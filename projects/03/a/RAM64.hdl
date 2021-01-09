@@ -15,5 +15,41 @@ CHIP RAM64 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    // Demux the address to the 8 load channels
+    DMux8Way(
+        in=load,
+        sel=address[0..2],
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd,
+        e=loade,
+        f=loadf,
+        g=loadg,
+        h=loadh
+    );
+
+    // The child blocks
+    RAM8(in=in, load=loada, address=address[3..5], out=rama);
+    RAM8(in=in, load=loadb, address=address[3..5], out=ramb);
+    RAM8(in=in, load=loadc, address=address[3..5], out=ramc);
+    RAM8(in=in, load=loadd, address=address[3..5], out=ramd);
+    RAM8(in=in, load=loade, address=address[3..5], out=rame);
+    RAM8(in=in, load=loadf, address=address[3..5], out=ramf);
+    RAM8(in=in, load=loadg, address=address[3..5], out=ramg);
+    RAM8(in=in, load=loadh, address=address[3..5], out=ramh);
+
+    // The output logic is a simple muxer
+    Mux8Way16(
+        a=rama,
+        b=ramb,
+        c=ramc,
+        d=ramd,
+        e=rame,
+        f=ramf,
+        g=ramg,
+        h=ramh,
+        sel=address[0..2],
+        out=out
+    );
 }

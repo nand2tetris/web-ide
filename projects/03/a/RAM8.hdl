@@ -15,5 +15,41 @@ CHIP RAM8 {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    // Demux the address to the 8 load channels
+    DMux8Way(
+        in=load,
+        sel=address,
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd,
+        e=loade,
+        f=loadf,
+        g=loadg,
+        h=loadh
+    );
+
+    // The registers proper
+    Register(in=in, load=loada, out=rega);
+    Register(in=in, load=loadb, out=regb);
+    Register(in=in, load=loadc, out=regc);
+    Register(in=in, load=loadd, out=regd);
+    Register(in=in, load=loade, out=rege);
+    Register(in=in, load=loadf, out=regf);
+    Register(in=in, load=loadg, out=regg);
+    Register(in=in, load=loadh, out=regh);
+
+    // The output logic is a simple muxer
+    Mux8Way16(
+        a=rega,
+        b=regb,
+        c=regc,
+        d=regd,
+        e=rege,
+        f=regf,
+        g=regg,
+        h=regh,
+        sel=address,
+        out=out
+    );
 }

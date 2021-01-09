@@ -16,5 +16,14 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+    // Read a value into the register if any of load, inc, or reset are set
+    Or(a=load, b=inc, out=doload);
+    Or(a=reset, b=doload, out=read);
+
+    // If a value should be read, it'll be in, count, or 0
+    Mux16(a=count, b=in, sel=load, out=value);
+    Mux16(a=value, b=false, sel=reset, out=set);
+
+    Register(in=set, load=read, out=regout, out=out);
+    Inc16(in=regout, out=count);
 }

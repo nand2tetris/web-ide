@@ -1,0 +1,27 @@
+/**
+ * 16-bit bus spreader:
+ * for i = 0..15 out[i] = in
+ */
+
+CHIP Copy16 {
+    IN in;
+    OUT out[16];
+
+    PARTS:
+    Copy(in=in, out=out[0]);
+    Copy(in=in, out=out[1]);
+    Copy(in=in, out=out[2]);
+    Copy(in=in, out=out[3]);
+    Copy(in=in, out=out[4]);
+    Copy(in=in, out=out[5]);
+    Copy(in=in, out=out[6]);
+    Copy(in=in, out=out[7]);
+    Copy(in=in, out=out[8]);
+    Copy(in=in, out=out[9]);
+    Copy(in=in, out=out[10]);
+    Copy(in=in, out=out[11]);
+    Copy(in=in, out=out[12]);
+    Copy(in=in, out=out[13]);
+    Copy(in=in, out=out[14]);
+    Copy(in=in, out=out[15]);
+}

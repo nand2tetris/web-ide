@@ -1,0 +1,11 @@
+/**
+ * Copy:
+ * out = in
+ */
+CHIP Copy { 
+    IN in;
+    OUT out;
+
+    PARTS:
+    Or(a=in, b=in, out=out);
+}

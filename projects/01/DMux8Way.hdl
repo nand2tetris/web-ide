@@ -16,5 +16,34 @@ CHIP DMux8Way {
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    // Put your code here:
+    Copy(in=sel[2], out=s1xx);
+    Copy(in=sel[1], out=sx1x);
+    Copy(in=sel[0], out=sxx1);
+
+    Not(in=s1xx, out=s0xx);
+    Not(in=sx1x, out=sx0x);
+    Not(in=sxx1, out=sxx0);
+
+    And(a=s0xx, b=sx0x, out=s00x);
+    And(a=s0xx, b=sx1x, out=s01x);
+    And(a=s1xx, b=sx0x, out=s10x);
+    And(a=s1xx, b=sx1x, out=s11x);
+
+    And(a=s00x, b=sxx0, out=s000);
+    And(a=s01x, b=sxx0, out=s010);
+    And(a=s10x, b=sxx0, out=s100);
+    And(a=s11x, b=sxx0, out=s110);
+    And(a=s00x, b=sxx1, out=s001);
+    And(a=s01x, b=sxx1, out=s011);
+    And(a=s10x, b=sxx1, out=s101);
+    And(a=s11x, b=sxx1, out=s111);
+
+    And(a=in, b=s000, out=a);
+    And(a=in, b=s001, out=b);
+    And(a=in, b=s010, out=c);
+    And(a=in, b=s011, out=d);
+    And(a=in, b=s100, out=e);
+    And(a=in, b=s101, out=f);
+    And(a=in, b=s110, out=g);
+    And(a=in, b=s111, out=h);
 }

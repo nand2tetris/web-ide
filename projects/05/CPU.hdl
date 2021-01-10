@@ -39,5 +39,27 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-    // Put your code here:
+
+    // From figure 5.9
+
+    // Register A will be filled from either the instruction line or the ALU
+    Mux16(a=instruction, b=alu, sel=instruction[15], out=regA);
+    Not(in=instruction[15], out=aInstruction);
+    Or(a=aInstruction, b=instruction[5], out=writeA);
+    // Only read 15 bits of memory address
+    Register(in=regA, in[15]=false, load=writeA, out[0..14]=addressM, out=A);
+
+    // D register is loaded from the ALU when d2 is set
+    Register(in=alu, load=instruction[4], out=D);
+
+    // ALU uses A or M based on the a bit.
+    Mux16(a=A, b=inM, sel=instruction[12], out=AM);
+    // ALU control bits are mapped directly in C instructions.
+    ALU(x=D, y=AM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f =instruction[7], no=instruction[6], out=alu, out=outM, zr=zr, ng=ng);
+
+    And(a=instruction[15], b=instruction[3], out=writeM);
+
+    Jump(jump=instruction[0..2], ng=ng, zr=zr, jmp=jmpi);
+    And(a=jmpi, b=instruction[15], out=jmp);
+    PC(in=A, load=jmp, reset=reset, inc=true, out[0..14]=pc);
 }

@@ -1,0 +1,32 @@
+/**
+ * Abstract away jump logic.
+ */
+CHIP Jump {
+    IN jump[3], ng, zr;
+    OUT jmp;
+
+    PARTS:
+
+    Not(in=ng, out=nng);
+    Not(in=zr, out=nzr);
+    And(a=nng, b=nzr, out=pt); // Positive is not negative and not zero
+
+    And(a=jump[2], b=ng, out=jlt);
+    And(a=jump[1], b=zr, out=jeq);
+    And(a=jump[0], b=pt, out=jgt);
+
+    And(a=jgt, b=jeq, out=jge);
+    And(a=jlt, b=jeq, out=jle);
+    And(a=jgt, b=jlt, out=jne);
+
+    And(a=jump[2], b=jump[1], out=jumpu1);
+    And(a=jump[0], b=jumpu1, out=jumpu);
+
+    Or(a=jgt, b=jeq, out=j1);
+    Or(a=jge, b=j1, out=j2);
+    Or(a=jlt, b=j2, out=j3);
+    Or(a=jne, b=j3, out=j4);
+    Or(a=jle, b=j4, out=j5);
+    Or(a=jumpu, b=j5, out=jmp);
+
+}

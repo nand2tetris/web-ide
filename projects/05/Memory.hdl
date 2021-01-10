@@ -27,5 +27,13 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-    // Put your code here:
+
+    RAM16K(in=in, load=writeram, address=address[1..14], out=ramout);
+
+    DMux(in=load, sel=address[0], a=writeram, b=writeio);
+    Screen(in=in, load=writeio, address=address[2..14], out=screenout);
+    Keyboard(out=kbdout);
+
+    Mux16(a=screenout, b=kbdout, sel=address[1], out=ioout);
+    Mux16(a=ramout, b=ioout, sel=address[0], out=out);
 }

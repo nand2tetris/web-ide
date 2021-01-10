@@ -41,25 +41,38 @@ CHIP CPU {
     PARTS:
 
     // From figure 5.9
+    Not(in=instruction[15], out=aInstruction);
+    Not(in=aInstruction, out=cInstruction);
+
+    And(a=cInstruction, b=instruction[5], out=writeA);
+    And(a=cInstruction, b=instruction[4], out=writeD);
+    And(a=cInstruction, b=instruction[3], out=writeM);
 
     // Register A will be filled from either the instruction line or the ALU
-    Mux16(a=instruction, b=alu, sel=instruction[15], out=regA);
-    Not(in=instruction[15], out=aInstruction);
-    Or(a=aInstruction, b=instruction[5], out=writeA);
-    // Only read 15 bits of memory address
-    Register(in=regA, in[15]=false, load=writeA, out[0..14]=addressM, out=A);
+    Mux16(b=instruction, a=alu, sel=aInstruction, out=regA);
+
+    // Only read 15 bits of memory address in register A
+    Or(a=aInstruction, b=writeA, out=setA);
+    Register(in=regA, in[15]=false, load=setA, out[0..14]=addressM, out=A);
 
     // D register is loaded from the ALU when d2 is set
-    Register(in=alu, load=instruction[4], out=D);
+    Register(in=alu, load=writeD, out=D);
+
+    And(a=cInstruction, b=instruction[12], out=aComp);
 
     // ALU uses A or M based on the a bit.
-    Mux16(a=A, b=inM, sel=instruction[12], out=AM);
-    // ALU control bits are mapped directly in C instructions.
-    ALU(x=D, y=AM, zx=instruction[11], nx=instruction[10], zy=instruction[9], ny=instruction[8], f =instruction[7], no=instruction[6], out=alu, out=outM, zr=zr, ng=ng);
+    Mux16(a=A, b=inM, sel=aComp, out=AM);
 
-    And(a=instruction[15], b=instruction[3], out=writeM);
+    // ALU control bits are mapped directly in C instructions when in c mode.
+    And(a=cInstruction, b=instruction[11], out=c1);
+    And(a=cInstruction, b=instruction[10], out=c2);
+    And(a=cInstruction, b=instruction[9], out=c3);
+    And(a=cInstruction, b=instruction[8], out=c4);
+    And(a=cInstruction, b=instruction[7], out=c5);
+    And(a=cInstruction, b=instruction[6], out=c6);
+    ALU(x=D, y=AM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=alu, out=outM, zr=zr, ng=ng);
 
     Jump(jump=instruction[0..2], ng=ng, zr=zr, jmp=jmpi);
-    And(a=jmpi, b=instruction[15], out=jmp);
+    And(a=jmpi, b=cInstruction, out=jmp);
     PC(in=A, load=jmp, reset=reset, inc=true, out[0..14]=pc);
 }

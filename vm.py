@@ -60,6 +60,10 @@ class Tokenizer():
                 return LogicInstruction(instruction, comment)
             if instruction == 'push' or instruction == 'pop':
                 return MemoryInstruction(instruction, arg1, arg2, comment)
+            if instruction == 'label':
+                return LabelInstruction(instruction, arg1, comment)
+            if instruction == 'goto' or instruction == 'if-goto':
+                return GotoInstruction(instruction, arg1, comment)
             return NoopInstruction(token, comment)
 
 def PTR_OFF(ptr, offset):
@@ -180,7 +184,7 @@ class BinaryInstruction:
         return self.instruction
 
 class MemoryInstruction:
-    def __init__(self, instruction, segment, index, comment, file = 'Xxx', function=''):
+    def __init__(self, instruction, segment, index, comment, file='Xxx', function=''):
         self.instruction = instruction
         self.segment = segment
         self.index = int(index)
@@ -191,10 +195,6 @@ class MemoryInstruction:
         self.comment = comment
         self.file = file
         self.function = function
-
-    def target(self):
-
-        return self.segment
     
     def write(self):
         if self.instruction == 'push':
@@ -245,6 +245,34 @@ class LogicInstruction:
     
     def __retr__(self):
         return self.instruction
+
+class LabelInstruction:
+    def __init__(self, instruction, label, comment):
+        self.instruction = instruction
+        self.label = label
+        self.comment = comment
+    
+    def write(self):
+        return f'({self.label}) {self.comment}'
+    
+    def __retr__(self):
+        return self.name
+
+class GotoInstruction:
+    def __init__(self, instruction, label, comment):
+        self.instruction = instruction
+        self.label = label
+        self.comment = comment
+    
+    def write(self):
+        if self.instruction == 'goto':
+            return f'@{self.label}\n0;JMP  {self.comment}'
+        if self.instruction == 'if-goto':
+            read = READ('SP', -1)
+            cache = f'@R13\nM=D'
+            dec = DEC_SP
+            jump = f'@R13\nD=M\n@{self.label}\nD;JNE'
+            return f'{read}\n{cache}\n{dec}\n{jump}  {self.comment}'
 
 class NoopInstruction():
     def __init__(self, token, comment):

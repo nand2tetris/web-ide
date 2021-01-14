@@ -6,121 +6,29 @@ import pathlib
 import re
 import sys
 
-class Table():
-    def __init__(self):
-        self.table = {
-            'SP': 0x0000,
-            'LCL': 0x0001,
-            'ARG': 0x0002,
-            'THIS': 0x0003,
-            'THAT': 0x0004,
-            'R0': 0x0000,
-            'R1': 0x0001,
-            'R2': 0x0002,
-            'R3': 0x0003,
-            'R4': 0x0004,
-            'R5': 0x0005,
-            'R6': 0x0006,
-            'R7': 0x0007,
-            'R8': 0x0008,
-            'R9': 0x0009,
-            'R10': 0x0008,
-            'R11': 0x000b,
-            'R12': 0x000c,
-            'R13': 0x000d,
-            'R14': 0x000e,
-            'R15': 0x000f,
-            'SCREEN': 0x4000,
-            'KBD': 0x6000,
-        } 
-        self.nextRegister = 0x0010
-    
-    def get(self, symbol):
-        self.register(symbol)
-        return self.table.get(symbol)
-    
-    def location(self, symbol, location):
-        # location can overwrite earlier symbols!
-        self.table[symbol] = location
-    
-    def register(self, symbol):
-        if not symbol in self.table:
-            if self.nextRegister >= 0x4000:
-                raise Exception(f'Symbol table is full, not creating register in screen mapped memory')
-            self.table[symbol] = self.nextRegister
-            self.nextRegister += 1
+import parser
 
-class Parse():
-    def __init__(self, instream):
-        self.tokenizer = Tokenizer(stream=instream)
-        self.instructions = []
-        self.table = Table()
-    
-    def parse(self):
-        while self.tokenizer.hasToken():
-            instruction = self.tokenizer.instruction()
-            self.instructions.append(instruction)
-        
-        position = 0
-        for instruction in self.instructions:
-            position = instruction.fillTable(self.table, position)
-    
-    def write(self, outstream):
-        for instruction in self.instructions:
-            if instruction.binary:
-                assembly = instruction.write(self.table)
-                assembly = assembly.replace('_', '')
-                outstream.write(assembly)
-                outstream.write('\n')
+class ASMParser(parser.Parser):
+    @classmethod
+    def getTokenizer(cls):
+        return ASMTokenizer
 
-class Tokenizer():
-    def __init__(self, stream=sys.stdin):
-        self.stream = stream
-        self.done = False
+class ASMTokenizer(parser.Tokenizer):
+    def makeInstruction(self, token, comment):
+        try:
+            if token[0] == '@':
+                return AInstruction(token)
+            if token[0] == '(':
+                return LInstruction(token)
+            if token[1] == '=' or token[2] == '=' or token[3] == '=':
+                return CInstruction(token)
+            if token[-4] == ';':
+                return CInstruction(token)
+        except:
+            pass
+        return parser.NoopInstruction()
 
-    def hasToken(self):
-        return not self.done
-    
-    def token(self):
-        read = self.stream.readline()
-        if read == '':
-            self.done = True
-        comment = read.find('//')
-        if comment > -1:
-            read = read[:comment]
-        return read.strip()
-    
-    def instruction(self):
-        if self.hasToken():
-            token = self.token()
-            try:
-                if token[0] == '@':
-                    return AInstruction(token)
-                if token[0] == '(':
-                    return LInstruction(token)
-                if token[1] == '=' or token[2] == '=' or token[3] == '=':
-                    return CInstruction(token)
-                if token[-4] == ';':
-                    return CInstruction(token)
-            except:
-                pass
-            return NoopInstruction(token)
-
-class NoopInstruction():
-    def __init__(self, token):
-        self.binary = False 
-        self.token = token
-    
-    def fillTable(self, table, position):
-        return position
-    
-    def write(self, table):
-        return f'Noop/Comment: {self.token}'
-    
-    def __repr__(self):
-        return f'                 # {self.write()}'
-
-class CInstruction():
+class CInstruction(parser.Instruction):
     def __init__(self, token):
         self.binary = True 
         self.token = token
@@ -143,21 +51,30 @@ class CInstruction():
 
         self.mMode = self.comp.find('M') > -1
 
-    
-    def fillTable(self, table, position):
-        self.position = position
-        return position + 1
-    
     def write(self, table):
         a = 1 if self.mMode else 0
         c = COMMANDS.get(self.comp.replace('M', 'A'), 0b111000)
         d = ASSIGN.get(self.dest, 0b000)
         j = JUMP.get(self.jump, 0b000)
         return f'111_{a:01b}_{c:06b}_{d:03b}_{j:03b}'
-    
-    def __repr__(self):
-        return f'{self.position:0x04} {self.write({})} # {self.token}'
+
+    def hack(self, table):
+        return self.write(table).replace('_', '')
  
+    def asm(self):
+        return self.token
+    
+    def xml(self):
+        name = self.__class__.__name__
+        element = f'<{name} mMode="{self.mMode}"'
+        if not self.dest == '':
+            element += f' dest="{self.dest}"'
+        element += f' comp="{self.comp}"'
+        if not self.jump == '':
+            element += f' jump="{self.jump}"'
+        element += f'>{self.write({})}</{name}>'
+        return element
+
 COMMANDS = {
       '0': 0b101010,
       '1': 0b111111,
@@ -204,46 +121,53 @@ def jump(jmp):
         return 0b001
     return 0b000
 
-
-class AInstruction():
+class AInstruction(parser.Instruction):
     def __init__(self, token):
-        self.binary = True 
         self.token = token
         self.value = token[1:]
         self.isLiteral = re.match(r'^\d+$', self.value) 
     
-    def fillTable(self, table, position):
+    def fill(self, table, position):
         self.position = position
         if not self.isLiteral:
             table.register(self.value)
         return position + 1
 
-    def write(self, table):
+    def hack(self, table):
         if self.isLiteral:
             intval = int(self.value)
         else:
             intval = table.get(self.value)
         return f'0{intval:015b}'
     
-    def __repr__(self):
-        return f'{self.position:0x04} A{self.value:>19}'
+    def asm(self):
+        return f'@{self.value}'
+    
+    def xml(self):
+        name = self.__class__.__name__
+        element = f'<{self.__class__.__name__} value="{self.value}" />'
+        return element
 
-class LInstruction():
+class LInstruction(parser.Instruction):
     def __init__(self, token):
-        self.binary = False 
         self.token = token
         self.value = token[1:-1]
     
-    def fillTable(self, table, position):
+    def fill(self, table, position):
         self.position = position
         table.location(self.value, position)
         return position
 
-    def write(self, table):
-        return f'Label: {self.token} @ {table[self.token]}'
+    def hack(self, table):
+        return None
+
+    def asm(self):
+        return f'({self.value})'
     
-    def __repr__(self):
-        return f'{self.position:0x04} {self.token:^20}'
+    def xml(self):
+        name = self.__class__.__name__
+        element = f'<{self.__class__.__name__} label="{self.value}" />'
+        return element
 
 def input():
     if len(sys.argv) > 1:
@@ -254,12 +178,12 @@ def input():
         print(f'Assembling from stdin to stdout', file=sys.stderr)
         return sys.stdin
 
-
 if __name__ == '__main__':
     file = input()
 
-    parse = Parse(file)
-    parse.parse()
+    parse = ASMParser()
+    parse.parse(file)
     file.close()
-    parse.write(sys.stdout)
+    hack = parse.hack()
+    sys.stdout.write(hack)
 

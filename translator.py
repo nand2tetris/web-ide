@@ -175,6 +175,9 @@ class BinaryInstruction(parser.Instruction):
             DecrementStackInstruction(),
         ]
 
+    def vm(self):
+        return self.instruction
+
 OPCODES = {
     'neg': 'D=-D',
     'not': 'D=!D',
@@ -224,6 +227,9 @@ class UnaryInstruction(parser.Instruction):
             assembler.CInstruction(OPCODES[self.instruction]),
             WritePtrInstruction(ptr='SP', offset=-1)
         ]
+    
+    def vm(self):
+        return self.instruction
 
 class MemoryInstruction(parser.Instruction):
     def buildTree(self):
@@ -261,6 +267,11 @@ class MemoryInstruction(parser.Instruction):
                 tree.append(WritePtrInstruction(ptr=segment, offset=index))
             tree.append(DecrementStackInstruction())    
         return tree
+    
+    def vm(self):
+        index = int(self.kwargs['index'])
+        segment = self.kwargs['segment']
+        return f'{self.instruction} {segment} {index}'
 
 class LogicTrueInstruction(parser.Instruction):
     def buildTree(self):
@@ -283,10 +294,17 @@ class LogicInstruction(parser.Instruction):
             IfThenElseInstruction(self.instruction, LogicTrueInstruction(), LogicFalseInstruction()),
             WritePtrInstruction(ptr='SP', offset=-1),
         ]
+    
+    def vm(self):
+        return self.instruction
 
 class LabelInstruction(parser.Instruction):
     def buildTree(self):
         return [assembler.LInstruction(self.kwargs['label'])]
+    
+    def vm(self):
+        label =  self.kwargs['label']
+        return f'label {label}'
     
 class GotoInstruction(parser.Instruction):
     def buildTree(self):
@@ -297,8 +315,14 @@ class GotoInstruction(parser.Instruction):
             return [
                 CACHE_DATA,
                 DecrementStackInstruction(),
-                ASM(DATA_ADDRESS, '', 'M', 'JNE')
+                ASM(DATA_ADDRESS, 'D', 'M')
+                ASM(label, '', 'D', 'JNE')
             ]
+        
+    def vm(self):
+        label = self.kwargs['label']
+        return f'{self.instruction} {label}'
+
 
 class FunctionInstruction(parser.Instruction):
     def buildTree(self):
@@ -312,6 +336,11 @@ class FunctionInstruction(parser.Instruction):
         for i in range(0, locals):
             tree.append(PushConstantInstruction(val=0))
         return tree
+    
+    def vm(self):
+        locals = int(self.kwargs['locals'])
+        label = self.kwargs['name']
+        return f'function {label} {locals}'
 
 class CallInstruction(parser.Instruction):
     def buildTree(self):
@@ -334,6 +363,11 @@ class CallInstruction(parser.Instruction):
             GotoInstruction('goto', label=function),
             assembler.LInstruction(address)
         ]
+
+    def vm(self):
+        args = self.kwargs['args']
+        function = self.kwargs['name']
+        return f'call {function} {args}'
 
 class MovePointerInstruction(parser.Instruction):
     def buildTree(self):
@@ -361,6 +395,9 @@ class ReturnInstruction(parser.Instruction):
             MovePointerInstruction(src=MEMORY_ADDRESS, src_offset=-4, dest='LCL'),
             ASM(JUMP_ADDRESS, '', 'M', 'JMP')
         ]
+    
+    def vm(self):
+        return 'return'
 
 if __name__ == '__main__':
     parser.main(VMParser)

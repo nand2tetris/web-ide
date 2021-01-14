@@ -188,7 +188,6 @@ def input():
         print(f'Assembling from stdin to stdout', file=sys.stderr)
         return sys.stdin
 
-
 def main(Parser):
     file = input()
 

@@ -12,6 +12,9 @@ class ASMParser(parser.Parser):
     @classmethod
     def getTokenizer(cls):
         return ASMTokenizer
+    
+    def default(self):
+        return self.hack()
 
 class ASMTokenizer(parser.Tokenizer):
     def makeInstruction(self, token, comment):
@@ -169,21 +172,6 @@ class LInstruction(parser.Instruction):
         element = f'<{self.__class__.__name__} label="{self.value}" />'
         return element
 
-def input():
-    if len(sys.argv) > 1:
-        print(f'Assembling from {sys.argv[1]} to stdout', file=sys.stderr)
-        localfile = pathlib.Path(__file__).parent / sys.argv[1]
-        return open(localfile)
-    else:
-        print(f'Assembling from stdin to stdout', file=sys.stderr)
-        return sys.stdin
 
 if __name__ == '__main__':
-    file = input()
-
-    parse = ASMParser()
-    parse.parse(file)
-    file.close()
-    hack = parse.hack()
-    sys.stdout.write(hack)
-
+    parser.main(ASMParser)

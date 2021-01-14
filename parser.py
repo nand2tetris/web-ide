@@ -178,3 +178,22 @@ class Parser(Instruction):
     def hack(self, table=Table()):
         self.fill(table) 
         return joinLines([child.hack(table) for child in self.tree])
+
+def input():
+    if len(sys.argv) > 1:
+        print(f'Assembling from {sys.argv[1]} to stdout', file=sys.stderr)
+        localfile = pathlib.Path(__file__).parent / sys.argv[1]
+        return open(localfile)
+    else:
+        print(f'Assembling from stdin to stdout', file=sys.stderr)
+        return sys.stdin
+
+
+def main(Parser):
+    file = input()
+
+    parse = ASMParser()
+    parse.parse(file)
+    file.close()
+    out = parse.default()
+    sys.stdout.write(out)

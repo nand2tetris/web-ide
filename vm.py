@@ -13,6 +13,9 @@ class VMParser(parser.Parser):
     @classmethod
     def getTokenizer(cls):
         return VMTokenizer
+    
+    def default(self):
+        return self.asm()
 
 class VMTokenizer(parser.Tokenizer):
     def makeInstruction(self, token, comment):
@@ -359,21 +362,5 @@ class ReturnInstruction(parser.Instruction):
             ASM(JUMP_ADDRESS, '', 'M', 'JMP')
         ]
 
-def input():
-    if len(sys.argv) > 1:
-        print(f'Preparing VM from {sys.argv[1]} to stdout', file=sys.stderr)
-        localfile = pathlib.Path(__file__).parent / sys.argv[1]
-        return open(localfile)
-    else:
-        print(f'Preparing VM from stdin to stdout', file=sys.stderr)
-        return sys.stdin
-
 if __name__ == '__main__':
-    file = input()
-
-    parse = VMParser()
-    parse.parse(file)
-    file.close()
-    out = parse.asm()
-    #out = parse.xml()
-    sys.stdout.write(out)
+    parser.main(VMParser)

@@ -15,6 +15,18 @@ class VMParser(parser.Parser):
     
     def default(self):
         return self.asm()
+    
+    def parse(self, instream):
+        parser.Parser.parse(self, instream)
+
+        hasSysInit = False
+        for child in self.tree:
+            isFn = isinstance(child, FunctionInstruction)
+            if isFn and child.kwargs['name'] == 'Sys.init':
+                hasSysInit = True
+
+        if hasSysInit:
+            self.tree.insert(0, BootstrapInstruction())
 
 class VMTokenizer(parser.Tokenizer):
     def makeInstruction(self, token, comment):
@@ -158,7 +170,7 @@ class PushConstantInstruction(parser.Instruction):
     def buildTree(self):
         val = self.kwargs['val']
         return [
-            ASM(f'{val:d}', 'D', 'A'),
+            ASM(f'{val}', 'D', 'A'),
             PushStackInstruction()
         ]
 
@@ -199,17 +211,10 @@ POINTER = {
     'that': 'THAT',
 }
 
-SYMBOLS = {}
-def SYMBOL(name):
-    if not name in SYMBOLS:
-        SYMBOLS[name] = 0
-    SYMBOLS[name] += 1
-    return f'${name}{SYMBOLS[name]}'
-
 class IfThenElseInstruction(parser.Instruction):
     def buildTree(self):
-        eq_then = SYMBOL(f'{op}_then')
-        eq_end = SYMBOL(f'{op}_end')
+        eq_then = parser.SYMBOL(f'{op}_then')
+        eq_end = parser.SYMBOL(f'{op}_end')
         return [
             ASM(eq_then, '', 'D', JUMPS[self.kwargs['op']]),
             self.kwargs['false'],
@@ -261,7 +266,7 @@ class MemoryInstruction(parser.Instruction):
             elif segment == 'static':
                 tree.append(ASM(f'{file}.{index}', 'M', 'D'))
             elif segment in ['local', 'argument', 'this', 'that']:
-                tree.append(WritePtrInstruction(ptr=POINTER[argument], offset=index))
+                tree.append(WritePtrInstruction(ptr=POINTER[segment], offset=index))
             else:
                 tree.append(WritePtrInstruction(ptr=segment, offset=index))
             tree.append(DecrementStackInstruction())    
@@ -299,7 +304,8 @@ class LogicInstruction(parser.Instruction):
 
 class LabelInstruction(parser.Instruction):
     def buildTree(self):
-        return [assembler.LInstruction(self.kwargs['label'])]
+        label = self.kwargs['label']
+        return [assembler.LInstruction(f'({label})')]
     
     def vm(self):
         label =  self.kwargs['label']
@@ -309,7 +315,7 @@ class GotoInstruction(parser.Instruction):
     def buildTree(self):
         label = self.kwargs['label']
         if self.instruction == 'goto':
-            return ASM(label, '', '0', 'JMP')
+            return [ASM(label, '', '0', 'JMP')]
         if self.instruction == 'if-goto':
             return [
                 CACHE_DATA,
@@ -329,6 +335,7 @@ class FunctionInstruction(parser.Instruction):
         label = self.kwargs['name']
         # static = ???
         tree = [
+            LabelInstruction(label=label),
             ASM('SP', 'D', 'M'),
             ASM('LCL', 'M', 'D')
         ]
@@ -345,7 +352,7 @@ class CallInstruction(parser.Instruction):
     def buildTree(self):
         args = self.kwargs['args']
         function = self.kwargs['name']
-        address = SYMBOL(f'{function}-return')
+        address = parser.SYMBOL(f'{function}-return', prefix='')
 
         return [
             PushConstantInstruction(val=address),
@@ -360,7 +367,7 @@ class CallInstruction(parser.Instruction):
             BinaryInstruction('sub'),
             PopRegisterInstruction(ptr='ARG'),
             GotoInstruction('goto', label=function),
-            assembler.LInstruction(address)
+            assembler.LInstruction(f'({address})')
         ]
 
     def vm(self):
@@ -379,24 +386,43 @@ class MovePointerInstruction(parser.Instruction):
             WritePtrInstruction(ptr=dest, offset=dest_offset),
         ]
 
+class PopFrameInstruction(parser.Instruction):
+    def buildTree(self):
+        return [
+            PopRegisterInstruction(ptr='THAT'),
+            PopRegisterInstruction(ptr='THIS'),
+            PopRegisterInstruction(ptr='ARG'),
+            PopRegisterInstruction(ptr='LCL'),
+        ]
+
 class ReturnInstruction(parser.Instruction):
     def buildTree(self):
         return [
-            MovePointerInstruction(src='LCL', dest=MEMORY_ADDRESS),
-            MovePointerInstruction(src=MEMORY_ADDRESS, offset=-5, dest=JUMP_ADDRESS),
-            PopRegisterInstruction(ptr='ARG'), # Set up return value
-            # SP = ARG+1
-            ASM('ARG', 'D', 'M'),
+            # Cache arg, to update SP later
+            ASM('ARG', 'D', 'M'), 
+            CACHE_ADDRESS,
+            # Copy return value to top of stack
+            PopRegisterInstruction(ptr='ARG'),
+            # Reset registers
+            PopFrameInstruction(),
+            # Prepare return jump
+            PopRegisterInstruction(ptr=JUMP_ADDRESS),
+            # SP = OLD_ARG+1
+            ASM(MEMORY_ADDRESS, 'D', 'M'),
             ASM('SP', 'M', 'D+1'),
-            MovePointerInstruction(src=MEMORY_ADDRESS, src_offset=-1, dest='THAT'),
-            MovePointerInstruction(src=MEMORY_ADDRESS, src_offset=-2, dest='THIS'),
-            MovePointerInstruction(src=MEMORY_ADDRESS, src_offset=-3, dest='ARG'),
-            MovePointerInstruction(src=MEMORY_ADDRESS, src_offset=-4, dest='LCL'),
             ASM(JUMP_ADDRESS, '', 'M', 'JMP')
         ]
     
     def vm(self):
         return 'return'
+
+class BootstrapInstruction(parser.Instruction):
+    def buildTree(self):
+        return [
+            ASM(256, 'D', 'A'),
+            ASM('SP', 'M', 'D'),
+            CallInstruction(name='Sys.init', args=0)
+        ]
 
 if __name__ == '__main__':
     parser.main(sys.argv[1:], VMParser)

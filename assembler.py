@@ -48,6 +48,10 @@ class CInstruction(parser.Instruction):
             self.comp = self.token[eq+1:]
 
         self.mMode = self.comp.find('M') > -1
+    
+    def fill(self, table, position):
+        self.position = position
+        return position + 1
 
     def write(self, table):
         a = 1 if self.mMode else 0
@@ -62,7 +66,7 @@ class CInstruction(parser.Instruction):
     def asm(self):
         return self.token
     
-    def xml(self):
+    def xml(self, table):
         name = self.__class__.__name__
         element = f'<{name} mMode="{self.mMode}"'
         if not self.dest == '':
@@ -70,7 +74,7 @@ class CInstruction(parser.Instruction):
         element += f' comp="{self.comp}"'
         if not self.jump == '':
             element += f' jump="{self.jump}"'
-        element += f'>{self.write({})}</{name}>'
+        element += f' position="{self.position}">{self.write({})}</{name}>'
         return element
 
 COMMANDS = {
@@ -141,9 +145,12 @@ class AInstruction(parser.Instruction):
     def asm(self):
         return f'@{self.value}'
     
-    def xml(self):
+    def xml(self, table):
         name = self.__class__.__name__
-        element = f'<{self.__class__.__name__} value="{self.value}" />'
+        element = f'<{self.__class__.__name__} value="{self.value}" position="{self.position}"'
+        if not self.isLiteral:
+            element += f' resolved="{table.get(self.value)}"'
+        element += '/>'
         return element
 
 class LInstruction(parser.Instruction):
@@ -162,9 +169,9 @@ class LInstruction(parser.Instruction):
     def asm(self):
         return f'({self.value})'
     
-    def xml(self):
+    def xml(self, table):
         name = self.__class__.__name__
-        element = f'<{self.__class__.__name__} label="{self.value}" />'
+        element = f'<{self.__class__.__name__} label="{self.value}" position="{self.position}" />'
         return element
 
 if __name__ == '__main__':

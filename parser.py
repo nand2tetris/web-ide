@@ -5,6 +5,13 @@ from operator import is_not
 from functools import partial
 
 
+SYMBOLS = {}
+def SYMBOL(name, prefix='$'):
+    if not name in SYMBOLS:
+        SYMBOLS[name] = 0
+    SYMBOLS[name] += 1
+    return f'{prefix}{name}{SYMBOLS[name]}'
+
 def joinLines(lines):
     return '\n'.join(filter(partial(is_not, None), lines))
 
@@ -105,7 +112,9 @@ class Instruction:
         return []
     
     def fill(self, table, position):
-        return position + 1
+        for child in self.tree:
+            position = child.fill(table, position)
+        return position
     
     def hack(self, table):
         return joinLines([child.hack(table) for child in self.tree])
@@ -116,7 +125,7 @@ class Instruction:
     def vm(self):
         return joinLines([child.vm() for child in self.tree])
 
-    def xml(self):
+    def xml(self, table):
         name = self.__class__.__name__
         element = f'<{name}'
         if self.instruction != '':
@@ -133,7 +142,7 @@ class Instruction:
         else:
             element += '>'
             for child in self.tree:
-                xml = child.xml()
+                xml = child.xml(table)
                 if not xml is None:
                     element += xml
             element += f'</{name}>'
@@ -152,7 +161,7 @@ class NoopInstruction(Instruction):
     def asm(self):
         return None
     
-    def xml(self):
+    def xml(self, table):
         return None
 
 class Parser(Instruction):
@@ -178,6 +187,10 @@ class Parser(Instruction):
     def hack(self, table=Table()):
         self.fill(table) 
         return joinLines([child.hack(table) for child in self.tree])
+    
+    def xml(self, table=Table()):
+        self.fill(table)
+        return Instruction.xml(self, table)
 
 
 argparser = argparse.ArgumentParser()

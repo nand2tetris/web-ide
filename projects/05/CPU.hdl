@@ -46,34 +46,40 @@ CHIP CPU {
         b=false,
         a=instruction,
         sel=aInstruction,
-        out[12]=selAM,
+        out[12]=a,
         out[11]=c1,
         out[10]=c2,
         out[9]=c3,
         out[8]=c4,
         out[7]=c5,
         out[6]=c6,
-        out[5]=writeA,
-        out[4]=writeD,
-        out[3]=writeM,
+        out[5]=d1,
+        out[4]=d2,
+        out[3]=d3,
         out[0..2]=jump
     );
 
     // Register A will be filled from either the instruction line or the ALU
-    Mux16(b=instruction, a=alu, sel=aInstruction, out=regA);
+    Mux16(a=alu, b=instruction, sel=aInstruction, out=regA);
 
     // Only read 15 bits of memory address in register A
-    Or(a=aInstruction, b=writeA, out=setA);
+    Or(a=aInstruction, b=d1, out=setA);
     Register(in=regA, in[15]=false, load=setA, out[0..14]=addressM, out=A);
 
     // D register is loaded from the ALU when d2 is set
-    Register(in=alu, load=writeD, out=D);
+    Register(in=alu, load=d2, out=D);
 
-    Mux16(a=A, b=inM, sel=selAM, out=AM);
+    Mux16(a=A, b=inM, sel=a, out=AM);
 
     // ALU control bits are mapped directly in C instructions when in c mode.
     ALU(x=D, y=AM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=alu, out=outM, zr=zr, ng=ng);
 
-    Jump(jump=jump, ng=ng, zr=zr, jmp=jmp);
-    PC(in=A, load=jmp, reset=reset, inc=true, out[0..14]=pc);
+    Halt(reset=reset, mMode=a, setM=d3, jump=jump, out=halt);
+    Not(in=halt, out=tick);
+    // Don't write memory if we halted
+    And(a=d3, b=tick, out=writeM);
+    Jump(jump=jump, ng=ng, zr=zr, jmp=jmpi);
+    // Only jump if not halting
+    And(a=jmpi, b=tick, out=jmp);
+    PC(in=A, load=jmp, reset=reset, inc=tick, out[0..14]=pc);
 }

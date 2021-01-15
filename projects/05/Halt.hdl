@@ -1,0 +1,25 @@
+/**
+ * Abstract away halt logic. It is invalid to perform any jump while accessing
+ * memory (4.2.3 "Conflicting Uses of the A register"), so we use this to
+ * indicate the computer should halt; that is, the PC should stop incrementing.
+ * Once a HALT chip has been triggered, it stays halted until reset.
+ */
+CHIP Halt {
+    IN jump[3], mMode, reset, setM;
+    OUT out;
+
+    PARTS:
+
+    Or(a=mMode, b=setM, out=mem);
+
+    And(a=jump[0], b=mem, out=j1);
+    And(a=jump[1], b=mem, out=j2);
+    And(a=jump[2], b=mem, out=j3);
+
+    Or(a=j1, b=j2, out=t);
+    Or(a=t, b=j3, out=hlt);
+
+    Or(a=reset, b=hlt, out=set);
+
+    Bit(in=hlt, load=set, out=out);
+}

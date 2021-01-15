@@ -1,4 +1,3 @@
-import pathlib
 import sys
 
 import parser
@@ -315,7 +314,7 @@ class GotoInstruction(parser.Instruction):
             return [
                 CACHE_DATA,
                 DecrementStackInstruction(),
-                ASM(DATA_ADDRESS, 'D', 'M')
+                ASM(DATA_ADDRESS, 'D', 'M'),
                 ASM(label, '', 'D', 'JNE')
             ]
         
@@ -400,4 +399,4 @@ class ReturnInstruction(parser.Instruction):
         return 'return'
 
 if __name__ == '__main__':
-    parser.main(VMParser)
+    parser.main(sys.argv[1:], VMParser)

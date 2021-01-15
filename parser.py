@@ -1,8 +1,8 @@
+import argparse
+import pathlib
 import sys
 from operator import is_not
 from functools import partial
-from xml.etree.ElementTree import Element
-from xml.etree.ElementTree import ElementTree
 
 
 def joinLines(lines):
@@ -179,20 +179,27 @@ class Parser(Instruction):
         self.fill(table) 
         return joinLines([child.hack(table) for child in self.tree])
 
-def input():
-    if len(sys.argv) > 1:
-        print(f'Assembling from {sys.argv[1]} to stdout', file=sys.stderr)
-        localfile = pathlib.Path(__file__).parent / sys.argv[1]
-        return open(localfile)
+
+argparser = argparse.ArgumentParser()
+argparser.add_argument('files', metavar='File', nargs='+')
+argparser.add_argument('--xml', const=True, nargs='?', help='Write XML data, rather than the parser\s default output.')
+argparser.add_argument('--out', type=str, default='-', help='Write to output file, - (default) is stdout.')
+
+def main(argv, Parser):
+    args = argparser.parse_args(argv)
+    parse = Parser()
+
+    for filename in args.files:
+        with open(filename, 'r') as file:
+            parse.parse(file)
+
+    if args.xml:
+        out = parse.xml()
     else:
-        print(f'Assembling from stdin to stdout', file=sys.stderr)
-        return sys.stdin
+        out = parse.default()
 
-def main(Parser):
-    file = input()
-
-    parse = ASMParser()
-    parse.parse(file)
-    file.close()
-    out = parse.default()
-    sys.stdout.write(out)
+    if args.out == '-':
+        sys.stdout.write(out)
+    else:
+        with open(args.out, 'w') as file:
+            file.write(out)

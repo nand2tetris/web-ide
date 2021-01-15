@@ -1,8 +1,3 @@
-'''
-Assembler for the hack machine language from nand2tetris
-'''
-
-import pathlib
 import re
 import sys
 
@@ -172,6 +167,5 @@ class LInstruction(parser.Instruction):
         element = f'<{self.__class__.__name__} label="{self.value}" />'
         return element
 
-
 if __name__ == '__main__':
-    parser.main(ASMParser)
+    parser.main(sys.argv[1:], ASMParser)

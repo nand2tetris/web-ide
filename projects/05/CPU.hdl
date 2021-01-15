@@ -42,11 +42,22 @@ CHIP CPU {
 
     // From figure 5.9
     Not(in=instruction[15], out=aInstruction);
-    Not(in=aInstruction, out=cInstruction);
-
-    And(a=cInstruction, b=instruction[5], out=writeA);
-    And(a=cInstruction, b=instruction[4], out=writeD);
-    And(a=cInstruction, b=instruction[3], out=writeM);
+    Mux16(
+        b=false,
+        a=instruction,
+        sel=aInstruction,
+        out[12]=selAM,
+        out[11]=c1,
+        out[10]=c2,
+        out[9]=c3,
+        out[8]=c4,
+        out[7]=c5,
+        out[6]=c6,
+        out[5]=writeA,
+        out[4]=writeD,
+        out[3]=writeM,
+        out[0..2]=jump
+    );
 
     // Register A will be filled from either the instruction line or the ALU
     Mux16(b=instruction, a=alu, sel=aInstruction, out=regA);
@@ -58,21 +69,11 @@ CHIP CPU {
     // D register is loaded from the ALU when d2 is set
     Register(in=alu, load=writeD, out=D);
 
-    And(a=cInstruction, b=instruction[12], out=aComp);
-
-    // ALU uses A or M based on the a bit.
-    Mux16(a=A, b=inM, sel=aComp, out=AM);
+    Mux16(a=A, b=inM, sel=selAM, out=AM);
 
     // ALU control bits are mapped directly in C instructions when in c mode.
-    And(a=cInstruction, b=instruction[11], out=c1);
-    And(a=cInstruction, b=instruction[10], out=c2);
-    And(a=cInstruction, b=instruction[9], out=c3);
-    And(a=cInstruction, b=instruction[8], out=c4);
-    And(a=cInstruction, b=instruction[7], out=c5);
-    And(a=cInstruction, b=instruction[6], out=c6);
     ALU(x=D, y=AM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=alu, out=outM, zr=zr, ng=ng);
 
-    Jump(jump=instruction[0..2], ng=ng, zr=zr, jmp=jmpi);
-    And(a=jmpi, b=cInstruction, out=jmp);
+    Jump(jump=jump, ng=ng, zr=zr, jmp=jmp);
     PC(in=A, load=jmp, reset=reset, inc=true, out[0..14]=pc);
 }

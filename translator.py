@@ -71,13 +71,15 @@ class ASM(parser.Instruction):
     
     def buildTree(self):
         instructions = []
-        if not self.address is None:
+        if self.address:
             instructions.append(assembler.AInstruction(f'@{self.address}'))
-        instructions.append(assembler.CInstruction(f'{self.store}={self.comp};{self.jump}'))
+        cInst = self.comp
+        if self.store:
+            cInst = f'{self.store}={cInst}'
+        if self.jump:
+            cInst = f'{cInst};{self.jump}'
+        instructions.append(assembler.CInstruction(cInst))
         return instructions
-
-CACHE_DATA = ASM(DATA_ADDRESS, 'M', 'D')
-CACHE_ADDRESS = ASM(MEMORY_ADDRESS, 'M', 'D')
 
 class PointerOffsetInstruction(parser.Instruction):
     def buildTree(self):
@@ -108,18 +110,21 @@ class ReadPtrInstruction(parser.Instruction):
         ]
 
 class WritePtrInstruction(parser.Instruction):
+    """
+    *(ptr+offset)=D
+    """
     def buildTree(self):
         ptr = self.kwargs['ptr']
         offset = self.kwargs.get('offset', 0)
         return [
-            CACHE_DATA,
+            ASM(DATA_ADDRESS, 'M', 'D'),
             # Calculate pointer and store in MEMORY_ADDRESS
             PointerOffsetInstruction(ptr=ptr, offset=offset),
             ASM(MEMORY_ADDRESS, 'M', 'D'),
-            # Write from R13 to R14
-            CACHE_DATA,
+            # Write from DATA_ADDRESS to MEMORY_ADDRESS
+            ASM(DATA_ADDRESS, 'D', 'M'),
             ASM(MEMORY_ADDRESS, 'A', 'M'),
-            ASM(None, 'M', 'D'),
+            ASM('', 'M', 'D')
         ]
 
 class DecrementStackInstruction(parser.Instruction):
@@ -140,7 +145,7 @@ class PopStackInstruction(parser.Instruction):
     def buildTree(self):
         return [
             ReadPtrInstruction(ptr='SP', offset=-1),
-            CACHE_DATA,
+            ASM(MEMORY_ADDRESS, 'M'),
             DecrementStackInstruction()
         ]
 
@@ -178,7 +183,7 @@ class BinaryInstruction(parser.Instruction):
     def buildTree(self):
         return [
             ReadPtrInstruction(ptr='SP', offset=-2),
-            CACHE_DATA,
+            ASM(DATA_ADDRESS, 'M', 'D'),
             ReadPtrInstruction(ptr='SP', offset=-1),
             assembler.AInstruction(DATA_ADDRESS),
             assembler.CInstruction(OPCODES[self.instruction]),
@@ -213,10 +218,11 @@ POINTER = {
 
 class IfThenElseInstruction(parser.Instruction):
     def buildTree(self):
+        op = self.instruction
         eq_then = parser.SYMBOL(f'{op}_then')
         eq_end = parser.SYMBOL(f'{op}_end')
         return [
-            ASM(eq_then, '', 'D', JUMPS[self.kwargs['op']]),
+            ASM(eq_then, '', 'D', JUMPS[op]),
             self.kwargs['false'],
             ASM(eq_end, '', '0', 'JMP'),
             assembler.LInstruction(f'({eq_then})'),
@@ -295,7 +301,7 @@ class LogicInstruction(parser.Instruction):
         return [
             BinaryInstruction('sub'),
             ReadPtrInstruction(ptr='SP', offset=-1),
-            IfThenElseInstruction(self.instruction, LogicTrueInstruction(), LogicFalseInstruction()),
+            IfThenElseInstruction(self.instruction, true=LogicTrueInstruction(), false=LogicFalseInstruction()),
             WritePtrInstruction(ptr='SP', offset=-1),
         ]
     
@@ -313,12 +319,20 @@ class LabelInstruction(parser.Instruction):
     
 class GotoInstruction(parser.Instruction):
     def buildTree(self):
-        label = self.kwargs['label']
+        label = self.kwargs.get('label', None)
+        indirect = self.kwargs.get('indirect', False)
         if self.instruction == 'goto':
-            return [ASM(label, '', '0', 'JMP')]
+            if indirect:
+                return [
+                    ASM(label, 'D', 'M'),
+                    ASM('', 'A', 'D'),
+                    ASM('', '', '0', 'JMP')
+                ]
+            else:
+                return [ASM(label, '', '0', 'JMP')]
         if self.instruction == 'if-goto':
             return [
-                CACHE_DATA,
+                ASM(DATA_ADDRESS, 'M', 'D'),
                 DecrementStackInstruction(),
                 ASM(DATA_ADDRESS, 'D', 'M'),
                 ASM(label, '', 'D', 'JNE')
@@ -327,7 +341,6 @@ class GotoInstruction(parser.Instruction):
     def vm(self):
         label = self.kwargs['label']
         return f'{self.instruction} {label}'
-
 
 class FunctionInstruction(parser.Instruction):
     def buildTree(self):
@@ -400,7 +413,7 @@ class ReturnInstruction(parser.Instruction):
         return [
             # Cache arg, to update SP later
             ASM('ARG', 'D', 'M'), 
-            CACHE_ADDRESS,
+            ASM(DATA_ADDRESS, 'M', 'D'),
             # Copy return value to top of stack
             PopRegisterInstruction(ptr='ARG'),
             # Reset registers
@@ -410,7 +423,7 @@ class ReturnInstruction(parser.Instruction):
             # SP = OLD_ARG+1
             ASM(MEMORY_ADDRESS, 'D', 'M'),
             ASM('SP', 'M', 'D+1'),
-            ASM(JUMP_ADDRESS, '', 'M', 'JMP')
+            GotoInstruction('goto', label=JUMP_ADDRESS, indirect=True)
         ]
     
     def vm(self):

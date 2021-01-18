@@ -1,0 +1,74 @@
+# HackX
+
+Extensions to Hack
+
+## Halt
+
+The Halt hack instruction will cause the CPU's PC to stop incrementing.
+The PC can be re-enabled by sending the Reset signal, which will clear the PC to 0x0000 and put it back in counting mode.
+
+## NOOP, noop
+
+A shorthand for A0, the A instruction which loads 0 into the A register and does nothing else.
+Exists to allow the asm to fill in areas of the output assembly as needed.
+
+## ALUX - Extended Arithmetic
+
+`1 1x m cccccc ddd jjj`
+
+In a hack c instruction, the second bit becomes an "Arithmetic" instruction.
+When set to 1, the machine will perform ALU arithmetic.
+The third bit will choose between standard (when 1) and eXtended (when 0).
+The ALU will read from memory if the m bit is set; will use the c bits to control the logic, and d bits to control where to store results.
+In standard mode, the j bits control the jump destination.
+In extended mode, the j bits select additional arithmetic operations.
+
+jjj | Operation                 | ASM Cmp | Hack VM
+----|---------------------------|---------|---------
+000 | left shift                | SHL {n} | shift-left {n}
+001 | right shift               | SHR {n} | shift-right {n}
+010 | integer multiplication    | MUL     | mul
+011 | integer division          | DIV     | div
+100 | floating point add        | FADD    | fadd 
+101 | floating point subtract   | FSUB    | fsub
+110 | floating point multiply   | FMUL    | fmul
+111 | floating point divide     | FDIV    | fdiv
+
+Shift uses either the lower 4 c-bits, or the lowest 4 m bits (based on mMode) to determine the amount of places to shift.
+Left shift is 0 fill, right shift is signed fill, to keep with the multiplication/division pattern.
+When an immediate shift amount is provided to the VM, a single value is popped and pushed.
+When no immediate shift amount is provided, the top stack value is used as the shift amount (and popped from the stack).
+
+ALUX has an expanded out bit buffer:
+ng zr ov nan inf
+
+The ALU out buffer can be read at 0xFFFF?
+@FFFF
+D=M
+@R13
+M=D
+
+## Interrupts
+
+Instruction             | Operation
+------------------------|----------------------------------------------------|
+`            1aaa a000` | Out of band, put the CPU in interrupt mode & jmp a |
+`1 0x 0 ???? 1aaa a000` | Put CPU in interrupts mode, and jump to a          |
+`1 01 0 ???? ???? ????` | Restore CPU to normal mode, and jump to last PC    |
+
+The Computer adds an 8-bit interrupt bus, along with a software interrupt signal.
+On receiving a 1 in the interrupt bus, or the software interrupt signal, the CPU caches inM, A, D, the PC, the ALU status bus.
+The CPU then marks as in interrupt state. If any interrupt commands arrive while in the interrupt, they are ignored.
+The CPU then jumps to the address specified by the interrupt.
+The last three bits of the interrupt must be 0, leaving 8 instructions for machine start:
+
+```
+@256
+D=A
+@SP
+M=D
+@Sys.init
+0;JMP
+NOOP
+NOOP
+```

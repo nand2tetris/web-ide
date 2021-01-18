@@ -4,6 +4,7 @@ import sys
 from operator import is_not
 from functools import partial
 
+import sixml
 
 SYMBOLS = {}
 def SYMBOL(name, prefix='$'):
@@ -127,25 +128,15 @@ class Instruction:
 
     def xml(self, table):
         name = self.__class__.__name__
-        element = f'<{name}'
-        if self.instruction != '':
-            element += f' instruction="{self.instruction}"'
-        if self.comment != '':
-            element += f' comment="{self.comment}"'
-        if len(self.args) > 0:
-            args = ' '.join(self.args)
-            element += f' args="{args}"'
-        for k, v in self.kwargs.items():
-            element += f' {k}="{v}"'
-        if len(self.tree) == 0:
-            element += ' />'
-        else:
-            element += '>'
-            for child in self.tree:
-                xml = child.xml(table)
-                if not xml is None:
-                    element += xml
-            element += f'</{name}>'
+        attributes = { 
+            'instruction': self.instruction,
+            'comment': self.comment,
+            'args': ' '.join(self.args),
+            **self.kwargs
+        }
+        children = [child.xml(table) for child in self.tree]
+        element = sixml.Element(name, attributes, children)
+
         return element
 
 class NoopInstruction(Instruction):
@@ -210,6 +201,8 @@ def main(argv, Parser):
         out = parse.xml()
     else:
         out = parse.default()
+
+    out = f'{out}'
 
     if args.out == '-':
         sys.stdout.write(out)

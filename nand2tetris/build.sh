@@ -1,17 +1,30 @@
-#/bin/sh
+#/bin/bash
 
-pushd HackPackageSource
-mkdir build
-javac -d build Hack/**/*.java
-jar cvf build/Hack.jar build/Hack/**/*.class
-popd
+shopt -s globstar
 
-cp HackPackageSource/build/Hack.jar InstallDir/bin/lib
+declare -A PACKAGES
+PACKAGES[HackPackageSource]=Hack
+PACKAGES[HackGUIPackageSource]=HackGUI
+PACKAGES[CompilersPackageSource]=Compilers
+PACKAGES[SimulatorsPackageSource]=Simulators
+PACKAGES[SimulatorsGUIPackageSource]=SimulatorsGUI
 
-pushd HackGUIPackageSource
-mkdir build
-javac -cp ../InstallDir/bin/lib/Hack.jar -d build HackGUI/*.java
-jar cvf build/HackGUI.jar build/HackGUI/**/*.class
-popd
+#PACKAGES[BuiltInChipsSource] = BuiltInChips
+#PACKAGES[BuiltInVMCodeSource] = BuiltInVM
+#PACKAGES[MainClassesSource
 
-cp HackGUIPackageSource/build/HackGUI.jar InstallDir/bin/lib
+CLASSPATH="."
+for pkg in ${!PACKAGES[@]}; do
+    build="${pkg}/build"
+    mkdir --parents $build
+    CLASSPATH="${build}:${CLASSPATH}"
+done
+
+export CLASSPATH
+echo $CLASSPATH
+
+for pkg in ${!PACKAGES[@]}; do
+    jar=${PACKAGES[$pkg]}.jar
+    javac -d $pkg/build $pkg/**/*.java
+    jar cvf InstallDir/bin/lib/$jar $pkg/build/**/*.class
+done

@@ -2,6 +2,7 @@ import re
 import sys
 
 import parser
+import sixml
 
 class ASMParser(parser.Parser):
     @classmethod
@@ -68,14 +69,13 @@ class CInstruction(parser.Instruction):
     
     def xml(self, table):
         name = self.__class__.__name__
-        element = f'<{name} mMode="{self.mMode}"'
-        if not self.dest == '':
-            element += f' dest="{self.dest}"'
-        element += f' comp="{self.comp}"'
-        if not self.jump == '':
-            element += f' jump="{self.jump}"'
-        element += f' position="{self.position}">{self.write({})}</{name}>'
-        return element
+        attributes = {
+            'dest': self.dest,
+            'comp': self.comp,
+            'jump': self.jump,
+            'position': str(self.position),
+        }
+        return sixml.Element(name, attributes, []) 
 
 COMMANDS = {
       '0': 0b101010,
@@ -147,10 +147,13 @@ class AInstruction(parser.Instruction):
     
     def xml(self, table):
         name = self.__class__.__name__
-        element = f'<{self.__class__.__name__} value="{self.value}" position="{self.position}"'
+        attributes = {
+            'value': self.value,
+            'position': str(self.position),
+        }
         if not self.isLiteral:
-            element += f' resolved="{table.get(self.value)}"'
-        element += '/>'
+            attributes['resolved'] = str(table.get(self.value))
+        return sixml.Element(name, attributes, [])
         return element
 
 class LInstruction(parser.Instruction):
@@ -170,9 +173,12 @@ class LInstruction(parser.Instruction):
         return f'({self.value})'
     
     def xml(self, table):
-        name = self.__class__.__name__
-        element = f'<{self.__class__.__name__} label="{self.value}" position="{self.position}" />'
-        return element
+        name =self.__class__.__name__
+        attributes = {
+            'label': self.value,
+            'position': str(self.position),
+        }
+        return sixml.Element(name, attributes, [])
 
 if __name__ == '__main__':
     parser.main(sys.argv[1:], ASMParser)

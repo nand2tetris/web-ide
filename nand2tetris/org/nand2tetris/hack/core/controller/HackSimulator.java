@@ -196,8 +196,8 @@ public abstract class HackSimulator implements ProgramEventListener, ComputerPar
     public void notifyListeners(byte action, Object data) {
         ControllerEvent event = new ControllerEvent(this, action, data);
 
-        for (int i = 0; i < listeners.size(); i++)
-            ((ControllerEventListener)listeners.elementAt(i)).actionPerformed(event);
+        for (ControllerEventListener listener: listeners)
+            listener.actionPerformed(event);
     }
 
     /**
@@ -222,9 +222,8 @@ public abstract class HackSimulator implements ProgramEventListener, ComputerPar
     protected void notifyProgramListeners(byte eventType, String programFileName) {
         ProgramEvent event = new ProgramEvent(this, eventType, programFileName);
 
-        for (int i = 0; i < programListeners.size(); i++) {
-            ((ProgramEventListener)programListeners.elementAt(i)).programChanged(event);
-        }
+        for (ProgramEventListener listener: programListeners)
+            listener.programChanged(event);
     }
 
     public void programChanged(ProgramEvent event) {

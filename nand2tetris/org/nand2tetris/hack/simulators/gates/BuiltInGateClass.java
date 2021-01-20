@@ -25,6 +25,9 @@ public class BuiltInGateClass extends GateClass {
     // the java class that holds the basic gate functionality
     private Class javaGateClass;
 
+    private static final String builtInGatePackage = "org.nand2tetris.hack.builtin.chips";
+    private static final String baseGateClass = "org.nand2tetris.hack.simulators.gates.BuiltInGate";
+
     /**
      * Constructs a new BuiltInGateClass with the given gate name and the HDLTokenizer
      * input which is positioned just after the BUILTIN declaration.
@@ -40,7 +43,7 @@ public class BuiltInGateClass extends GateClass {
             input.HDLError("Missing java class name");
 
         String classFileName = input.getIdentifier();
-        String fullName = GatesManager.getInstance().getBuiltInDir() + "." + classFileName;
+        String fullName = builtInGatePackage + "." + classFileName;
 
         try {
             javaGateClass = Class.forName(fullName);
@@ -53,7 +56,7 @@ public class BuiltInGateClass extends GateClass {
         boolean found;
         do {
             currentClass = currentClass.getSuperclass();
-            found = currentClass.getName().equals("Hack.Gates.BuiltInGate");
+            found = currentClass.getName().equals(baseGateClass);
         } while (!found && !currentClass.getName().equals("java.lang.Object"));
 
         if (!found)

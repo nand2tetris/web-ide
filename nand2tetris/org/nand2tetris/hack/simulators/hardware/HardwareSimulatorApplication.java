@@ -38,10 +38,8 @@ public class HardwareSimulatorApplication extends HackApplication {
     }
 
     protected void createController(HackSimulator simulator, ControllerGUI controllerComponent,
-                                    String defaultScript)
-     throws ScriptException, ControllerException {
-        HardwareSimulatorController c =
-            new HardwareSimulatorController((HardwareSimulatorControllerGUI)controllerComponent,
-                                            (HardwareSimulator)simulator, defaultScript);
+                                    String defaultScript) throws ScriptException, ControllerException {
+        new HardwareSimulatorController((HardwareSimulatorControllerGUI)controllerComponent,
+                                        (HardwareSimulator)simulator, defaultScript);
     }
 }

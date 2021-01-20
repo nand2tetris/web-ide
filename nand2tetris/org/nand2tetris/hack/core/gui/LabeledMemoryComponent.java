@@ -23,10 +23,12 @@ import javax.swing.table.*;
 import org.nand2tetris.hack.core.parts.LabeledPointedMemoryGUI;
 
 /**
- * This class represents a memomy component with additional feature of another
+ * This class represents a memory component with additional feature of another
  * column representing the labels of this memory component.
  */
 public class LabeledMemoryComponent extends PointedMemoryComponent implements LabeledPointedMemoryGUI{
+
+    private static final long serialVersionUID = 3134223827755692776L;
 
     // The array of labels of this memory.
     protected String[] labels;
@@ -85,7 +87,7 @@ public class LabeledMemoryComponent extends PointedMemoryComponent implements La
     }
 
     /**
-     * hides all existing falsh label.
+     * hides all existing false label.
      */
     public void hideLabelFlash() {
         labelFlashIndex = -1;
@@ -138,6 +140,8 @@ public class LabeledMemoryComponent extends PointedMemoryComponent implements La
     // An inner class representing the model of this table.
     class LabeledMemoryTableModel extends MemoryTableModel {
 
+        private static final long serialVersionUID = 8268008739804358882L;
+
         /**
          * Returns the number of columns.
          */
@@ -170,8 +174,10 @@ public class LabeledMemoryComponent extends PointedMemoryComponent implements La
 
     }
 
-    // An inner class which implemets the cell renderer of the VMMemoryComponent.
+    // An inner class which implements the cell renderer of the VMMemoryComponent.
     public class LabeledPointedMemoryTableCellRenderer extends PointedMemoryTableCellRenderer {
+
+        private static final long serialVersionUID = -2240769373026492343L;
 
         public void setRenderer(int row, int column) {
             super.setRenderer(row, column - 1);

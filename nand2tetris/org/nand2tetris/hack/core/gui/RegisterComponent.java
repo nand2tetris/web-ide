@@ -29,6 +29,8 @@ import org.nand2tetris.hack.core.parts.*;
  */
 public class RegisterComponent extends JPanel implements RegisterGUI {
 
+    private static final long serialVersionUID = 2592004315916332895L;
+
     // The label with the name of this register.
     protected JLabel registerName = new JLabel();
 
@@ -36,10 +38,10 @@ public class RegisterComponent extends JPanel implements RegisterGUI {
     protected JTextField registerValue = new JTextField();
 
     // A vector containing the listeners to this object.
-    private Vector listeners;
+    private Vector<ComputerPartEventListener> listeners;
 
     // A vector containing the error listeners to this object.
-    private Vector errorEventListeners;
+    private Vector<ErrorEventListener> errorEventListeners;
 
     // The value of the register
     protected short value;
@@ -61,8 +63,8 @@ public class RegisterComponent extends JPanel implements RegisterGUI {
      */
     public RegisterComponent() {
         dataFormat = Format.DEC_FORMAT;
-        listeners = new Vector();
-        errorEventListeners = new Vector();
+        listeners = new Vector<>();
+        errorEventListeners = new Vector<>();
         // initializes the register
         value = 0;
         registerValue.setText(translateValueToString(value));
@@ -92,14 +94,13 @@ public class RegisterComponent extends JPanel implements RegisterGUI {
     public void notifyListeners(int address, short value) {
         ComputerPartEvent event = new ComputerPartEvent(this,0,value);
         for(int i=0;i<listeners.size();i++) {
-            ((ComputerPartEventListener)listeners.elementAt(i)).valueChanged(event);
+            listeners.elementAt(i).valueChanged(event);
         }
     }
 
     public void notifyListeners() {
-        ComputerPartEvent event = new ComputerPartEvent(this);
         for(int i=0;i<listeners.size();i++) {
-            ((ComputerPartEventListener)listeners.elementAt(i)).guiGainedFocus();
+            listeners.elementAt(i).guiGainedFocus();
         }
     }
 
@@ -120,12 +121,12 @@ public class RegisterComponent extends JPanel implements RegisterGUI {
     /**
      * Notifies all the ErrorEventListener on an error in this gui by
      * creating an ErrorEvent (with the error message) and sending it
-     * using the errorOccured method to all the listeners.
+     * using the errorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         ErrorEvent event = new ErrorEvent(this, errorMessage);
         for (int i=0; i<errorEventListeners.size(); i++)
-            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccured(event);
+            errorEventListeners.elementAt(i).errorOccurred(event);
     }
 
     /**
@@ -185,7 +186,7 @@ public class RegisterComponent extends JPanel implements RegisterGUI {
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         registerValue.setForeground(Color.black);

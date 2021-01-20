@@ -38,9 +38,9 @@ public interface InteractiveComputerPartGUI extends ComputerPartGUI {
     public void removeErrorListener(ErrorEventListener listener);
 
     /**
-     * Notifies all the ErrorEventListeners on an error that occured in the
+     * Notifies all the ErrorEventListeners on an error that occurred in the
      * computer part gui by creating an ErrorEvent (with the error message)
-     * and sending it using the errorOccured method to all the listeners.
+     * and sending it using the errorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage);
 }

@@ -23,6 +23,7 @@ import java.util.EventObject;
  * An event for notifying a ClearEventListener on a request for clear.
  */
 public class ClearEvent extends EventObject {
+    private static final long serialVersionUID = -755762735282468092L;
 
     /**
      * Constructs a new ClearEvent with the given source.

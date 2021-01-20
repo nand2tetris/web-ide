@@ -23,7 +23,6 @@ import java.util.*;
 import javax.swing.*;
 import javax.swing.event.*;
 import javax.swing.table.*;
-import org.nand2tetris.hack.core.gui.*;
 import org.nand2tetris.hack.core.parts.*;
 
 /**
@@ -31,9 +30,10 @@ import org.nand2tetris.hack.core.parts.*;
  */
 public class TextFileComponent extends JPanel implements TextFileGUI {
 
+    private static final long serialVersionUID = -7210622341633564404L;
     // A vector containing the listeners to this component.
-    private Vector listeners;
-    private Vector rowsVector;
+    private Vector<TextFileEventListener> listeners;
+    private Vector<String> rowsVector;
 
     // The model of the table
     private TextFileTableModel model = new TextFileTableModel();
@@ -48,10 +48,10 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
     private JLabel nameLbl = new JLabel();
 
     // A set of indices of highlighted rows.
-    private Set highlightedLines;
+    private Set<Integer> highlightedLines;
 
     // A set of indices of emphasized rows.
-    private Set emphasizedLines;
+    private Set<Integer> emphasizedLines;
 
     // Indicates whether this component is enabled.
     private boolean isEnabled;
@@ -60,13 +60,13 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
      * Constructs a new TextFileComponent
      */
     public TextFileComponent() {
-        listeners = new Vector();
-        rowsVector = new Vector();
+        listeners = new Vector<>();
+        rowsVector = new Vector<>();
         textFileTable = new WideTable(model, 1000);
         textFileTable.setDefaultRenderer(textFileTable.getColumnClass(0), getCellRenderer());
         textFileTable.setTableHeader(null);
-        highlightedLines = new HashSet();
-        emphasizedLines = new HashSet();
+        highlightedLines = new HashSet<>();
+        emphasizedLines = new HashSet<>();
         enableUserInput();
         jbInit();
     }
@@ -104,7 +104,7 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
         if (clear)
             highlightedLines.clear();
 
-        highlightedLines.add(new Integer(index));
+        highlightedLines.add(index);
         Utilities.tableCenterScroll(this, textFileTable, index);
         repaint();
     }
@@ -115,12 +115,12 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
     }
 
     public void addEmphasis(int index) {
-        emphasizedLines.add(new Integer(index));
+        emphasizedLines.add(index);
         repaint();
     }
 
     public void removeEmphasis(int index) {
-        emphasizedLines.remove(new Integer(index));
+        emphasizedLines.remove(index);
         repaint();
     }
 
@@ -257,6 +257,8 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
     // An inner class representing the model of the breakpoint table.
     class TextFileTableModel extends AbstractTableModel {
 
+        private static final long serialVersionUID = 6372084286522973095L;
+
         /**
          * Returns the number of columns.
          */
@@ -299,6 +301,8 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
     // An inner class representing the cell renderer of the table.
     public class TextFileCellRenderer extends DefaultTableCellRenderer {
 
+        private static final long serialVersionUID = -2608051799157377212L;
+
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)
         {
@@ -312,12 +316,12 @@ public class TextFileComponent extends JPanel implements TextFileGUI {
         }
 
         public void setRenderer(int row, int column) {
-            if (highlightedLines.contains(new Integer(row)))
+            if (highlightedLines.contains(row))
                 setBackground(Color.yellow);
             else
                 setBackground(null);
 
-            if (emphasizedLines.contains(new Integer(row)))
+            if (emphasizedLines.contains(row))
                 setForeground(Color.red);
             else
                 setForeground(null);

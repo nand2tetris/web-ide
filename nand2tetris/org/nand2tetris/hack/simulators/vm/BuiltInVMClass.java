@@ -23,11 +23,11 @@ import org.nand2tetris.hack.core.utilities.Definitions;
 /**
  * A BuiltIn VM Class.
  * The base class for all classes which are implemented in java.
- * All methods in decendents of this class represent functions and therefore
+ * All methods in descendants of this class represent functions and therefore
  * should be static.
  */
 public abstract class BuiltInVMClass {
-	private static Hashtable builtInFunctionsRunnerByThread = new Hashtable();
+	private static Hashtable<Thread, BuiltInFunctionsRunner> builtInFunctionsRunnerByThread = new Hashtable<>();
 
 	/* Some definitions regarding the memory. */
     public static final short SCREEN_START_ADDRESS = Definitions.SCREEN_START_ADDRESS;
@@ -137,7 +137,7 @@ public abstract class BuiltInVMClass {
 	 *
 	 * Called by a BuiltInFunctionsRunner to request that all calls from
 	 * built-in functions executed from this thread be forwarded to it.
-	 * This is used instead of instatiating each implementing class as
+	 * This is used instead of instantiating each implementing class as
 	 * needed with a data member of the BuiltInFunctionsRunner because
 	 * logically all implementing classes should implement only static
 	 * methods.

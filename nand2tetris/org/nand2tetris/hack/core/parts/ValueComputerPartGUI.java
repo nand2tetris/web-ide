@@ -45,7 +45,7 @@ public interface ValueComputerPartGUI extends ComputerPartGUI {
     public void highlight(int index);
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight();
 

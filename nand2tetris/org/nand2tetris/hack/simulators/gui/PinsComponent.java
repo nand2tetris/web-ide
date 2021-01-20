@@ -35,6 +35,8 @@ import org.nand2tetris.hack.simulators.hardware.*;
  */
 public class PinsComponent extends JPanel implements PinsGUI, MouseListener, PinValueListener {
 
+    private static final long serialVersionUID = -2727588148974876542L;
+
     // A component which represents the binary value of the pin.
     protected BinaryComponent binary;
 
@@ -51,10 +53,10 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
     protected int dataFormat;
 
     // A vector containing the listeners to this object.
-    private Vector listeners;
+    private Vector<ComputerPartEventListener> listeners;
 
     // A vector containing the error listeners to this object.
-    private Vector errorEventListeners;
+    private Vector<ErrorEventListener> errorEventListeners;
 
     // The scroll pane on which the table is placed.
     protected JScrollPane scrollPane;
@@ -63,7 +65,7 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
     protected int flashIndex = -1;
 
     // A vector containing the index of the rows that should be highlighted.
-    protected Vector highlightIndex;
+    protected Vector<Integer> highlightIndex;
 
     // The location of this component relative to its top level ancestor.
     protected Point topLevelLocation;
@@ -104,9 +106,9 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
 
         pins = new PinInfo[0];
         valueStr = new String[0];
-        listeners = new Vector();
-        errorEventListeners = new Vector();
-        highlightIndex = new Vector();
+        listeners = new Vector<>();
+        errorEventListeners = new Vector<>();
+        highlightIndex = new Vector<>();
         binary = new BinaryComponent();
         pinsTable = new JTable(getTableModel());
         pinsTable.setDefaultRenderer(pinsTable.getColumnClass(0), renderer);
@@ -181,12 +183,12 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
    /**
      * Notifies all the ErrorEventListener on an error in this gui by
      * creating an ErrorEvent (with the error message) and sending it
-     * using the errorOccured method to all the listeners.
+     * using the errorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         ErrorEvent event = new ErrorEvent(this, errorMessage);
         for (int i=0; i<errorEventListeners.size(); i++)
-            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccured(event);
+            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccurred(event);
     }
 
     public void addListener(ComputerPartEventListener listener) {
@@ -244,12 +246,12 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
      * Highlights the value at the given index.
      */
     public void highlight(int index) {
-        highlightIndex.addElement(new Integer(index));
+        highlightIndex.addElement(index);
         repaint();
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         highlightIndex.removeAllElements();
@@ -481,7 +483,9 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
 
      // An inner class representing the model of the breakpoint table.
     class PinsTableModel extends AbstractTableModel {
-        String[] columnNames = {"Name", "Value"};
+
+        private static final long serialVersionUID = 4127212826414667393L;
+        String[] columnNames = { "Name", "Value" };
 
         /**
          * Returns the number of columns.
@@ -553,9 +557,11 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
         }
     }
 
-    // An inner class which implemets the cell renderer of the pins table, giving
+    // An inner class which implements the cell renderer of the pins table, giving
     // the feature of alignment, flashing and highlighting.
     class PinsTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = -6230456040701259023L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

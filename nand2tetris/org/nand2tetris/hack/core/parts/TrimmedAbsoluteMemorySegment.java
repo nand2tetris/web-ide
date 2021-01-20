@@ -17,8 +17,6 @@
 
 package org.nand2tetris.hack.core.parts;
 
-import org.nand2tetris.hack.core.parts.*;
-
 /**
  * An AbsolutePointedMemorySegment in which the pointer is always set to the address just
  * after the last updated address.

@@ -56,7 +56,7 @@ BUILTIN ChipName;
 should appear (where ChipName should be substituted for the name of the chip).
 
 In addition to the HDL file for the chip, each chip should be implemented in a
-seprate class named the same as the chip. The compiled implementation should
+separate class named the same as the chip. The compiled implementation should
 reside in the builtInChips package somewhere in the CLASSPATH (for example
 the compiled counterparts of the aforementioned chip provided with the Nand2Tetris 
 Software Suite are located under the InstallDir/builtInChips directory).
@@ -71,7 +71,7 @@ void reCompute() - called whenever any of the input pins changes
 Required initialization code may be placed in a constructor accepting no
 arguments and any number of data members may be defined.
 
-The code for the chip may access the input and outpu pins via the data members
+The code for the chip may access the input and output pins via the data members
 inputPins and outputPins, respectively.
 
 The value of a b-bit input pin/bus which was declared n-th (starting from zero)
@@ -85,7 +85,7 @@ significant bits are zero) by calling outputPins[n].set(v).
 The Nand2Tetris Software Suite Hardware Simulator Chip Java API also provides support
 for implementing a GUI visualization of the chip (similar to the one
 implemented by the provided ALU, RAM*, ROM32K, ARegister and DRegister chips).
-Implementing chips should extend the Hack.Gates.BuilInGateWithGUI class. See
+Implementing chips should extend the Hack.Gates.BuiltInGateWithGUI class. See
 the implementations of this class (located in
 SimulatorsPackageSource/Hack/Games/BuiltInGateWithGUI.java) and of the
 aforementioned gui-powered chips for examples and information regarding
@@ -150,8 +150,8 @@ package somewhere in the CLASSPATH (for example the compiled classes
 implementing the Jack OS supplied in the Nand2Tetris Software Suite are located
 under the InstallDir/builtInVMCode directory).
 
-A Java static method which implements a VM function may communiate with the
-Virual Machine using any of the following static methods which it inherits from
+A Java static method which implements a VM function may communicate with the
+Virtual Machine using any of the following static methods which it inherits from
 Hack.VMEmulator.BuiltInVMClass:
 short readMemory(int address) - returns the value stored in the VM
                                 memory at the given address (the address
@@ -201,7 +201,7 @@ A function calling any of the aforementioned static methods must be declared
 to throw Hack.VMEmulator.TerminateVMProgramThrowable. An instance of this
 Throwable class will be thrown by any of the aforementioned static methods
 if the user decides to restart the VM program (e.g. via the << button). This
-throwable may be caught by the calling method but must be rethrown.
+throwable may be caught by the calling method but must be re-thrown.
 
 For convenience, the following constants are provided by the
 Hack.VMEmulator.BuiltInVMClass for use by the classes which extend it:

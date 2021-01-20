@@ -20,7 +20,7 @@ package org.nand2tetris.hack.core.controller;
 /**
  * A Hack Application. Creates a controller to control the given given simulator using the
  * given GUI components.
- * The createController method may be overwridden by simulators that inherit the
+ * The createController method may be overwritten by simulators that inherit the
  * HackController.
  */
 public abstract class HackApplication {
@@ -57,6 +57,6 @@ public abstract class HackApplication {
     protected void createController(HackSimulator simulator, ControllerGUI controllerComponent,
                                     String defaultScript)
      throws ScriptException, ControllerException {
-        HackController c = new HackController(controllerComponent, simulator, defaultScript);
+        new HackController(controllerComponent, simulator, defaultScript);
     }
 }

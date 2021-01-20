@@ -27,6 +27,7 @@ import org.nand2tetris.hack.core.controller.Breakpoint;
  * This class represents the window of adding or editing a breakpoint.
  */
 public class BreakpointVariablesWindow extends JFrame {
+    static final long serialVersionUID = 0l;
 
     // Creating labels.
     private JLabel nameLbl = new JLabel();
@@ -37,7 +38,7 @@ public class BreakpointVariablesWindow extends JFrame {
     private JTextField valueTxt = new JTextField();
 
     // Creating the combo box of variables.
-    private JComboBox nameCombo = new JComboBox();
+    private JComboBox<String> nameCombo = new JComboBox<String>();
 
     // Creating the ok and cancel buttons.
     private JButton okButton = new JButton();
@@ -47,8 +48,8 @@ public class BreakpointVariablesWindow extends JFrame {
     private ImageIcon okIcon = new ImageIcon(Utilities.imagesDir + "ok.gif");
     private ImageIcon cancelIcon = new ImageIcon(Utilities.imagesDir + "cancel.gif");
 
-    // A vector conatining the listeners to this component.
-    private Vector listeners;
+    // A vector containing the listeners to this component.
+    private Vector<BreakpointChangedListener> listeners;
 
     // The breakpoint which is being added or changed.
     private Breakpoint breakpoint;
@@ -58,7 +59,7 @@ public class BreakpointVariablesWindow extends JFrame {
      */
     public BreakpointVariablesWindow() {
         super("Breakpoint Variables");
-        listeners = new Vector();
+        listeners = new Vector<>();
         jbInit();
     }
 
@@ -83,8 +84,8 @@ public class BreakpointVariablesWindow extends JFrame {
      */
     public void notifyListeners () {
         BreakpointChangedEvent event = new BreakpointChangedEvent(this,breakpoint);
-        for(int i=0;i<listeners.size();i++) {
-            ((BreakpointChangedListener)listeners.elementAt(i)).breakpointChanged(event);
+        for(int i=0; i<listeners.size(); i++) {
+            (listeners.elementAt(i)).breakpointChanged(event);
         }
     }
 
@@ -112,7 +113,7 @@ public class BreakpointVariablesWindow extends JFrame {
     }
 
     /**
-     * Sets the selected value in the combobox to the given index.
+     * Sets the selected value in the comboBox to the given index.
      */
     public void setNameCombo (int index) {
         nameCombo.setSelectedIndex(index);

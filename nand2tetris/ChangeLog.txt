@@ -68,7 +68,7 @@ Added: Upon a compilation failure on a file, the compilation process does not
        to avoid massive errors upon problems with the subroutine (and not with
        calls).
 
-Added: Upon a compilation error, the generated file is delted. The file is
+Added: Upon a compilation error, the generated file is deleted. The file is
        still generated upon a "link"-style error (error when cross-referencing
        subroutine signatures and calls).
 
@@ -100,7 +100,7 @@ General
 Fixed: .bat/.sh files used to launch the programs now work also when activated
        from a prompt from a different directory. These files also now work
        correctly when there's a file name with spaces in the classpath
-       (like when the JRE on windows was intalled into "Program Files").
+       (like when the JRE on windows was installed into "Program Files").
 
 Fixed: In all simulator/emulators, the while command now behaves as it should.
        Previously the body of the while was ignored which resulted in a
@@ -186,7 +186,7 @@ Fixed: No check was performed that a gate definition was closed (}). This
 Fixed: The binary input component now appears in the correct location with
        the correct number of active bits. Also, double-clicking on another
        input pin while the binary input component resulted in the wrong input
-       being updated - this is now fixed with a new behaviour which has the
+       being updated - this is now fixed with a new behavior which has the
        same feel as the decimal input: clicking on another input pin now closes
        a visible binary input component while double clicking on another
        input pni now opens the binary input component for that pin. Also enter
@@ -253,7 +253,7 @@ Fixed: The cursor is now displayed when expecting input, as described in the
        book.
 
 Fixed: Backspace now wraps from the beginning of a line to the previous,
-       providing a more natural behaviour when the user inputs a string
+       providing a more natural behavior when the user inputs a string
        to the Keyboard.readLine function.
 
 Compiler:
@@ -270,7 +270,7 @@ Added: Error when calling a function or constructor of a known (passed to the
 Added: Error when calling a method of a known class as a function/
        constructor.
 
-Added: Error when calling a non-existant function/method/constructor of
+Added: Error when calling a non-existent function/method/constructor of
        a known class.
 
 Added: Error when declaring two subroutines (of any kinds) of the same name

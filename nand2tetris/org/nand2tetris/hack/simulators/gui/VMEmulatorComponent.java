@@ -30,6 +30,7 @@ import org.nand2tetris.hack.simulators.vm.*;
  */
 public class VMEmulatorComponent extends HackSimulatorComponent implements VMEmulatorGUI {
 
+    private static final long serialVersionUID = -3661884190288349140L;
     // The dimension of this window.
     private static final int WIDTH = 1018;
     private static final int HEIGHT = 611;
@@ -226,7 +227,7 @@ public class VMEmulatorComponent extends HackSimulatorComponent implements VMEmu
         segments.getTempSegment().setMemoryComponent(ram);
         stack.setMemoryComponent(ram);
         workingStack.setMemoryComponent(ram);
-        //registers the segments to listen to the repain event of the ram.
+        //registers the segments to listen to the repin event of the ram.
         ram.addChangeListener(segments.getStaticSegment());
         ram.addChangeListener(segments.getLocalSegment());
         ram.addChangeListener(segments.getArgSegment());

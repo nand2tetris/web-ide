@@ -28,6 +28,8 @@ import org.nand2tetris.hack.simulators.cpu.*;
  */
 public class KeyboardComponent extends JPanel implements KeyboardGUI {
 
+    private static final long serialVersionUID = 3697126156773060307L;
+
     // The icon of the keyboard.
     private ImageIcon keyboardIcon = new ImageIcon(Utilities.imagesDir + "keyboard.gif");
 
@@ -45,7 +47,7 @@ public class KeyboardComponent extends JPanel implements KeyboardGUI {
     }
 
     /**
-     * Displayes the given key name.
+     * Displays the given key name.
      */
     public void setKey(String keyName) {
         keyNameText.setText(keyName);

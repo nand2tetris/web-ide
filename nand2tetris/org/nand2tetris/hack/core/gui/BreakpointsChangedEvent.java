@@ -20,28 +20,31 @@ package org.nand2tetris.hack.core.gui;
 import java.util.EventObject;
 import java.util.Vector;
 
+import org.nand2tetris.hack.core.controller.Breakpoint;
+
 /**
  * An event for notifying a BreakpointsChangedListener on a change in one of the
  * breakpoints.
  */
 public class BreakpointsChangedEvent extends EventObject {
+    private static final long serialVersionUID = -5144929253021412289L;
 
     // The vector of breakpoints
-    private Vector breakpoints = new Vector();
+    private Vector<Breakpoint> breakpoints = new Vector<>();
 
     /**
      * Constructs a new BreakpointsChangedEvent with the given source and vector of breakpoints.
      */
-    public BreakpointsChangedEvent(Object source, Vector breakpoints) {
+    public BreakpointsChangedEvent(Object source, Vector<Breakpoint> breakpoints) {
 
         super(source);
-        this.breakpoints = (Vector)breakpoints.clone();
+        this.breakpoints = new Vector<>(breakpoints);
     }
 
     /**
      * Returns the breakpoints vector
      */
-    public Vector getBreakpoints() {
+    public Vector<Breakpoint> getBreakpoints() {
         return breakpoints;
     }
 }

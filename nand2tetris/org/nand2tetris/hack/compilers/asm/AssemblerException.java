@@ -21,6 +21,7 @@ package org.nand2tetris.hack.compilers.asm;
  * An Exception for errors that occur in the Assembler
  */
 public class AssemblerException extends Exception {
+    private static final long serialVersionUID = 7481248250587322421L;
 
     /**
      * Constructs a new AssemblerException with the given message.

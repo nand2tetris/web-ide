@@ -47,12 +47,12 @@ public class CompositeGateClass extends GateClass {
 
 
     // internal pins info
-    protected Vector internalPinsInfo;
+    protected Vector<PinInfo> internalPinsInfo;
 
     // The list of contained GateClasses (parts)
-    private Vector partsList;
+    private Vector<GateClass> partsList;
 
-    // Array of indice of parts (taken from the parts vector), in a topological order.
+    // Array of indices of parts (taken from the parts vector), in a topological order.
     private int[] partsOrder;
 
     // The set of connections between the gate and its parts
@@ -67,8 +67,8 @@ public class CompositeGateClass extends GateClass {
      throws HDLException {
         super(gateName, inputPinsInfo, outputPinsInfo);
 
-        partsList = new Vector();
-        internalPinsInfo = new Vector();
+        partsList = new Vector<>();
+        internalPinsInfo = new Vector<>();
         connections = new ConnectionSet();
         isInputClocked = new boolean[inputPinsInfo.length];
         isOutputClocked = new boolean[outputPinsInfo.length];
@@ -152,12 +152,9 @@ public class CompositeGateClass extends GateClass {
 
         // check if internal pins have no source
         boolean[] hasSource = new boolean[internalPinsInfo.size()];
-        Iterator connectionIter = connections.iterator();
-        while (connectionIter.hasNext()) {
-            Connection connection = (Connection)connectionIter.next();
+        for (Connection connection: connections)
             if (connection.getType() == Connection.TO_INTERNAL)
                 hasSource[connection.getGatePinNumber()] = true;
-        }
         for (int i = 0; i < hasSource.length; i++)
             if (!hasSource[i])
                 input.HDLError(((PinInfo)internalPinsInfo.elementAt(i)).name +
@@ -306,7 +303,7 @@ public class CompositeGateClass extends GateClass {
         else {
             rightType = getPinType(rightName);
 
-            // check that not sub bus of intenral
+            // check that not sub bus of internal
             if ((rightType == UNKNOWN_PIN_TYPE || rightType == INTERNAL_PIN_TYPE) &&
                 !fullRightName.equals(rightName))
                     input.HDLError(fullRightName + ": sub bus of an internal node may not be used");
@@ -404,21 +401,18 @@ public class CompositeGateClass extends GateClass {
       The nodes in the graph are:
       1. Internal parts, represented with Integer objects containing the part's numbers.
       2. Input, Output, Internal and special nodes, represented with their PinInfo objects.
-      3. One "master part" node that connects to all the inernal parts, represented with the
+      3. One "master part" node that connects to all the internal parts, represented with the
          partsList vector.
       4. One "master output" node that all output nodes connect to, represented with the
          outputPinsInfo array.
       5. One "master input" node that connects to all input nodes, represented with the
          inputPinsInfo array.
-      Edges are not created between inetrnal nodes and clocked part inputs.
+      Edges are not created between internal nodes and clocked part inputs.
     */
     private Graph createConnectionsGraph() {
         Graph graph = new Graph();
-        Iterator connectionIter = connections.iterator();
-
-        while (connectionIter.hasNext()) {
-            Connection connection = (Connection)connectionIter.next();
-            Integer part = new Integer(connection.getPartNumber());
+        for (Connection connection: connections) {
+            Integer part = connection.getPartNumber();
             int gatePinNumber = connection.getGatePinNumber();
 
             switch (connection.getType()) {
@@ -461,7 +455,7 @@ public class CompositeGateClass extends GateClass {
 
         // connect the "master part" node to all the parts.
         for (int i = 0; i < partsList.size(); i++)
-            graph.addEdge(partsList, new Integer(i));
+            graph.addEdge(partsList, i);
 
         // connect all output pins to the "master output" node
         for (int i = 0; i < outputPinsInfo.length; i++)
@@ -548,14 +542,12 @@ public class CompositeGateClass extends GateClass {
 
         // First scan: creates internal Nodes (or SubNodes) and their connections to
         // their source part nodes. Also creates the connections between gate's
-        // input or putput nodes and part's input nodes and between part's output nodes and gate's
+        // input or output nodes and part's input nodes and between part's output nodes and gate's
         // output nodes.
         ConnectionSet internalConnections = new ConnectionSet();
         Node partNode, source, target;
         byte[] gateSubBus, partSubBus;
-        Iterator connectionIter = connections.iterator();
-        while (connectionIter.hasNext()) {
-            Connection connection = (Connection)connectionIter.next();
+        for (Connection connection: connections) {
             gateSubBus = connection.getGateSubBus();
             partSubBus = connection.getPartSubBus();
             partNode = parts[connection.getPartNumber()].getNode(connection.getPartPinName());
@@ -592,10 +584,8 @@ public class CompositeGateClass extends GateClass {
 
         // Second scan: Creates the connections between internal nodes or true node
         // or false node to a part's input nodes.
-        connectionIter = internalConnections.iterator();
         boolean isClockParticipating = false;
-        while (connectionIter.hasNext()) {
-            Connection connection = (Connection)connectionIter.next();
+        for (Connection connection: connections) {
             partNode = parts[connection.getPartNumber()].getNode(connection.getPartPinName());
             partSubBus = connection.getPartSubBus();
             gateSubBus = connection.getGateSubBus();

@@ -23,9 +23,12 @@ package org.nand2tetris.hack.simulators.vm;
  */
 public class TerminateVMProgramThrowable extends Throwable
 {
+
+    private static final long serialVersionUID = 3122905245964901404L;
+
     /**
-     * Constructs a new TerminateVMProgramThrowable with the given message.
-	 * Don't allow builtins (which are outside this package) to construct.
+     * Constructs a new TerminateVMProgramThrowable with the given message. Don't
+     * allow builtins (which are outside this package) to construct.
      */
     TerminateVMProgramThrowable(String message) {
         super(message);

@@ -28,7 +28,7 @@ import org.nand2tetris.hack.core.utilities.*;
 
 /**
  * A Controller for HackSimulators. Executes scripts written in a special scripting language
- * that controlls the features of the simulators.
+ * that controls the features of the simulators.
  * Constructed with a GUI that enables the execution control of the script.
  */
 public class HackController
@@ -52,7 +52,7 @@ public class HackController
     // ANIMATION MODES:
 
     /**
-     * Animation mode: Specifies using static display changes - displays value changes staticaly
+     * Animation mode: Specifies using static display changes - displays value changes statically
      */
     public static final int DISPLAY_CHANGES = 0;
 
@@ -63,7 +63,7 @@ public class HackController
 
     /**
      * Animation mode: Specifies using no display changes.
-     * In this mode, the speed has no meening.
+     * In this mode, the speed has no meaning.
      */
     public static final int NO_DISPLAY_CHANGES = 2;
 
@@ -111,7 +111,7 @@ public class HackController
     // The default dir for loading script files
     private static final String INITIAL_SCRIPT_DIR = "scripts";
 
-    // Minimum and maximum mili-seconds per script command execution
+    // Minimum and maximum milliseconds per script command execution
     private static final int MAX_MS = 2500;
     private static final int MIN_MS = 25;
 
@@ -121,7 +121,7 @@ public class HackController
     // A helper string with spaces
     private static final String SPACES = "                                        ";
 
-    // The contorller's GUI
+    // The controller's GUI
     protected ControllerGUI gui;
 
     // The file of the current script
@@ -146,7 +146,7 @@ public class HackController
     // The program counter
     private int currentCommandIndex;
 
-    // The output desination
+    // The output destination
     private PrintWriter output;
 
     // The comparison source
@@ -159,13 +159,13 @@ public class HackController
     private int repeatCounter;
 
     // The condition of the current while loop.
-    private ScriptCondition whileCondititon;
+    private ScriptCondition whileCondition;
 
     // The current variable printing list
     private VariableFormat[] varList;
 
     // The current breakpoints list
-    private Vector breakpoints;
+    private Vector<Breakpoint> breakpoints;
 
     // The current compared and output lines
     private int compareLinesCounter, outputLinesCounter;
@@ -228,7 +228,7 @@ public class HackController
         animationMode = NO_DISPLAY_CHANGES;
         simulator.setAnimationMode(animationMode);
         simulator.addListener(this);
-        breakpoints = new Vector();
+        breakpoints = new Vector<>();
 
         try {
             loadNewScript(file, false);
@@ -260,7 +260,7 @@ public class HackController
         setNumericFormatTask = new SetNumericFormatTask();
         simulator.addListener(this);
         simulator.addProgramListener(this);
-        breakpoints = new Vector();
+        breakpoints = new Vector<>();
 
         defaultScriptFile = new File(defaultScriptName);
         loadNewScript(defaultScriptFile, false);
@@ -400,7 +400,7 @@ public class HackController
 
             // Check Breakpoints
             for (int i = 0; i < breakpoints.size(); i++) {
-                Breakpoint breakpoint = (Breakpoint)breakpoints.elementAt(i);
+                Breakpoint breakpoint = breakpoints.elementAt(i);
                 String currentValue = simulator.getValue(breakpoint.getVarName());
                 if (currentValue.equals(breakpoint.getValue())) {
                     // if value is equal and the breakpoint wasn't reached before, turn it on
@@ -483,9 +483,9 @@ public class HackController
                 redo = true;
                 break;
             case Command.WHILE_COMMAND:
-                whileCondititon = (ScriptCondition)command.getArg();
+                whileCondition = (ScriptCondition)command.getArg();
                 loopCommandIndex = currentCommandIndex + 1;
-                if (!whileCondititon.compare(simulator)) {
+                if (!whileCondition.compare(simulator)) {
                     // advance till the nearest end while command.
                     for (; script.getCommandAt(currentCommandIndex).getCode() !=
                            Command.END_WHILE_COMMAND; currentCommandIndex++);
@@ -536,7 +536,7 @@ public class HackController
                         currentCommandIndex++;
                 }
                 else if (nextCommand.getCode() == Command.END_WHILE_COMMAND) {
-                    if (whileCondititon.compare(simulator))
+                    if (whileCondition.compare(simulator))
                         currentCommandIndex = loopCommandIndex;
                     else
                         currentCommandIndex++;
@@ -678,7 +678,7 @@ public class HackController
         return true;
     }
 
-    // Ouputs the given line into the output file and compares it to the current
+    // Outputs the given line into the output file and compares it to the current
     // compare file (if exists)
     private void outputAndCompare(String line) throws ControllerException {
         output.println(line);
@@ -814,8 +814,8 @@ public class HackController
     }
 
     // Sets the breakpoints list with the given one.
-    private void setBreakpoints(Vector newBreakpoints) {
-        breakpoints = new Vector();
+    private void setBreakpoints(Vector<Breakpoint> newBreakpoints) {
+        breakpoints = new Vector<>();
 
         // Make sure there's no duplicate breakpoints
         for (int i = 0; i < newBreakpoints.size(); i++) {
@@ -827,7 +827,7 @@ public class HackController
     }
 
     // Returns true if the given breakpoint exists in the given breakpoints vector.
-    private boolean breakpointExists(Vector breakpoints, Breakpoint breakpoint) {
+    private boolean breakpointExists(Vector<Breakpoint> breakpoints, Breakpoint breakpoint) {
         boolean found = false;
         for (int j = 0; j < breakpoints.size() && !found; j++) {
             Breakpoint scannedBreakpoint = (Breakpoint)breakpoints.elementAt(j);
@@ -975,7 +975,7 @@ public class HackController
                     setSpeed(((Integer)event.getData()).intValue());
                     break;
                 case ControllerEvent.BREAKPOINTS_CHANGE:
-                    setBreakpoints((Vector)event.getData());
+                    setBreakpoints((Vector<Breakpoint>)event.getData());
                     break;
                 case ControllerEvent.SCRIPT_CHANGE:
                     File file = (File)event.getData();

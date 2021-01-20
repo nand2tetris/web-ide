@@ -28,7 +28,9 @@ import org.nand2tetris.hack.core.gui.*;
  */
 public class MemorySegmentsComponent extends JPanel {
 
-    // The spllit pane containing static and local.
+    private static final long serialVersionUID = -2541703838222935341L;
+
+    // The split pane containing static and local.
     private JSplitPane segmentsSplitPane1;
 
     // The split pane between arg and the previous split pane.
@@ -111,7 +113,7 @@ public class MemorySegmentsComponent extends JPanel {
     }
 
     /**
-     * Returns the split pane which contains all of the other split peanes.
+     * Returns the split pane which contains all of the other split panes.
      */
     public JSplitPane getSplitPane() {
         return segmentsSplitPane1;

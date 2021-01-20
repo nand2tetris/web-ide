@@ -20,8 +20,9 @@ package org.nand2tetris.hack.core.controller;
 /**
  * An exception for errors with variable definitions.
  */
-public class VariableException extends Exception
-{
+public class VariableException extends Exception {
+    private static final long serialVersionUID = -7720572488472102958L;
+
     /**
      * Constructs a new VariableException with the given message and variable name.
      */

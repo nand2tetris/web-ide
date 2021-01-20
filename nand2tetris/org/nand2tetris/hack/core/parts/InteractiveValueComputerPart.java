@@ -27,7 +27,7 @@ public abstract class InteractiveValueComputerPart extends ValueComputerPart
  implements ComputerPartEventListener, ErrorEventListener {
 
     // Error listeners of hi computer prt
-    private Vector errorListeners;
+    private Vector<ComputerPartErrorEventListener> errorListeners;
 
     // The excepted range of numbers
     private short minValue, maxValue;
@@ -45,7 +45,7 @@ public abstract class InteractiveValueComputerPart extends ValueComputerPart
     public InteractiveValueComputerPart(boolean hasGUI) {
         super(hasGUI);
 
-        errorListeners = new Vector();
+        errorListeners = new Vector<>();
         this.minValue = -32768;
         this.maxValue = 32767;
 
@@ -60,7 +60,7 @@ public abstract class InteractiveValueComputerPart extends ValueComputerPart
     public InteractiveValueComputerPart(boolean hasGUI, short minValue, short maxValue) {
         super(hasGUI);
 
-        errorListeners = new Vector();
+        errorListeners = new Vector<>();
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
@@ -81,15 +81,15 @@ public abstract class InteractiveValueComputerPart extends ValueComputerPart
     }
 
     /**
-     * Notifies all the ComputerPartErrorEventListeners on an error that occured in the
+     * Notifies all the ComputerPartErrorEventListeners on an error that occurred in the
      * computer part by creating a ComputerPartErrorEvent (with the error message)
-     * and sending it using the computerPartErrorOccured method to all the listeners.
+     * and sending it using the computerPartErrorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         ComputerPartErrorEvent event = new ComputerPartErrorEvent(this, errorMessage);
 
         for (int i = 0; i < errorListeners.size(); i++)
-            ((ComputerPartErrorEventListener)errorListeners.elementAt(i)).computerPartErrorOccured(event);
+            ((ComputerPartErrorEventListener)errorListeners.elementAt(i)).computerPartErrorOccurred(event);
     }
 
     /**
@@ -99,14 +99,14 @@ public abstract class InteractiveValueComputerPart extends ValueComputerPart
         ComputerPartErrorEvent event = new ComputerPartErrorEvent(this, null);
 
         for (int i = 0; i < errorListeners.size(); i++)
-            ((ComputerPartErrorEventListener)errorListeners.elementAt(i)).computerPartErrorOccured(event);
+            ((ComputerPartErrorEventListener)errorListeners.elementAt(i)).computerPartErrorOccurred(event);
     }
 
     /**
-     * Called when an error occured in the GUI.
+     * Called when an error occurred in the GUI.
      * The event contains the source object and the error message.
      */
-    public void errorOccured(ErrorEvent event) {
+    public void errorOccurred(ErrorEvent event) {
         notifyErrorListeners(event.getErrorMessage());
     }
 

@@ -25,13 +25,11 @@ import org.nand2tetris.hack.simulators.gates.*;
  * Represents a collection of pins of a specific part.
  */
 public class PartPins extends ValueComputerPart {
-
-
     // The gui
     private PartPinsGUI gui;
 
     // The part pins.
-    private Vector partPins;
+    private Vector<PartPinInfo> partPins;
 
     // The current gate
     private Gate gate;
@@ -40,7 +38,7 @@ public class PartPins extends ValueComputerPart {
     private GateClass partGateClass;
 
     // mapping from the pins' nodes to their gui adapters.
-    private Hashtable nodes;
+    private Hashtable<Node, Node> nodes;
 
     /**
      * Constructs a new Part Pins with the given gui.
@@ -48,8 +46,8 @@ public class PartPins extends ValueComputerPart {
     public PartPins(PartPinsGUI gui) {
         super(gui != null);
         this.gui = gui;
-        partPins = new Vector();
-        nodes = new Hashtable();
+        partPins = new Vector<>();
+        nodes = new Hashtable<>();
         clearGate();
     }
 
@@ -65,7 +63,7 @@ public class PartPins extends ValueComputerPart {
         partGateClass = null;
 
         // remove all node gui adapters
-        Enumeration nodeEnum = nodes.keys();
+        Enumeration<Node> nodeEnum = nodes.keys();
         while (nodeEnum.hasMoreElements()) {
             Node node = (Node)nodeEnum.nextElement();
             Node nodeAdapter = (Node)nodes.get(node);

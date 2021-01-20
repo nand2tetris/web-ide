@@ -42,10 +42,11 @@ public class HardwareSimulatorMain {
             HardwareSimulatorGUI simulatorGUI = new HardwareSimulatorComponent();
             HardwareSimulatorControllerGUI controllerGUI = new HardwareSimulatorControllerComponent();
 
-            HardwareSimulatorApplication application =
-                new HardwareSimulatorApplication(controllerGUI, simulatorGUI,
-                                                 "bin/scripts/defaultHW.txt",
-                                                 "bin/help/hwUsage.html", "bin/help/hwAbout.html");
+            new HardwareSimulatorApplication(controllerGUI,
+                                             simulatorGUI,
+                                             "bin/scripts/defaultHW.txt",
+                                             "bin/help/hwUsage.html",
+                                             "bin/help/hwAbout.html");
         }
         else
             new HackController(new HardwareSimulator(), args[0]);

@@ -28,6 +28,7 @@ import org.nand2tetris.hack.simulators.hardware.*;
  * This class represents the gui of a part pin.
  */
 public class PartPinsComponent extends PinsComponent implements PartPinsGUI {
+    private static final long serialVersionUID = 5338008128557088667L;
 
     // An array containing the info of the part pins.
     private PartPinInfo[] partPins;
@@ -78,6 +79,13 @@ public class PartPinsComponent extends PinsComponent implements PartPinsGUI {
         isEnabled = false;
     }
 
+    /**
+     * Returns whether users are allowed to input into the source.
+     */
+    public boolean getUserInputEnabled() {
+        return isEnabled;
+    }
+
 
     /**
      * Returns the index of the values column.
@@ -122,7 +130,7 @@ public class PartPinsComponent extends PinsComponent implements PartPinsGUI {
     /**
      * Sets the pins list's contents with the given vector of PartPinInfo objects.
      */
-    public void setContents(Vector newPins) {
+    public void setContents(Vector<PartPinInfo> newPins) {
         partPins = new PartPinInfo[newPins.size()];
         valuesStr = new String[newPins.size()];
         newPins.toArray(partPins);
@@ -178,7 +186,8 @@ public class PartPinsComponent extends PinsComponent implements PartPinsGUI {
     // An inner class representing the model of the breakpoint table.
     class PartPinsTableModel extends AbstractTableModel {
 
-        String[] columnNames = {"Part pin", "Gate pin", "Value"};
+        private static final long serialVersionUID = -6502385266251938986L;
+        String[] columnNames = { "Part pin", "Gate pin", "Value" };
 
         /**
          * Returns the number of columns.
@@ -245,9 +254,11 @@ public class PartPinsComponent extends PinsComponent implements PartPinsGUI {
         }
     }
 
-    // An inner class which implemets the cell renderer of the pins table, giving
+    // An inner class which implements the cell renderer of the pins table, giving
     // the feature of alignment, flashing and highlighting.
     class PartPinsTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = -4706711296781629749L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

@@ -19,6 +19,8 @@ package org.nand2tetris.hack.core.translators;
 
 public class HackTranslatorException extends Exception {
 
+    private static final long serialVersionUID = -5148026985941540721L;
+
     /**
      * Constructs a new HackTranslatorException with the given message.
      */

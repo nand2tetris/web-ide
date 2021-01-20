@@ -26,7 +26,7 @@ import org.nand2tetris.hack.core.parts.*;
 public class CallStack extends ComputerPart {
 
     // the vector of function names.
-    private Vector names;
+    private Vector<String> names;
 
     // the stack gui
     private CallStackGUI gui;
@@ -36,7 +36,7 @@ public class CallStack extends ComputerPart {
      */
     public CallStack(CallStackGUI gui) {
         super(gui != null);
-        names = new Vector();
+        names = new Vector<>();
         this.gui = gui;
     }
 

@@ -30,6 +30,7 @@ import org.nand2tetris.hack.simulators.hardware.*;
  */
 public class HardwareSimulatorComponent extends HackSimulatorComponent implements HardwareSimulatorGUI, GatesPanelGUI {
 
+    private static final long serialVersionUID = -4953860861319565655L;
     // The dimension of this window.
     private static final int WIDTH = 1018;
     private static final int HEIGHT = 611;

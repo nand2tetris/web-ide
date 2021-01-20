@@ -29,6 +29,7 @@ import org.nand2tetris.hack.simulators.cpu.*;
  */
 public class ALUComponent extends JPanel implements ALUGUI{
 
+    private static final long serialVersionUID = -5709977175338487347L;
     // location constants
     private final static int START_LOCATION_ZERO_X = 7;
     private final static int START_LOCATION_ZERO_Y = 39;
@@ -119,7 +120,7 @@ public class ALUComponent extends JPanel implements ALUGUI{
     }
 
     /**
-     * Enabling and diabling user inputs. those methods aren't implemented
+     * Enabling and disabling user inputs. those methods aren't implemented
      * because in the ALU the text fields are always disabled.
      */
     public void disableUserInput() {}
@@ -187,7 +188,7 @@ public class ALUComponent extends JPanel implements ALUGUI{
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         location0.setDisabledTextColor(Color.black);

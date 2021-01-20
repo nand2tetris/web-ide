@@ -28,5 +28,5 @@ public interface CallStackGUI extends ComputerPartGUI {
     /**
      * Sets the stack with the given vector of method names.
      */
-    public void setContents(Vector names);
+    public void setContents(Vector<String> names);
 }

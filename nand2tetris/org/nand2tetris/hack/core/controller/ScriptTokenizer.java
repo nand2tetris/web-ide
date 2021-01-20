@@ -31,22 +31,22 @@ public class ScriptTokenizer {
     /**
      * Keyword script token type
      */
-    public static final int TYPE_KEYWORD		= 1;
+    public static final int TYPE_KEYWORD = 1;
 
     /**
      * Symbol script token type
      */
-    public static final int TYPE_SYMBOL			= 2;
+    public static final int TYPE_SYMBOL = 2;
 
     /**
      * Identifier script token type
      */
-    public static final int TYPE_IDENTIFIER		= 3;
+    public static final int TYPE_IDENTIFIER = 3;
 
     /**
      * Int const script token type
      */
-    public static final int TYPE_INT_CONST		= 4;
+    public static final int TYPE_INT_CONST = 4;
 
 
     // Keywords of the scripting language
@@ -54,61 +54,61 @@ public class ScriptTokenizer {
     /**
      * output-file script keyword
      */
-    public static final int KW_OUTPUT_FILE		 = 1;
+    public static final int KW_OUTPUT_FILE = 1;
 
     /**
      * compare-to script keyword
      */
-    public static final int KW_COMPARE_TO		 = 2;
+    public static final int KW_COMPARE_TO = 2;
 
     /**
      * output-list script keyword
      */
-    public static final int KW_OUTPUT_LIST		 = 3;
+    public static final int KW_OUTPUT_LIST = 3;
 
     /**
      * output script keyword
      */
-    public static final int KW_OUTPUT			 = 4;
+    public static final int KW_OUTPUT = 4;
 
     /**
      * breakpoint script keyword
      */
-    public static final int KW_BREAKPOINT		 = 5;
+    public static final int KW_BREAKPOINT = 5;
 
     /**
      * clear-breakpoints script keyword
      */
-    public static final int KW_CLEAR_BREAKPOINTS        = 6;
+    public static final int KW_CLEAR_BREAKPOINTS = 6;
 
     /**
      * repeat script keyword
      */
-    public static final int KW_REPEAT			 = 7;
+    public static final int KW_REPEAT = 7;
 
     /**
      * while script keyword
      */
-    public static final int KW_WHILE			 = 8;
+    public static final int KW_WHILE = 8;
 
     /**
      * echo script keyword
      */
-    public static final int KW_ECHO			 = 9;
+    public static final int KW_ECHO = 9;
 
     /**
      * clear-echo script keyword
      */
-    public static final int KW_CLEAR_ECHO	         = 10;
+    public static final int KW_CLEAR_ECHO = 10;
 
     // The parser
     private StreamTokenizer parser;
 
     // Hashtable containing the keywords of the language
-    private Hashtable keywords;
+    private Hashtable<String, Integer> keywords;
 
     // Hashtable containing the symbols of the language
-    private Hashtable symbols;
+    private Hashtable<String, String> symbols;
 
     // The type of the current token
     private int tokenType;
@@ -255,7 +255,7 @@ public class ScriptTokenizer {
      * Returns if there are more tokens in the stream
      */
     public boolean hasMoreTokens() {
-        return (parser.ttype != parser.TT_EOF);
+        return (parser.ttype != StreamTokenizer.TT_EOF);
     }
 
     /**
@@ -267,29 +267,29 @@ public class ScriptTokenizer {
 
     // Initializes the keywords hashtable
     private void initKeywords() {
-        keywords = new Hashtable();
-        keywords.put("output-file",new Integer(KW_OUTPUT_FILE));
-        keywords.put("compare-to",new Integer(KW_COMPARE_TO));
-        keywords.put("output-list",new Integer(KW_OUTPUT_LIST));
-        keywords.put("output",new Integer(KW_OUTPUT));
-        keywords.put("echo",new Integer(KW_ECHO));
-        keywords.put("clear-echo",new Integer(KW_CLEAR_ECHO));
-        keywords.put("breakpoint",new Integer(KW_BREAKPOINT));
-        keywords.put("clear-breakpoints",new Integer(KW_CLEAR_BREAKPOINTS));
-        keywords.put("repeat",new Integer(KW_REPEAT));
-        keywords.put("while",new Integer(KW_WHILE));
+        keywords = new Hashtable<>();
+        keywords.put("output-file", KW_OUTPUT_FILE);
+        keywords.put("compare-to", KW_COMPARE_TO);
+        keywords.put("output-list", KW_OUTPUT_LIST);
+        keywords.put("output", KW_OUTPUT);
+        keywords.put("echo", KW_ECHO);
+        keywords.put("clear-echo", KW_CLEAR_ECHO);
+        keywords.put("breakpoint", KW_BREAKPOINT);
+        keywords.put("clear-breakpoints", KW_CLEAR_BREAKPOINTS);
+        keywords.put("repeat", KW_REPEAT);
+        keywords.put("while", KW_WHILE);
     }
 
     // Initializes the symbols hashtable
     private void initSymbols() {
-        symbols = new Hashtable();
-        symbols.put("{","{");
-        symbols.put("}","}");
-        symbols.put(",",",");
-        symbols.put(";",";");
-        symbols.put("!","!");
-        symbols.put("=","=");
-        symbols.put(">",">");
-        symbols.put("<","<");
+        symbols = new Hashtable<>();
+        symbols.put("{", "{");
+        symbols.put("}", "}");
+        symbols.put(", ",",");
+        symbols.put(";", ";");
+        symbols.put("!", "!");
+        symbols.put("=", "=");
+        symbols.put(">", ">");
+        symbols.put("<", "<");
     }
 }

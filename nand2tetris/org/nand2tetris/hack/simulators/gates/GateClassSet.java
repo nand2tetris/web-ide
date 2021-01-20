@@ -22,7 +22,9 @@ import java.util.*;
 /**
  * A set of GateClasses.
  */
-public class GateClassSet extends HashSet {
+public class GateClassSet extends HashSet<GateClass> {
+
+    private static final long serialVersionUID = 5985295866329133482L;
 
     /**
      * Creates a new GateClassSet.

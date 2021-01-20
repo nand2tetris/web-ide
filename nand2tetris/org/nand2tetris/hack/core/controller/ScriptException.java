@@ -20,10 +20,12 @@ package org.nand2tetris.hack.core.controller;
 /**
  * An exception for errors that occurs in the script.
  */
-public class ScriptException extends Exception
-{
+public class ScriptException extends Exception {
+    private static final long serialVersionUID = 4430086779990757954L;
+
     /**
-     * Constructs a new ScriptException with the given message, script name and Line number.
+     * Constructs a new ScriptException with the given message, script name and Line
+     * number.
      */
     public ScriptException(String message, String scriptName, int lineNumber) {
         super("In script " + scriptName + ", Line " + lineNumber + ", " + message);

@@ -24,10 +24,12 @@ import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 
 /**
- * This class repersents the GUI of the component which allows the user to load
+ * This class represents the GUI of the component which allows the user to load
  * a certain file.
  */
 public class FileChooserWindow extends JFrame implements EnterPressedListener {
+
+    private static final long serialVersionUID = -2750410181944752953L;
 
     // Creating the file chooser component.
     private ViewableFileChooserComponent fileChooser;
@@ -41,13 +43,13 @@ public class FileChooserWindow extends JFrame implements EnterPressedListener {
     private ImageIcon cancelIcon = new ImageIcon(Utilities.imagesDir + "cancel.gif");
 
     // the listeners to this component.
-    private Vector listeners;
+    private Vector<FilesTypeListener> listeners;
 
     /**
      * Constructs a new FilesChooserWindow.
      */
     public FileChooserWindow(FileFilter filter) {
-        listeners = new Vector();
+        listeners = new Vector<>();
         fileChooser = new ViewableFileChooserComponent();
         fileChooser.setFilter(filter);
 
@@ -90,7 +92,7 @@ public class FileChooserWindow extends JFrame implements EnterPressedListener {
     }
 
     /**
-     * Returns the textfield.
+     * Returns the text field.
      */
     public JTextField getTextField() {
         return fileChooser.getTextField();

@@ -26,6 +26,8 @@ import javax.swing.*;
  */
 public class FileContentWindow extends JFrame {
 
+    private static final long serialVersionUID = -2940171245782925842L;
+
     // The text area on which the content of the file is shown.
     private JTextArea fileContent = new JTextArea();
 
@@ -61,17 +63,17 @@ public class FileContentWindow extends JFrame {
      * Sets the content of this window.
      */
     public void setContent(File fileName) {
-	if (loadAnyway || !fileName.equals(displayedFileName)) {
+        if (loadAnyway || !fileName.getName().equals(displayedFileName)) {
             displayedFileName = fileName.getAbsolutePath();
             fileContent.setText("");
             try {
-		reader = new BufferedReader(new FileReader(fileName));
-		String line;
-		while((line = reader.readLine()) != null) {
+                reader = new BufferedReader(new FileReader(fileName));
+                String line;
+                while((line = reader.readLine()) != null) {
                     fileContent.append(line);
                     fileContent.append("\n");
-		}
-		reader.close();
+                }
+                reader.close();
             } catch (IOException ioe) {}
         }
         fileContent.select(0,0);

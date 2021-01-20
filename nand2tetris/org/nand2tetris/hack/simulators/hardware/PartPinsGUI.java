@@ -28,7 +28,7 @@ public interface PartPinsGUI extends PinsGUI {
     /**
      * Sets the pins list's contents with the given Vector of PartPinInfo objects.
      */
-    public void setContents(Vector pins);
+    public void setContents(Vector<PartPinInfo> pins);
 
     /**
      * Sets the name of the part with the given name.

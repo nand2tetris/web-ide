@@ -52,14 +52,14 @@ public abstract class Gate {
     protected boolean isDirty;
 
     // A list of listeners to the isDirty property.
-    private Vector dirtyGateListeners;
+    private Vector<DirtyGateListener> dirtyGateListeners;
 
     /**
      * Adds the given listener as a listener to the isDirty property.
      */
     public void addDirtyGateListener(DirtyGateListener listener) {
         if (dirtyGateListeners == null)
-            dirtyGateListeners = new Vector(1, 1);
+            dirtyGateListeners = new Vector<>(1, 1);
 
         dirtyGateListeners.add(listener);
     }

@@ -17,7 +17,6 @@
 
 package org.nand2tetris.hack.builtin.vm;
 
-import org.nand2tetris.hack.simulators.vm.BuiltInVMClass;
 import org.nand2tetris.hack.simulators.vm.TerminateVMProgramThrowable;
 
 /**
@@ -138,7 +137,6 @@ public class Screen extends JackOSClass {
         int address = (y1 * (SCREEN_WIDTH>>4)) + x1Word;
         int wordsDiff = x2Word - x1Word;
 		if (wordsDiff == 0) {
-			int mask = lastWordMask&firstWordMask;
 			for (;y1<=y2;++y1,address+=(SCREEN_WIDTH>>4)) {
 				updateLocation(address, lastWordMask&firstWordMask);
 			}

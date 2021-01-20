@@ -132,27 +132,27 @@ public class Definitions {
     // pointers addresses
 
     /**
-     * The address of the SP regsiter
+     * The address of the SP register
      */
     public static final short SP_ADDRESS = 0;
 
     /**
-     * The address of the LOCAL regsiter
+     * The address of the LOCAL register
      */
     public static final short LOCAL_POINTER_ADDRESS = 1;
 
     /**
-     * The address of the ARG regsiter
+     * The address of the ARG register
      */
     public static final short ARG_POINTER_ADDRESS = 2;
 
     /**
-     * The address of the THIS regsiter
+     * The address of the THIS register
      */
     public static final short THIS_POINTER_ADDRESS = 3;
 
     /**
-     * The address of the THAT regsiter
+     * The address of the THAT register
      */
     public static final short THAT_POINTER_ADDRESS = 4;
 
@@ -253,7 +253,7 @@ public class Definitions {
     public final static String SCREEN_NAME = "SCREEN";
 
     /**
-     * The name of the keybaord assembly symbol
+     * The name of the keyboard assembly symbol
      */
     public final static String KEYBOARD_NAME = "KBD";
 
@@ -268,7 +268,7 @@ public class Definitions {
     public final static String LOCAL_POINTER_NAME = "LCL";
 
     /**
-     * The name of the argumet register assembly symbol
+     * The name of the argument register assembly symbol
      */
     public final static String ARG_POINTER_NAME = "ARG";
 
@@ -393,7 +393,7 @@ public class Definitions {
     private static Definitions instance;
 
     // the translation table from pointer names to addresses
-    private Hashtable addresses;
+    private Hashtable<String, Short> addresses;
 
     // translation table for action key codes
     private short[] actionKeyCodes;
@@ -449,8 +449,8 @@ public class Definitions {
     /**
      * Returns the translation table from pointer names to addresses.
      */
-    public Hashtable getAddressesTable() {
-        return (Hashtable)addresses.clone();
+    public Hashtable<String, Short> getAddressesTable() {
+        return new Hashtable<>(addresses);
     }
 
     /**
@@ -485,39 +485,39 @@ public class Definitions {
      * Returns the key name from the given key event.
      */
     public String getKeyName(KeyEvent e) {
-        String modifiers = e.getKeyModifiersText(e.getModifiers());
+        String modifiers = KeyEvent.getKeyModifiersText(e.getModifiers());
         String result = modifiers + (modifiers.length() > 0 ? "+" : "")
-                        + e.getKeyText(e.getKeyCode());
+                        + KeyEvent.getKeyText(e.getKeyCode());
 
         return result;
     }
 
     // initializes address translation table
     private void initAddresses() {
-        addresses = new Hashtable();
-        addresses.put(SP_NAME,new Short(SP_ADDRESS));
-        addresses.put(LOCAL_POINTER_NAME,new Short(LOCAL_POINTER_ADDRESS));
-        addresses.put(ARG_POINTER_NAME,new Short(ARG_POINTER_ADDRESS));
-        addresses.put(THIS_POINTER_NAME,new Short(THIS_POINTER_ADDRESS));
-        addresses.put(THAT_POINTER_NAME,new Short(THAT_POINTER_ADDRESS));
-        addresses.put(R0_NAME,new Short(R0_ADDRESS));
-        addresses.put(R1_NAME,new Short(R1_ADDRESS));
-        addresses.put(R2_NAME,new Short(R2_ADDRESS));
-        addresses.put(R3_NAME,new Short(R3_ADDRESS));
-        addresses.put(R4_NAME,new Short(R4_ADDRESS));
-        addresses.put(R5_NAME,new Short(R5_ADDRESS));
-        addresses.put(R6_NAME,new Short(R6_ADDRESS));
-        addresses.put(R7_NAME,new Short(R7_ADDRESS));
-        addresses.put(R8_NAME,new Short(R8_ADDRESS));
-        addresses.put(R9_NAME,new Short(R9_ADDRESS));
-        addresses.put(R10_NAME,new Short(R10_ADDRESS));
-        addresses.put(R11_NAME,new Short(R11_ADDRESS));
-        addresses.put(R12_NAME,new Short(R12_ADDRESS));
-        addresses.put(R13_NAME,new Short(R13_ADDRESS));
-        addresses.put(R14_NAME,new Short(R14_ADDRESS));
-        addresses.put(R15_NAME,new Short(R15_ADDRESS));
-        addresses.put(SCREEN_NAME,new Short(SCREEN_START_ADDRESS));
-        addresses.put(KEYBOARD_NAME,new Short(KEYBOARD_ADDRESS));
+        addresses = new Hashtable<>();
+        addresses.put(SP_NAME,SP_ADDRESS);
+        addresses.put(LOCAL_POINTER_NAME,LOCAL_POINTER_ADDRESS);
+        addresses.put(ARG_POINTER_NAME,ARG_POINTER_ADDRESS);
+        addresses.put(THIS_POINTER_NAME,THIS_POINTER_ADDRESS);
+        addresses.put(THAT_POINTER_NAME,THAT_POINTER_ADDRESS);
+        addresses.put(R0_NAME,R0_ADDRESS);
+        addresses.put(R1_NAME,R1_ADDRESS);
+        addresses.put(R2_NAME,R2_ADDRESS);
+        addresses.put(R3_NAME,R3_ADDRESS);
+        addresses.put(R4_NAME,R4_ADDRESS);
+        addresses.put(R5_NAME,R5_ADDRESS);
+        addresses.put(R6_NAME,R6_ADDRESS);
+        addresses.put(R7_NAME,R7_ADDRESS);
+        addresses.put(R8_NAME,R8_ADDRESS);
+        addresses.put(R9_NAME,R9_ADDRESS);
+        addresses.put(R10_NAME,R10_ADDRESS);
+        addresses.put(R11_NAME,R11_ADDRESS);
+        addresses.put(R12_NAME,R12_ADDRESS);
+        addresses.put(R13_NAME,R13_ADDRESS);
+        addresses.put(R14_NAME,R14_ADDRESS);
+        addresses.put(R15_NAME,R15_ADDRESS);
+        addresses.put(SCREEN_NAME,SCREEN_START_ADDRESS);
+        addresses.put(KEYBOARD_NAME,KEYBOARD_ADDRESS);
     }
 
     // prepare map of action keys from java codes to jack codes

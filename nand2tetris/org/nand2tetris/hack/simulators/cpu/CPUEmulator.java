@@ -37,7 +37,7 @@ import org.nand2tetris.hack.core.utilities.*;
  * load <HACK file name> - loads the given file into the ROM
  * TickTock - advances the clock by one time unit (executes one instruction)
  */
-public class CPUEmulator extends HackSimulator implements ComputerPartErrorEventListener {
+public class CPUEmulator extends HackSimulator {
 
 
     // Variables
@@ -235,7 +235,7 @@ public class CPUEmulator extends HackSimulator implements ComputerPartErrorEvent
 
         // hide gui highlights
         if (animationMode != HackController.NO_DISPLAY_CHANGES)
-            hideHighlightes();
+            hideHighlights();
 
         // execute the appropriate command
         if (command[0].equals(COMMAND_TICKTOCK)) {
@@ -265,7 +265,7 @@ public class CPUEmulator extends HackSimulator implements ComputerPartErrorEvent
     }
 
     // Hides all highlights in GUIs.
-    private void hideHighlightes() {
+    private void hideHighlights() {
         cpu.getRAM().hideHighlight();
         cpu.getROM().hideHighlight();
         cpu.getA().hideHighlight();
@@ -403,10 +403,10 @@ public class CPUEmulator extends HackSimulator implements ComputerPartErrorEvent
     }
 
     /**
-     * Called when an error occured in a computer part.
+     * Called when an error occurred in a computer part.
      * The event contains the source computer part and the error message.
      */
-    public void computerPartErrorOccured(ComputerPartErrorEvent event) {
+    public void computerPartErrorOccurred(ComputerPartErrorEvent event) {
         displayMessage(event.getErrorMessage(), true);
     }
 

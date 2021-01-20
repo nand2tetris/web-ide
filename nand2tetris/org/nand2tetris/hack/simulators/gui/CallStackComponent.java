@@ -30,11 +30,13 @@ import org.nand2tetris.hack.simulators.vm.CallStackGUI;
  */
 public class CallStackComponent extends JPanel implements CallStackGUI {
 
+    private static final long serialVersionUID = 8506628253435215268L;
+
     // Default number of visible rows
     protected static final int DEFAULT_VISIBLE_ROWS = 10;
 
     // The vector containing the method names of this call stack.
-    private Vector methodNames;
+    private Vector<String> methodNames;
 
     // The table representing this callStack.
     private JTable callStackTable;
@@ -52,7 +54,7 @@ public class CallStackComponent extends JPanel implements CallStackGUI {
      * Constructs a new CallStackComponent.
      */
     public CallStackComponent() {
-        methodNames = new Vector();
+        methodNames = new Vector<>();
         model = new CallStackTableModel();
         callStackTable = new JTable(model);
         jbInit();
@@ -62,8 +64,8 @@ public class CallStackComponent extends JPanel implements CallStackGUI {
     /**
      * Sets the call stack with the given vector of method names.
      */
-    public void setContents(Vector newMethodNames) {
-        methodNames = (Vector)newMethodNames.clone();
+    public void setContents(Vector<String> newMethodNames) {
+        methodNames = new Vector<>(newMethodNames);
         callStackTable.revalidate();
 
         Rectangle r = callStackTable.getCellRect(newMethodNames.size() - 1, 0, true);
@@ -146,6 +148,8 @@ public class CallStackComponent extends JPanel implements CallStackGUI {
     // An inner class representing the model of the CallStack table.
     class CallStackTableModel extends AbstractTableModel {
 
+        private static final long serialVersionUID = -3074343684420576377L;
+
         /**
          * Returns the number of columns.
          */
@@ -187,6 +191,8 @@ public class CallStackComponent extends JPanel implements CallStackGUI {
      * The Cell Renderer for the call stack's table.
      */
     public class callStackTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = 8975911503934854649L;
 
         /**
          * Returns the cell renderer component.

@@ -18,7 +18,6 @@
 package org.nand2tetris.hack.core.parts;
 
 import java.awt.*;
-import org.nand2tetris.hack.core.parts.*;
 
 /**
  * An interface for the GUI of the bus.
@@ -26,7 +25,7 @@ import org.nand2tetris.hack.core.parts.*;
 public interface BusGUI extends ComputerPartGUI {
 
     /**
-     * Moves the given value from the source coordinates to the traget coordinates.
+     * Moves the given value from the source coordinates to the target coordinates.
      */
     public void move(Point sourceCoordinates, Point targetCoordinates, String value);
 

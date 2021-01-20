@@ -28,18 +28,19 @@ import org.nand2tetris.hack.core.controller.Breakpoint;
  * This class represents the gui of a breakpoint panel.
  */
 public class BreakpointWindow extends JFrame implements MouseListener, BreakpointChangedListener {
+    private static final long serialVersionUID = 7013699237426922397L;
 
     // The table of breakpoints.
     private JTable breakpointTable;
 
     // The vector of breakpoints.
-    private Vector breakpoints;
+    private Vector<Breakpoint> breakpoints;
 
     // The model of this table.
     private BreakpointTableModel model;
 
     // A vector containing the listeners to this object.
-    private Vector listeners;
+    private Vector<BreakpointsChangedListener> listeners;
 
     // The layout of this component.
     private FlowLayout flowLayout = new FlowLayout();
@@ -68,11 +69,11 @@ public class BreakpointWindow extends JFrame implements MouseListener, Breakpoin
      */
     public BreakpointWindow() {
         super("Breakpoint Panel");
-        breakpoints = new Vector();
+        breakpoints = new Vector<>();
         model = new BreakpointTableModel();
         breakpointTable = new JTable(model);
         breakpointTable.setDefaultRenderer(breakpointTable.getColumnClass(0), coloredRenderer);
-        listeners = new Vector();
+        listeners = new Vector<>();
         setResizable(false);
 
         jbInit();
@@ -81,8 +82,8 @@ public class BreakpointWindow extends JFrame implements MouseListener, Breakpoin
     /**
      * Sets the breakpoints list with the given one.
      */
-    public void setBreakpoints (Vector breakpoints) {
-        this.breakpoints = (Vector)breakpoints.clone();
+    public void setBreakpoints (Vector<Breakpoint> breakpoints) {
+        this.breakpoints = new Vector<>(breakpoints);
         breakpointTable.revalidate();
     }
 
@@ -115,7 +116,7 @@ public class BreakpointWindow extends JFrame implements MouseListener, Breakpoin
     public void notifyListeners () {
         BreakpointsChangedEvent event = new BreakpointsChangedEvent(this,breakpoints);
         for(int i=0;i<listeners.size();i++) {
-            ((BreakpointsChangedListener)listeners.elementAt(i)).breakpointsChanged(event);
+            listeners.elementAt(i).breakpointsChanged(event);
         }
     }
 
@@ -182,7 +183,6 @@ public class BreakpointWindow extends JFrame implements MouseListener, Breakpoin
         this.getContentPane().setLayout(flowLayout);
         breakpointTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         breakpointTable.addMouseListener(this);
-        ListSelectionModel rowSM = breakpointTable.getSelectionModel();
         JScrollPane scrollPane = new JScrollPane(breakpointTable);
         scrollPane.setPreferredSize(new Dimension(190, 330));
         addButton.setPreferredSize(new Dimension(35, 25));
@@ -250,7 +250,9 @@ public class BreakpointWindow extends JFrame implements MouseListener, Breakpoin
 
     // An inner class representing the model of the breakpoint table.
     class BreakpointTableModel extends AbstractTableModel {
-        String[] columnNames = {"Variable Name", "Value"};
+        private static final long serialVersionUID = 596216860989072243L;
+
+        String[] columnNames = { "Variable Name", "Value" };
 
         /**
          * Returns the number of columns.
@@ -304,6 +306,7 @@ public class BreakpointWindow extends JFrame implements MouseListener, Breakpoin
     // An inner class which implements the cell renderer of the breakpoint table, giving
     // the feature of coloring the background of a specific cell.
     class ColoredTableCellRenderer extends DefaultTableCellRenderer {
+        private static final long serialVersionUID = -1053719655912392559L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

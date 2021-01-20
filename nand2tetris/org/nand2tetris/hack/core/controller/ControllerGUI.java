@@ -117,7 +117,7 @@ public interface ControllerGUI {
     /**
      * Sets the breakpoints list with the given one.
      */
-    public void setBreakpoints(Vector breakpoints);
+    public void setBreakpoints(Vector<Breakpoint> breakpoints);
 
     /**
      * Sets the list of recognized variables with the given one.
@@ -125,7 +125,7 @@ public interface ControllerGUI {
     public void setVariables(String[] vars);
 
     /**
-     * Sets the speed (int code, between 1 and HackController.NUMBER_OF_SPEED_UNTIS)
+     * Sets the speed (int code, between 1 and HackController.NUMBER_OF_SPEED_UNITS)
      */
     public void setSpeed(int speed);
 

@@ -29,6 +29,8 @@ import org.nand2tetris.hack.core.gui.*;
  */
 public class SearchProgramWindow extends JFrame {
 
+    private static final long serialVersionUID = -1136520701275918580L;
+
     // creating the label of this window
     private JLabel instructionLbl = new JLabel();
 

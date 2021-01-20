@@ -33,11 +33,13 @@ import org.nand2tetris.hack.simulators.vm.*;
  */
 public class ProgramComponent extends JPanel implements VMProgramGUI {
 
+    private static final long serialVersionUID = 66882133288439509L;
+
     // A vector containing the listeners to this object.
-    private Vector listeners;
+    private Vector<ProgramEventListener> listeners;
 
     // A vector containing the error listeners to this object.
-    private Vector errorEventListeners;
+    private Vector<ErrorEventListener> errorEventListeners;
 
     // The table representing this program
     protected JTable programTable;
@@ -92,8 +94,8 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
      * Constructs a new ProgramComponent.
      */
     public ProgramComponent() {
-        listeners = new Vector();
-        errorEventListeners = new Vector();
+        listeners = new Vector<>();
+        errorEventListeners = new Vector<>();
         instructions = new VMEmulatorInstruction[0];
         model = new ProgramTableModel();
         programTable = new JTable(model);
@@ -147,12 +149,12 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
     /**
      * Notifies all the ErrorEventListener on an error in this gui by
      * creating an ErrorEvent (with the error message) and sending it
-     * using the errorOccured method to all the listeners.
+     * using the errorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         ErrorEvent event = new ErrorEvent(this, errorMessage);
         for (int i=0; i<errorEventListeners.size(); i++)
-            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccured(event);
+            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccurred(event);
     }
 
     /**
@@ -359,6 +361,8 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
     // An inner class representing the model of the CallStack table.
     class ProgramTableModel extends AbstractTableModel {
 
+        private static final long serialVersionUID = 7549843555038304296L;
+
         /**
          * Returns the number of columns.
          */
@@ -391,7 +395,7 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
                 case 0:
                     short index = instructions[row].getIndexInFunction();
                     if (index >= 0)
-                        return new Short(index);
+                        return index;
                     else
                         return "";
                 case 1:
@@ -413,9 +417,11 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
         }
     }
 
-    // An inner class which implemets the cell renderer of the program table, giving
+    // An inner class which implements the cell renderer of the program table, giving
     // the feature of coloring the background of a specific cell.
     class ColoredTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = 8555050965238020066L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

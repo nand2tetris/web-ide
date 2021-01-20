@@ -25,13 +25,13 @@ import org.nand2tetris.hack.core.events.*;
  * A BuiltInGate with a GUI component.
  * Notifies its listeners on errors using the GateErrorEvent.
  * Also listens to ErrorEvents from the GUI (and therefore should register
- * as an ErrorEventListener to it). When such an event occures, the error is sent to
+ * as an ErrorEventListener to it). When such an event occurs, the error is sent to
  * the error listeners of the computer part itself.
  */
 public abstract class BuiltInGateWithGUI extends BuiltInGate
  implements ErrorEventListener {
 
-    private Vector errorListeners;
+    private Vector<GateErrorEventListener> errorListeners;
 
     // The gate parent of this gate. re-evaluates when a change is done through the gui.
     protected Gate parent;
@@ -40,7 +40,7 @@ public abstract class BuiltInGateWithGUI extends BuiltInGate
      * Constructs a new BuiltInGateWithGUI.
      */
     public BuiltInGateWithGUI() {
-        errorListeners = new Vector();
+        errorListeners = new Vector<>();
     }
 
     /**
@@ -76,15 +76,15 @@ public abstract class BuiltInGateWithGUI extends BuiltInGate
     }
 
     /**
-     * Notifies all the GateErrorEventListeners on an error that occured in the
+     * Notifies all the GateErrorEventListeners on an error that occurred in the
      * computer part by creating a GateErrorEvent (with the error message) and sending
-     * it using the gateErrorOccured method to all the listeners.
+     * it using the gateErrorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         GateErrorEvent event = new GateErrorEvent(this, errorMessage);
 
         for (int i = 0; i < errorListeners.size(); i++)
-            ((GateErrorEventListener)errorListeners.elementAt(i)).gateErrorOccured(event);
+            ((GateErrorEventListener)errorListeners.elementAt(i)).gateErrorOccurred(event);
     }
 
     /**
@@ -94,14 +94,14 @@ public abstract class BuiltInGateWithGUI extends BuiltInGate
         GateErrorEvent event = new GateErrorEvent(this, null);
 
         for (int i = 0; i < errorListeners.size(); i++)
-            ((GateErrorEventListener)errorListeners.elementAt(i)).gateErrorOccured(event);
+            ((GateErrorEventListener)errorListeners.elementAt(i)).gateErrorOccurred(event);
     }
 
     /**
-     * Called when an error occured in the GUI.
+     * Called when an error occurred in the GUI.
      * The event contains the source object and the error message.
      */
-    public void errorOccured(ErrorEvent event) {
+    public void errorOccurred(ErrorEvent event) {
         notifyErrorListeners(event.getErrorMessage());
     }
 

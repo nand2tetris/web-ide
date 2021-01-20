@@ -23,9 +23,9 @@ package org.nand2tetris.hack.core.events;
 public interface ErrorEventListener {
 
     /**
-     * Called when an error occured.
+     * Called when an error occurred.
      * The event contains the source object and the error message.
      */
-    public void errorOccured(ErrorEvent event);
+    public void errorOccurred(ErrorEvent event);
 
 }

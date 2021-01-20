@@ -19,7 +19,6 @@ package org.nand2tetris.hack.builtin.vm;
 
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
-import org.nand2tetris.hack.simulators.vm.BuiltInVMClass;
 import org.nand2tetris.hack.simulators.vm.TerminateVMProgramThrowable;
 
 /**

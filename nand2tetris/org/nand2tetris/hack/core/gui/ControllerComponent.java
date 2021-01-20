@@ -31,6 +31,7 @@ import org.nand2tetris.hack.core.controller.*;
 public class ControllerComponent extends JFrame implements ControllerGUI,
                                                            FilesTypeListener,
                                                            BreakpointsChangedListener {
+    private static final long serialVersionUID = -1010355743996671655L;
 
     // The dimensions of the tool bar.
     protected static final int TOOLBAR_WIDTH = 1016;
@@ -44,7 +45,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     protected static final Dimension separatorDimension = new Dimension(3, TOOLBAR_HEIGHT - 5);
 
     // The vector of listeners to this component.
-    private Vector listeners;
+    private Vector<ControllerEventListener> listeners;
 
     // The fast forward button.
     protected MouseOverJButton ffwdButton;
@@ -86,7 +87,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     // A combo box which controls the format of all the components.
     protected TitledComboBox formatCombo;
 
-    // A combo box for choosing the additional disply.
+    // A combo box for choosing the additional display.
     protected TitledComboBox additionalDisplayCombo;
 
     // A combo box for choosing the animation type.
@@ -121,13 +122,13 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
      * Constructs a new ControllerComponent.
      */
     public ControllerComponent() {
-        listeners = new Vector();
+        listeners = new Vector<ControllerEventListener>();
         formatCombo = new TitledComboBox("Format:", "Numeric display format",
                                          new String[]{"Decimal", "Hexa", "Binary"}, 75);
         additionalDisplayCombo = new TitledComboBox("View:", "View options",
                                                     new String[]{"Script", "Output", "Compare",
                                                                  "Screen"}, 80);
-        animationCombo = new TitledComboBox("Animate:", "Animtion type",
+        animationCombo = new TitledComboBox("Animate:", "Animation type",
                                             new String[]{"Program flow", "Program & data flow",
                                                          "No animation"}, 135);
         scriptComponent = new FileDisplayComponent();
@@ -392,13 +393,13 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     /**
      * Sets the breakpoints list with the given one.
      */
-    public void setBreakpoints(Vector breakpoints) {
+    public void setBreakpoints(Vector<Breakpoint> breakpoints) {
         // sending the given Vector to the breakpoint panel.
         breakpointWindow.setBreakpoints(breakpoints);
     }
 
     /**
-     * Sets the speed (int code, between 1 and NUMBER_OF_SPEED_UNTIS)
+     * Sets the speed (int code, between 1 and NUMBER_OF_SPEED_UNITS)
      */
     public void setSpeed(int speed) {
         speedSlider.setValue(speed);
@@ -519,7 +520,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     }
 
     /**
-     * Adds the menu items to the menuber.
+     * Adds the menu items to the menu.
      */
     protected void arrangeMenu() {
 
@@ -773,14 +774,14 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
         fileChooser.setFileFilter(new ScriptFileFilter());
         this.getContentPane().setLayout(null);
 
-        Hashtable labelTable = new Hashtable();
+        Hashtable<Integer, JLabel> labelTable = new Hashtable<Integer, JLabel>();
 
         JLabel slowLabel = new JLabel("Slow");
         slowLabel.setFont(Utilities.thinLabelsFont);
         JLabel fastLabel = new JLabel("Fast");
         fastLabel.setFont(Utilities.thinLabelsFont);
-        labelTable.put(new Integer(1), slowLabel);
-        labelTable.put(new Integer(5), fastLabel);
+        labelTable.put(1, slowLabel);
+        labelTable.put(5, fastLabel);
 
         speedSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent e) {
@@ -954,7 +955,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
                 break;
         }
 
-        notifyControllerListeners(ControllerEvent.ADDITIONAL_DISPLAY_CHANGE, new Integer(selectedIndex));
+        notifyControllerListeners(ControllerEvent.ADDITIONAL_DISPLAY_CHANGE, selectedIndex);
     }
 
     /**
@@ -1013,7 +1014,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
         JSlider source = (JSlider)e.getSource();
         if (!source.getValueIsAdjusting()) {
             int speed = (int)source.getValue();
-            notifyControllerListeners(ControllerEvent.SPEED_CHANGE, new Integer(speed));
+            notifyControllerListeners(ControllerEvent.SPEED_CHANGE, speed);
         }
     }
 
@@ -1039,7 +1040,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
                 break;
         }
 
-        notifyControllerListeners(ControllerEvent.ANIMATION_MODE_CHANGE,new Integer(selectedIndex));
+        notifyControllerListeners(ControllerEvent.ANIMATION_MODE_CHANGE, selectedIndex);
     }
 
     /**
@@ -1064,7 +1065,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
                 break;
         }
 
-        notifyControllerListeners(ControllerEvent.NUMERIC_FORMAT_CHANGE,new Integer(selectedIndex));
+        notifyControllerListeners(ControllerEvent.NUMERIC_FORMAT_CHANGE, selectedIndex);
     }
 
     /**
@@ -1137,7 +1138,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     }
 
     /**
-     * Called when the additonal display's "script" menu item was selected.
+     * Called when the additional display's "script" menu item was selected.
      */
     public void scriptDisplayMenuItem_actionPerformed (ActionEvent e) {
         if (!additionalDisplayCombo.isSelectedIndex(HackController.SCRIPT_ADDITIONAL_DISPLAY))
@@ -1145,7 +1146,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     }
 
     /**
-     * Called when the additonal display's "output" menu item was selected.
+     * Called when the additional display's "output" menu item was selected.
      */
     public void outputMenuItem_actionPerformed (ActionEvent e) {
         if (!additionalDisplayCombo.isSelectedIndex(HackController.OUTPUT_ADDITIONAL_DISPLAY))
@@ -1153,7 +1154,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     }
 
     /**
-     * Called when the additonal display's "comparison" menu item was selected.
+     * Called when the additional display's "comparison" menu item was selected.
      */
     public void compareMenuItem_actionPerformed (ActionEvent e) {
         if (!additionalDisplayCombo.isSelectedIndex(HackController.COMPARISON_ADDITIONAL_DISPLAY))
@@ -1161,7 +1162,7 @@ public class ControllerComponent extends JFrame implements ControllerGUI,
     }
 
     /**
-     * Called when the additonal display's "no display" menu item was selected.
+     * Called when the additional display's "no display" menu item was selected.
      */
     public void noAdditionalDisplayMenuItem_actionPerformed (ActionEvent e) {
         if (!additionalDisplayCombo.isSelectedIndex(HackController.NO_ADDITIONAL_DISPLAY))

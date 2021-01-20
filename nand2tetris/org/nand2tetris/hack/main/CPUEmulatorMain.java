@@ -42,8 +42,7 @@ public class CPUEmulatorMain {
             CPUEmulatorGUI simulatorGUI = new CPUEmulatorComponent();
 
             ControllerGUI controllerGUI = new ControllerComponent();
-            CPUEmulatorApplication application =
-                new CPUEmulatorApplication(controllerGUI, simulatorGUI, "bin/scripts/defaultCPU.txt",
+            new CPUEmulatorApplication(controllerGUI, simulatorGUI, "bin/scripts/defaultCPU.txt",
                                            "bin/help/cpuUsage.html", "bin/help/cpuAbout.html");
         }
         else

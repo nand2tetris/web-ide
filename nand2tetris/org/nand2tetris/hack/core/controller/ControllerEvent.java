@@ -24,10 +24,10 @@ import java.util.EventObject;
  * together with a data object which is supplied with the action code.
  */
 public class ControllerEvent extends EventObject {
+    private static final long serialVersionUID = -130352591646968013L;
 
     /**
-     * Action code for performing the single step operation.
-     * supplied data = null
+     * Action code for performing the single step operation. supplied data = null
      */
     public static final byte SINGLE_STEP = 1;
 

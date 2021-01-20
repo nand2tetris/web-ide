@@ -28,6 +28,7 @@ import org.nand2tetris.hack.simulators.cpu.*;
  */
 public class CPUEmulatorComponent extends HackSimulatorComponent implements CPUEmulatorGUI  {
 
+    private static final long serialVersionUID = 547070349454736198L;
     // The dimension of this window.
     private static final int EMULATOR_WIDTH = 1018;
     private static final int EMULATOR_HEIGHT = 611;

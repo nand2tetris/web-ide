@@ -24,6 +24,7 @@ import javax.swing.table.*;
  * A PointedMemorySegmentComponent with an absolute address referencing.
  */
 public class AbsolutePointedMemorySegmentComponent extends PointedMemorySegmentComponent {
+    private static final long serialVersionUID = 6405136316949909207L;
 
     /**
      * Returns the appropriate table model.
@@ -55,6 +56,7 @@ public class AbsolutePointedMemorySegmentComponent extends PointedMemorySegmentC
 
     // An inner class representing the model of this table.
     public class AbsoluteTableModel extends MemorySegmentTableModel {
+        private static final long serialVersionUID = -2757919813481131838L;
 
         /**
          * Returns the value at a specific row and column.

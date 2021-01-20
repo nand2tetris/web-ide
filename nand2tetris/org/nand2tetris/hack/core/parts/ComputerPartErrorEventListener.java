@@ -23,9 +23,9 @@ package org.nand2tetris.hack.core.parts;
 public interface ComputerPartErrorEventListener {
 
     /**
-     * Called when an error occured in the ComputerPart.
+     * Called when an error occurred in the ComputerPart.
      * The event contains the source object and the error message.
      */
-    public void computerPartErrorOccured(ComputerPartErrorEvent event);
+    public void computerPartErrorOccurred(ComputerPartErrorEvent event);
 
 }

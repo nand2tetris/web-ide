@@ -22,7 +22,7 @@ package org.nand2tetris.hack.core.parts;
  */
 public abstract class ValueComputerPart extends ComputerPart {
 
-    // The amount of miliseconds that a changed value will flash.
+    // The amount of milliseconds that a changed value will flash.
     private static final int FLASH_TIME = 500;
 
     // used as default value (in reset)
@@ -89,7 +89,7 @@ public abstract class ValueComputerPart extends ComputerPart {
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         if (displayChanges)

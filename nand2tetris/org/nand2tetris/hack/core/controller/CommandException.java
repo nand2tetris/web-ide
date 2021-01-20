@@ -20,8 +20,9 @@ package org.nand2tetris.hack.core.controller;
 /**
  * An exception for errors in command definitions.
  */
-public class CommandException extends Exception
-{
+public class CommandException extends Exception {
+    private static final long serialVersionUID = -257993232689872328L;
+
     /**
      * Constructs a new CommandException with the given message and command.
      */

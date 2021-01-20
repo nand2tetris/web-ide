@@ -20,8 +20,9 @@ package org.nand2tetris.hack.core.controller;
 /**
  * An exception for errors in the program.
  */
-public class ProgramException extends Exception
-{
+public class ProgramException extends Exception {
+    private static final long serialVersionUID = 8554975321503160506L;
+
     /**
      * Constructs a new ProgramException with the given message.
      */

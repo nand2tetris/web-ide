@@ -40,9 +40,9 @@ public interface VirtualMachine {
     public abstract void add();
 
     /**
-     * 2's complement integer substraction (binary operation)
+     * 2's complement integer subtraction (binary operation)
      */
-    public abstract void substract();
+    public abstract void subtract();
 
     /**
      * 2's complement negation (unary operation)

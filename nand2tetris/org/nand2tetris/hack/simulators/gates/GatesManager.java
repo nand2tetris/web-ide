@@ -41,7 +41,7 @@ public class GatesManager {
     private GateErrorEventListener errorHandler;
 
     // The list of built in chips with gui
-    private Vector chips;
+    private Vector<BuiltInGateWithGUI> chips;
 
     // When true, BuiltIn chips with gui should create and update their gui.
     // otherwise, their gui shouldn't be created.
@@ -51,7 +51,7 @@ public class GatesManager {
      * Constructs a new GatesManager.
      */
     private GatesManager() {
-        chips = new Vector();
+        chips = new Vector<>();
         updateChipsGUI = true;
     }
 
@@ -80,7 +80,7 @@ public class GatesManager {
     }
 
     /**
-     * Returnss the BuiltIn HDL dir.
+     * Returns the BuiltIn HDL dir.
      */
     public File getBuiltInDir() {
         return builtInDir;

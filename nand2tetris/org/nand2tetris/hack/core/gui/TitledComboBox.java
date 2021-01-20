@@ -27,6 +27,8 @@ import javax.swing.*;
  */
 public class TitledComboBox extends JPanel {
 
+    private static final long serialVersionUID = 3872308486984613463L;
+
     // The total height of this component
     private static final int TOTAL_HEIGHT = 37;
 
@@ -34,20 +36,20 @@ public class TitledComboBox extends JPanel {
     private static final int COMBO_HEIGHT = 22;
 
     // The combo box
-    private JComboBox combo;
+    private JComboBox<String> combo;
 
     // The title
     private JLabel title;
 
     // The listeners to this combo box
-    private LinkedList listeners;
+    private LinkedList<ActionListener> listeners;
 
     /**
      * Constructs a new TitledComboBox.
      */
     public TitledComboBox(String titleText, String toolTipText, String[] items, int width) {
         title = new JLabel(titleText);
-        combo = new JComboBox(items);
+        combo = new JComboBox<>(items);
         combo.setToolTipText(toolTipText);
 
         Dimension d = new Dimension(width, TOTAL_HEIGHT);
@@ -70,7 +72,7 @@ public class TitledComboBox extends JPanel {
         combo.setFont(Utilities.thinLabelsFont);
         combo.setPreferredSize(new Dimension(width, COMBO_HEIGHT));
 
-        listeners = new LinkedList();
+        listeners = new LinkedList<ActionListener>();
     }
 
     /**
@@ -82,9 +84,8 @@ public class TitledComboBox extends JPanel {
 
     // Notifies the registered listeners on an action in the combo box.
     private void notifyListeners(ActionEvent e) {
-        Iterator iter = listeners.iterator();
-        while(iter.hasNext())
-            ((ActionListener)iter.next()).actionPerformed(e);
+        for (ActionListener listener: listeners)
+            listener.actionPerformed(e);
     }
 
     /**
@@ -95,7 +96,7 @@ public class TitledComboBox extends JPanel {
     }
 
     /**
-     * Return true if the given item is the slected one.
+     * Return true if the given item is the selected one.
      */
     public boolean isSelectedItem(String item) {
         return combo.getSelectedItem().equals(item);

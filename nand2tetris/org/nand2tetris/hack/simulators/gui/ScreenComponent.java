@@ -28,6 +28,7 @@ import org.nand2tetris.hack.simulators.cpu.*;
  */
 public class ScreenComponent extends JPanel implements ScreenGUI, ActionListener {
 
+    private static final long serialVersionUID = -1742545217310931678L;
     // the clock intervals for animation
     private static final int ANIMATION_CLOCK_INTERVALS = 50;
     private static final int STATIC_CLOCK_INTERVALS = 500;
@@ -45,7 +46,7 @@ public class ScreenComponent extends JPanel implements ScreenGUI, ActionListener
     protected Timer timer;
 
     /**
-     * Constructs a new Sceen with given height & width (in words)
+     * Constructs a new Screen with given height & width (in words)
      * and amount of bits per word.
      */
     public ScreenComponent() {
@@ -66,7 +67,7 @@ public class ScreenComponent extends JPanel implements ScreenGUI, ActionListener
         x[0] = borderInsets.left;
         y[0] = borderInsets.top;
 
-        // updates pixels indice
+        // updates pixels indices
         for (int i = 1; i < Definitions.SCREEN_SIZE; i++) {
             x[i] = x[i - 1] + Definitions.BITS_PER_WORD;
             y[i] = y[i - 1];

@@ -28,10 +28,10 @@ import org.nand2tetris.hack.core.parts.*;
 public abstract class HackSimulator implements ProgramEventListener, ComputerPartErrorEventListener
 {
     // The vector of listeners
-    private Vector listeners;
+    private Vector<ControllerEventListener> listeners;
 
     // The vector of program listeners
-    private Vector programListeners;
+    private Vector<ProgramEventListener> programListeners;
 
     // The current working dir
     protected File workingDir;
@@ -40,8 +40,8 @@ public abstract class HackSimulator implements ProgramEventListener, ComputerPar
      * Constructs a new hack simulator.
      */
     public HackSimulator() {
-        listeners = new Vector();
-        programListeners = new Vector();
+        listeners = new Vector<>();
+        programListeners = new Vector<>();
     }
 
     /**
@@ -175,7 +175,7 @@ public abstract class HackSimulator implements ProgramEventListener, ComputerPar
     }
 
     /**
-     * Registers the given ControllerrEventListener as a listener to this simulator.
+     * Registers the given ControllerEventListener as a listener to this simulator.
      */
     public void addListener(ControllerEventListener listener) {
         listeners.addElement(listener);

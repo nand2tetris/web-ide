@@ -19,16 +19,16 @@ package org.nand2tetris.hack.core.gui;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.*;
 import java.util.Vector;
 import javax.swing.*;
 
 /**
- * This class repersents the GUI of the component which allows the user to load
+ * This class represents the GUI of the component which allows the user to load
  * three kinds of files into the system: script file, output file and comparison
  * file.
  */
 public class ControllerFileChooser extends JFrame {
+    private static final long serialVersionUID = -2353377232040029955L;
 
     // Creating the file chooser components
     private FileChooserComponent outputFileChooser = new FileChooserComponent();
@@ -44,13 +44,13 @@ public class ControllerFileChooser extends JFrame {
     private ImageIcon cancelIcon = new ImageIcon(Utilities.imagesDir + "cancel.gif");
 
     // the listeners to this component.
-    private Vector listeners;
+    private Vector<FilesTypeListener> listeners;
 
     /**
      * Constructs a new FilesChooserWindow.
      */
     public ControllerFileChooser() {
-        listeners = new Vector();
+        listeners = new Vector<>();
 
         jbInit();
 

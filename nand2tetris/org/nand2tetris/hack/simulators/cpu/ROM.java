@@ -26,7 +26,7 @@ import org.nand2tetris.hack.core.utilities.*;
 
 /**
  * A Read Only Memory. Has methods for loading a machine language file (.hack) and for
- * setting a pointer (a specific address in the ROM for GUI perposes).
+ * setting a pointer (a specific address in the ROM for GUI purposes).
  */
 public class ROM extends PointedMemory implements ProgramEventListener
 {
@@ -51,7 +51,7 @@ public class ROM extends PointedMemory implements ProgramEventListener
     public static final int ASM_FORMAT = 4;
 
     // listeners to program changes
-    private Vector listeners;
+    private Vector<ProgramEventListener> listeners;
 
     /**
      * Constructs a new ROM with the given ROM GUI.
@@ -59,7 +59,7 @@ public class ROM extends PointedMemory implements ProgramEventListener
     public ROM(ROMGUI gui) {
         super(Definitions.ROM_SIZE, gui);
         setNullValue(HackAssemblerTranslator.NOP, true);
-        listeners = new Vector();
+        listeners = new Vector<>();
 
         if (hasGUI) {
           gui.addProgramListener( (ProgramEventListener)this);
@@ -173,9 +173,7 @@ public class ROM extends PointedMemory implements ProgramEventListener
      */
     protected void notifyProgramListeners(byte eventType, String programFileName) {
         ProgramEvent event = new ProgramEvent(this, eventType, programFileName);
-
-        for (int i = 0; i < listeners.size(); i++) {
-            ((ProgramEventListener)listeners.elementAt(i)).programChanged(event);
-        }
+        for (ProgramEventListener listener: listeners)
+            listener.programChanged(event);
     }
 }

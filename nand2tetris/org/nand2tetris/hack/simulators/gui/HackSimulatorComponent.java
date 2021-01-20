@@ -26,6 +26,8 @@ import org.nand2tetris.hack.core.controller.*;
  */
 public abstract class HackSimulatorComponent extends JPanel implements HackSimulatorGUI {
 
+    private static final long serialVersionUID = -6897508267670690122L;
+
     // The current additional display
     protected JComponent currentAdditionalDisplay = null;
 
@@ -36,7 +38,6 @@ public abstract class HackSimulatorComponent extends JPanel implements HackSimul
         if(currentAdditionalDisplay != null) {
             remove(currentAdditionalDisplay);
         }
-        JComponent c = additionalComponent;
         currentAdditionalDisplay = additionalComponent;
 
         if (additionalComponent != null) {

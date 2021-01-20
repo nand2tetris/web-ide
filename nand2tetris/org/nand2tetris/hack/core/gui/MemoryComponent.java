@@ -30,6 +30,8 @@ import org.nand2tetris.hack.core.parts.*;
  */
 public class MemoryComponent extends JPanel implements MemoryGUI {
 
+    private static final long serialVersionUID = -7105224565353894664L;
+
     // The default number of visible rows.
     protected static final int DEFAULT_VISIBLE_ROWS = 10;
 
@@ -39,16 +41,16 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     public int dataFormat;
 
     // A vector containing the listeners to this object.
-    private Vector listeners;
+    private Vector<ComputerPartEventListener> listeners;
 
     // A vector containing the clear listeners to this object.
-    private Vector clearListeners;
+    private Vector<ClearEventListener> clearListeners;
 
     // A vector containing the error listeners to this object.
-    private Vector errorEventListeners;
+    private Vector<ErrorEventListener> errorEventListeners;
 
     // A vector containing the repaint listeners to this object.
-    private Vector changeListeners;
+    private Vector<MemoryChangeListener> changeListeners;
 
     // The table representing the memory.
     protected JTable memoryTable;
@@ -74,11 +76,11 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     // The window of searching a specific location in memory.
     private SearchMemoryWindow searchWindow;
 
-    // The scrollpane on which the table is placed.
+    // The scroll pane on which the table is placed.
     protected JScrollPane scrollPane;
 
     // A vector containing the highlighted rows.
-    protected Vector highlightIndex;
+    protected Vector<Integer> highlightIndex;
 
     // The index of the flashed row.
     protected int flashIndex = -1;
@@ -101,7 +103,7 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     // The start and end row indices of the enabled region.
     protected int startEnabling, endEnabling;
 
-    // If true, the disbaled region is shaded.
+    // If true, the disabled region is shaded.
     protected boolean grayDisabledRange;
 
     /**
@@ -117,11 +119,11 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
         tf.setBorder(null);
         DefaultCellEditor editor = new DefaultCellEditor(tf);
 
-        listeners = new Vector();
-        clearListeners = new Vector();
-        errorEventListeners = new Vector();
-        changeListeners = new Vector();
-        highlightIndex = new Vector();
+        listeners = new Vector<>();
+        clearListeners = new Vector<>();
+        errorEventListeners = new Vector<>();
+        changeListeners = new Vector<>();
+        highlightIndex = new Vector<>();
         memoryTable = new JTable(getTableModel());
         memoryTable.setDefaultRenderer(memoryTable.getColumnClass(0), getCellRenderer());
         memoryTable.getColumnModel().getColumn(getValueColumnIndex()).setCellEditor(editor);
@@ -202,16 +204,13 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
 
     public void notifyListeners(int address, short value) {
         ComputerPartEvent event = new ComputerPartEvent(this,address,value);
-        for (int i=0;i<listeners.size();i++) {
-           ((ComputerPartEventListener)listeners.elementAt(i)).valueChanged(event);
-        }
+        for (ComputerPartEventListener listener: listeners)
+            listener.valueChanged(event);
     }
 
     public void notifyListeners() {
-        ComputerPartEvent event = new ComputerPartEvent(this);
-        for (int i=0;i<listeners.size();i++) {
-           ((ComputerPartEventListener)listeners.elementAt(i)).guiGainedFocus();
-        }
+        for (ComputerPartEventListener listener: listeners)
+            listener.guiGainedFocus();
     }
 
     public void addClearListener (ClearEventListener listener) {
@@ -222,9 +221,9 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     }
 
     public void notifyClearListeners() {
-        ClearEvent clearEvent = new ClearEvent(this);
-        for(int i=0; i<clearListeners.size();i++)
-            ((ClearEventListener)clearListeners.elementAt(i)).clearRequested(clearEvent);
+        ClearEvent event = new ClearEvent(this);
+        for (ClearEventListener listener: clearListeners)
+            listener.clearRequested(event);
     }
 
     /**
@@ -244,12 +243,12 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
    /**
      * Notifies all the ErrorEventListener on an error in this gui by
      * creating an ErrorEvent (with the error message) and sending it
-     * using the errorOccured method to all the listeners.
+     * using the errorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         ErrorEvent event = new ErrorEvent(this, errorMessage);
         for (int i=0; i<errorEventListeners.size(); i++)
-            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccured(event);
+            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccurred(event);
     }
 
     /**
@@ -337,7 +336,7 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         highlightIndex.removeAllElements();
@@ -348,7 +347,7 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
      * Highlights the value at the given index.
      */
     public void highlight(int index) {
-        highlightIndex.addElement(new Integer(index));
+        highlightIndex.addElement(index);
         repaint();
     }
 
@@ -598,11 +597,12 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     }
 
     // An inner class representing the model of this table.
-    class MemoryTableModel extends AbstractTableModel {
+     class MemoryTableModel extends AbstractTableModel {
+         private static final long serialVersionUID = -261205669864256323L;
 
-        /**
-         * Returns the number of columns.
-         */
+         /**
+          * Returns the number of columns.
+          */
         public int getColumnCount() {
             return 2;
         }
@@ -687,9 +687,11 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
         nameLbl.setBounds(new Rectangle(3, 7, 150, 23));
     }
 
-    // An inner class which implemets the cell renderer of the memory table, giving
+    // An inner class which implements the cell renderer of the memory table, giving
     // the feature of aligning the text in the cells.
     class MemoryTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = -117608498268340926L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

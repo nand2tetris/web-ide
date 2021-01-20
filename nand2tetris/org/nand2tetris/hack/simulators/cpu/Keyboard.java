@@ -20,7 +20,6 @@ package org.nand2tetris.hack.simulators.cpu;
 import java.awt.event.*;
 import org.nand2tetris.hack.core.parts.*;
 import org.nand2tetris.hack.core.utilities.*;
-import org.nand2tetris.hack.simulators.cpu.*;
 
 /**
  * A computer keyboard.

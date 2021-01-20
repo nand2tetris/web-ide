@@ -28,7 +28,8 @@ import org.nand2tetris.hack.simulators.vm.CalculatorGUI;
  */
 public class StackCalculator extends JPanel implements CalculatorGUI {
 
-    // The input, command and output textfields.
+    private static final long serialVersionUID = 7201457198433497973L;
+    // The input, command and output text fields.
     private JTextField firstInput = new JTextField();
     private JTextField command = new JTextField();
     private JTextField secondInput = new JTextField();
@@ -148,7 +149,7 @@ public class StackCalculator extends JPanel implements CalculatorGUI {
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         firstInput.setForeground(Color.black);

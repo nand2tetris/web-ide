@@ -24,7 +24,6 @@ import java.util.Vector;
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.table.*;
-import javax.swing.table.*;
 import org.nand2tetris.hack.compilers.asm.*;
 import org.nand2tetris.hack.core.events.*;
 import org.nand2tetris.hack.core.gui.*;
@@ -35,8 +34,10 @@ import org.nand2tetris.hack.simulators.cpu.*;
  */
 public class ROMComponent extends PointedMemoryComponent implements ROMGUI {
 
+    private static final long serialVersionUID = -169764764749464751L;
+
     // A vector containing the listeners to this object.
-    private Vector programEventListeners;
+    private Vector<ProgramEventListener> programEventListeners;
 
     // The ASM format.
     private final static int ASM_FORMAT = ROM.ASM_FORMAT;
@@ -63,23 +64,19 @@ public class ROMComponent extends PointedMemoryComponent implements ROMGUI {
     private String[] format = {"Asm", "Dec", "Hex", "Bin"};
 
     // The combo box for choosing the numeric format.
-    protected JComboBox romFormat = new JComboBox(format);
-
-    // The name of the current program.
-    private String programFileName;
+    protected JComboBox<String> romFormat = new JComboBox<>(format);
 
     /**
      * Constructs a new ROMComponent.
      */
     public ROMComponent() {
         dataFormat = ASM_FORMAT;
-        programEventListeners = new Vector();
+        programEventListeners = new Vector<>();
         filter = new ROMFileFilter();
         fileChooser = new JFileChooser();
         fileChooser.setFileFilter(filter);
         jbInit();
     }
-
 
     public void setNumericFormat(int formatCode) {
         super.setNumericFormat(formatCode);
@@ -139,9 +136,7 @@ public class ROMComponent extends PointedMemoryComponent implements ROMGUI {
     /**
      * Sets the current program file name with the given name.
      */
-    public void setProgram(String programFileName) {
-        this.programFileName = programFileName;
-    }
+    public void setProgram(String programFileName) { }
 
     /**
      * Returns the value at the given index in its string representation.
@@ -267,7 +262,7 @@ public class ROMComponent extends PointedMemoryComponent implements ROMGUI {
 
 
     /**
-     * Implemeting the action of changing the selected item in the combo box
+     * Implementing the action of changing the selected item in the combo box
      */
     public void romFormat_actionPerformed(ActionEvent e) {
         String newFormat = (String)romFormat.getSelectedItem();
@@ -286,10 +281,12 @@ public class ROMComponent extends PointedMemoryComponent implements ROMGUI {
     }
 
     /**
-     * An inner class which implemets the cell renderer of the rom table,
+     * An inner class which implements the cell renderer of the rom table,
      * giving the feature of coloring the background of a specific cell.
      */
     public class ROMTableCellRenderer extends PointedMemoryTableCellRenderer {
+
+        private static final long serialVersionUID = 8457630878856528640L;
 
         public void setRenderer(int row, int column) {
             super.setRenderer(row, column);

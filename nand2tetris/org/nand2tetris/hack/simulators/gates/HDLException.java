@@ -22,8 +22,11 @@ package org.nand2tetris.hack.simulators.gates;
  */
 public class HDLException extends Exception {
 
+    private static final long serialVersionUID = 7587063055261661389L;
+
     /**
-     * Constructs a new HDLException with the given message, HDL file name and Line number.
+     * Constructs a new HDLException with the given message, HDL file name and Line
+     * number.
      */
     public HDLException(String message, String HDLName, int lineNumber) {
         super("In HDL file " + HDLName + ", Line " + lineNumber + ", " + message);

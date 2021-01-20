@@ -20,10 +20,12 @@ package org.nand2tetris.hack.core.parts;
 import org.nand2tetris.hack.core.events.*;
 
 /**
- * An event for notifying a ComputerPartErrorEventListener on an error that occured
+ * An event for notifying a ComputerPartErrorEventListener on an error that occurred
  * in a computer part.
  */
 public class ComputerPartErrorEvent extends ErrorEvent {
+
+    private static final long serialVersionUID = -2795771194380300167L;
 
     /**
      * Constructs a new ComputerPartErrorEvent with the given source (computer part)

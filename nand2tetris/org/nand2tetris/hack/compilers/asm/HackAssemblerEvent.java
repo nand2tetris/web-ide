@@ -26,8 +26,12 @@ import org.nand2tetris.hack.core.translators.*;
 public class HackAssemblerEvent extends HackTranslatorEvent {
 
     /**
-     * Action code for changing the comparison file.
-     * supplied data = comparison file name (String)
+     *
+     */
+    private static final long serialVersionUID = -5000459225301134946L;
+    /**
+     * Action code for changing the comparison file. supplied data = comparison file
+     * name (String)
      */
     public static final byte COMPARISON_LOAD = 9;
 

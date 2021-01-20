@@ -27,6 +27,7 @@ import org.nand2tetris.hack.simulators.hardware.*;
  */
 public class GateInfoComponent extends JPanel implements GateInfoGUI {
 
+    private static final long serialVersionUID = -3205222110447967185L;
     // creating labels
     private JLabel chipNameLbl;
     private JLabel timeLbl;

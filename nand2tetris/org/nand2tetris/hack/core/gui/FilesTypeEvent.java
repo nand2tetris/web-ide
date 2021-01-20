@@ -25,6 +25,8 @@ import java.util.EventObject;
  */
 public class FilesTypeEvent extends EventObject {
 
+    private static final long serialVersionUID = 6922217774279111516L;
+
     // The name of the first file
     private String firstFileName;
 

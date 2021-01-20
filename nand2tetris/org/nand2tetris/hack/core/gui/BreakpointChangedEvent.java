@@ -25,6 +25,7 @@ import org.nand2tetris.hack.core.controller.Breakpoint;
  * breakpoints.
  */
 public class BreakpointChangedEvent extends EventObject {
+    private static final long serialVersionUID = -7174365176049374365L;
 
     // The breakpoint
     private Breakpoint breakpoint;

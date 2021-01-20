@@ -41,9 +41,11 @@ public class VMEmulatorMain {
 
             VMEmulatorGUI simulatorGUI = new VMEmulatorComponent();
             ControllerGUI controllerGUI = new ControllerComponent();
-            VMEmulatorApplication application =
-                new VMEmulatorApplication(controllerGUI, simulatorGUI, "bin/scripts/defaultVM.txt",
-                                          "bin/help/vmUsage.html", "bin/help/vmAbout.html");
+            new VMEmulatorApplication(controllerGUI,
+                                      simulatorGUI,
+                                      "bin/scripts/defaultVM.txt",
+                                      "bin/help/vmUsage.html",
+                                      "bin/help/vmAbout.html");
         }
         else
             new HackController(new VMEmulator(), args[0]);

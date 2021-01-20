@@ -32,9 +32,9 @@ public class HVMInstructionSet {
     public static final byte ADD_CODE = 1;
 
     /**
-     * Substract instruction code
+     * Subtract instruction code
      */
-    public static final byte SUBSTRACT_CODE = 2;
+    public static final byte SUBTRACT_CODE = 2;
 
     /**
      * Negate instruction code
@@ -122,9 +122,9 @@ public class HVMInstructionSet {
     public static final String ADD_STRING = "add";
 
     /**
-     * Substract instruction string
+     * Subtract instruction string
      */
-    public static final String SUBSTRACT_STRING = "sub";
+    public static final String SUBTRACT_STRING = "sub";
 
     /**
      * Negate instruction string
@@ -209,7 +209,7 @@ public class HVMInstructionSet {
      */
     public final static int NUMBER_OF_ACTUAL_SEGMENTS = 5;
 
-    // The actual segments should be numbered from 0 onwards, so they can be used as array indice.
+    // The actual segments should be numbered from 0 onwards, so they can be used as array indices.
 
     /**
      * Local segment code
@@ -300,19 +300,19 @@ public class HVMInstructionSet {
     private static HVMInstructionSet instance;
 
     // the translation table from instruction strings to codes.
-    private Hashtable instructionToCode;
+    private Hashtable<String, Byte> instructionToCode;
 
     // the translation table from instruction codes to strings.
-    private Hashtable instructionToString;
+    private Hashtable<Byte, String> instructionToString;
 
     // the translation table from segment VM strings to codes.
-    private Hashtable segmentCodes;
+    private Hashtable<String, Byte> segmentCodes;
 
     // the translation table from segment codes to segment VM strings.
-    private Hashtable segmentStrings;
+    private Hashtable<Byte, String> segmentStrings;
 
     // the translation table from segment VM strings to hardware pointer names.
-    private Hashtable segmentPointerStrings;
+    private Hashtable<String, String> segmentPointerStrings;
 
     // Constructs the singlton HVMInstructionSet
     private HVMInstructionSet() {
@@ -333,75 +333,75 @@ public class HVMInstructionSet {
 
     // initializes the instructions table
     private void initInstructions() {
-        instructionToCode = new Hashtable();
-        instructionToCode.put(ADD_STRING,new Byte(ADD_CODE));
-        instructionToCode.put(SUBSTRACT_STRING,new Byte(SUBSTRACT_CODE));
-        instructionToCode.put(NEGATE_STRING,new Byte(NEGATE_CODE));
-        instructionToCode.put(EQUAL_STRING,new Byte(EQUAL_CODE));
-        instructionToCode.put(GREATER_THAN_STRING,new Byte(GREATER_THAN_CODE));
-        instructionToCode.put(LESS_THAN_STRING,new Byte(LESS_THAN_CODE));
-        instructionToCode.put(AND_STRING,new Byte(AND_CODE));
-        instructionToCode.put(OR_STRING,new Byte(OR_CODE));
-        instructionToCode.put(NOT_STRING,new Byte(NOT_CODE));
-        instructionToCode.put(PUSH_STRING,new Byte(PUSH_CODE));
-        instructionToCode.put(POP_STRING,new Byte(POP_CODE));
-        instructionToCode.put(LABEL_STRING,new Byte(LABEL_CODE));
-        instructionToCode.put(GOTO_STRING,new Byte(GOTO_CODE));
-        instructionToCode.put(IF_GOTO_STRING,new Byte(IF_GOTO_CODE));
-        instructionToCode.put(FUNCTION_STRING,new Byte(FUNCTION_CODE));
-        instructionToCode.put(RETURN_STRING,new Byte(RETURN_CODE));
-        instructionToCode.put(CALL_STRING,new Byte(CALL_CODE));
+        instructionToCode = new Hashtable<>();
+        instructionToCode.put(ADD_STRING, ADD_CODE);
+        instructionToCode.put(SUBTRACT_STRING, SUBTRACT_CODE);
+        instructionToCode.put(NEGATE_STRING, NEGATE_CODE);
+        instructionToCode.put(EQUAL_STRING, EQUAL_CODE);
+        instructionToCode.put(GREATER_THAN_STRING, GREATER_THAN_CODE);
+        instructionToCode.put(LESS_THAN_STRING, LESS_THAN_CODE);
+        instructionToCode.put(AND_STRING, AND_CODE);
+        instructionToCode.put(OR_STRING, OR_CODE);
+        instructionToCode.put(NOT_STRING, NOT_CODE);
+        instructionToCode.put(PUSH_STRING, PUSH_CODE);
+        instructionToCode.put(POP_STRING, POP_CODE);
+        instructionToCode.put(LABEL_STRING, LABEL_CODE);
+        instructionToCode.put(GOTO_STRING, GOTO_CODE);
+        instructionToCode.put(IF_GOTO_STRING, IF_GOTO_CODE);
+        instructionToCode.put(FUNCTION_STRING, FUNCTION_CODE);
+        instructionToCode.put(RETURN_STRING, RETURN_CODE);
+        instructionToCode.put(CALL_STRING, CALL_CODE);
 
-        instructionToString = new Hashtable();
-        instructionToString.put(new Byte(ADD_CODE), ADD_STRING);
-        instructionToString.put(new Byte(SUBSTRACT_CODE), SUBSTRACT_STRING);
-        instructionToString.put(new Byte(NEGATE_CODE), NEGATE_STRING);
-        instructionToString.put(new Byte(EQUAL_CODE), EQUAL_STRING);
-        instructionToString.put(new Byte(GREATER_THAN_CODE), GREATER_THAN_STRING);
-        instructionToString.put(new Byte(LESS_THAN_CODE), LESS_THAN_STRING);
-        instructionToString.put(new Byte(AND_CODE), AND_STRING);
-        instructionToString.put(new Byte(OR_CODE), OR_STRING);
-        instructionToString.put(new Byte(NOT_CODE), NOT_STRING);
-        instructionToString.put(new Byte(PUSH_CODE), PUSH_STRING);
-        instructionToString.put(new Byte(POP_CODE), POP_STRING);
-        instructionToString.put(new Byte(LABEL_CODE), LABEL_STRING);
-        instructionToString.put(new Byte(GOTO_CODE), GOTO_STRING);
-        instructionToString.put(new Byte(IF_GOTO_CODE), IF_GOTO_STRING);
-        instructionToString.put(new Byte(FUNCTION_CODE), FUNCTION_STRING);
-        instructionToString.put(new Byte(RETURN_CODE), RETURN_STRING);
-        instructionToString.put(new Byte(CALL_CODE), CALL_STRING);
+        instructionToString = new Hashtable<>();
+        instructionToString.put(ADD_CODE, ADD_STRING);
+        instructionToString.put(SUBTRACT_CODE, SUBTRACT_STRING);
+        instructionToString.put(NEGATE_CODE, NEGATE_STRING);
+        instructionToString.put(EQUAL_CODE, EQUAL_STRING);
+        instructionToString.put(GREATER_THAN_CODE, GREATER_THAN_STRING);
+        instructionToString.put(LESS_THAN_CODE, LESS_THAN_STRING);
+        instructionToString.put(AND_CODE, AND_STRING);
+        instructionToString.put(OR_CODE, OR_STRING);
+        instructionToString.put(NOT_CODE, NOT_STRING);
+        instructionToString.put(PUSH_CODE, PUSH_STRING);
+        instructionToString.put(POP_CODE, POP_STRING);
+        instructionToString.put(LABEL_CODE, LABEL_STRING);
+        instructionToString.put(GOTO_CODE, GOTO_STRING);
+        instructionToString.put(IF_GOTO_CODE, IF_GOTO_STRING);
+        instructionToString.put(FUNCTION_CODE, FUNCTION_STRING);
+        instructionToString.put(RETURN_CODE, RETURN_STRING);
+        instructionToString.put(CALL_CODE, CALL_STRING);
     }
 
     // initializes the segment strings table
     private void initSegmentStrings() {
-        segmentPointerStrings = new Hashtable();
+        segmentPointerStrings = new Hashtable<>();
         segmentPointerStrings.put(LOCAL_SEGMENT_VM_STRING, Definitions.LOCAL_POINTER_NAME);
         segmentPointerStrings.put(ARG_SEGMENT_VM_STRING, Definitions.ARG_POINTER_NAME);
         segmentPointerStrings.put(THIS_SEGMENT_VM_STRING, Definitions.THIS_POINTER_NAME);
         segmentPointerStrings.put(THAT_SEGMENT_VM_STRING, Definitions.THAT_POINTER_NAME);
 
-        segmentStrings = new Hashtable();
-        segmentStrings.put(new Byte(STATIC_SEGMENT_CODE), STATIC_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(LOCAL_SEGMENT_CODE), LOCAL_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(ARG_SEGMENT_CODE), ARG_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(THIS_SEGMENT_CODE), THIS_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(THAT_SEGMENT_CODE), THAT_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(TEMP_SEGMENT_CODE), TEMP_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(CONST_SEGMENT_CODE), CONST_SEGMENT_VM_STRING);
-        segmentStrings.put(new Byte(POINTER_SEGMENT_CODE), POINTER_SEGMENT_VM_STRING);
+        segmentStrings = new Hashtable<>();
+        segmentStrings.put(STATIC_SEGMENT_CODE, STATIC_SEGMENT_VM_STRING);
+        segmentStrings.put(LOCAL_SEGMENT_CODE, LOCAL_SEGMENT_VM_STRING);
+        segmentStrings.put(ARG_SEGMENT_CODE, ARG_SEGMENT_VM_STRING);
+        segmentStrings.put(THIS_SEGMENT_CODE, THIS_SEGMENT_VM_STRING);
+        segmentStrings.put(THAT_SEGMENT_CODE, THAT_SEGMENT_VM_STRING);
+        segmentStrings.put(TEMP_SEGMENT_CODE, TEMP_SEGMENT_VM_STRING);
+        segmentStrings.put(CONST_SEGMENT_CODE, CONST_SEGMENT_VM_STRING);
+        segmentStrings.put(POINTER_SEGMENT_CODE, POINTER_SEGMENT_VM_STRING);
     }
 
     // initializes the segment codes table
     private void initSegmentCodes() {
-        segmentCodes = new Hashtable();
-        segmentCodes.put(STATIC_SEGMENT_VM_STRING, new Byte(STATIC_SEGMENT_CODE));
-        segmentCodes.put(LOCAL_SEGMENT_VM_STRING, new Byte(LOCAL_SEGMENT_CODE));
-        segmentCodes.put(ARG_SEGMENT_VM_STRING, new Byte(ARG_SEGMENT_CODE));
-        segmentCodes.put(THIS_SEGMENT_VM_STRING, new Byte(THIS_SEGMENT_CODE));
-        segmentCodes.put(THAT_SEGMENT_VM_STRING, new Byte(THAT_SEGMENT_CODE));
-        segmentCodes.put(TEMP_SEGMENT_VM_STRING, new Byte(TEMP_SEGMENT_CODE));
-        segmentCodes.put(CONST_SEGMENT_VM_STRING, new Byte(CONST_SEGMENT_CODE));
-        segmentCodes.put(POINTER_SEGMENT_VM_STRING, new Byte(POINTER_SEGMENT_CODE));
+        segmentCodes = new Hashtable<>();
+        segmentCodes.put(STATIC_SEGMENT_VM_STRING, STATIC_SEGMENT_CODE);
+        segmentCodes.put(LOCAL_SEGMENT_VM_STRING, LOCAL_SEGMENT_CODE);
+        segmentCodes.put(ARG_SEGMENT_VM_STRING, ARG_SEGMENT_CODE);
+        segmentCodes.put(THIS_SEGMENT_VM_STRING, THIS_SEGMENT_CODE);
+        segmentCodes.put(THAT_SEGMENT_VM_STRING, THAT_SEGMENT_CODE);
+        segmentCodes.put(TEMP_SEGMENT_VM_STRING, TEMP_SEGMENT_CODE);
+        segmentCodes.put(CONST_SEGMENT_VM_STRING, CONST_SEGMENT_CODE);
+        segmentCodes.put(POINTER_SEGMENT_VM_STRING, POINTER_SEGMENT_CODE);
     }
 
     /**
@@ -418,7 +418,7 @@ public class HVMInstructionSet {
      * If not exists, returns null.
      */
     public String instructionCodeToString(byte code) {
-        return (String)instructionToString.get(new Byte(code));
+        return (String)instructionToString.get(code);
     }
 
     /**
@@ -450,6 +450,6 @@ public class HVMInstructionSet {
      * If not exists, returns null.
      */
     public String segmentCodeToVMString(byte code) {
-        return (String)segmentStrings.get(new Byte(code));
+        return (String)segmentStrings.get(code);
     }
 }

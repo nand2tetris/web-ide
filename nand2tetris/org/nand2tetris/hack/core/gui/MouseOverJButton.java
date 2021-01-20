@@ -24,6 +24,7 @@ import javax.swing.*;
  * A button which draws a raised border when the mouse cursor is over it.
  */
 public class MouseOverJButton extends JButton implements MouseListener {
+    private static final long serialVersionUID = -3668786014816499415L;
 
     /**
      * Constructs a new MouseOverJButton.

@@ -24,7 +24,7 @@ import org.nand2tetris.hack.core.translators.*;
 import org.nand2tetris.hack.core.utilities.*;
 
 /**
- * A translator from assmebly (.asm) to hack machine language (.hack)
+ * A translator from assembly (.asm) to hack machine language (.hack)
  */
 public class HackAssembler extends HackTranslator {
 
@@ -35,9 +35,9 @@ public class HackAssembler extends HackTranslator {
     private String comparisonFileName;
 
     // the symbol table
-    private Hashtable symbolTable;
+    private Hashtable<String, Short> symbolTable;
 
-    // The comarison program array
+    // The comparison program array
     private short[] comparisonProgram;
 
     // The HackAssembler translator;
@@ -166,7 +166,7 @@ public class HackAssembler extends HackTranslator {
 
                         input.ensureEnd();
 
-                        symbolTable.put(label,new Short(pc));
+                        symbolTable.put(label,pc);
                     }
                     else if (input.contains("["))
                         pc += 2;
@@ -195,8 +195,8 @@ public class HackAssembler extends HackTranslator {
         }
     }
 
-    protected int[] compileLineAndCount(String line) throws HackTranslatorException {
-        int[] compiledRange = super.compileLineAndCount(line);
+    protected Integer[] compileLineAndCount(String line) throws HackTranslatorException {
+        Integer[] compiledRange = super.compileLineAndCount(line);
 
         // check comparison
         if (compiledRange != null && comparisonReader != null) {
@@ -233,7 +233,7 @@ public class HackAssembler extends HackTranslator {
     }
 
     // Compares the given commands to the next commands in the comparison file.
-    private boolean compare(int[] compiledRange) {
+    private boolean compare(Integer[] compiledRange) {
         boolean result = true;
         int length = compiledRange[1] - compiledRange[0] + 1;
 
@@ -299,7 +299,7 @@ public class HackAssembler extends HackTranslator {
                     if (!numeric) {
                         Short address = (Short)symbolTable.get(label);
                         if (address == null) {
-                            address = new Short(varIndex++);
+                            address = varIndex++;
                             symbolTable.put(label, address);
                         }
 
@@ -308,7 +308,7 @@ public class HackAssembler extends HackTranslator {
                     else
                         addCommand(translator.textToCode(line));
                 }
-                else { // try to compile normaly, if error - try to compile as compact assembly
+                else { // try to compile normally, if error - try to compile as compact assembly
                     try {
                         addCommand(translator.textToCode(line));
                     } catch (AssemblerException ae) {
@@ -345,7 +345,7 @@ public class HackAssembler extends HackTranslator {
     public void rowSelected(TextFileEvent event) {
         super.rowSelected(event);
 
-        int[] range = rowIndexToRange(event.getRowIndex());
+        Integer[] range = rowIndexToRange(event.getRowIndex());
         if (range != null) {
             if (comparisonReader != null)
                 ((HackAssemblerGUI)gui).getComparison().select(range[0], range[1]);

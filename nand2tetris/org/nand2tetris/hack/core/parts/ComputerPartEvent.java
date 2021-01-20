@@ -25,6 +25,8 @@ import java.util.EventObject;
  */
 public class ComputerPartEvent extends EventObject {
 
+    private static final long serialVersionUID = -6159941604282722500L;
+
     // the index of the ComputerPart location that was changed
     private int index;
 

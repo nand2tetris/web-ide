@@ -28,6 +28,8 @@ import javax.swing.text.html.*;
  */
 public class HTMLViewFrame extends JFrame {
 
+    private static final long serialVersionUID = -8730851673851975377L;
+
     // The scroll pane for this frame
     private JScrollPane scrollPane;
 

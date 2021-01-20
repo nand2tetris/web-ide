@@ -24,9 +24,10 @@ import org.nand2tetris.hack.core.controller.*;
  */
 public class HardwareSimulatorControllerEvent extends ControllerEvent {
 
+    private static final long serialVersionUID = -7193528641683866669L;
+
     /**
-     * Action code for clicking on the TickTock button.
-     * supplied data = null.
+     * Action code for clicking on the TickTock button. supplied data = null.
      */
     public static final byte TICKTOCK_CLICKED = 100;
 

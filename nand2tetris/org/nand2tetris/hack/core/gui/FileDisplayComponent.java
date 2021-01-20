@@ -28,6 +28,8 @@ import javax.swing.table.*;
  */
 public class FileDisplayComponent extends JPanel {
 
+    private static final long serialVersionUID = 5596049951794810262L;
+
     // The rows of the text file.
     private String[] rows;
 
@@ -83,7 +85,7 @@ public class FileDisplayComponent extends JPanel {
     public synchronized void setContents (String fileName) {
         this.fileName = fileName;
         BufferedReader reader;
-        Vector rowsVector = new Vector();
+        Vector<String> rowsVector = new Vector<>();
         try {
             reader = new BufferedReader(new FileReader(fileName));
             String line;
@@ -141,6 +143,8 @@ public class FileDisplayComponent extends JPanel {
     // A model for the displayed table
     class FileDisplayTableModel extends AbstractTableModel {
 
+        private static final long serialVersionUID = 5603934247948807186L;
+
         /**
          * Returns the number of columns.
          */
@@ -180,6 +184,8 @@ public class FileDisplayComponent extends JPanel {
 
     // A cell renderer for the displayed table.
     class FileDisplayTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = -1891483503488445375L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

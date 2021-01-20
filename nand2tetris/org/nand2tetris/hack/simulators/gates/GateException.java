@@ -20,8 +20,10 @@ package org.nand2tetris.hack.simulators.gates;
 /**
  * An exception for errors in a gate.
  */
-public class GateException extends Exception
-{
+public class GateException extends Exception {
+
+    private static final long serialVersionUID = 969299226763187943L;
+
     /**
      * Constructs a new GateException with the given message.
      */

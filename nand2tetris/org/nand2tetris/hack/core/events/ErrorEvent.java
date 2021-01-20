@@ -23,6 +23,7 @@ import java.util.EventObject;
  * An event for notifying on an error.
  */
 public class ErrorEvent extends EventObject {
+    private static final long serialVersionUID = -6785783159145802522L;
 
     // the error message
     private String errorMessage;

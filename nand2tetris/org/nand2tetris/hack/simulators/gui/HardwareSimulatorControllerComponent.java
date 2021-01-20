@@ -29,6 +29,7 @@ import org.nand2tetris.hack.simulators.hardware.*;
  */
 public class HardwareSimulatorControllerComponent extends ControllerComponent implements HardwareSimulatorControllerGUI/*, ChipNameListener */{
 
+    private static final long serialVersionUID = 1153852524588428953L;
     // The buttons of this component.
     private MouseOverJButton loadChipButton;
     private MouseOverJButton tickTockButton;

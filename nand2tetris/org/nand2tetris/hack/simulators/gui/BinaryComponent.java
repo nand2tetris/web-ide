@@ -30,6 +30,7 @@ import org.nand2tetris.hack.core.utilities.Conversions;
  */
 public class BinaryComponent extends JPanel implements MouseListener, KeyListener {
 
+    private static final long serialVersionUID = -2273848118871973576L;
     // Creating the text fields.
     private JTextField bit0 = new JTextField(1);
     private JTextField bit1 = new JTextField(1);
@@ -62,8 +63,8 @@ public class BinaryComponent extends JPanel implements MouseListener, KeyListene
     private ImageIcon okIcon = new ImageIcon(Utilities.imagesDir + "smallok.gif");
     private ImageIcon cancelIcon = new ImageIcon(Utilities.imagesDir + "smallcancel.gif");
 
-    // A vector conatining the listeners to this component.
-    private Vector listeners;
+    // A vector containing the listeners to this component.
+    private Vector<PinValueListener> listeners;
 
     // A boolean value which is true if the user pressed the ok button and
     // false otherwise.
@@ -79,7 +80,7 @@ public class BinaryComponent extends JPanel implements MouseListener, KeyListene
      * Constructs a new BinaryComponent.
      */
     public BinaryComponent() {
-        listeners = new Vector();
+        listeners = new Vector<>();
 
         jbInit();
     }

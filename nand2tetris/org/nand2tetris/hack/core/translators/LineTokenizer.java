@@ -26,7 +26,7 @@ public class LineTokenizer extends StreamTokenizer {
 
     /**
      * Constructs a new LineTokenizer for the given line.
-     * Throws IOException if an IO error occured
+     * Throws IOException if an IO error occurred
      */
     public LineTokenizer(String line) throws IOException {
         super(new StringReader(line));

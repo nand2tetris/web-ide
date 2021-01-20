@@ -29,6 +29,7 @@ import javax.swing.filechooser.FileFilter;
  * of files, in order to be loaded to the simulator.
  */
 public class FileChooserComponent extends JPanel {
+    private static final long serialVersionUID = 9068064281530111945L;
 
     // The label of this component.
     private JLabel fileTypeName = new JLabel();
@@ -50,13 +51,13 @@ public class FileChooserComponent extends JPanel {
     private ImageIcon load = new ImageIcon(Utilities.imagesDir + "open.gif");
 
     // The vector of listeners the this component.
-    private Vector listeners;
+    private Vector<EnterPressedListener> listeners;
 
     /**
      * Constructs a new FileChooserComponent.
      */
     public FileChooserComponent() {
-        listeners = new Vector();
+        listeners = new Vector<>();
         jbInit();
         fileChooserFrame.setSize(440,250);
         fileChooserFrame.setLocation(250,250);
@@ -117,7 +118,7 @@ public class FileChooserComponent extends JPanel {
     }
 
     /**
-     * Sets the textfield with the current file name.
+     * Sets the text field with the current file name.
      */
     public void showCurrentFileName() {
         fileName.setText(currentFileName);
@@ -145,7 +146,7 @@ public class FileChooserComponent extends JPanel {
     }
 
     /**
-     * Returns the textfield.
+     * Returns the text field.
      */
     public JTextField getTextField() {
         return fileName;

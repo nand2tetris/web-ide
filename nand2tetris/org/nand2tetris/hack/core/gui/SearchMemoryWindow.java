@@ -27,6 +27,8 @@ import java.awt.event.*;
  */
 public class SearchMemoryWindow extends JFrame {
 
+    private static final long serialVersionUID = -2904357158649404370L;
+
     // Creating the label in this window.
     private JLabel instructionLbl = new JLabel();
 

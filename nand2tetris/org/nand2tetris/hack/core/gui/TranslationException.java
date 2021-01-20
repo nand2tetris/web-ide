@@ -20,8 +20,10 @@ package org.nand2tetris.hack.core.gui;
 /**
  * An exception for translation errors.
  */
-public class TranslationException extends Exception
-{
+public class TranslationException extends Exception {
+
+    private static final long serialVersionUID = 5505876411040246724L;
+
     /**
      * Constructs a new TranslationException with the given message.
      */

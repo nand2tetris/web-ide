@@ -17,7 +17,6 @@
 
 package org.nand2tetris.hack.builtin.vm;
 
-import org.nand2tetris.hack.simulators.vm.BuiltInVMClass;
 import org.nand2tetris.hack.simulators.vm.TerminateVMProgramThrowable;
 
 /**

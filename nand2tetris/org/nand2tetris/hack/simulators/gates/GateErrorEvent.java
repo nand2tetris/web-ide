@@ -20,14 +20,16 @@ package org.nand2tetris.hack.simulators.gates;
 import org.nand2tetris.hack.core.events.*;
 
 /**
- * An event for notifying a GateErrorEventListener on an error that occured
+ * An event for notifying a GateErrorEventListener on an error that occurred
  * in a gate.
  */
 public class GateErrorEvent extends ErrorEvent {
 
+    private static final long serialVersionUID = -3428407042348962329L;
+
     /**
-     * Constructs a new GateErrorEvent with the given source (gate)
-     * and errorMessage.
+     * Constructs a new GateErrorEvent with the given source (gate) and
+     * errorMessage.
      */
     public GateErrorEvent(Gate source, String errorMessage) {
         super(source, errorMessage);

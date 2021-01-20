@@ -23,10 +23,11 @@ import java.util.EventObject;
  * An event for notifying a ProgramEventListener on a request for a new program.
  */
 public class ProgramEvent extends EventObject {
+    private static final long serialVersionUID = 6652480307020076058L;
 
     /**
-     * event type for notifying on a new loaded program.
-     * supplied data = program file name (String)
+     * event type for notifying on a new loaded program. supplied data = program
+     * file name (String)
      */
     public static final byte LOAD = 1;
 

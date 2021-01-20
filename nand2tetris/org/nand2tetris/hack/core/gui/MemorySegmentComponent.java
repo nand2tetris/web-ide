@@ -31,6 +31,8 @@ import org.nand2tetris.hack.core.parts.*;
 public class MemorySegmentComponent extends JPanel
  implements MemorySegmentGUI, MemoryChangeListener {
 
+    private static final long serialVersionUID = 1924765647801729042L;
+
     /**
      * The current format.
      */
@@ -55,22 +57,19 @@ public class MemorySegmentComponent extends JPanel
     protected JLabel nameLbl = new JLabel();
 
     // A vector containing the values that should be highlighted.
-    protected Vector highlightIndex;
+    protected Vector<Integer> highlightIndex;
 
     // The listeners of this component.
-    private Vector listeners;
+    private Vector<ComputerPartEventListener> listeners;
 
     // The error listeners of this component.
-    private Vector errorEventListeners;
+    private Vector<ErrorEventListener> errorEventListeners;
 
     // The index of the flashed row.
     protected int flashIndex = -1;
 
     // The location of this component relative to its top level ancestor.
     protected Point topLevelLocation;
-
-    // The layout of this component.
-    private BorderLayout borderLayout = new BorderLayout();
 
     // The top level component.
     private Component topLevelComponent;
@@ -95,9 +94,9 @@ public class MemorySegmentComponent extends JPanel
      */
     public MemorySegmentComponent() {
         dataFormat = Format.DEC_FORMAT;
-        listeners = new Vector();
-        errorEventListeners = new Vector();
-        highlightIndex = new Vector();
+        listeners = new Vector<>();
+        errorEventListeners = new Vector<>();
+        highlightIndex = new Vector<>();
         segmentTable = new JTable(getTableModel());
         segmentTable.setDefaultRenderer(segmentTable.getColumnClass(0), getCellRenderer());
         startEnabling = -1;
@@ -197,10 +196,8 @@ public class MemorySegmentComponent extends JPanel
     }
 
     public void notifyListeners() {
-        ComputerPartEvent event = new ComputerPartEvent(this);
-        for (int i=0;i<listeners.size();i++) {
-           ((ComputerPartEventListener)listeners.elementAt(i)).guiGainedFocus();
-        }
+        for (ComputerPartEventListener listener: listeners)
+            listener.guiGainedFocus();
     }
 
     /**
@@ -220,12 +217,12 @@ public class MemorySegmentComponent extends JPanel
    /**
      * Notifies all the ErrorEventListener on an error in this gui by
      * creating an ErrorEvent (with the error message) and sending it
-     * using the errorOccured method to all the listeners.
+     * using the errorOccurred method to all the listeners.
      */
     public void notifyErrorListeners(String errorMessage) {
         ErrorEvent event = new ErrorEvent(this, errorMessage);
         for (int i=0; i<errorEventListeners.size(); i++)
-            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccured(event);
+            ((ErrorEventListener)errorEventListeners.elementAt(i)).errorOccurred(event);
     }
 
     /**
@@ -267,7 +264,6 @@ public class MemorySegmentComponent extends JPanel
      * Returns the coordinates of the top left corner of the value at the given index.
      */
     public Point getCoordinates(int index) {
-        JScrollBar bar = scrollPane.getVerticalScrollBar();
         Rectangle r = segmentTable.getCellRect(index, 1, true);
         segmentTable.scrollRectToVisible(r);
         setTopLevelLocation();
@@ -276,7 +272,7 @@ public class MemorySegmentComponent extends JPanel
     }
 
     /**
-     * Hides all highlightes.
+     * Hides all highlights.
      */
     public void hideHighlight() {
         highlightIndex.removeAllElements();
@@ -287,7 +283,7 @@ public class MemorySegmentComponent extends JPanel
      * Highlights the value at the given index.
      */
     public void highlight(int index) {
-        highlightIndex.addElement(new Integer(index));
+        highlightIndex.addElement(index);
         repaint();
     }
 
@@ -465,6 +461,8 @@ public class MemorySegmentComponent extends JPanel
     // An inner class representing the model of this table.
     class MemorySegmentTableModel extends AbstractTableModel {
 
+        private static final long serialVersionUID = -3062181128751276827L;
+
         /**
          * Returns the number of columns.
          */
@@ -534,9 +532,11 @@ public class MemorySegmentComponent extends JPanel
         }
     }
 
-    // An inner class which implemets the cell renderer of the memory table, giving
+    // An inner class which implements the cell renderer of the memory table, giving
     // the feature of aligning the text in the cells.
     class MemorySegmentTableCellRenderer extends DefaultTableCellRenderer {
+
+        private static final long serialVersionUID = -8268900517407798347L;
 
         public Component getTableCellRendererComponent
             (JTable table, Object value, boolean selected, boolean focused, int row, int column)

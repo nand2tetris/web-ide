@@ -17,7 +17,6 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import java.awt.event.*;
 import javax.swing.*;
 import org.nand2tetris.hack.core.parts.*;
 
@@ -29,7 +28,7 @@ import org.nand2tetris.hack.core.parts.*;
 public interface KeyboardGUI extends ComputerPartGUI {
 
     /**
-     * Displayes the given key name.
+     * Displays the given key name.
      */
     public void setKey(String keyName);
 

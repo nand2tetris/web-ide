@@ -24,6 +24,8 @@ import java.util.EventObject;
  */
 public class TextFileEvent extends EventObject {
 
+    private static final long serialVersionUID = -7337367589673700516L;
+
     // the changed row index;
     private int rowIndex;
 

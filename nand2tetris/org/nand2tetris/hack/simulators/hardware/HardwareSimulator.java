@@ -153,7 +153,7 @@ public class HardwareSimulator extends HackSimulator
         String result = null;
 
         if (gate == null)
-            throw new VariableException("cannot get var's value since no gate is currently loaded", varName);
+            throw new VariableException("cannot get var value since no gate is currently loaded", varName);
 
         if (varName.equals(VAR_TIME))
             result = String.valueOf(time) + (clockUp ? "+" : " ");
@@ -237,7 +237,7 @@ public class HardwareSimulator extends HackSimulator
      */
     public void setValue(String varName, String value) throws VariableException {
         if (gate == null)
-            throw new VariableException("cannot get var's value since no gate is currently loaded", varName);
+            throw new VariableException("cannot get var value since no gate is currently loaded", varName);
 
         short numValue;
 
@@ -402,7 +402,7 @@ public class HardwareSimulator extends HackSimulator
     }
 
     // Hides all highlights in GUIs.
-    private void hideHighlightes() {
+    private void hideHighlights() {
         inputPins.hideHighlight();
         outputPins.hideHighlight();
         internalPins.hideHighlight();
@@ -439,7 +439,7 @@ public class HardwareSimulator extends HackSimulator
             if (gui.getGateInfo() != null)
                 gui.getGateInfo().reset();
 
-            hideHighlightes();
+            hideHighlights();
         }
 
         if (gate != null)
@@ -668,18 +668,18 @@ public class HardwareSimulator extends HackSimulator
     }
 
     /**
-     * Called when an error occured in a computer part.
+     * Called when an error occurred in a computer part.
      * The event contains the source object and the error message.
      */
-    public void computerPartErrorOccured(ComputerPartErrorEvent event) {
+    public void computerPartErrorOccurred(ComputerPartErrorEvent event) {
         displayMessage(event.getErrorMessage(), true);
     }
 
     /**
-     * Called when an error occured in a gate's component.
+     * Called when an error occurred in a gate's component.
      * The event contains the source object and the error message.
      */
-    public void gateErrorOccured(GateErrorEvent event) {
+    public void gateErrorOccurred(GateErrorEvent event) {
         displayMessage(event.getErrorMessage(), true);
     }
 
@@ -741,7 +741,7 @@ public class HardwareSimulator extends HackSimulator
         if (gui != null) {
             // hide gui highlights
             if (animationMode != HackController.NO_DISPLAY_CHANGES)
-                hideHighlightes();
+                hideHighlights();
 
             updateTime();
         }
@@ -767,21 +767,6 @@ public class HardwareSimulator extends HackSimulator
             if (!clockUp)
                 gui.getGateInfo().setTime(time);
         }
-    }
-
-    // receives a variable name of the form xxx[i] and returns the numeric
-    // value of i.
-    // Throws VariableException if i is negative.
-    private static short getIndex(String varName) throws VariableException {
-        if (varName.indexOf("]") == -1)
-            throw new VariableException("Missing ']'", varName);
-
-        String indexStr = varName.substring(varName.indexOf("[") + 1, varName.indexOf("]"));
-        int index = Integer.parseInt(indexStr);
-        if (index < 0)
-            throw new VariableException("Illegal variable index", varName);
-
-        return (short)index;
     }
 
     // Returns the given pin name including its sub bus specification.

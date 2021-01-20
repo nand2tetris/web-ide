@@ -26,6 +26,8 @@ import org.nand2tetris.hack.compilers.vm.*;
  */
 public class VMProgramRowSelectionEvent extends EventObject {
 
+    private static final long serialVersionUID = 8217783200994572299L;
+
     // the changed row index;
     private int rowIndex;
 

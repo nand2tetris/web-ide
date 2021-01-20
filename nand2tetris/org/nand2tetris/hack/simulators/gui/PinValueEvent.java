@@ -25,6 +25,8 @@ import java.util.EventObject;
  */
 public class PinValueEvent extends EventObject {
 
+    private static final long serialVersionUID = -226492094915833135L;
+
     // The pin value in a string representation.
     private String valueStr;
 

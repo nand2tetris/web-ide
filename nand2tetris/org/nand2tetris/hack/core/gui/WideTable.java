@@ -22,10 +22,11 @@ import javax.swing.*;
 import javax.swing.table.*;
 
 /**
- * A table with a pre-determind width.
+ * A table with a pre-determined width.
  */
 public class WideTable extends JTable {
 
+    private static final long serialVersionUID = 6953208975166744716L;
     // The width of the table.
     private int width;
 

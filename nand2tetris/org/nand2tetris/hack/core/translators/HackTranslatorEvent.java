@@ -25,9 +25,10 @@ import java.util.EventObject;
  */
 public class HackTranslatorEvent extends EventObject {
 
+    private static final long serialVersionUID = 9222295322190790462L;
+
     /**
-     * Action code for performing the single step operation.
-     * supplied data = null
+     * Action code for performing the single step operation. supplied data = null
      */
     public static final byte SINGLE_STEP = 1;
 

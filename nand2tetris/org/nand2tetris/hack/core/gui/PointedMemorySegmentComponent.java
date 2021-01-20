@@ -24,6 +24,8 @@ import org.nand2tetris.hack.core.parts.*;
 
 public class PointedMemorySegmentComponent extends MemorySegmentComponent implements PointedMemorySegmentGUI {
 
+    private static final long serialVersionUID = 9131520495128876564L;
+
     // The pointer address
     protected short pointerAddress = -1;
 
@@ -82,9 +84,11 @@ public class PointedMemorySegmentComponent extends MemorySegmentComponent implem
         hasFocus = false;
     }
 
-    // An inner class which implemets the cell renderer of the program table, giving
+    // An inner class which implements the cell renderer of the program table, giving
     // the feature of coloring the background of a specific cell.
     public class PointedMemorySegmentTableCellRenderer extends MemorySegmentTableCellRenderer {
+
+        private static final long serialVersionUID = 7450464677672535605L;
 
         public void setRenderer(int row, int column) {
             if (row == pointerAddress - startAddress)

@@ -165,7 +165,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 		Class[] paramsClasses = new Class[params.length];
 		Object[] requestParams = new Object[params.length];
 		for (int i=0; i<params.length; ++i) {
-			requestParams[i] = new Short(params[i]);
+			requestParams[i] = params[i];
 			paramsClasses[i] = short.class;
 		}
 
@@ -312,7 +312,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 	/**
 	 * Makes sure an address that a built-in function requested
 	 * to write/read from is legal. If not - notifies the vm emulator
-	 * Thread that an exception occured, waits for a signal from it and
+	 * Thread that an exception occurred, waits for a signal from it and
 	 * throws a TerminateVMProgramThrowable.
 	 */
 	private void checkMemoryAddress(short address) throws TerminateVMProgramThrowable {

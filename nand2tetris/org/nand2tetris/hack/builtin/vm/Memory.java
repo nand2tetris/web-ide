@@ -17,7 +17,6 @@
 
 package org.nand2tetris.hack.builtin.vm;
 
-import org.nand2tetris.hack.simulators.vm.BuiltInVMClass;
 import org.nand2tetris.hack.simulators.vm.TerminateVMProgramThrowable;
 
 /**
@@ -69,7 +68,6 @@ public class Memory extends JackOSClass {
     public static void deAlloc(short arr)
 			throws TerminateVMProgramThrowable {
 		short segmentAddress = (short)(arr-2);
-		short segmentCapacity = readMemory(segmentAddress);
 		short nextSegmentAddress = readMemory(segmentAddress+1);
 		short nextCapacity;
         if (nextSegmentAddress > HEAP_END_ADDRESS ||

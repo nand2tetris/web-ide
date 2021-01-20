@@ -57,13 +57,12 @@ public class CPU {
     private MemorySegment argSegment;
     private MemorySegment thisSegment;
     private MemorySegment thatSegment;
-    private MemorySegment tempSegment;
 
     // A mapping from memory segment codes to the MemorySegment objects (not including stack).
     private MemorySegment[] segments;
 
     // A stack of method frame addresses
-    private Vector stackFrames;
+    private Vector<Integer> stackFrames;
 
     // The last instruction that was executed.
     private VMEmulatorInstruction currentInstruction;
@@ -96,7 +95,6 @@ public class CPU {
         this.argSegment = argSegment;
         this.thisSegment = thisSegment;
         this.thatSegment = thatSegment;
-        this.tempSegment = tempSegment;
 
         segments = new MemorySegment[HVMInstructionSet.NUMBER_OF_ACTUAL_SEGMENTS];
         segments[HVMInstructionSet.LOCAL_SEGMENT_CODE] = localSegment;
@@ -105,7 +103,7 @@ public class CPU {
         segments[HVMInstructionSet.THAT_SEGMENT_CODE] = thatSegment;
         segments[HVMInstructionSet.TEMP_SEGMENT_CODE] = tempSegment;
 
-        stackFrames = new Vector();
+        stackFrames = new Vector<>();
 
         if (program.getGUI() != null) {
             builtInFunctionsRunner =
@@ -214,8 +212,8 @@ public class CPU {
             case HVMInstructionSet.ADD_CODE:
                 add();
                 break;
-            case HVMInstructionSet.SUBSTRACT_CODE:
-                substract();
+            case HVMInstructionSet.SUBTRACT_CODE:
+                subtract();
                 break;
             case HVMInstructionSet.NEGATE_CODE:
                 negate();
@@ -277,9 +275,9 @@ public class CPU {
     }
 
     /**
-     * 2's complement integer substraction (binary operation)
+     * 2's complement integer subtraction (binary operation)
      */
-    public void substract() throws ProgramException {
+    public void subtract() throws ProgramException {
         calculate(2, Calculator.SUBTRACT);
     }
 
@@ -291,7 +289,7 @@ public class CPU {
     }
 
     /**
-     * Equalaty operation (binary operation). Returns(to the stack)
+     * Equality operation (binary operation). Returns(to the stack)
      * 0xFFFF as true,0x0000 as false
      */
     public void equal() throws ProgramException {
@@ -474,7 +472,7 @@ public class CPU {
         // check whether there is a "calling frame"
         if (stackFrames.size() > 0) {
             // retrieve stack frame address of old function
-            int frameAddress = ((Integer)stackFrames.lastElement()).intValue();
+            Integer frameAddress = stackFrames.lastElement();
             stackFrames.removeElementAt(stackFrames.size() - 1);
             workingStackSegment.setStartAddress(frameAddress);
 
@@ -509,7 +507,7 @@ public class CPU {
 											  Definitions.VAR_END_ADDRESS - 1,
 											  true);
 			}
-			program.setPC((short)(returnAddress-1)); // set previousPC currectly
+			program.setPC((short)(returnAddress-1)); // set previousPC currently
 			program.setPC(returnAddress); // pc = *sp
 		} else {
             error("Illegal return address");
@@ -540,7 +538,7 @@ public class CPU {
      */
     public void callFunction(short address, short numberOfArguments, String functionName, boolean callerIsBuiltIn)
      throws ProgramException {
-        stackFrames.addElement(new Integer(workingStackSegment.getStartAddress()));
+        stackFrames.addElement(workingStackSegment.getStartAddress());
         workingStackSegment.setStartAddress(getSP() + 5);
 
 		if (callerIsBuiltIn) {
@@ -575,7 +573,7 @@ public class CPU {
 			builtInFunctionsRunner.callBuiltInFunction(functionName, params);
 		} else if (address >= 0 || address < program.getSize()) {
 			program.setPC(address);
-			program.setPC(address); // make sure previouspc isn't pc-1
+			program.setPC(address); // make sure previousPC isn't pc-1
 									// which might happen if the calling
 									// function called this function in the
 									// last line before the "return" and
@@ -597,7 +595,7 @@ public class CPU {
             throw new ProgramException("Illegal function name: " + functionName);
 
         String className = functionName.substring(0, dotLocation);
-        int[] range = program.getStaticRange(className);
+        Integer[] range = program.getStaticRange(className);
         if (range == null)
             throw new ProgramException("Function name doesn't match class name: " + functionName);
 

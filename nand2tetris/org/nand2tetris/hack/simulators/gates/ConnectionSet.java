@@ -22,7 +22,9 @@ import java.util.HashSet;
 /**
  * A set of Connection objects.
  */
-public class ConnectionSet extends HashSet {
+public class ConnectionSet extends HashSet<Connection> {
+
+    private static final long serialVersionUID = 1224935961384641347L;
 
     /**
      * Constructs a new ConnectionSet

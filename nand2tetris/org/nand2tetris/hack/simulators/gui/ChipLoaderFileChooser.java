@@ -29,6 +29,7 @@ import org.nand2tetris.hack.core.gui.*;
  */
 public class ChipLoaderFileChooser extends JFrame {
 
+    private static final long serialVersionUID = 1372545391815567666L;
     // creating the file chooser components.
     private FileChooserComponent workingDir = new FileChooserComponent();
     private FileChooserComponent builtInDir = new FileChooserComponent();
@@ -42,14 +43,14 @@ public class ChipLoaderFileChooser extends JFrame {
     private JButton cancelButton = new JButton();
 
     // the vector containing the listeners to this component.
-    private Vector listeners;
+    private Vector<FilesTypeListener> listeners;
 
     /**
      * Constructs a new ChipLoaderFileChooser.
      */
     public ChipLoaderFileChooser() {
         super ("Directories Selection");
-        listeners = new Vector();
+        listeners = new Vector<>();
         setSelectionToDirectory();
         setNames();
         jbInit();
@@ -84,10 +85,8 @@ public class ChipLoaderFileChooser extends JFrame {
      */
     public void notifyListeners (String working, String builtIn/*, String composite*/) {
         FilesTypeEvent event = new FilesTypeEvent(this,working, builtIn, null/*, composite*/);
-
-        for(int i=0;i<listeners.size();i++) {
-            ((FilesTypeListener)listeners.elementAt(i)).filesNamesChanged(event);
-        }
+        for (FilesTypeListener listener: listeners)
+            listener.filesNamesChanged(event);
     }
 
     /**

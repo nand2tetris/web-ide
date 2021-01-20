@@ -38,10 +38,10 @@ public class Script {
     public static final int MAX_OUTPUT_LIST_ARGUMENTS = 20;
 
     // The list of commands
-    private Vector commands;
+    private Vector<Command> commands;
 
     // The list of script line numbers that match the corresponding command
-    private Vector lineNumbers;
+    private Vector<Integer> lineNumbers;
 
     // The file name of the script
     private String scriptName;
@@ -63,8 +63,8 @@ public class Script {
             throw new ScriptException("Script " + scriptName + " not found");
         }
 
-        commands = new Vector();
-        lineNumbers = new Vector();
+        commands = new Vector<>();
+        lineNumbers = new Vector<>();
         buildScript();
     }
 
@@ -74,7 +74,6 @@ public class Script {
         boolean whileOpen = false;
 		boolean justOpened = false;
         boolean outputListPrepared = false;
-        int currentCommandIndex = 0;
         Command command = null;
         int lineNumber = 0;
 
@@ -151,7 +150,7 @@ public class Script {
             }
 
             commands.addElement(command);
-            lineNumbers.addElement(new Integer(lineNumber));
+            lineNumbers.addElement(lineNumber);
         }
 
         if (repeatOpen || whileOpen)
@@ -159,7 +158,7 @@ public class Script {
 
         command = new Command(Command.END_SCRIPT_COMMAND);
         commands.addElement(command);
-        lineNumbers.addElement(new Integer(lineNumber));
+        lineNumbers.addElement(lineNumber);
     }
 
     // creates and returns a simulator command.
@@ -253,28 +252,28 @@ public class Script {
         VariableFormat[] vars = new VariableFormat[count];
 
         for (int i = 0; i < count; i++) {
-            int procentPos = args[i].indexOf('%');
-            if (procentPos == -1) { // no % found - add default formatting
-                procentPos = args[i].length();
+            int percentPos = args[i].indexOf('%');
+            if (percentPos == -1) { // no % found - add default formatting
+                percentPos = args[i].length();
                 args[i] += "%B1.1.1";
             }
 
             // find var name
-            String varName = args[i].substring(0, procentPos);
+            String varName = args[i].substring(0, percentPos);
 
             // find format
-            char format = args[i].charAt(procentPos + 1);
+            char format = args[i].charAt(percentPos + 1);
             if (format != VariableFormat.BINARY_FORMAT && format != VariableFormat.DECIMAL_FORMAT
                 && format != VariableFormat.HEX_FORMAT && format != VariableFormat.STRING_FORMAT)
                 scriptError("%" + format + " is not a legal format");
 
             // find padL
             int padL = 0;
-            int dotPos1 = args[i].indexOf('.', procentPos);
+            int dotPos1 = args[i].indexOf('.', percentPos);
             if (dotPos1 == -1)
                 scriptError("Missing '.'");
             try {
-                padL = Integer.parseInt(args[i].substring(procentPos + 2, dotPos1));
+                padL = Integer.parseInt(args[i].substring(percentPos + 2, dotPos1));
             } catch (NumberFormatException nfe) {
                 scriptError("padL must be a number");
             }
@@ -389,7 +388,7 @@ public class Script {
               input.getSymbol() == '{'))
                 scriptError("Missing '{' in repeat command");
 
-        return new Command(Command.REPEAT_COMMAND, new Integer(repeatNum));
+        return new Command(Command.REPEAT_COMMAND, repeatNum);
     }
 
     // creates and returns a controller While command.
@@ -457,7 +456,7 @@ public class Script {
      * Assumes a legal index.
      */
     public Command getCommandAt(int index) {
-        return (Command)commands.elementAt(index);
+        return commands.elementAt(index);
     }
 
     /**
@@ -465,7 +464,7 @@ public class Script {
      * Assumes a legal index.
      */
     public int getLineNumberAt(int index) {
-        return ((Integer)lineNumbers.elementAt(index)).intValue();
+        return (lineNumbers.elementAt(index)).intValue();
     }
 
     /**

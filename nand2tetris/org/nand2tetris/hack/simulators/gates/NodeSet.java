@@ -22,7 +22,9 @@ import java.util.*;
 /**
  * A set of nodes.
  */
-public class NodeSet extends Vector {
+public class NodeSet extends Vector<Node> {
+
+    private static final long serialVersionUID = 5146277350846412711L;
 
     /**
      * Creates a new NodeSet.

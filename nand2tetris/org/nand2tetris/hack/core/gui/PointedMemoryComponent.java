@@ -27,6 +27,8 @@ import org.nand2tetris.hack.core.parts.*;
  */
 public class PointedMemoryComponent extends MemoryComponent implements PointedMemoryGUI {
 
+    private static final long serialVersionUID = 8088777711214037915L;
+
     // The pointer address
     protected int pointerAddress = -1;
 
@@ -63,9 +65,11 @@ public class PointedMemoryComponent extends MemoryComponent implements PointedMe
         hasFocus = false;
     }
 
-    // An inner class which implemets the cell renderer of the program table, giving
+    // An inner class which implements the cell renderer of the program table, giving
     // the feature of coloring the background of a specific cell.
     public class PointedMemoryTableCellRenderer extends MemoryTableCellRenderer {
+
+        private static final long serialVersionUID = 61467133846354683L;
 
         public void setRenderer(int row, int column) {
             if (row == pointerAddress)

@@ -17,14 +17,22 @@
 
 package org.nand2tetris.hack.core.translators;
 
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Hashtable;
 import java.util.Vector;
-import javax.swing.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.translators.*;
-import org.nand2tetris.hack.core.utilities.*;
+
+import javax.swing.Timer;
+
+import org.nand2tetris.hack.core.parts.TextFileEvent;
+import org.nand2tetris.hack.core.parts.TextFileEventListener;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * This object provides translation services.
@@ -45,7 +53,7 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     protected String destFileName;
 
     // The size of the program.
-    protected int programSize;
+    protected Integer programSize;
 
     // The program array
     protected short[] program;
@@ -60,7 +68,7 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     private Timer timer;
 
     // locked when single step in process
-    private boolean singleStepLocked;
+    private Boolean singleStepLocked;
 
     // The Single Step task object
     private SingleStepTask singleStepTask;
@@ -74,23 +82,23 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     // The load source task object
     private LoadSourceTask loadSourceTask;
 
-    // True when compilation started already with singlestep or fastforward
-    protected boolean compilationStarted;
+    // True when compilation started already with single step or fastforward
+    protected Boolean compilationStarted;
 
     // The index of the next location to compile into in the destination file.
-    protected int destPC;
+    protected Integer destPC;
 
     // The index of the next location to compile in the source file.
-    protected int sourcePC;
+    protected Integer sourcePC;
 
     // If true, change to the translator will be displayed in its GUI.
-    private boolean updateGUI;
+    private Boolean updateGUI;
 
     // Maps between lines in the source files and their corresponding compiled lines
     // in the destination. The key is the pc of the source (Integer) and
     // the value is an int array of length 2, containing start and end pc of the destination
     // file.
-    protected Hashtable compilationMap;
+    protected Hashtable<Integer, Integer[]> compilationMap;
 
     // true only in the process of full compilation
     protected boolean inFullCompilation;
@@ -187,15 +195,15 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
      * If the line is a directive (doesn't compile to any physical code), returns null.
      * If the line is not legal, throws a HackTranslatorException.
      */
-    protected int[] compileLineAndCount(String line) throws HackTranslatorException {
-        int[] result = null;
+    protected Integer[] compileLineAndCount(String line) throws HackTranslatorException {
+        Integer[] result = null;
 
         int startPC = destPC;
         compileLine(line);
         int length = destPC - startPC;
 
         if (length > 0)
-            result = new int[]{startPC, destPC - 1};
+            result = new Integer[]{startPC, destPC - 1};
 
         return result;
     }
@@ -232,15 +240,15 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     // if not legal.
     private void checkDestinationFile(String fileName) throws HackTranslatorException {
         if (!fileName.endsWith("." + getDestinationExtension()))
-            throw new HackTranslatorException(fileName + " is not a ." + getDestinationExtension()
-                                              + " file");
+            throw new HackTranslatorException(
+                fileName + " is not a ." + getDestinationExtension() + " file");
     }
 
     /**
      * Restarts the compilation from the beginning of the source.
      */
     protected void restartCompilation() {
-        compilationMap = new Hashtable();
+        compilationMap = new Hashtable<>();
         sourcePC = 0;
         destPC = 0;
 
@@ -263,8 +271,8 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     // Loads the given source file and displays it in the Source GUI
     private void loadSource(String fileName) throws HackTranslatorException {
         String line;
-        Vector formattedLines = new Vector();
-        Vector lines = null;
+        Vector<String> formattedLines = new Vector<>();
+        Vector<String> lines = null;
         String errorMessage = null;
 
         try {
@@ -284,7 +292,7 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
             checkSourceFile(fileName);
             sourceFileName = fileName;
 
-            lines = new Vector();
+            lines = new Vector<>();
             BufferedReader sourceReader = new BufferedReader(new FileReader(sourceFileName));
 
             while((line = sourceReader.readLine()) != null) {
@@ -383,9 +391,9 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
             updateGUI = false;
 
             while(sourcePC < source.length) {
-                int[] compiledRange = compileLineAndCount(source[sourcePC]);
+                Integer[] compiledRange = compileLineAndCount(source[sourcePC]);
                 if (compiledRange != null) {
-                    compilationMap.put(new Integer(sourcePC), compiledRange);
+                    compilationMap.put(sourcePC, compiledRange);
                 }
 
                 sourcePC++;
@@ -443,7 +451,7 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     }
 
     /**
-     * Displayes the first numOfCommands commands from the program in the dest window.
+     * Displays the first numOfCommands commands from the program in the dest window.
      */
     protected void showProgram(int numOfCommands) {
         gui.getDestination().reset();
@@ -473,7 +481,7 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     }
 
     // Reads a single line from the source, compiles it and writes the result to the
-    // detination.
+    // destination.
     private void singleStep() {
         singleStepLocked = true;
 
@@ -486,10 +494,10 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
             gui.getSource().addHighlight(sourcePC, true);
             gui.getDestination().clearHighlights();
             updateGUI = true;
-            int[] compiledRange = compileLineAndCount(source[sourcePC]);
+            Integer[] compiledRange = compileLineAndCount(source[sourcePC]);
 
             if (compiledRange != null) {
-                compilationMap.put(new Integer(sourcePC), compiledRange);
+                compilationMap.put(sourcePC, compiledRange);
             }
 
             sourcePC++;
@@ -599,9 +607,9 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
     /**
      * Returns the range in the compilation map that corresponds to the given rowIndex.
      */
-    protected int[] rowIndexToRange(int rowIndex) {
-        Integer key = new Integer(rowIndex);
-        return (int[])compilationMap.get(key);
+    protected Integer[] rowIndexToRange(int rowIndex) {
+        Integer key = rowIndex;
+        return compilationMap.get(key);
     }
 
      // Returns the working dir that is saved in the data file, or "" if data file doesn't exist.
@@ -635,7 +643,7 @@ public abstract class HackTranslator implements HackTranslatorEventListener, Act
      */
     public void rowSelected(TextFileEvent event) {
         int index = event.getRowIndex();
-        int[] range = rowIndexToRange(index);
+        Integer[] range = rowIndexToRange(index);
         gui.getSource().addHighlight(index, true);
         gui.getSource().hideSelect();
         if (range != null) {

@@ -25,7 +25,7 @@ import org.nand2tetris.hack.core.utilities.*;
 /**
  * A translation service between the Assembly text and the numeric instruction values.
  * The translation is bidirectional.
- * This is a singlton class.
+ * This is a singleton class.
  */
 public class HackAssemblerTranslator {
 
@@ -35,61 +35,61 @@ public class HackAssemblerTranslator {
     public static final short NOP = (short)0x8000;
 
     // exp constants
-    private static final Short ZERO         = new Short((short)0xea80);
-    private static final Short ONE          = new Short((short)0xefc0);
-    private static final Short MINUS_ONE    = new Short((short)0xee80);
-    private static final Short EXP_D        = new Short((short)0xe300);
-    private static final Short NOT_D        = new Short((short)0xe340);
-    private static final Short EXP_M        = new Short((short)0xfc00);
-    private static final Short EXP_A        = new Short((short)0xec00);
-    private static final Short NOT_M        = new Short((short)0xfc40);
-    private static final Short NOT_A        = new Short((short)0xec40);
-    private static final Short MINUS_D      = new Short((short)0xe3c0);
-    private static final Short MINUS_M      = new Short((short)0xfcc0);
-    private static final Short MINUS_A      = new Short((short)0xecc0);
-    private static final Short D_PLUS_ONE   = new Short((short)0xe7c0);
-    private static final Short M_PLUS_ONE   = new Short((short)0xfdc0);
-    private static final Short A_PLUS_ONE   = new Short((short)0xedc0);
-    private static final Short D_MINUS_ONE  = new Short((short)0xe380);
-    private static final Short M_MINUS_ONE  = new Short((short)0xfc80);
-    private static final Short A_MINUS_ONE  = new Short((short)0xec80);
-    private static final Short D_PLUS_M     = new Short((short)0xf080);
-    private static final Short D_PLUS_A     = new Short((short)0xe080);
-    private static final Short D_MINUS_M    = new Short((short)0xf4c0);
-    private static final Short D_MINUS_A    = new Short((short)0xe4c0);
-    private static final Short M_MINUS_D    = new Short((short)0xf1c0);
-    private static final Short A_MINUS_D    = new Short((short)0xe1c0);
-    private static final Short D_AND_M      = new Short((short)0xf000);
-    private static final Short D_AND_A      = new Short((short)0xe000);
-    private static final Short D_OR_M       = new Short((short)0xf540);
-    private static final Short D_OR_A       = new Short((short)0xe540);
+    private static final Short ZERO         = (short)0xea80;
+    private static final Short ONE          = (short)0xefc0;
+    private static final Short MINUS_ONE    = (short)0xee80;
+    private static final Short EXP_D        = (short)0xe300;
+    private static final Short NOT_D        = (short)0xe340;
+    private static final Short EXP_M        = (short)0xfc00;
+    private static final Short EXP_A        = (short)0xec00;
+    private static final Short NOT_M        = (short)0xfc40;
+    private static final Short NOT_A        = (short)0xec40;
+    private static final Short MINUS_D      = (short)0xe3c0;
+    private static final Short MINUS_M      = (short)0xfcc0;
+    private static final Short MINUS_A      = (short)0xecc0;
+    private static final Short D_PLUS_ONE   = (short)0xe7c0;
+    private static final Short M_PLUS_ONE   = (short)0xfdc0;
+    private static final Short A_PLUS_ONE   = (short)0xedc0;
+    private static final Short D_MINUS_ONE  = (short)0xe380;
+    private static final Short M_MINUS_ONE  = (short)0xfc80;
+    private static final Short A_MINUS_ONE  = (short)0xec80;
+    private static final Short D_PLUS_M     = (short)0xf080;
+    private static final Short D_PLUS_A     = (short)0xe080;
+    private static final Short D_MINUS_M    = (short)0xf4c0;
+    private static final Short D_MINUS_A    = (short)0xe4c0;
+    private static final Short M_MINUS_D    = (short)0xf1c0;
+    private static final Short A_MINUS_D    = (short)0xe1c0;
+    private static final Short D_AND_M      = (short)0xf000;
+    private static final Short D_AND_A      = (short)0xe000;
+    private static final Short D_OR_M       = (short)0xf540;
+    private static final Short D_OR_A       = (short)0xe540;
 
     // dest constants
-    private static final Short A   = new Short((short)0x20);
-    private static final Short M   = new Short((short)0x8);
-    private static final Short D   = new Short((short)0x10);
-    private static final Short AM  = new Short((short)0x28);
-    private static final Short AD  = new Short((short)0x30);
-    private static final Short MD  = new Short((short)0x18);
-    private static final Short AMD = new Short((short)0x38);
+    private static final Short A   = 0x20;
+    private static final Short M   = 0x8;
+    private static final Short D   = 0x10;
+    private static final Short AM  = 0x28;
+    private static final Short AD  = 0x30;
+    private static final Short MD  = 0x18;
+    private static final Short AMD = 0x38;
 
     // jmp constants
-    private static final Short JMP              = new Short((short)0x7);
-    private static final Short JMP_LESS_THEN    = new Short((short)0x4);
-    private static final Short JMP_EQUAL        = new Short((short)0x2);
-    private static final Short JMP_GREATER_THEN  = new Short((short)0x1);
-    private static final Short JMP_NOT_EQUAL    = new Short((short)0x5);
-    private static final Short JMP_LESS_EQUAL   = new Short((short)0x6);
-    private static final Short JMP_GREATER_EQUAL = new Short((short)0x3);
+    private static final Short JMP              = 0x7;
+    private static final Short JMP_LESS_THEN    = 0x4;
+    private static final Short JMP_EQUAL        = 0x2;
+    private static final Short JMP_GREATER_THEN  = 0x1;
+    private static final Short JMP_NOT_EQUAL    = 0x5;
+    private static final Short JMP_LESS_EQUAL   = 0x6;
+    private static final Short JMP_GREATER_EQUAL = 0x3;
 
     // the single instance
     private static HackAssemblerTranslator instance;
 
     // The translation tables from text to codes
-    private Hashtable expToCode, destToCode, jmpToCode;
+    private Hashtable<String, Short> expToCode, destToCode, jmpToCode;
 
     // The translation table from code to text.
-    private Hashtable expToText, destToText, jmpToText;
+    private Hashtable<Short, String> expToText, destToText, jmpToText;
 
 
     /**
@@ -127,7 +127,7 @@ public class HackAssemblerTranslator {
      * If doesn't exist, throws AssemblerException.
      */
     public String getExpByCode(short code) throws AssemblerException {
-        String result = (String)expToText.get(new Short(code));
+        String result = (String)expToText.get(code);
         if (result == null)
             throw new AssemblerException("Illegal exp: " + code);
         return result;
@@ -149,7 +149,7 @@ public class HackAssemblerTranslator {
      * If doesn't exist, throws AssemblerException.
      */
     public String getDestByCode(short code) throws AssemblerException {
-        String result = (String)destToText.get(new Short(code));
+        String result = (String)destToText.get(code);
         if (result == null)
             throw new AssemblerException("Illegal dest: " + code);
         return result;
@@ -171,7 +171,7 @@ public class HackAssemblerTranslator {
      * If doesn't exist, throws AssemblerException.
      */
     public String getJmpByCode(short code) throws AssemblerException {
-        String result = (String)jmpToText.get(new Short(code));
+        String result = (String)jmpToText.get(code);
         if (result == null)
             throw new AssemblerException("Illegal jmp: " + code);
         return result;
@@ -349,8 +349,8 @@ public class HackAssemblerTranslator {
 
     // initializes the exp table
     private void initExp() {
-        expToCode = new Hashtable();
-        expToText = new Hashtable();
+        expToCode = new Hashtable<>();
+        expToText = new Hashtable<>();
 
         expToCode.put("0",ZERO);
         expToCode.put("1",ONE);
@@ -422,8 +422,8 @@ public class HackAssemblerTranslator {
 
     // initializes the dest table
     private void initDest() {
-        destToCode = new Hashtable();
-        destToText = new Hashtable();
+        destToCode = new Hashtable<>();
+        destToText = new Hashtable<>();
 
         destToCode.put("A",A);
         destToCode.put("M",M);
@@ -444,8 +444,8 @@ public class HackAssemblerTranslator {
 
     // initializes the jmp table
     private void initJmp() {
-        jmpToCode = new Hashtable();
-        jmpToText = new Hashtable();
+        jmpToCode = new Hashtable<>();
+        jmpToText = new Hashtable<>();
 
         jmpToCode.put("JMP",JMP);
         jmpToCode.put("JLT",JMP_LESS_THEN);

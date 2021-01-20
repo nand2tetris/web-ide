@@ -30,6 +30,7 @@ import org.nand2tetris.hack.simulators.hardware.*;
  */
 public class PartsComponent extends JPanel implements PartsGUI {
 
+    private static final long serialVersionUID = -7687383684105826920L;
     // The strings representing a composite and BuiltIn gates.
     private final static String BUILTIN_GATE  = "BuiltIn";
     private final static String COMPOSITE_GATE  = "Composite";
@@ -94,7 +95,7 @@ public class PartsComponent extends JPanel implements PartsGUI {
     }
 
     /**
-     * Resets the contents of this parts compoennt.
+     * Resets the contents of this parts component.
      */
     public void reset() {
         partsTable.clearSelection();
@@ -157,8 +158,9 @@ public class PartsComponent extends JPanel implements PartsGUI {
 
     // An inner class representing the model of the parts table.
     class PartsTableModel extends AbstractTableModel {
+        private static final long serialVersionUID = -5010203816890744902L;
 
-        String[] columnNames = {"Chip Name", "Type", "Clocked"};
+        String[] columnNames = { "Chip Name", "Type", "Clocked" };
 
         /**
          * Returns the number of columns.
@@ -195,7 +197,7 @@ public class PartsComponent extends JPanel implements PartsGUI {
                     result = BUILTIN_GATE;
             }
             else if (col==2)
-                result = new Boolean(parts[row].getGateClass().isClocked());
+                result = parts[row].getGateClass().isClocked();
             return result;
         }
 

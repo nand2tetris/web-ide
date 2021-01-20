@@ -25,8 +25,9 @@ import org.nand2tetris.hack.core.controller.*;
 import org.nand2tetris.hack.core.parts.BusGUI;
 
 public class BusComponent extends JPanel implements ActionListener, BusGUI {
+    private static final long serialVersionUID = 5106070306986244033L;
 
-    // Minimum and maximum miliseconds per one unit of movement
+    // Minimum and maximum milliseconds per one unit of movement
     private static final int MIN_MS = 10;
     private static final int MAX_MS = 40;
 

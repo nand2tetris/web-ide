@@ -5,8 +5,8 @@ shopt -s globstar
 mkdir --parents InstallDir/build
 rm -rf InstallDir/build/*
 
-javac -d InstallDir/build org/**/*.java
+javac -d InstallDir/build -Xlint:deprecation -Xlint:unchecked org/**/*.java
 cd InstallDir
-jar cvf nand2tetris.jar bin
+jar cf nand2tetris.jar bin
 cd build
-jar uvf ../nand2tetris.jar org
+jar uf ../nand2tetris.jar org

@@ -8,9 +8,9 @@ erase /P InstallDir\build
 javac -d InstallDir\build %PATHS%
 javac -d InstallDir\build org\nand2tetris\hack\main\*.java
 cd InstallDir
-jar cvf nand2tetris.jar bin
+jar cf nand2tetris.jar bin
 cd build
-jar uvf ..\nand2tetris.jar org
+jar uf ..\nand2tetris.jar org
 
 goto :eof
 

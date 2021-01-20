@@ -13,6 +13,18 @@ supports the book "The Elements of Computing Systems" by Nisan and Schocken,
 MIT Press 2005. If you modify the contents of this file, please document and
 mark your changes clearly, for the benefit of others.
 
+2.5.1
+=====
+
+General
+-------
+
+Fixed: Modified the source package structure to meet java standard packaging
+       rules.
+
+Fixed: -Xlint:warning and -Xlint:deprecation throughout the project. 
+
+Added: build.sh and build.bat to build and package the project.
 
 2.5
 ===

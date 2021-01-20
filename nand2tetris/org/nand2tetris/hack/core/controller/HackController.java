@@ -108,9 +108,6 @@ public class HackController
      */
     public static final int NO_ADDITIONAL_DISPLAY = 3;
 
-    // The default dir for loading script files
-    private static final String INITIAL_SCRIPT_DIR = "scripts";
-
     // Minimum and maximum milliseconds per script command execution
     private static final int MAX_MS = 2500;
     private static final int MIN_MS = 25;

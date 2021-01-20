@@ -36,6 +36,9 @@ public class BuiltInFunctionsRunner implements Runnable {
 	private static final int THROW_PROGRAM_EXCEPTION_REQUEST = 3; // b.i.=>prog
 	private static final int INFINITE_LOOP_REQUEST = 4; // b.i.=>prog
 
+	private static final String builtinVmPackage = "org.nand2tetris.hack.builtins.vm";
+	private static final String builtinVmBaseClass = "org.nand2tetris.hack.simulators.vm.BuiltInVMClass";
+
     // objects for communication between the threads
 	private class BuiltInToProgramRequest {
 		int request;
@@ -64,7 +67,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 	/********************** Code common to both threads *****/
 
 	/**
-	 * Relinquises control to the other thread until it relinquishes back.
+	 * Relinquishes control to the other thread until it relinquishes back.
 	 * Invariant: at any given time one of the threads is waiting here.
 	 */
 	private synchronized void continueOtherThread() {
@@ -141,9 +144,9 @@ public class BuiltInFunctionsRunner implements Runnable {
 		}
 		
 		// Find the implementing class
-		Class implementingClass;
+		Class<?> implementingClass;
 		try {
-			implementingClass = Class.forName(builtInDir+"."+className);
+			implementingClass = Class.forName(builtinVmPackage+"."+className);
 		} catch (ClassNotFoundException cnfe) {
 			throw new ProgramException("Can't find "+className+".vm or a built-in implementation for class "+className);
 		}
@@ -151,18 +154,18 @@ public class BuiltInFunctionsRunner implements Runnable {
 		// Check that the class is a subclass of BuiltInVMClass
 		// (right now not that important if the class doesn't want to access
 		// the computer - like math - but good practice anyway).
-		Class currentClass = implementingClass;
+		Class<?> currentClass = implementingClass;
 		boolean found;
 		do {
 			currentClass = currentClass.getSuperclass();
-			found = currentClass.getName().equals("Hack.VMEmulator.BuiltInVMClass");
+			found = currentClass.getName().equals(builtinVmBaseClass);
 		} while (!found && !currentClass.getName().equals("java.lang.Object"));
 		if (!found) {
 			throw new ProgramException("Built-in implementation for "+className+" is not a subclass of BuiltInVMClass");
 		}
 
 		// Find the implementing method & fill in the request
-		Class[] paramsClasses = new Class[params.length];
+		Class<?>[] paramsClasses = new Class[params.length];
 		Object[] requestParams = new Object[params.length];
 		for (int i=0; i<params.length; ++i) {
 			requestParams[i] = params[i];
@@ -176,7 +179,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 		} catch (NoSuchMethodException nsme) {
 			throw new ProgramException("Can't find "+className+".vm or a built-in implementation for function "+methodName+" in class "+className+" taking "+params.length+" argument"+(params.length==1?"":"s")+".");
 		}
-		Class returnType = functionObject.getReturnType();
+		Class<?> returnType = functionObject.getReturnType();
 		if (returnType != short.class && returnType != void.class &&
 			returnType != char.class && returnType != boolean.class) {
 			throw new ProgramException("Can't find "+className+".vm and the built-in implementation for "+functionName+" taking "+params.length+" arguments doesn't return short/char/void/boolean.");
@@ -234,7 +237,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 			while (true) {
 				try {
 					// Tell the VM Emulator that we finished init
-					// by issueing a request for calling a "null function" -
+					// by issuing a request for calling a "null function" -
 					// The emulator expects us to tell it we finished init
 					// and will ignore the actual function call request and
 					// continue as normal.
@@ -266,7 +269,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 			try { // Try to run the built-in implementation
 				// programToBuiltIn might be overwritten until the return
 				// from the call. Save what's needed.
-				Class returnType = programToBuiltIn.functionObject.getReturnType();
+				Class<?> returnType = programToBuiltIn.functionObject.getReturnType();
 				functionName =
 					programToBuiltIn.functionObject.getName();
 				// Execute
@@ -328,7 +331,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 	}
 
 	/**
-	 * Called by a built-in functio through the BuiltInVMClass class.
+	 * Called by a built-in function through the BuiltInVMClass class.
 	 * Enters an infinite loop, de-facto halting the program.
 	 * Important so that tests and other scripts finish counting
 	 * (since a built-in infinite loop doesn't count as steps).

@@ -212,7 +212,7 @@ public class PartsComponent extends JPanel implements PartsGUI {
         /**
          * Returns the the class of a specific column.
          */
-        public Class getColumnClass(int c) {
+        public Class<?> getColumnClass(int c) {
             return getValueAt(0, c).getClass();
         }
     }

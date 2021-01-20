@@ -55,9 +55,6 @@ public class MemoryComponent extends JPanel implements MemoryGUI {
     // The table representing the memory.
     protected JTable memoryTable;
 
-    // The model of the table.
-    private MemoryTableModel tableModel = new MemoryTableModel();
-
     // The values of this memory in a string representation.
     protected String[] valuesStr;
 

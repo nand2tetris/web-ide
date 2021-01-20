@@ -23,7 +23,7 @@ package org.nand2tetris.hack.simulators.gates;
 public class BuiltInGateClass extends GateClass {
 
     // the java class that holds the basic gate functionality
-    private Class javaGateClass;
+    private Class<?> javaGateClass;
 
     private static final String builtInGatePackage = "org.nand2tetris.hack.builtin.chips";
     private static final String baseGateClass = "org.nand2tetris.hack.simulators.gates.BuiltInGate";
@@ -52,7 +52,7 @@ public class BuiltInGateClass extends GateClass {
         }
 
         // check that the class is a subclass of BuiltInGate
-        Class currentClass = javaGateClass;
+        Class<?> currentClass = javaGateClass;
         boolean found;
         do {
             currentClass = currentClass.getSuperclass();
@@ -127,9 +127,9 @@ public class BuiltInGateClass extends GateClass {
             outputNodes[i] = new Node();
 
         try {
-            result = (BuiltInGate)javaGateClass.newInstance();
-        } catch (IllegalAccessException iae) {
-            throw new InstantiationException(iae.getMessage());
+            result = (BuiltInGate)javaGateClass.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            throw new InstantiationException(e.getMessage());
         }
 
         result.init(inputNodes, outputNodes, this);

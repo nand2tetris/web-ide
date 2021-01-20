@@ -1,3 +1,3 @@
 @echo off
 cd %0\..
-java -classpath "%CLASSPATH%;.;bin/classes;bin/lib/Hack.jar;bin/lib/HackGUI.jar;bin/lib/Simulators.jar;bin/lib/SimulatorsGUI.jar;bin/lib/Compilers.jar" VMEmulatorMain %1
+java -classpath "%CLASSPATH%;nand2tetris.jar" org.nand2tetris.hack.main.VMEmulatorMain %1

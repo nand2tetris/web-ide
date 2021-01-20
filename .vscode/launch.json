@@ -5,12 +5,30 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "type": "java",
+            "name": "HardwareSimulatorMain",
+            "request": "launch",
+            "mainClass": "org.nand2tetris.hack.main.HardwareSimulatorMain",
+            "projectName": "computron5k_dc1526c2",
+            "cwd": "${workspaceFolder}/nand2tetris/InstallDir"
+        },
+        {
+            "type": "java",
+            "name": "CPUSimulatorMain",
+            "request": "launch",
+            "mainClass": "org.nand2tetris.hack.main.CPUSimulatorMain",
+            "projectName": "computron5k_dc1526c2",
+            "cwd": "${workspaceFolder}/nand2tetris/InstallDir"
+        },
+        {
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["./projects/07/StackArithmetic/SimpleAdd/SimpleAdd.vm"]
+            "args": [
+                "./projects/07/StackArithmetic/SimpleAdd/SimpleAdd.vm"
+            ]
         }
     ]
 }

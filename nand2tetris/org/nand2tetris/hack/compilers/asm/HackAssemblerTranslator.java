@@ -307,8 +307,10 @@ public class HackAssemblerTranslator {
             for (int i = 0; i < size; i++)
                 memory[i] = nullValue;
 
+            BufferedReader reader = null;
+
             try {
-                BufferedReader reader = new BufferedReader(new FileReader(fileName));
+                reader = new BufferedReader(new FileReader(fileName));
                 String line;
                 int pc = 0;
 
@@ -331,6 +333,15 @@ public class HackAssemblerTranslator {
                 reader.close();
             } catch (IOException ioe) {
                 throw new AssemblerException("IO error while reading " + fileName);
+            } finally {
+                try {
+                    if (reader != null) {
+                        reader.close();
+                    }
+                } catch (IOException e) {
+                    throw new AssemblerException("IO error while reading " + fileName);
+                }
+
             }
         }
         else if (fileName.endsWith(".asm")) {

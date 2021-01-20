@@ -335,7 +335,7 @@ public class PinsComponent extends JPanel implements PinsGUI, MouseListener, Pin
 	 * This generates the same feel as the (hexa)decimal input method
      */
     public void mouseClicked(MouseEvent e) {
-        if(isEnabled && (e.getModifiers()&InputEvent.BUTTON1_MASK) != 0) {
+        if(isEnabled && (e.getModifiersEx()&InputEvent.BUTTON1_DOWN_MASK) != 0) {
 			if (binary.isVisible()) {
 				binary.hideBinary();
 				// The pinsTable didn't get the selection message since it

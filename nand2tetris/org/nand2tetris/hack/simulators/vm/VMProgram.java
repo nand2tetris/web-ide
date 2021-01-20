@@ -134,7 +134,7 @@ public class VMProgram extends InteractiveComputerPart
             String className = name.substring(0, name.indexOf("."));
 			// put some dummy into static range - just to tell the function
 			// getAddress in the second pass which classes exist
-			staticRange.put(className, null);
+			staticRange.put(className, new Integer[2]);
             try {
                 updateSymbolTable(files[i], symbols, functions);
             } catch (ProgramException pe) {
@@ -295,6 +295,14 @@ public class VMProgram extends InteractiveComputerPart
             throw new ProgramException("Error while reading from file");
         } catch (NoSuchElementException nsee) {
             throw new ProgramException("In line " + lineNumber + ": unexpected end of command");
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch(IOException e){
+                throw new ProgramException("Error while reading from file");
+            }
         }
 		if (isSlashStar) {
 			throw new ProgramException("Unterminated /* comment at end of file");
@@ -488,6 +496,14 @@ public class VMProgram extends InteractiveComputerPart
             throw new ProgramException("Illegal 16-bit value");
         } catch (NoSuchElementException nsee) {
             throw new ProgramException("In line " + lineNumber + ": unexpected end of command");
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                throw new ProgramException("Error while reading from file");
+            }
         }
 		if (isSlashStar) {
 			throw new ProgramException("Unterminated /* comment at end of file");

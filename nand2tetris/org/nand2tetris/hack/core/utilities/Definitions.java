@@ -485,7 +485,7 @@ public class Definitions {
      * Returns the key name from the given key event.
      */
     public String getKeyName(KeyEvent e) {
-        String modifiers = KeyEvent.getKeyModifiersText(e.getModifiers());
+        String modifiers = InputEvent.getModifiersExText(e.getModifiersEx());
         String result = modifiers + (modifiers.length() > 0 ? "+" : "")
                         + KeyEvent.getKeyText(e.getKeyCode());
 

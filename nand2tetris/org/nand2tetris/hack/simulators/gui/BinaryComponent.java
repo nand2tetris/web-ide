@@ -183,9 +183,9 @@ public class BinaryComponent extends JPanel implements MouseListener, KeyListene
         if(e.getKeyChar()=='0' || e.getKeyChar()=='1') {
             t.transferFocus();
             t.selectAll();
-        } else if (e.getKeyChar() == Event.ENTER) {
+        } else if (e.getKeyChar() == KeyEvent.VK_ENTER) {
 			approve();
-		} else if (e.getKeyChar() == Event.ESCAPE) {
+		} else if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
 			hideBinary();
 		} else {
             t.selectAll();

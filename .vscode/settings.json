@@ -12,6 +12,7 @@
     "cSpell.words": [
         "ALU's",
         "ALUGUI",
+        "ALUX",
         "APPENDCHAR",
         "CHARAT",
         "CLASSPATH",
@@ -21,6 +22,9 @@
         "DRAWRECTANGLE",
         "ERASELASTCHAR",
         "FASTFORWARD",
+        "FDIV",
+        "FMUL",
+        "FSUB",
         "GUIPC",
         "HEXA",
         "MOVECURSOR",

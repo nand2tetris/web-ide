@@ -50,6 +50,8 @@ M=D
 
 ## Interrupts
 
+### Interrupt Instructions
+
 Instruction             | Operation
 ------------------------|----------------------------------------------------|
 `            1aaa a000` | Out of band, put the CPU in interrupt mode & jmp a |
@@ -72,3 +74,17 @@ M=D
 NOOP
 NOOP
 ```
+
+### Interrupt processing
+
+Peripherals have mapped regions
+
+Write LENGTH bytes from MEM[OFFSET] into the device at IRQ#
+WRITE IRQ# OFFSET LENGTH
+
+Read LENGTH bytes from IRQ device into MEM starting at [OFFSET]
+
+IRQ1 Keyboard
+IRQ2 Mouse
+IRQ3 Video memory
+IRQ4 Hard drive

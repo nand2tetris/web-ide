@@ -14,9 +14,17 @@
         },
         {
             "type": "java",
-            "name": "CPUSimulatorMain",
+            "name": "VMEmulatorMain",
             "request": "launch",
-            "mainClass": "org.nand2tetris.hack.main.CPUSimulatorMain",
+            "mainClass": "org.nand2tetris.hack.main.VMEmulatorMain",
+            "projectName": "computron5k_dc1526c2",
+            "cwd": "${workspaceFolder}/nand2tetris/InstallDir"
+        },
+        {
+            "type": "java",
+            "name": "CPUEmulatorMain",
+            "request": "launch",
+            "mainClass": "org.nand2tetris.hack.main.CPUEmulatorMain",
             "projectName": "computron5k_dc1526c2",
             "cwd": "${workspaceFolder}/nand2tetris/InstallDir"
         },

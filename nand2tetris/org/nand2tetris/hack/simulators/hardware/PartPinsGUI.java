@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import java.util.*;
+import java.util.Vector;
 
 /**
  * An interface for the GUI of the part pins table. The GUI is similar to the Pins GUI,

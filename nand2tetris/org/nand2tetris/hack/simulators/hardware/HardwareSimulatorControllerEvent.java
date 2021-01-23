@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.core.controller.*;
+import org.nand2tetris.hack.core.controller.ControllerEvent;
 
 /**
  * An event for notifying the hardware simulator on actions taken in the controller.

@@ -17,9 +17,11 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import java.awt.event.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import org.nand2tetris.hack.core.parts.ComputerPart;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A computer keyboard.

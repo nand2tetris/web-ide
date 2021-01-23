@@ -17,13 +17,32 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.table.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.Vector;
+import javax.swing.BorderFactory;
+import javax.swing.DefaultCellEditor;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import org.nand2tetris.hack.core.events.ErrorEvent;
+import org.nand2tetris.hack.core.events.ErrorEventListener;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartEventListener;
+import org.nand2tetris.hack.core.parts.MemorySegmentGUI;
 
 /**
  * This class represents the gui of a memory segment.

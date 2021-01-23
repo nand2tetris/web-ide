@@ -17,15 +17,19 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import org.nand2tetris.hack.core.parts.LabeledPointedMemoryGUI;
+import org.nand2tetris.hack.core.parts.MemorySegment;
+import org.nand2tetris.hack.core.parts.PointedMemory;
+import org.nand2tetris.hack.core.parts.PointedMemorySegment;
+import org.nand2tetris.hack.core.parts.PointedMemoryGUI;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A Random Access Memory, which is mapped to a screen, and enables a segmented view on it.
  */
 public class RAM extends PointedMemory
 {
-    // The amount of miliseconds that a label should flash.
+    // The amount of milliseconds that a label should flash.
     private static final int LABEL_FLASH_TIME = 500;
 
     private static final short[] emptyScreen = new short[Definitions.SCREEN_SIZE_IN_WORDS];
@@ -111,7 +115,7 @@ public class RAM extends PointedMemory
     }
 
     /**
-     * Clears the contenets of the screen.
+     * Clears the contents of the screen.
      */
     public void clearScreen() {
         setContents(emptyScreen, Definitions.SCREEN_START_ADDRESS);

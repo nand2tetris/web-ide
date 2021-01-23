@@ -17,11 +17,17 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.utilities.*;
-import org.nand2tetris.hack.simulators.cpu.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Insets;
+import java.awt.Graphics;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.Timer;
+import org.nand2tetris.hack.core.utilities.Definitions;
+import org.nand2tetris.hack.simulators.cpu.ScreenGUI;
 
 /**
  * A Screen GUI component.

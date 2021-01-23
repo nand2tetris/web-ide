@@ -17,19 +17,29 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import java.io.*;
-import java.util.*;
-import org.nand2tetris.hack.compilers.vm.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Hashtable;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
+import java.util.Vector;
+
+import org.nand2tetris.hack.compilers.vm.HVMInstructionSet;
+import org.nand2tetris.hack.core.controller.ProgramException;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.core.parts.InteractiveComputerPart;
+import org.nand2tetris.hack.core.utilities.Definitions;
+import org.nand2tetris.hack.core.utilities.HackFileFilter;
 
 /**
  * A list of VM instructions, with a program counter.
  */
-public class VMProgram extends InteractiveComputerPart
- implements ProgramEventListener {
+public class VMProgram extends InteractiveComputerPart implements ProgramEventListener {
 
 	// pseudo address for returning to built-in functions
 	public static final short BUILTIN_FUNCTION_ADDRESS = -1;

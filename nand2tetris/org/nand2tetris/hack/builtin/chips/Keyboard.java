@@ -17,11 +17,14 @@
 
 package org.nand2tetris.hack.builtin.chips;
 
-import java.awt.*;
-import java.awt.event.*;
-import org.nand2tetris.hack.core.utilities.*;
-import org.nand2tetris.hack.simulators.gates.*;
-import org.nand2tetris.hack.simulators.gui.*;
+import java.awt.Component;
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
+import org.nand2tetris.hack.core.utilities.Definitions;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateWithGUI;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
+import org.nand2tetris.hack.simulators.gui.KeyboardComponent;
 
 /**
 /* A Keyboard, implemented as a 16 bit register that stores the currently pressed key code.

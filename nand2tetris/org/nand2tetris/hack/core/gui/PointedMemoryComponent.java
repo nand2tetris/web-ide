@@ -17,10 +17,10 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.table.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.awt.Color;
+import java.awt.event.FocusEvent;
+import javax.swing.table.DefaultTableCellRenderer;
+import org.nand2tetris.hack.core.parts.PointedMemoryGUI;
 
 /**
  * This class represents the GUI of a pointed memory.

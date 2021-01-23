@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import org.nand2tetris.hack.core.utilities.*;
+import org.nand2tetris.hack.core.utilities.Shifter;
 
 /**
  * A node that represents a sub-bus.
@@ -31,7 +31,7 @@ public class SubNode extends Node {
     private byte shiftRight;
 
     /**
-     * Constructs a new SubNode with the given low & high sub-bus indice.
+     * Constructs a new SubNode with the given low & high sub-bus indices.
      */
     public SubNode(byte low, byte high) {
         mask = getMask(low, high);
@@ -46,7 +46,7 @@ public class SubNode extends Node {
     }
 
     /**
-     * Returns a mask according to the given low & high bit indice.
+     * Returns a mask according to the given low & high bit indices.
      */
     public static short getMask(byte low, byte high) {
         short mask = 0;

@@ -17,12 +17,20 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.gui.*;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.Vector;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
+import org.nand2tetris.hack.core.gui.FileChooserComponent;
+import org.nand2tetris.hack.core.gui.FilesTypeEvent;
+import org.nand2tetris.hack.core.gui.FilesTypeListener;
+import org.nand2tetris.hack.core.gui.Utilities;
 
 /**
  * This class represents the gui of the chip loader file chooser.

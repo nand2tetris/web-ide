@@ -17,9 +17,10 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.table.*;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import javax.swing.JTable;
+import javax.swing.table.TableModel;
 
 /**
  * A table with a pre-determined width.

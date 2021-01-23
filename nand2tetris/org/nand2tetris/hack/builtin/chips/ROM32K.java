@@ -17,14 +17,19 @@
 
 package org.nand2tetris.hack.builtin.chips;
 
-import java.awt.*;
-import org.nand2tetris.hack.compilers.asm.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
-import org.nand2tetris.hack.simulators.cpu.*;
-import org.nand2tetris.hack.simulators.gates.*;
-import org.nand2tetris.hack.simulators.gui.*;
+import java.awt.Component;
+import org.nand2tetris.hack.compilers.asm.AssemblerException;
+import org.nand2tetris.hack.compilers.asm.HackAssemblerTranslator;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartEventListener;
+import org.nand2tetris.hack.core.utilities.Definitions;
+import org.nand2tetris.hack.simulators.cpu.ROM;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateWithGUI;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
+import org.nand2tetris.hack.simulators.gui.ROMComponent;
 
 /**
 /* A Read only memory of 32K registers, each 16 bit-wide.  The output is the value

@@ -17,7 +17,10 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.core.parts.*;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.PointedMemory;
+import org.nand2tetris.hack.core.parts.Register;
+import org.nand2tetris.hack.core.parts.RegisterGUI;
 
 /**
  * A register which receives a PointedMemory object.

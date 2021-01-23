@@ -17,9 +17,13 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import java.io.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import java.io.File;
+
+import org.nand2tetris.hack.core.controller.ControllerException;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.core.controller.ScriptException;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
 
 /**
  * A HackController for the Hardware Simulator.
@@ -33,7 +37,7 @@ public class HardwareSimulatorController extends HackController {
      */
     public HardwareSimulatorController(HardwareSimulatorControllerGUI gui,
                                        HardwareSimulator simulator, String defaultScriptName)
-     throws ScriptException, ControllerException  {
+     throws ScriptException, ControllerException {
         super(gui, simulator, defaultScriptName);
 
         gui.disableEval();

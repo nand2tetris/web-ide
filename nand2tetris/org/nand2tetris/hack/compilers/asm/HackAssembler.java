@@ -17,7 +17,10 @@
 
 package org.nand2tetris.hack.compilers.asm;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Hashtable;
 import org.nand2tetris.hack.core.parts.*;
 import org.nand2tetris.hack.core.translators.*;

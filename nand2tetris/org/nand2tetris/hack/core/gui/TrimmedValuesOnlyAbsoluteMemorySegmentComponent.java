@@ -17,9 +17,10 @@
 
 package org.nand2tetris.hack.core.gui;
 
-//import Hack.*;
-import java.awt.*;
-import javax.swing.table.*;
+import java.awt.Point;
+import java.awt.Rectangle;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
 
 /**
  * An AbsolutePointedMemorySegmentComponent that displays only the values column and

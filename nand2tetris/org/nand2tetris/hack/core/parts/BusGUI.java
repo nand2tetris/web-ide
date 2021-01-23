@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.core.parts;
 
-import java.awt.*;
+import java.awt.Point;
 
 /**
  * An interface for the GUI of the bus.

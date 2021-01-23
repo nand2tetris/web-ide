@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import java.util.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.util.Vector;
+
+import org.nand2tetris.hack.core.utilities.Graph;
 
 /**
  * A GateClass for composite gates.

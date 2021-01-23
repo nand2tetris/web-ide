@@ -17,9 +17,9 @@
 
 package org.nand2tetris.hack.core.controller;
 
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
+import java.io.File;
+import java.util.Vector;
+import javax.swing.JComponent;
 
 /**
  * An interface for a GUI of the hack controller.

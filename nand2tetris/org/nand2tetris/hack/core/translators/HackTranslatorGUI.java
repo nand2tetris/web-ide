@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.core.translators;
 
-import java.io.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.io.File;
+import org.nand2tetris.hack.core.parts.TextFileGUI;
 
 /**
  * The GUI of the HackTranslator.

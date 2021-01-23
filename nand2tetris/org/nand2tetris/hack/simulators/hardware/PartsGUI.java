@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.simulators.gates.Gate;
 
 /**
  * An interface for the GUI of the Parts.

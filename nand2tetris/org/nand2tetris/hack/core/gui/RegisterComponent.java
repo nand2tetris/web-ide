@@ -17,12 +17,25 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.util.Vector;
-import javax.swing.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import org.nand2tetris.hack.core.events.ErrorEvent;
+import org.nand2tetris.hack.core.events.ErrorEventListener;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartEventListener;
+import org.nand2tetris.hack.core.parts.RegisterGUI;
 
 /**
  * This class represents the GUI of a register.

@@ -17,10 +17,12 @@
 
 package org.nand2tetris.hack.builtin.chips;
 
-import java.awt.*;
-import org.nand2tetris.hack.core.utilities.*;
-import org.nand2tetris.hack.simulators.gates.*;
-import org.nand2tetris.hack.simulators.gui.*;
+import java.awt.Component;
+import org.nand2tetris.hack.core.utilities.Definitions;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateWithGUI;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
+import org.nand2tetris.hack.simulators.gui.ScreenComponent;
 
 /**
 /* A 512X256 screen, implemented with 8K registers, each register represents 16 pixels.

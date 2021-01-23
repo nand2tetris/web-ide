@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.core.parts;
 
-import java.util.*;
-import org.nand2tetris.hack.core.events.*;
+import java.util.Vector;
+import org.nand2tetris.hack.core.events.ErrorEvent;
+import org.nand2tetris.hack.core.events.ErrorEventListener;
 
 /**
  * An interactive computer part - a computer part that enables input to its GUI.

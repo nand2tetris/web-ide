@@ -17,11 +17,14 @@
 
 package org.nand2tetris.hack.main;
 
-import javax.swing.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.cpu.*;
-import org.nand2tetris.hack.simulators.gui.*;
+import javax.swing.UIManager;
+import org.nand2tetris.hack.core.controller.ControllerGUI;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.core.gui.ControllerComponent;
+import org.nand2tetris.hack.simulators.cpu.CPUEmulator;
+import org.nand2tetris.hack.simulators.cpu.CPUEmulatorApplication;
+import org.nand2tetris.hack.simulators.cpu.CPUEmulatorGUI;
+import org.nand2tetris.hack.simulators.gui.CPUEmulatorComponent;
 
 /**
  * The CPU Emulator.

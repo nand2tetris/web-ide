@@ -17,10 +17,12 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.compilers.asm.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import org.nand2tetris.hack.compilers.asm.AssemblerException;
+import org.nand2tetris.hack.compilers.asm.HackAssemblerTranslator;
+import org.nand2tetris.hack.core.controller.ProgramException;
+import org.nand2tetris.hack.core.parts.Bus;
+import org.nand2tetris.hack.core.parts.Register;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A computer with memory (ROM & RAM) and two registers (A & D). Includes
@@ -51,7 +53,7 @@ public class CPU
     // The time that passed since the program started running.
     protected long time;
 
-    // An assembler transltor
+    // An assembler translator
     protected HackAssemblerTranslator assemblerTranslator;
 
     /**

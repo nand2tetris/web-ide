@@ -17,9 +17,9 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.core.controller.HackSimulatorGUI;
+import org.nand2tetris.hack.core.parts.TextFileGUI;
+import org.nand2tetris.hack.simulators.gates.GatesPanelGUI;
 
 /**
  * An interface for the GUI of the Hardware Simulator.

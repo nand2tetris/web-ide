@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.core.utilities;
 
-import java.util.*;
-import java.awt.event.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
+import java.util.Hashtable;
 
 /**
  * Hack definitions and services. Designed as a singleton.

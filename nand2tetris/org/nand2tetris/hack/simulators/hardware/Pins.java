@@ -17,8 +17,12 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.core.parts.InteractiveValueComputerPart;
+import org.nand2tetris.hack.simulators.gates.GateClass;
+import org.nand2tetris.hack.simulators.gates.Node;
+import org.nand2tetris.hack.simulators.gates.PinInfo;
 
 /**
  * Represents a collection of pins, using the Nodes implementation.

@@ -17,9 +17,20 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Rectangle;
+import java.awt.SystemColor;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import org.nand2tetris.hack.core.gui.*;
 import org.nand2tetris.hack.simulators.cpu.*;
 

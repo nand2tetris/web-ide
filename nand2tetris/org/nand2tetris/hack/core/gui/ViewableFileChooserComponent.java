@@ -17,10 +17,11 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import javax.swing.*;
+import java.awt.Rectangle;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.io.File;
+import javax.swing.JCheckBox;
 
 /**
  * A FileChooserComponent that enables viewing files during selection.

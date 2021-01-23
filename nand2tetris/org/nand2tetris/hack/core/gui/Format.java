@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import org.nand2tetris.hack.core.controller.*;
+import org.nand2tetris.hack.core.controller.HackController;
 import org.nand2tetris.hack.core.utilities.Conversions;
 
 /**

@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.core.parts;
 
-import org.nand2tetris.hack.core.events.*;
+import org.nand2tetris.hack.core.events.ErrorEvent;
 
 /**
  * An event for notifying a ComputerPartErrorEventListener on an error that occurred

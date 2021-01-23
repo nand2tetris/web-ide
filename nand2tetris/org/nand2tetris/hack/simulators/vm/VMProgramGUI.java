@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.parts.InteractiveComputerPartGUI;
 
 /**
  * An interface for the GUI of the VM program. displays a list of instructions and

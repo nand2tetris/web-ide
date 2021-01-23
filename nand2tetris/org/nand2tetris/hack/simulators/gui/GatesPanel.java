@@ -17,9 +17,11 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Rectangle;
+import javax.swing.JPanel;
+import org.nand2tetris.hack.simulators.gates.GatesPanelGUI;
 
 /**
  * A GUI for displaying gates.

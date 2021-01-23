@@ -17,7 +17,8 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.core.controller.*;
+import org.nand2tetris.hack.core.controller.ControllerGUI;
+import org.nand2tetris.hack.core.controller.HackApplication;
 
 /**
  * A CPU Emulator application.

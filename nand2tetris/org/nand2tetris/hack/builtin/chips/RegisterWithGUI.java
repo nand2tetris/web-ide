@@ -17,10 +17,13 @@
 
 package org.nand2tetris.hack.builtin.chips;
 
-import java.awt.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import java.awt.Component;
+import org.nand2tetris.hack.core.gui.RegisterComponent;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartEventListener;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateWithGUI;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
 
 /**
  * A 16 bit memory register.

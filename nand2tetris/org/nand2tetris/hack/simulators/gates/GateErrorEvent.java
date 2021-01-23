@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import org.nand2tetris.hack.core.events.*;
+import org.nand2tetris.hack.core.events.ErrorEvent;
 
 /**
  * An event for notifying a GateErrorEventListener on an error that occurred

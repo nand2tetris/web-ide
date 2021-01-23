@@ -17,8 +17,10 @@
 
 package org.nand2tetris.hack.core.controller;
 
-import java.io.*;
-import java.util.*;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StreamTokenizer;
+import java.util.Hashtable;
 
 /**
  * ScriptTokenizer object: Reads input from a reader and produces a stream of

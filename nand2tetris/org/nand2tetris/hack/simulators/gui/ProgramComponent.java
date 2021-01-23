@@ -17,16 +17,36 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.SystemColor;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;
-import javax.swing.*;
-import javax.swing.table.*;
-import org.nand2tetris.hack.compilers.vm.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.vm.*;
+import javax.swing.BorderFactory;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import org.nand2tetris.hack.compilers.vm.HVMInstruction;
+import org.nand2tetris.hack.core.events.ErrorEvent;
+import org.nand2tetris.hack.core.events.ErrorEventListener;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.gui.MouseOverJButton;
+import org.nand2tetris.hack.core.gui.Utilities;
+import org.nand2tetris.hack.simulators.vm.VMEmulatorInstruction;
+import org.nand2tetris.hack.simulators.vm.VMProgramGUI;
 
 /**
  * This class represents the gui of a Program.

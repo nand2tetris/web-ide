@@ -17,8 +17,13 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.io.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import javax.swing.*;
 
 /**

@@ -17,10 +17,19 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.geom.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.gui.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.Line2D;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.UIManager;
+import javax.swing.SwingConstants;
+import org.nand2tetris.hack.core.gui.Format;
+import org.nand2tetris.hack.core.gui.Utilities;
 import org.nand2tetris.hack.simulators.vm.CalculatorGUI;
 
 /**

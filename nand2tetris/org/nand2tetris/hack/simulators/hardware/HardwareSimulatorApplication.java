@@ -17,7 +17,11 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.core.controller.*;
+import org.nand2tetris.hack.core.controller.ControllerException;
+import org.nand2tetris.hack.core.controller.ControllerGUI;
+import org.nand2tetris.hack.core.controller.HackApplication;
+import org.nand2tetris.hack.core.controller.HackSimulator;
+import org.nand2tetris.hack.core.controller.ScriptException;
 
 /**
  * A HardwareSimulator application.

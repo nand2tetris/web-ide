@@ -17,11 +17,15 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.io.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.text.html.*;
+import java.awt.BorderLayout;
+import java.io.IOException;
+import javax.swing.JEditorPane;
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.text.html.HTMLDocument;
+import javax.swing.text.html.HTMLFrameHyperlinkEvent;
 
 /**
  * A frame for viewing HTML files.

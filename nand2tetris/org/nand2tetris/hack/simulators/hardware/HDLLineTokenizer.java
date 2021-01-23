@@ -17,7 +17,12 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+
 import org.nand2tetris.hack.simulators.gates.HDLTokenizer;
 import org.nand2tetris.hack.simulators.gates.HDLException;
 

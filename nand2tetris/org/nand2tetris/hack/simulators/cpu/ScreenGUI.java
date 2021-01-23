@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.core.parts.*;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
 
 /**
  * A interface for a computer screen GUI.

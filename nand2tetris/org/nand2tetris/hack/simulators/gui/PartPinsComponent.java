@@ -17,12 +17,24 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.table.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.hardware.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.util.Vector;
+import javax.swing.JLabel;
+import javax.swing.JScrollBar;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
+import org.nand2tetris.hack.core.gui.Format;
+import org.nand2tetris.hack.core.gui.Utilities;
+import org.nand2tetris.hack.simulators.hardware.HardwareSimulator;
+import org.nand2tetris.hack.simulators.hardware.PartPinInfo;
+import org.nand2tetris.hack.simulators.hardware.PartPinsGUI;
 
 /**
  * This class represents the gui of a part pin.

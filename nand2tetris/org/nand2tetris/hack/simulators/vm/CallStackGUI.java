@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import java.util.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.util.Vector;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
 
 /**
  * An interface for a GUI of the call stack.

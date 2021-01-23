@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.core.parts.ComputerPart;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.simulators.gates.Gate;
 
 /**
  * A composite gate's parts list, where each part is a gate.

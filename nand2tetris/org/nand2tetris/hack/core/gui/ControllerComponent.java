@@ -17,7 +17,11 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Frame;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import java.io.*;
 import java.util.*;

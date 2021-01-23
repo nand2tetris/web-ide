@@ -17,13 +17,29 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.io.*;
-import java.util.*;
-import javax.swing.*;
-import javax.swing.event.*;
-import javax.swing.table.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.Vector;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import org.nand2tetris.hack.core.parts.TextFileEvent;
+import org.nand2tetris.hack.core.parts.TextFileEventListener;
+import org.nand2tetris.hack.core.parts.TextFileGUI;
 
 /**
  * A component for displaying a text file.

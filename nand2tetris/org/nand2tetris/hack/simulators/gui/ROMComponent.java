@@ -17,17 +17,32 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.SystemColor;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.Vector;
-import javax.swing.*;
+import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
+import javax.swing.JTextField;
+import javax.swing.ImageIcon;
+import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
-import javax.swing.table.*;
-import org.nand2tetris.hack.compilers.asm.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.cpu.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import org.nand2tetris.hack.compilers.asm.AssemblerException;
+import org.nand2tetris.hack.compilers.asm.HackAssemblerTranslator;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.gui.Format;
+import org.nand2tetris.hack.core.gui.MouseOverJButton;
+import org.nand2tetris.hack.core.gui.PointedMemoryComponent;
+import org.nand2tetris.hack.core.gui.TranslationException;
+import org.nand2tetris.hack.core.gui.Utilities;
+import org.nand2tetris.hack.simulators.cpu.ROM;
+import org.nand2tetris.hack.simulators.cpu.ROMGUI;
 
 /**
  * This class represents the GUI of a ROM.

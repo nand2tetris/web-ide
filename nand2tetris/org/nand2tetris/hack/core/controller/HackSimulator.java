@@ -17,10 +17,11 @@
 
 package org.nand2tetris.hack.core.controller;
 
-import java.io.*;
-import java.util.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.io.File;
+import java.util.Vector;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.parts.ComputerPartErrorEventListener;
 
 /**
  * An abstract base class for a simulator that can be controlled by the Hack Controller.

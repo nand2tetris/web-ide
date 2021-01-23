@@ -18,7 +18,7 @@
 package org.nand2tetris.hack.simulators.gates;
 
 /**
- * A Node that receives a target node and low & high bit indice of a sub bus. When the
+ * A Node that receives a target node and low & high bit indices of a sub bus. When the
  * value of this node changes, it only changes the appropriate sub bus of the target node.
  */
 public class SubBusListeningAdapter extends Node {
@@ -34,7 +34,7 @@ public class SubBusListeningAdapter extends Node {
 
     /**
      * Constructs a new SubBusListeningAdapter with the given target node and the
-     * low & high bit indice of the sub bus.
+     * low & high bit indices of the sub bus.
      */
     public SubBusListeningAdapter(Node targetNode, byte low, byte high) {
         mask = SubNode.getMask(low, high);

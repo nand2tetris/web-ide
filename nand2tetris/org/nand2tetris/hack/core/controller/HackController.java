@@ -17,14 +17,22 @@
 
 package org.nand2tetris.hack.core.controller;
 
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.CharacterIterator;
 import java.text.StringCharacterIterator;
 import java.util.Vector;
-import javax.swing.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.utilities.*;
+import javax.swing.Timer;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.utilities.Conversions;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A Controller for HackSimulators. Executes scripts written in a special scripting language

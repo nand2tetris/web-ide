@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.builtin.chips;
 
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.simulators.gates.BuiltInGate;
 
 /**
  * The DFF chip.

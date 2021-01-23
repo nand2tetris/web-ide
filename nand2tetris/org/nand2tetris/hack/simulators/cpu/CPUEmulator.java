@@ -17,10 +17,19 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import org.nand2tetris.hack.core.controller.ControllerEvent;
+import org.nand2tetris.hack.core.controller.CommandException;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.core.controller.HackSimulator;
+import org.nand2tetris.hack.core.controller.HackSimulatorGUI;
+import org.nand2tetris.hack.core.controller.ProgramException;
+import org.nand2tetris.hack.core.controller.VariableException;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.parts.Bus;
+import org.nand2tetris.hack.core.parts.ComputerPartErrorEvent;
+import org.nand2tetris.hack.core.parts.Register;
+import org.nand2tetris.hack.core.utilities.Conversions;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A CPU Emulator. Emulates machine code (In HACK format).

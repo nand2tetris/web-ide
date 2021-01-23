@@ -17,9 +17,17 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import java.util.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import java.util.Enumeration;
+import java.util.Hashtable;
+import java.util.Vector;
+
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.core.parts.ValueComputerPart;
+import org.nand2tetris.hack.simulators.gates.CompositeGateClass;
+import org.nand2tetris.hack.simulators.gates.Gate;
+import org.nand2tetris.hack.simulators.gates.GateClass;
+import org.nand2tetris.hack.simulators.gates.Node;
+import org.nand2tetris.hack.simulators.gates.PinInfo;
 
 /**
  * Represents a collection of pins of a specific part.

@@ -17,9 +17,11 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import java.awt.*;
-import java.util.*;
-import org.nand2tetris.hack.core.events.*;
+import java.awt.Component;
+import java.util.Vector;
+
+import org.nand2tetris.hack.core.events.ErrorEvent;
+import org.nand2tetris.hack.core.events.ErrorEventListener;
 
 /**
  * A BuiltInGate with a GUI component.

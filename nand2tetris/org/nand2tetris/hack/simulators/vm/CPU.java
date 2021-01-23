@@ -17,12 +17,17 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import java.io.*;
-import java.util.*;
-import org.nand2tetris.hack.compilers.vm.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.io.File;
+import java.util.Vector;
+
+import org.nand2tetris.hack.compilers.vm.HVMInstructionSet;
+import org.nand2tetris.hack.core.controller.ProgramException;
+import org.nand2tetris.hack.core.parts.AbsolutePointedMemorySegment;
+import org.nand2tetris.hack.core.parts.Bus;
+import org.nand2tetris.hack.core.parts.MemorySegment;
+import org.nand2tetris.hack.core.parts.PointedMemorySegment;
+import org.nand2tetris.hack.core.parts.TrimmedAbsoluteMemorySegment;
+import org.nand2tetris.hack.core.utilities.Definitions;
 import org.nand2tetris.hack.simulators.cpu.RAM;
 
 /**

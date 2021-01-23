@@ -20,7 +20,7 @@ package org.nand2tetris.hack.builtin.chips;
 import org.nand2tetris.hack.simulators.gates.BuiltInGate;
 
 /**
- * 1 bit 8-way demultiplexor.
+ * 1 bit 8-way demultiplexer.
  * The 3-bit sel choose to which output to channel the input (0->a .. 7->h).
  * The other outputs are set to 0.
  */

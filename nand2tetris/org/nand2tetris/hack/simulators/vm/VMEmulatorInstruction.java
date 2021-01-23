@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import org.nand2tetris.hack.compilers.vm.*;
+import org.nand2tetris.hack.compilers.vm.HVMInstruction;
 
 /**
  * An HVMInstruction for the use of the VMEmulator.

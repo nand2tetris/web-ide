@@ -17,10 +17,15 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.hardware.*;
+import java.awt.Rectangle;
+import java.awt.SystemColor;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import org.nand2tetris.hack.core.gui.Utilities;
+import org.nand2tetris.hack.simulators.hardware.GateInfoGUI;
 
 /**
  * This class represents the GUI of a gate info.

@@ -20,7 +20,7 @@ package org.nand2tetris.hack.builtin.chips;
 import org.nand2tetris.hack.simulators.gates.BuiltInGate;
 
 /**
- * 1-bit 2-way multiplexor.
+ * 1-bit 2-way multiplexer.
  * if sel=1 out=b else out=a.
  */
 public class Mux extends BuiltInGate {

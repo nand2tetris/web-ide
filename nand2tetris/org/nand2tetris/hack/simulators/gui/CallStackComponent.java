@@ -17,7 +17,10 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.*;
 import java.util.*;
 import javax.swing.*;

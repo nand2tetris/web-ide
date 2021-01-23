@@ -20,7 +20,7 @@ package org.nand2tetris.hack.builtin.chips;
 import org.nand2tetris.hack.simulators.gates.BuiltInGate;
 
 /**
- * 4-way 16-bit multiplexor.
+ * 4-way 16-bit multiplexer.
  * The two sel[0..1] bits select the output to be one of the four input buses
  * (0->a ... 3->d).
  */

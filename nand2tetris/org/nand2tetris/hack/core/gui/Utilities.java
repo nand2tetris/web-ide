@@ -17,7 +17,10 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.Rectangle;
 import javax.swing.*;
 import javax.swing.plaf.*;
 
@@ -111,13 +114,13 @@ public class Utilities {
         int afterScrollValue = bar.getValue();
         double visibleRowsCount = computeVisibleRowsCount(table);
 
-        // The scroller moved down
+        // The scroll moved down
         if (afterScrollValue > beforeScrollValue) {
             Rectangle newRectangle = table.getCellRect((int)(Math.min(row + visibleRowsCount / 2,table.getRowCount()-1)) , 0, true);
             table.scrollRectToVisible(newRectangle);
             panel.repaint();
         }
-        // The scroller moved up.
+        // The scroll moved up.
         else if (afterScrollValue < beforeScrollValue){
             Rectangle newRectangle = table.getCellRect((int)(Math.max(row - visibleRowsCount / 2,0)) , 0, true);
             table.scrollRectToVisible(newRectangle);

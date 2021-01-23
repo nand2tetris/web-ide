@@ -17,17 +17,32 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.geom.*;
-import javax.swing.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Line2D;
+
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.UIManager;
 import javax.swing.border.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.cpu.*;
+
+import org.nand2tetris.hack.core.gui.Format;
+import org.nand2tetris.hack.core.gui.Utilities;
+import org.nand2tetris.hack.simulators.cpu.ALUGUI;
 
 /**
  * This class represents the gui of an ALU.
  */
-public class ALUComponent extends JPanel implements ALUGUI{
+public class ALUComponent extends JPanel implements ALUGUI {
 
     private static final long serialVersionUID = -5709977175338487347L;
     // location constants

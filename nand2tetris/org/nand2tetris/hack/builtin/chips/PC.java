@@ -17,10 +17,13 @@
 
 package org.nand2tetris.hack.builtin.chips;
 
-import java.awt.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import java.awt.Component;
+import org.nand2tetris.hack.core.gui.RegisterComponent;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartEventListener;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateWithGUI;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
 
 /**
 /* A 16-bit counter with load and reset controls.
@@ -54,7 +57,7 @@ public class PC extends BuiltInGateWithGUI implements ComputerPartEventListener 
     protected void clockUp() {
         short in = inputPins[0].get(); // 16 bit input
         short load = inputPins[1].get(); // load bit
-        short inc = inputPins[2].get(); // incerement bit
+        short inc = inputPins[2].get(); // increment bit
         short reset = inputPins[3].get(); // reset bit
         if (reset == 1)
             value = 0;

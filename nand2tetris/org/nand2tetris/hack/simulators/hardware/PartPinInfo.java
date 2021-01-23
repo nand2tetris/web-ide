@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.simulators.gates.PinInfo;
 
 /**
  * Holds information on a pin of an internal part.

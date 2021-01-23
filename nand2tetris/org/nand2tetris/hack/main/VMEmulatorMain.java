@@ -17,11 +17,14 @@
 
 package org.nand2tetris.hack.main;
 
-import javax.swing.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.gui.*;
-import org.nand2tetris.hack.simulators.vm.*;
+import javax.swing.UIManager;
+import org.nand2tetris.hack.core.controller.ControllerGUI;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.core.gui.ControllerComponent;
+import org.nand2tetris.hack.simulators.gui.VMEmulatorComponent;
+import org.nand2tetris.hack.simulators.vm.VMEmulator;
+import org.nand2tetris.hack.simulators.vm.VMEmulatorApplication;
+import org.nand2tetris.hack.simulators.vm.VMEmulatorGUI;
 
 /**
  * The VM Emulator.

@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import java.util.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.util.Vector;
+import org.nand2tetris.hack.core.parts.ComputerPart;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
 
 /**
  * A call stack. Holds a vector of called function names.

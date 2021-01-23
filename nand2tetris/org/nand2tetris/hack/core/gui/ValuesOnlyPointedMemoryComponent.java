@@ -17,7 +17,8 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import javax.swing.table.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableModel;
 
 /**
  * A Memory component that has an address pointer and displays only its values

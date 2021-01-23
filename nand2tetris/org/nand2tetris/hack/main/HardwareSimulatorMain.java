@@ -17,10 +17,14 @@
  
 package org.nand2tetris.hack.main;
 
-import javax.swing.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.simulators.gui.*;
-import org.nand2tetris.hack.simulators.hardware.*;
+import javax.swing.UIManager;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.simulators.gui.HardwareSimulatorComponent;
+import org.nand2tetris.hack.simulators.gui.HardwareSimulatorControllerComponent;
+import org.nand2tetris.hack.simulators.hardware.HardwareSimulator;
+import org.nand2tetris.hack.simulators.hardware.HardwareSimulatorApplication;
+import org.nand2tetris.hack.simulators.hardware.HardwareSimulatorGUI;
+import org.nand2tetris.hack.simulators.hardware.HardwareSimulatorControllerGUI;
 
 
 /**

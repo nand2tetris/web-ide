@@ -17,7 +17,9 @@
 
 package org.nand2tetris.hack.core.translators;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.StreamTokenizer;
+import java.io.StringReader;
 
 /**
  * A tokenizer for lines of a program.

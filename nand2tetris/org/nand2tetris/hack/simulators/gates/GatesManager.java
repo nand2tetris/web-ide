@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import java.io.*;
+import java.io.File;
 import java.util.Vector;
 
 /**

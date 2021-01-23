@@ -17,7 +17,8 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import org.nand2tetris.hack.core.controller.*;
+import org.nand2tetris.hack.core.controller.ControllerGUI;
+import org.nand2tetris.hack.core.controller.HackApplication;
 
 /**
  * A VM Emulator application.

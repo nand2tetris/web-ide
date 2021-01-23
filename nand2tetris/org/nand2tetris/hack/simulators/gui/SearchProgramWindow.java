@@ -17,12 +17,18 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.StringTokenizer;
-import javax.swing.*;
-import org.nand2tetris.hack.compilers.vm.*;
-import org.nand2tetris.hack.core.gui.*;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JFrame;
+import javax.swing.JTextField;
+import javax.swing.JTable;
+import javax.swing.ImageIcon;
+import org.nand2tetris.hack.compilers.vm.HVMInstruction;
+import org.nand2tetris.hack.core.gui.Utilities;
 
 /**
  * This class represents a search window for the use of ProgramComponent.

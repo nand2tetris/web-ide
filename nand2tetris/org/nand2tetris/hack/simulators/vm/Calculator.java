@@ -17,7 +17,8 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import org.nand2tetris.hack.core.parts.*;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.core.parts.ValueComputerPart;
 
 /**
  * A simple calculator, with two inputs, one output, and a set of operators.

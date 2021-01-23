@@ -17,9 +17,11 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import java.awt.event.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.parts.*;
+import java.awt.event.KeyListener;
+import org.nand2tetris.hack.core.controller.HackSimulatorGUI;
+import org.nand2tetris.hack.core.parts.BusGUI;
+import org.nand2tetris.hack.core.parts.PointedMemoryGUI;
+import org.nand2tetris.hack.core.parts.RegisterGUI;
 
 /**
  * An interface for a GUI of the CPU emulator.

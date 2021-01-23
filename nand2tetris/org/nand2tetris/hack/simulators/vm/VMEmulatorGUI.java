@@ -17,8 +17,11 @@
 
 package org.nand2tetris.hack.simulators.vm;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.controller.*;
+import org.nand2tetris.hack.core.parts.BusGUI;
+import org.nand2tetris.hack.core.parts.LabeledPointedMemoryGUI;
+import org.nand2tetris.hack.core.parts.MemorySegmentGUI;
+import org.nand2tetris.hack.core.parts.PointedMemorySegmentGUI;
+import org.nand2tetris.hack.core.controller.HackSimulatorGUI;
 import org.nand2tetris.hack.simulators.cpu.ScreenGUI;
 import org.nand2tetris.hack.simulators.cpu.KeyboardGUI;
 

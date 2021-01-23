@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import javax.swing.*;
-import org.nand2tetris.hack.core.parts.*;
+import javax.swing.JComponent;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
 
 /**
  * An interface for the GUI of a computer Keyboard.

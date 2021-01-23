@@ -17,9 +17,10 @@
 
 package org.nand2tetris.hack.core.controller;
 
-import java.io.*;
-import java.util.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.io.IOException;
+import java.io.FileReader;
+import java.util.Vector;
+import org.nand2tetris.hack.core.utilities.Conversions;
 
 /**
  * A list of controller commands.

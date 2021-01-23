@@ -17,9 +17,10 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.gui.*;
+import java.awt.Dimension;
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import org.nand2tetris.hack.core.gui.MemorySegmentComponent;
 
 /**
  * This Panel contains six MemorySegmentComponents: static, local, arg,

@@ -17,12 +17,32 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import java.io.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
-import org.nand2tetris.hack.simulators.gates.*;
+import java.io.File;
+import org.nand2tetris.hack.core.controller.CommandException;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.core.controller.HackSimulator;
+import org.nand2tetris.hack.core.controller.HackSimulatorGUI;
+import org.nand2tetris.hack.core.controller.ProgramException;
+import org.nand2tetris.hack.core.controller.VariableException;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.parts.ComputerPartErrorEvent;
+import org.nand2tetris.hack.core.parts.TextFileEvent;
+import org.nand2tetris.hack.core.parts.TextFileEventListener;
+import org.nand2tetris.hack.core.utilities.Conversions;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateClass;
+import org.nand2tetris.hack.simulators.gates.BuiltInGateWithGUI;
+import org.nand2tetris.hack.simulators.gates.CompositeGate;
+import org.nand2tetris.hack.simulators.gates.CompositeGateClass;
+import org.nand2tetris.hack.simulators.gates.Gate;
+import org.nand2tetris.hack.simulators.gates.GateClass;
+import org.nand2tetris.hack.simulators.gates.GateException;
+import org.nand2tetris.hack.simulators.gates.GatesManager;
+import org.nand2tetris.hack.simulators.gates.DirtyGateListener;
+import org.nand2tetris.hack.simulators.gates.GateErrorEvent;
+import org.nand2tetris.hack.simulators.gates.GateErrorEventListener;
+import org.nand2tetris.hack.simulators.gates.HDLException;
+import org.nand2tetris.hack.simulators.gates.HDLTokenizer;
+import org.nand2tetris.hack.simulators.gates.Node;
 
 /**
  * A simulator for the Hack Hardware. Simulates chips (in .hdl format).

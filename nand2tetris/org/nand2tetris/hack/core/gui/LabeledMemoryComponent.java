@@ -17,9 +17,11 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import javax.swing.table.*;
+import java.awt.Color;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableModel;
 import org.nand2tetris.hack.core.parts.LabeledPointedMemoryGUI;
 
 /**

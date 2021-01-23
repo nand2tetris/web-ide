@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.compilers.asm;
 
-import org.nand2tetris.hack.core.translators.*;
+import org.nand2tetris.hack.core.translators.HackTranslatorEvent;
 
 /**
  * An event for notifying a HackAssemblerEventListener on an action that should be taken,

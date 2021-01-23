@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.compilers.vm;
 
-import java.util.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.util.Hashtable;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * The instruction set of the hack virtual machine.

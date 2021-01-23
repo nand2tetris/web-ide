@@ -17,11 +17,20 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.io.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.cpu.*;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.io.File;
+import org.nand2tetris.hack.core.gui.BusComponent;
+import org.nand2tetris.hack.core.gui.PointedMemoryComponent;
+import org.nand2tetris.hack.core.gui.RegisterComponent;
+import org.nand2tetris.hack.core.parts.BusGUI;
+import org.nand2tetris.hack.core.parts.PointedMemoryGUI;
+import org.nand2tetris.hack.core.parts.RegisterGUI;
+import org.nand2tetris.hack.simulators.cpu.ALUGUI;
+import org.nand2tetris.hack.simulators.cpu.CPUEmulatorGUI;
+import org.nand2tetris.hack.simulators.cpu.KeyboardGUI;
+import org.nand2tetris.hack.simulators.cpu.ROMGUI;
+import org.nand2tetris.hack.simulators.cpu.ScreenGUI;
 
 /**
  * This class represents the gui of the CPUEmulator.

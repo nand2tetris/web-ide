@@ -18,7 +18,8 @@
 package org.nand2tetris.hack.simulators.vm;
 
 import java.util.EventObject;
-import org.nand2tetris.hack.compilers.vm.*;
+
+import org.nand2tetris.hack.compilers.vm.HVMInstruction;
 
 /**
  * An event for notifying an VMProgramRowSelectionEventListener on a change in the selected row,

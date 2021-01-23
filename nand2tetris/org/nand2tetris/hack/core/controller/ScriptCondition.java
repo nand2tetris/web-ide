@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.core.controller;
 
-import org.nand2tetris.hack.core.utilities.*;
+import org.nand2tetris.hack.core.utilities.Conversions;
 
 /**
  * Represents a boolean condition. Has two arguments, which may be variable names or

@@ -17,8 +17,10 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.event.*;
-import javax.swing.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 
 /**
  * A button which draws a raised border when the mouse cursor is over it.

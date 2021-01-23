@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import java.util.*;
+import java.util.Vector;
 
 /**
  * A chip instance.

@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.simulators.hardware;
 
-import org.nand2tetris.hack.simulators.gates.*;
+import org.nand2tetris.hack.simulators.gates.Node;
 
 /**
  * A node that receives a Pins and an index and updates the Pins at the given

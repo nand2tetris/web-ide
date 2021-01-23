@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import org.nand2tetris.hack.core.parts.ComputerPartGUI;
+import org.nand2tetris.hack.core.parts.ValueComputerPart;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A computer ALU. Has two inputs, one output, and a set of commands.

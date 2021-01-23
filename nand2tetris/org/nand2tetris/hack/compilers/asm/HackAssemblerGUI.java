@@ -17,8 +17,8 @@
 
 package org.nand2tetris.hack.compilers.asm;
 
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.translators.*;
+import org.nand2tetris.hack.core.parts.TextFileGUI;
+import org.nand2tetris.hack.core.translators.HackTranslatorGUI;
 
 /**
  * The GUI of the HackAssembler.

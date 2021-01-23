@@ -17,13 +17,25 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.io.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.gates.*;
-import org.nand2tetris.hack.simulators.hardware.*;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.io.File;
+import javax.swing.BorderFactory;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
+import org.nand2tetris.hack.core.gui.TextFileComponent;
+import org.nand2tetris.hack.core.parts.TextFileGUI;
+import org.nand2tetris.hack.simulators.gates.GatesPanelGUI;
+import org.nand2tetris.hack.simulators.hardware.GateInfoGUI;
+import org.nand2tetris.hack.simulators.hardware.HardwareSimulatorGUI;
+import org.nand2tetris.hack.simulators.hardware.PartPinsGUI;
+import org.nand2tetris.hack.simulators.hardware.PartsGUI;
+import org.nand2tetris.hack.simulators.hardware.PinsGUI;
 
 /**
  * This class represents the gui of the hardware simulator.

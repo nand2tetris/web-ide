@@ -17,9 +17,10 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.controller.*;
+import java.awt.Point;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import org.nand2tetris.hack.core.controller.HackSimulatorGUI;
 
 /**
  * The GUI component of a Hack Simulator.

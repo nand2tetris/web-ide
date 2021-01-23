@@ -17,13 +17,22 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.table.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.simulators.gates.*;
-import org.nand2tetris.hack.simulators.hardware.*;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import javax.swing.BorderFactory;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
+import org.nand2tetris.hack.core.gui.Utilities;
+import org.nand2tetris.hack.simulators.gates.BuiltInGate;
+import org.nand2tetris.hack.simulators.gates.CompositeGate;
+import org.nand2tetris.hack.simulators.gates.Gate;
+import org.nand2tetris.hack.simulators.hardware.PartsGUI;
 
 /**
  * This class represents the gui of the parts component.

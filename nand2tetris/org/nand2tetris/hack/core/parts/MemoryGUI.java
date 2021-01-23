@@ -17,7 +17,7 @@
 
 package org.nand2tetris.hack.core.parts;
 
-import org.nand2tetris.hack.core.events.*;
+import org.nand2tetris.hack.core.events.ClearEventListener;
 
 /**
  * An interface for a computer memory GUI.

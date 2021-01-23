@@ -17,8 +17,9 @@
 
 package org.nand2tetris.hack.simulators.gates;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.util.Hashtable;
+import java.util.Vector;
 
 /**
  * A factory and information source for gates.

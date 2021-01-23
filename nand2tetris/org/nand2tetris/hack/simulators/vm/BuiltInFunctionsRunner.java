@@ -18,7 +18,9 @@
 package org.nand2tetris.hack.simulators.vm;
 
 import java.io.File;
-import java.lang.reflect.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 import org.nand2tetris.hack.core.controller.ProgramException;
 import org.nand2tetris.hack.core.utilities.Definitions;
 

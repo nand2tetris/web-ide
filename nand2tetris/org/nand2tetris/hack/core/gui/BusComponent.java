@@ -17,11 +17,19 @@
 
 package org.nand2tetris.hack.core.gui;
 
-import java.awt.*;
-import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.*;
-import org.nand2tetris.hack.core.controller.*;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import javax.swing.BorderFactory;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.border.Border;
+import org.nand2tetris.hack.core.controller.HackController;
 import org.nand2tetris.hack.core.parts.BusGUI;
 
 public class BusComponent extends JPanel implements ActionListener, BusGUI {

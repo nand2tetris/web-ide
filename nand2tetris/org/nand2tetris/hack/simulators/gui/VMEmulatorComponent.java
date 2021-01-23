@@ -17,13 +17,24 @@
 
 package org.nand2tetris.hack.simulators.gui;
 
-import java.awt.*;
-import java.io.*;
-import javax.swing.*;
-import org.nand2tetris.hack.core.gui.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.simulators.cpu.*;
-import org.nand2tetris.hack.simulators.vm.*;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.io.File;
+import javax.swing.BorderFactory;
+import org.nand2tetris.hack.core.gui.AbsolutePointedMemorySegmentComponent;
+import org.nand2tetris.hack.core.gui.BusComponent;
+import org.nand2tetris.hack.core.gui.LabeledMemoryComponent;
+import org.nand2tetris.hack.core.gui.TrimmedValuesOnlyAbsoluteMemorySegmentComponent;
+import org.nand2tetris.hack.core.parts.BusGUI;
+import org.nand2tetris.hack.core.parts.LabeledPointedMemoryGUI;
+import org.nand2tetris.hack.core.parts.MemorySegmentGUI;
+import org.nand2tetris.hack.core.parts.PointedMemorySegmentGUI;
+import org.nand2tetris.hack.simulators.cpu.KeyboardGUI;
+import org.nand2tetris.hack.simulators.cpu.ScreenGUI;
+import org.nand2tetris.hack.simulators.vm.CalculatorGUI;
+import org.nand2tetris.hack.simulators.vm.CallStackGUI;
+import org.nand2tetris.hack.simulators.vm.VMEmulatorGUI;
+import org.nand2tetris.hack.simulators.vm.VMProgramGUI;
 
 /**
  * This class represents the gui of the VMEmulator.

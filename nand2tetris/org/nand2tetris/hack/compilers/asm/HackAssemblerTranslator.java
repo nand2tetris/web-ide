@@ -17,10 +17,13 @@
 
 package org.nand2tetris.hack.compilers.asm;
 
-import java.io.*;
-import java.util.*;
-import org.nand2tetris.hack.core.translators.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Hashtable;
+import org.nand2tetris.hack.core.translators.HackTranslatorException;
+import org.nand2tetris.hack.core.utilities.Conversions;
 
 /**
  * A translation service between the Assembly text and the numeric instruction values.

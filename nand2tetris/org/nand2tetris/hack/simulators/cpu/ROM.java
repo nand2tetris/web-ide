@@ -17,12 +17,16 @@
 
 package org.nand2tetris.hack.simulators.cpu;
 
-import java.util.*;
-import org.nand2tetris.hack.compilers.asm.*;
-import org.nand2tetris.hack.core.controller.*;
-import org.nand2tetris.hack.core.events.*;
-import org.nand2tetris.hack.core.parts.*;
-import org.nand2tetris.hack.core.utilities.*;
+import java.util.Vector;
+import org.nand2tetris.hack.compilers.asm.AssemblerException;
+import org.nand2tetris.hack.compilers.asm.HackAssemblerTranslator;
+import org.nand2tetris.hack.core.controller.HackController;
+import org.nand2tetris.hack.core.controller.ProgramException;
+import org.nand2tetris.hack.core.events.ProgramEvent;
+import org.nand2tetris.hack.core.events.ProgramEventListener;
+import org.nand2tetris.hack.core.parts.ComputerPartEvent;
+import org.nand2tetris.hack.core.parts.PointedMemory;
+import org.nand2tetris.hack.core.utilities.Definitions;
 
 /**
  * A Read Only Memory. Has methods for loading a machine language file (.hack) and for

@@ -7,6 +7,8 @@ import assembler
 DATA_ADDRESS = 'R13'
 MEMORY_ADDRESS = 'R14'
 JUMP_ADDRESS = 'R15'
+FRAME_ADDRESS = 'R12'
+SP_ADDRESS = 'R11'
 
 class VMParser(parser.Parser):
     @classmethod
@@ -127,6 +129,47 @@ class WritePtrInstruction(parser.Instruction):
             ASM('', 'M', 'D')
         ]
 
+class ReadInstruction(parser.Instruction):
+    def buildTree(self):
+        src = self.kwargs['src']
+        if 'reg' in src:
+            return [
+                ASM(src['reg'], 'D', 'M'),
+            ]
+        elif 'ptr' in src:
+            ptr = src['ptr']
+            offset = src.get('offset', 0)
+            return [
+                ReadPtrInstruction(ptr=ptr, offset=offset)
+            ]
+        else:
+            return []
+
+class WriteInstruction(parser.Instruction):
+    def buildTree(self):
+        dest = self.kwargs['dest']
+        if 'reg' in dest:
+            return [
+                ASM(dest['reg'], 'M', 'D'),
+            ]
+        elif 'ptr' in dest:
+            ptr = dest['ptr']
+            offset = dest.get('offset', 0)
+            return [
+                WritePtrInstruction(ptr=ptr, offset=offset)
+            ]
+        else:
+            return []
+
+class MoveInstruction(parser.Instruction):
+    def buildTree(self):
+        src = self.kwargs['src']
+        dest = self.kwargs['dest']
+        return [
+            ReadInstruction(src=src),
+            WriteInstruction(dest=dest),
+        ]
+
 class DecrementStackInstruction(parser.Instruction):
     def buildTree(self):
         return [
@@ -145,15 +188,16 @@ class PopStackInstruction(parser.Instruction):
     def buildTree(self):
         return [
             ReadPtrInstruction(ptr='SP', offset=-1),
-            ASM(MEMORY_ADDRESS, 'M'),
-            DecrementStackInstruction()
+            ASM(DATA_ADDRESS, 'M', 'D'),
+            DecrementStackInstruction(),
+            ASM(DATA_ADDRESS, 'D', 'M')
         ]
 
 class PopRegisterInstruction(parser.Instruction):
     def buildTree(self):
         return [
             PopStackInstruction(),
-            ASM(self.kwargs['ptr'], 'M', 'D')
+            ASM(self.kwargs['reg'], 'M', 'D')
         ]
 
 class PushStackInstruction(parser.Instruction):
@@ -182,10 +226,13 @@ class PushConstantInstruction(parser.Instruction):
 class BinaryInstruction(parser.Instruction):
     def buildTree(self):
         return [
-            ReadPtrInstruction(ptr='SP', offset=-2),
-            ASM(DATA_ADDRESS, 'M', 'D'),
+            # Read Y into DATA_ADDRESS
             ReadPtrInstruction(ptr='SP', offset=-1),
+            ASM(DATA_ADDRESS, 'M', 'D'),
+            # Read X into D
+            ReadPtrInstruction(ptr='SP', offset=-2),
             assembler.AInstruction(DATA_ADDRESS),
+            # Operate with D=X and M=Y
             assembler.CInstruction(OPCODES[self.instruction]),
             WritePtrInstruction(ptr='SP', offset=-2),
             DecrementStackInstruction(),
@@ -332,9 +379,7 @@ class GotoInstruction(parser.Instruction):
                 return [ASM(label, '', '0', 'JMP')]
         if self.instruction == 'if-goto':
             return [
-                ASM(DATA_ADDRESS, 'M', 'D'),
-                DecrementStackInstruction(),
-                ASM(DATA_ADDRESS, 'D', 'M'),
+                PopStackInstruction(),
                 ASM(label, '', 'D', 'JNE')
             ]
         
@@ -361,6 +406,32 @@ class FunctionInstruction(parser.Instruction):
         label = self.kwargs['name']
         return f'function {label} {locals}'
 
+class BuildCallStack(parser.Instruction):
+    def buildTree(self):
+        args = self.kwargs['args']
+        return [
+            MoveInstruction(src={'reg': 'LCL'}, dest={'ptr': 'SP', 'offset': 0}),
+            MoveInstruction(src={'reg': 'ARG'}, dest={'ptr': 'SP', 'offset': 1}),
+            MoveInstruction(src={'reg': 'THIS'}, dest={'ptr': 'SP', 'offset': 2}),
+            MoveInstruction(src={'reg': 'THAT'}, dest={'ptr': 'SP', 'offset': 3}),
+            ASM('SP', 'D', 'M'),
+            ASM(4, 'D', 'D+A'),
+            ASM('SP', 'M', 'D'),
+            ASM(int(args)+5, 'D', 'D-A'),
+            ASM('ARG', 'M', 'D')
+        ]
+
+class ClearArgsInstruction(parser.Instruction):
+    def buildTree(self):
+        args = self.kwargs['args']
+        return [
+            PopRegisterInstruction(reg=DATA_ADDRESS),
+            ASM('SP', 'D', 'M'),
+            ASM(int(args), 'D', 'D-A'),
+            ASM('SP', 'M', 'D'),
+            PushRegisterInstruction(reg=DATA_ADDRESS)
+        ]
+
 class CallInstruction(parser.Instruction):
     def buildTree(self):
         args = self.kwargs['args']
@@ -369,18 +440,10 @@ class CallInstruction(parser.Instruction):
 
         return [
             PushConstantInstruction(val=address),
-            PushRegisterInstruction(reg='LCL'),
-            PushRegisterInstruction(reg='ARG'),
-            PushRegisterInstruction(reg='THIS'),
-            PushRegisterInstruction(reg='THAT'),
-            PushRegisterInstruction(reg='SP'),
-            PushConstantInstruction(val=args),
-            PushConstantInstruction(val=5),
-            BinaryInstruction('sub'),
-            BinaryInstruction('sub'),
-            PopRegisterInstruction(ptr='ARG'),
+            BuildCallStack(args=args),
             GotoInstruction('goto', label=function),
-            assembler.LInstruction(f'({address})')
+            assembler.LInstruction(f'({address})'),
+            ClearArgsInstruction(args=args),
         ]
 
     def vm(self):
@@ -388,40 +451,31 @@ class CallInstruction(parser.Instruction):
         function = self.kwargs['name']
         return f'call {function} {args}'
 
-class MovePointerInstruction(parser.Instruction):
-    def buildTree(self):
-        src = self.kwargs['src']
-        src_offset = self.kwargs.get('src_offset', 0)
-        dest = self.kwargs['dest']
-        dest_offset = self.kwargs.get('dest_offset', 0)
-        return [
-            ReadPtrInstruction(ptr=src, offset=src_offset),
-            WritePtrInstruction(ptr=dest, offset=dest_offset),
-        ]
-
 class PopFrameInstruction(parser.Instruction):
     def buildTree(self):
         return [
-            PopRegisterInstruction(ptr='THAT'),
-            PopRegisterInstruction(ptr='THIS'),
-            PopRegisterInstruction(ptr='ARG'),
-            PopRegisterInstruction(ptr='LCL'),
+            MoveInstruction(src={'ptr': FRAME_ADDRESS, 'offset': -1}, dest={'reg': 'THAT'}),
+            MoveInstruction(src={'ptr': FRAME_ADDRESS, 'offset': -2}, dest={'reg': 'THIS'}),
+            MoveInstruction(src={'ptr': FRAME_ADDRESS, 'offset': -3}, dest={'reg': 'ARG'}),
+            MoveInstruction(src={'ptr': FRAME_ADDRESS, 'offset': -4}, dest={'reg': 'LCL'}),
         ]
 
 class ReturnInstruction(parser.Instruction):
     def buildTree(self):
         return [
-            # Cache arg, to update SP later
-            ASM('ARG', 'D', 'M'), 
-            ASM(DATA_ADDRESS, 'M', 'D'),
+            # FRAME = LCL
+            ASM('LCL', 'D', 'M'),
+            ASM(FRAME_ADDRESS, 'M', 'D'),
+            # RET = *(FRAME-5)
+            MoveInstruction(src={'ptr': FRAME_ADDRESS, 'offset': -5}, dest={'reg': JUMP_ADDRESS}),
             # Copy return value to top of stack
-            PopRegisterInstruction(ptr='ARG'),
+            MoveInstruction(src={'ptr': 'SP', 'offset': -1}, dest={'ptr': 'ARG'}),
+            # Cache arg, to update SP later
+            MoveInstruction(src={'reg': 'ARG'}, dest={'reg': SP_ADDRESS}),
             # Reset registers
             PopFrameInstruction(),
-            # Prepare return jump
-            PopRegisterInstruction(ptr=JUMP_ADDRESS),
             # SP = OLD_ARG+1
-            ASM(MEMORY_ADDRESS, 'D', 'M'),
+            ReadInstruction(src={'reg': SP_ADDRESS}),
             ASM('SP', 'M', 'D+1'),
             GotoInstruction('goto', label=JUMP_ADDRESS, indirect=True)
         ]
@@ -434,7 +488,7 @@ class BootstrapInstruction(parser.Instruction):
         return [
             ASM(256, 'D', 'A'),
             ASM('SP', 'M', 'D'),
-            CallInstruction(name='Sys.init', args=0)
+            GotoInstruction('goto', label='Sys.init')
         ]
 
 if __name__ == '__main__':

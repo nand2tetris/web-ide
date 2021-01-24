@@ -3,8 +3,8 @@ import parser
 import sixml
 
 class JackParser(parser.Parser):
-    def parse(self):
-        parser.Parser.parse(self)
+    def parse(self, instream):
+        parser.Parser.parse(self, instream)
         # Modify the tree
 
     @classmethod

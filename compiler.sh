@@ -31,6 +31,10 @@ else
     for file in $(ls $arg1/*.jack) ; do 
         echo "Compiling $file"
         python compiler.py $file > ${file/jack/vm}
-        python compiler.py $file --xml > ${file/jack/xml}
+        python compiler.py $file --xml > ${file}.xml
+        argbase=$(basename $arg1)
+        python translator.py $arg1/*.vm > $arg1/$argbase.asm
+        python translator.py $arg1/*.vm --xml > $arg1/$argbase.vm.xml
+        python assembler.py $arg1/$argbase.asm > $arg1/$argbase.hack
     done
 fi

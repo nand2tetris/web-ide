@@ -31,6 +31,10 @@ class VMParser(parser.Parser):
             self.tree.insert(0, BootstrapInstruction())
 
 class VMTokenizer(parser.Tokenizer):
+    def __init__(self, instream):
+        parser.Tokenizer.__init__(self, instream)
+        self.currentFunction = ''
+
     def makeInstruction(self, token, comment):
         parts = token.split(' ')
         if len(parts) == 1:
@@ -50,12 +54,13 @@ class VMTokenizer(parser.Tokenizer):
         if instruction in ['lt', 'eq', 'gt']:
             return LogicInstruction(instruction, comment)
         if instruction == 'push' or instruction == 'pop':
-            return MemoryInstruction(instruction, comment, segment=arg1, index=arg2, file='')
+            return MemoryInstruction(instruction, comment, segment=arg1, index=arg2, function=self.currentFunction)
         if instruction == 'label':
             return LabelInstruction(instruction, comment, label=arg1)
         if instruction == 'goto' or instruction == 'if-goto':
             return GotoInstruction(instruction, comment, label=arg1)
         if instruction == 'function':
+            self.currentFunction = arg1
             return FunctionInstruction('function', comment, name=arg1, locals=arg2)
         if instruction == 'call':
             return CallInstruction('call', comment, name=arg1, args=arg2)
@@ -291,7 +296,7 @@ class UnaryInstruction(parser.Instruction):
 class MemoryInstruction(parser.Instruction):
     def buildTree(self):
         tree = []
-        file = self.kwargs['file']
+        function = self.kwargs['function']
         index = int(self.kwargs['index'])
         segment = self.kwargs['segment']
         if segment == 'pointer':
@@ -304,7 +309,7 @@ class MemoryInstruction(parser.Instruction):
             elif segment in ['pointer', 'temp']:
                 tree.append(ASM(f'{index:d}', 'D', 'M'))
             elif segment == 'static':
-                tree.append(ASM(f'{file}.{index}', 'D', 'M'))
+                tree.append(ASM(f'{function}.{index}', 'D', 'M'))
             elif segment in ['local', 'argument', 'this', 'that']:
                 tree.append(ReadPtrInstruction(ptr=POINTER[segment], offset=index))
             else:
@@ -317,7 +322,7 @@ class MemoryInstruction(parser.Instruction):
             if segment in ['pointer', 'temp']:
                 tree.append(ASM(f'{index:d}', 'M', 'D'))
             elif segment == 'static':
-                tree.append(ASM(f'{file}.{index}', 'M', 'D'))
+                tree.append(ASM(f'{function}.{index}', 'M', 'D'))
             elif segment in ['local', 'argument', 'this', 'that']:
                 tree.append(WritePtrInstruction(ptr=POINTER[segment], offset=index))
             else:

@@ -175,6 +175,9 @@ class Parser(Instruction):
             position = child.fill(table, position)
         return position
 
+    def vm(self):
+        return joinLines([child.vm() for child in self.tree])
+
     def hack(self, table=Table()):
         self.fill(table) 
         return joinLines([child.hack(table) for child in self.tree])

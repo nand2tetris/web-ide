@@ -35,7 +35,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "./projects/07/StackArithmetic/SimpleAdd/SimpleAdd.vm"
+                "./projects/09/HelloWorld/Main.jack"
             ]
         }
     ]

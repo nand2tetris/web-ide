@@ -108,6 +108,8 @@ class Instruction:
         self.args = args
         self.kwargs = kwargs
         self.tree = self.buildTree()
+        if self.tree is None:
+            raise Exception(f'{self.__class__} failed to build a tree')
     
     def buildTree(self):
         return []

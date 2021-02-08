@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys 
 import parser
-import sixml
 
 
 class BlockParser(parser.Parser):
@@ -18,7 +17,7 @@ class BlockParser(parser.Parser):
         return BlockTokenizer
 
     def default(self):
-        return self.vm()
+        return self.vm(scope=parser.Scope())
 
 class BlockTokenizer(parser.Tokenizer):
     def __init__(self, stream=sys.stdin):
@@ -241,20 +240,33 @@ class Block(parser.Instruction):
         self.list = list
         parser.Instruction.__init__(self)
 
-class ClassStatement(Block):
+class BlockBody(Block):
+    def scope(self, scope):
+        self.scope = parser.Scope(parent=scope)
+        parser.Instruction.scope(self, self.scope)
+    
+    def vm(self, scope):
+        assert scope == self.scope.parent
+        return parser.Instruction.vm(self, self.scope)
+
+class ClassStatement(BlockBody):
     def buildTree(self):
         self.token = self.list.getKeyword('class')
         self.name = self.list.getIdentifier()
         self.list.getSymbol('{')
         self.vars = VarDecl.list(self.list)
         self.routines = Routines(self.list)
-        #self.list.getSymbol('}')
-        return [self.routines]
+        self.list.getSymbol('}')
+        return self.vars + [self.routines]
+    
+    def scope(self, scope):
+        BlockBody.scope(self, scope)
+        self.scope.clazz = self.name.kwargs['token']
 
 class VarDecl(Block):
     def buildTree(self):
         self.location = self.list.getKeyword('var', 'static', 'field')
-        self.vars = VarNameList(self.list)
+        self.vars = VarNameList(self.list, self.location)
         self.kwargs = {
             'location': self.location.kwargs['keyword']
         }
@@ -265,6 +277,7 @@ class VarDecl(Block):
         decls = []
         while VarDecl.matches(list):
             decls.append(VarDecl(list))
+        return decls
     
     @staticmethod
     def matches(list):
@@ -272,6 +285,11 @@ class VarDecl(Block):
         return KeywordToken.matches(token, 'var', 'static', 'field')
 
 class VarNameList(Block):
+    def __init__(self, list, location):
+        self.location = location
+        Block.__init__(self, list)
+
+
     """ type varName (, varname)*"""
     def buildTree(self):
         self.type = self.list.getType()
@@ -281,6 +299,16 @@ class VarNameList(Block):
             self.names.append(self.list.getIdentifier())
         self.list.getSymbol(';')
         return self.names
+    
+    def scope(self, scope: parser.Scope):
+        location = self.location.kwargs['keyword']
+        for name in self.names:
+            if location == 'static':
+                scope.static(name.kwargs['token'])
+            if location == 'var':
+                scope.local(name.kwargs['token'])
+            
+            # TODO var, field
 
 class Routines(Block):
     def buildTree(self):
@@ -289,22 +317,29 @@ class Routines(Block):
             routines.append(Routine(self.list))
         return routines
 
-class Routine(Block):
+class Routine(BlockBody):
     def buildTree(self):
-        self.routineType = self.list.next()
+        self.routineType = self.list.getKeyword('constructor', 'function', 'method')
         self.returnType = self.list.getType()
         self.name = self.list.getIdentifier()
         self.arguments = ArgumentList(self.list)
         self.kwargs = {
             'type': self.routineType.kwargs['keyword'],
-            'return': self.returnType.kwargs['keyword'],
+            'return': self.retType(),
             'name': self.name.kwargs['token'],
         }
         self.body = RoutineBody(self.list)
-        return [
-            self.arguments,
-            self.body,
-        ]
+        return [self.arguments, self.body]
+    
+    def retType(self):
+        if isinstance(self.returnType, KeywordToken):
+            return self.returnType.kwargs['keyword']
+        return self.returnType.kwargs['token']
+    
+    def vm(self, scope):
+        decl = f"function {scope.clazz}.{self.kwargs['name']} {len(self.arguments)}"
+        vm = BlockBody.vm(self, scope)
+        return f"{decl}\n{vm}"
 
     @staticmethod
     def matches(list):
@@ -324,6 +359,9 @@ class ArgumentList(Block):
                 self.arguments.append(Argument(self.list))
             self.list.getSymbol(')')
         return self.arguments
+    
+    def __len__(self):
+        return len(self.arguments)
 
 class Argument(Block):
     def buildTree(self):
@@ -334,12 +372,15 @@ class Argument(Block):
             'name': self.name.kwargs['token']
         }
         return []
+    
+    def scope(self, scope):
+        scope.argument(self.name)
 
 class RoutineBody(Block):
     def buildTree(self):
         self.list.getSymbol('{')
         self.vars = VarDecl.list(self.list)
-        return Statement.list(self.list)
+        return self.vars + Statement.list(self.list)
 
 class Statement(Block):
     @staticmethod
@@ -384,15 +425,49 @@ class LetStatement(Statement):
             tree.append(self.index)
         tree.append(self.value)
         return tree
+    
+    def vm(self, scope):
+        op = self.value.vm(scope)
+        loc = self.name.kwargs['token']
+        location = scope.get(loc)
+        if not self.index:
+            return f"{op}\npop {location}"
+        else:
+            offset = self.index.vm(scope)
+            addr = f"push {location} // {loc}\n{offset}\nadd\npop pointer 1"
+            return f"{addr}\n{op}\npop that 0"
 
 class IfStatement(Statement):
     def buildTree(self):
+        self.label = IfStatement.nextLabel()
         self.list.getSymbol('(') 
         self.expression = Expression(self.list)
         self.list.getSymbol(')') 
         self.thenbody = ThenBody(self.list)
-        self.elsebody = Elsebody(self.list) 
+        self.elsebody = ElseBody(self.list) 
         return [self.expression, self.thenbody, self.elsebody]
+
+    def vm(self, scope):
+        expr = self.expression.vm(scope)
+        thenbody = self.thenbody.vm(scope)
+        elsebody = self.elsebody.vm(scope)
+
+        return "\n".join([
+            expr,
+            f"if-goto {self.label}_then",
+            elsebody,
+            f"goto {self.label}_end"
+            f"label {self.label}_then",
+            thenbody,
+            f"label {self.label}_end",
+        ])
+
+    label = 0
+    @classmethod
+    def nextLabel(cls):
+        label = f"if_{cls.label}"
+        cls.label += 1
+        return label
 
 class ThenBody(Statement):
     def buildTree(self):
@@ -410,11 +485,33 @@ class ElseBody(Statement):
 
 class WhileStatement(Statement):
     def buildTree(self):
+        self.label = WhileStatement.nextLabel()
         self.list.getSymbol('(')
         self.expression = Expression(self.list)
         self.list.getSymbol(')')
         self.body = WhileBody(self.list)
         return [self.expression, self.body]
+    
+    def vm(self, scope):
+        expr = self.expression.vm(scope)
+        body = self.body.vm(scope)
+
+        return "\n".join([
+            f"label {self.label}_start",
+            expr,
+            "not",
+            f"if-goto {self.label}_end",
+            body,
+            f"goto {self.label}_start",
+            f"label {self.label}_end"
+        ])
+
+    label = 0
+    @classmethod
+    def nextLabel(cls):
+        label = f"while_{cls.label}"
+        cls.label += 1
+        return label
 
 class WhileBody(Statement):
     def buildTree(self):
@@ -436,6 +533,10 @@ class ReturnStatement(Statement):
             value = Expression(self.list)
             self.list.getSymbol(';')
             return [value]
+    
+    def vm(self, scope):
+        vm = Statement.vm(self, scope)
+        return f"{vm}\nreturn"
 
 class Expression(Statement):
     def buildTree(self):
@@ -447,9 +548,28 @@ class Expression(Statement):
         """
         terms = [Term.next(self.list)]
         while SymbolToken.matches(self.list.peek(), '+', '-', '*', '/', '&', '|', '<', '>', '='):
-            self.list.advance()
+            terms.append(self.list.next())
             terms.append(Term.next(self.list))
         return terms
+    
+    def vm(self, scope):
+        vm = self.tree[0].vm(scope)
+        for i in range(2, len(self.tree), 2):
+            symbol = self.tree[i-1].kwargs['symbol']
+            op = {
+                '+': 'add',
+                '-': 'sub',
+                '&': 'and',
+                '|': 'or',
+                '<': 'lt',
+                '>': 'gt',
+                '=': 'eq',
+                '*': 'call Math.multiply 2',
+                '/': 'call Math.divide 2',
+            }[symbol]
+            y = self.tree[i].vm(scope)
+            vm += f"\n{y}\n{op}"
+        return vm
 
     @staticmethod
     def list(list):
@@ -473,6 +593,11 @@ class UnaryExpression(Statement):
     def buildTree(self):
         self.kwargs['op'] = self.op
         return [Expression(self.list)]
+    
+    def vm(self, scope):
+        mem = self.children[0].vm(scope)
+        op = {'-': 'neg', '~': 'not'}[self.op]
+        return f"{mem}\n{op}"
 
 class Term(Statement):
     def __init__(self, termToken, list):
@@ -483,6 +608,18 @@ class Term(Statement):
 
     def buildTree(self):
         return [self.token]
+    
+    def vm(self, scope):
+        if isinstance(self.token, StringToken):
+            string = self.token.kwargs['string']
+            return f"// begin '{string}'\n" + \
+                "\n".join([f"push {ord(c)}\ncall String.appendChar 1" for c in string]) + \
+                f"\n// end '{string}'"
+        elif isinstance(self.token, NumberToken):
+            return f"push constant {self.token.kwargs['number']}"
+        else:
+            location = scope.get(self.token.kwargs['token'])
+            return f"push {location}"
 
     """
     Terms are determined by the next next token.
@@ -512,7 +649,6 @@ class Term(Statement):
             list.advance()
             return CallExpression(list, name=term, dot=next)
         return Term(term, list)
-        
     
     @staticmethod
     def isConstant(token):
@@ -533,6 +669,12 @@ class IndexExpression(Statement):
         self.index = Expression(self.list)
         self.list.getSymbol(']')
         return [self.index]
+
+    def vm(self, scope):
+        location = scope.get(self.kwargs['var'])
+        offset = self.index.vm(scope)
+        addr = f"push {location}\n{offset}\nadd\npop pointer 1"
+        return f"{addr}\npush that 0"
 
 class CallExpression(Statement):
     def __init__(self, list, name=None, dot=None):
@@ -561,6 +703,14 @@ class CallExpression(Statement):
         if self.varName is not None:
             self.kwargs['var'] = self.varName.kwargs['token']
         return self.expressions
+    
+    def vm(self, scope):
+        vm = Statement.vm(self, scope)
+        method = self.subroutineName.kwargs['token']
+        if self.varName:
+            var = self.varName.kwargs['token']
+            method = f"{var}${method}"
+        return f"{vm}\ncall {method} {len(self.expressions)}"
 
 if __name__ == '__main__':
     parser.main(sys.argv[1:], BlockParser)

@@ -70,6 +70,50 @@ class NoopTable:
     def register(self, symbol):
         pass
 
+class Scope:
+    def __init__(self, parent = None, clazz=''):
+        self.parent = parent
+        self.clazz = ''
+        self.table = {}
+        self.next = {
+            'argument': 0,
+            'local': 0,
+            'static': 0,
+        }
+    
+    def get(self, symbol):
+        if symbol in self.table:
+            return self.table[symbol] + f' // {symbol}'
+        if not self.parent:
+            raise Exception(f"Symbol not found: {symbol}")
+        return self.parent.get(symbol) + f' // {symbol}'
+
+    def check(self, symbol):
+        if symbol in self.table:
+            raise Exception(f"Symbol already in scope: {symbol}")
+
+    def constant(self, symbol: str, value: int):
+        self.check(symbol)
+        self.table[symbol] = f"constant {value}"
+    
+    def argument(self, symbol: str):
+        self.check(symbol)
+        pos = self.next['argument']
+        self.next['argument'] = pos + 1
+        self.table[symbol] = f"argument {pos}"
+    
+    def local(self, symbol: str):
+        self.check(symbol)
+        pos = self.next['argument']
+        self.next['argument'] = pos + 1
+        self.table[symbol] = f"argument {pos}"
+    
+    def static(self, symbol: str):
+        self.check(symbol)
+        pos = self.next['static']
+        self.next['static'] = pos + 1
+        self.table[symbol] = f"static {pos}"
+
 class Tokenizer:
     def __init__(self, stream=sys.stdin):
         self.stream = stream
@@ -119,14 +163,18 @@ class Instruction:
             position = child.fill(table, position)
         return position
     
+    def scope(self, scope):
+        for child in self.tree:
+            child.scope(scope)
+    
     def hack(self, table):
         return joinLines([child.hack(table) for child in self.tree])
     
     def asm(self):
         return joinLines([child.asm() for child in self.tree])
     
-    def vm(self):
-        return joinLines([child.vm() for child in self.tree])
+    def vm(self, scope):
+        return joinLines([child.vm(scope) for child in self.tree])
 
     def xml(self, table):
         name = self.__class__.__name__
@@ -177,14 +225,19 @@ class Parser(Instruction):
             position = child.fill(table, position)
         return position
 
-    def vm(self):
-        return joinLines([child.vm() for child in self.tree])
+    def scope(self, scope):
+        for child in self.tree:
+            child.scope(scope)
+
+    def vm(self, scope):
+        self.scope(scope)
+        return joinLines([child.vm(scope) for child in self.tree])
 
     def hack(self, table=Table()):
         self.fill(table) 
         return joinLines([child.hack(table) for child in self.tree])
     
-    def xml(self, table=Table()):
+    def xml(self, table=Table(), scope=Scope()):
         self.fill(table)
         return Instruction.xml(self, table)
 

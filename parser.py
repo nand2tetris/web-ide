@@ -73,7 +73,7 @@ class NoopTable:
 class Scope:
     def __init__(self, parent = None, clazz=''):
         self.parent = parent
-        self.clazz = ''
+        self.clazz = clazz
         self.table = {}
         self.next = {
             'argument': 0,
@@ -83,10 +83,10 @@ class Scope:
     
     def get(self, symbol):
         if symbol in self.table:
-            return self.table[symbol] + f' // {symbol}'
+            return self.table[symbol]
         if not self.parent:
             raise Exception(f"Symbol not found: {symbol}")
-        return self.parent.get(symbol) + f' // {symbol}'
+        return self.parent.get(symbol)
 
     def check(self, symbol):
         if symbol in self.table:
@@ -104,9 +104,15 @@ class Scope:
     
     def local(self, symbol: str):
         self.check(symbol)
-        pos = self.next['argument']
-        self.next['argument'] = pos + 1
-        self.table[symbol] = f"argument {pos}"
+        pos = self.next['local']
+        self.next['local'] = pos + 1
+        self.table[symbol] = f"local {pos}"
+    
+    def field(self, symbol: str):
+        self.check(symbol)
+        pos = self.next['field']
+        self.next['field'] = pos + 1
+        self.table[symbol] = f"field {pos}"
     
     def static(self, symbol: str):
         self.check(symbol)

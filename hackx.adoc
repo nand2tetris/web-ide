@@ -1,18 +1,29 @@
-# HackX
+= HackX
 
 Extensions to Hack
 
-## Halt
+== Halt
 
 The Halt hack instruction will cause the CPU's PC to stop incrementing.
+This is achieved by sending an instruction that both reads from and writes to memory.
+While there are numerous commands that have this effect, canonically it is the C command to read from M and write 0 to AMD, with an unconditional jump.
 The PC can be re-enabled by sending the Reset signal, which will clear the PC to 0x0000 and put it back in counting mode.
+There is no mechanism to send the reset signal via software.
 
-## NOOP, noop
+`1111 1111 1111 1111`
+
+The Hack VM has the instruction `halt`.
+
+== NOOP, noop
 
 A shorthand for A0, the A instruction which loads 0 into the A register and does nothing else.
 Exists to allow the asm to fill in areas of the output assembly as needed.
 
-## ALUX - Extended Arithmetic
+`0000 0000 0000 0000`
+
+The Hack VM has the instruction `noop`.
+
+== ALUX - Extended Arithmetic
 
 `1 1x m cccccc ddd jjj`
 
@@ -34,37 +45,42 @@ jjj | Operation                 | ASM Cmp | Hack VM
 110 | floating point multiply   | FMUL    | fmul
 111 | floating point divide     | FDIV    | fdiv
 
-Shift uses either the lower 4 c-bits, or the lowest 4 m bits (based on mMode) to determine the amount of places to shift.
+Shift uses the lowest 4 c-bits to determine the amount of places to shift.
 Left shift is 0 fill, right shift is signed fill, to keep with the multiplication/division pattern.
 When an immediate shift amount is provided to the VM, a single value is popped and pushed.
-When no immediate shift amount is provided, the top stack value is used as the shift amount (and popped from the stack).
 
-ALUX has an expanded out bit buffer:
-ng zr ov nan inf
+ALUX has an expanded out bit buffer.
+The ALU out buffer can be read at 0xFFFF
 
-The ALU out buffer can be read at 0xFFFF?
-@FFFF
-D=M
-@R13
-M=D
+Bit | OB | Meaning      |  Comment
+----|----|--------------|----------------
+ 15 | ng | Negative     | Based on sign bit of result
+ 14 | zr | Zero         | All result bits are 0
+ 13 | ov | Overflow     | Overflow, if exponent positive, or Underflow, if exponent negative
+ 12 |nan | Not A Number | Result (or intermediates) is Not A Number
+ 11 |inf | Infinity     | Positive or negative based on ng
+0-10|N/A | None         | Reserved for future use
 
-## Interrupts
+== Interrupts
 
-### Interrupt Instructions
+The CPU can handle interrupts one level deep.
+If it is handling an interrupt, any hardware or software is ignored.
+
+=== Interrupt Instructions
 
 Instruction             | Operation
-------------------------|----------------------------------------------------|
-`            1aaa a000` | Out of band, put the CPU in interrupt mode & jmp a |
-`1 0x 0 ???? 1aaa a000` | Put CPU in interrupts mode, and jump to a          |
-`1 01 0 ???? ???? ????` | Restore CPU to normal mode, and jump to last PC    |
+------------------------|----------------------------------------------------
+`            1aaa a000` | Out of band, put the CPU in interrupt mode, and jump to a 
+`1 0x 0 ???? 1aaa a000` | Put CPU in interrupts mode, and jump to a
+`1 01 0 ???? ???? ????` | Restore CPU to normal mode, and jump to restored PC  
 
 The Computer adds an 8-bit interrupt bus, along with a software interrupt signal.
-On receiving a 1 in the interrupt bus, or the software interrupt signal, the CPU caches inM, A, D, the PC, the ALU status bus.
+On receiving a 1 in the interrupt bus, or the software interrupt instruction, the CPU caches inM, A, D, the PC, the ALU status bus.
 The CPU then marks as in interrupt state. If any interrupt commands arrive while in the interrupt, they are ignored.
 The CPU then jumps to the address specified by the interrupt.
 The last three bits of the interrupt must be 0, leaving 8 instructions for machine start:
 
-```
+----
 @256
 D=A
 @SP
@@ -73,18 +89,46 @@ M=D
 0;JMP
 NOOP
 NOOP
-```
+----
 
-### Interrupt processing
+=== Interrupt processing
 
-Peripherals have mapped regions
+Peripherals have mapped regions.
+
+Four IRQ regions:
+
+* IRQ1 Keyboard
+* IRQ2 Mouse
+* IRQ3 Video memory
+* IRQ4 Hard drive
+* IRQ5 Network
+
+IRQ pointers are the first 4 static variables.
+IRQ pointers take two bytes.
+The first byte is managed by the system, and is the memory offset for the IRQ device.
+The second byte is set by the device, for reads, or the software, for writes, and includes the number of bytes modified.
+
+IRQ command: [Read|Write] IRQ# LENGTH
 
 Write LENGTH bytes from MEM[OFFSET] into the device at IRQ#
 WRITE IRQ# OFFSET LENGTH
 
 Read LENGTH bytes from IRQ device into MEM starting at [OFFSET]
 
-IRQ1 Keyboard
-IRQ2 Mouse
-IRQ3 Video memory
-IRQ4 Hard drive
+== Prog
+
+= JackX
+
+== JackX VM additions
+
+Add bitwise rotations: SHL, SHR [x][y] => [x << y]
+Add binary f instructions: `addf`, `subf`, `mulf`, `divf`
+
+== Jack OS additions
+
+=== Process
+
+Process handling
+
+=== Screen
+

@@ -298,7 +298,7 @@ class MemoryInstruction(parser.Instruction):
     def buildTree(self):
         tree = []
         function = self.kwargs['function']
-        index = int(self.kwargs['index'])
+        index = int(self.kwargs['index'] or '0')
         segment = self.kwargs['segment']
         if segment == 'pointer':
             index += 3
@@ -415,6 +415,8 @@ class FunctionInstruction(parser.Instruction):
 class BuildCallStack(parser.Instruction):
     def buildTree(self):
         args = self.kwargs['args']
+        if args == '':
+            raise Exception('no args')
         return [
             MoveInstruction(src={'reg': 'LCL'}, dest={'ptr': 'SP', 'offset': 0}),
             MoveInstruction(src={'reg': 'ARG'}, dest={'ptr': 'SP', 'offset': 1}),

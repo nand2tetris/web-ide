@@ -1,0 +1,92 @@
+/**
+ * Shift Left
+ *
+ * Shift bits in a left (with zero fill) by b bits
+ *
+ *     f e d c b a 9 8 7 6 5 4 3 2 1 0
+ * <<5
+ *     a 9 8 7 6 5 4 3 2 1 9 0 0 0 0 0
+ */
+CHIP ShiftLeft {
+    IN a[16], b[4];
+    OUT out[16];
+
+    PARTS:
+        And16(
+            a=a,
+            b=True,
+            out[0..15]=A,
+            out[0..14]=B,
+            out[0..13]=C,
+            out[0..12]=D,
+            out[0..11]=E,
+            out[0..10]=F,
+            out[0..9]=G,
+            out[0..8]=H,
+            out[0..7]=I,
+            out[0..6]=J,
+            out[0..5]=K,
+            out[0..4]=L,
+            out[0..3]=M,
+            out[0..2]=N,
+            out[0..1]=O
+        );
+
+        Mux8Way16(
+            a[0..15]=A,
+
+            b[1..15]=B,
+            b[0]=False,
+
+            c[2..15]=C,
+            c[1]=False,
+            c[0]=False,
+
+            d[3..15]=D,
+            d[2]=False,
+            d[1]=False,
+            d[0]=False,
+
+            e[4..15]=E,
+            e[3]=False,
+            e[2]=False,
+            e[1]=False,
+            e[0]=False,
+
+            f[5..15]=F,
+            f[4]=False,
+            f[3]=False,
+            f[2]=False,
+            f[1]=False,
+            f[0]=False,
+
+            g[6..15]=G,
+            g[5]=False,
+            g[4]=False,
+            g[3]=False,
+            g[2]=False,
+            g[1]=False,
+            g[0]=False,
+
+            h[7..15]=H,
+            h[6]=False,
+            h[5]=False,
+            h[4]=False,
+            h[3]=False,
+            h[2]=False,
+            h[1]=False,
+            h[0]=False,
+
+            sel=b[0..2],
+            out=AHout
+        );
+
+        Mux8Way16(
+            a=Iout, b=Jout, c=Kout, d=Lout,
+            e=Mout, f=Nout, g=Oout, h=Pout,
+            sel=b[0..2],
+            out=IPout
+        );
+
+        Mux16(a=AHout, b=IPout, out=out);
+}

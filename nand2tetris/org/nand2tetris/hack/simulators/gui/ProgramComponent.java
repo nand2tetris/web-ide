@@ -476,6 +476,8 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
 	 * use built-in vm functions
 	 */
 	public boolean confirmBuiltInAccess() {
+        return true;
+        /*
 		String message =
 			"No implementation was found for some functions which are called in the VM code.\n" +
 			"The VM Emulator provides built-in implementations for the OS functions.\n" +
@@ -486,6 +488,7 @@ public class ProgramComponent extends JPanel implements VMProgramGUI {
 											  JOptionPane.YES_NO_OPTION,
 											  JOptionPane.QUESTION_MESSAGE) ==
 				JOptionPane.YES_OPTION);
+                */
 	}
 
 	/**

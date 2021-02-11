@@ -38,7 +38,7 @@ public class BuiltInFunctionsRunner implements Runnable {
 	private static final int THROW_PROGRAM_EXCEPTION_REQUEST = 3; // b.i.=>prog
 	private static final int INFINITE_LOOP_REQUEST = 4; // b.i.=>prog
 
-	private static final String builtinVmPackage = "org.nand2tetris.hack.builtins.vm";
+	private static final String builtinVmPackage = "org.nand2tetris.hack.builtin.vm";
 	private static final String builtinVmBaseClass = "org.nand2tetris.hack.simulators.vm.BuiltInVMClass";
 
     // objects for communication between the threads

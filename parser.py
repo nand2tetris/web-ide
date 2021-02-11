@@ -79,46 +79,47 @@ class Scope:
             'argument': 0,
             'local': 0,
             'static': 0,
+            'field': 0,
         }
     
     def get(self, symbol):
         if symbol in self.table:
             return self.table[symbol]
         if not self.parent:
-            raise Exception(f"Symbol not found: {symbol}")
-        return self.parent.get(symbol)
+            raise Exception(f'Symbol not found: {symbol}')
+        return self.parent.get(symbol), 
 
     def check(self, symbol):
         if symbol in self.table:
-            raise Exception(f"Symbol already in scope: {symbol}")
+            raise Exception(f'Symbol already in scope: {symbol}')
 
     def constant(self, symbol: str, value: int):
         self.check(symbol)
-        self.table[symbol] = f"constant {value}"
+        self.table[symbol] = (f'constant {value}', 'int')
     
-    def argument(self, symbol: str):
+    def argument(self, symbol: str, type):
         self.check(symbol)
         pos = self.next['argument']
         self.next['argument'] = pos + 1
-        self.table[symbol] = f"argument {pos}"
+        self.table[symbol] = (f'argument {pos}', type)
     
-    def local(self, symbol: str):
+    def local(self, symbol: str, type):
         self.check(symbol)
         pos = self.next['local']
         self.next['local'] = pos + 1
-        self.table[symbol] = f"local {pos}"
+        self.table[symbol] = (f'local {pos}', type)
     
-    def field(self, symbol: str):
+    def field(self, symbol: str, type):
         self.check(symbol)
         pos = self.next['field']
         self.next['field'] = pos + 1
-        self.table[symbol] = f"field {pos}"
+        self.table[symbol] = (f'this {pos}', type)
     
-    def static(self, symbol: str):
+    def static(self, symbol: str, type):
         self.check(symbol)
         pos = self.next['static']
         self.next['static'] = pos + 1
-        self.table[symbol] = f"static {pos}"
+        self.table[symbol] = (f'static {pos}', type)
 
 class Tokenizer:
     def __init__(self, stream=sys.stdin):

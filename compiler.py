@@ -20,6 +20,7 @@ class BlockParser(parser.Parser):
     def vm(self, scope):
         vm = parser.Parser.vm(self, scope)
         string = "//" + "\n//".join(str(self).split('\n'))
+        string=''
         return vm + '\n' + string
 
     def default(self):
@@ -351,13 +352,19 @@ class VarNameList(Block):
     
     def scope(self, scope: parser.Scope):
         location = self.location.kwargs['keyword']
+        if isinstance(self.type, KeywordToken):
+            type = self.type.kwargs['keyword']
+        elif isinstance(self.type, IdentifierToken):
+            type = self.type.kwargs['token']
+        else:
+            type = 'int'
         for name in self.names:
             if location == 'static':
-                scope.static(name.kwargs['token'])
+                scope.static(name.kwargs['token'], type)
             if location == 'var':
-                scope.local(name.kwargs['token'])
-            
-            # TODO var, field
+                scope.local(name.kwargs['token'], type)
+            if location == 'field':
+                scope.field(name.kwargs['token'], type)
 
     def __str__(self):
         return ', '.join([str(t) for t in self.names]) + ';\n'
@@ -394,8 +401,13 @@ class Routine(BlockBody):
     def vm(self, scope):
         locals = sum([len(l) for l in self.body.locals])
         decl = f"function {scope.clazz}.{self.kwargs['name']} {locals}"
+        init = ''
+        if self.kwargs['type'] == 'constructor':
+            # Get memory and set `this`
+            fields = scope.next['field']
+            init = f'push constant {fields}\ncall Memory.alloc 1\npop pointer 0\n'
         vm = BlockBody.vm(self, scope)
-        return f"{decl}\n{vm}"
+        return f"{decl}\n{init}\n{vm}"
 
     def __str__(self):
         type = self.kwargs['type']
@@ -441,7 +453,13 @@ class Argument(Block):
         return []
     
     def scope(self, scope):
-        scope.argument(self.kwargs['name'])
+        if isinstance(self.type, KeywordToken):
+            type = self.type.kwargs['keyword']
+        elif isinstance(self.type, IdentifierToken):
+            type = self.type.kwargs['token']
+        else:
+            type = 'int'
+        scope.argument(self.kwargs['name'], type)
     
     def vm(self, scope):
         return None
@@ -506,7 +524,7 @@ class LetStatement(Statement):
     def vm(self, scope):
         op = self.value.vm(scope)
         loc = self.name.kwargs['token']
-        location = scope.get(loc)
+        (location, type) = scope.get(loc)
         if not self.index:
             return f"{op}\npop {location}"
         else:
@@ -743,7 +761,7 @@ class Term(Statement):
             if keyword == 'true':
                 return 'push constant 0\nnot'
         else:
-            location = scope.get(self.token.kwargs['token'])
+            (location, type) = scope.get(self.token.kwargs['token'])
             return f"push {location}"
 
     """
@@ -796,7 +814,7 @@ class IndexExpression(Statement):
         return [self.index]
 
     def vm(self, scope):
-        location = scope.get(self.kwargs['var'])
+        (location, type) = scope.get(self.kwargs['var'])
         offset = self.index.vm(scope)
         addr = f"push {location}\n{offset}\nadd\npop pointer 1"
         return f"{addr}\npush that 0"
@@ -836,10 +854,22 @@ class CallExpression(Statement):
     def vm(self, scope):
         vm = Statement.vm(self, scope)
         method = self.subroutineName.kwargs['token']
+        args = len(self.expressions) + 1
         if self.varName:
-            var = self.varName.kwargs['token']
-            method = f"{var}.{method}"
-        return f"{vm}\ncall {method} {len(self.expressions)}"
+            try:
+                (location, type) = scope.get(self.varName)
+            except:
+                location = ''
+                type = self.varName
+        else:
+            location = 'position 0'
+            type = scope.parent.clazz
+        ptr = ''
+        if location != '':
+            ptr = f'push {location}'
+            args += 1
+        method = f"{type}.{method}"
+        return f"{vm}\n{ptr}\ncall {method} {args}"
 
     def __str__(self):
         args = ', '.join([str(t) for t in self.tree])

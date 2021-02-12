@@ -132,7 +132,7 @@ class WritePtrInstruction(parser.Instruction):
             # Write from DATA_ADDRESS to MEMORY_ADDRESS
             ASM(DATA_ADDRESS, 'D', 'M'),
             ASM(MEMORY_ADDRESS, 'A', 'M'),
-            ASM('', 'M', 'D')
+            ASM(None, 'M', 'D')
         ]
 
 class ReadInstruction(parser.Instruction):
@@ -247,42 +247,6 @@ class BinaryInstruction(parser.Instruction):
     def vm(self):
         return self.instruction
 
-OPCODES = {
-    'neg': 'D=-D',
-    'not': 'D=!D',
-    'add': 'D=D+M',
-    'sub': 'D=D-M',
-    'and': 'D=D&M',
-    'or': 'D=D|M',
-}
-
-JUMPS = {
-    'eq': 'JEQ',
-    'lt': 'JLT',
-    'gt': 'JGT',
-}
-
-POINTER = {
-    'local': 'LCL',
-    'argument': 'ARG',
-    'this': 'THIS',
-    'that': 'THAT',
-}
-
-class IfThenElseInstruction(parser.Instruction):
-    def buildTree(self):
-        op = self.instruction
-        eq_then = parser.SYMBOL(f'{op}_then')
-        eq_end = parser.SYMBOL(f'{op}_end')
-        return [
-            ASM(eq_then, '', 'D', JUMPS[op]),
-            self.kwargs['false'],
-            ASM(eq_end, '', '0', 'JMP'),
-            assembler.LInstruction(f'({eq_then})'),
-            self.kwargs['true'],
-            assembler.LInstruction(f'({eq_end})'),
-        ]
-
 class UnaryInstruction(parser.Instruction):
     def buildTree(self):
         return [
@@ -328,13 +292,49 @@ class MemoryInstruction(parser.Instruction):
                 tree.append(WritePtrInstruction(ptr=POINTER[segment], offset=index))
             else:
                 tree.append(WritePtrInstruction(ptr=segment, offset=index))
-            tree.append(DecrementStackInstruction())    
+            tree.append(DecrementStackInstruction())
         return tree
     
     def vm(self):
         index = int(self.kwargs['index'])
         segment = self.kwargs['segment']
         return f'{self.instruction} {segment} {index}'
+
+OPCODES = {
+    'neg': 'D=-D',
+    'not': 'D=!D',
+    'add': 'D=D+M',
+    'sub': 'D=D-M',
+    'and': 'D=D&M',
+    'or': 'D=D|M',
+}
+
+JUMPS = {
+    'eq': 'JEQ',
+    'lt': 'JLT',
+    'gt': 'JGT',
+}
+
+POINTER = {
+    'local': 'LCL',
+    'argument': 'ARG',
+    'this': 'THIS',
+    'that': 'THAT',
+}
+
+class IfThenElseInstruction(parser.Instruction):
+    def buildTree(self):
+        op = self.instruction
+        eq_then = parser.SYMBOL(f'{op}_then')
+        eq_end = parser.SYMBOL(f'{op}_end')
+        return [
+            ASM(eq_then, '', 'D', JUMPS[op]),
+            self.kwargs['false'],
+            ASM(eq_end, '', '0', 'JMP'),
+            assembler.LInstruction(f'({eq_then})'),
+            self.kwargs['true'],
+            assembler.LInstruction(f'({eq_end})'),
+        ]
 
 class LogicTrueInstruction(parser.Instruction):
     def buildTree(self):
@@ -378,8 +378,8 @@ class GotoInstruction(parser.Instruction):
             if indirect:
                 return [
                     ASM(label, 'D', 'M'),
-                    ASM('', 'A', 'D'),
-                    ASM('', '', '0', 'JMP')
+                    ASM(None, 'A', 'D'),
+                    ASM(None, '', '0', 'JMP')
                 ]
             else:
                 return [ASM(label, '', '0', 'JMP')]
@@ -423,28 +423,17 @@ class BuildCallStack(parser.Instruction):
             MoveInstruction(src={'reg': 'THIS'}, dest={'ptr': 'SP', 'offset': 2}),
             MoveInstruction(src={'reg': 'THAT'}, dest={'ptr': 'SP', 'offset': 3}),
             ASM('SP', 'D', 'M'),
-            ASM(4, 'D', 'D+A'),
+            ASM('4', 'D', 'D+A'),
             ASM('SP', 'M', 'D'),
-            ASM(int(args)+5, 'D', 'D-A'),
+            ASM(str(int(args)+5), 'D', 'D-A'),
             ASM('ARG', 'M', 'D')
-        ]
-
-class ClearArgsInstruction(parser.Instruction):
-    def buildTree(self):
-        args = self.kwargs['args']
-        return [
-            PopRegisterInstruction(reg=DATA_ADDRESS),
-            ASM('SP', 'D', 'M'),
-            ASM(int(args), 'D', 'D-A'),
-            ASM('SP', 'M', 'D'),
-            PushRegisterInstruction(reg=DATA_ADDRESS)
         ]
 
 class CallInstruction(parser.Instruction):
     def buildTree(self):
         args = self.kwargs['args']
         function = self.kwargs['name']
-        address = parser.SYMBOL(f'{function}-return', prefix='')
+        address = parser.SYMBOL(f'{function}_return', prefix='')
 
         return [
             PushConstantInstruction(val=address),
@@ -458,6 +447,17 @@ class CallInstruction(parser.Instruction):
         args = self.kwargs['args']
         function = self.kwargs['name']
         return f'call {function} {args}'
+
+class ClearArgsInstruction(parser.Instruction):
+    def buildTree(self):
+        args = self.kwargs['args']
+        return [
+            PopRegisterInstruction(reg=DATA_ADDRESS),
+            ASM('SP', 'D', 'M'),
+            ASM(str(int(args)), 'D', 'D-A'),
+            ASM('SP', 'M', 'D'),
+            PushRegisterInstruction(reg=DATA_ADDRESS)
+        ]
 
 class PopFrameInstruction(parser.Instruction):
     def buildTree(self):

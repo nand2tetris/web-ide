@@ -155,7 +155,6 @@ class AInstruction(parser.Instruction):
         if not self.isLiteral:
             attributes['resolved'] = str(table.get(self.value))
         return sixml.Element(name, attributes, [])
-        return element
 
 class LInstruction(parser.Instruction):
     def __init__(self, token):

@@ -11,7 +11,7 @@ def SYMBOL(name, prefix='$'):
     if not name in SYMBOLS:
         SYMBOLS[name] = 0
     SYMBOLS[name] += 1
-    return f'{prefix}{name}{SYMBOLS[name]}'
+    return f'{prefix}{name}_{SYMBOLS[name]}'
 
 def joinLines(lines):
     return '\n'.join(filter(partial(is_not, None), lines))
@@ -159,11 +159,11 @@ class Instruction:
         self.args = args
         self.kwargs = kwargs
         self.tree = self.buildTree()
-        if self.tree is None:
+        if not isinstance(self.tree, list):
             raise Exception(f'{self.__class__} failed to build a tree')
     
     def buildTree(self):
-        return []
+        return None
     
     def fill(self, table, position):
         for child in self.tree:
@@ -199,6 +199,9 @@ class Instruction:
 class NoopInstruction(Instruction):
     def __init__(self):
         Instruction.__init__(self, 'noop')
+
+    def buildTree(self):
+        return []
     
     def fill(self, table, position):
         return position

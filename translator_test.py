@@ -413,8 +413,7 @@ class TestFunctionCalling(TranslatorTestCase):
     def test_returnInstruction(self):
         instruction = translator.ReturnInstruction()
         self.assertInstructionList(instruction.tree, [
-            (translator.ASM, {'address': 'LCL', 'store': 'D', 'comp': 'M'}),
-            (translator.ASM, {'address': translator.FRAME_ADDRESS, 'store': 'M', 'comp': 'D'}),
+            (translator.MoveInstruction, {'src': {'reg': 'LCL'}, 'dest': {'reg': translator.FRAME_ADDRESS}}),
             (translator.MoveInstruction, {'src': {'ptr': translator.FRAME_ADDRESS, 'offset': -5}, 'dest': {'reg': translator.JUMP_ADDRESS}}),
             (translator.MoveInstruction, {'src': {'ptr': 'SP', 'offset': -1}, 'dest': {'ptr': 'ARG'}}),
             (translator.MoveInstruction, {'src': {'reg': 'ARG'}, 'dest': {'reg': translator.SP_ADDRESS}}),

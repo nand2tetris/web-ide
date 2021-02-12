@@ -472,8 +472,7 @@ class ReturnInstruction(parser.Instruction):
     def buildTree(self):
         return [
             # FRAME = LCL
-            ASM('LCL', 'D', 'M'),
-            ASM(FRAME_ADDRESS, 'M', 'D'),
+            MoveInstruction(src={'reg': 'LCL'}, dest={'reg': FRAME_ADDRESS}),
             # RET = *(FRAME-5)
             MoveInstruction(src={'ptr': FRAME_ADDRESS, 'offset': -5}, dest={'reg': JUMP_ADDRESS}),
             # Copy return value to top of stack

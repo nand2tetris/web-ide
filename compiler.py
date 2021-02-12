@@ -139,8 +139,22 @@ class BlockTokenizer(parser.Tokenizer):
         if token in KeywordToken.KEYWORDS:
             return KeywordToken(keyword=token, position=self.position())
         return IdentifierToken(token=token, position=self.position())
+
+class Token(parser.Instruction):
+    def buildTree(self):
+        return []
     
-class CommentToken(parser.Instruction):
+    def __eq__(self, other):
+        if isinstance(other, parser.Instruction):
+            return parser.Instruction.__eq__(self, other)
+        if isinstance(other, dict):
+            for arg in other:
+                if self.kwargs[arg] != other[arg]:
+                    return False
+            return True
+        return object.__eq__(self, other) 
+
+class CommentToken(Token):
     def __repr__(self):
         return f'Comment<{self.kwargs["comment"]}>'
     
@@ -150,7 +164,7 @@ class CommentToken(parser.Instruction):
             return comment
         return '//' + comment
 
-class KeywordToken(parser.Instruction):
+class KeywordToken(Token):
     KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
 
     def __repr__(self):
@@ -175,7 +189,7 @@ class KeywordToken(parser.Instruction):
             for keyword in args \
         ])
 
-class SymbolToken(parser.Instruction):
+class SymbolToken(Token):
     SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~']
 
     def __repr__(self):
@@ -194,21 +208,21 @@ class SymbolToken(parser.Instruction):
             for keyword in args \
         ])
 
-class StringToken(parser.Instruction):
+class StringToken(Token):
     def __repr__(self):
         return f'String<{self.kwargs["string"]}>'
     
     def __str__(self):
         return '"' + self.kwargs["string"] + '"'
 
-class NumberToken(parser.Instruction):
+class NumberToken(Token):
     def __repr__(self):
         return f'Number<{self.kwargs["number"]}>'
     
     def __str__(self):
         return self.kwargs["number"]
 
-class IdentifierToken(parser.Instruction):
+class IdentifierToken(Token):
     def __repr__(self):
         return f'Identifier<{self.kwargs["token"]}>'
     
@@ -229,9 +243,14 @@ class TokenList:
         token = self.peek()
         self.advance()
         return token
+    
+    def done(self):
+        return not self.index < len(self.list)
 
     def peek(self):
-        return self.list[self.index]
+        if not self.done():
+            return self.list[self.index]
+        return None
     
     def advance(self):
         self.index += 1
@@ -422,6 +441,10 @@ class Routine(BlockBody):
         return KeywordToken.matches(token, 'constructor', 'function', 'method')
 
 class ArgumentList(Block):
+    """
+    '(' <argument> |  (<argument> ',' <argument>+) ')'
+    """
+
     def buildTree(self):
         self.arguments = []
         self.list.getSymbol('(')
@@ -443,6 +466,10 @@ class ArgumentList(Block):
         return f'({args})'
 
 class Argument(Block):
+    """
+    <type> <varname>
+    """
+
     def buildTree(self):
         self.type = self.list.getType()
         self.name = self.list.getIdentifier()
@@ -708,23 +735,23 @@ class Expression(Statement):
             expressions.append(Expression(list))
         return expressions
 
-class GroupExpression(Statement):
+class GroupExpression(Expression):
     def buildTree(self):
-        expression = Expression(self.list)
+        tree = Expression.buildTree(self)
         self.list.getSymbol(')')
-        return [expression]
+        return tree
 
     def __str__(self):
-        return '(' + Statement.__str__(self) + ')'
+        return '(' + Expression.__str__(self) + ')'
 
-class UnaryExpression(Statement):
+class UnaryExpression(Expression):
     def __init__(self, op, list):
         self.op = op
-        Statement.__init__(self, list)
+        Expression.__init__(self, list)
 
     def buildTree(self):
         self.kwargs['op'] = self.op
-        return [Expression(self.list)]
+        return Expression.buildTree(self)
     
     def vm(self, scope):
         mem = self.tree[0].vm(scope)
@@ -734,12 +761,12 @@ class UnaryExpression(Statement):
     def __str__(self):
         return f'{self.op}{self.tree[0]}'
 
-class Term(Statement):
+class Term(Expression):
     def __init__(self, termToken, list):
         self.token = termToken
         if not Term.isConstant(self.token):
             raise ParseException(self.token, f'Expected constant, got {self.token}')
-        Statement.__init__(self, list)
+        Expression.__init__(self, list)
 
     def buildTree(self):
         return [self.token]
@@ -800,22 +827,22 @@ class Term(Statement):
                isinstance(token, NumberToken) or \
                KeywordToken.matches(token, 'true', 'false', 'null', 'this')
 
-class IndexExpression(Statement):
+class IndexExpression(Expression):
     def __init__(self, term, list):
         self.var = term
-        Statement.__init__(self, list)
+        Expression.__init__(self, list)
     
     def buildTree(self):
         self.kwargs = {
             'var': self.var.kwargs['token']
         }
-        self.index = Expression(self.list)
+        index = Expression(self.list)
         self.list.getSymbol(']')
-        return [self.index]
+        return index.tree
 
     def vm(self, scope):
         (location, type) = scope.get(self.kwargs['var'])
-        offset = self.index.vm(scope)
+        offset = Expression.vm(self, scope)
         addr = f"push {location}\n{offset}\nadd\npop pointer 1"
         return f"{addr}\npush that 0"
     
@@ -823,11 +850,11 @@ class IndexExpression(Statement):
         var = self.kwargs['var']
         return f'{var}[{self.index}]'
 
-class CallExpression(Statement):
+class CallExpression(Expression):
     def __init__(self, list, name=None, dot=None):
         self.subroutineName = name
         self.dot = dot
-        Statement.__init__(self, list)
+        Expression.__init__(self, list)
 
     def buildTree(self):
         if self.subroutineName is None:

@@ -2,9 +2,10 @@ import unittest
 
 import assembler
 import parser
+import parser_test
 import translator
     
-class TranslatorTestCase(unittest.TestCase):
+class TranslatorTestCase(parser_test.ParserTestCase):
     def assertAsm(self, instruction, address=None, store='', comp='', jump=''):
         self.assertIsInstance(instruction, translator.ASM)
         self.assertEqual(instruction.address, address)
@@ -13,19 +14,10 @@ class TranslatorTestCase(unittest.TestCase):
         self.assertEqual(instruction.jump, jump)
     
     def assertInstruction(self, instruction, Instruction, **kwargs):
-        self.assertIsInstance(instruction, Instruction)
-        for arg in kwargs:
-            self.assertEqual(instruction.kwargs[arg], kwargs[arg])
-    
-    def assertInstructionList(self, actual, expected):
-        self.assertEqual(len(actual), len(expected))
-        for (instruction, (Instruction, kwargs)) in zip(actual, expected):
-            if Instruction == None:
-                pass
-            elif Instruction == translator.ASM:
-                self.assertAsm(instruction, **kwargs)
-            else:
-                self.assertInstruction(instruction, Instruction, **kwargs)
+        if Instruction == translator.ASM:
+            self.assertAsm(instruction, **kwargs)
+        else:
+            parser_test.ParserTestCase.assertInstruction(self, instruction, Instruction, kwargs)
 
 # Use this to skip an instruction in the instruction list
 SKIP = (None, (None, None))

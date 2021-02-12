@@ -397,7 +397,6 @@ class FunctionInstruction(parser.Instruction):
     def buildTree(self):
         locals = int(self.kwargs['locals'])
         label = self.kwargs['name']
-        # static = ???
         tree = [
             LabelInstruction(label=label),
             ASM('SP', 'D', 'M'),

@@ -9,14 +9,14 @@ import parser_test
 
 class CompilerTestParser(parser.Parser):
     def __init__(self, source):
-        self.tokenizer = compiler.BlockTokenizer(StringIO(source))
+        self.tokenizer = parser.Tokenizer(StringIO(source))
         self.tree = []
         while self.tokenizer.hasToken():
             instruction = self.tokenizer.instruction()
             self.tree.append(instruction)
     
     def tokenize(self):
-        return compiler.TokenList(self.tree);
+        return parser.TokenList(self.tree);
 
     def parse(self, Instruction):
         return Instruction(self.tokenize())

@@ -115,38 +115,293 @@ class Scope:
     def static(self, symbol: str, type):
         self.set(symbol, 'static', type)
 
-class Tokenizer:
-    def __init__(self, stream=sys.stdin):
-        self.stream = stream
-        self.done = False
+class ParseException(Exception):
+    def __init__(self, token, message: str):
+        (line, col) = token.kwargs['position']
+        location = f" (at {line}:{col})"
+        Exception.__init__(self, message + location)
 
-    def hasToken(self):
-        return not self.done
+class ParseElement:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
     
-    def token(self):
-        read = self.stream.readline()
-        if read == '':
-            self.done = True
-        slash = read.find('//')
-        if slash > -1:
-            comment = read[slash:]
-            read = read[:slash]
-        else:
-            comment = f'//# {read}'
-        return (read.strip(), comment.replace('\n', ' '))
-    
-    def instruction(self):
-        if self.hasToken():
-            [token, comment] = self.token()
-            instruction = self.makeInstruction(token, comment)
-        if not instruction:
-            instruction = NoopInstruction()
-        return instruction
+    def fill(self, table, position):
+        return position
 
-    def makeInstruction(self, token, comment):
+    def hack(self, table):
+        return None
+    
+    def scope(self, scope):
         pass
 
-class Instruction:
+    def asm(self):
+        return None
+    
+    def vm(self, scope):
+        return None
+
+    def xml(self, table):
+        name = self.__class__.__name__
+        element = sixml.Element(name, self.kwargs, [])
+
+        return element
+
+class Tokenizer:
+    def __init__(self, stream=sys.stdin):
+        self.file = stream.read()
+        self.size = len(self.file)
+        self.index = 0
+        self.line = 1
+        self.col = 1
+
+    def hasToken(self):
+        return self.index < self.size
+
+    def instruction(self):
+        self._consumeWhitespace()
+        if not self.hasToken():
+            return NoopInstruction()
+
+        comment = self._getComment()
+        if comment is not None:
+            return comment
+        
+        string = self._getString()
+        if string is not None:
+            return string
+
+        number = self._getNumber()
+        if number is not None:
+            return number
+        
+        symbol = self._getSymbol()
+        if symbol is not None:
+            return symbol
+        
+        return self._getIdentifier()
+
+    def position(self):
+        return (self.line, self.col)
+
+    def _consumeWhitespace(self):
+        while self.hasToken() and self.file[self.index].isspace():
+            self._next()
+    
+    def _next(self):
+        if self.file[self.index] == '\n':
+            self.line += 1
+            self.col = 1
+        else:
+            self.col += 1
+        self.index += 1
+    
+    def _getComment(self):
+        nextTwo = self.file[self.index:self.index+2]
+        comment = None
+        start = self.position
+        if nextTwo == '//':
+            start = self.index
+            while self.file[self.index] != '\n':
+                self._next()
+            comment = self.file[start:self.index]
+        if nextTwo == '/*':
+            start = self.index
+            while self.file[self.index:self.index+2] != '*/':
+                self._next()
+            self.index += 2
+            comment = self.file[start:self.index]
+        if comment is not None:
+            return CommentToken(comment=comment, position=start, end=self.position())
+        return comment
+    
+    def _getString(self):
+        if self.file[self.index] == '"':
+            self._next()
+            start = self.index
+            while self.file[self.index] != '"' and self.file[self.index-1:self.index] != '\\"':
+                self._next()
+            string = self.file[start:self.index]
+            self._next() # Get ending "
+            return StringToken(string=string, position=self.position())
+        return None
+    
+    def _getNumber(self):
+        if self.file[self.index].isdigit():
+            start = self.index
+            while self.file[self.index].isdigit():
+                self._next()
+            number = self.file[start:self.index]
+            return NumberToken(number=number, position=self.position())
+        return None
+    
+    def _getSymbol(self):
+        symbol = None
+        if self.file[self.index] in SymbolToken.SYMBOLS:
+            symbol = SymbolToken(symbol=self.file[self.index], position=self.position())
+            self._next()
+        return symbol
+    
+    def _getIdentifier(self):
+        start = self.index
+        while self.hasToken() and \
+                not self.file[self.index].isspace() and \
+                not self.file[self.index] in SymbolToken.SYMBOLS and \
+                self.file[self.index] != '"':
+            self._next()
+        token = self.file[start:self.index]
+        if token in KeywordToken.KEYWORDS:
+            return KeywordToken(keyword=token, position=self.position())
+        return IdentifierToken(token=token, position=self.position())
+
+class Token(ParseElement):
+    def __eq__(self, other):
+        if isinstance(other, dict):
+            for arg in other:
+                if self.kwargs[arg] != other[arg]:
+                    return False
+            return True
+        return object.__eq__(self, other) 
+
+class CommentToken(Token):
+    def __repr__(self):
+        return f'Comment<{self.kwargs["comment"]}>'
+    
+    def __str__(self):
+        comment = self.kwargs["comment"]
+        if comment[0:2] == '/*':
+            return comment
+        return '//' + comment
+
+class KeywordToken(Token):
+    KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
+
+    def __repr__(self):
+        return f'Keyword<{self.kwargs["keyword"]}>'
+    
+    def __str__(self):
+        return self.kwargs["keyword"]
+
+    @classmethod
+    def isType(cls, token):
+        if not isinstance(token, cls):
+            return False
+        return token.kwargs['keyword'] in ['int', 'boolean', 'char', 'void']
+    
+    @classmethod
+    def matches(cls, token, *args):
+        if not isinstance(token, cls):
+             return False
+        return len(args) == 0 or any([ \
+            token.kwargs['keyword'] == keyword and \
+            keyword in KeywordToken.KEYWORDS \
+            for keyword in args \
+        ])
+
+class SymbolToken(Token):
+    SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~']
+
+    def __repr__(self):
+        return f'Symbol<{self.kwargs["symbol"]}>'
+    
+    def __str__(self):
+        return self.kwargs['symbol']
+
+    @classmethod
+    def matches(cls, token, *args):
+        if not isinstance(token, cls):
+            return False
+        return len(args) == 0 or any([ \
+            token.kwargs['symbol'] == keyword and \
+            keyword in SymbolToken.SYMBOLS \
+            for keyword in args \
+        ])
+
+class StringToken(Token):
+    def __repr__(self):
+        return f'String<{self.kwargs["string"]}>'
+    
+    def __str__(self):
+        return '"' + self.kwargs["string"] + '"'
+
+class NumberToken(Token):
+    def __repr__(self):
+        return f'Number<{self.kwargs["number"]}>'
+    
+    def __str__(self):
+        return self.kwargs["number"]
+
+class IdentifierToken(Token):
+    def __repr__(self):
+        return f'Identifier<{self.kwargs["token"]}>'
+    
+    def __str__(self):
+        return self.kwargs["token"]
+
+    @staticmethod
+    def matches(token):
+        return isinstance(token, IdentifierToken)
+
+class TokenList:
+    def __init__(self, list):
+        self.list = list
+        self.index = 0
+        self.skipComments()
+    
+    def next(self):
+        token = self.peek()
+        self.advance()
+        return token
+    
+    def done(self):
+        return not self.index < len(self.list)
+
+    def peek(self):
+        if not self.done():
+            return self.list[self.index]
+        return None
+    
+    def advance(self):
+        self.index += 1
+        self.skipComments()
+    
+    def skipComments(self):
+        while isinstance(self.peek(), CommentToken):
+            self.index += 1
+    
+    def getKeyword(self, *args):
+        token = self.peek()
+        if KeywordToken.matches(token, *args):
+            self.advance()
+            return token
+        else:
+            keywords = ','.join(args)
+            raise ParseException(token, f'Expected Keyword in [{keywords}], got {token}')
+
+    def getType(self):
+        if KeywordToken.isType(self.peek()):
+            return self.next()
+        return self.getIdentifier()
+    
+    def getSymbol(self, symbol):
+        token = self.peek()
+        if SymbolToken.matches(token, symbol):
+            self.advance()
+            return token
+        else:
+            raise ParseException(token, f'Expected Symbol {symbol}, got {token}')
+    
+    def getIdentifier(self):
+        token = self.peek()
+        if IdentifierToken.matches(token):
+            self.advance()
+            return token
+        if KeywordToken.matches(token, 'this'):
+            self.advance()
+            return token
+        else:
+            raise ParseException(token, f'Expected Identifier, got {token}')
+
+class Instruction(ParseElement):
     def __init__(self, instruction='', comment='', *args, **kwargs):
         self.instruction = instruction
         self.comment = comment
@@ -176,19 +431,6 @@ class Instruction:
     
     def vm(self, scope):
         return joinLines([child.vm(scope) for child in self.tree])
-
-    def xml(self, table):
-        name = self.__class__.__name__
-        attributes = { 
-            'instruction': self.instruction,
-            'comment': self.comment,
-            'args': ' '.join(self.args),
-            **self.kwargs
-        }
-        children = [child.xml(table) for child in self.tree]
-        element = sixml.Element(name, attributes, children)
-
-        return element
 
 class NoopInstruction(Instruction):
     def __init__(self):

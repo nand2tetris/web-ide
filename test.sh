@@ -11,12 +11,12 @@ python compiler_test.py || die 'Compiler test failed'
 
 for file in ./projects/06/**/*.asm ; do
     echo "Assembling $file..."
-    ./assembler.py $file >/dev/null || die "Failed to assemble ${file}"
+    ./assembler.py $file >${file/asm/hack} || die "Failed to assemble ${file}"
 done
 
 for file in $(find ./projects/0{7,8} -name '*.vm') ; do
     echo "Translating $file..."
-    ./translator.py $file >/dev/null || die "Failed to assemble ${file}"
+    ./translator.py $file >${file/vm/asm} || die "Failed to assemble ${file}"
 done
 
 for dir in ./projects/{10,11}/* ; do

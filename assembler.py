@@ -17,7 +17,16 @@ class ASMParser(parser.Parser):
         return self.hack()
 
 class ASMTokenizer(parser.Tokenizer):
-    def makeInstruction(self, token, comment):
+    def instruction(self):
+        self._consumeWhitespace()
+        if not self.hasToken():
+            return parser.NoopInstruction()
+
+        comment = self._getComment()
+        if comment is not None:
+            return comment
+
+        token = self._getLine()
         try:
             if token[0] == '@':
                 return AInstruction(token)
@@ -30,6 +39,14 @@ class ASMTokenizer(parser.Tokenizer):
         except:
             pass
         return parser.NoopInstruction()
+    
+    def _getLine(self):
+        token = ''
+        while self.hasToken() and self.file[self.index] != '\n':
+            token += self.file[self.index]
+            self._next()
+        self._next()
+        return token
 
 class CInstruction(parser.Instruction):
     def __init__(self, token):

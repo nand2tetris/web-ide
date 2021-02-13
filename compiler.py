@@ -9,6 +9,9 @@ class ParseException(Exception):
         Exception.__init__(self, message + location)
 
 class BlockParser(parser.Parser):
+    def buildTree(self):
+        return []
+
     def parse(self, instream):
         parser.Parser.parse(self, instream)
         list = TokenList(self.tree)
@@ -423,7 +426,7 @@ class Routine(BlockBody):
         init = ''
         if self.kwargs['type'] == 'constructor':
             # Get memory and set `this`
-            fields = scope.next['field']
+            fields = scope.next['this']
             init = f'push constant {fields}\ncall Memory.alloc 1\npop pointer 0\n'
         vm = BlockBody.vm(self, scope)
         return f"{decl}\n{init}\n{vm}"
@@ -551,7 +554,7 @@ class LetStatement(Statement):
     def vm(self, scope):
         op = self.value.vm(scope)
         loc = self.name.kwargs['token']
-        (location, type) = scope.get(loc)
+        (location, _) = scope.get(loc)
         if not self.index:
             return f"{op}\npop {location}"
         else:
@@ -788,7 +791,7 @@ class Term(Expression):
             if keyword == 'true':
                 return 'push constant 0\nnot'
         else:
-            (location, type) = scope.get(self.token.kwargs['token'])
+            (location, _) = scope.get(self.token.kwargs['token'])
             return f"push {location}"
 
     """
@@ -848,7 +851,7 @@ class IndexExpression(Expression):
     
     def __str__(self):
         var = self.kwargs['var']
-        return f'{var}[{self.index}]'
+        return f'{var}[{Expression.__str__(self)}]'
 
 class CallExpression(Expression):
     def __init__(self, list, name=None, dot=None):

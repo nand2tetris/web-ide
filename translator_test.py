@@ -17,7 +17,7 @@ class TranslatorTestCase(parser_test.ParserTestCase):
         if Instruction == translator.ASM:
             self.assertAsm(instruction, **kwargs)
         else:
-            parser_test.ParserTestCase.assertInstruction(self, instruction, Instruction, kwargs)
+            parser_test.ParserTestCase.assertInstruction(self, instruction, Instruction, **kwargs)
 
 # Use this to skip an instruction in the instruction list
 SKIP = (None, (None, None))

@@ -6,6 +6,9 @@ import parser
 import sixml
 
 class ASMParser(parser.Parser):
+    def buildTree(self):
+        return []
+
     @classmethod
     def getTokenizer(cls):
         return ASMTokenizer

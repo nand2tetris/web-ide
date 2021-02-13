@@ -30,12 +30,12 @@ else
 	fi
     for file in $(ls $arg1/*.jack) ; do 
         echo "Compiling $(basename $file)"
-        python compiler.py $file > ${file/jack/vm}
-        python compiler.py $file --xml > ${file}.xml
+        python compiler.py $file > ${file/jack/vm} || exit $?
+        python compiler.py $file --xml > ${file}.xml || exit $?
     done
 	argbase=$(basename $arg1)
 	echo "Assembling ${argbase}"
-	python translator.py $arg1/*.vm > $arg1/$argbase.asm
-	python translator.py $arg1/*.vm --xml > $arg1/$argbase.vm.xml
-	python assembler.py $arg1/$argbase.asm > $arg1/$argbase.hack
+	python translator.py $arg1/*.vm > $arg1/$argbase.asm || exit $?
+	python translator.py $arg1/*.vm --xml > $arg1/$argbase.vm.xml || exit $?
+	python assembler.py $arg1/$argbase.asm > $arg1/$argbase.hack || exit $?
 fi

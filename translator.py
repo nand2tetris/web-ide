@@ -12,6 +12,9 @@ FRAME_ADDRESS = 'R12'
 SP_ADDRESS = 'R11'
 
 class VMParser(parser.Parser):
+    def buildTree(self):
+        return []
+
     @classmethod
     def getTokenizer(cls):
         return VMTokenizer

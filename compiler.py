@@ -29,8 +29,34 @@ class BlockParser(parser.Parser):
 
     @classmethod
     def getTokenizer(cls):
-        return parser.Tokenizer
+        return BlockTokenizer
 
+class BlockTokenizer(parser.Tokenizer):
+    @staticmethod
+    def keywords():
+        return [
+            # Classes
+            'class', 'constructor', 'function', 'method',
+            # Variables
+            'field', 'static', 'var',
+            # Types
+            'int', 'char', 'boolean', 'void',
+            # Values
+            'true', 'false', 'null', 'this',
+            # Statements
+            'let', 'do', 'if', 'else', 'while', 'return'
+        ]
+    
+    @staticmethod
+    def symbols():
+        return [
+            # Blocks
+            '{', '}', '(', ')',
+            # Statements
+            '[', ']', '.', ',', ';',
+            # Expressions
+            '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'
+        ]
 
 class Block(parser.Instruction):
     def __init__(self, list):
@@ -504,7 +530,7 @@ class Term(Expression):
     def __init__(self, termToken, list):
         self.token = termToken
         if not Term.isConstant(self.token):
-            raise ParseException(self.token, f'Expected constant, got {self.token}')
+            raise parser.ParseException(self.token, f'Expected constant, got {self.token}')
         Expression.__init__(self, list)
 
     def buildTree(self):
@@ -622,11 +648,12 @@ class CallExpression(Expression):
         method = self.subroutineName.kwargs['token']
         args = len(self.expressions) + 1
         if self.varName:
+            varName = self.kwargs['var']
             try:
-                (location, type) = scope.get(self.varName)
+                (location, type) = scope.get(varName)
             except:
                 location = ''
-                type = self.varName
+                type = varName
         else:
             location = 'position 0'
             type = scope.parent.clazz

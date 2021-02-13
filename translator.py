@@ -38,18 +38,23 @@ class VMTokenizer(parser.Tokenizer):
     def __init__(self, instream):
         parser.Tokenizer.__init__(self, instream)
         self.currentFunction = ''
+    
+    @staticmethod
+    def keywords():
+        return ['neg', 'not', 'add', 'sub', 'and', 'or', 'lt', 'eq', 'gt', 'push', 'pop', 'label', 'goto', 'if-goto', 'function', 'call', 'return']
+    
+    def instruction(self):
+        self._consumeWhitespace()
+        if not self.hasToken():
+            return parser.NoopInstruction()
 
-    def makeInstruction(self, token, comment):
-        parts = token.split(' ')
-        if len(parts) == 1:
-            [instruction] = parts
-            arg1 = ''
-            arg2 = ''
-        if len(parts) == 2:
-            [instruction, arg1] = parts
-            arg2 = ''
-        if len(parts) == 3:
-            [instruction, arg1, arg2] = parts
+        comment = self._getComment()
+        if comment is not None:
+            return comment
+
+        instruction = self._getKeyword()
+        self._consumeWhitespace()
+        instruction = instruction.kwargs['keyword']
 
         if instruction in [ 'neg', 'not']:
             return UnaryInstruction(instruction, comment)
@@ -57,19 +62,25 @@ class VMTokenizer(parser.Tokenizer):
             return BinaryInstruction(instruction, comment)
         if instruction in ['lt', 'eq', 'gt']:
             return LogicInstruction(instruction, comment)
-        if instruction == 'push' or instruction == 'pop':
-            return MemoryInstruction(instruction, comment, segment=arg1, index=arg2, function=self.currentFunction)
+        if instruction == 'return':
+            return ReturnInstruction('return', comment)
+
+        arg1 = self._getIdentifier().kwargs['token']
+        self._consumeWhitespace()
         if instruction == 'label':
             return LabelInstruction(instruction, comment, label=arg1)
         if instruction == 'goto' or instruction == 'if-goto':
             return GotoInstruction(instruction, comment, label=arg1)
+
+        arg2 = self._getIdentifier().kwargs['token']
+        self._consumeWhitespace()
+        if instruction == 'push' or instruction == 'pop':
+            return MemoryInstruction(instruction, comment, segment=arg1, index=arg2, function=self.currentFunction)
         if instruction == 'function':
             self.currentFunction = arg1
             return FunctionInstruction('function', comment, name=arg1, locals=arg2)
         if instruction == 'call':
             return CallInstruction('call', comment, name=arg1, args=arg2)
-        if instruction == 'return':
-            return ReturnInstruction('return', comment)
         return None
 
 class ASM(parser.Instruction):

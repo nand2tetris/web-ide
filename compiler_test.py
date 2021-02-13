@@ -9,7 +9,7 @@ import parser_test
 
 class CompilerTestParser(parser.Parser):
     def __init__(self, source):
-        self.tokenizer = parser.Tokenizer(StringIO(source))
+        self.tokenizer = compiler.BlockTokenizer(StringIO(source))
         self.tree = []
         while self.tokenizer.hasToken():
             instruction = self.tokenizer.instruction()

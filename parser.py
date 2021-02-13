@@ -178,10 +178,22 @@ class Tokenizer:
         if symbol is not None:
             return symbol
         
+        keyword = self._getKeyword()
+        if keyword is not None:
+            return keyword
+
         return self._getIdentifier()
 
     def position(self):
         return (self.line, self.col)
+    
+    @staticmethod
+    def keywords():
+        return []
+
+    @staticmethod
+    def symbols():
+        return []
 
     def _consumeWhitespace(self):
         while self.hasToken() and self.file[self.index].isspace():
@@ -194,7 +206,7 @@ class Tokenizer:
         else:
             self.col += 1
         self.index += 1
-    
+
     def _getComment(self):
         nextTwo = self.file[self.index:self.index+2]
         comment = None
@@ -213,6 +225,13 @@ class Tokenizer:
         if comment is not None:
             return CommentToken(comment=comment, position=start, end=self.position())
         return comment
+    
+    def _getLine(self):
+        token = ''
+        while self.hasToken() and self.file[self.index] != '\n':
+            token += self.file[self.index]
+            self._next()
+        return token
     
     def _getString(self):
         if self.file[self.index] == '"':
@@ -236,20 +255,31 @@ class Tokenizer:
     
     def _getSymbol(self):
         symbol = None
-        if self.file[self.index] in SymbolToken.SYMBOLS:
+        if self.file[self.index] in self.__class__.symbols():
             symbol = SymbolToken(symbol=self.file[self.index], position=self.position())
             self._next()
         return symbol
     
-    def _getIdentifier(self):
+    def _getWord(self):
         start = self.index
         while self.hasToken() and \
                 not self.file[self.index].isspace() and \
-                not self.file[self.index] in SymbolToken.SYMBOLS and \
+                not self.file[self.index] in self.__class__.symbols() and \
                 self.file[self.index] != '"':
             self._next()
         token = self.file[start:self.index]
-        if token in KeywordToken.KEYWORDS:
+        return token
+
+    def _getKeyword(self):
+        token = self._getWord()
+        if token in self.__class__.keywords():
+            return KeywordToken(keyword=token, position=self.position())
+        self.index -= len(token)
+        return None
+
+    def _getIdentifier(self):
+        token = self._getWord()
+        if token in self.__class__.keywords():
             return KeywordToken(keyword=token, position=self.position())
         return IdentifierToken(token=token, position=self.position())
 
@@ -273,8 +303,6 @@ class CommentToken(Token):
         return '//' + comment
 
 class KeywordToken(Token):
-    KEYWORDS = ['class', 'constructor', 'function', 'method', 'field', 'static', 'var', 'int', 'char', 'boolean', 'void', 'true', 'false', 'null', 'this', 'let', 'do', 'if', 'else', 'while', 'return']
-
     def __repr__(self):
         return f'Keyword<{self.kwargs["keyword"]}>'
     
@@ -290,16 +318,12 @@ class KeywordToken(Token):
     @classmethod
     def matches(cls, token, *args):
         if not isinstance(token, cls):
-             return False
-        return len(args) == 0 or any([ \
-            token.kwargs['keyword'] == keyword and \
-            keyword in KeywordToken.KEYWORDS \
-            for keyword in args \
-        ])
+            return False
+        if len(args) == 0:
+            return True
+        return any([token.kwargs['keyword'] == keyword for keyword in args])
 
 class SymbolToken(Token):
-    SYMBOLS = ['{', '}', '(', ')', '[', ']', '.', ',', ';', '+', '-', '*', '/', '&', '|', '<', '>', '=', '~']
-
     def __repr__(self):
         return f'Symbol<{self.kwargs["symbol"]}>'
     
@@ -310,11 +334,9 @@ class SymbolToken(Token):
     def matches(cls, token, *args):
         if not isinstance(token, cls):
             return False
-        return len(args) == 0 or any([ \
-            token.kwargs['symbol'] == keyword and \
-            keyword in SymbolToken.SYMBOLS \
-            for keyword in args \
-        ])
+        if len(args) == 0:
+            return True
+        return any([token.kwargs['symbol'] == keyword for keyword in args])
 
 class StringToken(Token):
     def __repr__(self):

@@ -24,4 +24,9 @@ for dir in ./projects/{10,11}/* ; do
     ./compiler.sh $dir >/dev/null || die "Failed to compile ${dir}"
 done
 
+for file in ./projects/14/*.lisp ; do
+    echo "Interpreting $file..."
+    ./lisp.py $file >$file.out || die "Failed to interpret ${file}"
+done
+
 echo 'All tests passed'

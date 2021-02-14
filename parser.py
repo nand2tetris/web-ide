@@ -194,6 +194,18 @@ class Tokenizer:
     @staticmethod
     def symbols():
         return []
+    
+    @staticmethod
+    def comment():
+        return '//'
+    
+    @staticmethod
+    def openComment():
+        return '/*'
+    
+    @staticmethod
+    def closeComment():
+        return '*/'
 
     def _consumeWhitespace(self):
         while self.hasToken() and self.file[self.index].isspace():
@@ -208,23 +220,22 @@ class Tokenizer:
         self.index += 1
 
     def _getComment(self):
-        nextTwo = self.file[self.index:self.index+2]
         comment = None
         start = self.position
-        if nextTwo == '//':
+        if self.file[self.index:self.index+len(self.comment())] == self.comment():
             start = self.index
-            while self.file[self.index] != '\n':
+            while self.hasToken() and self.file[self.index] != '\n':
                 self._next()
             comment = self.file[start:self.index]
-        if nextTwo == '/*':
+        if self.file[self.index:self.index+len(self.openComment())] == self.openComment():
             start = self.index
-            while self.file[self.index:self.index+2] != '*/':
+            while self.file[self.index:self.index+len(self.closeComment())] != self.closeComment():
                 self._next()
             self.index += 2
             comment = self.file[start:self.index]
         if comment is not None:
             return CommentToken(comment=comment, position=start, end=self.position())
-        return comment
+        return None 
     
     def _getLine(self):
         token = ''
@@ -297,10 +308,7 @@ class CommentToken(Token):
         return f'Comment<{self.kwargs["comment"]}>'
     
     def __str__(self):
-        comment = self.kwargs["comment"]
-        if comment[0:2] == '/*':
-            return comment
-        return '//' + comment
+        return self.kwargs["comment"]
 
 class KeywordToken(Token):
     def __repr__(self):
@@ -329,6 +337,11 @@ class SymbolToken(Token):
     
     def __str__(self):
         return self.kwargs['symbol']
+    
+    def __eq__(self, other):
+        if not self.__class__ == other.__class__:
+            return False
+        return self.kwargs['symbol'] == other.kwargs['symbol']
 
     @classmethod
     def matches(cls, token, *args):
@@ -344,6 +357,11 @@ class StringToken(Token):
     
     def __str__(self):
         return '"' + self.kwargs["string"] + '"'
+    
+    def __eq__(self, other):
+        if not self.__class__ == other.__class__:
+            return False
+        return self.kwargs['string'] == other.kwargs['string']
 
 class NumberToken(Token):
     def __repr__(self):
@@ -351,6 +369,11 @@ class NumberToken(Token):
     
     def __str__(self):
         return self.kwargs["number"]
+    
+    def __eq__(self, other):
+        if not self.__class__ == other.__class__:
+            return False
+        return self.kwargs['number'] == other.kwargs['number']
 
 class IdentifierToken(Token):
     def __repr__(self):
@@ -358,6 +381,11 @@ class IdentifierToken(Token):
     
     def __str__(self):
         return self.kwargs["token"]
+    
+    def __eq__(self, other):
+        if not self.__class__ == other.__class__:
+            return False
+        return self.kwargs['token'] == other.kwargs['token']
 
     @staticmethod
     def matches(token):
@@ -473,6 +501,14 @@ class NoopInstruction(Instruction):
     def xml(self, table):
         return None
 
+class Block(Instruction):
+    def __init__(self, list):
+        self.list = list
+        Instruction.__init__(self)
+
+    def __str__(self):
+        return '\n'.join([str(t) for t in self.tree])
+
 class Parser(Instruction):
     def __init__(self):
         Instruction.__init__(self, 'program')
@@ -515,7 +551,7 @@ argparser.add_argument('files', metavar='File', nargs='+')
 argparser.add_argument('--xml', const=True, nargs='?', help='Write XML data, rather than the parser\s default output.')
 argparser.add_argument('--out', type=str, default='-', help='Write to output file, - (default) is stdout.')
 
-def main(argv, Parser):
+def main(Parser, argv=sys.argv[1:]):
     args = argparser.parse_args(argv)
     parse = Parser()
 

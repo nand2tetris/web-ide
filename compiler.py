@@ -58,15 +58,7 @@ class BlockTokenizer(parser.Tokenizer):
             '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'
         ]
 
-class Block(parser.Instruction):
-    def __init__(self, list):
-        self.list = list
-        parser.Instruction.__init__(self)
-
-    def __str__(self):
-        return '\n'.join([str(t) for t in self.tree])
-
-class BlockBody(Block):
+class BlockBody(parser.Block):
     def scope(self, scope):
         self.scope = parser.Scope(parent=scope)
         parser.Instruction.scope(self, self.scope)
@@ -92,7 +84,7 @@ class ClassStatement(BlockBody):
     def __str__(self):
         return ' '.join([str(t) for t in [self.token, self.name, '{\n'] + self.tree + ['}']])
 
-class VarDecl(Block):
+class VarDecl(parser.Block):
     def buildTree(self):
         self.location = self.list.getKeyword('var', 'static', 'field')
         self.vars = VarNameList(self.list, self.location)
@@ -119,10 +111,10 @@ class VarDecl(Block):
         token = list.peek()
         return KeywordToken.matches(token, 'var', 'static', 'field')
 
-class VarNameList(Block):
+class VarNameList(parser.Block):
     def __init__(self, list, location):
         self.location = location
-        Block.__init__(self, list)
+        parser.Block.__init__(self, list)
 
     """ type varName (, varname)*"""
     def buildTree(self):
@@ -156,7 +148,7 @@ class VarNameList(Block):
     def __len__(self):
         return len(self.names)
 
-class Routines(Block):
+class Routines(parser.Block):
     def buildTree(self):
         routines = []
         while Routine.matches(self.list):
@@ -205,7 +197,7 @@ class Routine(BlockBody):
         token = list.peek()
         return KeywordToken.matches(token, 'constructor', 'function', 'method')
 
-class ArgumentList(Block):
+class ArgumentList(parser.Block):
     """
     '(' <argument> |  (<argument> ',' <argument>+) ')'
     """
@@ -230,7 +222,7 @@ class ArgumentList(Block):
         args = ', '.join([str(t) for t in self.arguments])
         return f'({args})'
 
-class Argument(Block):
+class Argument(parser.Block):
     """
     <type> <varname>
     """
@@ -259,7 +251,7 @@ class Argument(Block):
     def __str__(self):
         return f'{self.type} {self.name}'
 
-class RoutineBody(Block):
+class RoutineBody(parser.Block):
     def buildTree(self):
         self.list.getSymbol('{')
         self.locals = VarDecl.list(self.list)
@@ -268,9 +260,9 @@ class RoutineBody(Block):
         return self.locals + self.statements
 
     def __str__(self):
-        return '{\n' + Block.__str__(self) + '\n}'
+        return '{\n' + parser.Block.__str__(self) + '\n}'
 
-class Statement(Block):
+class Statement(parser.Block):
     @staticmethod
     def list(list):
         statements = []
@@ -672,4 +664,4 @@ class CallExpression(Expression):
         return f'{fn}({args})'
 
 if __name__ == '__main__':
-    parser.main(sys.argv[1:], BlockParser)
+    parser.main(BlockParser)

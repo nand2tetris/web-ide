@@ -512,4 +512,4 @@ class BootstrapInstruction(parser.Instruction):
         ]
 
 if __name__ == '__main__':
-    parser.main(sys.argv[1:], VMParser)
+    parser.main(VMParser)

@@ -196,4 +196,4 @@ class LInstruction(parser.Instruction):
         return sixml.Element(name, attributes, [])
 
 if __name__ == '__main__':
-    parser.main(sys.argv[1:], ASMParser)
+    parser.main(ASMParser)

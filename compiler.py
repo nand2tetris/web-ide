@@ -449,6 +449,8 @@ class ReturnStatement(Statement):
         return f'return {expr}; \n'
 
 class Expression(Statement):
+    # TODO Rebuild the expression handling with a Pratt Parser
+    # http://journal.stuffwithstuff.com/2011/03/19/prott-parsers-expression-parsing-made-easy
     def buildTree(self):
         """
         Expressions are determined by the next next token.

@@ -295,6 +295,9 @@ class Tokenizer:
         return IdentifierToken(token=token, position=self.position())
 
 class Token(ParseElement):
+    def value(self):
+        return None
+
     def __eq__(self, other):
         if isinstance(other, dict):
             for arg in other:
@@ -303,18 +306,19 @@ class Token(ParseElement):
             return True
         return object.__eq__(self, other) 
 
-class CommentToken(Token):
     def __repr__(self):
-        return f'Comment<{self.kwargs["comment"]}>'
+        return f'{self.__class__}<{self.value()}>'
     
     def __str__(self):
+        return self.value()
+
+
+class CommentToken(Token):
+    def value(self):
         return self.kwargs["comment"]
 
 class KeywordToken(Token):
-    def __repr__(self):
-        return f'Keyword<{self.kwargs["keyword"]}>'
-    
-    def __str__(self):
+    def value(self):
         return self.kwargs["keyword"]
 
     @classmethod
@@ -332,13 +336,12 @@ class KeywordToken(Token):
         return any([token.kwargs['keyword'] == keyword for keyword in args])
 
 class SymbolToken(Token):
-    def __repr__(self):
-        return f'Symbol<{self.kwargs["symbol"]}>'
-    
-    def __str__(self):
-        return self.kwargs['symbol']
+    def value(self):
+        return self.kwargs["symbol"]
     
     def __eq__(self, other):
+        if isinstance(other, dict):
+            return self.kwargs['symbol'] == other['symbol']
         if not self.__class__ == other.__class__:
             return False
         return self.kwargs['symbol'] == other.kwargs['symbol']
@@ -352,8 +355,8 @@ class SymbolToken(Token):
         return any([token.kwargs['symbol'] == keyword for keyword in args])
 
 class StringToken(Token):
-    def __repr__(self):
-        return f'String<{self.kwargs["string"]}>'
+    def value(self):
+        return self.kwargs["string"]
     
     def __str__(self):
         return '"' + self.kwargs["string"] + '"'
@@ -364,10 +367,7 @@ class StringToken(Token):
         return self.kwargs['string'] == other.kwargs['string']
 
 class NumberToken(Token):
-    def __repr__(self):
-        return f'Number<{self.kwargs["number"]}>'
-    
-    def __str__(self):
+    def value(self):
         return self.kwargs["number"]
     
     def __eq__(self, other):
@@ -376,10 +376,7 @@ class NumberToken(Token):
         return self.kwargs['number'] == other.kwargs['number']
 
 class IdentifierToken(Token):
-    def __repr__(self):
-        return f'Identifier<{self.kwargs["token"]}>'
-    
-    def __str__(self):
+    def value(self):
         return self.kwargs["token"]
     
     def __eq__(self, other):

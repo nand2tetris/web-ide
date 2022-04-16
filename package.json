@@ -1,0 +1,16 @@
+{
+  "name": "computron5k",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --experimental-loader @jefri/jiffies/loader.mjs src/main.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "^2.6.2",
+    "typescript": "^4.7.0-dev.20220416"
+  }
+}

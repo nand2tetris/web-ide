@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // Assume browser environment & esm
+    "lib": ["es2021", "DOM", "DOM.Iterable"],
+    "target": "es2022",
+    "module": "es2022",
+    "moduleResolution": "node",
+    "allowJs": true,
+    "checkJs": true,
+
+    // Checks and strictness
+    "strict": true,
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    // "exactOptionalPropertyTypes": true,
+    "noFallthroughCasesInSwitch": true,
+    // "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    // "noPropertyAccessFromIndexSignature": true,
+    // "noUncheckedIndexedAccess": true,
+    // "noUnusedLocals": true,
+    // "noUnusedParameters": true,
+
+    "incremental": true,
+    "outDir": "build",
+    "declaration": true
+  },
+  "include": ["src/**/*"]
+}

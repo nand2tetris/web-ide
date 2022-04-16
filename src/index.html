@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Browser-based NAND to Tetris simulator" />
+    <base href="/" />
+    <link rel="stylesheet" href="/@pico/pico-1.4.1.css" />
+    <link rel="stylesheet" href="./fonts/runbar.css" />
+    <style>
+      :_root {
+        --line-height: 1.25; /* 1.5 */
+        --spacing: 0.25rem; /* 1rem */
+        --typography-spacing-vertical: 1.15rem; /* 1.5rem */
+        --grid-spacing-horizontal: 1rem; /* var(--spacing) */
+        --form-element-spacing-vertical: 0.15rem; /* .75rem */
+        --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+      }
+    </style>
+    <title>NAND2Tetris</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <script type="module">
+      import { App } from "./app.js";
+      document.body.append(...[App()].flat());
+    </script>
+  </body>
+</html>

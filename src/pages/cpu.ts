@@ -6,12 +6,10 @@ import { HACK } from "../testing/mult.js";
 import { Runbar } from "../components/runbar.js";
 import { Timer } from "../simulator/timer.js";
 import { Screen } from "../components/screen.js";
-/** @typedef {import("../components/screen.js").Screen} Screen */
 
 import { TickScreen } from "../testing/fill.js";
 import { compileFStyle } from "@jefri/jiffies/dom/css/fstyle.js";
 
-/** @param {{cpu: CPUChip}} props */
 export const CPU = (
   { cpu } = { cpu: new CPUChip({ ROM: new Memory(HACK) }) }
 ) => {

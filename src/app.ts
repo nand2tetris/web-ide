@@ -1,6 +1,6 @@
 import { header, li, main, nav, strong, ul } from "@jefri/jiffies/dom/html.js";
-import { link } from "@jefri/jiffies/router/link.js";
-import { Router } from "@jefri/jiffies/router/router.js";
+import { link } from "@jefri/jiffies/dom/router/link.js";
+import { Router } from "@jefri/jiffies/dom/router/router.js";
 
 import urls from "./urls.js";
 

@@ -1,4 +1,4 @@
-import { Bus, Chip, Nand } from "./chip.js";
+import { Bus, Chip, Nand, Nand16 } from "./chip.js";
 
 export const Not = () => {
   const not = new Chip(["in"], ["out"], "Not");
@@ -93,4 +93,16 @@ export const Xor = () => {
   ]);
 
   return xorChip;
+};
+
+export const Not16 = () => {
+  const not = new Chip(["in[16]"], ["out[16]"], "Not");
+
+  not.wire(new Nand16(), [
+    { from: "in", to: "a" },
+    { from: "in", to: "b" },
+    { from: "out", to: "out" },
+  ]);
+
+  return not;
 };

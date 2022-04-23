@@ -1,5 +1,14 @@
 import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { Chip, DFF, Nand, parseToPin, HIGH, LOW, printChip } from "./chip.js";
+import {
+  Chip,
+  DFF,
+  Nand,
+  parseToPin,
+  HIGH,
+  LOW,
+  printChip,
+  Bus,
+} from "./chip.js";
 import * as make from "./builder.js";
 
 describe("Chip", () => {
@@ -122,7 +131,19 @@ describe("Chip", () => {
   });
 
   describe("wide", () => {
-    describe("nand16", () => {});
+    describe("bus voltage", () => {
+      it("sets and returns wide busses", () => {
+        const pin = new Bus("wide", 16);
+        pin.busVoltage = 0xf00f;
+        expect(pin.voltage(0)).toBe(1);
+        expect(pin.voltage(8)).toBe(0);
+        expect(pin.voltage(9)).toBe(0);
+        expect(pin.voltage(15)).toBe(1);
+        expect(pin.busVoltage).toBe(0xf00f);
+      });
+    });
+
+    describe("and16", () => {});
   });
 
   describe("arithmetic", () => {

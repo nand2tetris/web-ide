@@ -1,5 +1,6 @@
 import { assert, assertString } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
+import { bin } from "../../util/twos.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -8,6 +9,7 @@ export type Voltage = typeof HIGH | typeof LOW;
 export interface Pin {
   readonly name: string;
   readonly width: number;
+  busVoltage: number;
   pull(voltage: Voltage, bit?: number): void;
   toggle(bit?: number): void;
   voltage(bit?: number): Voltage;
@@ -40,6 +42,17 @@ export class Bus implements Pin {
     return this.state[bit];
   }
 
+  set busVoltage(voltage: number) {
+    for (const i of range(0, this.width)) {
+      this.state[i] = ((voltage & (1 << i)) >> i) as Voltage;
+    }
+    this.next.forEach((n) => (n.busVoltage = voltage));
+  }
+
+  get busVoltage(): number {
+    return range(0, this.width).reduce((b, i) => b | (this.state[i] << i), 0);
+  }
+
   toggle(bit = 0) {
     const nextVoltage = this.voltage(bit) == LOW ? HIGH : LOW;
     this.pull(nextVoltage, bit);
@@ -66,6 +79,14 @@ export class SubBus implements Pin {
   voltage(bit = 0): Voltage {
     assert(bit >= 0 && bit < this.width);
     return this.bus.voltage(this.start + bit);
+  }
+
+  set busVoltage(voltage: number) {
+    this.bus.busVoltage = (voltage & mask(this.width)) << this.start;
+  }
+
+  get busVoltage(): number {
+    return this.bus.busVoltage >> this.start;
   }
 
   connect(bus: Pin): void {
@@ -262,6 +283,18 @@ export class Nand extends Chip {
   }
 }
 
+export class Nand16 extends Chip {
+  constructor() {
+    super(["a[16]", "b[16]"], ["out[16]"]);
+  }
+
+  eval() {
+    const a = this.in("a").busVoltage;
+    const b = this.in("b").busVoltage;
+    this.out().busVoltage = a ^ b;
+  }
+}
+
 export class DFF extends Chip {
   private t: Voltage = LOW;
 
@@ -280,7 +313,7 @@ export class DFF extends Chip {
   }
 }
 
-export type Pinout = Record<string, Voltage>;
+export type Pinout = Record<string, string>;
 export interface SerializedChip {
   id: number;
   name: string;
@@ -290,8 +323,15 @@ export interface SerializedChip {
   children: SerializedChip[];
 }
 
+function mask(width: number) {
+  return Math.pow(2, width) - 1;
+}
+
 function setBus(busses: Pinout, pin: Pin) {
-  busses[pin.name] = pin.voltage();
+  busses[pin.name] = bin(
+    (pin.busVoltage & mask(pin.width)) <<
+      (pin as unknown as { start: number }).start ?? 0
+  );
   return busses;
 }
 

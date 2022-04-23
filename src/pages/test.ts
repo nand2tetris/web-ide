@@ -1,7 +1,7 @@
-import { article, header } from "@jefri/jiffies/dom/html.js";
-import { execute } from "@jefri/jiffies/scope/execute.js";
-import { displayStatistics } from "@jefri/jiffies/scope/display/dom.js";
-import { onConsole } from "@jefri/jiffies/scope/display/console.js";
+import { article, header } from "@davidsouther/jiffies/dom/html.js";
+import { execute } from "@davidsouther/jiffies/scope/execute.js";
+import { displayStatistics } from "@davidsouther/jiffies/scope/display/dom.js";
+import { onConsole } from "@davidsouther/jiffies/scope/display/console.js";
 
 import "../util/twos.test.js";
 import "../util/asm.test.js";

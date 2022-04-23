@@ -1,7 +1,7 @@
-import { Select } from "@jefri/jiffies/components/select.js";
-import { DenormChildren } from "@jefri/jiffies/dom/dom.js";
-import { FC } from "@jefri/jiffies/dom/fc.js";
-import { button, i, li, nav, ul } from "@jefri/jiffies/dom/html.js";
+import { Select } from "@davidsouther/jiffies/components/select.js";
+import { DenormChildren } from "@davidsouther/jiffies/dom/dom.js";
+import { FC } from "@davidsouther/jiffies/dom/fc.js";
+import { button, i, li, nav, ul } from "@davidsouther/jiffies/dom/html.js";
 import { Timer } from "../simulator/timer.js";
 
 const icon = (icon: string) => i({ class: `icon-${icon}` });

@@ -1,4 +1,4 @@
-import { div, li, span, style, ul } from "@jefri/jiffies/dom/html.js";
+import { div, li, span, style, ul } from "@davidsouther/jiffies/dom/html.js";
 import { CPU as CPUChip } from "../simulator/cpu/cpu.js";
 import MemoryGUI from "../components/memory.js";
 import { Memory } from "../simulator/cpu/memory.js";
@@ -8,7 +8,7 @@ import { Timer } from "../simulator/timer.js";
 import { Screen } from "../components/screen.js";
 
 import { TickScreen } from "../testing/fill.js";
-import { compileFStyle } from "@jefri/jiffies/dom/css/fstyle.js";
+import { compileFStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 
 export const CPU = (
   { cpu } = { cpu: new CPUChip({ ROM: new Memory(HACK) }) }

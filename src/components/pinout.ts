@@ -1,5 +1,12 @@
-import { FC } from "@jefri/jiffies/dom/fc.js";
-import { table, tbody, td, th, thead, tr } from "@jefri/jiffies/dom/html.js";
+import { FC } from "@davidsouther/jiffies/dom/fc.js";
+import {
+  table,
+  tbody,
+  td,
+  th,
+  thead,
+  tr,
+} from "@davidsouther/jiffies/dom/html.js";
 import { Pin, Pins } from "../simulator/chip/chip.js";
 
 export const Pinout = FC(

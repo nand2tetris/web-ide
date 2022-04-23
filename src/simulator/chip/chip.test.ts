@@ -1,4 +1,4 @@
-import { describe, it, expect } from "@jefri/jiffies/scope/index.js";
+import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
 import { Chip, DFF, Nand, parseToPin, HIGH, LOW, printChip } from "./chip.js";
 import * as make from "./builder.js";
 

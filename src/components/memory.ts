@@ -6,9 +6,9 @@ import {
 import { asm } from "../util/asm.js";
 import { bin, dec, hex } from "../util/twos.js";
 
-import ButtonBar from "@jefri/jiffies/components/button_bar.js";
-import InlineEdit from "@jefri/jiffies/components/inline_edit.js";
-import VirtualScroll from "@jefri/jiffies/components/virtual_scroll.js";
+import ButtonBar from "@davidsouther/jiffies/components/button_bar.js";
+import InlineEdit from "@davidsouther/jiffies/components/inline_edit.js";
+import VirtualScroll from "@davidsouther/jiffies/components/virtual_scroll.js";
 import {
   article,
   code,
@@ -16,10 +16,10 @@ import {
   nav,
   span,
   ul,
-} from "@jefri/jiffies/dom/html.js";
-import { rounded } from "@jefri/jiffies/dom/css/border.js";
-import { FC, State } from "@jefri/jiffies/dom/fc.js";
-import { li } from "@jefri/jiffies/dom/html.js";
+} from "@davidsouther/jiffies/dom/html.js";
+import { rounded } from "@davidsouther/jiffies/dom/css/border.js";
+import { FC, State } from "@davidsouther/jiffies/dom/fc.js";
+import { li } from "@davidsouther/jiffies/dom/html.js";
 
 const MemoryBlock = FC<
   {

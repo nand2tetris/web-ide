@@ -1,7 +1,12 @@
-import { assertExists } from "@jefri/jiffies/assert.js";
-import { Updatable } from "@jefri/jiffies/dom/dom.js";
-import { FC, State } from "@jefri/jiffies/dom/fc.js";
-import { article, canvas, figure, header } from "@jefri/jiffies/dom/html.js";
+import { assertExists } from "@davidsouther/jiffies/assert.js";
+import { Updatable } from "@davidsouther/jiffies/dom/dom.js";
+import { FC, State } from "@davidsouther/jiffies/dom/fc.js";
+import {
+  article,
+  canvas,
+  figure,
+  header,
+} from "@davidsouther/jiffies/dom/html.js";
 import { Memory, SCREEN } from "../simulator/cpu/memory.js";
 
 const WHITE = "white";

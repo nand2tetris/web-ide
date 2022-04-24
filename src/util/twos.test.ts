@@ -1,5 +1,5 @@
 import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { bin, dec, hex, int10, int16, int2 } from "./twos.js";
+import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos.js";
 
 describe("twos", () => {
   it("formats as base 16", () => {
@@ -39,5 +39,21 @@ describe("twos", () => {
     expect(int16("0xffff")).toBe(-1);
     expect(int16("0xFFFF")).toBe(-1);
     expect(int16("0x0100")).toBe(256);
+  });
+
+  it("nands 16 bit numbers", () => {
+    expect(nand16(0b0, 0b0)).toBe(0b1111_1111_1111_1111);
+    expect(nand16(0b1, 0b0)).toBe(0b1111_1111_1111_1111);
+    expect(nand16(0b0, 0b1)).toBe(0b1111_1111_1111_1111);
+    expect(nand16(0b1, 0b1)).toBe(0b1111_1111_1111_1110);
+    expect(nand16(0b1010_1010_1010_1010, 0b0101_0101_0101_0101)).toBe(
+      0b1111_1111_1111_1111
+    );
+    expect(nand16(0b1111_0000_1111_0000, 0b1111_0000_0000_1111)).toBe(
+      0b0000_1111_1111_1111
+    );
+    expect(nand16(0b1111_1111_0000_1111_0000, 0b1111_1111_0000_0000_1111)).toBe(
+      0b0000_1111_1111_1111
+    );
   });
 });

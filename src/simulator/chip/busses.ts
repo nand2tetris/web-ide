@@ -1,5 +1,16 @@
-import { Not16 } from "./builder.js";
 import { Bus, Chip, Nand16 } from "./chip.js";
+
+export const Not16 = () => {
+  const not = new Chip(["in[16]"], ["out[16]"], "Not16");
+
+  not.wire(new Nand16(), [
+    { from: "in", to: "a" },
+    { from: "in", to: "b" },
+    { from: "out", to: "out" },
+  ]);
+
+  return not;
+};
 
 export const And16 = () => {
   const andChip = new Chip(["a[16]", "b[16]"], ["out[16]"], "And");

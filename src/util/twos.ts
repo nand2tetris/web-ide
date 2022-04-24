@@ -104,3 +104,11 @@ export function dec(i: number): string {
   i = Math.abs(i);
   return `${s}${i}`;
 }
+
+export function nand16(a: number, b: number): number {
+  a = a & 0xffff;
+  b = b & 0xffff;
+  let c = ~(a & b);
+  c = c & 0xffff;
+  return c;
+}

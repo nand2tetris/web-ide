@@ -15,6 +15,7 @@ import { Runbar } from "../components/runbar.js";
 import { LOW, Pin } from "../simulator/chip/chip.js";
 import { Timer } from "../simulator/timer.js";
 import * as make from "../simulator/chip/builder.js";
+import * as busses from "../simulator/chip/busses.js";
 
 export const Chip = () => {
   // let chip = getBuiltinChip("And");
@@ -73,7 +74,7 @@ export const Chip = () => {
         chip = make.And();
         break;
       case "And16":
-        chip = make.And16();
+        chip = busses.And16();
         break;
     }
     setState();

@@ -1,5 +1,6 @@
 import { FC } from "@davidsouther/jiffies/dom/fc.js";
 import {
+  code,
   table,
   tbody,
   td,
@@ -26,11 +27,13 @@ export const Pinout = FC(
                   ...(toggle ? { click: () => toggle(pin) } : {}),
                 },
               },
-              pin.width == 1
-                ? pin.voltage() == 0
-                  ? "Low"
-                  : "High"
-                : bin(pin.busVoltage)
+              code(
+                pin.width == 1
+                  ? pin.voltage() == 0
+                    ? "Low"
+                    : "High"
+                  : bin(pin.busVoltage)
+              )
             )
           )
         )

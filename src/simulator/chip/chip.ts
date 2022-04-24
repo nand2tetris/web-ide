@@ -1,6 +1,6 @@
 import { assert, assertString } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
-import { bin } from "../../util/twos.js";
+import { bin, nand16 } from "../../util/twos.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -291,7 +291,7 @@ export class Nand16 extends Chip {
   eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
-    this.out().busVoltage = a ^ b;
+    this.out().busVoltage = nand16(a, b);
   }
 }
 

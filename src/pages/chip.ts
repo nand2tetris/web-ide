@@ -83,23 +83,14 @@ export const Chip = () => {
   const fstyle: FStyle = {
     ".View__Chip": {
       "> section": {
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "var(--block-spacing-vertical) var(--block-spacing-horizontal)",
+        grid: "auto / 2fr 1fr",
         "> .pinouts": {
-          display: "grid",
-          grid: "1fr 1fr / fit-content repeat(2, minmax(200, 1fr))",
-          gap: "var(--block-spacing-vertical) var(--block-spacing-horizontal)",
+          grid: "min-content repeat(2, minmax(200px, 1fr)) / 1fr 1fr",
           "> h2": { gridColumn: "1 / span 2", marginBottom: "0" },
-          "> article": {
-            display: "flex",
-            flexDirection: "column",
-            "> pin-out": { flexGrow: "1" },
-          },
         },
       },
     },
-    "@media (max-width: 1023px)": {
+    "@media (max-width: 992px)": {
       ".View__Chip > section": {
         display: "flex",
         flexDirection: "column",
@@ -121,8 +112,9 @@ export const Chip = () => {
     style(compileFStyle(fstyle)),
     runbar,
     section(
+      { class: "grid" },
       div(
-        { class: "pinouts" },
+        { class: "pinouts grid" },
         h2(
           "Chip: ",
           Dropdown(
@@ -153,7 +145,8 @@ export const Chip = () => {
           pinsPinout,
           footer()
         )
-      )
+      ),
+      article(header("Test"), textarea({ style: { height: "100%" } }))
     )
   );
 };

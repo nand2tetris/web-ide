@@ -8,6 +8,7 @@ import {
   tr,
 } from "@davidsouther/jiffies/dom/html.js";
 import { Pin, Pins } from "../simulator/chip/chip.js";
+import { bin } from "../util/twos.js";
 
 export const Pinout = FC(
   "pin-out",
@@ -25,7 +26,11 @@ export const Pinout = FC(
                   ...(toggle ? { click: () => toggle(pin) } : {}),
                 },
               },
-              pin.voltage() == 0 ? "Low" : "High"
+              pin.width == 1
+                ? pin.voltage() == 0
+                  ? "Low"
+                  : "High"
+                : bin(pin.busVoltage)
             )
           )
         )

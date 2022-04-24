@@ -8,6 +8,7 @@ import {
   style,
   textarea,
 } from "@davidsouther/jiffies/dom/html.js";
+import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 import { Pinout } from "../components/pinout.js";
 import { Runbar } from "../components/runbar.js";
@@ -20,7 +21,11 @@ export const Chip = () => {
   let chip = make.Xor();
 
   const onToggle = (pin: Pin) => {
-    pin.toggle();
+    if (pin.width == 1) {
+      pin.toggle();
+    } else {
+      pin.busVoltage += 1;
+    }
     chip.eval();
     setState();
   };
@@ -54,9 +59,24 @@ export const Chip = () => {
   const runbar = Runbar({ runner });
 
   function setState() {
-    inPinout.update();
-    outPinout.update();
-    pinsPinout.update();
+    inPinout.update({ pins: chip.ins });
+    outPinout.update({ pins: chip.outs });
+    pinsPinout.update({ pins: chip.pins });
+  }
+
+  function setChip(name: "Xor" | "And" | "And16") {
+    switch (name) {
+      case "Xor":
+        chip = make.Xor();
+        break;
+      case "And":
+        chip = make.And();
+        break;
+      case "And16":
+        chip = make.And16();
+        break;
+    }
+    setState();
   }
 
   const fstyle: FStyle = {
@@ -102,7 +122,23 @@ export const Chip = () => {
     section(
       div(
         { class: "pinouts" },
-        h2(`Chip: ${chip.name}`),
+        h2(
+          "Chip: ",
+          Dropdown(
+            {
+              style: {
+                display: "inline-block",
+              },
+              selected: chip.name,
+              events: {
+                change: (event) => setChip(event.target?.value as unknown),
+              },
+            },
+            "Xor",
+            "And",
+            "And16"
+          )
+        ),
         article({ class: "no-shadow panel" }, header("Input pins"), inPinout),
         article({ class: "no-shadow panel" }, header("Output pins"), outPinout),
         article(

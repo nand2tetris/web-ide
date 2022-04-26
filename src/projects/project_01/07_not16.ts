@@ -1,6 +1,4 @@
-export const hdl = `/**
-* 16-bit Not gate: for i=0..15: out[i] = not in[i]
-*/
+export const hdl = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
 
 CHIP Not16 {
    IN in[16];
@@ -8,9 +6,7 @@ CHIP Not16 {
 
    PARTS:
 }`;
-export const sol = `/**
-* 16-bit Not gate: for i=0..15: out[i] = not in[i]
-*/
+export const sol = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
 
 CHIP Not16 {
    IN in[16];

@@ -3,8 +3,8 @@ import { execute } from "@davidsouther/jiffies/scope/execute.js";
 import { displayStatistics } from "@davidsouther/jiffies/scope/display/dom.js";
 import { onConsole } from "@davidsouther/jiffies/scope/display/console.js";
 
-import "../util/twos.test.js";
 import "../util/asm.test.js";
+import "../util/twos.test.js";
 import "../simulator/chip/chip.test.js";
 import "../simulator/chip/busses.test.js";
 import "../simulator/cpu/alu.test.js";

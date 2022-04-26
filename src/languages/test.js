@@ -1,0 +1,1 @@
+import "./cmp.test.js";

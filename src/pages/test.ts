@@ -5,6 +5,8 @@ import { onConsole } from "@davidsouther/jiffies/scope/display/console.js";
 
 import "../util/asm.test.js";
 import "../util/twos.test.js";
+import "../languages/test.js";
+import "../languages/parser/test.js";
 import "../simulator/chip/chip.test.js";
 import "../simulator/chip/busses.test.js";
 import "../simulator/cpu/alu.test.js";

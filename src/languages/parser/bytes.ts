@@ -5,7 +5,17 @@ import { ParseErrors, Parser } from "./base.js";
 // escaped	Matches a byte string with escaped characters.
 // escaped_transform	Matches a byte string with escaped characters.
 // is_a	Returns the longest slice of the matches the pattern.
-// is_not	Parse till certain characters are met.
+
+// Parse till certain characters are met.
+export const is_not =
+  (chars: string): Parser =>
+  (i) => {
+    let d = 0;
+    while (d < i.length && !chars.includes(i[d])) d++;
+    if (d == 0) return ParseErrors.error("is_not found immediately");
+    return Ok([i.substring(d), i.substring(0, d)]);
+  };
+
 // tag_no_case	Recognizes a case insensitive pattern.
 // take_till	Returns the longest input slice (if any) till a predicate is met.
 // take_till1	Returns the longest (at least 1) input slice till a predicate is met.

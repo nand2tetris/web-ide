@@ -10,7 +10,7 @@ export const all_consuming =
     const o = parser(i);
     if (isOk(o)) {
       if (Ok(o)[1] != "") {
-        return ParseErrors.failure("All Consuming");
+        return ParseErrors.failure("all Consuming");
       }
     }
     return o;
@@ -81,5 +81,16 @@ export const opt =
 // rest	Return the remaining input.
 // rest_len	Return the length of the remaining input.
 // success	a parser which always succeeds with given value without consuming any input.
+
 // value	Returns the provided value if the child parser succeeds.
+export const value =
+  <O, _O>(o: O, parser: Parser<_O>): Parser<O> =>
+  (i) => {
+    const r = parser(i);
+    if (isErr(r)) {
+      return ParseErrors.error("value parser", Err(r));
+    }
+    return Ok([Ok(r)[0], o]);
+  };
+
 // verify	Returns the result of the child parser if it satisfies a verification function.

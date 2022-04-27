@@ -50,6 +50,10 @@ export const alpha1 = () => alpha(1);
 // alphanumeric1	Recognizes one or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
 
 // char	Recognizes one character.
+export const char =
+  (c: string): Parser =>
+  (i) =>
+    i[0] == c ? Ok([i.substring(1), c]) : ParseErrors.error("char not found");
 
 // Recognizes the string “\r\n”.
 export const crlf = () => tag("\r\n");
@@ -69,8 +73,11 @@ export const digit1 = () => digit(1);
 // Recognizes an end of line (both ‘\n’ and ‘\r\n’).
 export const line_ending = () => alt(newline(), crlf());
 
-// multispace0	Recognizes zero or more spaces, tabs, carriage returns and line feeds.
-// multispace1	Recognizes one or more spaces, tabs, carriage returns and line feeds.
+export const multispace = (min: number) => chars(is_space, min);
+// Recognizes zero or more spaces, tabs, carriage returns and line feeds.
+export const multispace0 = () => multispace(0);
+// Recognizes one or more spaces, tabs, carriage returns and line feeds.
+export const multispace1 = () => multispace(1);
 
 // newline	Matches a newline character ‘\n’.
 export const newline = () => tag("\n");

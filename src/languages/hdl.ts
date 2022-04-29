@@ -5,7 +5,7 @@ import { IResult, ParseErrors, Parser } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
 import { value } from "./parser/combinator.js";
-import { many1 } from "./parser/multi.js";
+import { many0 } from "./parser/multi.js";
 import { filler, identifier, list, ws } from "./parser/recipe.js";
 import {
   delimited,
@@ -81,6 +81,7 @@ function part(i: string): IResult<Part> {
   const part: Part = {
     name,
     wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
+    Nand(a=in, b=in, out=out);
   };
   return Ok([input, part]);
 }
@@ -93,7 +94,7 @@ const outListParser = delimited(hdlTag("OUT"), pinList, hdlTag(";"));
 const outList = (i: string) => outListParser(i);
 
 const partsParser = alt<"BUILTIN" | Part[]>(
-  preceded(hdlTag("PARTS:"), many1(terminated(part, hdlTag(";")))),
+  preceded(hdlTag("PARTS:"), many0(terminated(part, hdlTag(";")))),
   value("BUILTIN", terminated(hdlTag("BUILTIN"), hdlTag(";")))
 );
 const parts = (i: string) => partsParser(i);

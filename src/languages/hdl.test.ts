@@ -18,6 +18,12 @@ const NOT_PARTS = `CHIP Not {
     Nand(a=in, b=in, out=out);
 }`;
 
+const NOT_NO_PARTS = `CHIP Not {
+    IN in;
+    OUT out;
+    PARTS:
+}`;
+
 describe("hdl language", () => {
   it("parses comments", () => {
     let parsed: IResult<string>;
@@ -154,6 +160,20 @@ describe("hdl language", () => {
               ],
             },
           ],
+        },
+      ])
+    );
+  });
+  it("parses a file without parts", () => {
+    const parsed = HdlParser(NOT_NO_PARTS);
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        {
+          name: "Not",
+          ins: [{ pin: "in" }],
+          outs: [{ pin: "out" }],
+          parts: [],
         },
       ])
     );

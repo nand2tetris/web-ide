@@ -1,5 +1,5 @@
 import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser } from "./base.js";
+import { IResult, ParseErrors, Parser } from "./base.js";
 
 // https://docs.rs/nom/latest/nom/multi/index.html
 // count	Runs the embedded parser a specified number of times. Returns the results in a Vec.
@@ -13,13 +13,12 @@ import { ParseErrors, Parser } from "./base.js";
 // length_value	Gets a number from the first parser, takes a subslice of the input of that size, then applies the second parser on that subslice. If the second parser returns Incomplete, length_value will return an error.
 
 // Repeats the embedded parser max times or until it fails and returns the results in a Vec. Fails if the embedded parser does not succeed at least min times.
-export const many =
-  <O>(
-    parser: Parser<O>,
-    min: number = 0,
-    max: number = Number.MAX_SAFE_INTEGER
-  ): Parser<O[]> =>
-  (i) => {
+export const many = <O>(
+  parser: Parser<O>,
+  min: number = 0,
+  max: number = Number.MAX_SAFE_INTEGER
+): Parser<O[]> => {
+  function many(i: string): IResult<O[]> {
     const results: O[] = [];
     while (results.length < max && i.length > 0) {
       const result = parser(i);
@@ -36,15 +35,17 @@ export const many =
     } else {
       return Ok([i, results]);
     }
-  };
+  }
+  return many;
+};
 
 // Repeats the embedded parser until it fails and returns the results in a Vec.
-export const many0 = <O>(parser: Parser<O[]>) => many(parser, 0);
+export const many0 = <O>(parser: Parser<O>): Parser<O[]> => many(parser, 0);
 
 // Repeats the embedded parser until it fails and returns the number of successful iterations.
 // export const many0_count = (parser: Parser) => count(many0(parser));
 // Runs the embedded parser until it fails and returns the results in a Vec. Fails if the embedded parser does not produce at least one result.
-export const many1 = (parser: Parser) => many(parser, 1);
+export const many1 = <O>(parser: Parser<O>) => many<O>(parser, 1);
 
 // Repeats the embedded parser until it fails and returns the number of successful iterations. Fails if the embedded parser does not succeed at least once.
 // export const many1_count = (parser: Parser) => count(many1(parser));

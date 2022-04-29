@@ -4,11 +4,15 @@ import { alt } from "./branch.js";
 import { tag } from "./bytes.js";
 
 // Tests if byte is ASCII alphabetic: A-Z, a-z
-export const is_alphabetic = (i: string) =>
+export const is_ascii = (i: string) =>
   ("A" <= i && i <= "Z") || ("a" <= i && i <= "z");
 
+// Tests if byte is extended alphabetic
+// TODO(https://stackoverflow.com/a/26660334/240358)
+export const is_alphabetic = (i: string) => is_ascii(i);
+
 // Tests if byte is ASCII alphanumeric: A-Z, a-z, 0-9
-export const is_alphanumeric = (i: string) => is_alphabetic(i) || is_digit(i);
+export const is_alphanumeric = (i: string) => is_ascii(i) || is_digit(i);
 
 // Tests if byte is ASCII digit: 0-9
 export const is_digit = (i: string) => "0" <= i && i <= "9";
@@ -16,6 +20,8 @@ export const is_digit = (i: string) => "0" <= i && i <= "9";
 // Tests if byte is ASCII hex digit: 0-9, A-F, a-f
 export const is_hex_digit = (i: string) =>
   is_digit(i) || ("A" <= i && i <= "F") || ("a" <= i && i <= "f");
+
+export const is_crlf = (i: string) => i == "\n" || i == "\r";
 
 // Tests if byte is ASCII newline: \n
 export const is_newine = (i: string) => i == "\n";
@@ -30,7 +36,7 @@ export const chars =
   (charClass: (i: string) => boolean, min: number): Parser<string> =>
   (i: string) => {
     let d = 0;
-    while (charClass(i[d++]));
+    while (charClass(i[d])) d++;
     if (d < min) {
       return ParseErrors.incomplete(min - d);
     }
@@ -46,8 +52,14 @@ export const alpha0 = () => alpha(0);
 // alpha1	Recognizes one or more lowercase and uppercase ASCII alphabetic characters: a-z, A-Z
 export const alpha1 = () => alpha(1);
 
-// alphanumeric0	Recognizes zero or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
-// alphanumeric1	Recognizes one or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
+export const alphanumeric = (min: number): Parser<string> =>
+  chars(is_alphanumeric, min);
+
+// Recognizes zero or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
+export const alphanumeric0 = () => alphanumeric(0);
+
+// Recognizes one or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
+export const alphanumeric1 = () => alphanumeric(1);
 
 // char	Recognizes one character.
 export const char =
@@ -70,17 +82,26 @@ export const digit1 = () => digit(1);
 // hex_digit1	Recognizes one or more ASCII hexadecimal numerical characters: 0-9, A-F, a-f
 // integer  Parsers a number in text form to an integer number
 
-// Recognizes an end of line (both ‘\n’ and ‘\r\n’).
-export const line_ending = () => alt(newline(), crlf());
+export const multispace = (min: number): Parser<string> => {
+  const parser = chars((i) => is_space(i) || is_crlf(i), min);
+  const multispace = (i: string) => parser(i);
+  return multispace;
+};
 
-export const multispace = (min: number) => chars(is_space, min);
 // Recognizes zero or more spaces, tabs, carriage returns and line feeds.
 export const multispace0 = () => multispace(0);
 // Recognizes one or more spaces, tabs, carriage returns and line feeds.
 export const multispace1 = () => multispace(1);
 
 // newline	Matches a newline character ‘\n’.
-export const newline = () => tag("\n");
+export const newline = (): Parser<string> => tag("\n");
+
+// Recognizes an end of line (both ‘\n’ and ‘\r\n’).
+const line_ending_parser = alt(newline(), crlf());
+export const line_ending = (): Parser<string> => {
+  const line_ending = (i: string) => line_ending_parser(i);
+  return line_ending;
+};
 
 // none_of	Recognizes a character that is not in the provided characters.
 // not_line_ending	Recognizes a string of any char except ‘\r\n’ or ‘\n’.

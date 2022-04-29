@@ -4,7 +4,7 @@
 import { Err, Result } from "@davidsouther/jiffies/result.js";
 
 export class ParseError extends Error {
-  constructor(message: string, readonly cause?: ParseError) {
+  constructor(message: string, readonly cause?: ParseError | string) {
     super(message);
   }
 }
@@ -36,10 +36,10 @@ export class ParseFailure extends ParseError {
 }
 
 export const ParseErrors = {
-  error(message: string, cause?: ParseError) {
+  error(message: string, cause?: ParseError | string) {
     return Err(new ParseError(message, cause));
   },
-  failure(message: string, cause?: ParseError) {
+  failure(message: string, cause?: ParseError | string) {
     return Err(new ParseFailure(message, cause));
   },
   incomplete(n: number) {

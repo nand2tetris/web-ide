@@ -62,13 +62,13 @@ export const tag = (s: string | RegExp): Parser =>
     ? (i) =>
         i.startsWith(s)
           ? Ok([i.substring(s.length), s])
-          : ParseErrors.error("tag not found")
+          : ParseErrors.error("tag not found", s)
     : (i) => {
         let m = i.match(s);
         if (m != null) {
           let o = m[0];
           return Ok([i.substring(o.length), o]);
         } else {
-          return ParseErrors.error("tag did not match");
+          return ParseErrors.error("tag did not match", `${s}`);
         }
       };

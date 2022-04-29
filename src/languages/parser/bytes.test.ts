@@ -18,7 +18,7 @@ describe("TS Parser Combinator", () => {
       const parser = tag("Hello");
 
       expect(parser("Hello, world!")).toEqual(Ok([", world!", "Hello"]));
-      expect(parser("Something")).toEqual(Err({ name: "Parse Error" }));
+      expect(parser("Something")).toEqual(Err({ cause: "Hello" }));
     });
   });
 });

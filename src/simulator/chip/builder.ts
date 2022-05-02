@@ -1,3 +1,6 @@
+import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
+import { HdlParser } from "../../languages/hdl.js";
+import { getBuiltinChip } from "./builtins/index.js";
 import { Bus, Chip, Nand, Nand16 } from "./chip.js";
 
 export const Not = () => {
@@ -94,3 +97,26 @@ export const Xor = () => {
 
   return xorChip;
 };
+
+export function parse(code: string): Result<Chip> {
+  const parsed = HdlParser(code);
+  if (isErr(parsed)) return parsed;
+  const [_, parts] = Ok(parsed);
+
+  if (parts.parts === "BUILTIN") {
+    return Ok(getBuiltinChip(parts.parts));
+  }
+
+  const ins = parts.ins.map(({ pin }) => pin);
+  const outs = parts.outs.map(({ pin }) => pin);
+  const chip = new Chip(ins, outs, parts.name);
+
+  for (const wire of parts.parts) {
+    chip.wire(
+      getBuiltinChip(wire.name),
+      wire.wires.map(({ lhs, rhs: { pin } }) => ({ from: pin, to: lhs }))
+    );
+  }
+
+  return Ok(chip);
+}

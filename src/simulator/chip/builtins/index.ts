@@ -1,5 +1,5 @@
 import { assert } from "@davidsouther/jiffies/assert.js";
-import { Chip } from "../chip.js";
+import { Chip, Nand, Nand16 } from "../chip.js";
 
 import { And } from "./logic/and.js";
 import { Demux } from "./logic/demux.js";
@@ -16,7 +16,7 @@ export { Or } from "./logic/or.js";
 export { Xor } from "./logic/xor.js";
 
 export const REGISTRY = new Map<string, () => Chip>(
-  [Not, And, Or, Xor, Mux, Demux].map((ChipCtor) => [
+  [Nand, Not, And, Or, Xor, Mux, Demux, Nand16].map((ChipCtor) => [
     ChipCtor.name,
     () => {
       const chip = new ChipCtor();

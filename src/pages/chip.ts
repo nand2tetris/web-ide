@@ -5,21 +5,34 @@ import {
   h2,
   header,
   section,
+  span,
   style,
   textarea,
 } from "@davidsouther/jiffies/dom/html.js";
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
+import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.js";
+import { isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
 import { Runbar } from "../components/runbar.js";
 import { LOW, Pin } from "../simulator/chip/chip.js";
 import { Timer } from "../simulator/timer.js";
+import { Chip as SimChip } from "../simulator/chip/chip.js";
 import * as make from "../simulator/chip/builder.js";
-import * as busses from "../simulator/chip/busses.js";
+import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
 
 export const Chip = () => {
-  // let chip = getBuiltinChip("And");
-  let chip = make.Xor();
+  const fs = unwrap(retrieve<FileSystem>("fs"));
+
+  let project = "01";
+  let chips: string[] = [];
+  let chip: SimChip = getBuiltinChip("And");
+
+  (async function init() {
+    await setProject("01");
+    await setChip("And");
+  })();
 
   const onToggle = (pin: Pin) => {
     if (pin.width == 1) {
@@ -31,6 +44,7 @@ export const Chip = () => {
     setState();
   };
 
+  const chipsDropdown = span();
   const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
   const outPinout = Pinout({ pins: chip.outs });
   const pinsPinout = Pinout({ pins: chip.pins });
@@ -65,19 +79,44 @@ export const Chip = () => {
     pinsPinout.update({ pins: chip.pins });
   }
 
-  function setChip(name: "Xor" | "And" | "And16") {
-    switch (name) {
-      case "Xor":
-        chip = make.Xor();
-        break;
-      case "And":
-        chip = make.And();
-        break;
-      case "And16":
-        chip = busses.And16();
-        break;
-    }
+  async function setChip(name: string) {
+    const hdl = await fs.readFile(`/projects/${project}/${name}/${name}.hdl`);
+    const tst = await fs.readFile(`/projects/${project}/${name}/${name}.tst`);
+    const cmp = await fs.readFile(`/projects/${project}/${name}/${name}.cmp`);
+    hdlTextarea.value = hdl;
+    tstTextarea.value = tst;
+    cmpTextarea.value = cmp;
+    compileChip(hdl);
+  }
+
+  function compileChip(text: string) {
+    const maybeChip = make.parse(text);
+    if (isErr(maybeChip)) return;
+    chip = Ok(maybeChip);
     setState();
+  }
+
+  async function saveChip(project: string, name: string, text: string) {
+    await fs.writeFile(`/projects/${project}/${name}/${name}.hdl`, text);
+  }
+
+  async function setProject(proj: "01" | "02" | "03" | "04" | "05") {
+    project = proj;
+    chips = [...new Set(await fs.readdir(`/projects/${project}`))].sort();
+    chipsDropdown.update(
+      Dropdown(
+        {
+          style: {
+            display: "inline-block",
+          },
+          selected: chip.name,
+          events: {
+            change: (event) => setChip(event.target?.value as unknown),
+          },
+        },
+        chips
+      )
+    );
   }
 
   const fstyle: FStyle = {
@@ -122,18 +161,22 @@ export const Chip = () => {
               style: {
                 display: "inline-block",
               },
-              selected: chip.name,
+              selected: project,
               events: {
-                change: (event) => setChip(event.target?.value as unknown),
+                change: (event) => setProject(event.target?.value as unknown),
               },
             },
-            "Xor",
-            "And",
-            "And16"
-          )
+            {
+              "01": "Logic",
+              "02": "Arithmetic",
+              "03": "Memory",
+              "04": "Assembly",
+              "05": "Architecture",
+            }
+          ),
+          "Chip: ",
+          chipsDropdown
         ),
-        article({ class: "no-shadow panel" }, header("Input pins"), inPinout),
-        article({ class: "no-shadow panel" }, header("Output pins"), outPinout),
         article(
           { class: "no-shadow panel" },
           header("HDL"),

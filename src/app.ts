@@ -6,6 +6,7 @@ import {
   strong,
   ul,
 } from "@davidsouther/jiffies/dom/html.js";
+import { provide } from "@davidsouther/jiffies/dom/provide.js";
 import { link } from "@davidsouther/jiffies/dom/router/link.js";
 import { Router } from "@davidsouther/jiffies/dom/router/router.js";
 import {
@@ -20,6 +21,7 @@ export const App = () => {
   const router = Router.for(urls, "test");
   const fs = new FileSystem(new LocalStorageFileSystemAdapter());
   projects.resetFiles(fs);
+  provide({ fs });
 
   const app = [
     header(

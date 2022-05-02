@@ -26,7 +26,7 @@ export const App = () => {
   const app = [
     header(
       nav(
-        ul(li(strong("CPU Emulator"))),
+        ul(li(strong("NAND2Tetris Online"))),
         ul(...urls.map((url) => li(link(url))))
       )
     ),

@@ -16,7 +16,13 @@
           --grid-spacing-horizontal: 1rem; /* var(--spacing) */
           --form-element-spacing-vertical: 0.15rem; /* .75rem */
           --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+          --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace;
         }
+
+        code, kbd, .font-monospace {
+          font-family: var(--font-family-monospace);
+        }
+
         @media (min-width: 1200px) {
         body>footer, body>header, body>main, section {
             --block-spacing-vertical: calc(var(--spacing) * 2);

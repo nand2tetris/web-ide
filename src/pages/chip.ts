@@ -1,13 +1,17 @@
 import {
+  a,
   article,
   div,
   footer,
   h2,
   header,
+  li,
+  nav,
   section,
   span,
   style,
   textarea,
+  ul,
 } from "@davidsouther/jiffies/dom/html.js";
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
@@ -48,6 +52,10 @@ export const Chip = () => {
   const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
   const outPinout = Pinout({ pins: chip.outs });
   const pinsPinout = Pinout({ pins: chip.pins });
+  const hdlTextarea = textarea({ class: "font-monospace", rows: 10 });
+  const tstTextarea = textarea({ class: "font-monospace", rows: 15 });
+  const cmpTextarea = textarea({ class: "font-monospace", rows: 5 });
+
   const runner = new (class ChipRunner extends Timer {
     tick() {
       chip.eval();
@@ -119,6 +127,8 @@ export const Chip = () => {
     );
   }
 
+  function runTest() {}
+
   const fstyle: FStyle = {
     ".View__Chip": {
       "> section": {
@@ -149,13 +159,12 @@ export const Chip = () => {
   return div(
     { class: "View__Chip" },
     style(compileFStyle(fstyle)),
-    runbar,
+    // runbar,
     section(
       { class: "grid" },
       div(
         { class: "pinouts grid" },
         h2(
-          "Chip: ",
           Dropdown(
             {
               style: {
@@ -179,17 +188,80 @@ export const Chip = () => {
         ),
         article(
           { class: "no-shadow panel" },
-          header("HDL"),
-          textarea({ rows: 10, style: { height: "100%" } })
+          header(
+            nav(
+              ul(li("HDL")),
+              ul(
+                li(
+                  a(
+                    {
+                      href: "#",
+                      role: "button",
+                      events: {
+                        click: (e) => {
+                          e.preventDefault();
+                          compileChip(hdlTextarea.value);
+                        },
+                      },
+                    },
+                    "Compile"
+                  )
+                ),
+                li(
+                  a(
+                    {
+                      href: "#",
+                      role: "button",
+                      events: {
+                        click: (e) => {
+                          e.preventDefault();
+                          saveChip(project, chip.name!, hdlTextarea.value);
+                        },
+                      },
+                    },
+                    "Save"
+                  )
+                )
+              )
+            )
+          ),
+          hdlTextarea
         ),
+        article({ class: "no-shadow panel" }, header("Input pins"), inPinout),
         article(
           { class: "no-shadow panel" },
           header("Internal Pins"),
           pinsPinout,
           footer()
-        )
+        ),
+        article({ class: "no-shadow panel" }, header("Output pins"), outPinout)
       ),
-      article(header("Test"), textarea({ style: { height: "100%" } }))
+      article(
+        header(
+          nav(
+            ul(li("Test")),
+            ul(
+              li(
+                a(
+                  {
+                    href: "#",
+                    role: "button",
+                    events: {
+                      click: (e) => {
+                        e.preventDefault();
+                        runTest();
+                      },
+                    },
+                  },
+                  "Execute"
+                )
+              )
+            )
+          )
+        ),
+        tstTextarea,
+        cmpTextarea
+      )
     )
   );
 };

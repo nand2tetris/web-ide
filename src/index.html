@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Browser-based NAND to Tetris simulator" />
     <base href="/" />
-    <!-- <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" /> -->
-    <link rel="stylesheet" href="./pico.min.css" />
+
+    <link rel="stylesheet" href="/@davidsouther/jiffies/pico/pico.css?$enable-viewport=none" />
     <link rel="stylesheet" href="./fonts/runbar.css" />
     <style>
         :root {
@@ -16,29 +16,11 @@
           --grid-spacing-horizontal: 1rem; /* var(--spacing) */
           --form-element-spacing-vertical: 0.15rem; /* .75rem */
           --form-element-spacing-horizontal: 0.25rem; /* 1rem */
-          --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace;
+          /* --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace; */
         }
 
         code, kbd, .font-monospace {
           font-family: var(--font-family-monospace);
-        }
-
-        @media (min-width: 1200px) {
-        body>footer, body>header, body>main, section {
-            --block-spacing-vertical: calc(var(--spacing) * 2);
-        }
-
-        @media (min-width: 992px) {
-        body>footer, body>header, body>main, section {
-            --block-spacing-vertical: calc(var(--spacing) * 1.75);
-        }
-        @media (min-width: 768px) {
-        body>footer, body>header, body>main, section {
-            --block-spacing-vertical: calc(var(--spacing) * 1.5);
-        }
-        @media (min-width: 576px) {
-        body>footer, body>header, body>main, section {
-            --block-spacing-vertical: calc(var(--spacing) * 1.25);
         }
     </style>
     <title>NAND2Tetris</title>

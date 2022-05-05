@@ -7,7 +7,7 @@ import {
   TstOutputSpec,
   tstParser,
 } from "./tst.js";
-import { IResult } from "./parser/base.js";
+import { IResult, Span } from "./parser/base.js";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -65,7 +65,7 @@ describe("tst language", () => {
   it("parses a test file", () => {
     let parsed: IResult<Tst>;
 
-    parsed = tstParser(NOT_TST);
+    parsed = tstParser(new Span(NOT_TST));
 
     expect(parsed).toEqual(
       Ok([

@@ -1,8 +1,8 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { isErr, Ok, Option, unwrapOr } from "@davidsouther/jiffies/result.js";
+import { Option, unwrapOr } from "@davidsouther/jiffies/result.js";
 import { int, int10 } from "../util/twos.js";
-import { IResult, Parser } from "./parser/base.js";
+import { Parser, StringLike } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
 import { multispace1 } from "./parser/character.js";
@@ -55,15 +55,8 @@ export interface Tst {
 // const tstTagParser = ws();
 const tstWs = <O>(p: Parser<O>): Parser<O> => ws(p);
 
-function tstNumberValue(parser: Parser<string>, radix: number): Parser<number> {
-  function tstNumberValue(i: string): IResult<number> {
-    const str = parser(i);
-    if (isErr(str)) return str;
-    const [input, num] = Ok(str);
-    return Ok([input, int(num, radix)]);
-  }
-  return tstNumberValue;
-}
+const tstNumberValue = (p: Parser<StringLike>, r: number): Parser<number> =>
+  map(p, (i) => int(i.toString(), r));
 const tstBinaryValueParser = preceded(tag("B"), tag(/[01]{1,16}/));
 const tstHexValueParser = preceded(tag("X"), tag(/[0-9a-fA-F]{1,4}/));
 const tstDecimalValueParser = preceded(opt(tag("D")), tag(/-?[1-9][0-9]{0,4}/));
@@ -74,11 +67,11 @@ const tstValueParser = preceded(
   tag("%"),
   alt(tstBinaryValue, tstHexValue, tstDecimalValue)
 );
-const tstValue: Parser<number> = (i: string) => tstValueParser(i);
+const tstValue: Parser<number> = (i) => tstValueParser(i);
 
 const set: Parser<TstSetOperation> = map(
   preceded(tstWs(tag("set")), pair(tstWs(identifier()), tstWs(tstValue))),
-  ([id, value]) => ({ op: "set", id, value })
+  ([id, value]) => ({ op: "set", id: id.toString(), value })
 );
 
 const tstOp = alt<TstOperation>(
@@ -99,9 +92,9 @@ const tstOutputFormatParser = tuple(
 const tstOutputFormat: Parser<TstOutputSpec> = map(
   tstOutputFormatParser,
   ([id, style, tag]) => {
-    const [a, b, c] = tag.split(".");
+    const [a, b, c] = tag.toString().split(".");
     return {
-      id,
+      id: id.toString(),
       // @ts-ignore
       style: unwrapOr<"D" | "B" | "X">(style as Option<"D" | "B" | "X">, "D"),
       width: int10(b),

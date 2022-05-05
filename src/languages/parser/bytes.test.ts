@@ -9,7 +9,7 @@ describe("TS Parser Combinator", () => {
 
       expect(parser("1234567")).toEqual(Ok(["7", "123456"]));
       expect(parser("things")).toEqual(Ok(["", "things"]));
-      expect(parser("short")).toEqual(
+      expect(parser("short")).toMatchObject(
         Err({ name: "Parse Incomplete", needed: 1 })
       );
     });
@@ -18,7 +18,9 @@ describe("TS Parser Combinator", () => {
       const parser = tag("Hello");
 
       expect(parser("Hello, world!")).toEqual(Ok([", world!", "Hello"]));
-      expect(parser("Something")).toEqual(Err({ cause: "Hello" }));
+      expect(parser("Something")).toMatchObject(
+        Err({ name: "ParseError", context: { cause: "Hello" } })
+      );
     });
   });
 });

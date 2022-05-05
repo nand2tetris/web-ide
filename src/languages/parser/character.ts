@@ -1,5 +1,5 @@
 import { Ok } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser } from "./base.js";
+import { ParseErrors, Parser, StringLike } from "./base.js";
 import { alt } from "./branch.js";
 import { tag } from "./bytes.js";
 
@@ -32,19 +32,25 @@ export const is_oct_digit = (i: string) => "0" <= i && i <= "7";
 // Tests if byte is ASCII space or tab
 export const is_space = (i: string) => i == " " || i == "\t";
 
-export const chars =
-  (charClass: (i: string) => boolean, min: number): Parser<string> =>
-  (i: string) => {
+export const chars = (
+  charClass: (i: string) => boolean,
+  min: number
+): Parser<StringLike> => {
+  const chars: Parser<StringLike> = (i) => {
     let d = 0;
-    while (charClass(i[d])) d++;
+    const m = i.toString();
+    while (d < m.length && charClass(m[d])) d++;
     if (d < min) {
-      return ParseErrors.incomplete(min - d);
+      return ParseErrors.incomplete(min - d, { span: i });
     }
     return Ok([i.substring(d), i.substring(0, d)]);
   };
+  return chars;
+};
 
 // https://docs.rs/nom/latest/nom/character/complete/index.html
-export const alpha = (min: number): Parser<string> => chars(is_alphabetic, min);
+export const alpha = (min: number): Parser<StringLike> =>
+  chars(is_alphabetic, min);
 
 // Recognizes zero or more lowercase and uppercase ASCII alphabetic characters: a-z, A-Z
 export const alpha0 = () => alpha(0);
@@ -52,7 +58,7 @@ export const alpha0 = () => alpha(0);
 // alpha1	Recognizes one or more lowercase and uppercase ASCII alphabetic characters: a-z, A-Z
 export const alpha1 = () => alpha(1);
 
-export const alphanumeric = (min: number): Parser<string> =>
+export const alphanumeric = (min: number): Parser<StringLike> =>
   chars(is_alphanumeric, min);
 
 // Recognizes zero or more ASCII numerical and alphabetic characters: 0-9, a-z, A-Z
@@ -65,7 +71,9 @@ export const alphanumeric1 = () => alphanumeric(1);
 export const char =
   (c: string): Parser =>
   (i) =>
-    i[0] == c ? Ok([i.substring(1), c]) : ParseErrors.error("char not found");
+    i.substring(0, 1) === c
+      ? Ok([i.substring(1), c])
+      : ParseErrors.error("char not found", { cause: c, span: i });
 
 // Recognizes the string “\r\n”.
 export const crlf = () => tag("\r\n");
@@ -82,9 +90,9 @@ export const digit1 = () => digit(1);
 // hex_digit1	Recognizes one or more ASCII hexadecimal numerical characters: 0-9, A-F, a-f
 // integer  Parsers a number in text form to an integer number
 
-export const multispace = (min: number): Parser<string> => {
+export const multispace = (min: number): Parser<StringLike> => {
   const parser = chars((i) => is_space(i) || is_crlf(i), min);
-  const multispace = (i: string) => parser(i);
+  const multispace: Parser<StringLike> = (i) => parser(i);
   return multispace;
 };
 
@@ -94,12 +102,12 @@ export const multispace0 = () => multispace(0);
 export const multispace1 = () => multispace(1);
 
 // newline	Matches a newline character ‘\n’.
-export const newline = (): Parser<string> => tag("\n");
+export const newline = () => tag("\n");
 
 // Recognizes an end of line (both ‘\n’ and ‘\r\n’).
 const line_ending_parser = alt(newline(), crlf());
-export const line_ending = (): Parser<string> => {
-  const line_ending = (i: string) => line_ending_parser(i);
+export const line_ending = () => {
+  const line_ending: Parser<StringLike> = (i) => line_ending_parser(i);
   return line_ending;
 };
 

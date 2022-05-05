@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "node --experimental-loader @davidsouther/jiffies/loader.mjs src/main.ts",
-    "build": "./build.sh"
+    "build": "./build.sh",
+    "check": "npx tsc --noEmit"
   },
   "author": "",
   "license": "ISC",

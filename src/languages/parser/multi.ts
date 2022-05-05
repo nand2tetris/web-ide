@@ -18,7 +18,7 @@ export const many = <O>(
   min: number = 0,
   max: number = Number.MAX_SAFE_INTEGER
 ): Parser<O[]> => {
-  function many(i: string): IResult<O[]> {
+  const many: Parser<O[]> = (i) => {
     const results: O[] = [];
     while (results.length < max && i.length > 0) {
       const result = parser(i);
@@ -31,11 +31,14 @@ export const many = <O>(
       }
     }
     if (results.length < min) {
-      return ParseErrors.error("many did not find enough results");
+      return ParseErrors.incomplete(results.length, {
+        cause: "many did not find enough results",
+        span: i,
+      });
     } else {
       return Ok([i, results]);
     }
-  }
+  };
   return many;
 };
 

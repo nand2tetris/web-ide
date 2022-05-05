@@ -13,7 +13,7 @@ export const alt =
         return result;
       }
     }
-    return ParseErrors.error("alt did not match any branches.");
+    return ParseErrors.error("alt did not match any branches.", { span: i });
   };
 
 // permutation	Applies a list of parsers in any order.

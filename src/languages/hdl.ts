@@ -1,12 +1,12 @@
 /** Reads and parses HDL chip descriptions. */
 
 import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { IResult, ParseErrors, Parser } from "./parser/base.js";
+import { IResult, ParseErrors, Parser, StringLike } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
 import { value } from "./parser/combinator.js";
 import { many0 } from "./parser/multi.js";
-import { filler, identifier, list, ws } from "./parser/recipe.js";
+import { filler, identifier, list, token, ws } from "./parser/recipe.js";
 import {
   delimited,
   pair,
@@ -18,16 +18,11 @@ import {
 
 const hdlWs = <O>(p: Parser<O>): Parser<O> => {
   const parser = ws(p, filler);
-  const hdlWs = (i: string) => parser(i);
+  const hdlWs: Parser<O> = (i) => parser(i);
   return hdlWs;
 };
-const hdlTag = (s: Parameters<typeof tag>[0]) => {
-  const parser = hdlWs(tag(s));
-  const hdlTag = (i: string) => parser(i);
-  return hdlTag;
-};
 const hdlIdentifierParser = hdlWs(identifier());
-const hdlIdentifier = (i: string) => hdlIdentifierParser(i);
+const hdlIdentifier = (i: StringLike) => hdlIdentifierParser(i);
 
 export interface PinParts {
   pin: string;
@@ -45,8 +40,10 @@ export interface Part {
   wires: Wire[];
 }
 
-function pin(toPin: string): IResult<PinParts> {
-  const match = toPin.match(/^(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
+function pin(toPin: StringLike): IResult<PinParts> {
+  const match = toPin
+    .toString()
+    .match(/^(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
   if (!match) {
     return ParseErrors.failure("toPin expected pin");
   }
@@ -63,16 +60,16 @@ function pin(toPin: string): IResult<PinParts> {
   ]);
 }
 
-const wireParser = separated_pair(hdlIdentifier, hdlTag("="), hdlWs(pin));
-const wire = (i: string) => wireParser(i);
+const wireParser = separated_pair(hdlIdentifier, token("="), hdlWs(pin));
+const wire: Parser<[string, PinParts]> = (i) => wireParser(i);
 const wireListParser = list(wire, tag(","));
-const wireList = (i: string) => wireListParser(i);
+const wireList: Parser<[string, PinParts][]> = (i) => wireListParser(i);
 
 const partParser = tuple(
   hdlIdentifier,
-  delimited(hdlTag("("), wireList, hdlTag(")"))
+  delimited(token("("), wireList, token(")"))
 );
-function part(i: string): IResult<Part> {
+const part: Parser<Part> = (i) => {
   const parse = partParser(i);
   if (isErr(parse)) {
     return ParseErrors.error("part parser has no identifier");
@@ -83,31 +80,31 @@ function part(i: string): IResult<Part> {
     wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
   };
   return Ok([input, part]);
-}
+};
 
-const pinListParser = list(hdlWs(pin), hdlTag(","));
-const pinList = (i: string) => pinListParser(i);
-const inListParser = delimited(hdlTag("IN"), pinList, hdlTag(";"));
-const inList = (i: string) => inListParser(i);
-const outListParser = delimited(hdlTag("OUT"), pinList, hdlTag(";"));
-const outList = (i: string) => outListParser(i);
+const pinListParser = list(hdlWs(pin), token(","));
+const pinList: Parser<PinParts[]> = (i) => pinListParser(i);
+const inListParser = delimited(token("IN"), pinList, token(";"));
+const inList: Parser<PinParts[]> = (i) => inListParser(i);
+const outListParser = delimited(token("OUT"), pinList, token(";"));
+const outList: Parser<PinParts[]> = (i) => outListParser(i);
 
 const partsParser = alt<"BUILTIN" | Part[]>(
-  preceded(hdlTag("PARTS:"), many0(terminated(part, hdlTag(";")))),
-  value("BUILTIN", terminated(hdlTag("BUILTIN"), hdlTag(";")))
+  preceded(token("PARTS:"), many0(terminated(part, token(";")))),
+  value("BUILTIN", terminated(token("BUILTIN"), token(";")))
 );
-const parts = (i: string) => partsParser(i);
+const parts: Parser<"BUILTIN" | Part[]> = (i) => partsParser(i);
 
 const chipBlockParser = delimited(
-  hdlTag("{"),
+  token("{"),
   tuple(inList, outList, parts),
-  hdlTag("}")
+  token("}")
 );
-const chipBlock = (i: string) => chipBlockParser(i);
+const chipBlock = (i: StringLike) => chipBlockParser(i);
 
 const chipParser = preceded(hdlWs(tag("CHIP")), pair(hdlIdentifier, chipBlock));
 
-export function HdlParser(i: string): IResult<{
+export function HdlParser(i: StringLike): IResult<{
   name: string;
   ins: PinParts[];
   outs: PinParts[];
@@ -126,7 +123,6 @@ export function HdlParser(i: string): IResult<{
 export const TEST_ONLY = {
   hdlWs,
   hdlIdentifier,
-  hdlTag,
   pin,
   inList,
   outList,

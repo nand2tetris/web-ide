@@ -61,14 +61,14 @@ export const separated_pair = <O1, O2>(
 };
 
 // terminated	Gets an object from the first parser, then matches an object from the second parser and discards it.
-export const terminated = <O, O2>(a: Parser<O>, b: Parser<O2>): Parser<O> => {
+export const terminated = <O>(a: Parser<O>, b: Parser<unknown>): Parser<O> => {
   const parser = tuple(a, b);
-  function terminated(i: string): IResult<O> {
+  const terminated: Parser<O> = (i) => {
     const t = parser(i);
     if (isErr(t)) return t;
     const [input, [A]] = Ok(t);
     return Ok([input, A]);
-  }
+  };
   return terminated;
 };
 
@@ -94,13 +94,17 @@ export function tuple<O1, O2, O3, O4, O5>(
   p5: Parser<O5>
 ): Parser<[O1, O2, O3, O4, O5]>;
 export function tuple(...parsers: any[]): any {
-  function tuple(i: string): IResult<any> {
+  const tuple: Parser<any> = (i) => {
     const results = [];
 
     for (const parser of parsers) {
       const result = parser(i);
       if (isErr(result)) {
-        return ParseErrors.error("tuple failed", Err(result));
+        return ParseErrors.error("tuple failed", {
+          // @ts-ignore
+          cause: Err(result),
+          span: i,
+        });
       }
       // @ts-ignore
       const [input, o] = Ok(result);
@@ -109,6 +113,6 @@ export function tuple(...parsers: any[]): any {
     }
 
     return Ok([i, results]);
-  }
+  };
   return tuple;
 }

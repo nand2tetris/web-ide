@@ -164,6 +164,7 @@ describe("hdl language", () => {
       ])
     );
   });
+
   it("parses a file without parts", () => {
     const parsed = HdlParser(NOT_NO_PARTS);
     expect(parsed).toEqual(

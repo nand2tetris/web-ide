@@ -1,18 +1,87 @@
 // https://docs.rs/nom/latest/nom/index.html
 
 /** Base utilities for a common parser combinator toolkit. */
+import { assert } from "@davidsouther/jiffies/assert.js";
 import { Err, Result } from "@davidsouther/jiffies/result.js";
 
-export class ParseError extends Error {
-  constructor(message: string, readonly cause?: ParseError | string) {
-    super(message);
-  }
+interface ErrorContext {
+  message?: string;
+  span?: StringLike;
+  cause?: ParseError | StringLike;
+}
+export class ParseError {
+  readonly name: string = "ParseError";
+  constructor(readonly context?: ErrorContext) {}
 }
 
-export type IResult<O> = Result<[string, O], ParseError>;
+export interface StringLike {
+  length: number;
+  // [i: number]: string;
+  toString(): string;
+  indexOf(input: StringLike): number;
+  charAt(n: number): string;
+  substring(start: number, end?: number): StringLike;
+}
 
-export interface Parser<O = string> {
-  (input: string): IResult<O>;
+export type IResult<O> = Result<[StringLike, O], ParseError>;
+
+export interface Parser<O = StringLike> {
+  (input: StringLike): IResult<O>;
+}
+
+export class Span implements StringLike {
+  readonly pos: number = 0;
+  readonly line: number = 1;
+  readonly col: number = 1;
+
+  get length(): number {
+    return this.end - this.start;
+  }
+
+  constructor(
+    private readonly str: StringLike,
+    private readonly start: number = 0,
+    readonly end: number = str.length - start
+  ) {
+    assert(
+      end <= str.length,
+      "Creating Span longer than underlying StringLike"
+    );
+
+    if (str instanceof Span) {
+      this.pos = str.pos + start;
+      this.line = str.line;
+      this.col = str.col;
+    } else {
+      this.pos = start;
+    }
+
+    for (let i = 0; i < this.start; i++) {
+      this.col += 1;
+      if (this.str.charAt(i) == "\n") {
+        this.line += 1;
+        this.col = 1;
+      }
+    }
+  }
+
+  charAt(n: number): string {
+    return this.str.charAt(this.start + n);
+  }
+
+  indexOf(input: StringLike): number {
+    return this.toString().indexOf(input.toString());
+  }
+
+  toString(): string {
+    return this.str.toString().substring(this.start, this.end);
+  }
+
+  substring(start: number, end: number = this.length): StringLike {
+    assert(start >= 0, "Cannot use negative substring");
+    assert(end >= start);
+    return new Span(this, start, end);
+  }
 }
 
 export type ParseErrorType = ParseErrorError | ParseIncomplete | ParseFailure;
@@ -25,8 +94,8 @@ export class ParseErrorError extends ParseError {
 export class ParseIncomplete extends ParseError {
   readonly name = "Parse Incomplete";
 
-  constructor(readonly needed: number) {
-    super("Parse Incomplete");
+  constructor(readonly needed: number, context?: ErrorContext) {
+    super(context);
   }
 }
 
@@ -36,13 +105,13 @@ export class ParseFailure extends ParseError {
 }
 
 export const ParseErrors = {
-  error(message: string, cause?: ParseError | string) {
-    return Err(new ParseError(message, cause));
+  error(message: string, context?: ErrorContext) {
+    return Err(new ParseError({ message, ...context }));
   },
-  failure(message: string, cause?: ParseError | string) {
-    return Err(new ParseFailure(message, cause));
+  failure(message: string, context?: ErrorContext) {
+    return Err(new ParseFailure({ message, ...context }));
   },
-  incomplete(n: number) {
-    return Err(new ParseIncomplete(n));
+  incomplete(n: number, context?: ErrorContext) {
+    return Err(new ParseIncomplete(n, context));
   },
 };

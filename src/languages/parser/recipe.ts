@@ -1,5 +1,4 @@
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { IResult, ParseErrors, Parser } from "./base.js";
+import { Parser, StringLike } from "./base.js";
 import { alt } from "./branch.js";
 import { is_not, tag, take_until } from "./bytes.js";
 import {
@@ -9,12 +8,15 @@ import {
   multispace0,
   multispace1,
 } from "./character.js";
-import { eof, opt, recognize, value } from "./combinator.js";
+import { eof, map, opt, recognize, value } from "./combinator.js";
 import { many0 } from "./multi.js";
 import { delimited, pair, preceded, terminated, tuple } from "./sequence.js";
 
-export const line = (): Parser<string> =>
-  terminated(take_until(alt(line_ending(), eof())), opt(line_ending()));
+export const line = (): Parser<StringLike> =>
+  terminated(
+    take_until(alt(line_ending(), value("", eof()))),
+    opt(line_ending())
+  );
 
 // Wrapper combinators that eat whitespace before and after a parser
 export const ws = <O>(
@@ -50,7 +52,7 @@ const identifierParser = recognize(
   pair(alt(alpha1(), tag("_")), many0(alt(alphanumeric1(), tag("_"))))
 );
 export const identifier = () => {
-  const identifier: Parser<string> = (i) => identifierParser(i);
+  const identifier: Parser<StringLike> = (i) => identifierParser(i);
   return identifier;
 };
 
@@ -65,18 +67,9 @@ export const list = <O>(
   parser: Parser<O>,
   separator: Parser<unknown>
 ): Parser<O[]> => {
-  function list(i: string): IResult<O[]> {
-    const first = parser(i);
-    if (isErr(first)) {
-      return ParseErrors.error("list first item");
-    }
-    const [restInput, firstResult] = Ok(first);
-    const rest = many0(preceded(separator, parser))(restInput);
-    if (isErr(rest)) {
-      return ParseErrors.error("list rest items");
-    }
-    const [outInput, restResult] = Ok(rest);
-    return Ok([outInput, [firstResult, ...restResult]]);
-  }
+  const list: Parser<O[]> = map(
+    pair(parser, many0(preceded(separator, parser))),
+    ([a, rest]) => [a, ...rest]
+  );
   return list;
 };

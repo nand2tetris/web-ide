@@ -62,9 +62,18 @@ export const fail = (): Parser => (_) => ParseErrors.failure("fail");
 // cond	Calls the parser if the condition is met.
 // consumed	if the child parser was successful, return the consumed input with the output as a tuple. Functions similarly to recognize except it returns the parser output as well.
 // flat_map	Creates a new parser from the output of the first parser, then apply that parser over the rest of the input.
-// into	automatically converts the child parser’s result to another type
-// iterator	Creates an iterator from input data and a parser.
-// map	Maps a function on the result of a parser.
+
+// Maps a function on the result of a parser.
+export const map = <I, O>(p: Parser<I>, fn: (i: I) => O): Parser<O> => {
+  function map(i: string): IResult<O> {
+    const res = p(i);
+    if (isErr(res)) return res;
+    const [input, o] = Ok(res);
+    return Ok([input, fn(o)]);
+  }
+  return map;
+};
+
 // map_opt	Applies a function returning an Option over the result of a parser.
 // map_parser	Applies a parser over the result of another one.
 // map_res	Applies a function returning a Result over the result of a parser.
@@ -105,6 +114,18 @@ export const value = <O>(o: O, parser: Parser<unknown>): Parser<O> => {
       return ParseErrors.error("value parser", Err(r));
     }
     return Ok([Ok(r)[0], o]);
+  }
+  return value;
+};
+
+// Returns the result of the provided function if the child parser succeeds.
+export const valueFn = <O>(o: () => O, parser: Parser<unknown>): Parser<O> => {
+  function value(i: string): IResult<O> {
+    const r = parser(i);
+    if (isErr(r)) {
+      return ParseErrors.error("value parser", Err(r));
+    }
+    return Ok([Ok(r)[0], o()]);
   }
   return value;
 };

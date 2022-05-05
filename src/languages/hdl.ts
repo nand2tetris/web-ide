@@ -81,7 +81,6 @@ function part(i: string): IResult<Part> {
   const part: Part = {
     name,
     wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
-    Nand(a=in, b=in, out=out);
   };
   return Ok([input, part]);
 }

@@ -55,6 +55,12 @@ export const Chip = () => {
   const hdlTextarea = textarea({ class: "font-monospace", rows: 10 });
   const tstTextarea = textarea({ class: "font-monospace", rows: 15 });
   const cmpTextarea = textarea({ class: "font-monospace", rows: 5 });
+  const outTextarea = textarea({
+    class: "font-monospace",
+    rows: 5,
+    disabled: true,
+    readOnly: true,
+  });
 
   const runner = new (class ChipRunner extends Timer {
     tick() {
@@ -260,7 +266,8 @@ export const Chip = () => {
           )
         ),
         tstTextarea,
-        cmpTextarea
+        cmpTextarea,
+        outTextarea
       )
     )
   );

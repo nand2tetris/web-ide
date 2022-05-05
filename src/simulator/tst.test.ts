@@ -5,7 +5,7 @@ import {
   TestSetInstruction,
   TestEvalInstruction,
   TestOutputInstruction,
-} from "./test.js";
+} from "./tst.js";
 
 describe("Simulator Test", () => {
   it("creates a simulator test", () => {

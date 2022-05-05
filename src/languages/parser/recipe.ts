@@ -31,25 +31,26 @@ export const comment = (open: string, close: string): Parser<null> =>
   value(null, tuple(tag(open), take_until(tag(close)), tag(close)));
 
 // Eat white space and comments
-export const filler = (
-  start = "//",
-  open = "/*",
-  close = "*/"
-): Parser<null> => {
+export const filler = (start = "//", open = "/*", close = "*/") => {
   const fillerParser = value(
     null,
     many0(alt(multispace1(), comment(open, close), eol_comment(start)))
   );
-  const filler = (i: string): IResult<null> => fillerParser(i);
+  const filler: Parser<null> = (i) => fillerParser(i);
   return filler;
 };
+
+export const token = (
+  token: string | RegExp,
+  fill: () => Parser<unknown> = filler
+) => ws(tag(token), fill);
 
 // C-style identifiers
 const identifierParser = recognize(
   pair(alt(alpha1(), tag("_")), many0(alt(alphanumeric1(), tag("_"))))
 );
-export const identifier = (): Parser<string> => {
-  const identifier = (i: string): IResult<string> => identifierParser(i);
+export const identifier = () => {
+  const identifier: Parser<string> = (i) => identifierParser(i);
   return identifier;
 };
 

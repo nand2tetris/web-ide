@@ -30,7 +30,7 @@ export const App = () => {
         ul(...urls.map((url) => li(link(url))))
       )
     ),
-    router(main({ class: "container-fluid" })),
+    router(main({ class: "flex flex-1" })),
   ];
   return app;
 };

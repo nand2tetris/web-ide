@@ -6,6 +6,7 @@ import {
   h2,
   header,
   li,
+  main,
   nav,
   section,
   span,
@@ -52,11 +53,11 @@ export const Chip = () => {
   const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
   const outPinout = Pinout({ pins: chip.outs });
   const pinsPinout = Pinout({ pins: chip.pins });
-  const hdlTextarea = textarea({ class: "font-monospace", rows: 10 });
-  const tstTextarea = textarea({ class: "font-monospace", rows: 15 });
-  const cmpTextarea = textarea({ class: "font-monospace", rows: 5 });
+  const hdlTextarea = textarea({ class: "font-monospace flex-1", rows: 10 });
+  const tstTextarea = textarea({ class: "font-monospace flex-2", rows: 15 });
+  const cmpTextarea = textarea({ class: "font-monospace flex-1", rows: 5 });
   const outTextarea = textarea({
-    class: "font-monospace",
+    class: "font-monospace flex-1",
     rows: 5,
     disabled: true,
     readOnly: true,
@@ -141,7 +142,7 @@ export const Chip = () => {
         grid: "auto / 2fr 1fr",
         "> .pinouts": {
           grid: "min-content repeat(2, minmax(200px, 1fr)) / 1fr 1fr",
-          "> h2": { gridColumn: "1 / span 2", marginBottom: "0" },
+          h2: { margin: "0 var(--nav-element-spacing-horizontal)" },
         },
       },
     },
@@ -163,14 +164,18 @@ export const Chip = () => {
   };
 
   return div(
-    { class: "View__Chip" },
+    { class: "View__Chip flex-1 flex" },
     style(compileFStyle(fstyle)),
     // runbar,
     section(
-      { class: "grid" },
+      { class: "flex-1 grid" },
       div(
         { class: "pinouts grid" },
-        h2(
+        div(
+          {
+            class: "flex row inline align-end",
+            style: { gridColumn: "1 / span 2" },
+          },
           Dropdown(
             {
               style: {
@@ -189,7 +194,7 @@ export const Chip = () => {
               "05": "Architecture",
             }
           ),
-          "Chip: ",
+          h2("Chips:"),
           chipsDropdown
         ),
         article(
@@ -231,18 +236,18 @@ export const Chip = () => {
               )
             )
           ),
-          hdlTextarea
+          main({ class: "flex" }, hdlTextarea)
         ),
         article({ class: "no-shadow panel" }, header("Input pins"), inPinout),
         article(
           { class: "no-shadow panel" },
           header("Internal Pins"),
-          pinsPinout,
-          footer()
+          pinsPinout
         ),
         article({ class: "no-shadow panel" }, header("Output pins"), outPinout)
       ),
       article(
+        { class: "flex" },
         header(
           nav(
             ul(li("Test")),

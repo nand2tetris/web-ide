@@ -26,7 +26,9 @@ export const ws = <O>(
 
 // C++/EOL style comments
 export const eolComment = (start: string) => {
-  const eolCommentParser = recognize(pair(tag(start), is_not("\r\n")));
+  const eolCommentParser = recognize(
+    tuple(tag(start), tag(/[^\r\n]*(?:\r\n|\n)?/))
+  );
   const eolComment = (i: StringLike) => eolCommentParser(i);
   return eolComment;
 };
@@ -90,9 +92,12 @@ export const list = <O>(
   parser: Parser<O>,
   separator: Parser<unknown>
 ): Parser<O[]> => {
-  const listParser: Parser<O[]> = map(
-    pair(parser, many0(preceded(separator, parser))),
-    ([a, rest]) => [a, ...rest]
+  const listParser: Parser<O[]> = terminated(
+    map(tuple(parser, many0(preceded(separator, parser))), ([a, rest]) => [
+      a,
+      ...rest,
+    ]),
+    opt(separator)
   );
   const list = (i: StringLike) => listParser(i);
   return list;

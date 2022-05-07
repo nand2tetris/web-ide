@@ -11,7 +11,7 @@ import {
   delimited,
   pair,
   preceded,
-  separated_pair,
+  separated,
   terminated,
   tuple,
 } from "./parser/sequence.js";
@@ -60,7 +60,7 @@ function pin(toPin: StringLike): IResult<PinParts> {
   ]);
 }
 
-const wireParser = separated_pair(hdlIdentifier, token("="), hdlWs(pin));
+const wireParser = separated(hdlIdentifier, token("="), hdlWs(pin));
 const wire: Parser<[string, PinParts]> = (i) => wireParser(i);
 const wireListParser = list(wire, tag(","));
 const wireList: Parser<[string, PinParts][]> = (i) => wireListParser(i);

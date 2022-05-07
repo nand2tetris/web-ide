@@ -184,6 +184,5 @@ describe("hdl language", () => {
   it("handles errors", () => {
     const parsed = HdlParser(new Span(`Chip And PARTS:`));
     assert(isErr(parsed));
-    console.log(Err(parsed).toString());
   });
 });

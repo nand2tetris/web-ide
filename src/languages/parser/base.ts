@@ -12,6 +12,32 @@ interface ErrorContext {
 export class ParseError {
   readonly name: string = "ParseError";
   constructor(readonly context?: ErrorContext) {}
+
+  toString(indent = "") {
+    const { message, span, cause } = this.context ?? {};
+    let str = indent + this.name;
+    if (message) {
+      str = `${str} (${message})`;
+    }
+    if (span instanceof Span) {
+      str = `${str} [${span.pos}; ${span.line},${span.col}]`;
+    }
+    if (span) {
+      if (span.length > 15) {
+        str = `${str} at ${span.substring(0, 15)}...`;
+      } else {
+        str = `${str} at '${span}'`;
+      }
+    }
+    if (cause) {
+      if (cause instanceof ParseError) {
+        str = `${str}\n${indent}Cause:\n${cause.toString(indent + "  ")}`;
+      } else {
+        str = `${str}\n${indent}Cause:\n${indent}  ${cause}`;
+      }
+    }
+    return str;
+  }
 }
 
 export interface StringLike {

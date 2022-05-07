@@ -1,5 +1,5 @@
-import { Err, isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { IResult, ParseErrors, Parser } from "./base.js";
+import { isErr, Ok } from "@davidsouther/jiffies/result.js";
+import { IResult, Parser, StringLike } from "./base.js";
 
 // delimited	Matches an object from the first parser and discards it, then gets an object from the second parser, and finally matches an object from the third parser and discards it.
 export const delimited = <O>(
@@ -94,18 +94,12 @@ export function tuple<O1, O2, O3, O4, O5>(
   p5: Parser<O5>
 ): Parser<[O1, O2, O3, O4, O5]>;
 export function tuple(...parsers: any[]): any {
-  const tuple: Parser<any> = (i) => {
-    const results = [];
+  const tuple: Parser<any> = (i: StringLike): IResult<any[]> => {
+    const results: any[] = [];
 
     for (const parser of parsers) {
       const result = parser(i);
-      if (isErr(result)) {
-        return ParseErrors.error("tuple failed", {
-          // @ts-ignore
-          cause: Err(result),
-          span: i,
-        });
-      }
+      if (isErr(result)) return result as IResult<any[]>;
       // @ts-ignore
       const [input, o] = Ok(result);
       results.push(o);

@@ -70,12 +70,15 @@ export const tag = (s: string | RegExp): Parser<StringLike> => {
       ? (i) =>
           i.indexOf(s) === 0
             ? Ok([i.substring(s.length), s])
-            : ParseErrors.error("tag not found", { cause: s, span: i })
+            : ParseErrors.error("tag not found", {
+                cause: `tag '${s}'`,
+                span: i,
+              })
       : (i) => {
           let m = i.toString().match(s);
           if (m == null)
             return ParseErrors.error("tag did not match", {
-              cause: `${s}`,
+              cause: `tag ${s}`,
               span: i,
             });
           let o = m[0];

@@ -19,7 +19,7 @@ describe("TS Parser Combinator", () => {
 
       expect(parser("Hello, world!")).toEqual(Ok([", world!", "Hello"]));
       expect(parser("Something")).toMatchObject(
-        Err({ name: "ParseError", context: { cause: "Hello" } })
+        Err({ name: "ParseError", context: { cause: "tag 'Hello'" } })
       );
     });
   });

@@ -1,7 +1,8 @@
-import { Ok } from "@davidsouther/jiffies/result.js";
+import { assert } from "@davidsouther/jiffies/assert.js";
+import { Err, isErr, Ok } from "@davidsouther/jiffies/result.js";
 import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
 import { HdlParser, Part, PinParts, TEST_ONLY } from "./hdl.js";
-import { IResult } from "./parser/base.js";
+import { IResult, Span, StringLike } from "./parser/base.js";
 import { tag } from "./parser/bytes.js";
 import { list } from "./parser/recipe.js";
 
@@ -26,7 +27,7 @@ const NOT_NO_PARTS = `CHIP Not {
 
 describe("hdl language", () => {
   it("parses comments", () => {
-    let parsed: IResult<string>;
+    let parsed: IResult<StringLike>;
     parsed = TEST_ONLY.hdlIdentifier("a // comment");
     expect(parsed).toEqual(Ok(["", "a"]));
 
@@ -178,5 +179,11 @@ describe("hdl language", () => {
         },
       ])
     );
+  });
+
+  it("handles errors", () => {
+    const parsed = HdlParser(new Span(`Chip And PARTS:`));
+    assert(isErr(parsed));
+    console.log(Err(parsed).toString());
   });
 });

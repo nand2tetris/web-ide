@@ -25,33 +25,56 @@ export const ws = <O>(
 ): Parser<O> => delimited(ws(), inner, ws());
 
 // C++/EOL style comments
-export const eol_comment = (start: string) =>
-  value(null, pair(tag(start), is_not("\r\n")));
+export const eolComment = (start: string) => {
+  const eolCommentParser = recognize(pair(tag(start), is_not("\r\n")));
+  const eolComment = (i: StringLike) => eolCommentParser(i);
+  return eolComment;
+};
 
 // C-style comments
-export const comment = (open: string, close: string): Parser<null> =>
-  value(null, tuple(tag(open), take_until(tag(close)), tag(close)));
+export const comment = (open: string, close: string) => {
+  const commentParser = recognize(
+    tuple(tag(open), take_until(tag(close)), tag(close))
+  );
+  const comment = (i: StringLike) => commentParser(i);
+  return comment;
+};
 
 // Eat white space and comments
 export const filler = (start = "//", open = "/*", close = "*/") => {
-  const fillerParser = value(
-    null,
-    many0(alt(multispace1(), comment(open, close), eol_comment(start)))
+  const fillerParser = recognize(
+    many0(alt(multispace1(), comment(open, close), eolComment(start)))
   );
-  const filler: Parser<null> = (i) => fillerParser(i);
+  const filler = (i: StringLike) => fillerParser(i);
   return filler;
 };
 
-export const token = (
+export function token(
   token: string | RegExp,
+  fill?: () => Parser<unknown>
+): Parser<StringLike>;
+export function token<O>(
+  token: Parser<O>,
+  fill?: () => Parser<unknown>
+): Parser<O>;
+export function token<O>(
+  tokenP: string | RegExp | Parser<O>,
   fill: () => Parser<unknown> = filler
-) => ws(tag(token), fill);
+): Parser<O | StringLike> {
+  const tokenParser =
+    tokenP instanceof RegExp || typeof tokenP == "string"
+      ? ws(tag(tokenP), fill)
+      : ws(tokenP, fill);
+  const token = (i: StringLike) => tokenParser(i);
+  return token;
+}
 
 // C-style identifiers
-const identifierParser = recognize(
-  pair(alt(alpha1(), tag("_")), many0(alt(alphanumeric1(), tag("_"))))
-);
-export const identifier = () => {
+export const identifier = (
+  initial = alt(alpha1(), tag("_")),
+  rest = alt(alphanumeric1(), tag("_"))
+) => {
+  const identifierParser = recognize(pair(initial, many0(rest)));
   const identifier: Parser<StringLike> = (i) => identifierParser(i);
   return identifier;
 };
@@ -67,9 +90,10 @@ export const list = <O>(
   parser: Parser<O>,
   separator: Parser<unknown>
 ): Parser<O[]> => {
-  const list: Parser<O[]> = map(
+  const listParser: Parser<O[]> = map(
     pair(parser, many0(preceded(separator, parser))),
     ([a, rest]) => [a, ...rest]
   );
+  const list = (i: StringLike) => listParser(i);
   return list;
 };

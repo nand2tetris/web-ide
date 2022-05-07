@@ -3,11 +3,12 @@ import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
 import {
   TEST_ONLY,
   Tst,
+  TstOperation,
   TstOutputListOperation,
   TstOutputSpec,
   tstParser,
 } from "./tst.js";
-import { IResult, Span } from "./parser/base.js";
+import { IResult } from "./parser/base.js";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -33,6 +34,9 @@ describe("tst language", () => {
 
     parsed = TEST_ONLY.tstValue("%D-1");
     expect(parsed).toEqual(Ok(["", -1]));
+
+    parsed = TEST_ONLY.tstValue("0");
+    expect(parsed).toEqual(Ok(["", 0]));
   });
 
   it("parses an output format", () => {
@@ -62,11 +66,49 @@ describe("tst language", () => {
     );
   });
 
+  it("parses simple multiline", () => {
+    let parsed: IResult<Tst>;
+
+    parsed = tstParser("eval;\n\neval;\n\n");
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        { lines: [{ ops: [{ op: "eval" }] }, { ops: [{ op: "eval" }] }] },
+      ])
+    );
+  });
+
+  it("parses an output list with junk", () => {
+    let parsed: IResult<TstOutputListOperation>;
+
+    parsed = TEST_ONLY.tstOutputListParser(
+      "\n/// A list\noutput-list a%B1.1.1 /* the output */ out%X2.3.4"
+    );
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        {
+          op: "output-list",
+          spec: [
+            { id: "a", style: "B", width: 1, lpad: 1, rpad: 1 },
+            { id: "out", style: "X", width: 3, lpad: 2, rpad: 4 },
+          ],
+        },
+      ])
+    );
+  });
+
+  it("parses a single set", () => {
+    let parsed: IResult<TstOperation>;
+
+    parsed = TEST_ONLY.set("set a 0");
+    expect(parsed).toEqual(Ok(["", { op: "set", id: "a", value: 0 }]));
+  });
+
   it("parses a test file", () => {
     let parsed: IResult<Tst>;
 
-    parsed = tstParser(new Span(NOT_TST));
-
+    parsed = tstParser(NOT_TST);
     expect(parsed).toEqual(
       Ok([
         "",

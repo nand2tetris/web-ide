@@ -5,10 +5,9 @@ import { int, int10 } from "../util/twos.js";
 import { Parser, StringLike } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
-import { multispace1 } from "./parser/character.js";
 import { map, opt, valueFn } from "./parser/combinator.js";
 import { many1 } from "./parser/multi.js";
-import { identifier, list, ws } from "./parser/recipe.js";
+import { filler, identifier, list, token } from "./parser/recipe.js";
 import { pair, preceded, terminated, tuple } from "./parser/sequence.js";
 
 export interface TstSetOperation {
@@ -52,35 +51,36 @@ export interface Tst {
   lines: TstLine[];
 }
 
-// const tstTagParser = ws();
-const tstWs = <O>(p: Parser<O>): Parser<O> => ws(p);
-
 const tstNumberValue = (p: Parser<StringLike>, r: number): Parser<number> =>
   map(p, (i) => int(i.toString(), r));
 const tstBinaryValueParser = preceded(tag("B"), tag(/[01]{1,16}/));
 const tstHexValueParser = preceded(tag("X"), tag(/[0-9a-fA-F]{1,4}/));
-const tstDecimalValueParser = preceded(opt(tag("D")), tag(/-?[1-9][0-9]{0,4}/));
+const tstDecimalValueParser = preceded(
+  opt(tag("D")),
+  tag(/(-[1-9])?[0-9]{0,4}/)
+);
 const tstHexValue = tstNumberValue(tstHexValueParser, 16);
 const tstDecimalValue = tstNumberValue(tstDecimalValueParser, 10);
 const tstBinaryValue = tstNumberValue(tstBinaryValueParser, 2);
-const tstValueParser = preceded(
-  tag("%"),
-  alt(tstBinaryValue, tstHexValue, tstDecimalValue)
+const tstValueParser = alt(
+  preceded(tag("%"), alt(tstBinaryValue, tstHexValue, tstDecimalValue)),
+  tstDecimalValue
 );
 const tstValue: Parser<number> = (i) => tstValueParser(i);
 
-const set: Parser<TstSetOperation> = map(
-  preceded(tstWs(tag("set")), pair(tstWs(identifier()), tstWs(tstValue))),
+const setParser: Parser<TstSetOperation> = map(
+  preceded(token("set"), pair(token(identifier()), token(tstValue))),
   ([id, value]) => ({ op: "set", id: id.toString(), value })
 );
+const set: Parser<TstSetOperation> = (i) => setParser(i);
 
 const tstOp = alt<TstOperation>(
   set,
-  valueFn(() => ({ op: "eval" }), tag("eval")),
-  valueFn(() => ({ op: "output" }), tag("output"))
+  valueFn(() => ({ op: "eval" }), token("eval")),
+  valueFn(() => ({ op: "output" }), token("output"))
 );
 const tstOpLineParser = map(
-  terminated(list(tstOp, tstWs(tag(","))), tag(";")),
+  terminated(list(tstOp, token(",")), token(";")),
   (ops) => ({ ops })
 );
 
@@ -105,22 +105,23 @@ const tstOutputFormat: Parser<TstOutputSpec> = map(
 );
 
 const tstOutputListParser: Parser<TstOutputListOperation> = map(
-  preceded(tstWs(tag("output-list")), list(tstOutputFormat, multispace1())),
+  preceded(token("output-list"), list(token(tstOutputFormat), filler())),
   (spec) => ({ op: "output-list", spec })
 );
 const tstConfigParser = alt(tstOutputListParser);
 
 const tstConfigLineParser: Parser<TstLine> = map(
-  terminated(list(tstConfigParser, tstWs(tag(","))), tstWs(tag(";"))),
+  terminated(list(tstConfigParser, token(",")), token(";")),
   (ops) => ({ ops } as TstLine)
 );
 
 export const tstParser: Parser<Tst> = map(
-  many1(tstWs(alt(tstConfigLineParser, tstOpLineParser))),
+  terminated(many1(alt(tstConfigLineParser, tstOpLineParser)), filler()),
   (lines) => ({ lines })
 );
 
 export const TEST_ONLY = {
+  set,
   tstValue,
   tstOp,
   tstOutputFormat,

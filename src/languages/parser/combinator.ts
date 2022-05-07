@@ -11,20 +11,20 @@ import {
 } from "./base.js";
 
 // Succeeds if all the input has been consumed by its child parser.
-export const all_consuming = <T>(parser: Parser<T>): Parser<T> => {
-  const all_consuming: Parser<T> = (i) => {
+export const allConsuming = <T>(parser: Parser<T>): Parser<T> => {
+  const allConsuming: Parser<T> = (i) => {
     const o = parser(i);
     if (isOk(o)) {
       const [remaining] = Ok(o);
-      if (remaining != "") {
-        return ParseErrors.failure("all Consuming has some remaining", {
+      if (remaining.length > 0) {
+        return ParseErrors.failure("allConsuming has some remaining", {
           cause: remaining,
         });
       }
     }
     return o;
   };
-  return all_consuming;
+  return allConsuming;
 };
 
 // Transforms Incomplete into Error.
@@ -67,7 +67,12 @@ export const eof = (): Parser<null> => (i) =>
   i == "" ? Ok(["", null]) : ParseErrors.error("Not EOF");
 
 // A parser which always fails.
-export const fail = (): Parser<unknown> => (_) => ParseErrors.failure("fail");
+export const fail =
+  (message = ""): Parser<unknown> =>
+  (_) =>
+    message == ""
+      ? ParseErrors.failure("fail", { message })
+      : ParseErrors.failure("fail");
 
 // cond	Calls the parser if the condition is met.
 // consumed	if the child parser was successful, return the consumed input with the output as a tuple. Functions similarly to recognize except it returns the parser output as well.
@@ -114,29 +119,24 @@ export const recognize = <O>(p: Parser<O>): Parser<StringLike> => {
 
 // rest	Return the remaining input.
 // rest_len	Return the length of the remaining input.
-// success	a parser which always succeeds with given value without consuming any input.
+
+// a parser which always succeeds with given value without consuming any input.
+export const success = <O>(o: O): Parser<O> => {
+  const success: Parser<O> = (i: StringLike) => Ok([i, o]);
+  return success;
+};
 
 // value	Returns the provided value if the child parser succeeds.
 export const value = <O>(o: O, parser: Parser<unknown>): Parser<O> => {
-  const value: Parser<O> = (i) => {
-    const r = parser(i);
-    if (isErr(r)) {
-      return ParseErrors.error("value parser", { cause: Err(r) });
-    }
-    return Ok([Ok(r)[0], o]);
-  };
+  const valueParser: Parser<O> = valueFn(() => o, parser);
+  const value: Parser<O> = (i) => valueParser(i);
   return value;
 };
 
 // Returns the result of the provided function if the child parser succeeds.
 export const valueFn = <O>(o: () => O, parser: Parser<unknown>): Parser<O> => {
-  const valueFn: Parser<O> = (i) => {
-    const r = parser(i);
-    if (isErr(r)) {
-      return ParseErrors.error("value parser", { cause: Err(r) });
-    }
-    return Ok([Ok(r)[0], o()]);
-  };
+  const valueFnParser = map(parser, () => o());
+  const valueFn: Parser<O> = (i) => valueFnParser(i);
   return valueFn;
 };
 

@@ -104,11 +104,17 @@ export function parse(code: string): Result<Chip> {
   const [_, parts] = Ok(parsed);
 
   if (parts.parts === "BUILTIN") {
-    return Ok(getBuiltinChip(parts.parts));
+    return Ok(getBuiltinChip(parts.name));
   }
 
-  const ins = parts.ins.map(({ pin }) => pin);
-  const outs = parts.outs.map(({ pin }) => pin);
+  const ins = parts.ins.map(({ pin, start }) => ({
+    pin,
+    start: start == 0 ? 1 : start,
+  }));
+  const outs = parts.outs.map(({ pin, start }) => ({
+    pin,
+    start: start == 0 ? 1 : start,
+  }));
   const chip = new Chip(ins, outs, parts.name);
 
   for (const wire of parts.parts) {

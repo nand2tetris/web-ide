@@ -97,7 +97,9 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   getVar(variable: string | number): number {
     variable = `${variable}`;
-    return this.chip.get(variable)?.voltage() ?? 0;
+    const pin = this.chip.get(variable);
+    if (!pin) return 0;
+    return pin instanceof Bus ? pin.busVoltage : pin.voltage();
   }
 
   setVar(variable: string, value: number): void {

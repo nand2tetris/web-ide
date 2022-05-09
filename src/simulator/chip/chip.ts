@@ -172,13 +172,23 @@ export class Chip {
   pins = new Pins();
   parts = new Set<Chip>();
 
-  constructor(ins: string[], outs: string[], public name?: string) {
+  constructor(
+    ins: (string | { pin: string; start: number })[],
+    outs: (string | { pin: string; start: number })[],
+    public name?: string
+  ) {
     for (const inn of ins) {
-      const { pin, start = 1 } = parseToPin(inn);
+      const { pin, start = 1 } =
+        (inn as { pin: string }).pin !== undefined
+          ? (inn as { pin: string; start: number })
+          : parseToPin(inn as string);
       this.ins.insert(new Bus(pin, start));
     }
-    for (const out of outs) {
-      const { pin, start = 1 } = parseToPin(out);
+    for (const oot of outs) {
+      const { pin, start = 1 } =
+        (oot as { pin: string }).pin !== undefined
+          ? (oot as { pin: string; start: number })
+          : parseToPin(oot as string);
       this.outs.insert(new Bus(pin, start));
     }
   }

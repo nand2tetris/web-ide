@@ -81,4 +81,10 @@ describe("Test Output Handler", () => {
 
     expect(test.log()).toEqual("| 0001001000110100 | 1001100001110110 |\n");
   });
+
+  it("outputs a header for 16 bit", () => {
+    const outB = new Output("b", "B", 16, 1, 1);
+    const b = outB.header(state.test);
+    expect(b).toEqual("        b         ");
+  });
 });

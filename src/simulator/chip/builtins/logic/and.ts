@@ -15,3 +15,14 @@ export class And extends Chip {
     }
   }
 }
+
+export class And16 extends Chip {
+  constructor() {
+    super(["a[16]", "b[16]"], ["out[16]"]);
+  }
+
+  eval() {
+    this.out().busVoltage =
+      this.in("a").busVoltage & this.in("b").busVoltage & 0xffff;
+  }
+}

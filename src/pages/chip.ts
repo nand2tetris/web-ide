@@ -28,7 +28,7 @@ import * as make from "../simulator/chip/builder.js";
 import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
 import { tstParser } from "../languages/tst.js";
 import { Span } from "../languages/parser/base.js";
-import { cmpParser, CmpParser } from "../languages/cmp.js";
+import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
 
 export const Chip = () => {
@@ -64,7 +64,6 @@ export const Chip = () => {
   const outTextarea = textarea({
     class: "font-monospace flex-1",
     rows: 5,
-    disabled: true,
     readOnly: true,
   });
 

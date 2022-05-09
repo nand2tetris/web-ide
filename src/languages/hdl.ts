@@ -26,7 +26,7 @@ const hdlIdentifier = (i: StringLike) => hdlIdentifierParser(i);
 
 export interface PinParts {
   pin: string;
-  start?: number;
+  start: number;
   end?: number;
 }
 
@@ -54,16 +54,16 @@ function pin(toPin: StringLike): IResult<PinParts> {
     toPin.substring(matched.length),
     {
       pin,
-      start: i ? Number(i) : undefined,
-      end: j ? Number(j) : undefined,
+      start: i ? Number(i) : 0,
+      end: j ? Number(j) : 1,
     },
   ]);
 }
 
 const wireParser = separated(hdlIdentifier, token("="), hdlWs(pin));
-const wire: Parser<[string, PinParts]> = (i) => wireParser(i);
+const wire: Parser<[StringLike, PinParts]> = (i) => wireParser(i);
 const wireListParser = list(wire, tag(","));
-const wireList: Parser<[string, PinParts][]> = (i) => wireListParser(i);
+const wireList: Parser<[StringLike, PinParts][]> = (i) => wireListParser(i);
 
 const partParser = tuple(
   hdlIdentifier,
@@ -76,8 +76,8 @@ const part: Parser<Part> = (i) => {
   }
   const [input, [name, wires]] = Ok(parse);
   const part: Part = {
-    name,
-    wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
+    name: name.toString(),
+    wires: wires.map(([lhs, rhs]) => ({ lhs: lhs.toString(), rhs })),
   };
   return Ok([input, part]);
 };
@@ -117,7 +117,7 @@ export function HdlParser(i: StringLike): IResult<{
 
   const [_, [name, [ins, outs, parts]]] = Ok(chipParse);
 
-  return Ok(["", { name, ins, outs, parts }]);
+  return Ok(["", { name: name.toString(), ins, outs, parts }]);
 }
 
 export const TEST_ONLY = {

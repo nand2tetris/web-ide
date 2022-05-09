@@ -3,4 +3,4 @@
 import { many0 } from "./parser/multi.js";
 import { line } from "./parser/recipe.js";
 
-export const CmpParser = () => many0(line());
+export const cmpParser = many0(line());

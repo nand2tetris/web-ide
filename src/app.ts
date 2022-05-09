@@ -1,4 +1,5 @@
 import {
+  footer,
   header,
   li,
   main,
@@ -21,7 +22,9 @@ export const App = () => {
   const router = Router.for(urls, "test");
   const fs = new FileSystem(new LocalStorageFileSystemAdapter());
   projects.resetFiles(fs);
-  provide({ fs });
+  provide({ fs, status: (status: string) => statusLine.update(status) });
+
+  const statusLine = footer("\u00a0");
 
   const app = [
     header(
@@ -31,6 +34,7 @@ export const App = () => {
       )
     ),
     router(main({ class: "flex flex-1" })),
+    statusLine,
   ];
   return app;
 };

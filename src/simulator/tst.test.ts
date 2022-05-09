@@ -1,7 +1,7 @@
 import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
+import { Output } from "./output.js";
 import {
   ChipTest,
-  Output,
   TestSetInstruction,
   TestEvalInstruction,
   TestOutputInstruction,
@@ -10,15 +10,11 @@ import {
 describe("Simulator Test", () => {
   it("creates a simulator test", () => {
     const test = new ChipTest();
-    test.load("Eq3.hdl");
-    test.outputFile("Eq3.out");
-    test.compareTo("Eq3.cmp");
-    test.outputList(["a", "b", "c", "out"].map((v) => new Output(v)));
+    test.outputList(["a", "b", "out"].map((v) => new Output(v)));
 
     [
       new TestSetInstruction("a", 0),
       new TestSetInstruction("b", 0),
-      new TestSetInstruction("c", 0),
       new TestEvalInstruction(),
       new TestOutputInstruction(),
     ].forEach((i) => test.addInstruction(i));
@@ -26,7 +22,6 @@ describe("Simulator Test", () => {
     [
       new TestSetInstruction("a", 1),
       new TestSetInstruction("b", 1),
-      new TestSetInstruction("c", 1),
       new TestEvalInstruction(),
       new TestOutputInstruction(),
     ].forEach((i) => test.addInstruction(i));
@@ -34,20 +29,20 @@ describe("Simulator Test", () => {
     [
       new TestSetInstruction("a", 1),
       new TestSetInstruction("b", 0),
-      new TestSetInstruction("c", 0),
       new TestEvalInstruction(),
       new TestOutputInstruction(),
     ].forEach((i) => test.addInstruction(i));
 
     [
-      new TestSetInstruction("a", 1),
-      new TestSetInstruction("b", 0),
-      new TestSetInstruction("c", 1),
+      new TestSetInstruction("a", 0),
+      new TestSetInstruction("b", 1),
       new TestEvalInstruction(),
       new TestOutputInstruction(),
     ].forEach((i) => test.addInstruction(i));
 
     test.run();
-    //expect(test.)
+    expect(test.log()).toEqual(
+      `| 0 | 0 | 1 |\n| 1 | 1 | 0 |\n| 1 | 0 | 1 |\n| 0 | 1 | 1 |\n`
+    );
   });
 });

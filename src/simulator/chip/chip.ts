@@ -198,6 +198,19 @@ export class Chip {
     return this.pins.get(name)!;
   }
 
+  get(name: string): Pin | undefined {
+    if (this.ins.has(name)) {
+      return this.ins.get(name)!;
+    }
+    if (this.outs.has(name)) {
+      return this.outs.get(name)!;
+    }
+    if (this.pins.has(name)) {
+      return this.pins.get(name)!;
+    }
+    return undefined;
+  }
+
   isOutPin(pin: string): boolean {
     return this.outs.has(pin);
   }

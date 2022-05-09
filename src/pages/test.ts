@@ -11,6 +11,8 @@ import "../simulator/chip/chip.test.js";
 import "../simulator/chip/busses.test.js";
 import "../simulator/cpu/alu.test.js";
 import "../simulator/cpu/cpu.test.js";
+import "../simulator/output.test.js";
+import "../simulator/tst.test.js";
 
 export const Test = () => {
   const root = article(header("Tests"));

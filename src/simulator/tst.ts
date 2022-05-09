@@ -1,13 +1,18 @@
-import { bin, dec, hex } from "../util/twos.js";
+import { Tst, TstOutputSpec } from "../languages/tst.js";
+import { Bus, Chip, HIGH, LOW, Nand } from "./chip/chip.js";
+import { Output } from "./output.js";
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
   protected _outputList: Output[] = [];
+  protected _log: string = "";
 
   load(filename: string): void {}
   compareTo(filename: string): void {}
   outputFile(filename: string): void {}
-  outputList(outputs: Output[]): void {}
+  outputList(outputs: Output[]): void {
+    this._outputList = outputs;
+  }
 
   addInstruction(instruction: IS | TestInstruction) {
     this.instructions.push(instruction);
@@ -20,6 +25,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   echo(content: string) {}
+
   clearEcho() {}
 
   protected readonly breakpoints: Map<string, number> = new Map();
@@ -32,7 +38,16 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
 
   output() {
     const values = this._outputList.map((output) => output.print(this));
-    const output = `|${values.join("|")}|`;
+    this._log += `|${values.join("|")}|\n`;
+  }
+
+  header() {
+    const values = this._outputList.map((output) => output.header(this));
+    this._log += `|${values.join("|")}|\n`;
+  }
+
+  log() {
+    return this._log;
   }
 
   abstract hasVar(variable: string | number): boolean;
@@ -41,17 +56,70 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
 }
 
 export class ChipTest extends Test<ChipTestInstruction> {
-  hasVar(variable: string | number): boolean {
-    return false;
-  }
-  getVar(variable: string | number): number {
-    return 0;
-  }
-  setVar(variable: string, value: number): void {}
+  private chip = new Nand();
 
-  eval(): void {}
-  tick(): void {}
-  tock(): void {}
+  static from(tst: Tst): ChipTest {
+    const test = new ChipTest();
+
+    for (const line of tst.lines) {
+      for (const inst of line.ops) {
+        switch (inst.op) {
+          case "eval":
+            test.addInstruction(new TestEvalInstruction());
+            break;
+          case "output":
+            test.addInstruction(new TestOutputInstruction());
+            break;
+          case "set":
+            test.addInstruction(new TestSetInstruction(inst.id, inst.value));
+            break;
+          case "output-list":
+            test.addInstruction(new TestOutputListInstruction(inst.spec));
+        }
+      }
+    }
+
+    return test;
+  }
+
+  with(chip: Chip): this {
+    this.chip = chip;
+    return this;
+  }
+
+  hasVar(variable: string | number): boolean {
+    variable = `${variable}`;
+    return (
+      this.chip.in(variable) !== undefined ||
+      this.chip.out(variable) !== undefined
+    );
+  }
+
+  getVar(variable: string | number): number {
+    variable = `${variable}`;
+    return this.chip.get(variable)?.voltage() ?? 0;
+  }
+
+  setVar(variable: string, value: number): void {
+    const pinOrBus = this.chip.in(`${variable}`);
+    if (pinOrBus instanceof Bus) {
+      pinOrBus.busVoltage = value;
+    } else {
+      pinOrBus.pull(value == 0 ? LOW : HIGH);
+    }
+  }
+
+  eval(): void {
+    this.chip.eval();
+  }
+
+  tick(): void {
+    this.chip.tick();
+  }
+
+  tock(): void {
+    this.chip.tock();
+  }
 }
 
 export class CPUTest extends Test<CPUTestInstruction> {
@@ -76,46 +144,6 @@ export class VMTest extends Test<VMTestInstruction> {
   vmstep(): void {}
 }
 
-export class Output {
-  private readonly fmt: "B" | "X" | "D" | "S";
-  private readonly lPad: number;
-  private readonly rPad: number;
-  private readonly len: number;
-
-  constructor(private variable: string, private format = "%B1.1.1") {
-    const { fmt, lPad, rPad, len } = format.match(
-      /^%(?<fmt>[BDXS])(?<lPad>\d+)\.(?<len>\d+)\.(?<rPad>\d+)$/
-    )?.groups as {
-      fmt: "B" | "X" | "D" | "S";
-      lPad: string;
-      rPad: string;
-      len: string;
-    };
-    this.fmt = fmt;
-    this.lPad = parseInt(lPad);
-    this.rPad = parseInt(rPad);
-    this.len = parseInt(len);
-  }
-
-  header(test: Test) {
-    return this.pad(this.variable);
-  }
-
-  print(test: Test) {
-    const val = test.getVar(this.variable);
-    const fmt = { B: bin, D: dec, X: hex, S: (i: number) => `${i}` }[this.fmt];
-    let value = fmt(val);
-    return this.pad(value);
-  }
-
-  private pad(val: string) {
-    let value = val.slice(0, this.len);
-    value = value.padStart(this.lPad + this.len);
-    value = value.padEnd(this.lPad + this.len + this.rPad);
-    return value;
-  }
-}
-
 export interface TestInstruction {
   do(test: Test): void;
 }
@@ -130,6 +158,27 @@ export class TestSetInstruction implements TestInstruction {
 export class TestOutputInstruction implements TestInstruction {
   do(test: Test): void {
     test.output();
+  }
+}
+
+export class TestOutputListInstruction implements TestInstruction {
+  private outputs: Output[] = [];
+
+  constructor(specs: TstOutputSpec[] = []) {
+    for (const spec of specs) {
+      this.addOutput(spec);
+    }
+  }
+
+  addOutput(inst: TstOutputSpec) {
+    this.outputs.push(
+      new Output(inst.id, inst.style, inst.width, inst.lpad, inst.rpad)
+    );
+  }
+
+  do(test: Test): void {
+    test.outputList(this.outputs);
+    test.header();
   }
 }
 

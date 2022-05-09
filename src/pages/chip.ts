@@ -1,8 +1,8 @@
+import { display } from "@davidsouther/jiffies/display.js";
 import {
   a,
   article,
   div,
-  footer,
   h2,
   header,
   li,
@@ -18,7 +18,7 @@ import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { FileSystem } from "@davidsouther/jiffies/fs.js";
-import { isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
+import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
 import { Runbar } from "../components/runbar.js";
 import { LOW, Pin } from "../simulator/chip/chip.js";
@@ -26,9 +26,14 @@ import { Timer } from "../simulator/timer.js";
 import { Chip as SimChip } from "../simulator/chip/chip.js";
 import * as make from "../simulator/chip/builder.js";
 import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
+import { tstParser } from "../languages/tst.js";
+import { Span } from "../languages/parser/base.js";
+import { cmpParser, CmpParser } from "../languages/cmp.js";
+import { ChipTest } from "../simulator/tst.js";
 
 export const Chip = () => {
   const fs = unwrap(retrieve<FileSystem>("fs"));
+  const statusLine = unwrap(retrieve<(s: string) => void>("status"));
 
   let project = "01";
   let chips: string[] = [];
@@ -134,7 +139,19 @@ export const Chip = () => {
     );
   }
 
-  function runTest() {}
+  function runTest() {
+    const tst = tstParser(new Span(tstTextarea.value));
+    if (isErr(tst)) {
+      statusLine(display(Err(tst)));
+      return;
+    }
+    const cmp = cmpParser(new Span(cmpTextarea.value));
+    statusLine("Parsed tst & cmp...");
+
+    const test = ChipTest.from(Ok(tst)[1]).with(chip);
+    test.run();
+    outTextarea.value = test.log();
+  }
 
   const fstyle: FStyle = {
     ".View__Chip": {

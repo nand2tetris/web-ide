@@ -3,10 +3,14 @@ import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos.js";
 
 describe("twos", () => {
   it("formats as base 16", () => {
-    expect(bin(0)).toBe("0000 0000 0000 0000");
-    expect(bin(1)).toBe("0000 0000 0000 0001");
-    expect(bin(-1)).toBe("1111 1111 1111 1111");
-    expect(bin(256)).toBe("0000 0001 0000 0000");
+    // expect(bin(0)).toBe("0000 0000 0000 0000");
+    // expect(bin(1)).toBe("0000 0000 0000 0001");
+    // expect(bin(-1)).toBe("1111 1111 1111 1111");
+    // expect(bin(256)).toBe("0000 0001 0000 0000");
+    expect(bin(0)).toBe("0000000000000000");
+    expect(bin(1)).toBe("0000000000000001");
+    expect(bin(-1)).toBe("1111111111111111");
+    expect(bin(256)).toBe("0000000100000000");
 
     expect(dec(0)).toBe("0");
     expect(dec(1)).toBe("1");

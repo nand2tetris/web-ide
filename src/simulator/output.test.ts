@@ -47,6 +47,12 @@ describe("Test Output Handler", () => {
     expect(a).toEqual("   1   ");
   });
 
+  it("outputs 16 bit values", () => {
+    const outB = new Output("b", "B", 16, 1, 1);
+    const b = outB.print(state.test);
+    expect(b).toEqual(" 0000000000010100 ");
+  });
+
   it("outputs a line", () => {
     state.test.outputList([
       new Output("a", "D", 1, 2, 2),
@@ -58,5 +64,21 @@ describe("Test Output Handler", () => {
     state.test.run();
 
     expect(state.test.log()).toEqual("|  1  | 0x0014 |  00  |  1111  |\n");
+  });
+
+  it("outputs 16 bit", () => {
+    const test = new OutputTest([
+      ["a", 0b0001001000110100],
+      ["b", 0b1001100001110110],
+    ]);
+    test.outputList([
+      new Output("a", "B", 16, 1, 1),
+      new Output("b", "B", 16, 1, 1),
+    ]);
+
+    test.addInstruction(new TestOutputInstruction());
+    test.run();
+
+    expect(test.log()).toEqual("| 0001001000110100 | 1001100001110110 |\n");
   });
 });

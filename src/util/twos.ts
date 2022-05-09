@@ -96,7 +96,8 @@ export function bin(i: number): string {
   const lu = bits((i & 0x00f0) >> 4);
   const ll = bits(i & 0x000f);
 
-  return `${hu} ${hl} ${lu} ${ll}`;
+  // return `${hu} ${hl} ${lu} ${ll}`;
+  return `${hu}${hl}${lu}${ll}`; // Match the book's formatting
 }
 
 export function dec(i: number): string {

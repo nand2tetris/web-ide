@@ -12,7 +12,10 @@
   "license": "ISC",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.2.1",
-    "prettier": "^2.6.2",
-    "typescript": "^4.7.0-dev.20220416"
+    "prettier": "^2.6.2"
+  },
+  "dependencies": {
+    "@davidsouther/jiffies": "file:../jiffies",
+    "typescript": "^4.8.0-dev.20220510"
   }
 }

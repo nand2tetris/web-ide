@@ -1,7 +1,8 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
 import { HdlParser } from "../../languages/hdl.js";
 import { getBuiltinChip } from "./builtins/index.js";
-import { Bus, Chip, Nand, Nand16 } from "./chip.js";
+import { Nand } from "./builtins/logic/nand.js";
+import { Bus, Chip } from "./chip.js";
 
 export const Not = () => {
   const not = new Chip(["in"], ["out"], "Not");

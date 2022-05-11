@@ -1,5 +1,6 @@
 import { Tst, TstOutputSpec } from "../languages/tst.js";
-import { Bus, Chip, HIGH, LOW, Nand } from "./chip/chip.js";
+import { Nand } from "./chip/builtins/logic/nand.js";
+import { Bus, Chip, HIGH, LOW } from "./chip/chip.js";
 import { Output } from "./output.js";
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {

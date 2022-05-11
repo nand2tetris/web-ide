@@ -1,7 +1,8 @@
 import { info } from "@davidsouther/jiffies/log.js";
 import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
+import { Nand16 } from "./builtins/logic/nand.js";
 import { And16 } from "./busses.js";
-import { Nand16, printChip } from "./chip.js";
+import { printChip } from "./chip.js";
 
 // 0x1001 & 0x1001 = 0x1001
 

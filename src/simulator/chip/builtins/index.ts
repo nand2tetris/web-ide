@@ -1,9 +1,10 @@
 import { assert } from "@davidsouther/jiffies/assert.js";
-import { Chip, Nand, Nand16 } from "../chip.js";
+import { Chip } from "../chip.js";
 
 import { And, And16 } from "./logic/and.js";
 import { Demux } from "./logic/demux.js";
 import { Mux } from "./logic/mux.js";
+import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
 import { Or } from "./logic/or.js";
 import { Xor } from "./logic/xor.js";

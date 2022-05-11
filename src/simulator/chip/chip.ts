@@ -291,34 +291,6 @@ export interface Connection {
   from: string | Pin;
 }
 
-export class Nand extends Chip {
-  constructor() {
-    super(["a", "b"], ["out"]);
-  }
-
-  eval() {
-    const a = this.in("a").voltage();
-    const b = this.in("b").voltage();
-    if (a === 1 && b === 1) {
-      this.out().pull(LOW);
-    } else {
-      this.out().pull(HIGH);
-    }
-  }
-}
-
-export class Nand16 extends Chip {
-  constructor() {
-    super(["a[16]", "b[16]"], ["out[16]"]);
-  }
-
-  eval() {
-    const a = this.in("a").busVoltage;
-    const b = this.in("b").busVoltage;
-    this.out().busVoltage = nand16(a, b);
-  }
-}
-
 export class DFF extends Chip {
   private t: Voltage = LOW;
 

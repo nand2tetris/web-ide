@@ -1,4 +1,12 @@
-import { Chip, HIGH, LOW } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+
+export function not(inn: Voltage): [Voltage] {
+  return [inn === LOW ? HIGH : LOW];
+}
+
+export function not16(inn: number): number {
+  return ~inn & 0xffff;
+}
 
 export class Not extends Chip {
   constructor() {
@@ -7,11 +15,8 @@ export class Not extends Chip {
 
   eval() {
     const a = this.in("in").voltage();
-    if (a === 0) {
-      this.out().pull(HIGH);
-    } else {
-      this.out().pull(LOW);
-    }
+    const [out] = not(a);
+    this.out().pull(out);
   }
 }
 
@@ -21,6 +26,6 @@ export class Not16 extends Chip {
   }
 
   eval() {
-    this.out().busVoltage = ~this.in().busVoltage & 0xffff;
+    this.out().busVoltage = not16(this.in().busVoltage);
   }
 }

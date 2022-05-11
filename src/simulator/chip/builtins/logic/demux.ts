@@ -1,4 +1,10 @@
-import { Chip, HIGH, LOW } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+
+export function demux(inn: Voltage, sel: Voltage): [Voltage, Voltage] {
+  const a = sel == LOW && inn == HIGH ? HIGH : LOW;
+  const b = sel == HIGH && inn == HIGH ? HIGH : LOW;
+  return [a, b];
+}
 
 export class Demux extends Chip {
   constructor() {
@@ -9,15 +15,8 @@ export class Demux extends Chip {
     const inn = this.in("in").voltage();
     const sel = this.in("sel").voltage();
 
-    const [a, b] =
-      sel === 0
-        ? [this.out("a"), this.out("b")]
-        : [this.out("a"), this.out("b")];
-    b.pull(LOW);
-    if (inn === 1) {
-      a.pull(HIGH);
-    } else {
-      a.pull(LOW);
-    }
+    const [a, b] = demux(inn, sel);
+    this.out("a").pull(a);
+    this.out("b").pull(b);
   }
 }

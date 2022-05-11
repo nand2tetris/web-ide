@@ -1,4 +1,5 @@
-import { Bus, Chip, Nand16 } from "./chip.js";
+import { Nand16 } from "./builtins/logic/nand.js";
+import { Bus, Chip } from "./chip.js";
 
 export const Not16 = () => {
   const not = new Chip(["in[16]"], ["out[16]"], "Not16");

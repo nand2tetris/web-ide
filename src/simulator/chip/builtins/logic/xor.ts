@@ -1,4 +1,8 @@
-import { Chip, HIGH, LOW } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+
+export function xor(a: Voltage, b: Voltage): [Voltage] {
+  return [(a == 1 && b == 0) || (a == 0 && b == 1) ? HIGH : LOW];
+}
 
 export class Xor extends Chip {
   constructor() {
@@ -8,10 +12,7 @@ export class Xor extends Chip {
   eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
-    if ((a === 1 && b === 0) || (a === 0 && b === 1)) {
-      this.out().pull(HIGH);
-    } else {
-      this.out().pull(LOW);
-    }
+    const [out] = xor(a, b);
+    this.out().pull(out);
   }
 }

@@ -1,16 +1,8 @@
 import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import {
-  Chip,
-  DFF,
-  Nand,
-  parseToPin,
-  HIGH,
-  LOW,
-  printChip,
-  Bus,
-} from "./chip.js";
+import { Chip, DFF, parseToPin, HIGH, LOW, printChip, Bus } from "./chip.js";
 import * as make from "./builder.js";
 import { Not16 } from "./busses.js";
+import { Nand } from "./builtins/logic/nand.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {

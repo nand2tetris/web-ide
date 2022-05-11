@@ -141,11 +141,11 @@ export class Pins {
     this.map.set(name, pin);
   }
 
-  emplace(name: string) {
+  emplace(name: string, minWidth?: number) {
     if (this.has(name)) {
       return this.get(name)!;
     } else {
-      const pin = new Bus(name);
+      const pin = new Bus(name, minWidth);
       this.insert(pin);
       return pin;
     }
@@ -229,29 +229,30 @@ export class Chip {
     this.parts.add(chip);
     for (const { to, from } of connections) {
       if (chip.isOutPin(nameOf(to))) {
-        const output = this.findPin(nameOf(from));
-        chip.outs.get(to)!.connect(output);
+        const outPin = chip.outs.get(to)!;
+        const output = this.findPin(nameOf(from), outPin.width);
+        outPin.connect(output);
       } else {
         let toParse = assertString(nameOf(to));
         const { pin, start, end } = parseToPin(toParse);
-        let input = this.findPin(nameOf(from));
-        /*
+        const inPin = chip.ins.get(pin)!;
+        let input = this.findPin(nameOf(from), inPin.width);
         if (start) {
           if (end) {
             assert(end > start);
             const width = end - start;
-            sink = new SubBus(sink, start, width);
+            input = new SubBus(input, start, width);
           } else {
-            sink = new SubBus(sink, start);
+            input = new SubBus(input, start);
           }
+        } else {
         }
-        */
-        input.connect(chip.ins.get(pin)!);
+        input.connect(inPin);
       }
     }
   }
 
-  private findPin(from: string): Pin {
+  private findPin(from: string, minWidth?: number): Pin {
     if (from === "True" || from === "1") {
       return new TrueBus("True");
     }
@@ -264,7 +265,7 @@ export class Chip {
     if (this.outs.has(from)) {
       return this.outs.get(from)!;
     }
-    return this.pins.emplace(from);
+    return this.pins.emplace(from, minWidth);
   }
 
   eval() {

@@ -112,6 +112,7 @@ export const Chip = () => {
     const maybeChip = make.parse(text);
     if (isErr(maybeChip)) return;
     chip = Ok(maybeChip);
+    chip.eval();
     setState();
   }
 

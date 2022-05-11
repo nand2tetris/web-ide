@@ -10,6 +10,7 @@ import {
   Bus,
 } from "./chip.js";
 import * as make from "./builder.js";
+import { Not16 } from "./busses.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -140,6 +141,15 @@ describe("Chip", () => {
         expect(pin.voltage(9)).toBe(0);
         expect(pin.voltage(15)).toBe(1);
         expect(pin.busVoltage).toBe(0xf00f);
+      });
+
+      it("creates wide busses internally", () => {
+        const chip = new Chip([], [], "WithWide");
+
+        chip.wire(Not16(), [{ to: "out", from: "a" }]);
+
+        const width = chip.pins.get("a")?.width;
+        expect(width).toBe(16);
       });
     });
 

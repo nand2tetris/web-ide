@@ -17,7 +17,7 @@ export class Not extends Chip {
 
 export class Not16 extends Chip {
   constructor() {
-    super(["in[16"], ["out[16]"]);
+    super(["in[16]"], ["out[16]"]);
   }
 
   eval() {

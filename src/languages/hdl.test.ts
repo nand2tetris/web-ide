@@ -50,6 +50,18 @@ describe("hdl language", () => {
 
     parsed = TEST_ONLY.wire("b = /* to */ a // things");
     expect(parsed).toEqual(Ok(["", ["b", { pin: "a", start: 0, end: 1 }]]));
+
+    parsed = TEST_ONLY.wire("b = 0");
+    expect(parsed).toEqual(Ok(["", ["b", { pin: "0", start: 0, end: 1 }]]));
+
+    parsed = TEST_ONLY.wire("b = False");
+    expect(parsed).toEqual(Ok(["", ["b", { pin: "False", start: 0, end: 1 }]]));
+
+    parsed = TEST_ONLY.wire("b = False");
+    expect(parsed).toEqual(Ok(["", ["b", { pin: "False", start: 0, end: 1 }]]));
+
+    parsed = TEST_ONLY.wire("b = Foo");
+    expect(isErr(parsed)).toBe(true);
   });
 
   it("parses a list of pins", () => {

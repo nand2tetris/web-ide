@@ -43,7 +43,7 @@ export interface Part {
 function pin(toPin: StringLike): IResult<PinParts> {
   const match = toPin
     .toString()
-    .match(/^(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
+    .match(/^(?<pin>[0-9a-z]+|True|False)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
   if (!match) {
     return ParseErrors.failure("toPin expected pin");
   }

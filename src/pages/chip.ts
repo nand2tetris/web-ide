@@ -31,18 +31,39 @@ import { Span } from "../languages/parser/base.js";
 import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
 
+const PROJECTS: Record<"01" | "02", string[]> = {
+  "01": [
+    "Not",
+    "And",
+    "Or",
+    "XOr",
+    "Mux",
+    "DMux",
+    "Not16",
+    "And16",
+    "Or16",
+    "Mux16",
+    "Mux4way16",
+    "DMux4way16",
+    "DMux4way",
+    "DMux8way",
+    "Or8way",
+  ],
+  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
+};
+
 export const Chip = () => {
   const fs = unwrap(retrieve<FileSystem>("fs"));
   const statusLine = unwrap(retrieve<(s: string) => void>("status"));
 
   let project = "01";
-  let chips: string[] = [];
+  let chips: string[] = PROJECTS["01"];
   let chip: SimChip = getBuiltinChip("And");
 
-  (async function init() {
+  setTimeout(async function () {
     await setProject("01");
     await setChip("And");
-  })();
+  });
 
   const onToggle = (pin: Pin) => {
     if (pin.width == 1) {
@@ -110,7 +131,10 @@ export const Chip = () => {
 
   function compileChip(text: string) {
     const maybeChip = make.parse(text);
-    if (isErr(maybeChip)) return;
+    if (isErr(maybeChip)) {
+      statusLine(display(Err(maybeChip)));
+      return;
+    }
     chip = Ok(maybeChip);
     chip.eval();
     setState();
@@ -122,7 +146,8 @@ export const Chip = () => {
 
   async function setProject(proj: "01" | "02" | "03" | "04" | "05") {
     project = proj;
-    chips = [...new Set(await fs.readdir(`/projects/${project}`))].sort();
+    // chips = [...new Set(await fs.readdir(`/projects/${project}`))].sort();
+    chips = PROJECTS[proj];
     chipsDropdown.update(
       Dropdown(
         {
@@ -137,6 +162,7 @@ export const Chip = () => {
         chips
       )
     );
+    setChip(chips[0]);
   }
 
   function runTest() {
@@ -151,6 +177,7 @@ export const Chip = () => {
     const test = ChipTest.from(Ok(tst)[1]).with(chip);
     test.run();
     outTextarea.value = test.log();
+    setState();
   }
 
   const fstyle: FStyle = {

@@ -1,5 +1,7 @@
 import { assert } from "@davidsouther/jiffies/assert.js";
 import { Chip } from "../chip.js";
+import { FullAdder } from "./arithmetic/full_adder.js";
+import { HalfAdder } from "./arithmetic/half_adder.js";
 
 import { And, And16 } from "./logic/and.js";
 import { Demux } from "./logic/demux.js";
@@ -17,16 +19,27 @@ export { Or } from "./logic/or.js";
 export { Xor } from "./logic/xor.js";
 
 export const REGISTRY = new Map<string, () => Chip>(
-  [Nand, Nand16, Not, Not16, And, And16, Or, Xor, Mux, Demux].map(
-    (ChipCtor) => [
-      ChipCtor.name,
-      () => {
-        const chip = new ChipCtor();
-        chip.name = ChipCtor.name;
-        return chip;
-      },
-    ]
-  )
+  [
+    Nand,
+    Nand16,
+    Not,
+    Not16,
+    And,
+    And16,
+    Or,
+    Xor,
+    Mux,
+    Demux,
+    HalfAdder,
+    FullAdder,
+  ].map((ChipCtor) => [
+    ChipCtor.name,
+    () => {
+      const chip = new ChipCtor();
+      chip.name = ChipCtor.name;
+      return chip;
+    },
+  ])
 );
 
 export function getBuiltinChip(name: string): Chip {

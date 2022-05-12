@@ -1,4 +1,8 @@
-import { assert, assertString } from "@davidsouther/jiffies/assert.js";
+import {
+  assert,
+  assertExists,
+  assertString,
+} from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
 import { bin, nand16 } from "../../util/twos.js";
 
@@ -229,25 +233,21 @@ export class Chip {
     this.parts.add(chip);
     for (const { to, from } of connections) {
       if (chip.isOutPin(nameOf(to))) {
-        const outPin = chip.outs.get(to)!;
+        const outPin = assertExists(chip.outs.get(to));
         const output = this.findPin(nameOf(from), outPin.width);
         outPin.connect(output);
       } else {
-        let toParse = assertString(nameOf(to));
-        const { pin, start, end } = parseToPin(toParse);
-        const inPin = chip.ins.get(pin)!;
-        let input = this.findPin(nameOf(from), inPin.width);
-        if (start) {
-          if (end) {
-            assert(end > start);
-            const width = end - start;
-            input = new SubBus(input, start, width);
-          } else {
-            input = new SubBus(input, start);
-          }
+        let pin = assertString(nameOf(to));
+        const inPin = assertExists(
+          chip.ins.get(pin),
+          () => `Cannot wire to missing pin ${pin}`
+        );
+        if (from instanceof SubBus) {
+          from.connect(inPin);
         } else {
+          let input = this.findPin(nameOf(from), inPin.width);
+          input.connect(inPin);
         }
-        input.connect(inPin);
       }
     }
   }
@@ -287,7 +287,9 @@ export class Chip {
 }
 
 export interface Connection {
+  // To is the part side
   to: string | Pin;
+  // From is the chip side
   from: string | Pin;
 }
 

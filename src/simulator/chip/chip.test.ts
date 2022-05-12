@@ -1,5 +1,14 @@
 import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { Chip, DFF, parseToPin, HIGH, LOW, printChip, Bus } from "./chip.js";
+import {
+  Chip,
+  DFF,
+  parseToPin,
+  HIGH,
+  LOW,
+  printChip,
+  Bus,
+  SubBus,
+} from "./chip.js";
 import * as make from "./builder.js";
 import { Not16 } from "./busses.js";
 import { Nand } from "./builtins/logic/nand.js";
@@ -147,13 +156,28 @@ describe("Chip", () => {
 
     describe("and16", () => {});
   });
+  describe("SubBus", () => {
+    describe("assigns output inside wide busses", () => {
+      const chip = new Chip(["in[2]"], ["out[4]"]);
 
-  describe("arithmetic", () => {
-    describe("half adder", () => {
-      it("compiles a half adder", () => {
-        const halfAdder = new Chip(["a", "b"], ["h", "l"], "HalfAdder");
-        // halfAdder.compile(["And(a=a, b=b, out=h)", "Xor(a=a, b=b, out=l)"]);
-      });
+      const a0 = new SubBus(chip.in()!, 0, 1);
+      const a1 = new SubBus(chip.in()!, 1, 1);
+      const out1 = new SubBus(chip.out()!, 1, 1);
+      const out2 = new SubBus(chip.out()!, 2, 1);
+
+      chip.wire(make.Not(), [
+        { to: "in", from: a0 },
+        { to: "out", from: out1 },
+      ]);
+      // chip.wire(make.Not(), [
+      //   { to: "in", from: a1 },
+      //   { to: "out", from: out2 },
+      // ]);
+
+      // expect(chip.out().busVoltage).toBe(0b0000);
+      // chip.in().busVoltage = 0b00;
+      // chip.eval();
+      // expect(chip.out().busVoltage).toBe(0b0110);
     });
   });
 

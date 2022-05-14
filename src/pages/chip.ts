@@ -244,14 +244,11 @@ export const Chip = () => {
         article(
           { class: "no-shadow panel" },
           header(
-            nav(
-              ul(li("HDL")),
-              ul(
-                li(
-                  a(
+            div("HDL"),
+            fieldset(
+              { class: "button-group" },
+              button(
                     {
-                      href: "#",
-                      role: "button",
                       events: {
                         click: (e) => {
                           e.preventDefault();
@@ -260,13 +257,9 @@ export const Chip = () => {
                       },
                     },
                     "Compile"
-                  )
                 ),
-                li(
-                  a(
+              button(
                     {
-                      href: "#",
-                      role: "button",
                       events: {
                         click: (e) => {
                           e.preventDefault();
@@ -275,8 +268,6 @@ export const Chip = () => {
                       },
                     },
                     "Save"
-                  )
-                )
               )
             )
           ),
@@ -291,16 +282,12 @@ export const Chip = () => {
         article({ class: "no-shadow panel" }, header("Output pins"), outPinout)
       ),
       article(
-        { class: "flex" },
         header(
-          nav(
-            ul(li("Test")),
-            ul(
-              li(
-                a(
+          div("Test"),
+          fieldset(
+            { class: "input-group" },
+            button(
                   {
-                    href: "#",
-                    role: "button",
                     events: {
                       click: (e) => {
                         e.preventDefault();
@@ -309,8 +296,6 @@ export const Chip = () => {
                     },
                   },
                   "Execute"
-                )
-              )
             )
           )
         ),

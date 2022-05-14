@@ -1,4 +1,4 @@
-import { div, li, span, style, ul } from "@davidsouther/jiffies/dom/html.js";
+import { div, label, span, style } from "@davidsouther/jiffies/dom/html.js";
 import { CPU as CPUChip } from "../simulator/cpu/cpu.js";
 import MemoryGUI from "../components/memory.js";
 import { Memory } from "../simulator/cpu/memory.js";
@@ -64,7 +64,7 @@ export const CPU = (
 
   return div(
     { class: "View__CPU" },
-    (runbar = Runbar({ runner }, ul(li(PC), li(A), li(D)))),
+    (runbar = Runbar({ runner }, label(PC, A, D))),
     style(
       compileFStyle({
         ".View__CPU": {

@@ -1,7 +1,10 @@
 import { assert } from "@davidsouther/jiffies/assert.js";
 import { Chip } from "../chip.js";
+import { Add16 } from "./arithmetic/add_16.js";
+import { ALU, ALUNoStat } from "./arithmetic/alu.js";
 import { FullAdder } from "./arithmetic/full_adder.js";
 import { HalfAdder } from "./arithmetic/half_adder.js";
+import { Inc16 } from "./arithmetic/inc16.js";
 
 import { And, And16 } from "./logic/and.js";
 import { Demux } from "./logic/demux.js";
@@ -32,6 +35,10 @@ export const REGISTRY = new Map<string, () => Chip>(
     Demux,
     HalfAdder,
     FullAdder,
+    Add16,
+    Inc16,
+    ALU,
+    ALUNoStat,
   ].map((ChipCtor) => [
     ChipCtor.name,
     () => {

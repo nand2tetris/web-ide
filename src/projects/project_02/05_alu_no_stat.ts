@@ -33,8 +33,6 @@ CHIP ALU {
 
     OUT 
         out[16], // 16-bit output
-        zr, // 1 if (out == 0), 0 otherwise
-        ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
    // Put you code here:

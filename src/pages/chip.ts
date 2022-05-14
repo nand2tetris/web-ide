@@ -28,6 +28,8 @@ import { tstParser } from "../languages/tst.js";
 import { Span } from "../languages/parser/base.js";
 import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
+import { compare } from "../simulator/compare.js";
+import { DiffPanel } from "../components/diff.js";
 
 const PROJECTS: Record<"01" | "02", string[]> = {
   "01": [
@@ -86,6 +88,7 @@ export const Chip = () => {
     rows: 5,
     readOnly: true,
   });
+  const diffPanel = DiffPanel();
 
   const runner = new (class ChipRunner extends Timer {
     tick() {
@@ -175,13 +178,24 @@ export const Chip = () => {
       statusLine(display(Err(tst)));
       return;
     }
-    const cmp = cmpParser(new Span(cmpTextarea.value));
-    statusLine("Parsed tst & cmp...");
+    statusLine("Parsed tst");
 
     const test = ChipTest.from(Ok(tst)[1]).with(chip);
     test.run();
     outTextarea.value = test.log();
     setState();
+    const cmp = cmpParser(new Span(cmpTextarea.value));
+    const out = cmpParser(new Span(outTextarea.value));
+    if (isErr(cmp)) {
+      statusLine(`Error parsing cmp file!`);
+      return;
+    }
+    if (isErr(out)) {
+      statusLine(`Error parsing out file!`);
+      return;
+    }
+    const diffs = compare(Ok(cmp)[1], Ok(out)[1]);
+    diffPanel.update({diffs});
   }
 
   const fstyle: FStyle = {
@@ -309,7 +323,8 @@ export const Chip = () => {
         ),
         tstTextarea,
         cmpTextarea,
-        outTextarea
+        outTextarea,
+        diffPanel,
       )
     )
   );

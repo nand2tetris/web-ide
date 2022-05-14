@@ -90,7 +90,19 @@ export const map = <I, O>(p: Parser<I>, fn: (i: I) => O): Parser<O> => {
 };
 
 // map_opt	Applies a function returning an Option over the result of a parser.
-// map_parser	Applies a parser over the result of another one.
+
+// Applies a parser over the result of another one.
+export const mapParser = <O>(
+  p1: Parser<StringLike>,
+  p2: Parser<O>
+): Parser<O> => {
+  return map(p1, (i): O => {
+    const res = p2(i);
+    if (isErr(res)) throw res;
+    return Ok(res)[1];
+  });
+};
+
 // map_res	Applies a function returning a Result over the result of a parser.
 // not	Succeeds if the child parser returns an error.
 

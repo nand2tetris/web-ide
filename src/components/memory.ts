@@ -12,14 +12,12 @@ import VirtualScroll from "@davidsouther/jiffies/components/virtual_scroll.js";
 import {
   article,
   code,
+  div,
   header,
-  nav,
   span,
-  ul,
 } from "@davidsouther/jiffies/dom/html.js";
 import { rounded } from "@davidsouther/jiffies/dom/css/border.js";
 import { FC, State } from "@davidsouther/jiffies/dom/fc.js";
-import { li } from "@davidsouther/jiffies/dom/html.js";
 
 const MemoryBlock = FC<
   {
@@ -148,11 +146,7 @@ const Memory = FC<
       },
     });
 
-    return article(
-      { class: "panel no-shadow" },
-      header(nav({ class: "panel" }, ul(li(name)), buttonBar)),
-      memoryBlock
-    );
+    return article(header(div(name), buttonBar), memoryBlock);
   }
 );
 

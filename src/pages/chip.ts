@@ -1,18 +1,16 @@
 import { display } from "@davidsouther/jiffies/display.js";
 import {
-  a,
   article,
+  button,
   div,
+  fieldset,
   h2,
   header,
-  li,
   main,
-  nav,
   section,
   span,
   style,
   textarea,
-  ul,
 } from "@davidsouther/jiffies/dom/html.js";
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
@@ -56,13 +54,14 @@ export const Chip = () => {
   const fs = unwrap(retrieve<FileSystem>("fs"));
   const statusLine = unwrap(retrieve<(s: string) => void>("status"));
 
-  let project = "01";
-  let chips: string[] = PROJECTS["01"];
-  let chip: SimChip = getBuiltinChip("And");
+  let project = localStorage["chip/project"] ?? "01";
+  let chips: string[] = PROJECTS[project as "01" | "02"];
+  let chipName = localStorage["chip/chip"] ?? "And";
+  let chip: SimChip = getBuiltinChip(chipName);
 
   setTimeout(async function () {
-    await setProject("01");
-    await setChip("And");
+    await setProject(project);
+    await setChip(chip.name!);
   });
 
   const onToggle = (pin: Pin) => {
@@ -120,6 +119,7 @@ export const Chip = () => {
   }
 
   async function setChip(name: string) {
+    localStorage["chip/chip"] = name;
     const hdl = await fs.readFile(`/projects/${project}/${name}/${name}.hdl`);
     const tst = await fs.readFile(`/projects/${project}/${name}/${name}.tst`);
     const cmp = await fs.readFile(`/projects/${project}/${name}/${name}.cmp`);
@@ -136,25 +136,30 @@ export const Chip = () => {
       return;
     }
     chip = Ok(maybeChip);
+    statusLine(`Compiled ${chip.name}`);
     chip.eval();
     setState();
   }
 
   async function saveChip(project: string, name: string, text: string) {
-    await fs.writeFile(`/projects/${project}/${name}/${name}.hdl`, text);
+    const path = `/projects/${project}/${name}/${name}.hdl`;
+    await fs.writeFile(path, text);
+    statusLine(`Saved ${path}`)
   }
 
   async function setProject(proj: "01" | "02" | "03" | "04" | "05") {
-    project = proj;
+    localStorage["chip/project"] = project = proj;
     // chips = [...new Set(await fs.readdir(`/projects/${project}`))].sort();
-    chips = PROJECTS[proj];
+    chips = PROJECTS[proj as "01" | "02"];
+    chipName = chipName && chips.includes(chipName) ? chipName : chips[0];
+    setChip(chipName);
     chipsDropdown.update(
       Dropdown(
         {
           style: {
             display: "inline-block",
           },
-          selected: chip.name,
+          selected: chipName,
           events: {
             change: (event) => setChip(event.target?.value as unknown),
           },
@@ -162,7 +167,6 @@ export const Chip = () => {
         chips
       )
     );
-    setChip(chips[0]);
   }
 
   function runTest() {
@@ -248,22 +252,22 @@ export const Chip = () => {
             fieldset(
               { class: "button-group" },
               button(
-                    {
-                      events: {
+                {
+                  events: {
                     click: () => compileChip(hdlTextarea.value),
                     keypress: () => compileChip(hdlTextarea.value);
-                      },
-                    },
-                    "Compile"
-                ),
+                  },
+                },
+                "Compile"
+              ),
               button(
-                    {
-                      events: {
+                {
+                  events: {
                     click: () => saveChip(project, chip.name!, hdlTextarea.value),
                     keypress: () => saveChip(project, chip.name!, hdlTextarea.value)
-                      },
-                    },
-                    "Save"
+                  },
+                },
+                "Save"
               )
             )
           ),
@@ -291,15 +295,15 @@ export const Chip = () => {
           fieldset(
             { class: "input-group" },
             button(
-                  {
-                    events: {
-                      click: (e) => {
-                        e.preventDefault();
-                        runTest();
-                      },
-                    },
+              {
+                events: {
+                  click: (e) => {
+                    e.preventDefault();
+                    runTest();
                   },
-                  "Execute"
+                },
+              },
+              "Execute"
             )
           )
         ),

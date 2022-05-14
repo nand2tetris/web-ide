@@ -1,9 +1,19 @@
+import ButtonBar from "@davidsouther/jiffies/components/button_bar.js";
 import {
+  a,
+  article,
+  button,
+  dd,
+  dialog,
+  div,
+  dl,
+  dt,
   footer,
   header,
   li,
   main,
   nav,
+  p,
   strong,
   ul,
 } from "@davidsouther/jiffies/dom/html.js";
@@ -21,12 +31,59 @@ import * as projects from "./projects/index.js";
 export const App = () => {
   const router = Router.for(urls, "test");
   const fs = new FileSystem(new LocalStorageFileSystemAdapter());
-  projects.resetFiles(fs);
+  // projects.resetFiles(fs);
   provide({ fs, status: (status: string) => statusLine.update(status) });
 
-  const statusLine = footer("\u00a0");
+  const statusLine = div("\u00a0");
+  const settings = dialog(
+    article(
+      header(
+        p("Settings"),
+        a({
+          class: "close",
+          href: "#",
+          events: {
+            click: (e) => {
+              e.preventDefault();
+              settings.removeAttribute("open");
+            },
+          },
+        })
+      ),
+      main(
+        dl(
+          header("Project"),
+          dt("Files"),
+          dd(
+            button(
+              {
+                events: {
+                  click: (e) => {
+                    projects.resetFiles(fs);
+                    statusLine.update("Reset files in local storage");
+                  },
+                },
+              },
+              "Reset"
+            )
+          ),
+          dt("Numeric Format"),
+          dd(
+            ButtonBar({
+              value: "B",
+              values: ["B", "D", "X", "A"],
+              events: {
+                onSelect: () => {},
+              },
+            })
+          )
+        )
+      )
+    )
+  );
 
   const app = [
+    settings,
     header(
       nav(
         ul(li(strong("NAND2Tetris Online"))),
@@ -34,7 +91,20 @@ export const App = () => {
       )
     ),
     router(main({ class: "flex flex-1" })),
-    statusLine,
+    footer(
+      { class: "flex row justify-between" },
+      statusLine,
+      div(
+        button(
+          {
+            events: {
+              click: () => settings.setAttribute("open", "open"),
+            },
+          },
+          "Settings"
+        )
+      )
+    ),
   ];
   return app;
 };

@@ -6,29 +6,43 @@
     <meta name="description" content="Browser-based NAND to Tetris simulator" />
     <base href="/" />
 
-    <link rel="stylesheet" href="/@davidsouther/jiffies/pico/pico.css?$enable-viewport=none" />
+    <link
+      rel="stylesheet"
+      href="/@davidsouther/jiffies/pico/pico.css?$enable-viewport=none"
+    />
     <link rel="stylesheet" href="./fonts/runbar.css" />
     <style>
-        :root {
-          --line-height: 1.25; /* 1.5 */
-          --spacing: 0.25rem; /* 1rem */
-          --typography-spacing-vertical: 1.15rem; /* 1.5rem */
-          --grid-spacing-horizontal: 1rem; /* var(--spacing) */
-          --form-element-spacing-vertical: 0.15rem; /* .75rem */
-          --form-element-spacing-horizontal: 0.25rem; /* 1rem */
-          /* --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace; */
-          --font-size-monospace: 0.6rem;
-        }
+      :root {
+        --line-height: 1.25; /* 1.5 */
+        --spacing: 0.25rem; /* 1rem */
+        --typography-spacing-vertical: 1.15rem; /* 1.5rem */
+        --grid-spacing-horizontal: 1rem; /* var(--spacing) */
+        --form-element-spacing-vertical: 0.15rem; /* .75rem */
+        --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+        /* --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace; */
+        --font-size-monospace: 0.6rem;
+      }
 
-        code, kbd, .font-monospace {
-          font-family: var(--font-family-monospace);
-          font-size: var(--font-size-monospace);
-        }
+      code,
+      kbd,
+      .font-monospace {
+        font-family: var(--font-family-monospace);
+        font-size: var(--font-size-monospace);
+      }
 
-        textarea.font-monospace {
-          overflow: scroll;
-          white-space: pre;
-        }
+      textarea.font-monospace {
+        overflow: scroll;
+        white-space: pre;
+      }
+
+      body > footer {
+        border-top: 1px solid var(--card-border-color);
+        background-color: var(--card-background-color);
+      }
+
+      body > header, body > main, body > footer {
+        width: 99%; /* Fix a small scroll box issue */
+      }
     </style>
     <title>NAND2Tetris</title>
   </head>

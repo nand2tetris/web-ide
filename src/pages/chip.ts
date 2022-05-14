@@ -238,22 +238,20 @@ export const Chip = () => {
               "05": "Architecture",
             }
           ),
-          h2("Chips:"),
+          h2({ tabIndex: 0 }, "Chips:"),
           chipsDropdown
         ),
         article(
           { class: "no-shadow panel" },
           header(
-            div("HDL"),
+            div({ tabIndex: 0 }, "HDL"),
             fieldset(
               { class: "button-group" },
               button(
                     {
                       events: {
-                        click: (e) => {
-                          e.preventDefault();
-                          compileChip(hdlTextarea.value);
-                        },
+                    click: () => compileChip(hdlTextarea.value),
+                    keypress: () => compileChip(hdlTextarea.value);
                       },
                     },
                     "Compile"
@@ -261,10 +259,8 @@ export const Chip = () => {
               button(
                     {
                       events: {
-                        click: (e) => {
-                          e.preventDefault();
-                          saveChip(project, chip.name!, hdlTextarea.value);
-                        },
+                    click: () => saveChip(project, chip.name!, hdlTextarea.value),
+                    keypress: () => saveChip(project, chip.name!, hdlTextarea.value)
                       },
                     },
                     "Save"
@@ -273,17 +269,25 @@ export const Chip = () => {
           ),
           main({ class: "flex" }, hdlTextarea)
         ),
-        article({ class: "no-shadow panel" }, header("Input pins"), inPinout),
         article(
           { class: "no-shadow panel" },
-          header("Internal Pins"),
+          header({ tabIndex: 0 }, "Input pins"),
+          inPinout
+        ),
+        article(
+          { class: "no-shadow panel" },
+          header({ tabIndex: 0 }, "Internal Pins"),
           pinsPinout
         ),
-        article({ class: "no-shadow panel" }, header("Output pins"), outPinout)
+        article(
+          { class: "no-shadow panel" },
+          header({ tabIndex: 0 }, "Output pins"),
+          outPinout
+        )
       ),
       article(
         header(
-          div("Test"),
+          div({ tabIndex: 0 }, "Test"),
           fieldset(
             { class: "input-group" },
             button(

@@ -7,4 +7,4 @@ ASSETS=(
 
 npx tsc 
 npx rollup -c 
-cp -r ${ASSETS/#/src/} dist
+cp -r ${ASSETS/#/src/} docs

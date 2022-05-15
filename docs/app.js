@@ -1775,6 +1775,9 @@ class ALU extends Chip$1 {
 function or(a, b) {
     return [a == 1 || b == 1 ? HIGH : LOW];
 }
+function or8way(a) {
+    return [(a & 0xff) == 0 ? LOW : HIGH];
+}
 class Or$1 extends Chip$1 {
     constructor() {
         super(["a", "b"], ["out"]);
@@ -1783,6 +1786,16 @@ class Or$1 extends Chip$1 {
         const a = this.in("a").voltage();
         const b = this.in("b").voltage();
         const [out] = or(a, b);
+        this.out().pull(out);
+    }
+}
+class Or8way extends Chip$1 {
+    constructor() {
+        super(["in[8]"], ["out"], "Or8way");
+    }
+    eval() {
+        const inn = this.in().busVoltage;
+        const [out] = or8way(inn);
         this.out().pull(out);
     }
 }
@@ -1886,6 +1899,9 @@ class Demux extends Chip$1 {
 function mux(a, b, sel) {
     return [sel === 0 ? a : b];
 }
+function mux16(a, b, sel) {
+    return [sel === 0 ? a : b];
+}
 class Mux extends Chip$1 {
     constructor() {
         super(["a", "b", "sel"], ["out"]);
@@ -1901,6 +1917,18 @@ class Mux extends Chip$1 {
         else {
             this.out().pull(LOW);
         }
+    }
+}
+class Mux16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]", "sel"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const sel = this.in("sel").voltage();
+        const [out] = mux16(a, b, sel);
+        this.out().busVoltage = out;
     }
 }
 
@@ -1977,9 +2005,11 @@ const REGISTRY = new Map([
     ["And", And$1],
     ["And16", And16$1],
     ["Or", Or$1],
-    ["Xor", Xor$1],
+    ["XOr", Xor$1],
     ["Mux", Mux],
+    ["Mux16", Mux16],
     ["Demux", Demux],
+    ["Or8way", Or8way],
     ["HalfAdder", HalfAdder],
     ["FullAdder", FullAdder],
     ["Add16", Add16],
@@ -2374,14 +2404,41 @@ const PROJECTS = {
         "And16",
         "Or16",
         "Mux16",
-        "Mux4way16",
-        "DMux4way16",
-        "DMux4way",
-        "DMux8way",
+        // "Mux4way16",
+        // "DMux4way",
+        // "DMux8way",
         "Or8way",
     ],
     "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
 };
+function makeProjectDropdown(selected, setProject) {
+    return Dropdown({
+        style: {
+            display: "inline-block",
+        },
+        selected,
+        events: {
+            change: (event) => setProject(event.target?.value),
+        },
+    }, {
+        "01": "Logic",
+        "02": "Arithmetic",
+        "03": "Memory",
+        "04": "Assembly",
+        "05": "Architecture",
+    });
+}
+function makeChipsDropdown(selected, chips, setChip) {
+    return Dropdown({
+        style: {
+            display: "inline-block",
+        },
+        selected,
+        events: {
+            change: (event) => setChip(event.target?.value),
+        },
+    }, chips);
+}
 const Chip = () => {
     const fs = unwrap(retrieve("fs"));
     const statusLine = unwrap(retrieve("status"));
@@ -2404,6 +2461,7 @@ const Chip = () => {
         setState();
     };
     const chipsDropdown = span();
+    const projectDropdown = span();
     const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
     const outPinout = Pinout({ pins: chip.outs });
     const pinsPinout = Pinout({ pins: chip.pins });
@@ -2469,19 +2527,11 @@ const Chip = () => {
     }
     async function setProject(proj) {
         localStorage["chip/project"] = project = proj;
-        // chips = [...new Set(await fs.readdir(`/projects/${project}`))].sort();
+        projectDropdown.update(makeProjectDropdown(project, setProject));
         chips = PROJECTS[proj];
         chipName = chipName && chips.includes(chipName) ? chipName : chips[0];
         setChip(chipName);
-        chipsDropdown.update(Dropdown({
-            style: {
-                display: "inline-block",
-            },
-            selected: chipName,
-            events: {
-                change: (event) => setChip(event.target?.value),
-            },
-        }, chips));
+        chipsDropdown.update(makeChipsDropdown(chipName, chips, setChip));
     }
     function runTest() {
         const tst = tstParser(new Span(tstTextarea.value));
@@ -2538,21 +2588,7 @@ const Chip = () => {
     section({ class: "flex-1 grid" }, div({ class: "pinouts grid" }, div({
         class: "flex row inline align-end",
         style: { gridColumn: "1 / span 2" },
-    }, Dropdown({
-        style: {
-            display: "inline-block",
-        },
-        selected: project,
-        events: {
-            change: (event) => setProject(event.target?.value),
-        },
-    }, {
-        "01": "Logic",
-        "02": "Arithmetic",
-        "03": "Memory",
-        "04": "Assembly",
-        "05": "Architecture",
-    }), h2({ tabIndex: 0 }, "Chips:"), chipsDropdown), article({ class: "no-shadow panel" }, header(div({ tabIndex: 0 }, "HDL"), fieldset({ class: "button-group" }, button({
+    }, projectDropdown, h2({ tabIndex: 0 }, "Chips:"), chipsDropdown), article({ class: "no-shadow panel" }, header(div({ tabIndex: 0 }, "HDL"), fieldset({ class: "button-group" }, button({
         events: {
             click: () => compileChip(hdlTextarea.value),
             keypress: () => compileChip(hdlTextarea.value),
@@ -4507,10 +4543,10 @@ var urls = [
     { href: "test", link: "Tests", target: Test },
 ];
 
-const cmp$j = `|  in   |  out  |
+const cmp$k = `|  in   |  out  |
 |   0   |   1   |
 |   1   |   0   |`;
-const hdl$j = `// Not gate: out = not in
+const hdl$k = `// Not gate: out = not in
 
 CHIP Not {
     IN in;
@@ -4518,13 +4554,13 @@ CHIP Not {
 
     PARTS:
 }`;
-const tst$j = `
+const tst$k = `
 output-list in%B3.1.3 out%B3.1.3;
 
 set in 0, eval, output;
 set in 1, eval, output;`;
 
-const hdl$i = `/**
+const hdl$j = `/**
  * And gate: out = 1 if {a==1 and b==1}, 0 otherwise
  * And gate: if {a==1 and b==1} then out = 1 else out = 0
  */
@@ -4535,27 +4571,49 @@ CHIP And {
 
     PARTS:
 }`;
-const tst$i = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const tst$j = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
-const cmp$i = `|   a   |   b   |  out  |
+const cmp$j = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   0   |
 |   1   |   0   |   0   |
 |   1   |   1   |   1   |`;
 
-const cmp$h = `|   a   |   b   |  out  |
+const cmp$i = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   1   |
 |   1   |   0   |   1   |
 |   1   |   1   |   1   |`;
-const hdl$h = `/**
+const hdl$i = `/**
  * Or gate: out = 1 if {a==1 or b==1}, 0 otherwise
  */
 
 CHIP Or {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+}`;
+const tst$i = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+
+set a 0, set b 0, eval, output;
+set a 0, set b 1, eval, output;
+set a 1, set b 0, eval, output;
+set a 1, set b 1, eval, output;`;
+
+const cmp$h = `|   a   |   b   |  out  |
+|   0   |   0   |   0   |
+|   0   |   1   |   1   |
+|   1   |   0   |   1   |
+|   1   |   1   |   0   |`;
+const hdl$h = `/**
+ *  Exclusive-or gate: out = !(a == b).
+ */
+
+CHIP XOr {
     IN a, b;
     OUT out;
 
@@ -4568,29 +4626,7 @@ set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
 
-const cmp$g = `|   a   |   b   |  out  |
-|   0   |   0   |   0   |
-|   0   |   1   |   1   |
-|   1   |   0   |   1   |
-|   1   |   1   |   0   |`;
-const hdl$g = `/**
- *  Exclusive-or gate: out = !(a == b).
- */
-
-CHIP Xor {
-    IN a, b;
-    OUT out;
-
-    PARTS:
-}`;
-const tst$g = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
-
-set a 0, set b 0, eval, output;
-set a 0, set b 1, eval, output;
-set a 1, set b 0, eval, output;
-set a 1, set b 1, eval, output;`;
-
-const cmp$f = `|   a   |   b   |  sel  |  out  |
+const cmp$g = `|   a   |   b   |  sel  |  out  |
 |   0   |   0   |   0   |   0   |
 |   0   |   0   |   1   |   0   |
 |   0   |   1   |   0   |   0   |
@@ -4599,7 +4635,7 @@ const cmp$f = `|   a   |   b   |  sel  |  out  |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |
 |   1   |   1   |   1   |   1   |`;
-const hdl$f = `/** 
+const hdl$g = `/** 
  * Multiplexor. If sel==1 then out=b else out=a.
  */
 
@@ -4609,7 +4645,7 @@ CHIP Mux {
 
     PARTS:
 }`;
-const tst$f = `output-list a%B3.1.3 b%B3.1.3 sel%B3.1.3 out%B3.1.3;
+const tst$g = `output-list a%B3.1.3 b%B3.1.3 sel%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4623,7 +4659,7 @@ set sel 1, eval, output;
 set a 1, set b 1, set sel 0, eval, output;
 set sel 1, eval, output;`;
 
-const hdl$e = `/**
+const hdl$f = `/**
  * Demultiplexor.
  * {a,b} = {in,0} if sel==0
  *         {0,in} if sel==1
@@ -4635,20 +4671,20 @@ CHIP DMux {
 
     PARTS:
 }`;
-const tst$e = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
+const tst$f = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
 
 set in 0, set sel 0, eval, output;
 set sel 1, eval, output;
 
 set in 1, set sel 0, eval, output;
 set sel 1, eval, output;`;
-const cmp$e = `|  in   |  sel  |   a   |   b   |
+const cmp$f = `|  in   |  sel  |   a   |   b   |
 |   0   |   0   |   0   |   0   |
 |   0   |   1   |   0   |   0   |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |`;
 
-const hdl$d = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
+const hdl$e = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
 
 CHIP Not16 {
    IN in[16];
@@ -4656,20 +4692,20 @@ CHIP Not16 {
 
    PARTS:
 }`;
-const tst$d = `output-list in%B1.16.1 out%B1.16.1;
+const tst$e = `output-list in%B1.16.1 out%B1.16.1;
 set in %B0000000000000000, eval, output;
 set in %B1111111111111111, eval, output;
 set in %B1010101010101010, eval, output;
 set in %B0011110011000011, eval, output;
 set in %B0001001000110100, eval, output;`;
-const cmp$d = `|        in        |       out        |
+const cmp$e = `|        in        |       out        |
 | 0000000000000000 | 1111111111111111 |
 | 1111111111111111 | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |
 | 0011110011000011 | 1100001100111100 |
 | 0001001000110100 | 1110110111001011 |`;
 
-const hdl$c = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
+const hdl$d = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
 
 CHIP And16 {
     IN a[16], b[16];
@@ -4677,7 +4713,7 @@ CHIP And16 {
 
     PARTS:
 }`;
-const tst$c = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const tst$d = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 
 set a %B0000000000000000, set b %B0000000000000000, eval, output;
 set a %B0000000000000000, set b %B1111111111111111, eval, output;
@@ -4685,7 +4721,7 @@ set a %B1111111111111111, set b %B1111111111111111, eval, output;
 set a %B1010101010101010, set b %B0101010101010101, eval, output;
 set a %B0011110011000011, set b %B0000111111110000, eval, output;
 set a %B0001001000110100, set b %B1001100001110110, eval, output;`;
-const cmp$c = `|        a         |        b         |       out        |
+const cmp$d = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 0000000000000000 |
 | 1111111111111111 | 1111111111111111 | 1111111111111111 |
@@ -4693,14 +4729,14 @@ const cmp$c = `|        a         |        b         |       out        |
 | 0011110011000011 | 0000111111110000 | 0000110011000000 |
 | 0001001000110100 | 1001100001110110 | 0001000000110100 |`;
 
-const cmp$b = `|        a         |        b         |       out        |
+const cmp$c = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1111111111111111 |
 | 1111111111111111 | 1111111111111111 | 1111111111111111 |
 | 1010101010101010 | 0101010101010101 | 1111111111111111 |
 | 0011110011000011 | 0000111111110000 | 0011111111110011 |
 | 0001001000110100 | 1001100001110110 | 1001101001110110 |`;
-const hdl$b = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
+const hdl$c = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
 
 CHIP Or16 {
     IN a[16], b[16];
@@ -4708,7 +4744,7 @@ CHIP Or16 {
 
     PARTS:
 }`;
-const tst$b = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const tst$c = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 set a %B0000000000000000, set b %B0000000000000000, eval, output;
 set a %B0000000000000000, set b %B1111111111111111, eval, output;
 set a %B1111111111111111, set b %B1111111111111111, eval, output;
@@ -4716,7 +4752,7 @@ set a %B1010101010101010, set b %B0101010101010101, eval, output;
 set a %B0011110011000011, set b %B0000111111110000, eval, output;
 set a %B0001001000110100, set b %B1001100001110110, eval, output;`;
 
-const cmp$a = `|        a         |        b         | sel |       out        |
+const cmp$b = `|        a         |        b         | sel |       out        |
 | 0000000000000000 | 0000000000000000 |  0  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 |  1  | 0000000000000000 |
 | 0000000000000000 | 0001001000110100 |  0  | 0000000000000000 |
@@ -4725,7 +4761,7 @@ const cmp$a = `|        a         |        b         | sel |       out        |
 | 1001100001110110 | 0000000000000000 |  1  | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |  0  | 1010101010101010 |
 | 1010101010101010 | 0101010101010101 |  1  | 0101010101010101 |`;
-const hdl$a = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
+const hdl$b = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
 
 CHIP Mux16 {
     IN a[16], b[16], sel;
@@ -4733,7 +4769,7 @@ CHIP Mux16 {
 
     PARTS:
 }`;
-const tst$a = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
+const tst$b = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
 
 set a 0, set b 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4747,7 +4783,7 @@ set sel 1, eval, output;
 set a %B1010101010101010, set b %B0101010101010101, set sel 0, eval, output;
 set sel 1, eval, output;`;
 
-const cmp$9 = `|        a         |        b         |        c         |        d         | sel  |       out        |
+const cmp$a = `|        a         |        b         |        c         |        d         | sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  00  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  01  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  10  | 0000000000000000 |
@@ -4756,7 +4792,7 @@ const cmp$9 = `|        a         |        b         |        c         |       
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  01  | 1001100001110110 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  10  | 1010101010101010 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  11  | 0101010101010101 |`;
-const hdl$9 = `/**
+const hdl$a = `/**
  * 4-way 16-bit multiplexor.
  * out = a if sel==00
  *       b if sel==01
@@ -4770,7 +4806,7 @@ CHIP Mux4Way16 {
 
     PARTS:
 }`;
-const tst$9 = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
+const tst$a = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
 
 set a 0, set b 0, set c 0, set d 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4782,7 +4818,7 @@ set sel 1, eval, output;
 set sel 2, eval, output;
 set sel 3, eval, output;`;
 
-const cmp$8 = `|        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
+const cmp$9 = `|        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  000  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  001  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  010  | 0000000000000000 |
@@ -4799,7 +4835,7 @@ const cmp$8 = `|        a         |        b         |        c         |       
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  101  | 0110011110001001 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  110  | 0111100010011010 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  111  | 1000100110101011 |`;
-const hdl$8 = `/**
+const hdl$9 = `/**
  * 8-way 16-bit multiplexor.
  * out = a if sel==000
  *       b if sel==001
@@ -4815,7 +4851,7 @@ CHIP Mux8Way16 {
 
     PARTS:
 }`;
-const tst$8 = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
+const tst$9 = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
 
 set a 0, set b 0, set c 0, set d 0, set e 0, set f 0, set g 0, set h 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4835,7 +4871,7 @@ set sel 5, eval, output;
 set sel 6, eval, output;
 set sel 7, eval, output;`;
 
-const hdl$7 = `/**
+const hdl$8 = `/**
  * 4-way demultiplexor.
  * {a,b,c,d} = {in,0,0,0} if sel==00
  *             {0,in,0,0} if sel==01
@@ -4849,7 +4885,7 @@ CHIP DMux4Way {
 
     PARTS:
 }`;
-const tst$7 = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
+const tst$8 = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
 
 set in 0, set sel %B00, eval, output;
 set sel %B01, eval, output;
@@ -4860,7 +4896,7 @@ set in 1, set sel %B00, eval, output;
 set sel %B01, eval, output;
 set sel %B10, eval, output;
 set sel %B11, eval, output;`;
-const cmp$7 = `| in  | sel  |  a  |  b  |  c  |  d  |
+const cmp$8 = `| in  | sel  |  a  |  b  |  c  |  d  |
 |  0  |  00  |  0  |  0  |  0  |  0  |
 |  0  |  01  |  0  |  0  |  0  |  0  |
 |  0  |  10  |  0  |  0  |  0  |  0  |
@@ -4870,7 +4906,7 @@ const cmp$7 = `| in  | sel  |  a  |  b  |  c  |  d  |
 |  1  |  10  |  0  |  0  |  1  |  0  |
 |  1  |  11  |  0  |  0  |  0  |  1  |`;
 
-const hdl$6 = `/**
+const hdl$7 = `/**
  * 8-way demultiplexor.
  * {a,b,c,d,e,f,g,h} = {in,0,0,0,0,0,0,0} if sel==000
  *                     {0,in,0,0,0,0,0,0} if sel==001
@@ -4885,7 +4921,7 @@ CHIP DMux8Way {
 
     PARTS:
 }`;
-const tst$6 = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;
+const tst$7 = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;
 
 set in 0, set sel %B000, eval, output;
 set sel %B001, eval, output;
@@ -4904,7 +4940,7 @@ set sel %B100, eval, output;
 set sel %B101, eval, output;
 set sel %B110, eval, output;
 set sel %B111, eval, output;`;
-const cmp$6 = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
+const cmp$7 = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  0  |  00  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
 |  0  |  01  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
 |  0  |  10  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
@@ -4922,78 +4958,107 @@ const cmp$6 = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  1  |  10  |  0  |  0  |  0  |  0  |  0  |  0  |  1  |  0  |
 |  1  |  11  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  1  |`;
 
+const cmp$6 = `|     in     | out |
+|  00000000  |  0  |
+|  11111111  |  1  |
+|  00010000  |  1  |
+|  00000001  |  1  |
+|  00100110  |  1  |`;
+const hdl$6 = `/**
+ * 8-way or gate: out = in[0] or in[1] or ... or in[7].
+ */
+
+CHIP Or8Way {
+    IN in[8];
+    OUT out;
+
+    PARTS:
+}`;
+const tst$6 = `output-list in%B2.8.2 out%B2.1.2;
+
+set in %B00000000, eval, output;
+set in %B11111111, eval, output;
+set in %B00010000, eval, output;
+set in %B00000001, eval, output;
+set in %B00100110, eval, output;`;
+
 async function resetFiles$2(fs) {
     await fs.pushd("/projects/01");
     await reset(fs, {
         Not: {
-            "Not.hdl": hdl$j,
-            "Not.tst": tst$j,
-            "Not.cmp": cmp$j,
+            "Not.hdl": hdl$k,
+            "Not.tst": tst$k,
+            "Not.cmp": cmp$k,
         },
         And: {
-            "And.hdl": hdl$i,
-            "And.tst": tst$i,
-            "And.cmp": cmp$i,
+            "And.hdl": hdl$j,
+            "And.tst": tst$j,
+            "And.cmp": cmp$j,
         },
         Or: {
-            "Or.hdl": hdl$h,
-            "Or.tst": tst$h,
-            "Or.cmp": cmp$h,
+            "Or.hdl": hdl$i,
+            "Or.tst": tst$i,
+            "Or.cmp": cmp$i,
         },
-        Xor: {
-            "Xor.hdl": hdl$g,
-            "Xor.tst": tst$g,
-            "Xor.cmp": cmp$g,
+        XOr: {
+            "XOr.hdl": hdl$h,
+            "XOr.tst": tst$h,
+            "XOr.cmp": cmp$h,
         },
         Mux: {
-            "Mux.hdl": hdl$f,
-            "Mux.tst": tst$f,
-            "Mux.cmp": cmp$f,
+            "Mux.hdl": hdl$g,
+            "Mux.tst": tst$g,
+            "Mux.cmp": cmp$g,
         },
         DMux: {
-            "DMux.hdl": hdl$e,
-            "DMux.tst": tst$e,
-            "DMux.cmp": cmp$e,
+            "DMux.hdl": hdl$f,
+            "DMux.tst": tst$f,
+            "DMux.cmp": cmp$f,
         },
         Not16: {
-            "Not16.hdl": hdl$d,
-            "Not16.tst": tst$d,
-            "Not16.cmp": cmp$d,
+            "Not16.hdl": hdl$e,
+            "Not16.tst": tst$e,
+            "Not16.cmp": cmp$e,
         },
         And16: {
-            "And16.hdl": hdl$c,
-            "And16.tst": tst$c,
-            "And16.cmp": cmp$c,
+            "And16.hdl": hdl$d,
+            "And16.tst": tst$d,
+            "And16.cmp": cmp$d,
         },
         Or16: {
-            "Or16.hdl": hdl$b,
-            "Or16.tst": tst$b,
-            "Or16.cmp": cmp$b,
+            "Or16.hdl": hdl$c,
+            "Or16.tst": tst$c,
+            "Or16.cmp": cmp$c,
         },
         Mux16: {
-            "Mux16.hdl": hdl$a,
-            "Mux16.tst": tst$a,
-            "Mux16.cmp": cmp$a,
+            "Mux16.hdl": hdl$b,
+            "Mux16.tst": tst$b,
+            "Mux16.cmp": cmp$b,
         },
         Mux4way16: {
-            "Mux4way16.hdl": hdl$9,
-            "Mux4way16.tst": tst$9,
-            "Mux4way16.cmp": cmp$9,
+            "Mux4way16.hdl": hdl$a,
+            "Mux4way16.tst": tst$a,
+            "Mux4way16.cmp": cmp$a,
         },
         Mux8way16: {
-            "Mux8way16.hdl": hdl$8,
-            "Mux8way16.tst": tst$8,
-            "Mux8way16.cmp": cmp$8,
+            "Mux8way16.hdl": hdl$9,
+            "Mux8way16.tst": tst$9,
+            "Mux8way16.cmp": cmp$9,
         },
         DMux4way: {
-            "DMux4way.hdl": hdl$7,
-            "DMux4way.tst": tst$7,
-            "DMux4way.cmp": cmp$7,
+            "DMux4way.hdl": hdl$8,
+            "DMux4way.tst": tst$8,
+            "DMux4way.cmp": cmp$8,
         },
         DMux8way: {
-            "DMux8way.hdl": hdl$6,
-            "DMux8way.tst": tst$6,
-            "DMux8way.cmp": cmp$6,
+            "DMux8way.hdl": hdl$7,
+            "DMux8way.tst": tst$7,
+            "DMux8way.cmp": cmp$7,
+        },
+        Or8way: {
+            "Or8way.hdl": hdl$6,
+            "Or8way.tst": tst$6,
+            "Or8way.cmp": cmp$6,
         },
     });
     await fs.popd();
@@ -6098,7 +6163,7 @@ async function resetFiles(fs) {
 const App = () => {
     const router = Router.for(urls, "test");
     const fs = new FileSystem(new LocalStorageFileSystemAdapter());
-    // projects.resetFiles(fs);
+    fs.stat("/projects/01/Not.hdl").catch(() => resetFiles(fs));
     provide({ fs, status: (status) => statusLine.update(status) });
     const statusLine = div("\u00a0");
     const settings = dialog(article(header(p("Settings"), a$1({

@@ -4,44 +4,47 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="Browser-based NAND to Tetris simulator" />
-    <base href="/" />
+    <base href="/computron5k/" />
 
-    <link
-      rel="stylesheet"
-      href="./pico.css"
-    />
-    <link rel="stylesheet" href="./fonts/runbar.css" />
+    <link rel="stylesheet" href="/pico.css" />
+    <link rel="stylesheet" href="/fonts/runbar.css" />
     <style>
-      :root {
-        --line-height: 1.25; /* 1.5 */
-        --spacing: 0.25rem; /* 1rem */
-        --typography-spacing-vertical: 1.15rem; /* 1.5rem */
-        --grid-spacing-horizontal: 1rem; /* var(--spacing) */
-        --form-element-spacing-vertical: 0.15rem; /* .75rem */
-        --form-element-spacing-horizontal: 0.25rem; /* 1rem */
-        /* --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace; */
-        --font-size-monospace: 0.6rem;
+      @layer user {
+        :root {
+          --line-height: 1.25; /* 1.5 */
+          --spacing: 0.25rem; /* 1rem */
+          --typography-spacing-vertical: 1.15rem; /* 1.5rem */
+          --grid-spacing-horizontal: 1rem; /* var(--spacing) */
+          --form-element-spacing-vertical: 0.15rem; /* .75rem */
+          --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+          /* --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace; */
+          --font-size-monospace: 0.6rem;
+        }
       }
 
-      code,
-      kbd,
-      .font-monospace {
-        font-family: var(--font-family-monospace);
-        font-size: var(--font-size-monospace);
+      @layer components {
+        code,
+        kbd,
+        .font-monospace {
+          font-family: var(--font-family-monospace);
+          font-size: var(--font-size-monospace);
+        }
+
+        textarea.font-monospace {
+          overflow: scroll;
+          white-space: pre;
+        }
+
+        body > footer {
+          border-top: 1px solid var(--card-border-color);
+          background-color: var(--card-background-color);
+        }
       }
 
-      textarea.font-monospace {
-        overflow: scroll;
-        white-space: pre;
-      }
-
-      body > footer {
-        border-top: 1px solid var(--card-border-color);
-        background-color: var(--card-background-color);
-      }
-
-      body > header, body > main, body > footer {
-        width: 99%; /* Fix a small scroll box issue */
+      @layer reset {
+        body > header, body > main, body > footer {
+          width: 99%; /* Fix a small scroll box issue */
+        }
       }
     </style>
     <title>NAND2Tetris</title>
@@ -49,7 +52,7 @@
   <body class="flex">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <script type="module">
-      import { App } from "./app.js";
+      import { App } from "/app.js";
       document.body.append(...[App()].flat());
     </script>
   </body>

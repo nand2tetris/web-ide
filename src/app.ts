@@ -31,7 +31,7 @@ import * as projects from "./projects/index.js";
 export const App = () => {
   const router = Router.for(urls, "test");
   const fs = new FileSystem(new LocalStorageFileSystemAdapter());
-  // projects.resetFiles(fs);
+  fs.stat("/projects/01/Not.hdl").catch(() => projects.resetFiles(fs));
   provide({ fs, status: (status: string) => statusLine.update(status) });
 
   const statusLine = div("\u00a0");

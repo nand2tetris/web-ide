@@ -14,6 +14,7 @@ import * as Mux4way16 from "./11_mux4way16.js";
 import * as Mux8way16 from "./12_mux8way16.js";
 import * as DMux4way from "./13_dmux4way.js";
 import * as DMux8way from "./14_dmux8way.js";
+import * as Or8way from "./15_or8way.js";
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/01");
@@ -33,10 +34,10 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
       "Or.tst": Or.tst,
       "Or.cmp": Or.cmp,
     },
-    Xor: {
-      "Xor.hdl": Xor.hdl,
-      "Xor.tst": Xor.tst,
-      "Xor.cmp": Xor.cmp,
+    XOr: {
+      "XOr.hdl": Xor.hdl,
+      "XOr.tst": Xor.tst,
+      "XOr.cmp": Xor.cmp,
     },
     Mux: {
       "Mux.hdl": Mux.hdl,
@@ -87,6 +88,11 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
       "DMux8way.hdl": DMux8way.hdl,
       "DMux8way.tst": DMux8way.tst,
       "DMux8way.cmp": DMux8way.cmp,
+    },
+    Or8way: {
+      "Or8way.hdl": Or8way.hdl,
+      "Or8way.tst": Or8way.tst,
+      "Or8way.cmp": Or8way.cmp,
     },
   });
   await fs.popd();

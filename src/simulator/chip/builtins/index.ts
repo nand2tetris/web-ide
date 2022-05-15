@@ -8,10 +8,10 @@ import { Inc16 } from "./arithmetic/inc16.js";
 
 import { And, And16 } from "./logic/and.js";
 import { Demux } from "./logic/demux.js";
-import { Mux } from "./logic/mux.js";
+import { Mux, Mux16 } from "./logic/mux.js";
 import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
-import { Or } from "./logic/or.js";
+import { Or, Or8way } from "./logic/or.js";
 import { Xor } from "./logic/xor.js";
 
 export { And, And16 } from "./logic/and.js";
@@ -30,9 +30,11 @@ export const REGISTRY = new Map<string, () => Chip>(
     ["And", And],
     ["And16", And16],
     ["Or", Or],
-    ["Xor", Xor],
+    ["XOr", Xor],
     ["Mux", Mux],
+    ["Mux16", Mux16],
     ["Demux", Demux],
+    ["Or8way", Or8way],
     ["HalfAdder", HalfAdder],
     ["FullAdder", FullAdder],
     ["Add16", Add16],

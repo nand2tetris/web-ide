@@ -43,14 +43,53 @@ const PROJECTS: Record<"01" | "02", string[]> = {
     "And16",
     "Or16",
     "Mux16",
-    "Mux4way16",
-    "DMux4way16",
-    "DMux4way",
-    "DMux8way",
+    // "Mux4way16",
+    // "DMux4way",
+    // "DMux8way",
     "Or8way",
   ],
   "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
 };
+
+function makeProjectDropdown(selected: "01" | "02", setProject: Function) {
+  return Dropdown(
+    {
+      style: {
+        display: "inline-block",
+      },
+      selected,
+      events: {
+        change: (event) => setProject(event.target?.value as unknown),
+      },
+    },
+    {
+      "01": "Logic",
+      "02": "Arithmetic",
+      "03": "Memory",
+      "04": "Assembly",
+      "05": "Architecture",
+    }
+  );
+}
+
+function makeChipsDropdown(
+  selected: string,
+  chips: string[],
+  setChip: Function
+) {
+  return Dropdown(
+    {
+      style: {
+        display: "inline-block",
+      },
+      selected,
+      events: {
+        change: (event) => setChip(event.target?.value as unknown),
+      },
+    },
+    chips
+  );
+}
 
 export const Chip = () => {
   const fs = unwrap(retrieve<FileSystem>("fs"));
@@ -77,6 +116,7 @@ export const Chip = () => {
   };
 
   const chipsDropdown = span();
+  const projectDropdown = span();
   const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
   const outPinout = Pinout({ pins: chip.outs });
   const pinsPinout = Pinout({ pins: chip.pins });
@@ -152,24 +192,11 @@ export const Chip = () => {
 
   async function setProject(proj: "01" | "02" | "03" | "04" | "05") {
     localStorage["chip/project"] = project = proj;
-    // chips = [...new Set(await fs.readdir(`/projects/${project}`))].sort();
+    projectDropdown.update(makeProjectDropdown(project, setProject));
     chips = PROJECTS[proj as "01" | "02"];
     chipName = chipName && chips.includes(chipName) ? chipName : chips[0];
     setChip(chipName);
-    chipsDropdown.update(
-      Dropdown(
-        {
-          style: {
-            display: "inline-block",
-          },
-          selected: chipName,
-          events: {
-            change: (event) => setChip(event.target?.value as unknown),
-          },
-        },
-        chips
-      )
-    );
+    chipsDropdown.update(makeChipsDropdown(chipName, chips, setChip));
   }
 
   function runTest() {
@@ -238,24 +265,7 @@ export const Chip = () => {
             class: "flex row inline align-end",
             style: { gridColumn: "1 / span 2" },
           },
-          Dropdown(
-            {
-              style: {
-                display: "inline-block",
-              },
-              selected: project,
-              events: {
-                change: (event) => setProject(event.target?.value as unknown),
-              },
-            },
-            {
-              "01": "Logic",
-              "02": "Arithmetic",
-              "03": "Memory",
-              "04": "Assembly",
-              "05": "Architecture",
-            }
-          ),
+          projectDropdown,
           h2({ tabIndex: 0 }, "Chips:"),
           chipsDropdown
         ),

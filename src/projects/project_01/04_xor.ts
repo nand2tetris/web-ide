@@ -7,13 +7,13 @@ export const hdl = `/**
  *  Exclusive-or gate: out = !(a == b).
  */
 
-CHIP Xor {
+CHIP XOr {
     IN a, b;
     OUT out;
 
     PARTS:
 }`;
-export const sol = `CHIP Xor {
+export const sol = `CHIP XOr {
     IN a, b;
     OUT out;
 

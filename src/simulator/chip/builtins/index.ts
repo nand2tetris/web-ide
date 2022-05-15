@@ -23,27 +23,27 @@ export { Xor } from "./logic/xor.js";
 
 export const REGISTRY = new Map<string, () => Chip>(
   [
-    Nand,
-    Nand16,
-    Not,
-    Not16,
-    And,
-    And16,
-    Or,
-    Xor,
-    Mux,
-    Demux,
-    HalfAdder,
-    FullAdder,
-    Add16,
-    Inc16,
-    ALU,
-    ALUNoStat,
-  ].map((ChipCtor) => [
-    ChipCtor.name,
+    ["Nand", Nand],
+    ["Nand16", Nand16],
+    ["Not", Not],
+    ["Not16", Not16],
+    ["And", And],
+    ["And16", And16],
+    ["Or", Or],
+    ["Xor", Xor],
+    ["Mux", Mux],
+    ["Demux", Demux],
+    ["HalfAdder", HalfAdder],
+    ["FullAdder", FullAdder],
+    ["Add16", Add16],
+    ["Inc16", Inc16],
+    ["ALU", ALU],
+    ["ALUNoStat", ALUNoStat],
+  ].map(([name, ChipCtor]: [string, () => Chip]) => [
+    name,
     () => {
       const chip = new ChipCtor();
-      chip.name = ChipCtor.name;
+      chip.name = name;
       return chip;
     },
   ])

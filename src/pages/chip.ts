@@ -147,7 +147,7 @@ export const Chip = () => {
   async function saveChip(project: string, name: string, text: string) {
     const path = `/projects/${project}/${name}/${name}.hdl`;
     await fs.writeFile(path, text);
-    statusLine(`Saved ${path}`)
+    statusLine(`Saved ${path}`);
   }
 
   async function setProject(proj: "01" | "02" | "03" | "04" | "05") {
@@ -195,7 +195,7 @@ export const Chip = () => {
       return;
     }
     const diffs = compare(Ok(cmp)[1], Ok(out)[1]);
-    diffPanel.update({diffs});
+    diffPanel.update({ diffs });
   }
 
   const fstyle: FStyle = {
@@ -269,7 +269,7 @@ export const Chip = () => {
                 {
                   events: {
                     click: () => compileChip(hdlTextarea.value),
-                    keypress: () => compileChip(hdlTextarea.value);
+                    keypress: () => compileChip(hdlTextarea.value),
                   },
                 },
                 "Compile"
@@ -277,8 +277,10 @@ export const Chip = () => {
               button(
                 {
                   events: {
-                    click: () => saveChip(project, chip.name!, hdlTextarea.value),
-                    keypress: () => saveChip(project, chip.name!, hdlTextarea.value)
+                    click: () =>
+                      saveChip(project, chip.name!, hdlTextarea.value),
+                    keypress: () =>
+                      saveChip(project, chip.name!, hdlTextarea.value),
                   },
                 },
                 "Save"
@@ -324,7 +326,7 @@ export const Chip = () => {
         tstTextarea,
         cmpTextarea,
         outTextarea,
-        diffPanel,
+        diffPanel
       )
     )
   );

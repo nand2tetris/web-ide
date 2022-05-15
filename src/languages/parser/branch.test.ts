@@ -1,4 +1,4 @@
-import { Ok } from "@davidsouther/jiffies/result.js";
+import { Err, Ok } from "@davidsouther/jiffies/result.js";
 import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
 import { alt } from "./branch.js";
 import { alpha1, digit1 } from "./character.js";

@@ -6,8 +6,8 @@
     <meta name="description" content="Browser-based NAND to Tetris simulator" />
     <base href="/computron5k/" />
 
-    <link rel="stylesheet" href="/pico.css" />
-    <link rel="stylesheet" href="/fonts/runbar.css" />
+    <link rel="stylesheet" href="./pico.css" />
+    <link rel="stylesheet" href="./fonts/runbar.css" />
     <style>
       @layer user {
         :root {
@@ -52,7 +52,7 @@
   <body class="flex">
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <script type="module">
-      import { App } from "/app.js";
+      import { App } from "./app.js";
       document.body.append(...[App()].flat());
     </script>
   </body>

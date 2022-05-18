@@ -46,8 +46,8 @@
 
       @layer user {
         body > header, body > main, body > footer {
-          width: inherit;
-          margin: inherit;
+          width: calc(100vw - (100vw - 100%));
+          overflow-x: hidden;
         }
       }
     </style>

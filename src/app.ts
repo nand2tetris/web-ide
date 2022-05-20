@@ -29,7 +29,7 @@ import urls from "./urls.js";
 import * as projects from "./projects/index.js";
 
 export const App = () => {
-  const router = Router.for(urls, "test");
+  const router = Router.for(urls, "chip");
   const fs = new FileSystem(new LocalStorageFileSystemAdapter());
   fs.stat("/projects/01/Not.hdl").catch(() => projects.resetFiles(fs));
   provide({ fs, status: (status: string) => statusLine.update(status) });

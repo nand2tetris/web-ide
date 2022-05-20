@@ -6163,7 +6163,7 @@ async function resetFiles(fs) {
 }
 
 const App = () => {
-    const router = Router.for(urls, "test");
+    const router = Router.for(urls, "chip");
     const fs = new FileSystem(new LocalStorageFileSystemAdapter());
     fs.stat("/projects/01/Not.hdl").catch(() => resetFiles(fs));
     provide({ fs, status: (status) => statusLine.update(status) });

@@ -6202,7 +6202,13 @@ const App = () => {
                 statusLine.update("Reset files in local storage");
             },
         },
-    }, "Reset"))
+    }, "Reset")), dt("References"), dd(a$1({
+        href: "https://github.com/davidsouther/computron5k",
+        target: "_blank",
+    }, "Github")), dd(a$1({
+        href: "https://davidsouther.github.io/computron5k/user_guide",
+        target: "_blank",
+    }, "User Guide"))
     // dt("Numeric Format"),
     // dd(
     //   ButtonBar({

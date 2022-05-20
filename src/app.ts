@@ -65,6 +65,25 @@ export const App = () => {
               },
               "Reset"
             )
+          ),
+          dt("References"),
+          dd(
+            a(
+              {
+                href: "https://github.com/davidsouther/computron5k",
+                target: "_blank",
+              },
+              "Github"
+            )
+          ),
+          dd(
+            a(
+              {
+                href: "https://davidsouther.github.io/computron5k/user_guide",
+                target: "_blank",
+              },
+              "User Guide"
+            )
           )
           // dt("Numeric Format"),
           // dd(

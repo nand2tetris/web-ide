@@ -58,6 +58,7 @@ function update(element, attrs, children) {
                 .forEach((c) => element.classList.add(c));
         }
         let useAttributes = k.startsWith("aria-") ||
+            k == "role" ||
             element.namespaceURI != "http://www.w3.org/1999/xhtml";
         if (useAttributes) {
             switch (v) {
@@ -352,10 +353,16 @@ const display = (a) => {
     return JSON.stringify(a);
 };
 
-const Select$1 = (attrs) => label({ style: attrs.style ?? {} }, select({ events: attrs.events ?? {} }, ...prepareOptions(attrs.options).map(Option)));
-const prepareOptions = (attrs) => Array.isArray(attrs)
-    ? attrs.map((value) => ({ value, label: value }))
-    : Object.entries(attrs).map(([value, label]) => typeof label === "string" ? { value, label } : { value, ...label });
+const Select$1 = (attrs) => label({ style: attrs.style ?? {} }, select({ events: attrs.events ?? {} }, ...prepareOptions(attrs.options, attrs.selected).map(Option)));
+const prepareOptions = (attrs, selected) => Array.isArray(attrs)
+    ? attrs.map((value) => ({
+        value,
+        label: value,
+        selected: selected == value,
+    }))
+    : Object.entries(attrs).map(([value, label]) => typeof label === "string"
+        ? { value, label, selected: selected === value }
+        : { value, ...label });
 const Option = (attrs) => option(attrs);
 const Dropdown = (attrs, ...options) => Select$1({
     ...attrs,
@@ -2782,18 +2789,29 @@ class CPU$1 {
     }
 }
 
-const ButtonBar = FC("button-bar", (el, { value, values, events }) => ul({ class: "ButtonBar__wrapper" }, ...values.map((option) => li(a$1({
-    href: "#",
-    class: `ButtonBar__${`${option}`.replace(/\s+/g, "_").toLowerCase()}
-                ${option === value ? "" : "secondary"}
-                `.replace(/[\n\s]+/, " "),
-    events: {
-        click: (e) => {
-            e.preventDefault();
-            events.onSelect(option);
-        },
-    },
-}, display(option))))));
+let buttonBarId = 1;
+let nextId = () => buttonBarId++;
+const ButtonBar = FC("button-bar", (el, { value, values, events }) => {
+    const name = `button-bar-${nextId()}`;
+    return fieldset({ class: "input-group" }, ...values
+        .map((option) => {
+        const opt = `${option}`.replace(/\s+/g, "_").toLowerCase();
+        const id = `${name}-${opt}`;
+        return [
+            label({ role: "button", htmlFor: id }, input({
+                type: "radio",
+                id,
+                name,
+                value: option,
+                checked: option === value,
+                events: {
+                    change: () => events.onSelect(option),
+                },
+            }), display(option)),
+        ];
+    })
+        .flat());
+});
 
 const Sizes = {
     none: "0px",
@@ -6198,7 +6216,7 @@ const App = () => {
     ))));
     const app = [
         settings,
-        header(nav(ul(li(strong("NAND2Tetris Online"))), ul(...urls.map((url) => li(link(url)))))),
+        header(nav(ul(li(strong(a$1({ href: "https://nand2tetris.org", target: "_blank" }, "NAND2Tetris"), " Online"))), ul(...urls.map((url) => li(link(url)))))),
         router(main({ class: "flex flex-1" })),
         footer({ class: "flex row justify-between" }, statusLine, div({ class: "flex row align-center" }, a$1({ href: "./user_guide/", style: { marginRight: "var(--spacing)" } }, "User\u00a0Guide"), button({
             events: {

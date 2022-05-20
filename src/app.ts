@@ -1,4 +1,3 @@
-import ButtonBar from "@davidsouther/jiffies/components/button_bar.js";
 import {
   a,
   article,
@@ -86,7 +85,17 @@ export const App = () => {
     settings,
     header(
       nav(
-        ul(li(strong("NAND2Tetris Online"))),
+        ul(
+          li(
+            strong(
+              a(
+                { href: "https://nand2tetris.org", target: "_blank" },
+                "NAND2Tetris"
+              ),
+              " Online"
+            )
+          )
+        ),
         ul(...urls.map((url) => li(link(url))))
       )
     ),

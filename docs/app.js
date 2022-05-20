@@ -1,15 +1,3 @@
-const isDisplay = (/** @type unknown */ a) => typeof a.toString === "function" ||
-    typeof a === "string";
-const display = (a) => {
-    if (isDisplay(a)) {
-        const str = a.toString();
-        if (str === "[object Object]")
-            return JSON.stringify(a);
-        return str;
-    }
-    return JSON.stringify(a);
-};
-
 const Events = Symbol("events");
 const CLEAR = Symbol("Clear children");
 function isAttrs(attrs) {
@@ -105,41 +93,6 @@ function update(element, attrs, children) {
     return element;
 }
 
-const State = Symbol();
-function FC(name, component) {
-    class FCImpl extends HTMLElement {
-        constructor() {
-            super();
-        }
-        [State] = {};
-        #attrs = {};
-        #children = [];
-        update(attrs, ...children) {
-            [attrs, children] = normalizeArguments(attrs, children);
-            if (children[0] === CLEAR) {
-                this.#children = [];
-            }
-            else if (children.length > 0) {
-                this.#children = children;
-            }
-            this.#attrs = { ...this.#attrs, ...attrs };
-            // Apply updates from the attrs to the dom node itself
-            // @ts-ignore
-            update(this, this.#attrs, []);
-            // Re-run the component function using new element, attrs, and children.
-            const replace = [component(this, this.#attrs, this.#children)];
-            this.replaceChildren(...replace.flat());
-        }
-    }
-    customElements.define(name, FCImpl);
-    const ctor = (attrs, ...children) => {
-        const element = document.createElement(name);
-        element.update(attrs, ...children);
-        return element;
-    };
-    return ctor;
-}
-
 const makeHTMLElement = (name) => (attrs, ...children) => up(document.createElement(name), attrs, ...children);
 const a$1 = makeHTMLElement("a");
 const article = makeHTMLElement("article");
@@ -181,19 +134,6 @@ const th = makeHTMLElement("th");
 const thead = makeHTMLElement("thead");
 const tr = makeHTMLElement("tr");
 const ul = makeHTMLElement("ul");
-
-const ButtonBar = FC("button-bar", (el, { value, values, events }) => ul({ class: "ButtonBar__wrapper" }, ...values.map((option) => li(a$1({
-    href: "#",
-    class: `ButtonBar__${`${option}`.replace(/\s+/g, "_").toLowerCase()}
-                ${option === value ? "" : "secondary"}
-                `.replace(/[\n\s]+/, " "),
-    events: {
-        click: (e) => {
-            e.preventDefault();
-            events.onSelect(option);
-        },
-    },
-}, display(option))))));
 
 let registry = {};
 function provide(items) {
@@ -400,6 +340,18 @@ async function reset(fs, tree) {
     }
 }
 
+const isDisplay = (/** @type unknown */ a) => typeof a.toString === "function" ||
+    typeof a === "string";
+const display = (a) => {
+    if (isDisplay(a)) {
+        const str = a.toString();
+        if (str === "[object Object]")
+            return JSON.stringify(a);
+        return str;
+    }
+    return JSON.stringify(a);
+};
+
 const Select$1 = (attrs) => label({ style: attrs.style ?? {} }, select({ events: attrs.events ?? {} }, ...prepareOptions(attrs.options).map(Option)));
 const prepareOptions = (attrs) => Array.isArray(attrs)
     ? attrs.map((value) => ({ value, label: value }))
@@ -492,6 +444,41 @@ function unwrapOr(t, def) {
         return Ok(t);
     }
     return t;
+}
+
+const State = Symbol();
+function FC(name, component) {
+    class FCImpl extends HTMLElement {
+        constructor() {
+            super();
+        }
+        [State] = {};
+        #attrs = {};
+        #children = [];
+        update(attrs, ...children) {
+            [attrs, children] = normalizeArguments(attrs, children);
+            if (children[0] === CLEAR) {
+                this.#children = [];
+            }
+            else if (children.length > 0) {
+                this.#children = children;
+            }
+            this.#attrs = { ...this.#attrs, ...attrs };
+            // Apply updates from the attrs to the dom node itself
+            // @ts-ignore
+            update(this, this.#attrs, []);
+            // Re-run the component function using new element, attrs, and children.
+            const replace = [component(this, this.#attrs, this.#children)];
+            this.replaceChildren(...replace.flat());
+        }
+    }
+    customElements.define(name, FCImpl);
+    const ctor = (attrs, ...children) => {
+        const element = document.createElement(name);
+        element.update(attrs, ...children);
+        return element;
+    };
+    return ctor;
 }
 
 const Hex = [
@@ -2794,6 +2781,19 @@ class CPU$1 {
         this.#pc = pc;
     }
 }
+
+const ButtonBar = FC("button-bar", (el, { value, values, events }) => ul({ class: "ButtonBar__wrapper" }, ...values.map((option) => li(a$1({
+    href: "#",
+    class: `ButtonBar__${`${option}`.replace(/\s+/g, "_").toLowerCase()}
+                ${option === value ? "" : "secondary"}
+                `.replace(/[\n\s]+/, " "),
+    events: {
+        click: (e) => {
+            e.preventDefault();
+            events.onSelect(option);
+        },
+    },
+}, display(option))))));
 
 const Sizes = {
     none: "0px",
@@ -6184,13 +6184,18 @@ const App = () => {
                 statusLine.update("Reset files in local storage");
             },
         },
-    }, "Reset")), dt("Numeric Format"), dd(ButtonBar({
-        value: "B",
-        values: ["B", "D", "X", "A"],
-        events: {
-            onSelect: () => { },
-        },
-    }))))));
+    }, "Reset"))
+    // dt("Numeric Format"),
+    // dd(
+    //   ButtonBar({
+    //     value: "B",
+    //     values: ["B", "D", "X", "A"],
+    //     events: {
+    //       onSelect: () => {},
+    //     },
+    //   })
+    // )
+    ))));
     const app = [
         settings,
         header(nav(ul(li(strong("NAND2Tetris Online"))), ul(...urls.map((url) => li(link(url)))))),

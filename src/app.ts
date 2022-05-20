@@ -66,17 +66,17 @@ export const App = () => {
               },
               "Reset"
             )
-          ),
-          dt("Numeric Format"),
-          dd(
-            ButtonBar({
-              value: "B",
-              values: ["B", "D", "X", "A"],
-              events: {
-                onSelect: () => {},
-              },
-            })
           )
+          // dt("Numeric Format"),
+          // dd(
+          //   ButtonBar({
+          //     value: "B",
+          //     values: ["B", "D", "X", "A"],
+          //     events: {
+          //       onSelect: () => {},
+          //     },
+          //   })
+          // )
         )
       )
     )

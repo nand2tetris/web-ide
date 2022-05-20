@@ -2498,6 +2498,8 @@ const Chip = () => {
         inPinout.update({ pins: chip.ins });
         outPinout.update({ pins: chip.outs });
         pinsPinout.update({ pins: chip.pins });
+        outTextarea.update("");
+        diffPanel.update();
     }
     async function setChip(name) {
         localStorage["chip/chip"] = name;
@@ -6193,7 +6195,7 @@ const App = () => {
         settings,
         header(nav(ul(li(strong("NAND2Tetris Online"))), ul(...urls.map((url) => li(link(url)))))),
         router(main({ class: "flex flex-1" })),
-        footer({ class: "flex row justify-between" }, statusLine, div(button({
+        footer({ class: "flex row justify-between" }, statusLine, div({ class: "flex row align-center" }, a$1({ href: "./user_guide/", style: { marginRight: "var(--spacing)" } }, "User\u00a0Guide"), button({
             events: {
                 click: () => settings.setAttribute("open", "open"),
             },

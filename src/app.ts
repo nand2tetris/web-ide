@@ -95,6 +95,11 @@ export const App = () => {
       { class: "flex row justify-between" },
       statusLine,
       div(
+        { class: "flex row align-center" },
+        a(
+          { href: "./user_guide/", style: { marginRight: "var(--spacing)" } },
+          "User\u00a0Guide"
+        ),
         button(
           {
             events: {

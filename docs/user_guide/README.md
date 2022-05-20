@@ -46,3 +46,10 @@ You may need to scroll to see all failed lines.
 ![Passed Chip Test](./06_chip_complex_passed_test.png)
 
 All tests pass!
+
+---
+
+![Settings](./07_settings.png)
+
+Clicking `Save` in the HDL panel will store the HDL chip to user's local storage.
+In settings, clicking `Files: Reset` will restore the files to the book' projects.

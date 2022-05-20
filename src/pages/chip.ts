@@ -159,6 +159,8 @@ export const Chip = () => {
     inPinout.update({ pins: chip.ins });
     outPinout.update({ pins: chip.outs });
     pinsPinout.update({ pins: chip.pins });
+    outTextarea.update("");
+    diffPanel.update();
   }
 
   async function setChip(name: string) {

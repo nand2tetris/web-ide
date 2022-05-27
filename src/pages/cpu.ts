@@ -8,7 +8,6 @@ import { Timer } from "../simulator/timer.js";
 import { Screen } from "../components/screen.js";
 
 import { TickScreen } from "../testing/fill.js";
-import { compileFStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 
 export const CPU = (
   { cpu } = { cpu: new CPUChip({ ROM: new Memory(HACK) }) }
@@ -63,44 +62,29 @@ export const CPU = (
   })();
 
   return div(
-    { class: "View__CPU" },
     (runbar = Runbar({ runner }, label(PC, A, D))),
-    style(
-      compileFStyle({
-        ".View__CPU": {
-          "div.grid": {
-            gridTemplateColumns: "repeat(4, 283px)",
-            justifyContent: "center",
-          },
-          "hack-screen": {
-            gridColumn: "3 / span 2",
-          },
-        },
-        "@media (max-width: 1195px)": {
-          ".View__CPU": {
-            "div.grid": {
-              gridTemplateColumns: "repeat(2, 283px)",
-            },
-            "hack-screen": {
-              gridColumn: "1 / span 2",
-            },
-          },
-        },
-      })
-    ),
     div(
       { class: "grid" },
-      (ROM = MemoryGUI({
-        name: "ROM",
-        memory: cpu.ROM,
-        highlight: cpu.PC,
-        format: "asm",
-        editable: false,
-      })),
-      (RAM = MemoryGUI({ name: "RAM", memory: cpu.RAM, format: "hex" })),
-      (screen = Screen({
-        memory: cpu.RAM,
-      }))
+      div(
+        {
+          class: "grid",
+          style: {
+            gridAutoFlow: "column",
+            gridTemplateColumns: "repeat(2, 1fr)"
+          }
+        },
+        (ROM = MemoryGUI({
+          name: "ROM",
+          memory: cpu.ROM,
+          highlight: cpu.PC,
+          format: "asm",
+          editable: false,
+        })),
+        (RAM = MemoryGUI({ name: "RAM", memory: cpu.RAM, format: "hex" }))
+      ),
+      div(
+        (screen = Screen({ memory: cpu.RAM }))
+      )
     )
   );
 };

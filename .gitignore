@@ -3,4 +3,5 @@ node_modules/
 build/
 dist/
 .parcel-cache
+.idea
 jefri-jiffies-*.tgz

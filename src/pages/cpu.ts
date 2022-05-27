@@ -69,23 +69,27 @@ export const CPU = (
       compileFStyle({
         ".View__CPU": {
           "div.grid": {
-            gridTemplateColumns: "repeat(4, 283px)",
-            justifyContent: "center",
+            gridTemplateColumns: "repeat(4, minmax(125px, 283px))",
+            justifyContent: "center"
           },
           "hack-screen": {
-            gridColumn: "3 / span 2",
-          },
+            width: "100%",
+            maxWidth: "600px",
+            gridColumn: "3 / span 4",
+          }
         },
         "@media (max-width: 1195px)": {
           ".View__CPU": {
             "div.grid": {
-              gridTemplateColumns: "repeat(2, 283px)",
+              gridTemplateColumns: "repeat(2, minmax(125px, 283px))",
+              gridTemplateRows: "2fr"
             },
             "hack-screen": {
-              gridColumn: "1 / span 2",
-            },
-          },
-        },
+              gridRow: "2",
+              gridColumn: "1 / span 2"
+            }
+          }
+        }
       })
     ),
     div(

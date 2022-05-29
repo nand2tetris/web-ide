@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/result";
+import { Err, Ok, Result } from "@davidsouther/jiffies/result.js";
 import { Chip } from "../chip.js";
 import { Add16 } from "./arithmetic/add_16.js";
 import { ALU, ALUNoStat } from "./arithmetic/alu.js";

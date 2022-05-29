@@ -1,5 +1,6 @@
 import { Not, Or } from "../simulator/chip/builtins";
-import { Chip, Nand } from "../simulator/chip/chip.js";
+import { Nand } from "../simulator/chip/builtins/logic/nand.js";
+import { Chip } from "../simulator/chip/chip.js";
 
 /** Figure A2.1 */
 const hdl = `

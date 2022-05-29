@@ -55,8 +55,7 @@ export const Screen = FC<
     figure(
       {
         style: {
-          width: "100%",
-          marginInline: "auto",
+          textAlign: "center",
           borderTop: "2px solid gray",
           borderLeft: "2px solid gray",
           borderBottom: "2px solid lightgray",

@@ -62,49 +62,64 @@ export const CPU = (
     }
   })();
 
+  // Referenced/Pulled from https://github.com/picocss/pico/blob/master/css/pico.css#L568-L598
+  const containerStyles = {
+    ".container": {
+      width: "100%",
+      marginInline: "auto",
+      paddingRight: "10px",
+      paddingLeft: "10px"
+    },
+    "@media (min-width: 576px)": {
+      ".container": {
+        maxWidth: "510px",
+        paddingRight: "0",
+        paddingLeft: "0"
+      }
+    },
+    "@media (min-width: 768px)": {
+      ".container": {
+        maxWidth: "700px"
+      }
+    },
+    "@media (min-width: 992px)": {
+      ".container": {
+        maxWidth: "920px"
+      }
+    },
+    "@media (min-width: 1200px)": {
+      ".container": {
+        maxWidth: "1130px"
+      }
+    }
+  };
+
   return div(
-    { class: "View__CPU" },
+    { class: "container" },
+    style(compileFStyle(containerStyles)),
     (runbar = Runbar({ runner }, label(PC, A, D))),
-    style(
-      compileFStyle({
-        ".View__CPU": {
-          "div.grid": {
-            gridTemplateColumns: "repeat(4, minmax(125px, 283px))",
-            justifyContent: "center"
-          },
-          "hack-screen": {
-            width: "100%",
-            maxWidth: "600px",
-            gridColumn: "3 / span 4",
-          }
-        },
-        "@media (max-width: 1195px)": {
-          ".View__CPU": {
-            "div.grid": {
-              gridTemplateColumns: "repeat(2, minmax(125px, 283px))",
-              gridTemplateRows: "2fr"
-            },
-            "hack-screen": {
-              gridRow: "2",
-              gridColumn: "1 / span 2"
-            }
-          }
-        }
-      })
-    ),
     div(
       { class: "grid" },
-      (ROM = MemoryGUI({
-        name: "ROM",
-        memory: cpu.ROM,
-        highlight: cpu.PC,
-        format: "asm",
-        editable: false,
-      })),
-      (RAM = MemoryGUI({ name: "RAM", memory: cpu.RAM, format: "hex" })),
-      (screen = Screen({
-        memory: cpu.RAM,
-      }))
+      div(
+        {
+          class: "grid",
+          style: {
+            gridAutoFlow: "column",
+            gridTemplateColumns: "repeat(2, 1fr)"
+          }
+        },
+        (ROM = MemoryGUI({
+          name: "ROM",
+          memory: cpu.ROM,
+          highlight: cpu.PC,
+          format: "asm",
+          editable: false,
+        })),
+        (RAM = MemoryGUI({ name: "RAM", memory: cpu.RAM, format: "hex" }))
+      ),
+      div(
+        (screen = Screen({ memory: cpu.RAM }))
+      )
     )
   );
 };

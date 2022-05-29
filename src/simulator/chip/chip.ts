@@ -4,7 +4,7 @@ import {
   assertString,
 } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
-import { bin, nand16 } from "../../util/twos.js";
+import { bin } from "../../util/twos.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -108,6 +108,13 @@ export class TrueBus extends Bus {
   voltage(_ = 0): Voltage {
     return HIGH;
   }
+
+  set busVoltage(voltage: number) {
+    // Noop
+  }
+  get busVoltage(): number {
+    return 0xffff;
+  }
 }
 
 export class FalseBus extends Bus {
@@ -118,6 +125,12 @@ export class FalseBus extends Bus {
   pullLow(_ = 0) {}
   voltage(_ = 0): Voltage {
     return LOW;
+  }
+  set busVoltage(voltage: number) {
+    // Noop
+  }
+  get busVoltage(): number {
+    return 0x0000;
   }
 }
 
@@ -283,6 +296,20 @@ export class Chip {
 
   tock() {
     this.eval();
+  }
+}
+
+export class Low extends Chip {
+  constructor() {
+    super([], ["out"]);
+    this.outs.insert(new FalseBus("out"));
+  }
+}
+
+export class High extends Chip {
+  constructor() {
+    super([], ["out"]);
+    this.outs.insert(new TrueBus("out"));
   }
 }
 

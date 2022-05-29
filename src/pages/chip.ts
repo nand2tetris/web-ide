@@ -19,7 +19,7 @@ import { FileSystem } from "@davidsouther/jiffies/fs.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
 import { Runbar } from "../components/runbar.js";
-import { LOW, Pin } from "../simulator/chip/chip.js";
+import { Low, LOW, Pin } from "../simulator/chip/chip.js";
 import { Timer } from "../simulator/timer.js";
 import { Chip as SimChip } from "../simulator/chip/chip.js";
 import * as make from "../simulator/chip/builder.js";
@@ -98,7 +98,9 @@ export const Chip = () => {
   let project = localStorage["chip/project"] ?? "01";
   let chips: string[] = PROJECTS[project as "01" | "02"];
   let chipName = localStorage["chip/chip"] ?? "And";
-  let chip: SimChip = getBuiltinChip(chipName);
+  let maybeChip = getBuiltinChip(chipName);
+  if (isErr(maybeChip)) statusLine(display(Err(maybeChip)));
+  let chip: SimChip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
 
   setTimeout(async function () {
     await setProject(project);

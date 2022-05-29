@@ -4,6 +4,10 @@ export function or(a: Voltage, b: Voltage): [Voltage] {
   return [a == 1 || b == 1 ? HIGH : LOW];
 }
 
+export function or16(a: number, b: number): [number] {
+  return [(a | b) & 0xffff];
+}
+
 export function or8way(a: number): [Voltage] {
   return [(a & 0xff) == 0 ? LOW : HIGH];
 }
@@ -18,6 +22,19 @@ export class Or extends Chip {
     const b = this.in("b").voltage();
     const [out] = or(a, b);
     this.out().pull(out);
+  }
+}
+
+export class Or16 extends Chip {
+  constructor() {
+    super(["a[16]", "b[16]"], ["out[16"]);
+  }
+
+  eval() {
+    const a = this.in("a").busVoltage;
+    const b = this.in("b").busVoltage;
+    const [out] = or16(a, b);
+    this.out().busVoltage = out;
   }
 }
 

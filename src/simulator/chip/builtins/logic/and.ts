@@ -4,8 +4,8 @@ export function and(a: Voltage, b: Voltage): [Voltage] {
   return [a == 1 && b == 1 ? HIGH : LOW];
 }
 
-export function and16(a: number, b: number): number {
-  return a & b & 0xffff;
+export function and16(a: number, b: number): [number] {
+  return [a & b & 0xffff];
 }
 
 export class And extends Chip {
@@ -27,9 +27,9 @@ export class And16 extends Chip {
   }
 
   eval() {
-    this.out().busVoltage = and16(
-      this.in("a").busVoltage,
-      this.in("b").busVoltage
-    );
+    const a = this.in("a").busVoltage;
+    const b = this.in("b").busVoltage;
+    const [n] = and16(a, b);
+    this.out().busVoltage = n;
   }
 }

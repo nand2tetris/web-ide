@@ -1,5 +1,6 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
 import { HdlParser } from "../../languages/hdl.js";
+import { ParseError } from "../../languages/parser/base.js";
 import { getBuiltinChip } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
 import { Bus, Chip } from "./chip.js";
@@ -99,13 +100,13 @@ export const Xor = () => {
   return xorChip;
 };
 
-export function parse(code: string): Result<Chip> {
+export function parse(code: string): Result<Chip, Error | ParseError> {
   const parsed = HdlParser(code);
   if (isErr(parsed)) return parsed;
   const [_, parts] = Ok(parsed);
 
   if (parts.parts === "BUILTIN") {
-    return Ok(getBuiltinChip(parts.name));
+    return getBuiltinChip(parts.name);
   }
 
   const ins = parts.ins.map(({ pin, start }) => ({
@@ -119,10 +120,13 @@ export function parse(code: string): Result<Chip> {
   const chip = new Chip(ins, outs, parts.name);
 
   for (const wire of parts.parts) {
-    chip.wire(
-      getBuiltinChip(wire.name),
-      wire.wires.map(({ lhs, rhs: { pin } }) => ({ from: pin, to: lhs }))
-    );
+    const builtin = getBuiltinChip(wire.name);
+    if (isErr(builtin)) return builtin;
+    const wires = wire.wires.map(({ lhs, rhs: { pin } }) => ({
+      from: pin,
+      to: lhs,
+    }));
+    chip.wire(Ok(builtin), wires);
   }
 
   return Ok(chip);

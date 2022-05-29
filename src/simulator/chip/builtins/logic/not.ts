@@ -4,8 +4,8 @@ export function not(inn: Voltage): [Voltage] {
   return [inn === LOW ? HIGH : LOW];
 }
 
-export function not16(inn: number): number {
-  return ~inn & 0xffff;
+export function not16(inn: number): [number] {
+  return [~inn & 0xffff];
 }
 
 export class Not extends Chip {
@@ -26,6 +26,7 @@ export class Not16 extends Chip {
   }
 
   eval() {
-    this.out().busVoltage = not16(this.in().busVoltage);
+    const [n] = not16(this.in().busVoltage);
+    this.out().busVoltage = n;
   }
 }

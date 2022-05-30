@@ -33,6 +33,7 @@ export class Bus implements Pin {
 
   connect(next: Pin) {
     this.next.push(next);
+    next.busVoltage = this.busVoltage;
   }
 
   pull(voltage: Voltage, bit = 0) {
@@ -50,7 +51,7 @@ export class Bus implements Pin {
     for (const i of range(0, this.width)) {
       this.state[i] = ((voltage & (1 << i)) >> i) as Voltage;
     }
-    this.next.forEach((n) => (n.busVoltage = voltage));
+    this.next.forEach((n) => (n.busVoltage = this.busVoltage));
   }
 
   get busVoltage(): number {
@@ -63,10 +64,9 @@ export class Bus implements Pin {
   }
 }
 
-export class SubBus implements Pin {
-  readonly name: string;
+export class InSubBus extends Bus {
   constructor(private bus: Pin, private start: number, readonly width = 1) {
-    this.name = bus.name;
+    super(bus.name);
     assert(start >= 0 && start + width <= bus.width);
   }
 
@@ -75,26 +75,45 @@ export class SubBus implements Pin {
     this.bus.pull(voltage, this.start + bit);
   }
 
-  toggle(bit = 0) {
-    const nextVoltage = this.voltage(bit) == LOW ? HIGH : LOW;
-    this.pull(nextVoltage, bit);
-  }
-
   voltage(bit = 0): Voltage {
     assert(bit >= 0 && bit < this.width);
     return this.bus.voltage(this.start + bit);
   }
 
   set busVoltage(voltage: number) {
-    this.bus.busVoltage = (voltage & mask(this.width)) << this.start;
+    const high = this.bus.busVoltage & ~mask(this.width + this.start);
+    const low = this.bus.busVoltage & mask(this.start);
+    const mid = (voltage & mask(this.width)) << this.start;
+    this.bus.busVoltage = high | mid | low;
   }
 
   get busVoltage(): number {
-    return this.bus.busVoltage >> this.start;
+    return (this.bus.busVoltage >> this.start) & mask(this.width);
   }
 
   connect(bus: Pin): void {
     assert(this.start + this.width <= bus.width);
+    this.bus = bus;
+  }
+}
+
+export class OutSubBus extends Bus {
+  constructor(private bus: Pin, private start: number, readonly width = 1) {
+    super(bus.name);
+    assert(start >= 0 && width <= bus.width);
+  }
+
+  set busVoltage(voltage: number) {
+    this.bus.busVoltage =
+      (voltage & mask(this.width + this.start)) >> this.start;
+  }
+
+  get busVoltage(): number {
+    return this.bus.busVoltage & mask(this.width);
+  }
+
+  connect(bus: Pin): void {
+    assert(this.width <= bus.width);
     this.bus = bus;
   }
 }
@@ -242,7 +261,7 @@ export class Chip {
           chip.ins.get(pin),
           () => `Cannot wire to missing pin ${pin}`
         );
-        if (from instanceof SubBus) {
+        if (from instanceof InSubBus) {
           from.connect(inPin);
         } else {
           let input = this.findPin(nameOf(from), inPin.width);
@@ -254,10 +273,10 @@ export class Chip {
 
   private findPin(from: string, minWidth?: number): Pin {
     if (from === "True" || from === "1") {
-      return new TrueBus("True");
+      return TRUE_BUS;
     }
     if (from === "false" || from === "0") {
-      return new FalseBus("False");
+      return FALSE_BUS;
     }
     if (this.ins.has(from)) {
       return this.ins.get(from)!;
@@ -289,14 +308,22 @@ export class Chip {
 export class Low extends Chip {
   constructor() {
     super([], []);
+<<<<<<< HEAD
     this.outs.insert(new FalseBus("out"));
+=======
+    this.outs.insert(FALSE_BUS);
+>>>>>>> In and Out subbusses index within a chip
   }
 }
 
 export class High extends Chip {
   constructor() {
     super([], []);
+<<<<<<< HEAD
     this.outs.insert(new TrueBus("out"));
+=======
+    this.outs.insert(TRUE_BUS);
+>>>>>>> In and Out subbusses index within a chip
   }
 }
 
@@ -317,11 +344,13 @@ export class DFF extends Chip {
   tick() {
     // Read in into t
     this.t = this.in().voltage();
+    this.eval();
   }
 
   tock() {
     // write t into out
     this.out().pull(this.t);
+    this.eval();
   }
 }
 

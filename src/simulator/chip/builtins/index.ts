@@ -12,7 +12,7 @@ import { Mux, Mux16 } from "./logic/mux.js";
 import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
 import { Or, Or16, Or8way } from "./logic/or.js";
-import { Xor } from "./logic/xor.js";
+import { Xor, Xor16 } from "./logic/xor.js";
 
 export { And, And16 } from "./logic/and.js";
 export { Demux } from "./logic/demux.js";
@@ -22,28 +22,32 @@ export { Or } from "./logic/or.js";
 export { Xor } from "./logic/xor.js";
 
 export const REGISTRY = new Map<string, () => Chip>(
-  [
-    ["Nand", Nand],
-    ["Nand16", Nand16],
-    ["Not", Not],
-    ["Not16", Not16],
-    ["And", And],
-    ["And16", And16],
-    ["Or", Or],
-    ["Or16", Or16],
-    ["Or8way", Or8way],
-    ["XOr", Xor],
-    ["XOr16", Xor],
-    ["Mux", Mux],
-    ["Mux16", Mux16],
-    ["Demux", Demux],
-    ["HalfAdder", HalfAdder],
-    ["FullAdder", FullAdder],
-    ["Add16", Add16],
-    ["Inc16", Inc16],
-    ["ALU", ALU],
-    ["ALUNoStat", ALUNoStat],
-  ].map(([name, ChipCtor]: [string, () => Chip]) => [
+  (
+    [
+      ["Nand", Nand],
+      ["Nand16", Nand16],
+      ["Not", Not],
+      ["Not16", Not16],
+      ["And", And],
+      ["And16", And16],
+      ["Or", Or],
+      ["Or16", Or16],
+      ["Or8way", Or8way],
+      ["XOr", Xor],
+      ["XOr16", Xor16],
+      ["Xor", Xor],
+      ["Xor16", Xor16],
+      ["Mux", Mux],
+      ["Mux16", Mux16],
+      ["Demux", Demux],
+      ["HalfAdder", HalfAdder],
+      ["FullAdder", FullAdder],
+      ["Add16", Add16],
+      ["Inc16", Inc16],
+      ["ALU", ALU],
+      ["ALUNoStat", ALUNoStat],
+    ] as [string, { new (): Chip }][]
+  ).map(([name, ChipCtor]) => [
     name,
     () => {
       const chip = new ChipCtor();

@@ -54,20 +54,19 @@ export const Screen = FC<
     { class: "no-shadow panel" },
     header("Display"),
     figure(
-      div(
-        {
-          style: {
-            width: "512px",
-            marginInline: "auto",
-            boxSizing: "content-box",
-            borderTop: "2px solid gray",
-            borderLeft: "2px solid gray",
-            borderBottom: "2px solid lightgray",
-            borderRight: "2px solid lightgray",
-          },
+      {
+        style: {
+          width: "100%",
+          maxWidth: "512px",
+          boxSizing: "content-box",
+          marginInline: "auto",
+          borderTop: "2px solid gray",
+          borderLeft: "2px solid gray",
+          borderBottom: "2px solid lightgray",
+          borderRight: "2px solid lightgray",
         },
-        screen
-      )
+      },
+      screen
     )
   );
 });

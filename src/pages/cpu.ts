@@ -44,7 +44,7 @@ export const CPU = (
   const runner = new (class CPURunner extends Timer {
     tick() {
       cpu.tick();
-      // tickScreen();
+      tickScreen();
     }
 
     finishFrame() {

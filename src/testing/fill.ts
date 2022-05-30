@@ -1,10 +1,12 @@
 import { CPU } from "../simulator/cpu/cpu.js";
 import { SCREEN } from "../simulator/cpu/memory.js";
 
+const colorfn = () => (Math.random() * 0xffff) & 0xffff;
+
 export const TickScreen = (cpu: CPU) => {
   let row = 0;
   let col = 0;
-  let color = 0xffff;
+  let color = colorfn();
   return () => {
     const index = SCREEN + col + row * 32;
     cpu.RAM.set(index, color);
@@ -12,9 +14,9 @@ export const TickScreen = (cpu: CPU) => {
     if (col >= 32) {
       col = 0;
       row += 1;
+      color = colorfn();
       if (row >= 256) {
         row = 0;
-        color = color === 0x0000 ? 0xffff : 0x0000;
       }
     }
   };

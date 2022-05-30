@@ -119,12 +119,12 @@ export function parse(code: string): Result<Chip, Error | ParseError> {
   }));
   const chip = new Chip(ins, outs, parts.name);
 
-  for (const wire of parts.parts) {
-    const builtin = getBuiltinChip(wire.name);
+  for (const part of parts.parts) {
+    const builtin = getBuiltinChip(part.name);
     if (isErr(builtin)) return builtin;
-    const wires = wire.wires.map(({ lhs, rhs: { pin } }) => ({
-      from: pin,
-      to: lhs,
+    const wires = part.wires.map(({ lhs: { pin }, rhs }) => ({
+      from: rhs,
+      to: pin,
     }));
     chip.wire(Ok(builtin), wires);
   }

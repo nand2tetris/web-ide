@@ -19,6 +19,8 @@ import {
 import { rounded } from "@davidsouther/jiffies/dom/css/border.js";
 import { FC, State } from "@davidsouther/jiffies/dom/fc.js";
 
+const ITEM_HEIGHT = 33.5;
+
 const MemoryBlock = FC<
   {
     memory: MemoryChip;
@@ -38,7 +40,7 @@ const MemoryBlock = FC<
       el[State].virtualScroll?.update();
     } else {
       el[State].virtualScroll = VirtualScroll({
-        settings: { count: 20, maxIndex: memory.size, itemHeight: 28 },
+        settings: { count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT },
         get: (o, l) => memory.map((i, v) => [i, v], o, o + l),
         row: ([i, v]) =>
           // @ts-ignore TODO(TFC)
@@ -65,7 +67,7 @@ const MemoryCell = FC<{
   "memory-cell",
   (
     el,
-    { index, value, highlight = false, editable = false, onChange = () => { } }
+    { index, value, highlight = false, editable = false, onChange = () => {} }
   ) => {
     el.style.display = "flex";
     return [
@@ -93,12 +95,12 @@ const MemoryCell = FC<{
         },
         editable
           ? InlineEdit({
-            value: `${value}`,
-            events: {
-              // @ts-ignore TODO(FC Events)
-              change: (newValue: string) => onChange(index, newValue, value),
-            },
-          })
+              value: `${value}`,
+              events: {
+                // @ts-ignore TODO(FC Events)
+                change: (newValue: string) => onChange(index, newValue, value),
+              },
+            })
           : span(`${value}`)
       ),
     ];

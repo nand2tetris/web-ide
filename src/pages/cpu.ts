@@ -61,38 +61,6 @@ export const CPU = (
     }
   })();
 
-  // Referenced/Pulled from https://github.com/picocss/pico/blob/master/css/pico.css#L568-L598
-  const containerStyles = {
-    ".container": {
-      width: "100%",
-      marginInline: "auto",
-      paddingRight: "10px",
-      paddingLeft: "10px",
-    },
-    "@media (min-width: 576px)": {
-      ".container": {
-        maxWidth: "510px",
-        paddingRight: "0",
-        paddingLeft: "0",
-      },
-    },
-    "@media (min-width: 768px)": {
-      ".container": {
-        maxWidth: "700px",
-      },
-    },
-    "@media (min-width: 992px)": {
-      ".container": {
-        maxWidth: "920px",
-      },
-    },
-    "@media (min-width: 1200px)": {
-      ".container": {
-        maxWidth: "1130px",
-      },
-    },
-  };
-
   return div(
     (runbar = Runbar({ runner }, label(PC, A, D))),
     div(

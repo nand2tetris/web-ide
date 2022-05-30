@@ -20,8 +20,7 @@
           --grid-spacing-horizontal: 1rem; /* var(--spacing) */
           --form-element-spacing-vertical: 0.15rem; /* .75rem */
           --form-element-spacing-horizontal: 0.25rem; /* 1rem */
-          /* --font-family-monospace: 'Andale Mono', 'Courier New', Courier, monospace; */
-          --font-size-monospace: 0.6rem;
+          --font-size-monospace: 16px;
         }
       }
 
@@ -45,7 +44,9 @@
       }
 
       @layer user {
-        body > header, body > main, body > footer {
+        body > header,
+        body > main,
+        body > footer {
           width: calc(100vw - (100vw - 100%));
           overflow-x: hidden;
         }

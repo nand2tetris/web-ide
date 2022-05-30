@@ -6,6 +6,7 @@ import {
   canvas,
   figure,
   header,
+  div,
 } from "@davidsouther/jiffies/dom/html.js";
 import { Memory, SCREEN } from "../simulator/cpu/memory.js";
 
@@ -34,7 +35,6 @@ export const Screen = FC<
 >("hack-screen", (el, { memory }) => {
   const screen = (el[State].screen ??= canvas({ width: 512, height: 256 }));
   const ctx = (el[State].ctx ??= screen.getContext("2d") ?? undefined);
-  el.style.width = "518px";
 
   if (ctx) {
     const image = assertExists(
@@ -56,11 +56,14 @@ export const Screen = FC<
     figure(
       {
         style: {
+          width: "100%",
+          maxWidth: "512px",
+          boxSizing: "content-box",
+          marginInline: "auto",
           borderTop: "2px solid gray",
           borderLeft: "2px solid gray",
           borderBottom: "2px solid lightgray",
           borderRight: "2px solid lightgray",
-          marginBottom: "0",
         },
       },
       screen

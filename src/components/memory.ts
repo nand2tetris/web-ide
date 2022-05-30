@@ -67,7 +67,7 @@ const MemoryCell = FC<{
   "memory-cell",
   (
     el,
-    { index, value, highlight = false, editable = false, onChange = () => {} }
+    { index, value, highlight = false, editable = false, onChange = () => { } }
   ) => {
     el.style.display = "flex";
     return [
@@ -95,12 +95,12 @@ const MemoryCell = FC<{
         },
         editable
           ? InlineEdit({
-              value: `${value}`,
-              events: {
-                // @ts-ignore TODO(FC Events)
-                change: (newValue: string) => onChange(index, newValue, value),
-              },
-            })
+            value: `${value}`,
+            events: {
+              // @ts-ignore TODO(FC Events)
+              change: (newValue: string) => onChange(index, newValue, value),
+            },
+          })
           : span(`${value}`)
       ),
     ];

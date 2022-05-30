@@ -789,6 +789,12 @@ class TrueBus extends Bus {
     voltage(_ = 0) {
         return HIGH;
     }
+    set busVoltage(voltage) {
+        // Noop
+    }
+    get busVoltage() {
+        return 0xffff;
+    }
 }
 class FalseBus extends Bus {
     constructor(name) {
@@ -798,6 +804,12 @@ class FalseBus extends Bus {
     pullLow(_ = 0) { }
     voltage(_ = 0) {
         return LOW;
+    }
+    set busVoltage(voltage) {
+        // Noop
+    }
+    get busVoltage() {
+        return 0x0000;
     }
 }
 function parseToPin(toPin) {
@@ -934,6 +946,12 @@ class Chip$1 {
     }
     tock() {
         this.eval();
+    }
+}
+class Low extends Chip$1 {
+    constructor() {
+        super([], ["out"]);
+        this.outs.insert(new FalseBus("out"));
     }
 }
 class DFF extends Chip$1 {
@@ -1769,6 +1787,9 @@ class ALU extends Chip$1 {
 function or(a, b) {
     return [a == 1 || b == 1 ? HIGH : LOW];
 }
+function or16(a, b) {
+    return [(a | b) & 0xffff];
+}
 function or8way(a) {
     return [(a & 0xff) == 0 ? LOW : HIGH];
 }
@@ -1781,6 +1802,17 @@ class Or$1 extends Chip$1 {
         const b = this.in("b").voltage();
         const [out] = or(a, b);
         this.out().pull(out);
+    }
+}
+class Or16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]"], ["out[16"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const [out] = or16(a, b);
+        this.out().busVoltage = out;
     }
 }
 class Or8way extends Chip$1 {
@@ -1850,7 +1882,7 @@ function and(a, b) {
     return [a == 1 && b == 1 ? HIGH : LOW];
 }
 function and16(a, b) {
-    return a & b & 0xffff;
+    return [a & b & 0xffff];
 }
 class And$1 extends Chip$1 {
     constructor() {
@@ -1868,7 +1900,10 @@ class And16$1 extends Chip$1 {
         super(["a[16]", "b[16]"], ["out[16]"]);
     }
     eval() {
-        this.out().busVoltage = and16(this.in("a").busVoltage, this.in("b").busVoltage);
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const [n] = and16(a, b);
+        this.out().busVoltage = n;
     }
 }
 
@@ -1955,7 +1990,7 @@ function not(inn) {
     return [inn === LOW ? HIGH : LOW];
 }
 function not16(inn) {
-    return ~inn & 0xffff;
+    return [~inn & 0xffff];
 }
 class Not$1 extends Chip$1 {
     constructor() {
@@ -1972,12 +2007,13 @@ class Not16$1 extends Chip$1 {
         super(["in[16]"], ["out[16]"]);
     }
     eval() {
-        this.out().busVoltage = not16(this.in().busVoltage);
+        const [n] = not16(this.in().busVoltage);
+        this.out().busVoltage = n;
     }
 }
 
 function xor(a, b) {
-    return [(a == 1 && b == 0) || (a == 0 && b == 1) ? HIGH : LOW];
+    return [(a == HIGH && b == LOW) || (a == LOW && b == HIGH) ? HIGH : LOW];
 }
 class Xor$1 extends Chip$1 {
     constructor() {
@@ -1999,11 +2035,13 @@ const REGISTRY = new Map([
     ["And", And$1],
     ["And16", And16$1],
     ["Or", Or$1],
+    ["Or16", Or16],
+    ["Or8way", Or8way],
     ["XOr", Xor$1],
+    ["XOr16", Xor$1],
     ["Mux", Mux],
     ["Mux16", Mux16],
     ["Demux", Demux],
-    ["Or8way", Or8way],
     ["HalfAdder", HalfAdder],
     ["FullAdder", FullAdder],
     ["Add16", Add16],
@@ -2019,8 +2057,10 @@ const REGISTRY = new Map([
     },
 ]));
 function getBuiltinChip(name) {
-    assert(REGISTRY.has(name), `Chip ${name} not in builtin registry`);
-    return REGISTRY.get(name)();
+    const chip = REGISTRY.get(name);
+    return chip
+        ? Ok(chip())
+        : Err(new Error(`Chip ${name} not in builtin registry`));
 }
 
 const Not = () => {
@@ -2109,7 +2149,7 @@ function parse(code) {
         return parsed;
     const [_, parts] = Ok(parsed);
     if (parts.parts === "BUILTIN") {
-        return Ok(getBuiltinChip(parts.name));
+        return getBuiltinChip(parts.name);
     }
     const ins = parts.ins.map(({ pin, start }) => ({
         pin,
@@ -2121,7 +2161,14 @@ function parse(code) {
     }));
     const chip = new Chip$1(ins, outs, parts.name);
     for (const wire of parts.parts) {
-        chip.wire(getBuiltinChip(wire.name), wire.wires.map(({ lhs, rhs: { pin } }) => ({ from: pin, to: lhs })));
+        const builtin = getBuiltinChip(wire.name);
+        if (isErr(builtin))
+            return builtin;
+        const wires = wire.wires.map(({ lhs, rhs: { pin } }) => ({
+            from: pin,
+            to: lhs,
+        }));
+        chip.wire(Ok(builtin), wires);
     }
     return Ok(chip);
 }
@@ -2439,7 +2486,10 @@ const Chip = () => {
     let project = localStorage["chip/project"] ?? "01";
     let chips = PROJECTS[project];
     let chipName = localStorage["chip/chip"] ?? "And";
-    let chip = getBuiltinChip(chipName);
+    let maybeChip = getBuiltinChip(chipName);
+    if (isErr(maybeChip))
+        statusLine(display(Err(maybeChip)));
+    let chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
     setTimeout(async function () {
         await setProject(project);
         await setChip(chip.name);
@@ -4012,7 +4062,7 @@ describe("TS Parser Combinator", () => {
             const parser = alt(alpha1(), digit1());
             expect(parser("abc")).toEqual(Ok(["", "abc"]));
             expect(parser("123456")).toEqual(Ok(["", "123456"]));
-            expect(parser(" ")).toEqual(Err({}));
+            expect(parser(" ")).toEqual(Err({ name: "" }));
         });
     });
 });

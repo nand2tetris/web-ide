@@ -6,6 +6,7 @@ import {
   canvas,
   figure,
   header,
+  div,
 } from "@davidsouther/jiffies/dom/html.js";
 import { Memory, SCREEN } from "../simulator/cpu/memory.js";
 
@@ -53,16 +54,20 @@ export const Screen = FC<
     { class: "no-shadow panel" },
     header("Display"),
     figure(
-      {
-        style: {
-          textAlign: "center",
-          borderTop: "2px solid gray",
-          borderLeft: "2px solid gray",
-          borderBottom: "2px solid lightgray",
-          borderRight: "2px solid lightgray"
+      div(
+        {
+          style: {
+            width: "512px",
+            marginInline: "auto",
+            boxSizing: "content-box",
+            borderTop: "2px solid gray",
+            borderLeft: "2px solid gray",
+            borderBottom: "2px solid lightgray",
+            borderRight: "2px solid lightgray",
+          },
         },
-      },
-      screen
+        screen
+      )
     )
   );
 });

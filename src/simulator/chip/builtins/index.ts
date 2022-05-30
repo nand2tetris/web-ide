@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/assert.js";
+import { Err, Ok, Result } from "@davidsouther/jiffies/result.js";
 import { Chip } from "../chip.js";
 import { Add16 } from "./arithmetic/add_16.js";
 import { ALU, ALUNoStat } from "./arithmetic/alu.js";
@@ -11,7 +11,7 @@ import { Demux } from "./logic/demux.js";
 import { Mux, Mux16 } from "./logic/mux.js";
 import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
-import { Or, Or8way } from "./logic/or.js";
+import { Or, Or16, Or8way } from "./logic/or.js";
 import { Xor } from "./logic/xor.js";
 
 export { And, And16 } from "./logic/and.js";
@@ -30,11 +30,13 @@ export const REGISTRY = new Map<string, () => Chip>(
     ["And", And],
     ["And16", And16],
     ["Or", Or],
+    ["Or16", Or16],
+    ["Or8way", Or8way],
     ["XOr", Xor],
+    ["XOr16", Xor],
     ["Mux", Mux],
     ["Mux16", Mux16],
     ["Demux", Demux],
-    ["Or8way", Or8way],
     ["HalfAdder", HalfAdder],
     ["FullAdder", FullAdder],
     ["Add16", Add16],
@@ -51,7 +53,9 @@ export const REGISTRY = new Map<string, () => Chip>(
   ])
 );
 
-export function getBuiltinChip(name: string): Chip {
-  assert(REGISTRY.has(name), `Chip ${name} not in builtin registry`);
-  return REGISTRY.get(name)!();
+export function getBuiltinChip(name: string): Result<Chip> {
+  const chip = REGISTRY.get(name);
+  return chip
+    ? Ok(chip())
+    : Err(new Error(`Chip ${name} not in builtin registry`));
 }

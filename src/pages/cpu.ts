@@ -8,7 +8,6 @@ import { Timer } from "../simulator/timer.js";
 import { Screen } from "../components/screen.js";
 
 import { TickScreen } from "../testing/fill.js";
-import { compileFStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 
 export const CPU = (
   { cpu } = { cpu: new CPUChip({ ROM: new Memory(HACK) }) }
@@ -68,35 +67,33 @@ export const CPU = (
       width: "100%",
       marginInline: "auto",
       paddingRight: "10px",
-      paddingLeft: "10px"
+      paddingLeft: "10px",
     },
     "@media (min-width: 576px)": {
       ".container": {
         maxWidth: "510px",
         paddingRight: "0",
-        paddingLeft: "0"
-      }
+        paddingLeft: "0",
+      },
     },
     "@media (min-width: 768px)": {
       ".container": {
-        maxWidth: "700px"
-      }
+        maxWidth: "700px",
+      },
     },
     "@media (min-width: 992px)": {
       ".container": {
-        maxWidth: "920px"
-      }
+        maxWidth: "920px",
+      },
     },
     "@media (min-width: 1200px)": {
       ".container": {
-        maxWidth: "1130px"
-      }
-    }
+        maxWidth: "1130px",
+      },
+    },
   };
 
   return div(
-    { class: "container" },
-    style(compileFStyle(containerStyles)),
     (runbar = Runbar({ runner }, label(PC, A, D))),
     div(
       { class: "grid" },
@@ -105,8 +102,8 @@ export const CPU = (
           class: "grid",
           style: {
             gridAutoFlow: "column",
-            gridTemplateColumns: "repeat(2, 1fr)"
-          }
+            gridTemplateColumns: "repeat(2, 1fr)",
+          },
         },
         (ROM = MemoryGUI({
           name: "ROM",
@@ -117,9 +114,7 @@ export const CPU = (
         })),
         (RAM = MemoryGUI({ name: "RAM", memory: cpu.RAM, format: "hex" }))
       ),
-      div(
-        (screen = Screen({ memory: cpu.RAM }))
-      )
+      div((screen = Screen({ memory: cpu.RAM })))
     )
   );
 };

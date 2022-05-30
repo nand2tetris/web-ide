@@ -99,40 +99,27 @@ export class SubBus implements Pin {
   }
 }
 
-export class TrueBus extends Bus {
-  constructor(name: string) {
-    super(name, 16);
+export class ConstantBus extends Bus {
+  constructor(name: string, private readonly value: number) {
+    super(name, 16 /* TODO: get high bit index */);
   }
+
   pullHigh(_ = 0) {}
   pullLow(_ = 0) {}
   voltage(_ = 0): Voltage {
-    return HIGH;
+    return (this.busVoltage & 0x1) as Voltage;
   }
 
   set busVoltage(voltage: number) {
     // Noop
   }
   get busVoltage(): number {
-    return 0xffff;
+    return this.value;
   }
 }
 
-export class FalseBus extends Bus {
-  constructor(name: string) {
-    super(name, 16);
-  }
-  pullHigh(_ = 0) {}
-  pullLow(_ = 0) {}
-  voltage(_ = 0): Voltage {
-    return LOW;
-  }
-  set busVoltage(voltage: number) {
-    // Noop
-  }
-  get busVoltage(): number {
-    return 0x0000;
-  }
-}
+export const TRUE_BUS = new ConstantBus("true", 0xffff);
+export const FALSE_BUS = new ConstantBus("false", 0);
 
 export function parseToPin(toPin: string): {
   pin: string;

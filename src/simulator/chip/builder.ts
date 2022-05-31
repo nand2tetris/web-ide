@@ -3,7 +3,7 @@ import { HdlParser } from "../../languages/hdl.js";
 import { ParseError } from "../../languages/parser/base.js";
 import { getBuiltinChip } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
-import { Bus, Chip } from "./chip.js";
+import { Bus, Chip, InSubBus, OutSubBus, Pin } from "./chip.js";
 
 export const Not = () => {
   const not = new Chip(["in"], ["out"], "Not");
@@ -117,17 +117,38 @@ export function parse(code: string): Result<Chip, Error | ParseError> {
     pin,
     start: start == 0 ? 1 : start,
   }));
-  const chip = new Chip(ins, outs, parts.name);
+
+  const buildChip = new Chip(ins, outs, parts.name);
 
   for (const part of parts.parts) {
     const builtin = getBuiltinChip(part.name);
     if (isErr(builtin)) return builtin;
-    const wires = part.wires.map(({ lhs: { pin }, rhs }) => ({
-      from: rhs,
-      to: pin,
-    }));
-    chip.wire(Ok(builtin), wires);
+    const chip = Ok(builtin);
+    const wires = part.wires.map(({ lhs, rhs }) => {
+      const { pin: pinName, start, end } = lhs;
+      let pin: Pin;
+      let BusCtor: { new (p: Pin, s: number, w: number): Bus };
+
+      if (chip.ins.has(pinName)) {
+        pin = chip.ins.get(pinName)!;
+        BusCtor = InSubBus;
+      } else if (chip.outs.has(pinName)) {
+        pin = chip.outs.get(pinName)!;
+        BusCtor = OutSubBus;
+      } else {
+        throw new Error(`Missing pin on part ${part.name}`);
+      }
+      const width = end ? end - start + 1 : 1;
+      if (start == 0 && width == pin.width) {
+        return { to: pinName, from: rhs };
+      }
+      return {
+        to: new BusCtor(pin, start, width),
+        from: rhs,
+      };
+    });
+    buildChip.wire(chip, wires);
   }
 
-  return Ok(chip);
+  return Ok(buildChip);
 }

@@ -248,23 +248,29 @@ export class Chip {
     return this.outs.has(pin);
   }
 
-  wire(chip: Chip, connections: Connection[]) {
-    this.parts.add(chip);
+  wire(part: Chip, connections: Connection[]) {
+    this.parts.add(part);
     for (const { to, from } of connections) {
-      if (chip.isOutPin(nameOf(to))) {
-        const outPin = assertExists(chip.outs.get(to));
+      if (part.isOutPin(nameOf(to))) {
+        const outPin = assertExists(part.outs.get(to));
         const output = this.findPin(nameOf(from), outPin.width);
-        outPin.connect(output);
+        if (to instanceof OutSubBus) {
+          to.connect(output);
+          outPin.connect(to);
+        } else {
+          outPin.connect(output);
+        }
       } else {
         let pin = assertString(nameOf(to));
         const inPin = assertExists(
-          chip.ins.get(pin),
+          part.ins.get(pin),
           () => `Cannot wire to missing pin ${pin}`
         );
-        if (from instanceof InSubBus) {
-          from.connect(inPin);
+        let input = this.findPin(nameOf(from), inPin.width);
+        if (to instanceof InSubBus) {
+          input.connect(to);
+          to.connect(inPin);
         } else {
-          let input = this.findPin(nameOf(from), inPin.width);
           input.connect(inPin);
         }
       }
@@ -272,10 +278,10 @@ export class Chip {
   }
 
   private findPin(from: string, minWidth?: number): Pin {
-    if (from === "True" || from === "1") {
+    if (from.toLowerCase() === "true" || from === "1") {
       return TRUE_BUS;
     }
-    if (from === "false" || from === "0") {
+    if (from.toLowerCase() === "false" || from === "0") {
       return FALSE_BUS;
     }
     if (this.ins.has(from)) {

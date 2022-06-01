@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node --experimental-loader @davidsouther/jiffies/loader.mjs src/main.ts",
     "build": "./build.sh",
+    "format": "npx prettier --write src/",
     "check": "npx tsc --noEmit"
   },
   "author": "",
@@ -15,7 +16,7 @@
     "prettier": "^2.6.2"
   },
   "dependencies": {
-    "@davidsouther/jiffies": "1.0.0",
-    "typescript": "^4.8.0-dev.20220510"
+    "@davidsouther/jiffies": "file:../jiffies",
+    "typescript": "^4.7.1"
   }
 }

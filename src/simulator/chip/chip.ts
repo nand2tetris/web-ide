@@ -201,11 +201,11 @@ export class Chip {
           : parseToPin(inn as string);
       this.ins.insert(new Bus(pin, start));
     }
-    for (const oot of outs) {
+    for (const out of outs) {
       const { pin, start = 1 } =
-        (oot as { pin: string }).pin !== undefined
-          ? (oot as { pin: string; start: number })
-          : parseToPin(oot as string);
+        (out as { pin: string }).pin !== undefined
+          ? (out as { pin: string; start: number })
+          : parseToPin(out as string);
       this.outs.insert(new Bus(pin, start));
     }
   }

@@ -35,7 +35,7 @@ export const Pinout = FC(
                   ? pin.voltage() == 0
                     ? "Low"
                     : "High"
-                  : bin(pin.busVoltage)
+                  : bin(pin.busVoltage, pin.width)
               )
             )
           )

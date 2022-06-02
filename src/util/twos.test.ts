@@ -12,6 +12,8 @@ describe("twos", () => {
     expect(bin(-1)).toBe("1111111111111111");
     expect(bin(256)).toBe("0000000100000000");
 
+    expect(bin(6, 4)).toBe("0110");
+
     expect(dec(0)).toBe("0");
     expect(dec(1)).toBe("1");
     expect(dec(-1)).toBe("-1");

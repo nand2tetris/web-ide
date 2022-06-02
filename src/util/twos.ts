@@ -90,14 +90,14 @@ export function hex(i: number): string {
   return `0x${hu}${hl}${lu}${ll}`;
 }
 
-export function bin(i: number): string {
+export function bin(i: number, precision = 16): string {
   const hu = bits((i & 0xf000) >> 12);
   const hl = bits((i & 0x0f00) >> 8);
   const lu = bits((i & 0x00f0) >> 4);
   const ll = bits(i & 0x000f);
 
   // return `${hu} ${hl} ${lu} ${ll}`;
-  return `${hu}${hl}${lu}${ll}`; // Match the book's formatting
+  return `${hu}${hl}${lu}${ll}`.substring(16 - precision); // Match the book's formatting
 }
 
 export function dec(i: number): string {

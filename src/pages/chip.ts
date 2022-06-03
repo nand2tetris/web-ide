@@ -59,7 +59,8 @@ function makeProjectDropdown(selected: "01" | "02", setProject: Function) {
       },
       selected,
       events: {
-        change: (event) => setProject(event.target?.value as unknown),
+        change: (event: Event) =>
+          setProject((event.target as HTMLSelectElement)?.value),
       },
     },
     {
@@ -84,7 +85,7 @@ function makeChipsDropdown(
       },
       selected,
       events: {
-        change: (event) => setChip(event.target?.value as unknown),
+        change: (event) => setChip((event.target as HTMLSelectElement)?.value),
       },
     },
     chips

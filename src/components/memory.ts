@@ -36,10 +36,11 @@ const MemoryBlock = FC<
 >(
   "memory-block",
   (el, { memory, highlight = -1, editable = false, format, onChange }) => {
-    if (el[State].virtualScroll) {
-      el[State].virtualScroll?.update();
+    const state = (el[State] ??= {});
+    if (state.virtualScroll) {
+      state.virtualScroll?.update();
     } else {
-      el[State].virtualScroll = VirtualScroll({
+      state.virtualScroll = VirtualScroll({
         settings: { count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT },
         get: (o, l) => memory.map((i, v) => [i, v], o, o + l),
         row: ([i, v]) =>
@@ -53,7 +54,7 @@ const MemoryBlock = FC<
           }),
       });
     }
-    return el[State].virtualScroll!;
+    return state.virtualScroll;
   }
 );
 
@@ -67,7 +68,7 @@ const MemoryCell = FC<{
   "memory-cell",
   (
     el,
-    { index, value, highlight = false, editable = false, onChange = () => { } }
+    { index, value, highlight = false, editable = false, onChange = () => {} }
   ) => {
     el.style.display = "flex";
     return [
@@ -95,12 +96,12 @@ const MemoryCell = FC<{
         },
         editable
           ? InlineEdit({
-            value: `${value}`,
-            events: {
-              // @ts-ignore TODO(FC Events)
-              change: (newValue: string) => onChange(index, newValue, value),
-            },
-          })
+              value: `${value}`,
+              events: {
+                // @ts-ignore TODO(FC Events)
+                change: (newValue: string) => onChange(index, newValue, value),
+              },
+            })
           : span(`${value}`)
       ),
     ];
@@ -123,7 +124,7 @@ const Memory = FC<
     { name = "Memory", highlight = -1, editable = true, memory, format = "dec" }
   ) => {
     el.style.width = "100%";
-    const state = el[State];
+    const state = (el[State] ??= {});
     state.format ??= format;
     const setFormat = (f: Format) => {
       state.format = f;

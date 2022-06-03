@@ -1,5 +1,4 @@
 import { assertExists } from "@davidsouther/jiffies/assert.js";
-import { Updatable } from "@davidsouther/jiffies/dom/dom.js";
 import { FC, State } from "@davidsouther/jiffies/dom/fc.js";
 import {
   article,
@@ -31,10 +30,11 @@ function set(data: Uint8ClampedArray, x: number, y: number, value: COLOR) {
 
 export const Screen = FC<
   { memory: Memory },
-  { screen: Updatable<HTMLCanvasElement>; ctx: CanvasRenderingContext2D }
+  { screen: HTMLCanvasElement; ctx: CanvasRenderingContext2D }
 >("hack-screen", (el, { memory }) => {
-  const screen = (el[State].screen ??= canvas({ width: 512, height: 256 }));
-  const ctx = (el[State].ctx ??= screen.getContext("2d") ?? undefined);
+  const state = (el[State] ??= {});
+  const screen = (state.screen ??= canvas({ width: 512, height: 256 }));
+  const ctx = (state.ctx ??= screen.getContext("2d") ?? undefined);
 
   if (ctx) {
     const image = assertExists(

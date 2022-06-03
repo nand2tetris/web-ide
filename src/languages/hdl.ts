@@ -33,7 +33,7 @@ export interface PinParts {
 
 export interface Wire {
   lhs: PinParts;
-  rhs: string;
+  rhs: PinParts;
 }
 
 export interface Part {
@@ -61,10 +61,10 @@ function pin(toPin: StringLike): IResult<PinParts> {
   ]);
 }
 
-const wireParser = separated(hdlWs(pin), token("="), hdlIdentifier);
-const wire: Parser<[PinParts, string]> = (i) => wireParser(i);
+const wireParser = separated(hdlWs(pin), token("="), hdlWs(pin));
+const wire: Parser<[PinParts, PinParts]> = (i) => wireParser(i);
 const wireListParser = list(wire, tag(","));
-const wireList: Parser<[PinParts, string][]> = (i) => wireListParser(i);
+const wireList: Parser<[PinParts, PinParts][]> = (i) => wireListParser(i);
 
 const partParser = tuple(
   hdlIdentifier,
@@ -78,7 +78,7 @@ const part: Parser<Part> = (i) => {
   const [input, [name, wires]] = Ok(parse);
   const part: Part = {
     name: name.toString(),
-    wires: wires.map(([lhs, rhs]) => ({ lhs, rhs: rhs.toString() })),
+    wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
   };
   return Ok([input, part]);
 };

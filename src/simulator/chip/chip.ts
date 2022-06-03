@@ -254,7 +254,7 @@ export class Chip {
       if (part.isOutPin(nameOf(to))) {
         const outPin = assertExists(part.outs.get(to));
         const output = this.findPin(nameOf(from), outPin.width);
-        if (to instanceof OutSubBus) {
+        if (to instanceof Bus) {
           to.connect(output);
           outPin.connect(to);
         } else {
@@ -267,7 +267,11 @@ export class Chip {
           () => `Cannot wire to missing pin ${pin}`
         );
         let input = this.findPin(nameOf(from), inPin.width);
-        if (to instanceof InSubBus) {
+        if (from instanceof Bus) {
+          input.connect(from);
+          input = from;
+        }
+        if (to instanceof Bus) {
           input.connect(to);
           to.connect(inPin);
         } else {

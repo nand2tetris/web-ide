@@ -1,9 +1,9 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
-import { HdlParser } from "../../languages/hdl.js";
+import { HdlParser, PinParts } from "../../languages/hdl.js";
 import { ParseError } from "../../languages/parser/base.js";
 import { getBuiltinChip } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
-import { Bus, Chip, InSubBus, OutSubBus, Pin } from "./chip.js";
+import { Bus, Chip, Connection, InSubBus, OutSubBus, Pin } from "./chip.js";
 
 export const Not = () => {
   const not = new Chip(["in"], ["out"], "Not");
@@ -15,6 +15,15 @@ export const Not = () => {
   ]);
 
   return not;
+};
+
+export const Not16 = () => {
+  const not16 = new Chip(["in[16]"], ["out[16]"], "Not16");
+
+  not16.wire(Not(), [{ from: new OutSubBus(not16.in(), 0, 1), to: "in" }]);
+  not16.wire(Not(), [{ from: new OutSubBus(not16.in(), 1, 1), to: "in" }]);
+
+  return not16;
 };
 
 export const And = () => {
@@ -100,6 +109,38 @@ export const Xor = () => {
   return xorChip;
 };
 
+enum PinDirection {
+  LHS,
+  RHS,
+}
+
+function makePin(
+  chip: Chip,
+  part: PinParts,
+  direction: PinDirection
+): string | Pin {
+  let BusCtor: { new (p: Pin, s: number, w: number): Bus };
+  const { pin: name, start, end } = part;
+  let width = end ? end - start + 1 : 1;
+  let pin: Pin;
+  if (chip.ins.has(name)) {
+    pin = chip.ins.get(name)!;
+    BusCtor = direction == PinDirection.LHS ? InSubBus : OutSubBus;
+  } else if (chip.outs.has(name)) {
+    pin = chip.outs.get(name)!;
+    BusCtor = direction == PinDirection.LHS ? OutSubBus : InSubBus;
+  } else {
+    pin = chip.pins.emplace(name, width);
+    BusCtor = direction == PinDirection.LHS ? InSubBus : OutSubBus;
+  }
+
+  // Ensure pin has appropriate width
+
+  return start == 0 && width == pin.width
+    ? name
+    : new BusCtor(pin, start, width);
+}
+
 export function parse(code: string): Result<Chip, Error | ParseError> {
   const parsed = HdlParser(code);
   if (isErr(parsed)) return parsed;
@@ -123,32 +164,22 @@ export function parse(code: string): Result<Chip, Error | ParseError> {
   for (const part of parts.parts) {
     const builtin = getBuiltinChip(part.name);
     if (isErr(builtin)) return builtin;
-    const chip = Ok(builtin);
-    const wires = part.wires.map(({ lhs, rhs }) => {
-      const { pin: pinName, start, end } = lhs;
-      let pin: Pin;
-      let BusCtor: { new (p: Pin, s: number, w: number): Bus };
+    const partChip = Ok(builtin);
 
-      if (chip.ins.has(pinName)) {
-        pin = chip.ins.get(pinName)!;
-        BusCtor = InSubBus;
-      } else if (chip.outs.has(pinName)) {
-        pin = chip.outs.get(pinName)!;
-        BusCtor = OutSubBus;
-      } else {
-        throw new Error(`Missing pin on part ${part.name}`);
-      }
-      const width = end ? end - start + 1 : 1;
-      if (start == 0 && width == pin.width) {
-        return { to: pinName, from: rhs };
-      }
-      return {
-        to: new BusCtor(pin, start, width),
-        from: rhs,
-      };
+    const wires = part.wires.map<Connection>(({ lhs, rhs }) => {
+      const toPin = makePin(partChip, lhs, PinDirection.LHS);
+      const fromPin = makePin(partChip, rhs, PinDirection.RHS);
+
+      return { to: toPin, from: fromPin };
     });
-    buildChip.wire(chip, wires);
+
+    buildChip.wire(partChip, wires);
   }
 
   return Ok(buildChip);
 }
+
+export const TEST_ONLY = {
+  makePin,
+  PinDirection,
+};

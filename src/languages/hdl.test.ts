@@ -43,29 +43,61 @@ describe("hdl language", () => {
   });
 
   it("parses pin wiring", () => {
-    let parsed: IResult<[PinParts, StringLike]>;
+    let parsed: IResult<[PinParts, PinParts]>;
 
     parsed = TEST_ONLY.wire("a=a");
-    expect(parsed).toEqual(Ok(["", [{ pin: "a", start: 0, end: 0 }, "a"]]));
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "a", start: 0, end: 0 },
+          { pin: "a", start: 0, end: 0 },
+        ],
+      ])
+    );
 
     parsed = TEST_ONLY.wire("b = /* to */ a // things");
-    expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, "a"]]));
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "b", start: 0, end: 0 },
+          { pin: "a", start: 0, end: 0 },
+        ],
+      ])
+    );
 
     // parsed = TEST_ONLY.wire("b = 0");
-    // expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, "0"]]));
+    // expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, {pin: "0", start: 0, end: 0}]]));
 
     parsed = TEST_ONLY.wire("b = False");
-    expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, "False"]]));
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "b", start: 0, end: 0 },
+          { pin: "False", start: 0, end: 0 },
+        ],
+      ])
+    );
 
     parsed = TEST_ONLY.wire("b = True");
-    expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, "True"]]));
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "b", start: 0, end: 0 },
+          { pin: "True", start: 0, end: 0 },
+        ],
+      ])
+    );
 
     // parsed = TEST_ONLY.wire("b = Foo");
     // expect(isErr(parsed)).toBe(true);
   });
 
   it("parses a list of pins", () => {
-    let parsed: IResult<[PinParts, StringLike][]>;
+    let parsed: IResult<[PinParts, PinParts][]>;
     let parser = list(TEST_ONLY.wire, tag(","));
 
     parsed = parser("a=a , b=b");
@@ -73,20 +105,66 @@ describe("hdl language", () => {
       Ok([
         "",
         [
-          [{ pin: "a", start: 0, end: 0 }, "a"],
-          [{ pin: "b", start: 0, end: 0 }, "b"],
+          [
+            { pin: "a", start: 0, end: 0 },
+            { pin: "a", start: 0, end: 0 },
+          ],
+          [
+            { pin: "b", start: 0, end: 0 },
+            { pin: "b", start: 0, end: 0 },
+          ],
         ],
       ])
     );
   });
 
   it("parses bus pins", () => {
-    let parsed: IResult<[PinParts, StringLike]>;
+    let parsed: IResult<[PinParts, PinParts]>;
     let parser = TEST_ONLY.wire;
 
     parsed = parser("a[2..4]=b");
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "a", start: 2, end: 4 },
+          { pin: "b", start: 0, end: 0 },
+        ],
+      ])
+    );
 
-    expect(parsed).toEqual(Ok(["", [{ pin: "a", start: 2, end: 4 }, "b"]]));
+    parsed = parser("a=b[0]");
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "a", start: 0, end: 0 },
+          { pin: "b", start: 0, end: 0 },
+        ],
+      ])
+    );
+
+    parsed = parser("a=b[2]");
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "a", start: 0, end: 0 },
+          { pin: "b", start: 2, end: 0 },
+        ],
+      ])
+    );
+
+    parsed = parser("a[2..4]=b[10..12]");
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        [
+          { pin: "a", start: 2, end: 4 },
+          { pin: "b", start: 10, end: 12 },
+        ],
+      ])
+    );
   });
 
   it("parses a part", () => {
@@ -99,9 +177,18 @@ describe("hdl language", () => {
         {
           name: "Nand",
           wires: [
-            { lhs: { pin: "a", start: 0, end: 0 }, rhs: "a" },
-            { lhs: { pin: "b", start: 0, end: 0 }, rhs: "b" },
-            { lhs: { pin: "out", start: 0, end: 0 }, rhs: "out" },
+            {
+              lhs: { pin: "a", start: 0, end: 0 },
+              rhs: { pin: "a", start: 0, end: 0 },
+            },
+            {
+              lhs: { pin: "b", start: 0, end: 0 },
+              rhs: { pin: "b", start: 0, end: 0 },
+            },
+            {
+              lhs: { pin: "out", start: 0, end: 0 },
+              rhs: { pin: "out", start: 0, end: 0 },
+            },
           ],
         },
       ])
@@ -119,16 +206,31 @@ describe("hdl language", () => {
           {
             name: "Not",
             wires: [
-              { lhs: { pin: "a", start: 0, end: 0 }, rhs: "a" },
-              { lhs: { pin: "o", start: 0, end: 0 }, rhs: "o" },
+              {
+                lhs: { pin: "a", start: 0, end: 0 },
+                rhs: { pin: "a", start: 0, end: 0 },
+              },
+              {
+                lhs: { pin: "o", start: 0, end: 0 },
+                rhs: { pin: "o", start: 0, end: 0 },
+              },
             ],
           },
           {
             name: "And",
             wires: [
-              { lhs: { pin: "b", start: 0, end: 0 }, rhs: "b" },
-              { lhs: { pin: "c", start: 0, end: 0 }, rhs: "c" },
-              { lhs: { pin: "i", start: 0, end: 0 }, rhs: "i" },
+              {
+                lhs: { pin: "b", start: 0, end: 0 },
+                rhs: { pin: "b", start: 0, end: 0 },
+              },
+              {
+                lhs: { pin: "c", start: 0, end: 0 },
+                rhs: { pin: "c", start: 0, end: 0 },
+              },
+              {
+                lhs: { pin: "i", start: 0, end: 0 },
+                rhs: { pin: "i", start: 0, end: 0 },
+              },
             ],
           },
         ],
@@ -193,9 +295,18 @@ describe("hdl language", () => {
             {
               name: "Nand",
               wires: [
-                { lhs: { pin: "a", start: 0, end: 0 }, rhs: "in" },
-                { lhs: { pin: "b", start: 0, end: 0 }, rhs: "in" },
-                { lhs: { pin: "out", start: 0, end: 0 }, rhs: "out" },
+                {
+                  lhs: { pin: "a", start: 0, end: 0 },
+                  rhs: { pin: "in", start: 0, end: 0 },
+                },
+                {
+                  lhs: { pin: "b", start: 0, end: 0 },
+                  rhs: { pin: "in", start: 0, end: 0 },
+                },
+                {
+                  lhs: { pin: "out", start: 0, end: 0 },
+                  rhs: { pin: "out", start: 0, end: 0 },
+                },
               ],
             },
           ],

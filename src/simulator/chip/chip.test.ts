@@ -136,6 +136,18 @@ describe("Chip", () => {
   });
 
   describe("wide", () => {
+    describe("Not16", () => {
+      it("evaluates a not16 gate", () => {
+        const not16 = make.Not16();
+
+        const inn = not16.in();
+
+        inn.busVoltage = 0b00;
+        not16.eval();
+        expect(not16.out().busVoltage).toBe(0b11);
+      });
+    });
+
     describe("bus voltage", () => {
       it("sets and returns wide busses", () => {
         const pin = new Bus("wide", 16);
@@ -160,41 +172,62 @@ describe("Chip", () => {
     describe("and16", () => {});
   });
   describe("SubBus", () => {
-    it("assigns output inside wide busses", () => {
-      // From figure A2.2, page 287, 2nd edition
-      class Not8 extends Chip {
-        constructor() {
-          super(["in[8]"], ["out[8]"]);
-        }
-
-        eval() {
-          const inn = this.in().busVoltage;
-          const out = ~inn & 0xff;
-          this.out().busVoltage = out;
-        }
+    class Not8 extends Chip {
+      constructor() {
+        super(["in[8]"], ["out[8]"]);
       }
+
+      eval() {
+        const inn = this.in().busVoltage;
+        const out = ~inn & 0xff;
+        this.out().busVoltage = out;
+      }
+    }
+
+    it("assigns input inside wide busses", () => {
       class Foo extends Chip {
+        readonly not8 = new Not8();
         constructor() {
           super([], []);
-          const not8 = new Not8();
-          this.parts.add(not8);
-          this.pins.insert(new ConstantBus("six", 0b110));
-          // in[0..1] = true
-          TRUE_BUS.connect(new InSubBus(not8.in(), 0, 2));
-          // in[3..5] = six, 110
-          this.pins.get("six")?.connect(new InSubBus(not8.in(), 3, 3));
-          // in[7] = true
-          TRUE_BUS.connect(new InSubBus(not8.in(), 7, 1));
-          // out[3..7] = out1
+          this.parts.add(this.not8);
+          this.pins.insert(new ConstantBus("pal", 0b1010_1100_0011_0101));
+          this.pins.get("pal")?.connect(new OutSubBus(this.not8.in(), 4, 8));
           this.pins.emplace("out1", 5);
           const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
-          not8.out().connect(out1Bus);
+          this.not8.out().connect(out1Bus);
         }
       }
 
       const foo = new Foo();
       foo.eval();
-      expect([...foo.parts][0].in().busVoltage).toBe(0b10110011);
+      expect(foo.not8.in().busVoltage).toEqual(0b1100_0011);
+      expect(foo.pin("out1")?.busVoltage).toEqual(0b00111);
+    });
+
+    it("assigns output inside wide busses", () => {
+      // From figure A2.2, page 287, 2nd edition
+      class Foo extends Chip {
+        readonly not8 = new Not8();
+        constructor() {
+          super([], []);
+          this.parts.add(this.not8);
+          this.pins.insert(new ConstantBus("six", 0b110));
+          // in[0..1] = true
+          TRUE_BUS.connect(new InSubBus(this.not8.in(), 0, 2));
+          // in[3..5] = six, 110
+          this.pins.get("six")?.connect(new InSubBus(this.not8.in(), 3, 3));
+          // in[7] = true
+          TRUE_BUS.connect(new InSubBus(this.not8.in(), 7, 1));
+          // out[3..7] = out1
+          this.pins.emplace("out1", 5);
+          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
+          this.not8.out().connect(out1Bus);
+        }
+      }
+
+      const foo = new Foo();
+      foo.eval();
+      expect(foo.not8.in().busVoltage).toBe(0b10110011);
       expect(foo.pin("out1").busVoltage).toBe(0b01001);
     });
   });

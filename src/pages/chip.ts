@@ -31,7 +31,7 @@ import { ChipTest } from "../simulator/tst.js";
 import { compare } from "../simulator/compare.js";
 import { DiffPanel } from "../components/diff.js";
 
-const PROJECTS: Record<"01" | "02", string[]> = {
+const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   "01": [
     "Not",
     "And",
@@ -43,12 +43,14 @@ const PROJECTS: Record<"01" | "02", string[]> = {
     "And16",
     "Or16",
     "Mux16",
-    // "Mux4way16",
-    // "DMux4way",
-    // "DMux8way",
+    "Mux4way16",
+    "Mux8way16",
+    "DMux4way",
+    "DMux8way",
     "Or8way",
   ],
   "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
+  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
 };
 
 function makeProjectDropdown(selected: "01" | "02", setProject: Function) {

@@ -17,7 +17,7 @@ export interface TstSetOperation {
 }
 
 export interface TstEvalOperation {
-  op: "eval";
+  op: "eval" | "tick" | "tock";
 }
 
 export interface TstOutputOperation {
@@ -26,7 +26,7 @@ export interface TstOutputOperation {
 
 export interface TstOutputSpec {
   id: string;
-  style: "D" | "X" | "B";
+  style: "D" | "X" | "B" | "S";
   width: number;
   lpad: number;
   rpad: number;
@@ -76,6 +76,8 @@ const set: Parser<TstSetOperation> = (i) => setParser(i);
 
 const tstOp = alt<TstOperation>(
   set,
+  valueFn(() => ({ op: "tick" }), token("tick")),
+  valueFn(() => ({ op: "tock" }), token("tock")),
   valueFn(() => ({ op: "eval" }), token("eval")),
   valueFn(() => ({ op: "output" }), token("output"))
 );
@@ -86,7 +88,7 @@ const tstOpLineParser = map(
 
 const tstOutputFormatParser = tuple(
   identifier(),
-  opt(preceded(tag("%"), alt(tag("X"), tag("B"), tag("D")))),
+  opt(preceded(tag("%"), alt(tag("X"), tag("B"), tag("D"), tag("S")))),
   tag(/\d+\.\d+\.\d+/)
 );
 const tstOutputFormat: Parser<TstOutputSpec> = map(

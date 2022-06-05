@@ -212,6 +212,13 @@ export class Chip {
   pins = new Pins();
   parts = new Set<Chip>();
 
+  get clocked() {
+    for (const part of this.parts) {
+      if (part.clocked) return true;
+    }
+    return false;
+  }
+
   constructor(
     ins: (string | { pin: string; width: number })[],
     outs: (string | { pin: string; width: number })[],

@@ -12,9 +12,9 @@ import {
 } from "./tst.js";
 
 class OutputTest extends Test {
-  private readonly vars: Map<string, number>;
+  private readonly vars: Map<string, number | string>;
 
-  constructor(init: [string, number][]) {
+  constructor(init: [string, number | string][]) {
     super();
     this.vars = new Map(init);
   }
@@ -22,7 +22,7 @@ class OutputTest extends Test {
   hasVar(variable: string | number): boolean {
     return this.vars.has(`${variable}`);
   }
-  getVar(variable: string | number): number {
+  getVar(variable: string | number): number | string {
     return this.vars.get(`${variable}`) ?? 0;
   }
   setVar(variable: string, value: number): void {
@@ -33,6 +33,7 @@ class OutputTest extends Test {
 describe("Test Output Handler", () => {
   const state = cleanState(() => ({
     test: new OutputTest([
+      ["time", "14+"],
       ["a", 1],
       ["b", 20],
       ["in", 0],
@@ -86,5 +87,11 @@ describe("Test Output Handler", () => {
     const outB = new Output("b", "B", 16, 1, 1);
     const b = outB.header(state.test);
     expect(b).toEqual("        b         ");
+  });
+
+  it("does not center %S", () => {
+    const outTime = new Output("time", "S", 6, 1, 1);
+    const time = outTime.print(state.test);
+    expect(`'${time}'`).toEqual("' 14+    '");
   });
 });

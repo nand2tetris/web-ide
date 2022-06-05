@@ -301,14 +301,14 @@ export class Chip {
 
 export class Low extends Chip {
   constructor() {
-    super([], ["out"]);
+    super([], []);
     this.outs.insert(new FalseBus("out"));
   }
 }
 
 export class High extends Chip {
   constructor() {
-    super([], ["out"]);
+    super([], []);
     this.outs.insert(new TrueBus("out"));
   }
 }

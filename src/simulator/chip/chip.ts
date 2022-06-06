@@ -395,26 +395,6 @@ export interface Connection {
   from: PinSide;
 }
 
-export class DFF extends Chip {
-  private t: Voltage = LOW;
-
-  constructor() {
-    super(["in"], ["out"]);
-  }
-
-  tick() {
-    // Read in into t
-    this.t = this.in().voltage();
-    this.eval();
-  }
-
-  tock() {
-    // write t into out
-    this.out().pull(this.t);
-    this.eval();
-  }
-}
-
 export type Pinout = Record<string, string>;
 export interface SerializedChip {
   id: number;

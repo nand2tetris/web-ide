@@ -3,7 +3,6 @@ import {
   Bus,
   Chip,
   ConstantBus,
-  DFF,
   HIGH,
   InSubBus,
   LOW,
@@ -15,6 +14,7 @@ import {
 import { Nand } from "./builtins/logic/nand.js";
 import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { bin } from "../../util/twos.js";
+import { DFF } from "./builtins/sequential/dff.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {

@@ -24,8 +24,8 @@ import { Timer } from "../simulator/timer.js";
 import { Chip as SimChip } from "../simulator/chip/chip.js";
 import * as make from "../simulator/chip/builder.js";
 import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
-import { tstParser } from "../languages/tst.js";
-import { Span } from "../languages/parser/base.js";
+import { Tst, tstParser } from "../languages/tst.js";
+import { IResult } from "../languages/parser/base.js";
 import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
 import { compare } from "../simulator/compare.js";
@@ -207,10 +207,14 @@ export const Chip = () => {
     chipsDropdown.update(makeChipsDropdown(chipName, chips, setChip));
   }
 
-  function runTest() {
-    const tst = tstParser(new Span(tstTextarea.value));
+  async function runTest() {
     outTextarea.value = "";
     diffPanel.update(CLEAR);
+
+    const tst = await new Promise<IResult<Tst>>((r) =>
+      r(tstParser(tstTextarea.value))
+    );
+
     if (isErr(tst)) {
       statusLine(display(Err(tst)));
       return;
@@ -218,11 +222,20 @@ export const Chip = () => {
     statusLine("Parsed tst");
 
     const test = ChipTest.from(Ok(tst)[1]).with(chip);
-    test.run();
+
+    await new Promise<void>((r) => {
+      test.run();
+      r();
+    });
+
     outTextarea.value = test.log();
     setState();
-    const cmp = cmpParser(new Span(cmpTextarea.value));
-    const out = cmpParser(new Span(outTextarea.value));
+
+    const [cmp, out] = await Promise.all([
+      new Promise<IResult<string[][]>>((r) => r(cmpParser(cmpTextarea.value))),
+      new Promise<IResult<string[][]>>((r) => r(cmpParser(outTextarea.value))),
+    ]);
+
     if (isErr(cmp)) {
       statusLine(`Error parsing cmp file!`);
       return;
@@ -231,6 +244,7 @@ export const Chip = () => {
       statusLine(`Error parsing out file!`);
       return;
     }
+
     const diffs = compare(Ok(cmp)[1], Ok(out)[1]);
     diffPanel.update({ diffs });
   }

@@ -123,7 +123,11 @@ export const Chip = () => {
 
   const chipsDropdown = span();
   const projectDropdown = span();
-  const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
+  const inPinout = Pinout({
+    pins: chip.ins,
+    toggle: onToggle,
+    clocked: chip.clocked,
+  });
   const outPinout = Pinout({ pins: chip.outs });
   const pinsPinout = Pinout({ pins: chip.pins });
   const hdlTextarea = textarea({ class: "font-monospace flex-1", rows: 10 });
@@ -162,7 +166,7 @@ export const Chip = () => {
   const runbar = Runbar({ runner });
 
   function setState() {
-    inPinout.update({ pins: chip.ins });
+    inPinout.update({ pins: chip.ins, clocked: chip.clocked });
     outPinout.update({ pins: chip.outs });
     pinsPinout.update({ pins: chip.pins });
     outTextarea.update("");

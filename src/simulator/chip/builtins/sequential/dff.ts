@@ -2,6 +2,9 @@ import { Chip, LOW, Voltage } from "../../chip.js";
 
 export class DFF extends Chip {
   private t: Voltage = LOW;
+  get clocked(): boolean {
+    return true;
+  }
 
   constructor() {
     super(["in"], ["out"]);

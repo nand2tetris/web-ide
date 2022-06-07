@@ -1,36 +1,8 @@
-import { assert, checkExhaustive } from "@davidsouther/jiffies/assert.js";
+import { checkExhaustive } from "@davidsouther/jiffies/assert.js";
 import { Tst, TstOutputSpec } from "../languages/tst.js";
 import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip.js";
+import { Clock } from "./chip/clock.js";
 import { Output } from "./output.js";
-
-class TstClock {
-  private level = LOW;
-  private ticks = 0;
-
-  reset() {
-    this.ticks = 0;
-  }
-
-  tick() {
-    assert(this.level == LOW, "Can only tick up from LOG");
-    this.level = HIGH;
-  }
-
-  tock() {
-    assert(this.level == HIGH, "Can only tock down from HIGH");
-    this.level = LOW;
-    this.ticks += 1;
-  }
-
-  eval() {
-    this.tick();
-    this.tock();
-  }
-
-  toString() {
-    return `${this.ticks}${this.level == HIGH ? "+" : ""}`;
-  }
-}
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
@@ -87,7 +59,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
 
 export class ChipTest extends Test<ChipTestInstruction> {
   private chip = new Low();
-  private clock = new TstClock();
+  private clock = Clock.get();
 
   static from(tst: Tst): ChipTest {
     const test = new ChipTest();
@@ -171,6 +143,11 @@ export class ChipTest extends Test<ChipTestInstruction> {
   tock(): void {
     this.clock.tock();
     this.chip.tock();
+  }
+
+  run(): void {
+    Clock.get().reset();
+    super.run();
   }
 }
 

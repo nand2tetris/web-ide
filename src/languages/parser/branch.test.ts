@@ -10,7 +10,12 @@ describe("TS Parser Combinator", () => {
 
       expect(parser("abc")).toEqual(Ok(["", "abc"]));
       expect(parser("123456")).toEqual(Ok(["", "123456"]));
-      expect(parser(" ")).toEqual(Err({ name: "" }));
+      expect(parser(" ")).toEqual(
+        Err({
+          context: { message: "alt did not match any branches.", span: " " },
+          name: "ParseError",
+        })
+      );
     });
   });
 });

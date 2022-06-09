@@ -1,15 +1,7 @@
 import { Select } from "@davidsouther/jiffies/components/select.js";
 import { DenormChildren } from "@davidsouther/jiffies/dom/dom.js";
 import { FC } from "@davidsouther/jiffies/dom/fc.js";
-import {
-  a,
-  button,
-  div,
-  i,
-  li,
-  nav,
-  ul,
-} from "@davidsouther/jiffies/dom/html.js";
+import { a, div, i } from "@davidsouther/jiffies/dom/html.js";
 import { Timer } from "../simulator/timer.js";
 
 const icon = (icon: string) => i({ class: `icon-${icon}` });
@@ -34,6 +26,7 @@ export const Runbar = FC(
       ),
       a(
         {
+          href: "#",
           role: "button",
           events: {
             click: (e) => {
@@ -46,6 +39,7 @@ export const Runbar = FC(
       ),
       a(
         {
+          href: "#",
           role: "button",
           events: {
             click: (e) => {

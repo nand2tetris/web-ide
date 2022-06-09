@@ -20,10 +20,6 @@ export interface Pin {
   connect(pin: Pin): void;
 }
 
-function nameOf(pin: string | Pin): string {
-  return typeof pin === "string" ? pin : pin.name;
-}
-
 export class Bus implements Pin {
   state: Voltage[];
   next: Pin[] = [];
@@ -174,12 +170,12 @@ export class Pins {
     }
   }
 
-  has(pin: string | Pin): boolean {
-    return this.map.has(nameOf(pin));
+  has(pin: string): boolean {
+    return this.map.has(pin);
   }
 
-  get(pin: string | Pin): Pin | undefined {
-    return this.map.get(nameOf(pin));
+  get(pin: string): Pin | undefined {
+    return this.map.get(pin);
   }
 
   entries(): Iterable<Pin> {
@@ -251,31 +247,34 @@ export class Chip {
   wire(part: Chip, connections: Connection[]) {
     this.parts.add(part);
     for (const { to, from } of connections) {
-      if (part.isOutPin(nameOf(to))) {
-        const outPin = assertExists(part.outs.get(to));
-        const output = this.findPin(nameOf(from), outPin.width);
-        if (to instanceof Bus) {
-          to.connect(output);
-          outPin.connect(to);
-        } else {
+      let pin = assertString(to.name);
+      if (part.isOutPin(to.name)) {
+        const outPin = assertExists(
+          part.outs.get(pin),
+          () => `Cannot wire to missing pin ${pin}`
+        );
+        const output = this.findPin(from.name, outPin.width);
+
+        if (from.start == 0 && outPin.width == output.width) {
           outPin.connect(output);
+        } else {
+          const outBus = new OutSubBus(output, to.start, to.width);
+          outPin.connect(outBus);
+          outBus.connect(output);
         }
       } else {
-        let pin = assertString(nameOf(to));
         const inPin = assertExists(
           part.ins.get(pin),
           () => `Cannot wire to missing pin ${pin}`
         );
-        let input = this.findPin(nameOf(from), inPin.width);
-        if (from instanceof Bus) {
-          input.connect(from);
-          input = from;
-        }
-        if (to instanceof Bus) {
-          input.connect(to);
-          to.connect(inPin);
-        } else {
+        let input = this.findPin(from.name, inPin.width);
+
+        if (from.start == 0 && inPin.width == input.width) {
           input.connect(inPin);
+        } else {
+          const inBus = new InSubBus(inPin, to.start, to.width);
+          input.connect(inBus);
+          inBus.connect(inPin);
         }
       }
     }
@@ -318,30 +317,28 @@ export class Chip {
 export class Low extends Chip {
   constructor() {
     super([], []);
-<<<<<<< HEAD
-    this.outs.insert(new FalseBus("out"));
-=======
     this.outs.insert(FALSE_BUS);
->>>>>>> In and Out subbusses index within a chip
   }
 }
 
 export class High extends Chip {
   constructor() {
     super([], []);
-<<<<<<< HEAD
-    this.outs.insert(new TrueBus("out"));
-=======
     this.outs.insert(TRUE_BUS);
->>>>>>> In and Out subbusses index within a chip
   }
+}
+
+export interface PinSide {
+  name: string;
+  start: number;
+  width: number;
 }
 
 export interface Connection {
   // To is the part side
-  to: string | Pin;
+  to: PinSide;
   // From is the chip side
-  from: string | Pin;
+  from: PinSide;
 }
 
 export class DFF extends Chip {

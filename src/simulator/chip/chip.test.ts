@@ -12,9 +12,8 @@ import {
   InSubBus,
   OutSubBus,
 } from "./chip.js";
-import * as make from "./builder.js";
-import { Not16 } from "./busses.js";
 import { Nand } from "./builtins/logic/nand.js";
+import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -50,7 +49,7 @@ describe("Chip", () => {
 
     describe("not", () => {
       it("evaluates a not gate", () => {
-        const notChip = make.Not();
+        const notChip = new Not();
 
         notChip.eval();
         expect(notChip.out().voltage()).toBe(HIGH);
@@ -63,7 +62,7 @@ describe("Chip", () => {
 
     describe("and", () => {
       it("evaluates an and gate", () => {
-        const andChip = make.And();
+        const andChip = new And();
 
         const a = andChip.in("a")!;
         const b = andChip.in("b")!;
@@ -87,7 +86,7 @@ describe("Chip", () => {
 
     describe("or", () => {
       it("evaluates an or gate", () => {
-        const orChip = make.Or();
+        const orChip = new Or();
 
         const a = orChip.in("a")!;
         const b = orChip.in("b")!;
@@ -112,7 +111,7 @@ describe("Chip", () => {
 
     describe("xor", () => {
       it("evaluates an xor gate", () => {
-        const xorChip = make.Xor();
+        const xorChip = new Xor();
 
         const a = xorChip.in("a")!;
         const b = xorChip.in("b")!;
@@ -138,13 +137,17 @@ describe("Chip", () => {
   describe("wide", () => {
     describe("Not16", () => {
       it("evaluates a not16 gate", () => {
-        const not16 = make.Not16();
+        const not16 = new Not16();
 
         const inn = not16.in();
 
-        inn.busVoltage = 0b00;
+        inn.busVoltage = 0x0;
         not16.eval();
-        expect(not16.out().busVoltage).toBe(0b11);
+        expect(not16.out().busVoltage).toBe(0xffff);
+
+        inn.busVoltage = 0xf00f;
+        not16.eval();
+        expect(not16.out().busVoltage).toBe(0x0ff0);
       });
     });
 
@@ -162,7 +165,12 @@ describe("Chip", () => {
       it("creates wide busses internally", () => {
         const chip = new Chip([], [], "WithWide");
 
-        chip.wire(Not16(), [{ to: "out", from: "a" }]);
+        chip.wire(new Not16(), [
+          {
+            to: { name: "out", start: 0, width: 16 },
+            from: { name: "a", start: 0, width: 16 },
+          },
+        ]);
 
         const width = chip.pins.get("a")?.width;
         expect(width).toBe(16);

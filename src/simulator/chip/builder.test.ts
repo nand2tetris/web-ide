@@ -1,31 +1,10 @@
 import { display } from "@davidsouther/jiffies/display.js";
 import { unwrap } from "@davidsouther/jiffies/result.js";
 import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
-import { parse, TEST_ONLY } from "./builder.js";
-import { getBuiltinChip } from "./builtins/index.js";
-import { Chip, HIGH, InSubBus, LOW } from "./chip.js";
+import { parse } from "./builder.js";
+import { Chip, HIGH, LOW } from "./chip.js";
 
 describe("Chip Builder", () => {
-  it("makes wire connections", () => {
-    const not16 = unwrap(getBuiltinChip("Not16"));
-    {
-      const lhs = { pin: "a", start: 0, end: 7 };
-      const rhs = { pin: "b", start: 4, end: 11 };
-
-      const toPin = TEST_ONLY.makePin(not16, lhs, TEST_ONLY.PinDirection.LHS);
-      const fromPin = TEST_ONLY.makePin(
-        not16,
-        rhs,
-        TEST_ONLY.PinDirection.RHS
-      ) as InSubBus;
-
-      expect(toPin).toBe("a");
-      expect(fromPin.name).toBe("b");
-      expect(fromPin.start).toBe(4);
-      expect(fromPin.width).toBe(8);
-    }
-  });
-
   it("builds a chip from a string", () => {
     const nand = unwrap(
       parse(`CHIP Not { IN in; OUT out; PARTS: Nand(a=in, b=in, out=out); }`)

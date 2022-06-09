@@ -1,17 +1,20 @@
 import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
 import {
-  Chip,
-  DFF,
-  parseToPin,
-  HIGH,
-  LOW,
-  printChip,
   Bus,
-  SubBus,
+  Chip,
+  ConstantBus,
+  DFF,
+  HIGH,
+  InSubBus,
+  LOW,
+  OutSubBus,
+  TRUE_BUS,
+  parseToPin,
+  printChip,
 } from "./chip.js";
-import * as make from "./builder.js";
-import { Not16 } from "./busses.js";
 import { Nand } from "./builtins/logic/nand.js";
+import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
+import { bin } from "../../util/twos.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -47,7 +50,7 @@ describe("Chip", () => {
 
     describe("not", () => {
       it("evaluates a not gate", () => {
-        const notChip = make.Not();
+        const notChip = new Not();
 
         notChip.eval();
         expect(notChip.out().voltage()).toBe(HIGH);
@@ -60,7 +63,7 @@ describe("Chip", () => {
 
     describe("and", () => {
       it("evaluates an and gate", () => {
-        const andChip = make.And();
+        const andChip = new And();
 
         const a = andChip.in("a")!;
         const b = andChip.in("b")!;
@@ -84,7 +87,7 @@ describe("Chip", () => {
 
     describe("or", () => {
       it("evaluates an or gate", () => {
-        const orChip = make.Or();
+        const orChip = new Or();
 
         const a = orChip.in("a")!;
         const b = orChip.in("b")!;
@@ -109,7 +112,7 @@ describe("Chip", () => {
 
     describe("xor", () => {
       it("evaluates an xor gate", () => {
-        const xorChip = make.Xor();
+        const xorChip = new Xor();
 
         const a = xorChip.in("a")!;
         const b = xorChip.in("b")!;
@@ -133,6 +136,22 @@ describe("Chip", () => {
   });
 
   describe("wide", () => {
+    describe("Not16", () => {
+      it("evaluates a not16 gate", () => {
+        const not16 = new Not16();
+
+        const inn = not16.in();
+
+        inn.busVoltage = 0x0;
+        not16.eval();
+        expect(not16.out().busVoltage).toBe(0xffff);
+
+        inn.busVoltage = 0xf00f;
+        not16.eval();
+        expect(not16.out().busVoltage).toBe(0x0ff0);
+      });
+    });
+
     describe("bus voltage", () => {
       it("sets and returns wide busses", () => {
         const pin = new Bus("wide", 16);
@@ -147,7 +166,12 @@ describe("Chip", () => {
       it("creates wide busses internally", () => {
         const chip = new Chip([], [], "WithWide");
 
-        chip.wire(Not16(), [{ to: "out", from: "a" }]);
+        chip.wire(new Not16(), [
+          {
+            to: { name: "out", start: 0, width: 16 },
+            from: { name: "a", start: 0, width: 16 },
+          },
+        ]);
 
         const width = chip.pins.get("a")?.width;
         expect(width).toBe(16);
@@ -157,27 +181,163 @@ describe("Chip", () => {
     describe("and16", () => {});
   });
   describe("SubBus", () => {
-    describe("assigns output inside wide busses", () => {
-      const chip = new Chip(["in[2]"], ["out[4]"]);
+    class Not3 extends Chip {
+      constructor() {
+        super(["in[3]"], ["out[3]"]);
+      }
 
-      const a0 = new SubBus(chip.in()!, 0, 1);
-      const a1 = new SubBus(chip.in()!, 1, 1);
-      const out1 = new SubBus(chip.out()!, 1, 1);
-      const out2 = new SubBus(chip.out()!, 2, 1);
+      eval() {
+        const inn = this.in().busVoltage;
+        const out = ~inn & 0b11;
+        this.out().busVoltage = out;
+      }
+    }
 
-      chip.wire(make.Not(), [
-        { to: "in", from: a0 },
-        { to: "out", from: out1 },
+    it("drives OutSubBus", () => {
+      const notChip = new Not();
+      const inPin = new Bus("in", 3);
+      const outSubBus = new OutSubBus(notChip.in(), 1, 1);
+      inPin.connect(outSubBus);
+
+      inPin.busVoltage = 0b0;
+      expect(notChip.in().busVoltage).toBe(0b0);
+      inPin.busVoltage = 0b111;
+      expect(notChip.in().busVoltage).toBe(0b1);
+    });
+
+    it("wires SubBus in=in[1]", () => {
+      const not3Chip = new Not3();
+      const notPart = new Not();
+      const inPin = not3Chip.in();
+
+      not3Chip.wire(notPart, [
+        {
+          from: { name: "in", start: 1, width: 1 },
+          to: { name: "in", start: 0, width: 1 },
+        },
       ]);
-      // chip.wire(make.Not(), [
-      //   { to: "in", from: a1 },
-      //   { to: "out", from: out2 },
-      // ]);
 
-      // expect(chip.out().busVoltage).toBe(0b0000);
-      // chip.in().busVoltage = 0b00;
-      // chip.eval();
-      // expect(chip.out().busVoltage).toBe(0b0110);
+      inPin.busVoltage = 0b0;
+      expect(notPart.in().busVoltage).toBe(0b0);
+      inPin.busVoltage = 0b111;
+      expect(notPart.in().busVoltage).toBe(0b1);
+    });
+
+    it("wires SubBus out=out[1]", () => {
+      const not3Chip = new Not3();
+      const notPart = new Not();
+      const outPin = notPart.out();
+
+      not3Chip.wire(notPart, [
+        {
+          from: { name: "out", start: 1, width: 1 },
+          to: { name: "out", start: 0, width: 1 },
+        },
+      ]);
+
+      outPin.busVoltage = 0b0;
+      expect(not3Chip.out().busVoltage).toBe(0b0);
+      outPin.busVoltage = 0b1;
+      expect(not3Chip.out().busVoltage).toBe(0b010);
+    });
+
+    class Not8 extends Chip {
+      constructor() {
+        super(["in[8]"], ["out[8]"]);
+      }
+
+      eval() {
+        const inn = this.in().busVoltage;
+        const out = ~inn & 0xff;
+        this.out().busVoltage = out;
+      }
+    }
+
+    it("assigns input inside wide busses", () => {
+      class Foo extends Chip {
+        readonly not8 = new Not8();
+        constructor() {
+          super([], []);
+          this.parts.add(this.not8);
+          this.pins.insert(new ConstantBus("pal", 0b1010_1100_0011_0101));
+          this.pins.get("pal")?.connect(new OutSubBus(this.not8.in(), 4, 8));
+          this.pins.emplace("out1", 5);
+          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
+          this.not8.out().connect(out1Bus);
+        }
+      }
+
+      const foo = new Foo();
+      foo.eval();
+      expect(foo.not8.in().busVoltage).toEqual(0b1100_0011);
+      expect(foo.pin("out1")?.busVoltage).toEqual(0b00111);
+    });
+
+    it("assigns output inside wide busses", () => {
+      // From figure A2.2, page 287, 2nd edition
+      class Foo extends Chip {
+        readonly not8 = new Not8();
+        constructor() {
+          super([], []);
+          this.parts.add(this.not8);
+          this.pins.insert(new ConstantBus("six", 0b110));
+          // in[0..1] = true
+          TRUE_BUS.connect(new InSubBus(this.not8.in(), 0, 2));
+          // in[3..5] = six, 110
+          this.pins.get("six")?.connect(new InSubBus(this.not8.in(), 3, 3));
+          // in[7] = true
+          TRUE_BUS.connect(new InSubBus(this.not8.in(), 7, 1));
+          // out[3..7] = out1
+          this.pins.emplace("out1", 5);
+          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
+          this.not8.out().connect(out1Bus);
+        }
+      }
+
+      const foo = new Foo();
+      foo.eval();
+      expect(foo.not8.in().busVoltage).toBe(0b10110011);
+      expect(foo.pin("out1").busVoltage).toBe(0b01001);
+    });
+
+    it("pulls portions of true", () => {
+      class Foo extends Chip {
+        readonly chip = new Not3();
+        constructor() {
+          super([], []);
+          this.wire(this.chip, [
+            {
+              from: { name: "true", start: 0, width: 1 },
+              to: { name: "in", start: 1, width: 2 },
+            },
+          ]);
+        }
+      }
+
+      const foo = new Foo();
+
+      const inVoltage = foo.chip.in().busVoltage;
+      expect(bin(inVoltage)).toBe(bin(0b110));
+    });
+
+    it("pulls start of true", () => {
+      class Foo extends Chip {
+        readonly chip = new Not3();
+        constructor() {
+          super([], []);
+          this.wire(this.chip, [
+            {
+              from: { name: "true", start: 0, width: 1 },
+              to: { name: "in", start: 0, width: 2 },
+            },
+          ]);
+        }
+      }
+
+      const foo = new Foo();
+
+      const inVoltage = foo.chip.in().busVoltage;
+      expect(bin(inVoltage)).toBe(bin(0b11));
     });
   });
 

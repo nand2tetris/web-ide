@@ -15,6 +15,7 @@ import {
 } from "./chip.js";
 import { Nand } from "./builtins/logic/nand.js";
 import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
+import { bin } from "../../util/twos.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -311,6 +312,46 @@ describe("Chip", () => {
       foo.eval();
       expect(foo.not8.in().busVoltage).toBe(0b10110011);
       expect(foo.pin("out1").busVoltage).toBe(0b01001);
+    });
+
+    it("pulls portions of true", () => {
+      class Foo extends Chip {
+        readonly chip = new Not3();
+        constructor() {
+          super([], []);
+          this.wire(this.chip, [
+            {
+              from: { name: "true", start: 0, width: 1 },
+              to: { name: "in", start: 1, width: 2 },
+            },
+          ]);
+        }
+      }
+
+      const foo = new Foo();
+
+      const inVoltage = foo.chip.in().busVoltage;
+      expect(bin(inVoltage)).toBe(bin(0b110));
+    });
+
+    it("pulls start of true", () => {
+      class Foo extends Chip {
+        readonly chip = new Not3();
+        constructor() {
+          super([], []);
+          this.wire(this.chip, [
+            {
+              from: { name: "true", start: 0, width: 1 },
+              to: { name: "in", start: 0, width: 2 },
+            },
+          ]);
+        }
+      }
+
+      const foo = new Foo();
+
+      const inVoltage = foo.chip.in().busVoltage;
+      expect(bin(inVoltage)).toBe(bin(0b11));
     });
   });
 

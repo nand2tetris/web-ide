@@ -1,8 +1,4 @@
-import {
-  assert,
-  assertExists,
-  assertString,
-} from "@davidsouther/jiffies/assert.js";
+import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
 import { bin } from "../../util/twos.js";
 
@@ -138,6 +134,20 @@ export class ConstantBus extends Bus {
 export const TRUE_BUS = new ConstantBus("true", 0xffff);
 export const FALSE_BUS = new ConstantBus("false", 0);
 
+export function parsePinDecl(toPin: string): {
+  pin: string;
+  width: number;
+} {
+  const { pin, w } = toPin.match(/(?<pin>[a-z]+)(\[(?<w>\d+)\])?/)?.groups as {
+    pin: string;
+    w?: string;
+  };
+  return {
+    pin,
+    width: w ? Number(w) : 1,
+  };
+}
+
 export function parseToPin(toPin: string): {
   pin: string;
   start?: number;
@@ -194,23 +204,23 @@ export class Chip {
   parts = new Set<Chip>();
 
   constructor(
-    ins: (string | { pin: string; start: number })[],
-    outs: (string | { pin: string; start: number })[],
+    ins: (string | { pin: string; width: number })[],
+    outs: (string | { pin: string; width: number })[],
     public name?: string
   ) {
     for (const inn of ins) {
-      const { pin, start = 1 } =
+      const { pin, width = 1 } =
         (inn as { pin: string }).pin !== undefined
-          ? (inn as { pin: string; start: number })
-          : parseToPin(inn as string);
-      this.ins.insert(new Bus(pin, start));
+          ? (inn as { pin: string; width: number })
+          : parsePinDecl(inn as string);
+      this.ins.insert(new Bus(pin, width));
     }
     for (const out of outs) {
-      const { pin, start = 1 } =
+      const { pin, width = 1 } =
         (out as { pin: string }).pin !== undefined
-          ? (out as { pin: string; start: number })
-          : parseToPin(out as string);
-      this.outs.insert(new Bus(pin, start));
+          ? (out as { pin: string; width: number })
+          : parsePinDecl(out as string);
+      this.outs.insert(new Bus(pin, width));
     }
   }
 
@@ -254,27 +264,46 @@ export class Chip {
           part.outs.get(to.name),
           () => `Cannot wire to missing pin ${to.name}`
         );
-        let chipPin: Pin = this.findPin(from.name, partPin.width);
+        let chipPin: Pin = this.findPin(from.name, from.width);
 
-        if (from.start > 0 || partPin.width != chipPin.width) {
+        to.width ??= partPin.width;
+        from.width ??= chipPin.width;
+
+        if (chipPin instanceof ConstantBus) {
+          throw new Error(`Cannot wire to constant bus`);
+        }
+
+        // Wrap the chipPin in an InBus when the chip side is dimensioned
+        if (from.start > 0 || from.width != chipPin.width) {
           chipPin = new InSubBus(chipPin, from.start, from.width);
         }
-        if (to.start > 0 || partPin.width != chipPin.width) {
+
+        // Wrap the chipPin in an OutBus when the part side is dimensionsed
+        if (to.start > 0 || to.width != chipPin.width) {
           chipPin = new OutSubBus(chipPin, to.start, to.width);
         }
+
         partPin.connect(chipPin);
       } else {
         let partPin = assertExists(
           part.ins.get(to.name),
           () => `Cannot wire to missing pin ${to.name}`
         );
-        const chipPin = this.findPin(from.name, partPin.width);
+        const chipPin = this.findPin(from.name, to.width);
 
-        if (to.start > 0 || partPin.width != chipPin.width) {
+        to.width ??= partPin.width;
+        from.width ??= chipPin.width;
+
+        // Wrap the partPin in an InBus when the part side is dimensioned
+        if (to.start > 0 || to.width != chipPin.width) {
           partPin = new InSubBus(partPin, to.start, to.width);
         }
-        if (from.start > 0 || partPin.width != chipPin.width) {
-          partPin = new OutSubBus(partPin, from.start, from.width);
+
+        // Wrap the partPin in an OutBus when the chip side is dimensioned
+        if (!["true", "false"].includes(chipPin.name)) {
+          if (from.start > 0 || from.width != chipPin.width) {
+            partPin = new OutSubBus(partPin, from.start, from.width);
+          }
         }
         chipPin.connect(partPin);
       }
@@ -332,7 +361,7 @@ export class High extends Chip {
 export interface PinSide {
   name: string;
   start: number;
-  width: number;
+  width: number | undefined;
 }
 
 export interface Connection {

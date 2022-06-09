@@ -4,7 +4,10 @@ import { ParseError } from "../../languages/parser/base.js";
 import { getBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
 
-function pinWidth(start: number, end: number): number {
+function pinWidth(start: number, end: number | undefined): number | undefined {
+  if (end === undefined) {
+    return undefined;
+  }
   if (end >= start) {
     return end - start + 1;
   }
@@ -23,16 +26,7 @@ export function parse(code: string): Result<Chip, Error | ParseError> {
     return getBuiltinChip(parts.name);
   }
 
-  const ins = parts.ins.map(({ pin, start }) => ({
-    pin,
-    start: start == 0 ? 1 : start,
-  }));
-  const outs = parts.outs.map(({ pin, start }) => ({
-    pin,
-    start: start == 0 ? 1 : start,
-  }));
-
-  const buildChip = new Chip(ins, outs, parts.name);
+  const buildChip = new Chip(parts.ins, parts.outs, parts.name);
 
   for (const part of parts.parts) {
     const builtin = getBuiltinChip(part.name);
@@ -42,13 +36,13 @@ export function parse(code: string): Result<Chip, Error | ParseError> {
     const wires = part.wires.map<Connection>(({ lhs, rhs }) => ({
       to: {
         name: lhs.pin,
-        start: lhs.start,
-        width: pinWidth(lhs.start, lhs.end),
+        start: lhs.start ?? 0,
+        width: pinWidth(lhs.start ?? 0, lhs.end),
       },
       from: {
         name: rhs.pin,
-        start: rhs.start,
-        width: pinWidth(rhs.start, rhs.end),
+        start: rhs.start ?? 0,
+        width: pinWidth(rhs.start ?? 0, rhs.end),
       },
     }));
 

@@ -64,6 +64,7 @@ export class InSubBus extends Bus {
   constructor(private bus: Pin, private start: number, readonly width = 1) {
     super(bus.name);
     assert(start >= 0 && start + width <= bus.width);
+    this.connect(bus);
   }
 
   pull(voltage: Voltage, bit = 0) {
@@ -97,6 +98,7 @@ export class OutSubBus extends Bus {
   constructor(private bus: Pin, private start: number, readonly width = 1) {
     super(bus.name);
     assert(start >= 0 && width <= bus.width);
+    this.connect(bus);
   }
 
   set busVoltage(voltage: number) {
@@ -247,35 +249,34 @@ export class Chip {
   wire(part: Chip, connections: Connection[]) {
     this.parts.add(part);
     for (const { to, from } of connections) {
-      let pin = assertString(to.name);
       if (part.isOutPin(to.name)) {
-        const outPin = assertExists(
-          part.outs.get(pin),
-          () => `Cannot wire to missing pin ${pin}`
+        let partPin = assertExists(
+          part.outs.get(to.name),
+          () => `Cannot wire to missing pin ${to.name}`
         );
-        const output = this.findPin(from.name, outPin.width);
+        let chipPin: Pin = this.findPin(from.name, partPin.width);
 
-        if (from.start == 0 && outPin.width == output.width) {
-          outPin.connect(output);
-        } else {
-          const outBus = new OutSubBus(output, to.start, to.width);
-          outPin.connect(outBus);
-          outBus.connect(output);
+        if (from.start > 0 || partPin.width != chipPin.width) {
+          chipPin = new InSubBus(chipPin, from.start, from.width);
         }
+        if (to.start > 0 || partPin.width != chipPin.width) {
+          chipPin = new OutSubBus(chipPin, to.start, to.width);
+        }
+        partPin.connect(chipPin);
       } else {
-        const inPin = assertExists(
-          part.ins.get(pin),
-          () => `Cannot wire to missing pin ${pin}`
+        let partPin = assertExists(
+          part.ins.get(to.name),
+          () => `Cannot wire to missing pin ${to.name}`
         );
-        let input = this.findPin(from.name, inPin.width);
+        const chipPin = this.findPin(from.name, partPin.width);
 
-        if (from.start == 0 && inPin.width == input.width) {
-          input.connect(inPin);
-        } else {
-          const inBus = new InSubBus(inPin, to.start, to.width);
-          input.connect(inBus);
-          inBus.connect(inPin);
+        if (to.start > 0 || partPin.width != chipPin.width) {
+          partPin = new InSubBus(partPin, to.start, to.width);
         }
+        if (from.start > 0 || partPin.width != chipPin.width) {
+          partPin = new OutSubBus(partPin, from.start, from.width);
+        }
+        chipPin.connect(partPin);
       }
     }
   }

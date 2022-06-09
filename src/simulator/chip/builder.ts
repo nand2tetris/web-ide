@@ -1,8 +1,18 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
-import { HdlParser, PinParts } from "../../languages/hdl.js";
+import { HdlParser } from "../../languages/hdl.js";
 import { ParseError } from "../../languages/parser/base.js";
 import { getBuiltinChip } from "./builtins/index.js";
-import { Bus, Chip, Connection, InSubBus, OutSubBus, Pin } from "./chip.js";
+import { Chip, Connection } from "./chip.js";
+
+function pinWidth(start: number, end: number): number {
+  if (end >= start) {
+    return end - start + 1;
+  }
+  if (start > 0 && end == 0) {
+    return 1;
+  }
+  throw new Error(`Bus specification has start > end (${start} > ${end})`);
+}
 
 export function parse(code: string): Result<Chip, Error | ParseError> {
   const parsed = HdlParser(code);
@@ -29,20 +39,18 @@ export function parse(code: string): Result<Chip, Error | ParseError> {
     if (isErr(builtin)) return builtin;
     const partChip = Ok(builtin);
 
-    const wires = part.wires.map<Connection>(({ lhs, rhs }) => {
-      const toPin = {
+    const wires = part.wires.map<Connection>(({ lhs, rhs }) => ({
+      to: {
         name: lhs.pin,
         start: lhs.start,
-        width: lhs.end - lhs.start + 1,
-      };
-      const fromPin = {
+        width: pinWidth(lhs.start, lhs.end),
+      },
+      from: {
         name: rhs.pin,
         start: rhs.start,
-        width: rhs.end - rhs.start + 1,
-      };
-
-      return { to: toPin, from: fromPin };
-    });
+        width: pinWidth(rhs.start, rhs.end),
+      },
+    }));
 
     buildChip.wire(partChip, wires);
   }

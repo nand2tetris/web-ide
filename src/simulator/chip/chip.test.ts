@@ -11,6 +11,7 @@ import {
   ConstantBus,
   InSubBus,
   OutSubBus,
+  InSubBus,
 } from "./chip.js";
 import { Nand } from "./builtins/logic/nand.js";
 import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
@@ -180,6 +181,79 @@ describe("Chip", () => {
     describe("and16", () => {});
   });
   describe("SubBus", () => {
+    class Not3 extends Chip {
+      constructor() {
+        super(["in[3]"], ["out[3]"]);
+      }
+
+      eval() {
+        const inn = this.in().busVoltage;
+        const out = ~inn & 0b11;
+        this.out().busVoltage = out;
+      }
+    }
+
+    // it("drives InSubBus", () => {
+    //   const notChip = new Not();
+    //   const inPin = new Bus("in", 3);
+    //   const inSubBus = new InSubBus(notChip.in(), 1, 1);
+    //   inPin.connect(inSubBus);
+    //   inSubBus.connect(notChip.in());
+
+    //   inPin.busVoltage = 0b0;
+    //   expect(notChip.in().busVoltage).toBe(0b0);
+    //   inPin.busVoltage = 0b111;
+    //   expect(notChip.in().busVoltage).toBe(0b1);
+    // });
+
+    it("drives OutSubBus", () => {
+      const notChip = new Not();
+      const inPin = new Bus("in", 3);
+      const outSubBus = new OutSubBus(notChip.in(), 1, 1);
+      inPin.connect(outSubBus);
+
+      inPin.busVoltage = 0b0;
+      expect(notChip.in().busVoltage).toBe(0b0);
+      inPin.busVoltage = 0b111;
+      expect(notChip.in().busVoltage).toBe(0b1);
+    });
+
+    it("wires SubBus in=in[1]", () => {
+      const not3Chip = new Not3();
+      const notPart = new Not();
+      const inPin = not3Chip.in();
+
+      not3Chip.wire(notPart, [
+        {
+          from: { name: "in", start: 1, width: 1 },
+          to: { name: "in", start: 0, width: 1 },
+        },
+      ]);
+
+      inPin.busVoltage = 0b0;
+      expect(notPart.in().busVoltage).toBe(0b0);
+      inPin.busVoltage = 0b111;
+      expect(notPart.in().busVoltage).toBe(0b1);
+    });
+
+    it("wires SubBus out=out[1]", () => {
+      const not3Chip = new Not3();
+      const notPart = new Not();
+      const outPin = notPart.out();
+
+      not3Chip.wire(notPart, [
+        {
+          from: { name: "out", start: 1, width: 1 },
+          to: { name: "out", start: 0, width: 1 },
+        },
+      ]);
+
+      outPin.busVoltage = 0b0;
+      expect(not3Chip.out().busVoltage).toBe(0b0);
+      outPin.busVoltage = 0b1;
+      expect(not3Chip.out().busVoltage).toBe(0b010);
+    });
+
     class Not8 extends Chip {
       constructor() {
         super(["in[8]"], ["out[8]"]);

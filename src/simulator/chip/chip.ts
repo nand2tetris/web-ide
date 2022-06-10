@@ -1,8 +1,4 @@
-import {
-  assert,
-  assertExists,
-  assertString,
-} from "@davidsouther/jiffies/assert.js";
+import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
 import { bin } from "../../util/twos.js";
 
@@ -20,10 +16,6 @@ export interface Pin {
   connect(pin: Pin): void;
 }
 
-function nameOf(pin: string | Pin): string {
-  return typeof pin === "string" ? pin : pin.name;
-}
-
 export class Bus implements Pin {
   state: Voltage[];
   next: Pin[] = [];
@@ -33,6 +25,7 @@ export class Bus implements Pin {
 
   connect(next: Pin) {
     this.next.push(next);
+    next.busVoltage = this.busVoltage;
   }
 
   pull(voltage: Voltage, bit = 0) {
@@ -50,7 +43,7 @@ export class Bus implements Pin {
     for (const i of range(0, this.width)) {
       this.state[i] = ((voltage & (1 << i)) >> i) as Voltage;
     }
-    this.next.forEach((n) => (n.busVoltage = voltage));
+    this.next.forEach((n) => (n.busVoltage = this.busVoltage));
   }
 
   get busVoltage(): number {
@@ -63,21 +56,19 @@ export class Bus implements Pin {
   }
 }
 
-export class SubBus implements Pin {
-  readonly name: string;
+export class InSubBus extends Bus {
   constructor(private bus: Pin, private start: number, readonly width = 1) {
-    this.name = bus.name;
-    assert(start >= 0 && start + width <= bus.width);
+    super(bus.name);
+    assert(
+      start >= 0 && start + width <= bus.width,
+      `Mismatched InSubBus dimensions`
+    );
+    this.connect(bus);
   }
 
   pull(voltage: Voltage, bit = 0) {
     assert(bit >= 0 && bit < this.width);
     this.bus.pull(voltage, this.start + bit);
-  }
-
-  toggle(bit = 0) {
-    const nextVoltage = this.voltage(bit) == LOW ? HIGH : LOW;
-    this.pull(nextVoltage, bit);
   }
 
   voltage(bit = 0): Voltage {
@@ -86,52 +77,84 @@ export class SubBus implements Pin {
   }
 
   set busVoltage(voltage: number) {
-    this.bus.busVoltage = (voltage & mask(this.width)) << this.start;
+    const high = this.bus.busVoltage & ~mask(this.width + this.start);
+    const low = this.bus.busVoltage & mask(this.start);
+    const mid = (voltage & mask(this.width)) << this.start;
+    this.bus.busVoltage = high | mid | low;
   }
 
   get busVoltage(): number {
-    return this.bus.busVoltage >> this.start;
+    return (this.bus.busVoltage >> this.start) & mask(this.width);
   }
 
   connect(bus: Pin): void {
-    assert(this.start + this.width <= bus.width);
+    assert(
+      this.start + this.width <= bus.width,
+      `Mismatched InSubBus connection dimensions`
+    );
     this.bus = bus;
   }
 }
 
-export class TrueBus extends Bus {
-  constructor(name: string) {
-    super(name, 16);
-  }
-  pullHigh(_ = 0) {}
-  pullLow(_ = 0) {}
-  voltage(_ = 0): Voltage {
-    return HIGH;
+export class OutSubBus extends Bus {
+  constructor(private bus: Pin, private start: number, readonly width = 1) {
+    super(bus.name);
+    assert(start >= 0 && width <= bus.width, `Mismatched OutSubBus dimensions`);
+    this.connect(bus);
   }
 
   set busVoltage(voltage: number) {
-    // Noop
+    this.bus.busVoltage =
+      (voltage & mask(this.width + this.start)) >> this.start;
   }
+
   get busVoltage(): number {
-    return 0xffff;
+    return this.bus.busVoltage & mask(this.width);
+  }
+
+  connect(bus: Pin): void {
+    assert(
+      this.width <= bus.width,
+      `Mismatched OutSubBus connection dimensions`
+    );
+    this.bus = bus;
   }
 }
 
-export class FalseBus extends Bus {
-  constructor(name: string) {
-    super(name, 16);
+export class ConstantBus extends Bus {
+  constructor(name: string, private readonly value: number) {
+    super(name, 16 /* TODO: get high bit index */);
   }
+
   pullHigh(_ = 0) {}
   pullLow(_ = 0) {}
   voltage(_ = 0): Voltage {
-    return LOW;
+    return (this.busVoltage & 0x1) as Voltage;
   }
+
   set busVoltage(voltage: number) {
     // Noop
   }
   get busVoltage(): number {
-    return 0x0000;
+    return this.value;
   }
+}
+
+export const TRUE_BUS = new ConstantBus("true", 0xffff);
+export const FALSE_BUS = new ConstantBus("false", 0);
+
+export function parsePinDecl(toPin: string): {
+  pin: string;
+  width: number;
+} {
+  const { pin, w } = toPin.match(/(?<pin>[a-z]+)(\[(?<w>\d+)\])?/)?.groups as {
+    pin: string;
+    w?: string;
+  };
+  return {
+    pin,
+    width: w ? Number(w) : 1,
+  };
 }
 
 export function parseToPin(toPin: string): {
@@ -168,12 +191,12 @@ export class Pins {
     }
   }
 
-  has(pin: string | Pin): boolean {
-    return this.map.has(nameOf(pin));
+  has(pin: string): boolean {
+    return this.map.has(pin);
   }
 
-  get(pin: string | Pin): Pin | undefined {
-    return this.map.get(nameOf(pin));
+  get(pin: string): Pin | undefined {
+    return this.map.get(pin);
   }
 
   entries(): Iterable<Pin> {
@@ -190,23 +213,23 @@ export class Chip {
   parts = new Set<Chip>();
 
   constructor(
-    ins: (string | { pin: string; start: number })[],
-    outs: (string | { pin: string; start: number })[],
+    ins: (string | { pin: string; width: number })[],
+    outs: (string | { pin: string; width: number })[],
     public name?: string
   ) {
     for (const inn of ins) {
-      const { pin, start = 1 } =
+      const { pin, width = 1 } =
         (inn as { pin: string }).pin !== undefined
-          ? (inn as { pin: string; start: number })
-          : parseToPin(inn as string);
-      this.ins.insert(new Bus(pin, start));
+          ? (inn as { pin: string; width: number })
+          : parsePinDecl(inn as string);
+      this.ins.insert(new Bus(pin, width));
     }
     for (const out of outs) {
-      const { pin, start = 1 } =
+      const { pin, width = 1 } =
         (out as { pin: string }).pin !== undefined
-          ? (out as { pin: string; start: number })
-          : parseToPin(out as string);
-      this.outs.insert(new Bus(pin, start));
+          ? (out as { pin: string; width: number })
+          : parsePinDecl(out as string);
+      this.outs.insert(new Bus(pin, width));
     }
   }
 
@@ -242,35 +265,23 @@ export class Chip {
     return this.outs.has(pin);
   }
 
-  wire(chip: Chip, connections: Connection[]) {
-    this.parts.add(chip);
+  wire(part: Chip, connections: Connection[]) {
+    this.parts.add(part);
     for (const { to, from } of connections) {
-      if (chip.isOutPin(nameOf(to))) {
-        const outPin = assertExists(chip.outs.get(to));
-        const output = this.findPin(nameOf(from), outPin.width);
-        outPin.connect(output);
+      if (part.isOutPin(to.name)) {
+        this.wireOutPin(part, to, from);
       } else {
-        let pin = assertString(nameOf(to));
-        const inPin = assertExists(
-          chip.ins.get(pin),
-          () => `Cannot wire to missing pin ${pin}`
-        );
-        if (from instanceof SubBus) {
-          from.connect(inPin);
-        } else {
-          let input = this.findPin(nameOf(from), inPin.width);
-          input.connect(inPin);
-        }
+        this.wireInPin(part, to, from);
       }
     }
   }
 
   private findPin(from: string, minWidth?: number): Pin {
-    if (from === "True" || from === "1") {
-      return new TrueBus("True");
+    if (from.toLowerCase() === "true" || from === "1") {
+      return TRUE_BUS;
     }
-    if (from === "false" || from === "0") {
-      return new FalseBus("False");
+    if (from.toLowerCase() === "false" || from === "0") {
+      return FALSE_BUS;
     }
     if (this.ins.has(from)) {
       return this.ins.get(from)!;
@@ -279,6 +290,57 @@ export class Chip {
       return this.outs.get(from)!;
     }
     return this.pins.emplace(from, minWidth);
+  }
+
+  private wireOutPin(part: Chip, to: PinSide, from: PinSide) {
+    let partPin = assertExists(
+      part.outs.get(to.name),
+      () => `Cannot wire to missing pin ${to.name}`
+    );
+    let chipPin: Pin = this.findPin(from.name, from.width);
+
+    to.width ??= partPin.width;
+    from.width ??= chipPin.width;
+
+    if (chipPin instanceof ConstantBus) {
+      throw new Error(`Cannot wire to constant bus`);
+    }
+
+    // Wrap the chipPin in an InBus when the chip side is dimensioned
+    if (from.start > 0 || from.width != chipPin.width) {
+      chipPin = new InSubBus(chipPin, from.start, from.width);
+    }
+
+    // Wrap the chipPin in an OutBus when the part side is dimensionsed
+    if (to.start > 0 || to.width != chipPin.width) {
+      chipPin = new OutSubBus(chipPin, to.start, to.width);
+    }
+
+    partPin.connect(chipPin);
+  }
+
+  private wireInPin(part: Chip, to: PinSide, from: PinSide) {
+    let partPin = assertExists(
+      part.ins.get(to.name),
+      () => `Cannot wire to missing pin ${to.name}`
+    );
+    const chipPin = this.findPin(from.name, to.width);
+
+    to.width ??= partPin.width;
+    from.width ??= chipPin.width;
+
+    // Wrap the partPin in an InBus when the part side is dimensioned
+    if (to.start > 0 || to.width != chipPin.width) {
+      partPin = new InSubBus(partPin, to.start, to.width);
+    }
+
+    // Wrap the partPin in an OutBus when the chip side is dimensioned
+    if (!["true", "false"].includes(chipPin.name)) {
+      if (from.start > 0 || from.width != chipPin.width) {
+        partPin = new OutSubBus(partPin, from.start, from.width);
+      }
+    }
+    chipPin.connect(partPin);
   }
 
   eval() {
@@ -302,22 +364,28 @@ export class Chip {
 export class Low extends Chip {
   constructor() {
     super([], []);
-    this.outs.insert(new FalseBus("out"));
+    this.outs.insert(FALSE_BUS);
   }
 }
 
 export class High extends Chip {
   constructor() {
     super([], []);
-    this.outs.insert(new TrueBus("out"));
+    this.outs.insert(TRUE_BUS);
   }
+}
+
+export interface PinSide {
+  name: string;
+  start: number;
+  width: number | undefined;
 }
 
 export interface Connection {
   // To is the part side
-  to: string | Pin;
+  to: PinSide;
   // From is the chip side
-  from: string | Pin;
+  from: PinSide;
 }
 
 export class DFF extends Chip {
@@ -330,11 +398,13 @@ export class DFF extends Chip {
   tick() {
     // Read in into t
     this.t = this.in().voltage();
+    this.eval();
   }
 
   tock() {
     // write t into out
     this.out().pull(this.t);
+    this.eval();
   }
 }
 

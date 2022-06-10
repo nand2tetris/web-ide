@@ -1,6 +1,6 @@
 import { Parser, StringLike } from "./base.js";
 import { alt } from "./branch.js";
-import { is_not, tag, take_until } from "./bytes.js";
+import { tag, take_until } from "./bytes.js";
 import {
   alpha1,
   alphanumeric1,

@@ -22,16 +22,25 @@ const hdlWs = <O>(p: Parser<O>): Parser<O> => {
   return hdlWs;
 };
 const hdlIdentifierParser = hdlWs(identifier());
-const hdlIdentifier = (i: StringLike) => hdlIdentifierParser(i);
+const hdlIdentifier: Parser<string> = (i: StringLike) =>
+  // @ts-ignore
+  hdlIdentifierParser(i).map(([rest, id]: [StringLike, StringLike]) =>
+    Ok([rest, id.toString()])
+  );
 
 export interface PinParts {
   pin: string;
-  start: number;
-  end?: number;
+  start?: number | undefined;
+  end?: number | undefined;
+}
+
+export interface PinDeclaration {
+  pin: string;
+  width: number;
 }
 
 export interface Wire {
-  lhs: string;
+  lhs: PinParts;
   rhs: PinParts;
 }
 
@@ -40,30 +49,51 @@ export interface Part {
   wires: Wire[];
 }
 
+function pinDeclaration(toPin: StringLike): IResult<PinDeclaration> {
+  const match = toPin.toString().match(/^(?<pin>[0-9a-z]+)(\[(?<w>\d+)\])?/);
+  if (!match) {
+    return ParseErrors.failure("pinDeclaration expected pin");
+  }
+
+  const matched = match[0];
+  const { pin, w } = match.groups as { pin: string; w?: string };
+  return Ok([
+    toPin.substring(matched.length),
+    {
+      pin,
+      width: w ? Number(w) : 1,
+    },
+  ]);
+}
+
 function pin(toPin: StringLike): IResult<PinParts> {
   const match = toPin
     .toString()
-    .match(/^(?<pin>[0-9a-z]+|True|False)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
+    .match(
+      /^(?<pin>[0-9a-z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
+    );
   if (!match) {
     return ParseErrors.failure("toPin expected pin");
   }
 
   const matched = match[0];
   const { pin, i, j } = match.groups as { pin: string; i?: string; j?: string };
+  const start = i ? Number(i) : undefined;
+  const end = j ? Number(j) : start !== undefined ? start : undefined;
   return Ok([
     toPin.substring(matched.length),
     {
       pin,
-      start: i ? Number(i) : 0,
-      end: j ? Number(j) : 1,
+      start,
+      end,
     },
   ]);
 }
 
-const wireParser = separated(hdlIdentifier, token("="), hdlWs(pin));
-const wire: Parser<[StringLike, PinParts]> = (i) => wireParser(i);
+const wireParser = separated(hdlWs(pin), token("="), hdlWs(pin));
+const wire: Parser<[PinParts, PinParts]> = (i) => wireParser(i);
 const wireListParser = list(wire, tag(","));
-const wireList: Parser<[StringLike, PinParts][]> = (i) => wireListParser(i);
+const wireList: Parser<[PinParts, PinParts][]> = (i) => wireListParser(i);
 
 const partParser = tuple(
   hdlIdentifier,
@@ -77,17 +107,17 @@ const part: Parser<Part> = (i) => {
   const [input, [name, wires]] = Ok(parse);
   const part: Part = {
     name: name.toString(),
-    wires: wires.map(([lhs, rhs]) => ({ lhs: lhs.toString(), rhs })),
+    wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
   };
   return Ok([input, part]);
 };
 
-const pinListParser = list(hdlWs(pin), token(","));
-const pinList: Parser<PinParts[]> = (i) => pinListParser(i);
-const inListParser = delimited(token("IN"), pinList, token(";"));
-const inList: Parser<PinParts[]> = (i) => inListParser(i);
-const outListParser = delimited(token("OUT"), pinList, token(";"));
-const outList: Parser<PinParts[]> = (i) => outListParser(i);
+const pinDeclParser = list(hdlWs(pinDeclaration), token(","));
+const pinList: Parser<PinDeclaration[]> = (i) => pinDeclParser(i);
+const inDeclParser = delimited(token("IN"), pinList, token(";"));
+const inList: Parser<PinDeclaration[]> = (i) => inDeclParser(i);
+const outDeclParser = delimited(token("OUT"), pinList, token(";"));
+const outList: Parser<PinDeclaration[]> = (i) => outDeclParser(i);
 
 const partsParser = alt<"BUILTIN" | Part[]>(
   preceded(token("PARTS:"), many0(terminated(part, token(";")))),
@@ -106,8 +136,8 @@ const chipParser = preceded(hdlWs(tag("CHIP")), pair(hdlIdentifier, chipBlock));
 
 export function HdlParser(i: StringLike): IResult<{
   name: string;
-  ins: PinParts[];
-  outs: PinParts[];
+  ins: PinDeclaration[];
+  outs: PinDeclaration[];
   parts: "BUILTIN" | Part[];
 }> {
   const chipParse = chipParser(i);

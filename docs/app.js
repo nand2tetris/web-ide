@@ -4,10 +4,10 @@ function isAttrs(attrs) {
     if (!attrs) {
         return false;
     }
-    if (typeof attrs === "string") {
-        return false;
+    if (typeof attrs === "object") {
+        return !attrs.nodeType;
     }
-    return !attrs.nodeType;
+    return false;
 }
 function normalizeArguments(attrs, children = [], defaultAttrs = {}) {
     let attributes;
@@ -55,31 +55,39 @@ function update(element, attrs, children) {
         if (k === "class" && typeof v === "string") {
             v.split(/\s+/m)
                 .filter((s) => s !== "")
-                .forEach((c) => element.classList.add(c));
+                .forEach((c) => {
+                if (c.startsWith("!")) {
+                    element.classList.remove(c.substring(1));
+                }
+                else {
+                    element.classList.add(c);
+                }
+            });
         }
-        let useAttributes = k.startsWith("aria-") ||
-            k == "role" ||
+        const useNamespace = element.namespaceURI &&
             element.namespaceURI != "http://www.w3.org/1999/xhtml";
-        if (useAttributes) {
-            switch (v) {
-                case false:
-                    element.removeAttributeNS(element.namespaceURI, k);
-                    break;
-                case true:
-                    element.setAttributeNS(element.namespaceURI, k, k);
-                    break;
-                default:
-                    if (v === "") {
-                        element.removeAttributeNS(element.namespaceURI, k);
-                    }
-                    else {
-                        element.setAttributeNS(element.namespaceURI, k, v);
-                    }
+        const remove = !v;
+        if (useNamespace) {
+            if (remove) {
+                element.removeAttributeNS(element.namespaceURI, k);
+            }
+            else if (v === true) {
+                element.setAttributeNS(element.namespaceURI, k, k);
+            }
+            else {
+                element.setAttributeNS(element.namespaceURI, k, v);
             }
         }
         else {
-            // @ts-ignore Object.entries is unable to statically look into args
-            element[k] = v;
+            if (remove) {
+                element.removeAttribute(k);
+            }
+            else if (v === true) {
+                element.setAttribute(k, k);
+            }
+            else {
+                element.setAttribute(k, v);
+            }
         }
     });
     if (children?.length > 0) {
@@ -102,6 +110,7 @@ const canvas = makeHTMLElement("canvas");
 const code = makeHTMLElement("code");
 const dd = makeHTMLElement("dd");
 const del = makeHTMLElement("del");
+const details = makeHTMLElement("details");
 const dialog = makeHTMLElement("dialog");
 const div = makeHTMLElement("div");
 const dl = makeHTMLElement("dl");
@@ -127,6 +136,7 @@ const select = makeHTMLElement("select");
 const span = makeHTMLElement("span");
 const strong = makeHTMLElement("strong");
 const style = makeHTMLElement("style");
+const summary = makeHTMLElement("summary");
 const table = makeHTMLElement("table");
 const tbody = makeHTMLElement("tbody");
 const td = makeHTMLElement("td");
@@ -477,6 +487,7 @@ function FC(name, component) {
             // Re-run the component function using new element, attrs, and children.
             const replace = [component(this, this.#attrs, this.#children)];
             this.replaceChildren(...replace.flat());
+            return this;
         }
     }
     customElements.define(name, FCImpl);
@@ -571,13 +582,13 @@ function hex(i) {
     const ll = chars$1(i & 0x000f);
     return `0x${hu}${hl}${lu}${ll}`;
 }
-function bin(i) {
+function bin(i, precision = 16) {
     const hu = bits((i & 0xf000) >> 12);
     const hl = bits((i & 0x0f00) >> 8);
     const lu = bits((i & 0x00f0) >> 4);
     const ll = bits(i & 0x000f);
     // return `${hu} ${hl} ${lu} ${ll}`;
-    return `${hu}${hl}${lu}${ll}`; // Match the book's formatting
+    return `${hu}${hl}${lu}${ll}`.substring(16 - precision); // Match the book's formatting
 }
 function dec(i) {
     const s = Math.sign(i) === -1 ? "-" : "";
@@ -604,7 +615,7 @@ const Pinout = FC("pin-out", (el, { pins, toggle }) => {
         ? pin.voltage() == 0
             ? "Low"
             : "High"
-        : bin(pin.busVoltage)))))));
+        : bin(pin.busVoltage, pin.width)))))));
     return t;
 });
 
@@ -687,14 +698,6 @@ function assertExists(t, message = "Assertion failed: value does not exist") {
     assert(t != null, message);
     return t;
 }
-/**
- * @param {*} n
- * @returns string
- */
-function assertString(n, message = () => `Assertion failed: ${n} is not a string`) {
-    assert(typeof n == "string", message);
-    return n;
-}
 
 function range(start, end, stride = 1) {
     const range = [];
@@ -706,9 +709,6 @@ function range(start, end, stride = 1) {
 
 const HIGH = 1;
 const LOW = 0;
-function nameOf(pin) {
-    return typeof pin === "string" ? pin : pin.name;
-}
 class Bus {
     name;
     width;
@@ -721,6 +721,7 @@ class Bus {
     }
     connect(next) {
         this.next.push(next);
+        next.busVoltage = this.busVoltage;
     }
     pull(voltage, bit = 0) {
         assert(bit >= 0 && bit < this.width);
@@ -735,7 +736,7 @@ class Bus {
         for (const i of range(0, this.width)) {
             this.state[i] = ((voltage & (1 << i)) >> i);
         }
-        this.next.forEach((n) => (n.busVoltage = voltage));
+        this.next.forEach((n) => (n.busVoltage = this.busVoltage));
     }
     get busVoltage() {
         return range(0, this.width).reduce((b, i) => b | (this.state[i] << i), 0);
@@ -745,72 +746,90 @@ class Bus {
         this.pull(nextVoltage, bit);
     }
 }
-class SubBus {
+class InSubBus extends Bus {
     bus;
     start;
     width;
-    name;
     constructor(bus, start, width = 1) {
+        super(bus.name);
         this.bus = bus;
         this.start = start;
         this.width = width;
-        this.name = bus.name;
-        assert(start >= 0 && start + width <= bus.width);
+        assert(start >= 0 && start + width <= bus.width, `Mismatched InSubBus dimensions`);
+        this.connect(bus);
     }
     pull(voltage, bit = 0) {
         assert(bit >= 0 && bit < this.width);
         this.bus.pull(voltage, this.start + bit);
-    }
-    toggle(bit = 0) {
-        const nextVoltage = this.voltage(bit) == LOW ? HIGH : LOW;
-        this.pull(nextVoltage, bit);
     }
     voltage(bit = 0) {
         assert(bit >= 0 && bit < this.width);
         return this.bus.voltage(this.start + bit);
     }
     set busVoltage(voltage) {
-        this.bus.busVoltage = (voltage & mask(this.width)) << this.start;
+        const high = this.bus.busVoltage & ~mask(this.width + this.start);
+        const low = this.bus.busVoltage & mask(this.start);
+        const mid = (voltage & mask(this.width)) << this.start;
+        this.bus.busVoltage = high | mid | low;
     }
     get busVoltage() {
-        return this.bus.busVoltage >> this.start;
+        return (this.bus.busVoltage >> this.start) & mask(this.width);
     }
     connect(bus) {
-        assert(this.start + this.width <= bus.width);
+        assert(this.start + this.width <= bus.width, `Mismatched InSubBus connection dimensions`);
         this.bus = bus;
     }
 }
-class TrueBus extends Bus {
-    constructor(name) {
-        super(name, 16);
-    }
-    pullHigh(_ = 0) { }
-    pullLow(_ = 0) { }
-    voltage(_ = 0) {
-        return HIGH;
+class OutSubBus extends Bus {
+    bus;
+    start;
+    width;
+    constructor(bus, start, width = 1) {
+        super(bus.name);
+        this.bus = bus;
+        this.start = start;
+        this.width = width;
+        assert(start >= 0 && width <= bus.width, `Mismatched OutSubBus dimensions`);
+        this.connect(bus);
     }
     set busVoltage(voltage) {
-        // Noop
+        this.bus.busVoltage =
+            (voltage & mask(this.width + this.start)) >> this.start;
     }
     get busVoltage() {
-        return 0xffff;
+        return this.bus.busVoltage & mask(this.width);
+    }
+    connect(bus) {
+        assert(this.width <= bus.width, `Mismatched OutSubBus connection dimensions`);
+        this.bus = bus;
     }
 }
-class FalseBus extends Bus {
-    constructor(name) {
-        super(name, 16);
+class ConstantBus extends Bus {
+    value;
+    constructor(name, value) {
+        super(name, 16 /* TODO: get high bit index */);
+        this.value = value;
     }
     pullHigh(_ = 0) { }
     pullLow(_ = 0) { }
     voltage(_ = 0) {
-        return LOW;
+        return (this.busVoltage & 0x1);
     }
     set busVoltage(voltage) {
         // Noop
     }
     get busVoltage() {
-        return 0x0000;
+        return this.value;
     }
+}
+const TRUE_BUS = new ConstantBus("true", 0xffff);
+const FALSE_BUS = new ConstantBus("false", 0);
+function parsePinDecl(toPin) {
+    const { pin, w } = toPin.match(/(?<pin>[a-z]+)(\[(?<w>\d+)\])?/)?.groups;
+    return {
+        pin,
+        width: w ? Number(w) : 1,
+    };
 }
 function parseToPin(toPin) {
     const { pin, i, j } = toPin.match(/(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/)?.groups;
@@ -838,10 +857,10 @@ class Pins {
         }
     }
     has(pin) {
-        return this.map.has(nameOf(pin));
+        return this.map.has(pin);
     }
     get(pin) {
-        return this.map.get(nameOf(pin));
+        return this.map.get(pin);
     }
     entries() {
         return this.map.values();
@@ -858,16 +877,16 @@ class Chip$1 {
     constructor(ins, outs, name) {
         this.name = name;
         for (const inn of ins) {
-            const { pin, start = 1 } = inn.pin !== undefined
+            const { pin, width = 1 } = inn.pin !== undefined
                 ? inn
-                : parseToPin(inn);
-            this.ins.insert(new Bus(pin, start));
+                : parsePinDecl(inn);
+            this.ins.insert(new Bus(pin, width));
         }
-        for (const oot of outs) {
-            const { pin, start = 1 } = oot.pin !== undefined
-                ? oot
-                : parseToPin(oot);
-            this.outs.insert(new Bus(pin, start));
+        for (const out of outs) {
+            const { pin, width = 1 } = out.pin !== undefined
+                ? out
+                : parsePinDecl(out);
+            this.outs.insert(new Bus(pin, width));
         }
     }
     in(pin = "in") {
@@ -897,33 +916,23 @@ class Chip$1 {
     isOutPin(pin) {
         return this.outs.has(pin);
     }
-    wire(chip, connections) {
-        this.parts.add(chip);
+    wire(part, connections) {
+        this.parts.add(part);
         for (const { to, from } of connections) {
-            if (chip.isOutPin(nameOf(to))) {
-                const outPin = assertExists(chip.outs.get(to));
-                const output = this.findPin(nameOf(from), outPin.width);
-                outPin.connect(output);
+            if (part.isOutPin(to.name)) {
+                this.wireOutPin(part, to, from);
             }
             else {
-                let pin = assertString(nameOf(to));
-                const inPin = assertExists(chip.ins.get(pin), () => `Cannot wire to missing pin ${pin}`);
-                if (from instanceof SubBus) {
-                    from.connect(inPin);
-                }
-                else {
-                    let input = this.findPin(nameOf(from), inPin.width);
-                    input.connect(inPin);
-                }
+                this.wireInPin(part, to, from);
             }
         }
     }
     findPin(from, minWidth) {
-        if (from === "True" || from === "1") {
-            return new TrueBus("True");
+        if (from.toLowerCase() === "true" || from === "1") {
+            return TRUE_BUS;
         }
-        if (from === "false" || from === "0") {
-            return new FalseBus("False");
+        if (from.toLowerCase() === "false" || from === "0") {
+            return FALSE_BUS;
         }
         if (this.ins.has(from)) {
             return this.ins.get(from);
@@ -932,6 +941,41 @@ class Chip$1 {
             return this.outs.get(from);
         }
         return this.pins.emplace(from, minWidth);
+    }
+    wireOutPin(part, to, from) {
+        let partPin = assertExists(part.outs.get(to.name), () => `Cannot wire to missing pin ${to.name}`);
+        let chipPin = this.findPin(from.name, from.width);
+        to.width ??= partPin.width;
+        from.width ??= chipPin.width;
+        if (chipPin instanceof ConstantBus) {
+            throw new Error(`Cannot wire to constant bus`);
+        }
+        // Wrap the chipPin in an InBus when the chip side is dimensioned
+        if (from.start > 0 || from.width != chipPin.width) {
+            chipPin = new InSubBus(chipPin, from.start, from.width);
+        }
+        // Wrap the chipPin in an OutBus when the part side is dimensionsed
+        if (to.start > 0 || to.width != chipPin.width) {
+            chipPin = new OutSubBus(chipPin, to.start, to.width);
+        }
+        partPin.connect(chipPin);
+    }
+    wireInPin(part, to, from) {
+        let partPin = assertExists(part.ins.get(to.name), () => `Cannot wire to missing pin ${to.name}`);
+        const chipPin = this.findPin(from.name, to.width);
+        to.width ??= partPin.width;
+        from.width ??= chipPin.width;
+        // Wrap the partPin in an InBus when the part side is dimensioned
+        if (to.start > 0 || to.width != chipPin.width) {
+            partPin = new InSubBus(partPin, to.start, to.width);
+        }
+        // Wrap the partPin in an OutBus when the chip side is dimensioned
+        if (!["true", "false"].includes(chipPin.name)) {
+            if (from.start > 0 || from.width != chipPin.width) {
+                partPin = new OutSubBus(partPin, from.start, from.width);
+            }
+        }
+        chipPin.connect(partPin);
     }
     eval() {
         for (const chip of this.parts) {
@@ -950,8 +994,8 @@ class Chip$1 {
 }
 class Low extends Chip$1 {
     constructor() {
-        super([], ["out"]);
-        this.outs.insert(new FalseBus("out"));
+        super([], []);
+        this.outs.insert(FALSE_BUS);
     }
 }
 class DFF extends Chip$1 {
@@ -962,10 +1006,12 @@ class DFF extends Chip$1 {
     tick() {
         // Read in into t
         this.t = this.in().voltage();
+        this.eval();
     }
     tock() {
         // write t into out
         this.out().pull(this.t);
+        this.eval();
     }
 }
 function mask(width) {
@@ -1479,26 +1525,45 @@ const hdlWs = (p) => {
     return hdlWs;
 };
 const hdlIdentifierParser = hdlWs(identifier());
-const hdlIdentifier = (i) => hdlIdentifierParser(i);
+const hdlIdentifier = (i) => 
+// @ts-ignore
+hdlIdentifierParser(i).map(([rest, id]) => Ok([rest, id.toString()]));
+function pinDeclaration(toPin) {
+    const match = toPin.toString().match(/^(?<pin>[0-9a-z]+)(\[(?<w>\d+)\])?/);
+    if (!match) {
+        return ParseErrors.failure("pinDeclaration expected pin");
+    }
+    const matched = match[0];
+    const { pin, w } = match.groups;
+    return Ok([
+        toPin.substring(matched.length),
+        {
+            pin,
+            width: w ? Number(w) : 1,
+        },
+    ]);
+}
 function pin(toPin) {
     const match = toPin
         .toString()
-        .match(/^(?<pin>[0-9a-z]+|True|False)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
+        .match(/^(?<pin>[0-9a-z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
     if (!match) {
         return ParseErrors.failure("toPin expected pin");
     }
     const matched = match[0];
     const { pin, i, j } = match.groups;
+    const start = i ? Number(i) : undefined;
+    const end = j ? Number(j) : start !== undefined ? start : undefined;
     return Ok([
         toPin.substring(matched.length),
         {
             pin,
-            start: i ? Number(i) : 0,
-            end: j ? Number(j) : 1,
+            start,
+            end,
         },
     ]);
 }
-const wireParser = separated(hdlIdentifier, token("="), hdlWs(pin));
+const wireParser = separated(hdlWs(pin), token("="), hdlWs(pin));
 const wire = (i) => wireParser(i);
 const wireListParser = list(wire, tag(","));
 const wireList = (i) => wireListParser(i);
@@ -1511,16 +1576,16 @@ const part = (i) => {
     const [input, [name, wires]] = Ok(parse);
     const part = {
         name: name.toString(),
-        wires: wires.map(([lhs, rhs]) => ({ lhs: lhs.toString(), rhs })),
+        wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
     };
     return Ok([input, part]);
 };
-const pinListParser = list(hdlWs(pin), token(","));
-const pinList = (i) => pinListParser(i);
-const inListParser = delimited(token("IN"), pinList, token(";"));
-const inList = (i) => inListParser(i);
-const outListParser = delimited(token("OUT"), pinList, token(";"));
-const outList = (i) => outListParser(i);
+const pinDeclParser = list(hdlWs(pinDeclaration), token(","));
+const pinList = (i) => pinDeclParser(i);
+const inDeclParser = delimited(token("IN"), pinList, token(";"));
+const inList = (i) => inDeclParser(i);
+const outDeclParser = delimited(token("OUT"), pinList, token(";"));
+const outList = (i) => outDeclParser(i);
 const partsParser = alt(preceded(token("PARTS:"), many0(terminated(part, token(";")))), value("BUILTIN", terminated(token("BUILTIN"), token(";"))));
 const parts = (i) => partsParser(i);
 const chipBlockParser = delimited(token("{"), tuple(inList, outList, parts), token("}"));
@@ -1793,7 +1858,7 @@ function or16(a, b) {
 function or8way(a) {
     return [(a & 0xff) == 0 ? LOW : HIGH];
 }
-class Or$1 extends Chip$1 {
+class Or extends Chip$1 {
     constructor() {
         super(["a", "b"], ["out"]);
     }
@@ -1884,7 +1949,7 @@ function and(a, b) {
 function and16(a, b) {
     return [a & b & 0xffff];
 }
-class And$1 extends Chip$1 {
+class And extends Chip$1 {
     constructor() {
         super(["a", "b"], ["out"]);
     }
@@ -1895,7 +1960,7 @@ class And$1 extends Chip$1 {
         this.out().pull(n);
     }
 }
-class And16$1 extends Chip$1 {
+class And16 extends Chip$1 {
     constructor() {
         super(["a[16]", "b[16]"], ["out[16]"]);
     }
@@ -1992,7 +2057,7 @@ function not(inn) {
 function not16(inn) {
     return [~inn & 0xffff];
 }
-class Not$1 extends Chip$1 {
+class Not extends Chip$1 {
     constructor() {
         super(["in"], ["out"]);
     }
@@ -2002,7 +2067,7 @@ class Not$1 extends Chip$1 {
         this.out().pull(out);
     }
 }
-class Not16$1 extends Chip$1 {
+class Not16 extends Chip$1 {
     constructor() {
         super(["in[16]"], ["out[16]"]);
     }
@@ -2015,7 +2080,10 @@ class Not16$1 extends Chip$1 {
 function xor(a, b) {
     return [(a == HIGH && b == LOW) || (a == LOW && b == HIGH) ? HIGH : LOW];
 }
-class Xor$1 extends Chip$1 {
+function xor16(a, b) {
+    return [(a ^ b) & 0xffff];
+}
+class Xor extends Chip$1 {
     constructor() {
         super(["a", "b"], ["out"]);
     }
@@ -2026,19 +2094,32 @@ class Xor$1 extends Chip$1 {
         this.out().pull(out);
     }
 }
+class Xor16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const [out] = xor16(a, b);
+        this.out().busVoltage = out;
+    }
+}
 
 const REGISTRY = new Map([
     ["Nand", Nand],
     ["Nand16", Nand16],
-    ["Not", Not$1],
-    ["Not16", Not16$1],
-    ["And", And$1],
-    ["And16", And16$1],
-    ["Or", Or$1],
+    ["Not", Not],
+    ["Not16", Not16],
+    ["And", And],
+    ["And16", And16],
+    ["Or", Or],
     ["Or16", Or16],
     ["Or8way", Or8way],
-    ["XOr", Xor$1],
-    ["XOr16", Xor$1],
+    ["XOr", Xor],
+    ["XOr16", Xor16],
+    ["Xor", Xor],
+    ["Xor16", Xor16],
     ["Mux", Mux],
     ["Mux16", Mux16],
     ["Demux", Demux],
@@ -2063,86 +2144,18 @@ function getBuiltinChip(name) {
         : Err(new Error(`Chip ${name} not in builtin registry`));
 }
 
-const Not = () => {
-    const not = new Chip$1(["in"], ["out"], "Not");
-    not.wire(new Nand(), [
-        { from: "in", to: "a" },
-        { from: "in", to: "b" },
-        { from: "out", to: "out" },
-    ]);
-    return not;
-};
-const And = () => {
-    const andChip = new Chip$1(["a", "b"], ["out"], "And");
-    const n = new Bus("n");
-    andChip.pins.insert(n);
-    andChip.wire(new Nand(), [
-        { from: "a", to: "a" },
-        { from: "b", to: "b" },
-        { from: n, to: "out" },
-    ]);
-    andChip.wire(Not(), [
-        { from: n, to: "in" },
-        { from: "out", to: "out" },
-    ]);
-    return andChip;
-};
-const Or = () => {
-    const orChip = new Chip$1(["a", "b"], ["out"], "Or");
-    const notA = new Bus("notA");
-    const notB = new Bus("notB");
-    orChip.pins.insert(notA);
-    orChip.pins.insert(notB);
-    orChip.wire(Not(), [
-        { from: "a", to: "in" },
-        { from: notA, to: "out" },
-    ]);
-    orChip.wire(Not(), [
-        { from: "b", to: "in" },
-        { from: notB, to: "out" },
-    ]);
-    orChip.wire(new Nand(), [
-        { from: notA, to: "a" },
-        { from: notB, to: "b" },
-        { from: "out", to: "out" },
-    ]);
-    return orChip;
-};
-const Xor = () => {
-    const xorChip = new Chip$1(["a", "b"], ["out"], "Xor");
-    const notA = new Bus("notA");
-    const notB = new Bus("notB");
-    const aAndNotB = new Bus("aAndNotB");
-    const notAAndB = new Bus("notAAndB");
-    xorChip.pins.insert(notA);
-    xorChip.pins.insert(notB);
-    xorChip.pins.insert(aAndNotB);
-    xorChip.pins.insert(notAAndB);
-    xorChip.wire(Not(), [
-        { from: "a", to: "in" },
-        { from: notA, to: "out" },
-    ]);
-    xorChip.wire(Not(), [
-        { from: "b", to: "in" },
-        { from: notB, to: "out" },
-    ]);
-    xorChip.wire(And(), [
-        { from: "a", to: "a" },
-        { from: notB, to: "b" },
-        { from: aAndNotB, to: "out" },
-    ]);
-    xorChip.wire(And(), [
-        { from: notA, to: "a" },
-        { from: "b", to: "b" },
-        { from: notAAndB, to: "out" },
-    ]);
-    xorChip.wire(Or(), [
-        { from: aAndNotB, to: "a" },
-        { from: notAAndB, to: "b" },
-        { from: "out", to: "out" },
-    ]);
-    return xorChip;
-};
+function pinWidth(start, end) {
+    if (end === undefined) {
+        return undefined;
+    }
+    if (end >= start) {
+        return end - start + 1;
+    }
+    if (start > 0 && end == 0) {
+        return 1;
+    }
+    throw new Error(`Bus specification has start > end (${start} > ${end})`);
+}
 function parse(code) {
     const parsed = HdlParser(code);
     if (isErr(parsed))
@@ -2151,26 +2164,27 @@ function parse(code) {
     if (parts.parts === "BUILTIN") {
         return getBuiltinChip(parts.name);
     }
-    const ins = parts.ins.map(({ pin, start }) => ({
-        pin,
-        start: start == 0 ? 1 : start,
-    }));
-    const outs = parts.outs.map(({ pin, start }) => ({
-        pin,
-        start: start == 0 ? 1 : start,
-    }));
-    const chip = new Chip$1(ins, outs, parts.name);
-    for (const wire of parts.parts) {
-        const builtin = getBuiltinChip(wire.name);
+    const buildChip = new Chip$1(parts.ins, parts.outs, parts.name);
+    for (const part of parts.parts) {
+        const builtin = getBuiltinChip(part.name);
         if (isErr(builtin))
             return builtin;
-        const wires = wire.wires.map(({ lhs, rhs: { pin } }) => ({
-            from: pin,
-            to: lhs,
+        const partChip = Ok(builtin);
+        const wires = part.wires.map(({ lhs, rhs }) => ({
+            to: {
+                name: lhs.pin,
+                start: lhs.start ?? 0,
+                width: pinWidth(lhs.start ?? 0, lhs.end),
+            },
+            from: {
+                name: rhs.pin,
+                start: rhs.start ?? 0,
+                width: pinWidth(rhs.start ?? 0, rhs.end),
+            },
         }));
-        chip.wire(Ok(builtin), wires);
+        buildChip.wire(partChip, wires);
     }
-    return Ok(chip);
+    return Ok(buildChip);
 }
 
 /** Reads tst files to apply and perform test runs. */
@@ -2445,12 +2459,14 @@ const PROJECTS = {
         "And16",
         "Or16",
         "Mux16",
-        // "Mux4way16",
-        // "DMux4way",
-        // "DMux8way",
+        "Mux4way16",
+        "Mux8way16",
+        "DMux4way",
+        "DMux8way",
         "Or8way",
     ],
     "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
+    "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
 };
 function makeProjectDropdown(selected, setProject) {
     return Dropdown({
@@ -3027,11 +3043,11 @@ const VirtualScroll = FC("virtual-scroll", (element, props) => {
         state.topPaddingHeight = newState.topPaddingHeight;
         state.bottomPaddingHeight = newState.bottomPaddingHeight;
         state.data = newState.data;
-        element[State].rows = state.data.map(props.row);
+        state.rows = state.data.map(props.row);
         viewportElement.update(div({
             class: "VirtualScroll__topPadding",
             style: { height: `${state.topPaddingHeight}px` },
-        }), ...(element[State].rows ?? []).map((row, i) => div({
+        }), ...(state.rows ?? []).map((row, i) => div({
             class: `VirtualScroll__item_${i}`,
             style: { height: `${settings.itemHeight}px` },
         }, row)), div({
@@ -3082,13 +3098,15 @@ function rounded(size = "", side = "") {
     }, {});
 }
 
+const ITEM_HEIGHT = 33.5;
 const MemoryBlock = FC("memory-block", (el, { memory, highlight = -1, editable = false, format, onChange }) => {
-    if (el[State].virtualScroll) {
-        el[State].virtualScroll?.update();
+    const state = (el[State] ??= {});
+    if (state.virtualScroll) {
+        state.virtualScroll?.update();
     }
     else {
-        el[State].virtualScroll = VirtualScroll({
-            settings: { count: 20, maxIndex: memory.size, itemHeight: 28 },
+        state.virtualScroll = VirtualScroll({
+            settings: { count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT },
             get: (o, l) => memory.map((i, v) => [i, v], o, o + l),
             row: ([i, v]) => 
             // @ts-ignore TODO(TFC)
@@ -3101,7 +3119,7 @@ const MemoryBlock = FC("memory-block", (el, { memory, highlight = -1, editable =
             }),
         });
     }
-    return el[State].virtualScroll;
+    return state.virtualScroll;
 });
 const MemoryCell = FC("memory-cell", (el, { index, value, highlight = false, editable = false, onChange = () => { } }) => {
     el.style.display = "flex";
@@ -3135,8 +3153,8 @@ const MemoryCell = FC("memory-cell", (el, { index, value, highlight = false, edi
     ];
 });
 const Memory = FC("memory-gui", (el, { name = "Memory", highlight = -1, editable = true, memory, format = "dec" }) => {
-    el.style.width = "283px";
-    const state = el[State];
+    el.style.width = "100%";
+    const state = (el[State] ??= {});
     state.format ??= format;
     const setFormat = (f) => {
         state.format = f;
@@ -3210,9 +3228,9 @@ function set(data, x, y, value) {
     data[pixel + 3] = 255;
 }
 const Screen = FC("hack-screen", (el, { memory }) => {
-    const screen = (el[State].screen ??= canvas({ width: 512, height: 256 }));
-    const ctx = (el[State].ctx ??= screen.getContext("2d") ?? undefined);
-    el.style.width = "518px";
+    const state = (el[State] ??= {});
+    const screen = (state.screen ??= canvas({ width: 512, height: 256 }));
+    const ctx = (state.ctx ??= screen.getContext("2d") ?? undefined);
     if (ctx) {
         const image = assertExists(ctx.getImageData(0, 0, 512, 256), "Failed to create Context2d");
         for (let col = 0; col < 512; col++) {
@@ -3225,14 +3243,37 @@ const Screen = FC("hack-screen", (el, { memory }) => {
     }
     return article({ class: "no-shadow panel" }, header("Display"), figure({
         style: {
+            width: "100%",
+            maxWidth: "512px",
+            boxSizing: "content-box",
+            marginInline: "auto",
             borderTop: "2px solid gray",
             borderLeft: "2px solid gray",
             borderBottom: "2px solid lightgray",
             borderRight: "2px solid lightgray",
-            marginBottom: "0",
         },
     }, screen));
 });
+
+const colorfn = () => (Math.random() * 0xffff) & 0xffff;
+const TickScreen = (cpu) => {
+    let row = 0;
+    let col = 0;
+    let color = colorfn();
+    return () => {
+        const index = SCREEN + col + row * 32;
+        cpu.RAM.set(index, color);
+        col += 1;
+        if (col >= 32) {
+            col = 0;
+            row += 1;
+            color = colorfn();
+            if (row >= 256) {
+                row = 0;
+            }
+        }
+    };
+};
 
 const CPU = ({ cpu } = { cpu: new CPU$1({ ROM: new Memory$1(HACK) }) }) => {
     const PC = span();
@@ -3249,6 +3290,7 @@ const CPU = ({ cpu } = { cpu: new CPU$1({ ROM: new Memory$1(HACK) }) }) => {
         screen?.update();
     };
     resetRAM();
+    const tickScreen = TickScreen(cpu);
     const setState = () => {
         PC.update(`PC: ${cpu.PC}`);
         A.update(`A: ${cpu.A}`);
@@ -3261,7 +3303,7 @@ const CPU = ({ cpu } = { cpu: new CPU$1({ ROM: new Memory$1(HACK) }) }) => {
     const runner = new (class CPURunner extends Timer {
         tick() {
             cpu.tick();
-            // tickScreen();
+            tickScreen();
         }
         finishFrame() {
             setState();
@@ -3274,35 +3316,19 @@ const CPU = ({ cpu } = { cpu: new CPU$1({ ROM: new Memory$1(HACK) }) }) => {
             runbar.update();
         }
     })();
-    return div({ class: "View__CPU" }, (runbar = Runbar({ runner }, label(PC, A, D))), style(compileFStyle({
-        ".View__CPU": {
-            "div.grid": {
-                gridTemplateColumns: "repeat(4, 283px)",
-                justifyContent: "center",
-            },
-            "hack-screen": {
-                gridColumn: "3 / span 2",
-            },
+    return div((runbar = Runbar({ runner }, label(PC, A, D))), div({ class: "grid" }, div({
+        class: "grid",
+        style: {
+            gridAutoFlow: "column",
+            gridTemplateColumns: "repeat(2, 1fr)",
         },
-        "@media (max-width: 1195px)": {
-            ".View__CPU": {
-                "div.grid": {
-                    gridTemplateColumns: "repeat(2, 283px)",
-                },
-                "hack-screen": {
-                    gridColumn: "1 / span 2",
-                },
-            },
-        },
-    })), div({ class: "grid" }, (ROM = Memory({
+    }, (ROM = Memory({
         name: "ROM",
         memory: cpu.ROM,
         highlight: cpu.PC,
         format: "asm",
         editable: false,
-    })), (RAM = Memory({ name: "RAM", memory: cpu.RAM, format: "hex" })), (screen = Screen({
-        memory: cpu.RAM,
-    }))));
+    })), (RAM = Memory({ name: "RAM", memory: cpu.RAM, format: "hex" }))), div((screen = Screen({ memory: cpu.RAM })))));
 };
 
 const LEVEL = {
@@ -3325,7 +3351,7 @@ function getLogger(name) {
     logger.error = logAt(LEVEL.ERROR, console.error.bind(console));
     return logger;
 }
-const DEFAULT_LOGGER = getLogger();
+getLogger();
 
 const beforeall = Symbol("beforeAll");
 const beforeeach = Symbol("beforeEach");
@@ -3359,6 +3385,10 @@ function it(title, block) {
     totalCases += 1;
     cases[0][title] = block;
 }
+it.skip = (title, _block) => {
+    logger$1.debug(`it.skip(${title})`);
+    totalCases += 1;
+};
 function beforeEach(fn) {
     cases[0][beforeeach] = fn;
 }
@@ -3453,49 +3483,6 @@ function flattenResults(results, prefix = "") {
         errorList = errorList.concat(flatResult);
     }
     return errorList;
-}
-
-function isHTMLLogger(logger) {
-    return logger.root != undefined;
-}
-function makeHTMLLogger(name) {
-    let log;
-    const root = div(div(span(name)), (log = ul()));
-    const logger = { level: LEVEL.INFO, root };
-    function append(message) {
-        log.appendChild(li(pre(code(message))));
-    }
-    const logAt = (level) => (message) => level >= (logger.level ?? LEVEL.ERROR)
-        ? append(display(message))
-        : undefined;
-    logger.debug = logAt(LEVEL.VERBOSE);
-    logger.info = logAt(LEVEL.INFO);
-    logger.warn = logAt(LEVEL.WARN);
-    logger.error = logAt(LEVEL.ERROR);
-    return logger;
-}
-
-function displayStatistics(results, root = document.body) {
-    const { executed, failed } = results;
-    const logger = (() => {
-        try {
-            return makeHTMLLogger(`Executed ${executed} of ${getTotalCases()}; ${failed} failed.`);
-        }
-        catch (e) {
-            return DEFAULT_LOGGER;
-        }
-    })();
-    logger.level = LEVEL.DEBUG;
-    const flat = flattenResults(results);
-    for (const { test, stack } of flat) {
-        if (stack) {
-            logger.info(test);
-            logger.debug(`${stack}`);
-        }
-    }
-    if (isHTMLLogger(logger)) {
-        root.appendChild(logger.root);
-    }
 }
 
 const logger = getLogger();
@@ -3679,6 +3666,7 @@ describe("twos", () => {
         expect(bin(1)).toBe("0000000000000001");
         expect(bin(-1)).toBe("1111111111111111");
         expect(bin(256)).toBe("0000000100000000");
+        expect(bin(6, 4)).toBe("0110");
         expect(dec(0)).toBe("0");
         expect(dec(1)).toBe("1");
         expect(dec(-1)).toBe("-1");
@@ -3772,17 +3760,17 @@ describe("hdl language", () => {
     it("parses pin wiring", () => {
         let parsed;
         parsed = TEST_ONLY$1.wire("a=a");
-        expect(parsed).toEqual(Ok(["", ["a", { pin: "a", start: 0, end: 1 }]]));
+        expect(parsed).toEqual(Ok(["", [{ pin: "a" }, { pin: "a" }]]));
         parsed = TEST_ONLY$1.wire("b = /* to */ a // things");
-        expect(parsed).toEqual(Ok(["", ["b", { pin: "a", start: 0, end: 1 }]]));
-        parsed = TEST_ONLY$1.wire("b = 0");
-        expect(parsed).toEqual(Ok(["", ["b", { pin: "0", start: 0, end: 1 }]]));
+        expect(parsed).toEqual(Ok(["", [{ pin: "b" }, { pin: "a" }]]));
+        // parsed = TEST_ONLY.wire("b = 0");
+        // expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, {pin: "0", start: 0, end: 0}]]));
         parsed = TEST_ONLY$1.wire("b = False");
-        expect(parsed).toEqual(Ok(["", ["b", { pin: "False", start: 0, end: 1 }]]));
-        parsed = TEST_ONLY$1.wire("b = False");
-        expect(parsed).toEqual(Ok(["", ["b", { pin: "False", start: 0, end: 1 }]]));
-        parsed = TEST_ONLY$1.wire("b = Foo");
-        expect(isErr(parsed)).toBe(true);
+        expect(parsed).toEqual(Ok(["", [{ pin: "b" }, { pin: "False" }]]));
+        parsed = TEST_ONLY$1.wire("b = True");
+        expect(parsed).toEqual(Ok(["", [{ pin: "b" }, { pin: "True" }]]));
+        // parsed = TEST_ONLY.wire("b = Foo");
+        // expect(isErr(parsed)).toBe(true);
     });
     it("parses a list of pins", () => {
         let parsed;
@@ -3791,12 +3779,30 @@ describe("hdl language", () => {
         expect(parsed).toEqual(Ok([
             "",
             [
-                ["a", { pin: "a", start: 0, end: 1 }],
-                ["b", { pin: "b", start: 0, end: 1 }],
+                [{ pin: "a" }, { pin: "a" }],
+                [{ pin: "b" }, { pin: "b" }],
             ],
         ]));
     });
-    it("Parses a part", () => {
+    it("parses bus pins", () => {
+        let parsed;
+        let parser = TEST_ONLY$1.wire;
+        parsed = parser("a[2..4]=b");
+        expect(parsed).toEqual(Ok(["", [{ pin: "a", start: 2, end: 4 }, { pin: "b" }]]));
+        parsed = parser("a=b[0]");
+        expect(parsed).toEqual(Ok(["", [{ pin: "a" }, { pin: "b", start: 0, end: 0 }]]));
+        parsed = parser("a=b[2]");
+        expect(parsed).toEqual(Ok(["", [{ pin: "a" }, { pin: "b", start: 2, end: 2 }]]));
+        parsed = parser("a[2..4]=b[10..12]");
+        expect(parsed).toEqual(Ok([
+            "",
+            [
+                { pin: "a", start: 2, end: 4 },
+                { pin: "b", start: 10, end: 12 },
+            ],
+        ]));
+    });
+    it("parses a part", () => {
         let parsed;
         parsed = TEST_ONLY$1.part("Nand(a=a, b=b, out=out)");
         expect(parsed).toEqual(Ok([
@@ -3804,9 +3810,18 @@ describe("hdl language", () => {
             {
                 name: "Nand",
                 wires: [
-                    { lhs: "a", rhs: { pin: "a", start: 0, end: 1 } },
-                    { lhs: "b", rhs: { pin: "b", start: 0, end: 1 } },
-                    { lhs: "out", rhs: { pin: "out", start: 0, end: 1 } },
+                    {
+                        lhs: { pin: "a" },
+                        rhs: { pin: "a" },
+                    },
+                    {
+                        lhs: { pin: "b" },
+                        rhs: { pin: "b" },
+                    },
+                    {
+                        lhs: { pin: "out" },
+                        rhs: { pin: "out" },
+                    },
                 ],
             },
         ]));
@@ -3820,16 +3835,31 @@ describe("hdl language", () => {
                 {
                     name: "Not",
                     wires: [
-                        { lhs: "a", rhs: { pin: "a", start: 0, end: 1 } },
-                        { lhs: "o", rhs: { pin: "o", start: 0, end: 1 } },
+                        {
+                            lhs: { pin: "a" },
+                            rhs: { pin: "a" },
+                        },
+                        {
+                            lhs: { pin: "o" },
+                            rhs: { pin: "o" },
+                        },
                     ],
                 },
                 {
                     name: "And",
                     wires: [
-                        { lhs: "b", rhs: { pin: "b", start: 0, end: 1 } },
-                        { lhs: "c", rhs: { pin: "c", start: 0, end: 1 } },
-                        { lhs: "i", rhs: { pin: "i", start: 0, end: 1 } },
+                        {
+                            lhs: { pin: "b" },
+                            rhs: { pin: "b" },
+                        },
+                        {
+                            lhs: { pin: "c" },
+                            rhs: { pin: "c" },
+                        },
+                        {
+                            lhs: { pin: "i" },
+                            rhs: { pin: "i" },
+                        },
                     ],
                 },
             ],
@@ -3843,15 +3873,15 @@ describe("hdl language", () => {
         expect(parsed).toEqual(Ok([
             "",
             [
-                { pin: "a", start: 0, end: 1 },
-                { pin: "b", start: 0, end: 1 },
+                { pin: "a", width: 1 },
+                { pin: "b", width: 1 },
             ],
         ]));
     });
     it("parses OUT list", () => {
         let parsed;
         parsed = TEST_ONLY$1.outList(`OUT out;`);
-        expect(parsed).toEqual(Ok(["", [{ pin: "out", start: 0, end: 1 }]]));
+        expect(parsed).toEqual(Ok(["", [{ pin: "out", width: 1 }]]));
     });
     it("parses a file into a builtin", () => {
         const parsed = HdlParser(AND_BUILTIN);
@@ -3860,10 +3890,10 @@ describe("hdl language", () => {
             {
                 name: "And",
                 ins: [
-                    { pin: "a", start: 0, end: 1 },
-                    { pin: "b", start: 0, end: 1 },
+                    { pin: "a", width: 1 },
+                    { pin: "b", width: 1 },
                 ],
-                outs: [{ pin: "out", start: 0, end: 1 }],
+                outs: [{ pin: "out", width: 1 }],
                 parts: "BUILTIN",
             },
         ]));
@@ -3874,15 +3904,24 @@ describe("hdl language", () => {
             "",
             {
                 name: "Not",
-                ins: [{ pin: "in", start: 0, end: 1 }],
-                outs: [{ pin: "out", start: 0, end: 1 }],
+                ins: [{ pin: "in", width: 1 }],
+                outs: [{ pin: "out", width: 1 }],
                 parts: [
                     {
                         name: "Nand",
                         wires: [
-                            { lhs: "a", rhs: { pin: "in", start: 0, end: 1 } },
-                            { lhs: "b", rhs: { pin: "in", start: 0, end: 1 } },
-                            { lhs: "out", rhs: { pin: "out", start: 0, end: 1 } },
+                            {
+                                lhs: { pin: "a" },
+                                rhs: { pin: "in" },
+                            },
+                            {
+                                lhs: { pin: "b" },
+                                rhs: { pin: "in" },
+                            },
+                            {
+                                lhs: { pin: "out" },
+                                rhs: { pin: "out" },
+                            },
                         ],
                     },
                 ],
@@ -3895,8 +3934,8 @@ describe("hdl language", () => {
             "",
             {
                 name: "Not",
-                ins: [{ pin: "in", start: 0, end: 1 }],
-                outs: [{ pin: "out", start: 0, end: 1 }],
+                ins: [{ pin: "in", width: 1 }],
+                outs: [{ pin: "out", width: 1 }],
                 parts: [],
             },
         ]));
@@ -3908,17 +3947,19 @@ describe("hdl language", () => {
             {
                 name: "And16",
                 ins: [
-                    { pin: "a", start: 16, end: 1 },
-                    { pin: "b", start: 16, end: 1 },
+                    { pin: "a", width: 16 },
+                    { pin: "b", width: 16 },
                 ],
-                outs: [{ pin: "out", start: 16, end: 1 }],
+                outs: [{ pin: "out", width: 16 }],
                 parts: "BUILTIN",
             },
         ]));
     });
-    it("handles errors", () => {
-        const parsed = HdlParser(new Span(`Chip And PARTS:`));
-        assert(isErr(parsed));
+    describe("errors", () => {
+        it("handles errors", () => {
+            const parsed = HdlParser(new Span(`Chip And PARTS:`));
+            assert(isErr(parsed));
+        });
     });
 });
 
@@ -4062,7 +4103,10 @@ describe("TS Parser Combinator", () => {
             const parser = alt(alpha1(), digit1());
             expect(parser("abc")).toEqual(Ok(["", "abc"]));
             expect(parser("123456")).toEqual(Ok(["", "123456"]));
-            expect(parser(" ")).toEqual(Err({ name: "" }));
+            expect(parser(" ")).toEqual(Err({
+                context: { message: "alt did not match any branches.", span: " " },
+                name: "ParseError",
+            }));
         });
     });
 });
@@ -4211,31 +4255,6 @@ describe("Parser sequences", () => {
     });
 });
 
-const Not16 = () => {
-    const not = new Chip$1(["in[16]"], ["out[16]"], "Not16");
-    not.wire(new Nand16(), [
-        { from: "in", to: "a" },
-        { from: "in", to: "b" },
-        { from: "out", to: "out" },
-    ]);
-    return not;
-};
-const And16 = () => {
-    const andChip = new Chip$1(["a[16]", "b[16]"], ["out[16]"], "And");
-    const n = new Bus("n", 16);
-    andChip.pins.insert(n);
-    andChip.wire(new Nand16(), [
-        { from: "a", to: "a" },
-        { from: "b", to: "b" },
-        { from: n, to: "out" },
-    ]);
-    andChip.wire(Not16(), [
-        { from: n, to: "in" },
-        { from: "out", to: "out" },
-    ]);
-    return andChip;
-};
-
 describe("Chip", () => {
     it("parses toPin", () => {
         expect(parseToPin("a")).toMatchObject({ pin: "a" });
@@ -4265,7 +4284,7 @@ describe("Chip", () => {
         });
         describe("not", () => {
             it("evaluates a not gate", () => {
-                const notChip = Not();
+                const notChip = new Not();
                 notChip.eval();
                 expect(notChip.out().voltage()).toBe(HIGH);
                 notChip.in().pull(HIGH);
@@ -4275,7 +4294,7 @@ describe("Chip", () => {
         });
         describe("and", () => {
             it("evaluates an and gate", () => {
-                const andChip = And();
+                const andChip = new And();
                 const a = andChip.in("a");
                 const b = andChip.in("b");
                 andChip.eval();
@@ -4293,7 +4312,7 @@ describe("Chip", () => {
         });
         describe("or", () => {
             it("evaluates an or gate", () => {
-                const orChip = Or();
+                const orChip = new Or();
                 const a = orChip.in("a");
                 const b = orChip.in("b");
                 orChip.eval();
@@ -4312,7 +4331,7 @@ describe("Chip", () => {
         });
         describe("xor", () => {
             it("evaluates an xor gate", () => {
-                const xorChip = Xor();
+                const xorChip = new Xor();
                 const a = xorChip.in("a");
                 const b = xorChip.in("b");
                 xorChip.eval();
@@ -4330,6 +4349,18 @@ describe("Chip", () => {
         });
     });
     describe("wide", () => {
+        describe("Not16", () => {
+            it("evaluates a not16 gate", () => {
+                const not16 = new Not16();
+                const inn = not16.in();
+                inn.busVoltage = 0x0;
+                not16.eval();
+                expect(not16.out().busVoltage).toBe(0xffff);
+                inn.busVoltage = 0xf00f;
+                not16.eval();
+                expect(not16.out().busVoltage).toBe(0x0ff0);
+            });
+        });
         describe("bus voltage", () => {
             it("sets and returns wide busses", () => {
                 const pin = new Bus("wide", 16);
@@ -4342,7 +4373,12 @@ describe("Chip", () => {
             });
             it("creates wide busses internally", () => {
                 const chip = new Chip$1([], [], "WithWide");
-                chip.wire(Not16(), [{ to: "out", from: "a" }]);
+                chip.wire(new Not16(), [
+                    {
+                        to: { name: "out", start: 0, width: 16 },
+                        from: { name: "a", start: 0, width: 16 },
+                    },
+                ]);
                 const width = chip.pins.get("a")?.width;
                 expect(width).toBe(16);
             });
@@ -4350,24 +4386,152 @@ describe("Chip", () => {
         describe("and16", () => { });
     });
     describe("SubBus", () => {
-        describe("assigns output inside wide busses", () => {
-            const chip = new Chip$1(["in[2]"], ["out[4]"]);
-            const a0 = new SubBus(chip.in(), 0, 1);
-            new SubBus(chip.in(), 1, 1);
-            const out1 = new SubBus(chip.out(), 1, 1);
-            new SubBus(chip.out(), 2, 1);
-            chip.wire(Not(), [
-                { to: "in", from: a0 },
-                { to: "out", from: out1 },
+        class Not3 extends Chip$1 {
+            constructor() {
+                super(["in[3]"], ["out[3]"]);
+            }
+            eval() {
+                const inn = this.in().busVoltage;
+                const out = ~inn & 0b11;
+                this.out().busVoltage = out;
+            }
+        }
+        it("drives InSubBus", () => {
+            const chipPin = new Bus("in", 3);
+            const notChip = new Not();
+            const inSubBus = new InSubBus(notChip.in(), 1, 1);
+            inSubBus.connect(notChip.in());
+            chipPin.busVoltage = 0b0;
+            expect(notChip.in().busVoltage).toBe(0b0);
+            chipPin.busVoltage = 0b111;
+            expect(notChip.in().busVoltage).toBe(0b1);
+        });
+        it("drives OutSubBus", () => {
+            const notChip = new Not();
+            const inPin = new Bus("in", 3);
+            const outSubBus = new OutSubBus(notChip.in(), 1, 1);
+            inPin.connect(outSubBus);
+            inPin.busVoltage = 0b0;
+            expect(notChip.in().busVoltage).toBe(0b0);
+            inPin.busVoltage = 0b111;
+            expect(notChip.in().busVoltage).toBe(0b1);
+        });
+        it("wires SubBus in=in[1]", () => {
+            const not3Chip = new Not3();
+            const notPart = new Not();
+            const inPin = not3Chip.in();
+            not3Chip.wire(notPart, [
+                {
+                    from: { name: "in", start: 1, width: 1 },
+                    to: { name: "in", start: 0, width: 1 },
+                },
             ]);
-            // chip.wire(make.Not(), [
-            //   { to: "in", from: a1 },
-            //   { to: "out", from: out2 },
-            // ]);
-            // expect(chip.out().busVoltage).toBe(0b0000);
-            // chip.in().busVoltage = 0b00;
-            // chip.eval();
-            // expect(chip.out().busVoltage).toBe(0b0110);
+            inPin.busVoltage = 0b0;
+            expect(notPart.in().busVoltage).toBe(0b0);
+            inPin.busVoltage = 0b111;
+            expect(notPart.in().busVoltage).toBe(0b1);
+        });
+        it("wires SubBus out=out[1]", () => {
+            const not3Chip = new Not3();
+            const notPart = new Not();
+            const outPin = notPart.out();
+            not3Chip.wire(notPart, [
+                {
+                    from: { name: "out", start: 1, width: 1 },
+                    to: { name: "out", start: 0, width: 1 },
+                },
+            ]);
+            outPin.busVoltage = 0b0;
+            expect(not3Chip.out().busVoltage).toBe(0b0);
+            outPin.busVoltage = 0b1;
+            expect(not3Chip.out().busVoltage).toBe(0b010);
+        });
+        class Not8 extends Chip$1 {
+            constructor() {
+                super(["in[8]"], ["out[8]"]);
+            }
+            eval() {
+                const inn = this.in().busVoltage;
+                const out = ~inn & 0xff;
+                this.out().busVoltage = out;
+            }
+        }
+        it("assigns input inside wide busses", () => {
+            class Foo extends Chip$1 {
+                not8 = new Not8();
+                constructor() {
+                    super([], []);
+                    this.parts.add(this.not8);
+                    this.pins.insert(new ConstantBus("pal", 44085));
+                    this.pins.get("pal")?.connect(new OutSubBus(this.not8.in(), 4, 8));
+                    this.pins.emplace("out1", 5);
+                    const out1Bus = new OutSubBus(this.pins.get("out1"), 3, 5);
+                    this.not8.out().connect(out1Bus);
+                }
+            }
+            const foo = new Foo();
+            foo.eval();
+            expect(foo.not8.in().busVoltage).toEqual(195);
+            expect(foo.pin("out1")?.busVoltage).toEqual(0b00111);
+        });
+        it("assigns output inside wide busses", () => {
+            // From figure A2.2, page 287, 2nd edition
+            class Foo extends Chip$1 {
+                not8 = new Not8();
+                constructor() {
+                    super([], []);
+                    this.parts.add(this.not8);
+                    this.pins.insert(new ConstantBus("six", 0b110));
+                    // in[0..1] = true
+                    TRUE_BUS.connect(new InSubBus(this.not8.in(), 0, 2));
+                    // in[3..5] = six, 110
+                    this.pins.get("six")?.connect(new InSubBus(this.not8.in(), 3, 3));
+                    // in[7] = true
+                    TRUE_BUS.connect(new InSubBus(this.not8.in(), 7, 1));
+                    // out[3..7] = out1
+                    this.pins.emplace("out1", 5);
+                    const out1Bus = new OutSubBus(this.pins.get("out1"), 3, 5);
+                    this.not8.out().connect(out1Bus);
+                }
+            }
+            const foo = new Foo();
+            foo.eval();
+            expect(foo.not8.in().busVoltage).toBe(0b10110011);
+            expect(foo.pin("out1").busVoltage).toBe(0b01001);
+        });
+        it("pulls portions of true", () => {
+            class Foo extends Chip$1 {
+                chip = new Not3();
+                constructor() {
+                    super([], []);
+                    this.wire(this.chip, [
+                        {
+                            from: { name: "true", start: 0, width: 1 },
+                            to: { name: "in", start: 1, width: 2 },
+                        },
+                    ]);
+                }
+            }
+            const foo = new Foo();
+            const inVoltage = foo.chip.in().busVoltage;
+            expect(bin(inVoltage)).toBe(bin(0b110));
+        });
+        it("pulls start of true", () => {
+            class Foo extends Chip$1 {
+                chip = new Not3();
+                constructor() {
+                    super([], []);
+                    this.wire(this.chip, [
+                        {
+                            from: { name: "true", start: 0, width: 1 },
+                            to: { name: "in", start: 0, width: 2 },
+                        },
+                    ]);
+                }
+            }
+            const foo = new Foo();
+            const inVoltage = foo.chip.in().busVoltage;
+            expect(bin(inVoltage)).toBe(bin(0b11));
         });
     });
     describe("sequential", () => {
@@ -4392,25 +4556,87 @@ describe("Chip", () => {
     });
 });
 
-// 0x1001 & 0x1001 = 0x1001
-describe("bus logic", () => {
-    describe("nand16", () => {
-        it("nands 16-bit-wide", () => {
-            const nand16 = new Nand16();
-            nand16.in("a").busVoltage = 0xf00f;
-            nand16.in("b").busVoltage = 0xf0f0;
-            nand16.eval();
-            expect(nand16.out().busVoltage).toBe(0x0fff);
-        });
+describe("Chip Builder", () => {
+    it("builds a chip from a string", () => {
+        const nand = unwrap(parse(`CHIP Not { IN in; OUT out; PARTS: Nand(a=in, b=in, out=out); }`));
+        nand.in().pull(LOW);
+        nand.eval();
+        expect(nand.out().voltage()).toBe(HIGH);
+        nand.in().pull(HIGH);
+        nand.eval();
+        expect(nand.out().voltage()).toBe(LOW);
     });
-    describe("and16", () => {
-        it("ands 16-bit-wide busses", () => {
-            const and16 = And16();
-            and16.in("a").busVoltage = 0x1001;
-            and16.in("b").busVoltage = 0x1010;
-            and16.eval();
-            expect(and16.out().busVoltage).toBe(0x1000);
-        });
+    it("builds and evals a chip with subbus components", () => {
+        let foo;
+        try {
+            foo = unwrap(parse(`CHIP Foo {
+          IN six[3];
+          OUT out;
+          PARTS: Not16(
+            in[0..1] = true,
+            in[3..5] = six,
+            in[7] = true,
+            // out[3..7] = out1,
+            );
+          }`));
+        }
+        catch (e) {
+            throw new Error(display(e));
+        }
+        const six = foo.in("six");
+        six.busVoltage = 6;
+        foo.eval();
+        const inVoltage = [...foo.parts][0].in().busVoltage;
+        expect(bin(inVoltage)).toBe(bin(0b10110011));
+        // const outVoltage = foo.pin("out1").busVoltage;
+        // expect(outVoltage).toBe(0b01001);
+        // expect(outVoltage).toBe(0b11001);
+    });
+    it("builds and evals a chip with subpins", () => {
+        let foo;
+        try {
+            foo = unwrap(parse(`
+        CHIP Not2 {
+          IN in[2];
+          OUT out[2];
+          PARTS:
+          Not(in=in[0], out=out[0]);
+          Not(in=in[1], out=out[1]);
+        }
+      `));
+        }
+        catch (e) {
+            throw new Error(display(e));
+        }
+        foo.in().busVoltage = 0b00;
+        foo.eval();
+        expect(foo.out().busVoltage).toBe(0b11);
+        foo.in().busVoltage = 0b11;
+        foo.eval();
+        expect(foo.out().busVoltage).toBe(0b00);
+    });
+    it("builds and evals a chip with subbus components on the right", () => {
+        let foo;
+        try {
+            foo = unwrap(parse(`CHIP Foo {
+          IN in[16];
+          OUT out[5];
+          PARTS: Not16(
+            in[0..7] = in[4..11],
+            // in[8..15] = false,
+            out[3..5] = out[1..3],
+            );
+          }`));
+        }
+        catch (e) {
+            throw new Error(display(e));
+        }
+        foo.in().busVoltage = 44085;
+        foo.eval();
+        const inVoltage = [...foo.parts][0].in().busVoltage;
+        const outVoltage = foo.out().busVoltage;
+        expect(bin(inVoltage)).toBe(bin(0b11000011));
+        expect(bin(outVoltage)).toBe(bin(0b01110));
     });
 });
 
@@ -4594,6 +4820,16 @@ describe("Simulator Test", () => {
     });
 });
 
+function displayStatistics(results, root) {
+    const { executed, failed } = results;
+    root.appendChild(div(`Executed ${executed} of ${getTotalCases()}; ${failed} failed.`));
+    const flat = flattenResults(results);
+    for (const { test, stack } of flat) {
+        if (stack) {
+            root.appendChild(details(summary(code({ style: { width: "calc(100% - 1.5rem)" } }, test)), pre(code(display(stack)))));
+        }
+    }
+}
 const Test = () => {
     const root = article(header("Tests"));
     (async function test() {
@@ -4613,10 +4849,10 @@ var urls = [
     { href: "test", link: "Tests", target: Test },
 ];
 
-const cmp$k = `|  in   |  out  |
+const cmp$s = `|  in   |  out  |
 |   0   |   1   |
 |   1   |   0   |`;
-const hdl$k = `// Not gate: out = not in
+const hdl$s = `// Not gate: out = not in
 
 CHIP Not {
     IN in;
@@ -4624,13 +4860,13 @@ CHIP Not {
 
     PARTS:
 }`;
-const tst$k = `
+const tst$s = `
 output-list in%B3.1.3 out%B3.1.3;
 
 set in 0, eval, output;
 set in 1, eval, output;`;
 
-const hdl$j = `/**
+const hdl$r = `/**
  * And gate: out = 1 if {a==1 and b==1}, 0 otherwise
  * And gate: if {a==1 and b==1} then out = 1 else out = 0
  */
@@ -4641,23 +4877,23 @@ CHIP And {
 
     PARTS:
 }`;
-const tst$j = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const tst$r = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
-const cmp$j = `|   a   |   b   |  out  |
+const cmp$r = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   0   |
 |   1   |   0   |   0   |
 |   1   |   1   |   1   |`;
 
-const cmp$i = `|   a   |   b   |  out  |
+const cmp$q = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   1   |
 |   1   |   0   |   1   |
 |   1   |   1   |   1   |`;
-const hdl$i = `/**
+const hdl$q = `/**
  * Or gate: out = 1 if {a==1 or b==1}, 0 otherwise
  */
 
@@ -4667,19 +4903,19 @@ CHIP Or {
 
     PARTS:
 }`;
-const tst$i = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const tst$q = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
 
-const cmp$h = `|   a   |   b   |  out  |
+const cmp$p = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   1   |
 |   1   |   0   |   1   |
 |   1   |   1   |   0   |`;
-const hdl$h = `/**
+const hdl$p = `/**
  *  Exclusive-or gate: out = !(a == b).
  */
 
@@ -4689,14 +4925,14 @@ CHIP XOr {
 
     PARTS:
 }`;
-const tst$h = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const tst$p = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
 
-const cmp$g = `|   a   |   b   |  sel  |  out  |
+const cmp$o = `|   a   |   b   |  sel  |  out  |
 |   0   |   0   |   0   |   0   |
 |   0   |   0   |   1   |   0   |
 |   0   |   1   |   0   |   0   |
@@ -4705,7 +4941,7 @@ const cmp$g = `|   a   |   b   |  sel  |  out  |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |
 |   1   |   1   |   1   |   1   |`;
-const hdl$g = `/** 
+const hdl$o = `/** 
  * Multiplexor. If sel==1 then out=b else out=a.
  */
 
@@ -4715,7 +4951,7 @@ CHIP Mux {
 
     PARTS:
 }`;
-const tst$g = `output-list a%B3.1.3 b%B3.1.3 sel%B3.1.3 out%B3.1.3;
+const tst$o = `output-list a%B3.1.3 b%B3.1.3 sel%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4729,7 +4965,7 @@ set sel 1, eval, output;
 set a 1, set b 1, set sel 0, eval, output;
 set sel 1, eval, output;`;
 
-const hdl$f = `/**
+const hdl$n = `/**
  * Demultiplexor.
  * {a,b} = {in,0} if sel==0
  *         {0,in} if sel==1
@@ -4741,20 +4977,20 @@ CHIP DMux {
 
     PARTS:
 }`;
-const tst$f = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
+const tst$n = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
 
 set in 0, set sel 0, eval, output;
 set sel 1, eval, output;
 
 set in 1, set sel 0, eval, output;
 set sel 1, eval, output;`;
-const cmp$f = `|  in   |  sel  |   a   |   b   |
+const cmp$n = `|  in   |  sel  |   a   |   b   |
 |   0   |   0   |   0   |   0   |
 |   0   |   1   |   0   |   0   |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |`;
 
-const hdl$e = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
+const hdl$m = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
 
 CHIP Not16 {
    IN in[16];
@@ -4762,20 +4998,20 @@ CHIP Not16 {
 
    PARTS:
 }`;
-const tst$e = `output-list in%B1.16.1 out%B1.16.1;
+const tst$m = `output-list in%B1.16.1 out%B1.16.1;
 set in %B0000000000000000, eval, output;
 set in %B1111111111111111, eval, output;
 set in %B1010101010101010, eval, output;
 set in %B0011110011000011, eval, output;
 set in %B0001001000110100, eval, output;`;
-const cmp$e = `|        in        |       out        |
+const cmp$m = `|        in        |       out        |
 | 0000000000000000 | 1111111111111111 |
 | 1111111111111111 | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |
 | 0011110011000011 | 1100001100111100 |
 | 0001001000110100 | 1110110111001011 |`;
 
-const hdl$d = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
+const hdl$l = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
 
 CHIP And16 {
     IN a[16], b[16];
@@ -4783,7 +5019,7 @@ CHIP And16 {
 
     PARTS:
 }`;
-const tst$d = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const tst$l = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 
 set a %B0000000000000000, set b %B0000000000000000, eval, output;
 set a %B0000000000000000, set b %B1111111111111111, eval, output;
@@ -4791,7 +5027,7 @@ set a %B1111111111111111, set b %B1111111111111111, eval, output;
 set a %B1010101010101010, set b %B0101010101010101, eval, output;
 set a %B0011110011000011, set b %B0000111111110000, eval, output;
 set a %B0001001000110100, set b %B1001100001110110, eval, output;`;
-const cmp$d = `|        a         |        b         |       out        |
+const cmp$l = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 0000000000000000 |
 | 1111111111111111 | 1111111111111111 | 1111111111111111 |
@@ -4799,14 +5035,14 @@ const cmp$d = `|        a         |        b         |       out        |
 | 0011110011000011 | 0000111111110000 | 0000110011000000 |
 | 0001001000110100 | 1001100001110110 | 0001000000110100 |`;
 
-const cmp$c = `|        a         |        b         |       out        |
+const cmp$k = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1111111111111111 |
 | 1111111111111111 | 1111111111111111 | 1111111111111111 |
 | 1010101010101010 | 0101010101010101 | 1111111111111111 |
 | 0011110011000011 | 0000111111110000 | 0011111111110011 |
 | 0001001000110100 | 1001100001110110 | 1001101001110110 |`;
-const hdl$c = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
+const hdl$k = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
 
 CHIP Or16 {
     IN a[16], b[16];
@@ -4814,7 +5050,7 @@ CHIP Or16 {
 
     PARTS:
 }`;
-const tst$c = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const tst$k = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 set a %B0000000000000000, set b %B0000000000000000, eval, output;
 set a %B0000000000000000, set b %B1111111111111111, eval, output;
 set a %B1111111111111111, set b %B1111111111111111, eval, output;
@@ -4822,7 +5058,7 @@ set a %B1010101010101010, set b %B0101010101010101, eval, output;
 set a %B0011110011000011, set b %B0000111111110000, eval, output;
 set a %B0001001000110100, set b %B1001100001110110, eval, output;`;
 
-const cmp$b = `|        a         |        b         | sel |       out        |
+const cmp$j = `|        a         |        b         | sel |       out        |
 | 0000000000000000 | 0000000000000000 |  0  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 |  1  | 0000000000000000 |
 | 0000000000000000 | 0001001000110100 |  0  | 0000000000000000 |
@@ -4831,7 +5067,7 @@ const cmp$b = `|        a         |        b         | sel |       out        |
 | 1001100001110110 | 0000000000000000 |  1  | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |  0  | 1010101010101010 |
 | 1010101010101010 | 0101010101010101 |  1  | 0101010101010101 |`;
-const hdl$b = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
+const hdl$j = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
 
 CHIP Mux16 {
     IN a[16], b[16], sel;
@@ -4839,7 +5075,7 @@ CHIP Mux16 {
 
     PARTS:
 }`;
-const tst$b = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
+const tst$j = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
 
 set a 0, set b 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4853,7 +5089,7 @@ set sel 1, eval, output;
 set a %B1010101010101010, set b %B0101010101010101, set sel 0, eval, output;
 set sel 1, eval, output;`;
 
-const cmp$a = `|        a         |        b         |        c         |        d         | sel  |       out        |
+const cmp$i = `|        a         |        b         |        c         |        d         | sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  00  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  01  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  10  | 0000000000000000 |
@@ -4862,7 +5098,7 @@ const cmp$a = `|        a         |        b         |        c         |       
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  01  | 1001100001110110 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  10  | 1010101010101010 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  11  | 0101010101010101 |`;
-const hdl$a = `/**
+const hdl$i = `/**
  * 4-way 16-bit multiplexor.
  * out = a if sel==00
  *       b if sel==01
@@ -4876,7 +5112,7 @@ CHIP Mux4Way16 {
 
     PARTS:
 }`;
-const tst$a = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
+const tst$i = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
 
 set a 0, set b 0, set c 0, set d 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4888,7 +5124,7 @@ set sel 1, eval, output;
 set sel 2, eval, output;
 set sel 3, eval, output;`;
 
-const cmp$9 = `|        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
+const cmp$h = `|        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  000  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  001  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  010  | 0000000000000000 |
@@ -4905,7 +5141,7 @@ const cmp$9 = `|        a         |        b         |        c         |       
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  101  | 0110011110001001 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  110  | 0111100010011010 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  111  | 1000100110101011 |`;
-const hdl$9 = `/**
+const hdl$h = `/**
  * 8-way 16-bit multiplexor.
  * out = a if sel==000
  *       b if sel==001
@@ -4921,7 +5157,7 @@ CHIP Mux8Way16 {
 
     PARTS:
 }`;
-const tst$9 = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
+const tst$h = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
 
 set a 0, set b 0, set c 0, set d 0, set e 0, set f 0, set g 0, set h 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4941,7 +5177,7 @@ set sel 5, eval, output;
 set sel 6, eval, output;
 set sel 7, eval, output;`;
 
-const hdl$8 = `/**
+const hdl$g = `/**
  * 4-way demultiplexor.
  * {a,b,c,d} = {in,0,0,0} if sel==00
  *             {0,in,0,0} if sel==01
@@ -4955,7 +5191,7 @@ CHIP DMux4Way {
 
     PARTS:
 }`;
-const tst$8 = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
+const tst$g = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
 
 set in 0, set sel %B00, eval, output;
 set sel %B01, eval, output;
@@ -4966,7 +5202,7 @@ set in 1, set sel %B00, eval, output;
 set sel %B01, eval, output;
 set sel %B10, eval, output;
 set sel %B11, eval, output;`;
-const cmp$8 = `| in  | sel  |  a  |  b  |  c  |  d  |
+const cmp$g = `| in  | sel  |  a  |  b  |  c  |  d  |
 |  0  |  00  |  0  |  0  |  0  |  0  |
 |  0  |  01  |  0  |  0  |  0  |  0  |
 |  0  |  10  |  0  |  0  |  0  |  0  |
@@ -4976,7 +5212,7 @@ const cmp$8 = `| in  | sel  |  a  |  b  |  c  |  d  |
 |  1  |  10  |  0  |  0  |  1  |  0  |
 |  1  |  11  |  0  |  0  |  0  |  1  |`;
 
-const hdl$7 = `/**
+const hdl$f = `/**
  * 8-way demultiplexor.
  * {a,b,c,d,e,f,g,h} = {in,0,0,0,0,0,0,0} if sel==000
  *                     {0,in,0,0,0,0,0,0} if sel==001
@@ -4991,7 +5227,7 @@ CHIP DMux8Way {
 
     PARTS:
 }`;
-const tst$7 = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;
+const tst$f = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;
 
 set in 0, set sel %B000, eval, output;
 set sel %B001, eval, output;
@@ -5010,7 +5246,7 @@ set sel %B100, eval, output;
 set sel %B101, eval, output;
 set sel %B110, eval, output;
 set sel %B111, eval, output;`;
-const cmp$7 = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
+const cmp$f = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  0  |  00  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
 |  0  |  01  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
 |  0  |  10  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
@@ -5028,13 +5264,13 @@ const cmp$7 = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  1  |  10  |  0  |  0  |  0  |  0  |  0  |  0  |  1  |  0  |
 |  1  |  11  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  1  |`;
 
-const cmp$6 = `|     in     | out |
+const cmp$e = `|     in     | out |
 |  00000000  |  0  |
 |  11111111  |  1  |
 |  00010000  |  1  |
 |  00000001  |  1  |
 |  00100110  |  1  |`;
-const hdl$6 = `/**
+const hdl$e = `/**
  * 8-way or gate: out = in[0] or in[1] or ... or in[7].
  */
 
@@ -5044,7 +5280,7 @@ CHIP Or8Way {
 
     PARTS:
 }`;
-const tst$6 = `output-list in%B2.8.2 out%B2.1.2;
+const tst$e = `output-list in%B2.8.2 out%B2.1.2;
 
 set in %B00000000, eval, output;
 set in %B11111111, eval, output;
@@ -5052,89 +5288,89 @@ set in %B00010000, eval, output;
 set in %B00000001, eval, output;
 set in %B00100110, eval, output;`;
 
-async function resetFiles$2(fs) {
+async function resetFiles$3(fs) {
     await fs.pushd("/projects/01");
     await reset(fs, {
         Not: {
-            "Not.hdl": hdl$k,
-            "Not.tst": tst$k,
-            "Not.cmp": cmp$k,
+            "Not.hdl": hdl$s,
+            "Not.tst": tst$s,
+            "Not.cmp": cmp$s,
         },
         And: {
-            "And.hdl": hdl$j,
-            "And.tst": tst$j,
-            "And.cmp": cmp$j,
+            "And.hdl": hdl$r,
+            "And.tst": tst$r,
+            "And.cmp": cmp$r,
         },
         Or: {
-            "Or.hdl": hdl$i,
-            "Or.tst": tst$i,
-            "Or.cmp": cmp$i,
+            "Or.hdl": hdl$q,
+            "Or.tst": tst$q,
+            "Or.cmp": cmp$q,
         },
         XOr: {
-            "XOr.hdl": hdl$h,
-            "XOr.tst": tst$h,
-            "XOr.cmp": cmp$h,
+            "XOr.hdl": hdl$p,
+            "XOr.tst": tst$p,
+            "XOr.cmp": cmp$p,
         },
         Mux: {
-            "Mux.hdl": hdl$g,
-            "Mux.tst": tst$g,
-            "Mux.cmp": cmp$g,
+            "Mux.hdl": hdl$o,
+            "Mux.tst": tst$o,
+            "Mux.cmp": cmp$o,
         },
         DMux: {
-            "DMux.hdl": hdl$f,
-            "DMux.tst": tst$f,
-            "DMux.cmp": cmp$f,
+            "DMux.hdl": hdl$n,
+            "DMux.tst": tst$n,
+            "DMux.cmp": cmp$n,
         },
         Not16: {
-            "Not16.hdl": hdl$e,
-            "Not16.tst": tst$e,
-            "Not16.cmp": cmp$e,
+            "Not16.hdl": hdl$m,
+            "Not16.tst": tst$m,
+            "Not16.cmp": cmp$m,
         },
         And16: {
-            "And16.hdl": hdl$d,
-            "And16.tst": tst$d,
-            "And16.cmp": cmp$d,
+            "And16.hdl": hdl$l,
+            "And16.tst": tst$l,
+            "And16.cmp": cmp$l,
         },
         Or16: {
-            "Or16.hdl": hdl$c,
-            "Or16.tst": tst$c,
-            "Or16.cmp": cmp$c,
+            "Or16.hdl": hdl$k,
+            "Or16.tst": tst$k,
+            "Or16.cmp": cmp$k,
         },
         Mux16: {
-            "Mux16.hdl": hdl$b,
-            "Mux16.tst": tst$b,
-            "Mux16.cmp": cmp$b,
+            "Mux16.hdl": hdl$j,
+            "Mux16.tst": tst$j,
+            "Mux16.cmp": cmp$j,
         },
         Mux4way16: {
-            "Mux4way16.hdl": hdl$a,
-            "Mux4way16.tst": tst$a,
-            "Mux4way16.cmp": cmp$a,
+            "Mux4way16.hdl": hdl$i,
+            "Mux4way16.tst": tst$i,
+            "Mux4way16.cmp": cmp$i,
         },
         Mux8way16: {
-            "Mux8way16.hdl": hdl$9,
-            "Mux8way16.tst": tst$9,
-            "Mux8way16.cmp": cmp$9,
+            "Mux8way16.hdl": hdl$h,
+            "Mux8way16.tst": tst$h,
+            "Mux8way16.cmp": cmp$h,
         },
         DMux4way: {
-            "DMux4way.hdl": hdl$8,
-            "DMux4way.tst": tst$8,
-            "DMux4way.cmp": cmp$8,
+            "DMux4way.hdl": hdl$g,
+            "DMux4way.tst": tst$g,
+            "DMux4way.cmp": cmp$g,
         },
         DMux8way: {
-            "DMux8way.hdl": hdl$7,
-            "DMux8way.tst": tst$7,
-            "DMux8way.cmp": cmp$7,
+            "DMux8way.hdl": hdl$f,
+            "DMux8way.tst": tst$f,
+            "DMux8way.cmp": cmp$f,
         },
         Or8way: {
-            "Or8way.hdl": hdl$6,
-            "Or8way.tst": tst$6,
-            "Or8way.cmp": cmp$6,
+            "Or8way.hdl": hdl$e,
+            "Or8way.tst": tst$e,
+            "Or8way.cmp": cmp$e,
         },
     });
     await fs.popd();
 }
 
-const hdl$5 = `// Computes the sum of two bits.
+const hdl$d = `// Computes the sum of two bits.
 
 CHIP HalfAdder {
    IN a, b;    // 1-bit inputs
@@ -5144,12 +5380,12 @@ CHIP HalfAdder {
    PARTS:
    // Put you code here:
 }`;
-const cmp$5 = `|   a   |   b   |  sum  | carry |
+const cmp$d = `|   a   |   b   |  sum  | carry |
 |   0   |   0   |   0   |   0   |
 |   0   |   1   |   1   |   0   |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |`;
-const tst$5 = `output-list a%B3.1.3 b%B3.1.3 sum%B3.1.3 carry%B3.1.3;
+const tst$d = `output-list a%B3.1.3 b%B3.1.3 sum%B3.1.3 carry%B3.1.3;
 
 set a 0,
 set b 0,
@@ -5171,7 +5407,7 @@ set b 1,
 eval,
 output;`;
 
-const hdl$4 = `// Computes the sum of three bits.
+const hdl$c = `// Computes the sum of three bits.
 
 CHIP FullAdder {
    IN a, b, c;  // 1-bit inputs
@@ -5181,7 +5417,7 @@ CHIP FullAdder {
    PARTS:
    // Put you code here:
 }`;
-const cmp$4 = `|   a   |   b   |   c   |  sum  | carry |
+const cmp$c = `|   a   |   b   |   c   |  sum  | carry |
 |   0   |   0   |   0   |   0   |   0   |
 |   0   |   0   |   1   |   1   |   0   |
 |   0   |   1   |   0   |   1   |   0   |
@@ -5190,7 +5426,7 @@ const cmp$4 = `|   a   |   b   |   c   |  sum  | carry |
 |   1   |   0   |   1   |   0   |   1   |
 |   1   |   1   |   0   |   0   |   1   |
 |   1   |   1   |   1   |   1   |   1   |`;
-const tst$4 = `output-list a%B3.1.3 b%B3.1.3 c%B3.1.3 sum%B3.1.3 carry%B3.1.3;
+const tst$c = `output-list a%B3.1.3 b%B3.1.3 c%B3.1.3 sum%B3.1.3 carry%B3.1.3;
 
 set a 0,
 set b 0,
@@ -5230,7 +5466,7 @@ set c 1,
 eval,
 output;`;
 
-const hdl$3 = `/**
+const hdl$b = `/**
 * Adds two 16-bit values.
 * The most significant carry bit is ignored.
 */
@@ -5241,14 +5477,14 @@ CHIP Add16 {
 
    PARTS:
 }`;
-const cmp$3 = `|        a         |        b         |       out        |
+const cmp$b = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1111111111111111 |
 | 1111111111111111 | 1111111111111111 | 1111111111111110 |
 | 1010101010101010 | 0101010101010101 | 1111111111111111 |
 | 0011110011000011 | 0000111111110000 | 0100110010110011 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 |`;
-const tst$3 = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const tst$b = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 
 set a %B0000000000000000,
 set b %B0000000000000000,
@@ -5280,7 +5516,7 @@ set b %B1001100001110110,
 eval,
 output;`;
 
-const hdl$2 = `/**
+const hdl$a = `/**
 * 16-bit incrementer:
 * out = in + 1 (arithmetic addition)
 */
@@ -5292,13 +5528,13 @@ CHIP Inc16 {
    PARTS:
   // Put you code here:
 }`;
-const cmp$2 = `|        in        |       out        |
+const cmp$a = `|        in        |       out        |
 | 0000000000000000 | 0000000000000001 |
 | 1111111111111111 | 0000000000000000 |
 | 0000000000000101 | 0000000000000110 |
 | 1111111111111011 | 1111111111111100 |
 `;
-const tst$2 = `output-list in%B1.16.1 out%B1.16.1;
+const tst$a = `output-list in%B1.16.1 out%B1.16.1;
 
 set in %B0000000000000000,  // in = 0
 eval,
@@ -5316,7 +5552,7 @@ set in %B1111111111111011,  // in = -5
 eval,
 output;`;
 
-const hdl$1 = `/**
+const hdl$9 = `/**
  * The ALU (Arithmetic Logic Unit).
  * Computes one of the following functions:
  * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
@@ -5355,7 +5591,7 @@ CHIP ALU {
     PARTS:
    // Put you code here:
 }`;
-const cmp$1 = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |
+const cmp$9 = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 0 | 1 | 0 | 1111111111111111 |
@@ -5393,7 +5629,7 @@ const cmp$1 = `|        x         |        y         |zx |nx |zy |ny | f |no |  
 | 0101101110100000 | 0001111011010010 | 0 | 0 | 0 | 0 | 0 | 0 | 0001101010000000 |
 | 0101101110100000 | 0001111011010010 | 0 | 1 | 0 | 1 | 0 | 1 | 0101111111110010 |
 `;
-const tst$1 = `
+const tst$9 = `
 // ALU no stat tst provides a partial test of the ALU chip.
 // It IS NOT a replacement for ALU.tst.
 
@@ -5740,7 +5976,7 @@ set no 1,
 eval,
 output;`;
 
-const hdl = `/**
+const hdl$8 = `/**
  * The ALU (Arithmetic Logic Unit).
  * Computes one of the following functions:
  * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
@@ -5781,7 +6017,7 @@ CHIP ALU {
     PARTS:
    // Put you code here:
 }`;
-const cmp = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |zr |ng |
+const cmp$8 = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |zr |ng |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 | 1 | 0 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 | 0 | 0 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 0 | 1 | 0 | 1111111111111111 | 0 | 1 |
@@ -5818,7 +6054,7 @@ const cmp = `|        x         |        y         |zx |nx |zy |ny | f |no |    
 | 0000000000010001 | 0000000000000011 | 0 | 0 | 0 | 1 | 1 | 1 | 1111111111110010 | 0 | 1 |
 | 0000000000010001 | 0000000000000011 | 0 | 0 | 0 | 0 | 0 | 0 | 0000000000000001 | 0 | 0 |
 | 0000000000010001 | 0000000000000011 | 0 | 1 | 0 | 1 | 0 | 1 | 0000000000010011 | 0 | 0 |`;
-const tst = `output-list x%B1.16.1 y%B1.16.1 zx%B1.1.1 nx%B1.1.1 zy%B1.1.1 
+const tst$8 = `output-list x%B1.16.1 y%B1.16.1 zx%B1.1.1 nx%B1.1.1 zy%B1.1.1 
 ny%B1.1.1 f%B1.1.1 no%B1.1.1 out%B1.16.1 zr%B1.1.1
 ng%B1.1.1;
 
@@ -6188,44 +6424,4190 @@ set no 1,
 eval,
 output;`;
 
-async function resetFiles$1(fs) {
+async function resetFiles$2(fs) {
     await fs.pushd("/projects/02");
     await reset(fs, {
         HalfAdder: {
-            "HalfAdder.hdl": hdl$5,
-            "HalfAdder.tst": tst$5,
-            "HalfAdder.cmp": cmp$5,
+            "HalfAdder.hdl": hdl$d,
+            "HalfAdder.tst": tst$d,
+            "HalfAdder.cmp": cmp$d,
         },
         FullAdder: {
-            "FullAdder.hdl": hdl$4,
-            "FullAdder.tst": tst$4,
-            "FullAdder.cmp": cmp$4,
+            "FullAdder.hdl": hdl$c,
+            "FullAdder.tst": tst$c,
+            "FullAdder.cmp": cmp$c,
         },
         Add16: {
-            "Add16.hdl": hdl$3,
-            "Add16.tst": tst$3,
-            "Add16.cmp": cmp$3,
+            "Add16.hdl": hdl$b,
+            "Add16.tst": tst$b,
+            "Add16.cmp": cmp$b,
         },
         Inc16: {
-            "Inc16.hdl": hdl$2,
-            "Inc16.tst": tst$2,
-            "Inc16.cmp": cmp$2,
+            "Inc16.hdl": hdl$a,
+            "Inc16.tst": tst$a,
+            "Inc16.cmp": cmp$a,
         },
         AluNoStat: {
-            "AluNoStat.hdl": hdl$1,
-            "AluNoStat.tst": tst$1,
-            "AluNoStat.cmp": cmp$1,
+            "AluNoStat.hdl": hdl$9,
+            "AluNoStat.tst": tst$9,
+            "AluNoStat.cmp": cmp$9,
         },
         ALU: {
-            "ALU.hdl": hdl,
-            "ALU.tst": tst,
-            "ALU.cmp": cmp,
+            "ALU.hdl": hdl$8,
+            "ALU.tst": tst$8,
+            "ALU.cmp": cmp$8,
+        },
+    });
+    await fs.popd();
+}
+
+const hdl$7 = `/**
+ * 1-bit register:
+ * If load[t] == 1 then out[t+1] = in[t]
+ *                 else out does not change (out[t+1] = out[t])
+ */
+
+CHIP Bit {
+    IN in, load;
+    OUT out;
+
+    PARTS:
+}`;
+const tst$7 = `output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 1, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 1, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 0, set load 1, tick, output; tock, output;
+set in 1, set load 1, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 1, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;
+set in 1, set load 0, tick, output; tock, output;`;
+const cmp$7 = `| time | in  |load | out |
+| 0+   |  0  |  0  |  0  |
+| 1    |  0  |  0  |  0  |
+| 1+   |  0  |  1  |  0  |
+| 2    |  0  |  1  |  0  |
+| 2+   |  1  |  0  |  0  |
+| 3    |  1  |  0  |  0  |
+| 3+   |  1  |  1  |  0  |
+| 4    |  1  |  1  |  1  |
+| 4+   |  0  |  0  |  1  |
+| 5    |  0  |  0  |  1  |
+| 5+   |  1  |  0  |  1  |
+| 6    |  1  |  0  |  1  |
+| 6+   |  0  |  1  |  1  |
+| 7    |  0  |  1  |  0  |
+| 7+   |  1  |  1  |  0  |
+| 8    |  1  |  1  |  1  |
+| 8+   |  0  |  0  |  1  |
+| 9    |  0  |  0  |  1  |
+| 9+   |  0  |  0  |  1  |
+| 10   |  0  |  0  |  1  |
+| 10+  |  0  |  0  |  1  |
+| 11   |  0  |  0  |  1  |
+| 11+  |  0  |  0  |  1  |
+| 12   |  0  |  0  |  1  |
+| 12+  |  0  |  0  |  1  |
+| 13   |  0  |  0  |  1  |
+| 13+  |  0  |  0  |  1  |
+| 14   |  0  |  0  |  1  |
+| 14+  |  0  |  0  |  1  |
+| 15   |  0  |  0  |  1  |
+| 15+  |  0  |  0  |  1  |
+| 16   |  0  |  0  |  1  |
+| 16+  |  0  |  0  |  1  |
+| 17   |  0  |  0  |  1  |
+| 17+  |  0  |  0  |  1  |
+| 18   |  0  |  0  |  1  |
+| 18+  |  0  |  0  |  1  |
+| 19   |  0  |  0  |  1  |
+| 19+  |  0  |  0  |  1  |
+| 20   |  0  |  0  |  1  |
+| 20+  |  0  |  0  |  1  |
+| 21   |  0  |  0  |  1  |
+| 21+  |  0  |  0  |  1  |
+| 22   |  0  |  0  |  1  |
+| 22+  |  0  |  0  |  1  |
+| 23   |  0  |  0  |  1  |
+| 23+  |  0  |  0  |  1  |
+| 24   |  0  |  0  |  1  |
+| 24+  |  0  |  0  |  1  |
+| 25   |  0  |  0  |  1  |
+| 25+  |  0  |  0  |  1  |
+| 26   |  0  |  0  |  1  |
+| 26+  |  0  |  0  |  1  |
+| 27   |  0  |  0  |  1  |
+| 27+  |  0  |  0  |  1  |
+| 28   |  0  |  0  |  1  |
+| 28+  |  0  |  0  |  1  |
+| 29   |  0  |  0  |  1  |
+| 29+  |  0  |  0  |  1  |
+| 30   |  0  |  0  |  1  |
+| 30+  |  0  |  0  |  1  |
+| 31   |  0  |  0  |  1  |
+| 31+  |  0  |  0  |  1  |
+| 32   |  0  |  0  |  1  |
+| 32+  |  0  |  0  |  1  |
+| 33   |  0  |  0  |  1  |
+| 33+  |  0  |  0  |  1  |
+| 34   |  0  |  0  |  1  |
+| 34+  |  0  |  0  |  1  |
+| 35   |  0  |  0  |  1  |
+| 35+  |  0  |  0  |  1  |
+| 36   |  0  |  0  |  1  |
+| 36+  |  0  |  0  |  1  |
+| 37   |  0  |  0  |  1  |
+| 37+  |  0  |  0  |  1  |
+| 38   |  0  |  0  |  1  |
+| 38+  |  0  |  0  |  1  |
+| 39   |  0  |  0  |  1  |
+| 39+  |  0  |  0  |  1  |
+| 40   |  0  |  0  |  1  |
+| 40+  |  0  |  0  |  1  |
+| 41   |  0  |  0  |  1  |
+| 41+  |  0  |  0  |  1  |
+| 42   |  0  |  0  |  1  |
+| 42+  |  0  |  0  |  1  |
+| 43   |  0  |  0  |  1  |
+| 43+  |  0  |  0  |  1  |
+| 44   |  0  |  0  |  1  |
+| 44+  |  0  |  0  |  1  |
+| 45   |  0  |  0  |  1  |
+| 45+  |  0  |  0  |  1  |
+| 46   |  0  |  0  |  1  |
+| 46+  |  0  |  0  |  1  |
+| 47   |  0  |  0  |  1  |
+| 47+  |  0  |  0  |  1  |
+| 48   |  0  |  0  |  1  |
+| 48+  |  0  |  0  |  1  |
+| 49   |  0  |  0  |  1  |
+| 49+  |  0  |  0  |  1  |
+| 50   |  0  |  0  |  1  |
+| 50+  |  0  |  0  |  1  |
+| 51   |  0  |  0  |  1  |
+| 51+  |  0  |  0  |  1  |
+| 52   |  0  |  0  |  1  |
+| 52+  |  0  |  0  |  1  |
+| 53   |  0  |  0  |  1  |
+| 53+  |  0  |  0  |  1  |
+| 54   |  0  |  0  |  1  |
+| 54+  |  0  |  0  |  1  |
+| 55   |  0  |  0  |  1  |
+| 55+  |  0  |  0  |  1  |
+| 56   |  0  |  0  |  1  |
+| 56+  |  0  |  0  |  1  |
+| 57   |  0  |  0  |  1  |
+| 57+  |  0  |  1  |  1  |
+| 58   |  0  |  1  |  0  |
+| 58+  |  1  |  0  |  0  |
+| 59   |  1  |  0  |  0  |
+| 59+  |  1  |  0  |  0  |
+| 60   |  1  |  0  |  0  |
+| 60+  |  1  |  0  |  0  |
+| 61   |  1  |  0  |  0  |
+| 61+  |  1  |  0  |  0  |
+| 62   |  1  |  0  |  0  |
+| 62+  |  1  |  0  |  0  |
+| 63   |  1  |  0  |  0  |
+| 63+  |  1  |  0  |  0  |
+| 64   |  1  |  0  |  0  |
+| 64+  |  1  |  0  |  0  |
+| 65   |  1  |  0  |  0  |
+| 65+  |  1  |  0  |  0  |
+| 66   |  1  |  0  |  0  |
+| 66+  |  1  |  0  |  0  |
+| 67   |  1  |  0  |  0  |
+| 67+  |  1  |  0  |  0  |
+| 68   |  1  |  0  |  0  |
+| 68+  |  1  |  0  |  0  |
+| 69   |  1  |  0  |  0  |
+| 69+  |  1  |  0  |  0  |
+| 70   |  1  |  0  |  0  |
+| 70+  |  1  |  0  |  0  |
+| 71   |  1  |  0  |  0  |
+| 71+  |  1  |  0  |  0  |
+| 72   |  1  |  0  |  0  |
+| 72+  |  1  |  0  |  0  |
+| 73   |  1  |  0  |  0  |
+| 73+  |  1  |  0  |  0  |
+| 74   |  1  |  0  |  0  |
+| 74+  |  1  |  0  |  0  |
+| 75   |  1  |  0  |  0  |
+| 75+  |  1  |  0  |  0  |
+| 76   |  1  |  0  |  0  |
+| 76+  |  1  |  0  |  0  |
+| 77   |  1  |  0  |  0  |
+| 77+  |  1  |  0  |  0  |
+| 78   |  1  |  0  |  0  |
+| 78+  |  1  |  0  |  0  |
+| 79   |  1  |  0  |  0  |
+| 79+  |  1  |  0  |  0  |
+| 80   |  1  |  0  |  0  |
+| 80+  |  1  |  0  |  0  |
+| 81   |  1  |  0  |  0  |
+| 81+  |  1  |  0  |  0  |
+| 82   |  1  |  0  |  0  |
+| 82+  |  1  |  0  |  0  |
+| 83   |  1  |  0  |  0  |
+| 83+  |  1  |  0  |  0  |
+| 84   |  1  |  0  |  0  |
+| 84+  |  1  |  0  |  0  |
+| 85   |  1  |  0  |  0  |
+| 85+  |  1  |  0  |  0  |
+| 86   |  1  |  0  |  0  |
+| 86+  |  1  |  0  |  0  |
+| 87   |  1  |  0  |  0  |
+| 87+  |  1  |  0  |  0  |
+| 88   |  1  |  0  |  0  |
+| 88+  |  1  |  0  |  0  |
+| 89   |  1  |  0  |  0  |
+| 89+  |  1  |  0  |  0  |
+| 90   |  1  |  0  |  0  |
+| 90+  |  1  |  0  |  0  |
+| 91   |  1  |  0  |  0  |
+| 91+  |  1  |  0  |  0  |
+| 92   |  1  |  0  |  0  |
+| 92+  |  1  |  0  |  0  |
+| 93   |  1  |  0  |  0  |
+| 93+  |  1  |  0  |  0  |
+| 94   |  1  |  0  |  0  |
+| 94+  |  1  |  0  |  0  |
+| 95   |  1  |  0  |  0  |
+| 95+  |  1  |  0  |  0  |
+| 96   |  1  |  0  |  0  |
+| 96+  |  1  |  0  |  0  |
+| 97   |  1  |  0  |  0  |
+| 97+  |  1  |  0  |  0  |
+| 98   |  1  |  0  |  0  |
+| 98+  |  1  |  0  |  0  |
+| 99   |  1  |  0  |  0  |
+| 99+  |  1  |  0  |  0  |
+| 100  |  1  |  0  |  0  |
+| 100+ |  1  |  0  |  0  |
+| 101  |  1  |  0  |  0  |
+| 101+ |  1  |  0  |  0  |
+| 102  |  1  |  0  |  0  |
+| 102+ |  1  |  0  |  0  |
+| 103  |  1  |  0  |  0  |
+| 103+ |  1  |  0  |  0  |
+| 104  |  1  |  0  |  0  |
+| 104+ |  1  |  0  |  0  |
+| 105  |  1  |  0  |  0  |
+| 105+ |  1  |  0  |  0  |
+| 106  |  1  |  0  |  0  |
+| 106+ |  1  |  0  |  0  |
+| 107  |  1  |  0  |  0  |`;
+
+const hdl$6 = `/**
+ * 16-bit register:
+ * If load[t] == 1 then out[t+1] = in[t]
+ * else out does not change
+ */
+
+CHIP Register {
+    IN in[16], load;
+    OUT out[16];
+
+    PARTS:
+}`;
+const tst$6 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 out%D1.6.1;\n` +
+    [
+        [0, 0],
+        [0, 1],
+        [-32123, 0],
+        [11111, 0],
+        [-32123, 1],
+        [-32123, 1],
+        [-32123, 0],
+        [12345, 1],
+        [0, 0],
+        [0, 1],
+    ]
+        .map(([inn, load]) => `set in ${inn}, set load ${load}, tick, output; tock, output;`)
+        .join("\n") +
+    [
+        "%B0000000000000001",
+        "%B0000000000000010",
+        "%B0000000000000100",
+        "%B0000000000001000",
+        "%B0000000000010000",
+        "%B0000000000100000",
+        "%B0000000001000000",
+        "%B0000000010000000",
+        "%B0000000100000000",
+        "%B0000001000000000",
+        "%B0000010000000000",
+        "%B0000100000000000",
+        "%B0001000000000000",
+        "%B0010000000000000",
+        "%B0100000000000000",
+        "%B1000000000000000",
+        "%B1111111111111110",
+        "%B1111111111111101",
+        "%B1111111111111011",
+        "%B1111111111110111",
+        "%B1111111111101111",
+        "%B1111111111011111",
+        "%B1111111110111111",
+        "%B1111111101111111",
+        "%B1111111011111111",
+        "%B1111110111111111",
+        "%B1111101111111111",
+        "%B1111011111111111",
+        "%B1110111111111111",
+        "%B1101111111111111",
+        "%B1011111111111111",
+        "%B0111111111111111",
+    ].map((n) => `set in ${n}, set load 0, tick, output; tock, output; set load 1, tick, output; tock, output;`);
+const cmp$6 = `| time |   in   |load |  out   |
+| 0+   |      0 |  0  |      0 |
+| 1    |      0 |  0  |      0 |
+| 1+   |      0 |  1  |      0 |
+| 2    |      0 |  1  |      0 |
+| 2+   | -32123 |  0  |      0 |
+| 3    | -32123 |  0  |      0 |
+| 3+   |  11111 |  0  |      0 |
+| 4    |  11111 |  0  |      0 |
+| 4+   | -32123 |  1  |      0 |
+| 5    | -32123 |  1  | -32123 |
+| 5+   | -32123 |  1  | -32123 |
+| 6    | -32123 |  1  | -32123 |
+| 6+   | -32123 |  0  | -32123 |
+| 7    | -32123 |  0  | -32123 |
+| 7+   |  12345 |  1  | -32123 |
+| 8    |  12345 |  1  |  12345 |
+| 8+   |      0 |  0  |  12345 |
+| 9    |      0 |  0  |  12345 |
+| 9+   |      0 |  1  |  12345 |
+| 10   |      0 |  1  |      0 |
+| 10+  |      1 |  0  |      0 |
+| 11   |      1 |  0  |      0 |
+| 11+  |      1 |  1  |      0 |
+| 12   |      1 |  1  |      1 |
+| 12+  |      2 |  0  |      1 |
+| 13   |      2 |  0  |      1 |
+| 13+  |      2 |  1  |      1 |
+| 14   |      2 |  1  |      2 |
+| 14+  |      4 |  0  |      2 |
+| 15   |      4 |  0  |      2 |
+| 15+  |      4 |  1  |      2 |
+| 16   |      4 |  1  |      4 |
+| 16+  |      8 |  0  |      4 |
+| 17   |      8 |  0  |      4 |
+| 17+  |      8 |  1  |      4 |
+| 18   |      8 |  1  |      8 |
+| 18+  |     16 |  0  |      8 |
+| 19   |     16 |  0  |      8 |
+| 19+  |     16 |  1  |      8 |
+| 20   |     16 |  1  |     16 |
+| 20+  |     32 |  0  |     16 |
+| 21   |     32 |  0  |     16 |
+| 21+  |     32 |  1  |     16 |
+| 22   |     32 |  1  |     32 |
+| 22+  |     64 |  0  |     32 |
+| 23   |     64 |  0  |     32 |
+| 23+  |     64 |  1  |     32 |
+| 24   |     64 |  1  |     64 |
+| 24+  |    128 |  0  |     64 |
+| 25   |    128 |  0  |     64 |
+| 25+  |    128 |  1  |     64 |
+| 26   |    128 |  1  |    128 |
+| 26+  |    256 |  0  |    128 |
+| 27   |    256 |  0  |    128 |
+| 27+  |    256 |  1  |    128 |
+| 28   |    256 |  1  |    256 |
+| 28+  |    512 |  0  |    256 |
+| 29   |    512 |  0  |    256 |
+| 29+  |    512 |  1  |    256 |
+| 30   |    512 |  1  |    512 |
+| 30+  |   1024 |  0  |    512 |
+| 31   |   1024 |  0  |    512 |
+| 31+  |   1024 |  1  |    512 |
+| 32   |   1024 |  1  |   1024 |
+| 32+  |   2048 |  0  |   1024 |
+| 33   |   2048 |  0  |   1024 |
+| 33+  |   2048 |  1  |   1024 |
+| 34   |   2048 |  1  |   2048 |
+| 34+  |   4096 |  0  |   2048 |
+| 35   |   4096 |  0  |   2048 |
+| 35+  |   4096 |  1  |   2048 |
+| 36   |   4096 |  1  |   4096 |
+| 36+  |   8192 |  0  |   4096 |
+| 37   |   8192 |  0  |   4096 |
+| 37+  |   8192 |  1  |   4096 |
+| 38   |   8192 |  1  |   8192 |
+| 38+  |  16384 |  0  |   8192 |
+| 39   |  16384 |  0  |   8192 |
+| 39+  |  16384 |  1  |   8192 |
+| 40   |  16384 |  1  |  16384 |
+| 40+  | -32768 |  0  |  16384 |
+| 41   | -32768 |  0  |  16384 |
+| 41+  | -32768 |  1  |  16384 |
+| 42   | -32768 |  1  | -32768 |
+| 42+  |     -2 |  0  | -32768 |
+| 43   |     -2 |  0  | -32768 |
+| 43+  |     -2 |  1  | -32768 |
+| 44   |     -2 |  1  |     -2 |
+| 44+  |     -3 |  0  |     -2 |
+| 45   |     -3 |  0  |     -2 |
+| 45+  |     -3 |  1  |     -2 |
+| 46   |     -3 |  1  |     -3 |
+| 46+  |     -5 |  0  |     -3 |
+| 47   |     -5 |  0  |     -3 |
+| 47+  |     -5 |  1  |     -3 |
+| 48   |     -5 |  1  |     -5 |
+| 48+  |     -9 |  0  |     -5 |
+| 49   |     -9 |  0  |     -5 |
+| 49+  |     -9 |  1  |     -5 |
+| 50   |     -9 |  1  |     -9 |
+| 50+  |    -17 |  0  |     -9 |
+| 51   |    -17 |  0  |     -9 |
+| 51+  |    -17 |  1  |     -9 |
+| 52   |    -17 |  1  |    -17 |
+| 52+  |    -33 |  0  |    -17 |
+| 53   |    -33 |  0  |    -17 |
+| 53+  |    -33 |  1  |    -17 |
+| 54   |    -33 |  1  |    -33 |
+| 54+  |    -65 |  0  |    -33 |
+| 55   |    -65 |  0  |    -33 |
+| 55+  |    -65 |  1  |    -33 |
+| 56   |    -65 |  1  |    -65 |
+| 56+  |   -129 |  0  |    -65 |
+| 57   |   -129 |  0  |    -65 |
+| 57+  |   -129 |  1  |    -65 |
+| 58   |   -129 |  1  |   -129 |
+| 58+  |   -257 |  0  |   -129 |
+| 59   |   -257 |  0  |   -129 |
+| 59+  |   -257 |  1  |   -129 |
+| 60   |   -257 |  1  |   -257 |
+| 60+  |   -513 |  0  |   -257 |
+| 61   |   -513 |  0  |   -257 |
+| 61+  |   -513 |  1  |   -257 |
+| 62   |   -513 |  1  |   -513 |
+| 62+  |  -1025 |  0  |   -513 |
+| 63   |  -1025 |  0  |   -513 |
+| 63+  |  -1025 |  1  |   -513 |
+| 64   |  -1025 |  1  |  -1025 |
+| 64+  |  -2049 |  0  |  -1025 |
+| 65   |  -2049 |  0  |  -1025 |
+| 65+  |  -2049 |  1  |  -1025 |
+| 66   |  -2049 |  1  |  -2049 |
+| 66+  |  -4097 |  0  |  -2049 |
+| 67   |  -4097 |  0  |  -2049 |
+| 67+  |  -4097 |  1  |  -2049 |
+| 68   |  -4097 |  1  |  -4097 |
+| 68+  |  -8193 |  0  |  -4097 |
+| 69   |  -8193 |  0  |  -4097 |
+| 69+  |  -8193 |  1  |  -4097 |
+| 70   |  -8193 |  1  |  -8193 |
+| 70+  | -16385 |  0  |  -8193 |
+| 71   | -16385 |  0  |  -8193 |
+| 71+  | -16385 |  1  |  -8193 |
+| 72   | -16385 |  1  | -16385 |
+| 72+  |  32767 |  0  | -16385 |
+| 73   |  32767 |  0  | -16385 |
+| 73+  |  32767 |  1  | -16385 |
+| 74   |  32767 |  1  |  32767 |`;
+
+const hdl$5 = `/**
+ * A 16-bit counter with load and reset control bits.
+ * if      (reset[t] == 1) out[t+1] = 0
+ * else if (load[t] == 1)  out[t+1] = in[t]
+ * else if (inc[t] == 1)   out[t+1] = out[t] + 1  (integer addition)
+ * else                    out[t+1] = out[t]
+ */
+
+CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    PARTS:
+}`;
+const tst$5 = `output-list time%S1.4.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
+
+set in 0, set reset 0, set load 0, set inc 0, tick, output;
+tock, output;
+
+set inc 1, tick, output; tock, output;
+set in -32123, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+tick, output; tock, output;
+set in 12345, set load 1, set inc 0, tick, output; tock, output;
+set reset 1, tick, output; tock, output;
+set reset 0, set inc 1, tick, output; tock, output;
+set reset 1, tick, output; tock, output;
+set reset 0, set load 0, tick, output; tock, output;
+set reset 1, tick, output; tock, output;
+set in 0, set reset 0, set load 1, tick, output; tock, output;
+set load 0, set inc 1, tick, output; tock, output;
+set in 22222, set reset 1, set inc 0, tick, output; tock, output;`;
+const cmp$5 = `| time |   in   |reset|load | inc |  out   |
+| 0+   |      0 |  0  |  0  |  0  |      0 |
+| 1    |      0 |  0  |  0  |  0  |      0 |
+| 1+   |      0 |  0  |  0  |  1  |      0 |
+| 2    |      0 |  0  |  0  |  1  |      1 |
+| 2+   | -32123 |  0  |  0  |  1  |      1 |
+| 3    | -32123 |  0  |  0  |  1  |      2 |
+| 3+   | -32123 |  0  |  1  |  1  |      2 |
+| 4    | -32123 |  0  |  1  |  1  | -32123 |
+| 4+   | -32123 |  0  |  0  |  1  | -32123 |
+| 5    | -32123 |  0  |  0  |  1  | -32122 |
+| 5+   | -32123 |  0  |  0  |  1  | -32122 |
+| 6    | -32123 |  0  |  0  |  1  | -32121 |
+| 6+   |  12345 |  0  |  1  |  0  | -32121 |
+| 7    |  12345 |  0  |  1  |  0  |  12345 |
+| 7+   |  12345 |  1  |  1  |  0  |  12345 |
+| 8    |  12345 |  1  |  1  |  0  |      0 |
+| 8+   |  12345 |  0  |  1  |  1  |      0 |
+| 9    |  12345 |  0  |  1  |  1  |  12345 |
+| 9+   |  12345 |  1  |  1  |  1  |  12345 |
+| 10   |  12345 |  1  |  1  |  1  |      0 |
+| 10+  |  12345 |  0  |  0  |  1  |      0 |
+| 11   |  12345 |  0  |  0  |  1  |      1 |
+| 11+  |  12345 |  1  |  0  |  1  |      1 |
+| 12   |  12345 |  1  |  0  |  1  |      0 |
+| 12+  |      0 |  0  |  1  |  1  |      0 |
+| 13   |      0 |  0  |  1  |  1  |      0 |
+| 13+  |      0 |  0  |  0  |  1  |      0 |
+| 14   |      0 |  0  |  0  |  1  |      1 |
+| 14+  |  22222 |  1  |  0  |  0  |      1 |
+| 15   |  22222 |  1  |  0  |  0  |      0 |`;
+
+const hdl$4 = `/**
+ * Memory of 8 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
+
+    PARTS:
+}`;
+const tst$4 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D3.1.3 out%D1.6.1;
+set in 0, set load 0, set address 0,
+tick, output; tock, output;
+
+set load 1, tick, output; tock, output;
+
+set in 11111, set load 0,
+tick, output; tock, output;
+
+set load 1, set address 1,
+tick, output; tock, output;
+
+set load 0, set address 0,
+tick, output; tock, output;
+
+set in 3333, set address 3,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 1, eval, output;
+
+set in 7777,
+tick, output; tock, output;
+
+set load 1, set address 7,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 3, eval, output;
+
+set address 7, eval, output;
+
+set load 0, set address 0,
+tick, output; tock, output;
+
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set in %B0101010101010101, set address 0, tick, output; tock, output;
+set address 1, tick, output, tock, output;
+set address 2, tick, output, tock, output;
+set address 3, tick, output, tock, output;
+set address 4, tick, output, tock, output;
+set address 5, tick, output, tock, output;
+set address 6, tick, output, tock, output;
+set address 7, tick, output, tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 0, set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 0, set in %B0101010101010101,
+tick, output, tock, output;
+set address 1, set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output; set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 1, set in %B0101010101010101,
+tick, output, tock, output;
+set address 2, set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 2, set in %B0101010101010101,
+tick, output, tock, output;
+set address 3, set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 3, set in %B0101010101010101, tick, output, tock, output;
+set address 4, set in %B1010101010101010, tick, output; tock, output;
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 4, set in %B0101010101010101, tick, output, tock, output;
+set address 5, set in %B1010101010101010, tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 5, set in %B0101010101010101, tick, output, tock, output;
+set address 6, set in %B1010101010101010, tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 6, set in %B0101010101010101, tick, output, tock, output;
+set address 7, set in %B1010101010101010, tick, output; tock, output;
+
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
+
+set load 1, set address 7, set in %B0101010101010101, tick, output, tock, output;
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;`;
+const cmp$4 = `| time |   in   |load |address|  out   |
+| 0+   |      0 |  0  |   0   |      0 |
+| 1    |      0 |  0  |   0   |      0 |
+| 1+   |      0 |  1  |   0   |      0 |
+| 2    |      0 |  1  |   0   |      0 |
+| 2+   |  11111 |  0  |   0   |      0 |
+| 3    |  11111 |  0  |   0   |      0 |
+| 3+   |  11111 |  1  |   1   |      0 |
+| 4    |  11111 |  1  |   1   |  11111 |
+| 4+   |  11111 |  0  |   0   |      0 |
+| 5    |  11111 |  0  |   0   |      0 |
+| 5+   |   3333 |  0  |   3   |      0 |
+| 6    |   3333 |  0  |   3   |      0 |
+| 6+   |   3333 |  1  |   3   |      0 |
+| 7    |   3333 |  1  |   3   |   3333 |
+| 7+   |   3333 |  0  |   3   |   3333 |
+| 8    |   3333 |  0  |   3   |   3333 |
+| 8    |   3333 |  0  |   1   |  11111 |
+| 8+   |   7777 |  0  |   1   |  11111 |
+| 9    |   7777 |  0  |   1   |  11111 |
+| 9+   |   7777 |  1  |   7   |      0 |
+| 10   |   7777 |  1  |   7   |   7777 |
+| 10+  |   7777 |  0  |   7   |   7777 |
+| 11   |   7777 |  0  |   7   |   7777 |
+| 11   |   7777 |  0  |   3   |   3333 |
+| 11   |   7777 |  0  |   7   |   7777 |
+| 11+  |   7777 |  0  |   0   |      0 |
+| 12   |   7777 |  0  |   0   |      0 |
+| 12   |   7777 |  0  |   1   |  11111 |
+| 12   |   7777 |  0  |   2   |      0 |
+| 12   |   7777 |  0  |   3   |   3333 |
+| 12   |   7777 |  0  |   4   |      0 |
+| 12   |   7777 |  0  |   5   |      0 |
+| 12   |   7777 |  0  |   6   |      0 |
+| 12   |   7777 |  0  |   7   |   7777 |
+| 12+  |  21845 |  1  |   0   |      0 |
+| 13   |  21845 |  1  |   0   |  21845 |
+| 13+  |  21845 |  1  |   1   |  11111 |
+| 14   |  21845 |  1  |   1   |  21845 |
+| 14+  |  21845 |  1  |   2   |      0 |
+| 15   |  21845 |  1  |   2   |  21845 |
+| 15+  |  21845 |  1  |   3   |   3333 |
+| 16   |  21845 |  1  |   3   |  21845 |
+| 16+  |  21845 |  1  |   4   |      0 |
+| 17   |  21845 |  1  |   4   |  21845 |
+| 17+  |  21845 |  1  |   5   |      0 |
+| 18   |  21845 |  1  |   5   |  21845 |
+| 18+  |  21845 |  1  |   6   |      0 |
+| 19   |  21845 |  1  |   6   |  21845 |
+| 19+  |  21845 |  1  |   7   |   7777 |
+| 20   |  21845 |  1  |   7   |  21845 |
+| 20+  |  21845 |  0  |   0   |  21845 |
+| 21   |  21845 |  0  |   0   |  21845 |
+| 21   |  21845 |  0  |   1   |  21845 |
+| 21   |  21845 |  0  |   2   |  21845 |
+| 21   |  21845 |  0  |   3   |  21845 |
+| 21   |  21845 |  0  |   4   |  21845 |
+| 21   |  21845 |  0  |   5   |  21845 |
+| 21   |  21845 |  0  |   6   |  21845 |
+| 21   |  21845 |  0  |   7   |  21845 |
+| 21+  | -21846 |  1  |   0   |  21845 |
+| 22   | -21846 |  1  |   0   | -21846 |
+| 22+  | -21846 |  0  |   0   | -21846 |
+| 23   | -21846 |  0  |   0   | -21846 |
+| 23   | -21846 |  0  |   1   |  21845 |
+| 23   | -21846 |  0  |   2   |  21845 |
+| 23   | -21846 |  0  |   3   |  21845 |
+| 23   | -21846 |  0  |   4   |  21845 |
+| 23   | -21846 |  0  |   5   |  21845 |
+| 23   | -21846 |  0  |   6   |  21845 |
+| 23   | -21846 |  0  |   7   |  21845 |
+| 23+  |  21845 |  1  |   0   | -21846 |
+| 24   |  21845 |  1  |   0   |  21845 |
+| 24+  | -21846 |  1  |   1   |  21845 |
+| 25   | -21846 |  1  |   1   | -21846 |
+| 25+  | -21846 |  0  |   0   |  21845 |
+| 26   | -21846 |  0  |   0   |  21845 |
+| 26   | -21846 |  0  |   1   | -21846 |
+| 26   | -21846 |  0  |   2   |  21845 |
+| 26   | -21846 |  0  |   3   |  21845 |
+| 26   | -21846 |  0  |   4   |  21845 |
+| 26   | -21846 |  0  |   5   |  21845 |
+| 26   | -21846 |  0  |   6   |  21845 |
+| 26   | -21846 |  0  |   7   |  21845 |
+| 26+  |  21845 |  1  |   1   | -21846 |
+| 27   |  21845 |  1  |   1   |  21845 |
+| 27+  | -21846 |  1  |   2   |  21845 |
+| 28   | -21846 |  1  |   2   | -21846 |
+| 28+  | -21846 |  0  |   0   |  21845 |
+| 29   | -21846 |  0  |   0   |  21845 |
+| 29   | -21846 |  0  |   1   |  21845 |
+| 29   | -21846 |  0  |   2   | -21846 |
+| 29   | -21846 |  0  |   3   |  21845 |
+| 29   | -21846 |  0  |   4   |  21845 |
+| 29   | -21846 |  0  |   5   |  21845 |
+| 29   | -21846 |  0  |   6   |  21845 |
+| 29   | -21846 |  0  |   7   |  21845 |
+| 29+  |  21845 |  1  |   2   | -21846 |
+| 30   |  21845 |  1  |   2   |  21845 |
+| 30+  | -21846 |  1  |   3   |  21845 |
+| 31   | -21846 |  1  |   3   | -21846 |
+| 31+  | -21846 |  0  |   0   |  21845 |
+| 32   | -21846 |  0  |   0   |  21845 |
+| 32   | -21846 |  0  |   1   |  21845 |
+| 32   | -21846 |  0  |   2   |  21845 |
+| 32   | -21846 |  0  |   3   | -21846 |
+| 32   | -21846 |  0  |   4   |  21845 |
+| 32   | -21846 |  0  |   5   |  21845 |
+| 32   | -21846 |  0  |   6   |  21845 |
+| 32   | -21846 |  0  |   7   |  21845 |
+| 32+  |  21845 |  1  |   3   | -21846 |
+| 33   |  21845 |  1  |   3   |  21845 |
+| 33+  | -21846 |  1  |   4   |  21845 |
+| 34   | -21846 |  1  |   4   | -21846 |
+| 34+  | -21846 |  0  |   0   |  21845 |
+| 35   | -21846 |  0  |   0   |  21845 |
+| 35   | -21846 |  0  |   1   |  21845 |
+| 35   | -21846 |  0  |   2   |  21845 |
+| 35   | -21846 |  0  |   3   |  21845 |
+| 35   | -21846 |  0  |   4   | -21846 |
+| 35   | -21846 |  0  |   5   |  21845 |
+| 35   | -21846 |  0  |   6   |  21845 |
+| 35   | -21846 |  0  |   7   |  21845 |
+| 35+  |  21845 |  1  |   4   | -21846 |
+| 36   |  21845 |  1  |   4   |  21845 |
+| 36+  | -21846 |  1  |   5   |  21845 |
+| 37   | -21846 |  1  |   5   | -21846 |
+| 37+  | -21846 |  0  |   0   |  21845 |
+| 38   | -21846 |  0  |   0   |  21845 |
+| 38   | -21846 |  0  |   1   |  21845 |
+| 38   | -21846 |  0  |   2   |  21845 |
+| 38   | -21846 |  0  |   3   |  21845 |
+| 38   | -21846 |  0  |   4   |  21845 |
+| 38   | -21846 |  0  |   5   | -21846 |
+| 38   | -21846 |  0  |   6   |  21845 |
+| 38   | -21846 |  0  |   7   |  21845 |
+| 38+  |  21845 |  1  |   5   | -21846 |
+| 39   |  21845 |  1  |   5   |  21845 |
+| 39+  | -21846 |  1  |   6   |  21845 |
+| 40   | -21846 |  1  |   6   | -21846 |
+| 40+  | -21846 |  0  |   0   |  21845 |
+| 41   | -21846 |  0  |   0   |  21845 |
+| 41   | -21846 |  0  |   1   |  21845 |
+| 41   | -21846 |  0  |   2   |  21845 |
+| 41   | -21846 |  0  |   3   |  21845 |
+| 41   | -21846 |  0  |   4   |  21845 |
+| 41   | -21846 |  0  |   5   |  21845 |
+| 41   | -21846 |  0  |   6   | -21846 |
+| 41   | -21846 |  0  |   7   |  21845 |
+| 41+  |  21845 |  1  |   6   | -21846 |
+| 42   |  21845 |  1  |   6   |  21845 |
+| 42+  | -21846 |  1  |   7   |  21845 |
+| 43   | -21846 |  1  |   7   | -21846 |
+| 43+  | -21846 |  0  |   0   |  21845 |
+| 44   | -21846 |  0  |   0   |  21845 |
+| 44   | -21846 |  0  |   1   |  21845 |
+| 44   | -21846 |  0  |   2   |  21845 |
+| 44   | -21846 |  0  |   3   |  21845 |
+| 44   | -21846 |  0  |   4   |  21845 |
+| 44   | -21846 |  0  |   5   |  21845 |
+| 44   | -21846 |  0  |   6   |  21845 |
+| 44   | -21846 |  0  |   7   | -21846 |
+| 44+  |  21845 |  1  |   7   | -21846 |
+| 45   |  21845 |  1  |   7   |  21845 |
+| 45+  |  21845 |  0  |   0   |  21845 |
+| 46   |  21845 |  0  |   0   |  21845 |
+| 46   |  21845 |  0  |   1   |  21845 |
+| 46   |  21845 |  0  |   2   |  21845 |
+| 46   |  21845 |  0  |   3   |  21845 |
+| 46   |  21845 |  0  |   4   |  21845 |
+| 46   |  21845 |  0  |   5   |  21845 |
+| 46   |  21845 |  0  |   6   |  21845 |
+| 46   |  21845 |  0  |   7   |  21845 |`;
+
+const hdl$3 = `/**
+ * Memory of 64 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM64 {
+    IN in[16], load, address[6];
+    OUT out[16];
+}`;
+const tst$3 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+
+set in 0, set load 0, set address 0, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set in 1313, set load 0, tick, output; tock, output;
+set load 1, set address 13, tick, output; tock, output;
+set load 0, set address 0, tick, output; tock, output;
+set in 4747, set address 47, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 13, eval, output;
+set in 6363, tick, output; tock, output;
+set load 1, set address 63, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 47, eval, output;
+set address 63, eval, output;
+
+set load 0, set address %B101000, tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1, set in %B0101010101010101, set address %B101000, tick, output; tock, output;
+set address %B101001, tick, output, tock, output;
+set address %B101010, tick, output, tock, output;
+set address %B101011, tick, output, tock, output;
+set address %B101100, tick, output, tock, output;
+set address %B101101, tick, output, tock, output;
+set address %B101110, tick, output, tock, output;
+set address %B101111, tick, output, tock, output;
+
+set load 0, set address %B101000, tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1, set address %B101000, set in %B1010101010101010, tick, output; tock, output;
+set load 0, set address %B101000, tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1, set address %B101000, set in %B0101010101010101, tick, output, tock, output;
+set address %B101001, set in %B1010101010101010, tick, output; tock, output;
+
+set load 0, set address %B101000, tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1, set address %B101001, set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1,
+set address %B101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101011,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1,
+set address %B101011,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101100,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1,
+set address %B101100,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1,
+set address %B101101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101110,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1,
+set address %B101110,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101111,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 1,
+set address %B101111,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B101000,
+tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, tick, output, tock, output;
+set address %B010101, tick, output, tock, output;
+set address %B011101, tick, output, tock, output;
+set address %B100101, tick, output, tock, output;
+set address %B101101, tick, output, tock, output;
+set address %B110101, tick, output, tock, output;
+set address %B111101, tick, output, tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B000101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B000101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B001101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B001101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B011101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B011101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B100101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B100101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B101101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B110101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B110101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B111101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;
+
+set load 1,
+set address %B111101,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B000101,
+tick, output; tock, output;
+set address %B001101, eval, output;
+set address %B010101, eval, output;
+set address %B011101, eval, output;
+set address %B100101, eval, output;
+set address %B101101, eval, output;
+set address %B110101, eval, output;
+set address %B111101, eval, output;`;
+const cmp$3 = `| time |   in   |load |address|  out   |
+| 0+   |      0 |  0  |    0  |      0 |
+| 1    |      0 |  0  |    0  |      0 |
+| 1+   |      0 |  1  |    0  |      0 |
+| 2    |      0 |  1  |    0  |      0 |
+| 2+   |   1313 |  0  |    0  |      0 |
+| 3    |   1313 |  0  |    0  |      0 |
+| 3+   |   1313 |  1  |   13  |      0 |
+| 4    |   1313 |  1  |   13  |   1313 |
+| 4+   |   1313 |  0  |    0  |      0 |
+| 5    |   1313 |  0  |    0  |      0 |
+| 5+   |   4747 |  0  |   47  |      0 |
+| 6    |   4747 |  0  |   47  |      0 |
+| 6+   |   4747 |  1  |   47  |      0 |
+| 7    |   4747 |  1  |   47  |   4747 |
+| 7+   |   4747 |  0  |   47  |   4747 |
+| 8    |   4747 |  0  |   47  |   4747 |
+| 8    |   4747 |  0  |   13  |   1313 |
+| 8+   |   6363 |  0  |   13  |   1313 |
+| 9    |   6363 |  0  |   13  |   1313 |
+| 9+   |   6363 |  1  |   63  |      0 |
+| 10   |   6363 |  1  |   63  |   6363 |
+| 10+  |   6363 |  0  |   63  |   6363 |
+| 11   |   6363 |  0  |   63  |   6363 |
+| 11   |   6363 |  0  |   47  |   4747 |
+| 11   |   6363 |  0  |   63  |   6363 |
+| 11+  |   6363 |  0  |   40  |      0 |
+| 12   |   6363 |  0  |   40  |      0 |
+| 12   |   6363 |  0  |   41  |      0 |
+| 12   |   6363 |  0  |   42  |      0 |
+| 12   |   6363 |  0  |   43  |      0 |
+| 12   |   6363 |  0  |   44  |      0 |
+| 12   |   6363 |  0  |   45  |      0 |
+| 12   |   6363 |  0  |   46  |      0 |
+| 12   |   6363 |  0  |   47  |   4747 |
+| 12+  |  21845 |  1  |   40  |      0 |
+| 13   |  21845 |  1  |   40  |  21845 |
+| 13+  |  21845 |  1  |   41  |      0 |
+| 14   |  21845 |  1  |   41  |  21845 |
+| 14+  |  21845 |  1  |   42  |      0 |
+| 15   |  21845 |  1  |   42  |  21845 |
+| 15+  |  21845 |  1  |   43  |      0 |
+| 16   |  21845 |  1  |   43  |  21845 |
+| 16+  |  21845 |  1  |   44  |      0 |
+| 17   |  21845 |  1  |   44  |  21845 |
+| 17+  |  21845 |  1  |   45  |      0 |
+| 18   |  21845 |  1  |   45  |  21845 |
+| 18+  |  21845 |  1  |   46  |      0 |
+| 19   |  21845 |  1  |   46  |  21845 |
+| 19+  |  21845 |  1  |   47  |   4747 |
+| 20   |  21845 |  1  |   47  |  21845 |
+| 20+  |  21845 |  0  |   40  |  21845 |
+| 21   |  21845 |  0  |   40  |  21845 |
+| 21   |  21845 |  0  |   41  |  21845 |
+| 21   |  21845 |  0  |   42  |  21845 |
+| 21   |  21845 |  0  |   43  |  21845 |
+| 21   |  21845 |  0  |   44  |  21845 |
+| 21   |  21845 |  0  |   45  |  21845 |
+| 21   |  21845 |  0  |   46  |  21845 |
+| 21   |  21845 |  0  |   47  |  21845 |
+| 21+  | -21846 |  1  |   40  |  21845 |
+| 22   | -21846 |  1  |   40  | -21846 |
+| 22+  | -21846 |  0  |   40  | -21846 |
+| 23   | -21846 |  0  |   40  | -21846 |
+| 23   | -21846 |  0  |   41  |  21845 |
+| 23   | -21846 |  0  |   42  |  21845 |
+| 23   | -21846 |  0  |   43  |  21845 |
+| 23   | -21846 |  0  |   44  |  21845 |
+| 23   | -21846 |  0  |   45  |  21845 |
+| 23   | -21846 |  0  |   46  |  21845 |
+| 23   | -21846 |  0  |   47  |  21845 |
+| 23+  |  21845 |  1  |   40  | -21846 |
+| 24   |  21845 |  1  |   40  |  21845 |
+| 24+  | -21846 |  1  |   41  |  21845 |
+| 25   | -21846 |  1  |   41  | -21846 |
+| 25+  | -21846 |  0  |   40  |  21845 |
+| 26   | -21846 |  0  |   40  |  21845 |
+| 26   | -21846 |  0  |   41  | -21846 |
+| 26   | -21846 |  0  |   42  |  21845 |
+| 26   | -21846 |  0  |   43  |  21845 |
+| 26   | -21846 |  0  |   44  |  21845 |
+| 26   | -21846 |  0  |   45  |  21845 |
+| 26   | -21846 |  0  |   46  |  21845 |
+| 26   | -21846 |  0  |   47  |  21845 |
+| 26+  |  21845 |  1  |   41  | -21846 |
+| 27   |  21845 |  1  |   41  |  21845 |
+| 27+  | -21846 |  1  |   42  |  21845 |
+| 28   | -21846 |  1  |   42  | -21846 |
+| 28+  | -21846 |  0  |   40  |  21845 |
+| 29   | -21846 |  0  |   40  |  21845 |
+| 29   | -21846 |  0  |   41  |  21845 |
+| 29   | -21846 |  0  |   42  | -21846 |
+| 29   | -21846 |  0  |   43  |  21845 |
+| 29   | -21846 |  0  |   44  |  21845 |
+| 29   | -21846 |  0  |   45  |  21845 |
+| 29   | -21846 |  0  |   46  |  21845 |
+| 29   | -21846 |  0  |   47  |  21845 |
+| 29+  |  21845 |  1  |   42  | -21846 |
+| 30   |  21845 |  1  |   42  |  21845 |
+| 30+  | -21846 |  1  |   43  |  21845 |
+| 31   | -21846 |  1  |   43  | -21846 |
+| 31+  | -21846 |  0  |   40  |  21845 |
+| 32   | -21846 |  0  |   40  |  21845 |
+| 32   | -21846 |  0  |   41  |  21845 |
+| 32   | -21846 |  0  |   42  |  21845 |
+| 32   | -21846 |  0  |   43  | -21846 |
+| 32   | -21846 |  0  |   44  |  21845 |
+| 32   | -21846 |  0  |   45  |  21845 |
+| 32   | -21846 |  0  |   46  |  21845 |
+| 32   | -21846 |  0  |   47  |  21845 |
+| 32+  |  21845 |  1  |   43  | -21846 |
+| 33   |  21845 |  1  |   43  |  21845 |
+| 33+  | -21846 |  1  |   44  |  21845 |
+| 34   | -21846 |  1  |   44  | -21846 |
+| 34+  | -21846 |  0  |   40  |  21845 |
+| 35   | -21846 |  0  |   40  |  21845 |
+| 35   | -21846 |  0  |   41  |  21845 |
+| 35   | -21846 |  0  |   42  |  21845 |
+| 35   | -21846 |  0  |   43  |  21845 |
+| 35   | -21846 |  0  |   44  | -21846 |
+| 35   | -21846 |  0  |   45  |  21845 |
+| 35   | -21846 |  0  |   46  |  21845 |
+| 35   | -21846 |  0  |   47  |  21845 |
+| 35+  |  21845 |  1  |   44  | -21846 |
+| 36   |  21845 |  1  |   44  |  21845 |
+| 36+  | -21846 |  1  |   45  |  21845 |
+| 37   | -21846 |  1  |   45  | -21846 |
+| 37+  | -21846 |  0  |   40  |  21845 |
+| 38   | -21846 |  0  |   40  |  21845 |
+| 38   | -21846 |  0  |   41  |  21845 |
+| 38   | -21846 |  0  |   42  |  21845 |
+| 38   | -21846 |  0  |   43  |  21845 |
+| 38   | -21846 |  0  |   44  |  21845 |
+| 38   | -21846 |  0  |   45  | -21846 |
+| 38   | -21846 |  0  |   46  |  21845 |
+| 38   | -21846 |  0  |   47  |  21845 |
+| 38+  |  21845 |  1  |   45  | -21846 |
+| 39   |  21845 |  1  |   45  |  21845 |
+| 39+  | -21846 |  1  |   46  |  21845 |
+| 40   | -21846 |  1  |   46  | -21846 |
+| 40+  | -21846 |  0  |   40  |  21845 |
+| 41   | -21846 |  0  |   40  |  21845 |
+| 41   | -21846 |  0  |   41  |  21845 |
+| 41   | -21846 |  0  |   42  |  21845 |
+| 41   | -21846 |  0  |   43  |  21845 |
+| 41   | -21846 |  0  |   44  |  21845 |
+| 41   | -21846 |  0  |   45  |  21845 |
+| 41   | -21846 |  0  |   46  | -21846 |
+| 41   | -21846 |  0  |   47  |  21845 |
+| 41+  |  21845 |  1  |   46  | -21846 |
+| 42   |  21845 |  1  |   46  |  21845 |
+| 42+  | -21846 |  1  |   47  |  21845 |
+| 43   | -21846 |  1  |   47  | -21846 |
+| 43+  | -21846 |  0  |   40  |  21845 |
+| 44   | -21846 |  0  |   40  |  21845 |
+| 44   | -21846 |  0  |   41  |  21845 |
+| 44   | -21846 |  0  |   42  |  21845 |
+| 44   | -21846 |  0  |   43  |  21845 |
+| 44   | -21846 |  0  |   44  |  21845 |
+| 44   | -21846 |  0  |   45  |  21845 |
+| 44   | -21846 |  0  |   46  |  21845 |
+| 44   | -21846 |  0  |   47  | -21846 |
+| 44+  |  21845 |  1  |   47  | -21846 |
+| 45   |  21845 |  1  |   47  |  21845 |
+| 45+  |  21845 |  0  |   40  |  21845 |
+| 46   |  21845 |  0  |   40  |  21845 |
+| 46   |  21845 |  0  |   41  |  21845 |
+| 46   |  21845 |  0  |   42  |  21845 |
+| 46   |  21845 |  0  |   43  |  21845 |
+| 46   |  21845 |  0  |   44  |  21845 |
+| 46   |  21845 |  0  |   45  |  21845 |
+| 46   |  21845 |  0  |   46  |  21845 |
+| 46   |  21845 |  0  |   47  |  21845 |
+| 46+  |  21845 |  0  |    5  |      0 |
+| 47   |  21845 |  0  |    5  |      0 |
+| 47   |  21845 |  0  |   13  |   1313 |
+| 47   |  21845 |  0  |   21  |      0 |
+| 47   |  21845 |  0  |   29  |      0 |
+| 47   |  21845 |  0  |   37  |      0 |
+| 47   |  21845 |  0  |   45  |  21845 |
+| 47   |  21845 |  0  |   53  |      0 |
+| 47   |  21845 |  0  |   61  |      0 |
+| 47+  |  21845 |  1  |    5  |      0 |
+| 48   |  21845 |  1  |    5  |  21845 |
+| 48+  |  21845 |  1  |   13  |   1313 |
+| 49   |  21845 |  1  |   13  |  21845 |
+| 49+  |  21845 |  1  |   21  |      0 |
+| 50   |  21845 |  1  |   21  |  21845 |
+| 50+  |  21845 |  1  |   29  |      0 |
+| 51   |  21845 |  1  |   29  |  21845 |
+| 51+  |  21845 |  1  |   37  |      0 |
+| 52   |  21845 |  1  |   37  |  21845 |
+| 52+  |  21845 |  1  |   45  |  21845 |
+| 53   |  21845 |  1  |   45  |  21845 |
+| 53+  |  21845 |  1  |   53  |      0 |
+| 54   |  21845 |  1  |   53  |  21845 |
+| 54+  |  21845 |  1  |   61  |      0 |
+| 55   |  21845 |  1  |   61  |  21845 |
+| 55+  |  21845 |  0  |    5  |  21845 |
+| 56   |  21845 |  0  |    5  |  21845 |
+| 56   |  21845 |  0  |   13  |  21845 |
+| 56   |  21845 |  0  |   21  |  21845 |
+| 56   |  21845 |  0  |   29  |  21845 |
+| 56   |  21845 |  0  |   37  |  21845 |
+| 56   |  21845 |  0  |   45  |  21845 |
+| 56   |  21845 |  0  |   53  |  21845 |
+| 56   |  21845 |  0  |   61  |  21845 |
+| 56+  | -21846 |  1  |    5  |  21845 |
+| 57   | -21846 |  1  |    5  | -21846 |
+| 57+  | -21846 |  0  |    5  | -21846 |
+| 58   | -21846 |  0  |    5  | -21846 |
+| 58   | -21846 |  0  |   13  |  21845 |
+| 58   | -21846 |  0  |   21  |  21845 |
+| 58   | -21846 |  0  |   29  |  21845 |
+| 58   | -21846 |  0  |   37  |  21845 |
+| 58   | -21846 |  0  |   45  |  21845 |
+| 58   | -21846 |  0  |   53  |  21845 |
+| 58   | -21846 |  0  |   61  |  21845 |
+| 58+  |  21845 |  1  |    5  | -21846 |
+| 59   |  21845 |  1  |    5  |  21845 |
+| 59+  | -21846 |  1  |   13  |  21845 |
+| 60   | -21846 |  1  |   13  | -21846 |
+| 60+  | -21846 |  0  |    5  |  21845 |
+| 61   | -21846 |  0  |    5  |  21845 |
+| 61   | -21846 |  0  |   13  | -21846 |
+| 61   | -21846 |  0  |   21  |  21845 |
+| 61   | -21846 |  0  |   29  |  21845 |
+| 61   | -21846 |  0  |   37  |  21845 |
+| 61   | -21846 |  0  |   45  |  21845 |
+| 61   | -21846 |  0  |   53  |  21845 |
+| 61   | -21846 |  0  |   61  |  21845 |
+| 61+  |  21845 |  1  |   13  | -21846 |
+| 62   |  21845 |  1  |   13  |  21845 |
+| 62+  | -21846 |  1  |   21  |  21845 |
+| 63   | -21846 |  1  |   21  | -21846 |
+| 63+  | -21846 |  0  |    5  |  21845 |
+| 64   | -21846 |  0  |    5  |  21845 |
+| 64   | -21846 |  0  |   13  |  21845 |
+| 64   | -21846 |  0  |   21  | -21846 |
+| 64   | -21846 |  0  |   29  |  21845 |
+| 64   | -21846 |  0  |   37  |  21845 |
+| 64   | -21846 |  0  |   45  |  21845 |
+| 64   | -21846 |  0  |   53  |  21845 |
+| 64   | -21846 |  0  |   61  |  21845 |
+| 64+  |  21845 |  1  |   21  | -21846 |
+| 65   |  21845 |  1  |   21  |  21845 |
+| 65+  | -21846 |  1  |   29  |  21845 |
+| 66   | -21846 |  1  |   29  | -21846 |
+| 66+  | -21846 |  0  |    5  |  21845 |
+| 67   | -21846 |  0  |    5  |  21845 |
+| 67   | -21846 |  0  |   13  |  21845 |
+| 67   | -21846 |  0  |   21  |  21845 |
+| 67   | -21846 |  0  |   29  | -21846 |
+| 67   | -21846 |  0  |   37  |  21845 |
+| 67   | -21846 |  0  |   45  |  21845 |
+| 67   | -21846 |  0  |   53  |  21845 |
+| 67   | -21846 |  0  |   61  |  21845 |
+| 67+  |  21845 |  1  |   29  | -21846 |
+| 68   |  21845 |  1  |   29  |  21845 |
+| 68+  | -21846 |  1  |   37  |  21845 |
+| 69   | -21846 |  1  |   37  | -21846 |
+| 69+  | -21846 |  0  |    5  |  21845 |
+| 70   | -21846 |  0  |    5  |  21845 |
+| 70   | -21846 |  0  |   13  |  21845 |
+| 70   | -21846 |  0  |   21  |  21845 |
+| 70   | -21846 |  0  |   29  |  21845 |
+| 70   | -21846 |  0  |   37  | -21846 |
+| 70   | -21846 |  0  |   45  |  21845 |
+| 70   | -21846 |  0  |   53  |  21845 |
+| 70   | -21846 |  0  |   61  |  21845 |
+| 70+  |  21845 |  1  |   37  | -21846 |
+| 71   |  21845 |  1  |   37  |  21845 |
+| 71+  | -21846 |  1  |   45  |  21845 |
+| 72   | -21846 |  1  |   45  | -21846 |
+| 72+  | -21846 |  0  |    5  |  21845 |
+| 73   | -21846 |  0  |    5  |  21845 |
+| 73   | -21846 |  0  |   13  |  21845 |
+| 73   | -21846 |  0  |   21  |  21845 |
+| 73   | -21846 |  0  |   29  |  21845 |
+| 73   | -21846 |  0  |   37  |  21845 |
+| 73   | -21846 |  0  |   45  | -21846 |
+| 73   | -21846 |  0  |   53  |  21845 |
+| 73   | -21846 |  0  |   61  |  21845 |
+| 73+  |  21845 |  1  |   45  | -21846 |
+| 74   |  21845 |  1  |   45  |  21845 |
+| 74+  | -21846 |  1  |   53  |  21845 |
+| 75   | -21846 |  1  |   53  | -21846 |
+| 75+  | -21846 |  0  |    5  |  21845 |
+| 76   | -21846 |  0  |    5  |  21845 |
+| 76   | -21846 |  0  |   13  |  21845 |
+| 76   | -21846 |  0  |   21  |  21845 |
+| 76   | -21846 |  0  |   29  |  21845 |
+| 76   | -21846 |  0  |   37  |  21845 |
+| 76   | -21846 |  0  |   45  |  21845 |
+| 76   | -21846 |  0  |   53  | -21846 |
+| 76   | -21846 |  0  |   61  |  21845 |
+| 76+  |  21845 |  1  |   53  | -21846 |
+| 77   |  21845 |  1  |   53  |  21845 |
+| 77+  | -21846 |  1  |   61  |  21845 |
+| 78   | -21846 |  1  |   61  | -21846 |
+| 78+  | -21846 |  0  |    5  |  21845 |
+| 79   | -21846 |  0  |    5  |  21845 |
+| 79   | -21846 |  0  |   13  |  21845 |
+| 79   | -21846 |  0  |   21  |  21845 |
+| 79   | -21846 |  0  |   29  |  21845 |
+| 79   | -21846 |  0  |   37  |  21845 |
+| 79   | -21846 |  0  |   45  |  21845 |
+| 79   | -21846 |  0  |   53  |  21845 |
+| 79   | -21846 |  0  |   61  | -21846 |
+| 79+  |  21845 |  1  |   61  | -21846 |
+| 80   |  21845 |  1  |   61  |  21845 |
+| 80+  |  21845 |  0  |    5  |  21845 |
+| 81   |  21845 |  0  |    5  |  21845 |
+| 81   |  21845 |  0  |   13  |  21845 |
+| 81   |  21845 |  0  |   21  |  21845 |
+| 81   |  21845 |  0  |   29  |  21845 |
+| 81   |  21845 |  0  |   37  |  21845 |
+| 81   |  21845 |  0  |   45  |  21845 |
+| 81   |  21845 |  0  |   53  |  21845 |
+| 81   |  21845 |  0  |   61  |  21845 |`;
+
+const hdl$2 = `/**
+ * Memory of 512 registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM512 {
+    IN in[16], load, address[9];
+    OUT out[16];
+    
+    PARTS:
+}`;
+const tst$2 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+
+set in 0,
+set load 0,
+set address 0,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set in 13099,
+set load 0,
+tick, output; tock, output;
+
+set load 1,
+set address 130,
+tick, output; tock, output;
+
+set load 0,
+set address 0,
+tick, output; tock, output;
+
+set in 4729,
+set address 472,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 130,
+eval,
+output;
+
+set in 5119,
+tick, output; tock, output;
+
+set load 1,
+set address 511,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 472,
+eval,
+output;
+
+set address 511,
+eval,
+output;
+
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001,
+tick, output, tock, output;
+set address %B010101010,
+tick, output, tock, output;
+set address %B010101011,
+tick, output, tock, output;
+set address %B010101100,
+tick, output, tock, output;
+set address %B010101101,
+tick, output, tock, output;
+set address %B010101110,
+tick, output, tock, output;
+set address %B010101111,
+tick, output, tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101000,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101000,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101001,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101001,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101011,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101011,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101100,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101100,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101110,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101110,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101111,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+set load 1,
+set address %B010101111,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B010101000,
+tick, output; tock, output;
+set address %B010101001, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B010101011, tick, output, tock, output;
+set address %B010101100, tick, output, tock, output;
+set address %B010101101, tick, output, tock, output;
+set address %B010101110, tick, output, tock, output;
+set address %B010101111, tick, output, tock, output;
+
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010,
+tick, output, tock, output;
+set address %B010101010,
+tick, output, tock, output;
+set address %B011101010,
+tick, output, tock, output;
+set address %B100101010,
+tick, output, tock, output;
+set address %B101101010,
+tick, output, tock, output;
+set address %B110101010,
+tick, output, tock, output;
+set address %B111101010,
+tick, output, tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B000101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B000101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B001101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B001101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B010101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B011101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B011101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B100101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B100101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B101101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B110101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B110101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B111101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;
+
+set load 1,
+set address %B111101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B000101010,
+tick, output; tock, output;
+set address %B001101010, tick, output, tock, output;
+set address %B010101010, tick, output, tock, output;
+set address %B011101010, tick, output, tock, output;
+set address %B100101010, tick, output, tock, output;
+set address %B101101010, tick, output, tock, output;
+set address %B110101010, tick, output, tock, output;
+set address %B111101010, tick, output, tock, output;`;
+const cmp$2 = `| time |   in   |load |address|  out   |
+| 0+   |      0 |  0  |    0  |      0 |
+| 1    |      0 |  0  |    0  |      0 |
+| 1+   |      0 |  1  |    0  |      0 |
+| 2    |      0 |  1  |    0  |      0 |
+| 2+   |  13099 |  0  |    0  |      0 |
+| 3    |  13099 |  0  |    0  |      0 |
+| 3+   |  13099 |  1  |  130  |      0 |
+| 4    |  13099 |  1  |  130  |  13099 |
+| 4+   |  13099 |  0  |    0  |      0 |
+| 5    |  13099 |  0  |    0  |      0 |
+| 5+   |   4729 |  0  |  472  |      0 |
+| 6    |   4729 |  0  |  472  |      0 |
+| 6+   |   4729 |  1  |  472  |      0 |
+| 7    |   4729 |  1  |  472  |   4729 |
+| 7+   |   4729 |  0  |  472  |   4729 |
+| 8    |   4729 |  0  |  472  |   4729 |
+| 8    |   4729 |  0  |  130  |  13099 |
+| 8+   |   5119 |  0  |  130  |  13099 |
+| 9    |   5119 |  0  |  130  |  13099 |
+| 9+   |   5119 |  1  |  511  |      0 |
+| 10   |   5119 |  1  |  511  |   5119 |
+| 10+  |   5119 |  0  |  511  |   5119 |
+| 11   |   5119 |  0  |  511  |   5119 |
+| 11   |   5119 |  0  |  472  |   4729 |
+| 11   |   5119 |  0  |  511  |   5119 |
+| 11+  |   5119 |  0  |  168  |      0 |
+| 12   |   5119 |  0  |  168  |      0 |
+| 12   |   5119 |  0  |  169  |      0 |
+| 12   |   5119 |  0  |  170  |      0 |
+| 12   |   5119 |  0  |  171  |      0 |
+| 12   |   5119 |  0  |  172  |      0 |
+| 12   |   5119 |  0  |  173  |      0 |
+| 12   |   5119 |  0  |  174  |      0 |
+| 12   |   5119 |  0  |  175  |      0 |
+| 12+  |  21845 |  1  |  168  |      0 |
+| 13   |  21845 |  1  |  168  |  21845 |
+| 13+  |  21845 |  1  |  169  |      0 |
+| 14   |  21845 |  1  |  169  |  21845 |
+| 14+  |  21845 |  1  |  170  |      0 |
+| 15   |  21845 |  1  |  170  |  21845 |
+| 15+  |  21845 |  1  |  171  |      0 |
+| 16   |  21845 |  1  |  171  |  21845 |
+| 16+  |  21845 |  1  |  172  |      0 |
+| 17   |  21845 |  1  |  172  |  21845 |
+| 17+  |  21845 |  1  |  173  |      0 |
+| 18   |  21845 |  1  |  173  |  21845 |
+| 18+  |  21845 |  1  |  174  |      0 |
+| 19   |  21845 |  1  |  174  |  21845 |
+| 19+  |  21845 |  1  |  175  |      0 |
+| 20   |  21845 |  1  |  175  |  21845 |
+| 20+  |  21845 |  0  |  168  |  21845 |
+| 21   |  21845 |  0  |  168  |  21845 |
+| 21   |  21845 |  0  |  169  |  21845 |
+| 21   |  21845 |  0  |  170  |  21845 |
+| 21   |  21845 |  0  |  171  |  21845 |
+| 21   |  21845 |  0  |  172  |  21845 |
+| 21   |  21845 |  0  |  173  |  21845 |
+| 21   |  21845 |  0  |  174  |  21845 |
+| 21   |  21845 |  0  |  175  |  21845 |
+| 21+  | -21846 |  1  |  168  |  21845 |
+| 22   | -21846 |  1  |  168  | -21846 |
+| 22+  | -21846 |  0  |  168  | -21846 |
+| 23   | -21846 |  0  |  168  | -21846 |
+| 23   | -21846 |  0  |  169  |  21845 |
+| 23   | -21846 |  0  |  170  |  21845 |
+| 23   | -21846 |  0  |  171  |  21845 |
+| 23   | -21846 |  0  |  172  |  21845 |
+| 23   | -21846 |  0  |  173  |  21845 |
+| 23   | -21846 |  0  |  174  |  21845 |
+| 23   | -21846 |  0  |  175  |  21845 |
+| 23+  |  21845 |  1  |  168  | -21846 |
+| 24   |  21845 |  1  |  168  |  21845 |
+| 24+  | -21846 |  1  |  169  |  21845 |
+| 25   | -21846 |  1  |  169  | -21846 |
+| 25+  | -21846 |  0  |  168  |  21845 |
+| 26   | -21846 |  0  |  168  |  21845 |
+| 26   | -21846 |  0  |  169  | -21846 |
+| 26   | -21846 |  0  |  170  |  21845 |
+| 26   | -21846 |  0  |  171  |  21845 |
+| 26   | -21846 |  0  |  172  |  21845 |
+| 26   | -21846 |  0  |  173  |  21845 |
+| 26   | -21846 |  0  |  174  |  21845 |
+| 26   | -21846 |  0  |  175  |  21845 |
+| 26+  |  21845 |  1  |  169  | -21846 |
+| 27   |  21845 |  1  |  169  |  21845 |
+| 27+  | -21846 |  1  |  170  |  21845 |
+| 28   | -21846 |  1  |  170  | -21846 |
+| 28+  | -21846 |  0  |  168  |  21845 |
+| 29   | -21846 |  0  |  168  |  21845 |
+| 29   | -21846 |  0  |  169  |  21845 |
+| 29   | -21846 |  0  |  170  | -21846 |
+| 29   | -21846 |  0  |  171  |  21845 |
+| 29   | -21846 |  0  |  172  |  21845 |
+| 29   | -21846 |  0  |  173  |  21845 |
+| 29   | -21846 |  0  |  174  |  21845 |
+| 29   | -21846 |  0  |  175  |  21845 |
+| 29+  |  21845 |  1  |  170  | -21846 |
+| 30   |  21845 |  1  |  170  |  21845 |
+| 30+  | -21846 |  1  |  171  |  21845 |
+| 31   | -21846 |  1  |  171  | -21846 |
+| 31+  | -21846 |  0  |  168  |  21845 |
+| 32   | -21846 |  0  |  168  |  21845 |
+| 32   | -21846 |  0  |  169  |  21845 |
+| 32   | -21846 |  0  |  170  |  21845 |
+| 32   | -21846 |  0  |  171  | -21846 |
+| 32   | -21846 |  0  |  172  |  21845 |
+| 32   | -21846 |  0  |  173  |  21845 |
+| 32   | -21846 |  0  |  174  |  21845 |
+| 32   | -21846 |  0  |  175  |  21845 |
+| 32+  |  21845 |  1  |  171  | -21846 |
+| 33   |  21845 |  1  |  171  |  21845 |
+| 33+  | -21846 |  1  |  172  |  21845 |
+| 34   | -21846 |  1  |  172  | -21846 |
+| 34+  | -21846 |  0  |  168  |  21845 |
+| 35   | -21846 |  0  |  168  |  21845 |
+| 35   | -21846 |  0  |  169  |  21845 |
+| 35   | -21846 |  0  |  170  |  21845 |
+| 35   | -21846 |  0  |  171  |  21845 |
+| 35   | -21846 |  0  |  172  | -21846 |
+| 35   | -21846 |  0  |  173  |  21845 |
+| 35   | -21846 |  0  |  174  |  21845 |
+| 35   | -21846 |  0  |  175  |  21845 |
+| 35+  |  21845 |  1  |  172  | -21846 |
+| 36   |  21845 |  1  |  172  |  21845 |
+| 36+  | -21846 |  1  |  173  |  21845 |
+| 37   | -21846 |  1  |  173  | -21846 |
+| 37+  | -21846 |  0  |  168  |  21845 |
+| 38   | -21846 |  0  |  168  |  21845 |
+| 38   | -21846 |  0  |  169  |  21845 |
+| 38   | -21846 |  0  |  170  |  21845 |
+| 38   | -21846 |  0  |  171  |  21845 |
+| 38   | -21846 |  0  |  172  |  21845 |
+| 38   | -21846 |  0  |  173  | -21846 |
+| 38   | -21846 |  0  |  174  |  21845 |
+| 38   | -21846 |  0  |  175  |  21845 |
+| 38+  |  21845 |  1  |  173  | -21846 |
+| 39   |  21845 |  1  |  173  |  21845 |
+| 39+  | -21846 |  1  |  174  |  21845 |
+| 40   | -21846 |  1  |  174  | -21846 |
+| 40+  | -21846 |  0  |  168  |  21845 |
+| 41   | -21846 |  0  |  168  |  21845 |
+| 41   | -21846 |  0  |  169  |  21845 |
+| 41   | -21846 |  0  |  170  |  21845 |
+| 41   | -21846 |  0  |  171  |  21845 |
+| 41   | -21846 |  0  |  172  |  21845 |
+| 41   | -21846 |  0  |  173  |  21845 |
+| 41   | -21846 |  0  |  174  | -21846 |
+| 41   | -21846 |  0  |  175  |  21845 |
+| 41+  |  21845 |  1  |  174  | -21846 |
+| 42   |  21845 |  1  |  174  |  21845 |
+| 42+  | -21846 |  1  |  175  |  21845 |
+| 43   | -21846 |  1  |  175  | -21846 |
+| 43+  | -21846 |  0  |  168  |  21845 |
+| 44   | -21846 |  0  |  168  |  21845 |
+| 44   | -21846 |  0  |  169  |  21845 |
+| 44   | -21846 |  0  |  170  |  21845 |
+| 44   | -21846 |  0  |  171  |  21845 |
+| 44   | -21846 |  0  |  172  |  21845 |
+| 44   | -21846 |  0  |  173  |  21845 |
+| 44   | -21846 |  0  |  174  |  21845 |
+| 44   | -21846 |  0  |  175  | -21846 |
+| 44+  |  21845 |  1  |  175  | -21846 |
+| 45   |  21845 |  1  |  175  |  21845 |
+| 45+  |  21845 |  0  |  168  |  21845 |
+| 46   |  21845 |  0  |  168  |  21845 |
+| 46   |  21845 |  0  |  169  |  21845 |
+| 46   |  21845 |  0  |  170  |  21845 |
+| 46   |  21845 |  0  |  171  |  21845 |
+| 46   |  21845 |  0  |  172  |  21845 |
+| 46   |  21845 |  0  |  173  |  21845 |
+| 46   |  21845 |  0  |  174  |  21845 |
+| 46   |  21845 |  0  |  175  |  21845 |
+| 46+  |  21845 |  0  |   42  |      0 |
+| 47   |  21845 |  0  |   42  |      0 |
+| 47   |  21845 |  0  |  106  |      0 |
+| 47   |  21845 |  0  |  170  |  21845 |
+| 47   |  21845 |  0  |  234  |      0 |
+| 47   |  21845 |  0  |  298  |      0 |
+| 47   |  21845 |  0  |  362  |      0 |
+| 47   |  21845 |  0  |  426  |      0 |
+| 47   |  21845 |  0  |  490  |      0 |
+| 47+  |  21845 |  1  |   42  |      0 |
+| 48   |  21845 |  1  |   42  |  21845 |
+| 48+  |  21845 |  1  |  106  |      0 |
+| 49   |  21845 |  1  |  106  |  21845 |
+| 49+  |  21845 |  1  |  170  |  21845 |
+| 50   |  21845 |  1  |  170  |  21845 |
+| 50+  |  21845 |  1  |  234  |      0 |
+| 51   |  21845 |  1  |  234  |  21845 |
+| 51+  |  21845 |  1  |  298  |      0 |
+| 52   |  21845 |  1  |  298  |  21845 |
+| 52+  |  21845 |  1  |  362  |      0 |
+| 53   |  21845 |  1  |  362  |  21845 |
+| 53+  |  21845 |  1  |  426  |      0 |
+| 54   |  21845 |  1  |  426  |  21845 |
+| 54+  |  21845 |  1  |  490  |      0 |
+| 55   |  21845 |  1  |  490  |  21845 |
+| 55+  |  21845 |  0  |   42  |  21845 |
+| 56   |  21845 |  0  |   42  |  21845 |
+| 56   |  21845 |  0  |  106  |  21845 |
+| 56   |  21845 |  0  |  170  |  21845 |
+| 56   |  21845 |  0  |  234  |  21845 |
+| 56   |  21845 |  0  |  298  |  21845 |
+| 56   |  21845 |  0  |  362  |  21845 |
+| 56   |  21845 |  0  |  426  |  21845 |
+| 56   |  21845 |  0  |  490  |  21845 |
+| 56+  | -21846 |  1  |   42  |  21845 |
+| 57   | -21846 |  1  |   42  | -21846 |
+| 57+  | -21846 |  0  |   42  | -21846 |
+| 58   | -21846 |  0  |   42  | -21846 |
+| 58   | -21846 |  0  |  106  |  21845 |
+| 58   | -21846 |  0  |  170  |  21845 |
+| 58   | -21846 |  0  |  234  |  21845 |
+| 58   | -21846 |  0  |  298  |  21845 |
+| 58   | -21846 |  0  |  362  |  21845 |
+| 58   | -21846 |  0  |  426  |  21845 |
+| 58   | -21846 |  0  |  490  |  21845 |
+| 58+  |  21845 |  1  |   42  | -21846 |
+| 59   |  21845 |  1  |   42  |  21845 |
+| 59+  | -21846 |  1  |  106  |  21845 |
+| 60   | -21846 |  1  |  106  | -21846 |
+| 60+  | -21846 |  0  |   42  |  21845 |
+| 61   | -21846 |  0  |   42  |  21845 |
+| 61   | -21846 |  0  |  106  | -21846 |
+| 61   | -21846 |  0  |  170  |  21845 |
+| 61   | -21846 |  0  |  234  |  21845 |
+| 61   | -21846 |  0  |  298  |  21845 |
+| 61   | -21846 |  0  |  362  |  21845 |
+| 61   | -21846 |  0  |  426  |  21845 |
+| 61   | -21846 |  0  |  490  |  21845 |
+| 61+  |  21845 |  1  |  106  | -21846 |
+| 62   |  21845 |  1  |  106  |  21845 |
+| 62+  | -21846 |  1  |  170  |  21845 |
+| 63   | -21846 |  1  |  170  | -21846 |
+| 63+  | -21846 |  0  |   42  |  21845 |
+| 64   | -21846 |  0  |   42  |  21845 |
+| 64   | -21846 |  0  |  106  |  21845 |
+| 64   | -21846 |  0  |  170  | -21846 |
+| 64   | -21846 |  0  |  234  |  21845 |
+| 64   | -21846 |  0  |  298  |  21845 |
+| 64   | -21846 |  0  |  362  |  21845 |
+| 64   | -21846 |  0  |  426  |  21845 |
+| 64   | -21846 |  0  |  490  |  21845 |
+| 64+  |  21845 |  1  |  170  | -21846 |
+| 65   |  21845 |  1  |  170  |  21845 |
+| 65+  | -21846 |  1  |  234  |  21845 |
+| 66   | -21846 |  1  |  234  | -21846 |
+| 66+  | -21846 |  0  |   42  |  21845 |
+| 67   | -21846 |  0  |   42  |  21845 |
+| 67   | -21846 |  0  |  106  |  21845 |
+| 67   | -21846 |  0  |  170  |  21845 |
+| 67   | -21846 |  0  |  234  | -21846 |
+| 67   | -21846 |  0  |  298  |  21845 |
+| 67   | -21846 |  0  |  362  |  21845 |
+| 67   | -21846 |  0  |  426  |  21845 |
+| 67   | -21846 |  0  |  490  |  21845 |
+| 67+  |  21845 |  1  |  234  | -21846 |
+| 68   |  21845 |  1  |  234  |  21845 |
+| 68+  | -21846 |  1  |  298  |  21845 |
+| 69   | -21846 |  1  |  298  | -21846 |
+| 69+  | -21846 |  0  |   42  |  21845 |
+| 70   | -21846 |  0  |   42  |  21845 |
+| 70   | -21846 |  0  |  106  |  21845 |
+| 70   | -21846 |  0  |  170  |  21845 |
+| 70   | -21846 |  0  |  234  |  21845 |
+| 70   | -21846 |  0  |  298  | -21846 |
+| 70   | -21846 |  0  |  362  |  21845 |
+| 70   | -21846 |  0  |  426  |  21845 |
+| 70   | -21846 |  0  |  490  |  21845 |
+| 70+  |  21845 |  1  |  298  | -21846 |
+| 71   |  21845 |  1  |  298  |  21845 |
+| 71+  | -21846 |  1  |  362  |  21845 |
+| 72   | -21846 |  1  |  362  | -21846 |
+| 72+  | -21846 |  0  |   42  |  21845 |
+| 73   | -21846 |  0  |   42  |  21845 |
+| 73   | -21846 |  0  |  106  |  21845 |
+| 73   | -21846 |  0  |  170  |  21845 |
+| 73   | -21846 |  0  |  234  |  21845 |
+| 73   | -21846 |  0  |  298  |  21845 |
+| 73   | -21846 |  0  |  362  | -21846 |
+| 73   | -21846 |  0  |  426  |  21845 |
+| 73   | -21846 |  0  |  490  |  21845 |
+| 73+  |  21845 |  1  |  362  | -21846 |
+| 74   |  21845 |  1  |  362  |  21845 |
+| 74+  | -21846 |  1  |  426  |  21845 |
+| 75   | -21846 |  1  |  426  | -21846 |
+| 75+  | -21846 |  0  |   42  |  21845 |
+| 76   | -21846 |  0  |   42  |  21845 |
+| 76   | -21846 |  0  |  106  |  21845 |
+| 76   | -21846 |  0  |  170  |  21845 |
+| 76   | -21846 |  0  |  234  |  21845 |
+| 76   | -21846 |  0  |  298  |  21845 |
+| 76   | -21846 |  0  |  362  |  21845 |
+| 76   | -21846 |  0  |  426  | -21846 |
+| 76   | -21846 |  0  |  490  |  21845 |
+| 76+  |  21845 |  1  |  426  | -21846 |
+| 77   |  21845 |  1  |  426  |  21845 |
+| 77+  | -21846 |  1  |  490  |  21845 |
+| 78   | -21846 |  1  |  490  | -21846 |
+| 78+  | -21846 |  0  |   42  |  21845 |
+| 79   | -21846 |  0  |   42  |  21845 |
+| 79   | -21846 |  0  |  106  |  21845 |
+| 79   | -21846 |  0  |  170  |  21845 |
+| 79   | -21846 |  0  |  234  |  21845 |
+| 79   | -21846 |  0  |  298  |  21845 |
+| 79   | -21846 |  0  |  362  |  21845 |
+| 79   | -21846 |  0  |  426  |  21845 |
+| 79   | -21846 |  0  |  490  | -21846 |
+| 79+  |  21845 |  1  |  490  | -21846 |
+| 80   |  21845 |  1  |  490  |  21845 |
+| 80+  |  21845 |  0  |   42  |  21845 |
+| 81   |  21845 |  0  |   42  |  21845 |
+| 81   |  21845 |  0  |  106  |  21845 |
+| 81   |  21845 |  0  |  170  |  21845 |
+| 81   |  21845 |  0  |  234  |  21845 |
+| 81   |  21845 |  0  |  298  |  21845 |
+| 81   |  21845 |  0  |  362  |  21845 |
+| 81   |  21845 |  0  |  426  |  21845 |
+| 81   |  21845 |  0  |  490  |  21845 |`;
+
+const hdl$1 = `/**
+ * Memory of 4K registers, each 16 bit-wide. Out holds the value
+ * stored at the memory location specified by address. If load==1, then 
+ * the in value is loaded into the memory location specified by address 
+ * (the loaded value will be emitted to out from the next time step onward).
+ */
+
+CHIP RAM4K {
+    IN in[16], load, address[12];
+    OUT out[16];
+
+    PARTS:
+}`;
+const tst$1 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.4.2 out%D1.6.1;
+
+set in 0,
+set load 0,
+set address 0,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set in 1111,
+set load 0,
+tick, output; tock, output;
+
+set load 1,
+set address 1111,
+tick, output; tock, output;
+
+set load 0,
+set address 0,
+tick, output; tock, output;
+
+set in 3513,
+set address 3513,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 1111,
+eval,
+output;
+
+set in 4095,
+tick, output; tock, output;
+
+set load 1,
+set address 4095,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 3513,
+eval,
+output;
+
+set address 4095,
+eval,
+output;
+
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001,
+tick, output, tock, output;
+set address %B101010101010,
+tick, output, tock, output;
+set address %B101010101011,
+tick, output, tock, output;
+set address %B101010101100,
+tick, output, tock, output;
+set address %B101010101101,
+tick, output, tock, output;
+set address %B101010101110,
+tick, output, tock, output;
+set address %B101010101111,
+tick, output, tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101000,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101000,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101001,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101001,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101011,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101011,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101100,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101100,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101110,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101110,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101010101111,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+set load 1,
+set address %B101010101111,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B101010101000,
+tick, output; tock, output;
+set address %B101010101001, tick, output, tock, output;
+set address %B101010101010, tick, output, tock, output;
+set address %B101010101011, tick, output, tock, output;
+set address %B101010101100, tick, output, tock, output;
+set address %B101010101101, tick, output, tock, output;
+set address %B101010101110, tick, output, tock, output;
+set address %B101010101111, tick, output, tock, output;
+
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101,
+tick, output, tock, output;
+set address %B010101010101,
+tick, output, tock, output;
+set address %B011101010101,
+tick, output, tock, output;
+set address %B100101010101,
+tick, output, tock, output;
+set address %B101101010101,
+tick, output, tock, output;
+set address %B110101010101,
+tick, output, tock, output;
+set address %B111101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B000101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B000101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B001101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B001101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B010101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B010101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B011101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B011101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B100101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B100101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B101101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B101101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B110101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B110101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B111101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;
+
+set load 1,
+set address %B111101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B000101010101,
+tick, output; tock, output;
+set address %B001101010101, tick, output, tock, output;
+set address %B010101010101, tick, output, tock, output;
+set address %B011101010101, tick, output, tock, output;
+set address %B100101010101, tick, output, tock, output;
+set address %B101101010101, tick, output, tock, output;
+set address %B110101010101, tick, output, tock, output;
+set address %B111101010101, tick, output, tock, output;`;
+const cmp$1 = `| time |   in   |load |address |  out   |
+| 0+   |      0 |  0  |     0  |      0 |
+| 1    |      0 |  0  |     0  |      0 |
+| 1+   |      0 |  1  |     0  |      0 |
+| 2    |      0 |  1  |     0  |      0 |
+| 2+   |   1111 |  0  |     0  |      0 |
+| 3    |   1111 |  0  |     0  |      0 |
+| 3+   |   1111 |  1  |  1111  |      0 |
+| 4    |   1111 |  1  |  1111  |   1111 |
+| 4+   |   1111 |  0  |     0  |      0 |
+| 5    |   1111 |  0  |     0  |      0 |
+| 5+   |   3513 |  0  |  3513  |      0 |
+| 6    |   3513 |  0  |  3513  |      0 |
+| 6+   |   3513 |  1  |  3513  |      0 |
+| 7    |   3513 |  1  |  3513  |   3513 |
+| 7+   |   3513 |  0  |  3513  |   3513 |
+| 8    |   3513 |  0  |  3513  |   3513 |
+| 8    |   3513 |  0  |  1111  |   1111 |
+| 8+   |   4095 |  0  |  1111  |   1111 |
+| 9    |   4095 |  0  |  1111  |   1111 |
+| 9+   |   4095 |  1  |  4095  |      0 |
+| 10   |   4095 |  1  |  4095  |   4095 |
+| 10+  |   4095 |  0  |  4095  |   4095 |
+| 11   |   4095 |  0  |  4095  |   4095 |
+| 11   |   4095 |  0  |  3513  |   3513 |
+| 11   |   4095 |  0  |  4095  |   4095 |
+| 11+  |   4095 |  0  |  2728  |      0 |
+| 12   |   4095 |  0  |  2728  |      0 |
+| 12   |   4095 |  0  |  2729  |      0 |
+| 12   |   4095 |  0  |  2730  |      0 |
+| 12   |   4095 |  0  |  2731  |      0 |
+| 12   |   4095 |  0  |  2732  |      0 |
+| 12   |   4095 |  0  |  2733  |      0 |
+| 12   |   4095 |  0  |  2734  |      0 |
+| 12   |   4095 |  0  |  2735  |      0 |
+| 12+  |  21845 |  1  |  2728  |      0 |
+| 13   |  21845 |  1  |  2728  |  21845 |
+| 13+  |  21845 |  1  |  2729  |      0 |
+| 14   |  21845 |  1  |  2729  |  21845 |
+| 14+  |  21845 |  1  |  2730  |      0 |
+| 15   |  21845 |  1  |  2730  |  21845 |
+| 15+  |  21845 |  1  |  2731  |      0 |
+| 16   |  21845 |  1  |  2731  |  21845 |
+| 16+  |  21845 |  1  |  2732  |      0 |
+| 17   |  21845 |  1  |  2732  |  21845 |
+| 17+  |  21845 |  1  |  2733  |      0 |
+| 18   |  21845 |  1  |  2733  |  21845 |
+| 18+  |  21845 |  1  |  2734  |      0 |
+| 19   |  21845 |  1  |  2734  |  21845 |
+| 19+  |  21845 |  1  |  2735  |      0 |
+| 20   |  21845 |  1  |  2735  |  21845 |
+| 20+  |  21845 |  0  |  2728  |  21845 |
+| 21   |  21845 |  0  |  2728  |  21845 |
+| 21   |  21845 |  0  |  2729  |  21845 |
+| 21   |  21845 |  0  |  2730  |  21845 |
+| 21   |  21845 |  0  |  2731  |  21845 |
+| 21   |  21845 |  0  |  2732  |  21845 |
+| 21   |  21845 |  0  |  2733  |  21845 |
+| 21   |  21845 |  0  |  2734  |  21845 |
+| 21   |  21845 |  0  |  2735  |  21845 |
+| 21+  | -21846 |  1  |  2728  |  21845 |
+| 22   | -21846 |  1  |  2728  | -21846 |
+| 22+  | -21846 |  0  |  2728  | -21846 |
+| 23   | -21846 |  0  |  2728  | -21846 |
+| 23   | -21846 |  0  |  2729  |  21845 |
+| 23   | -21846 |  0  |  2730  |  21845 |
+| 23   | -21846 |  0  |  2731  |  21845 |
+| 23   | -21846 |  0  |  2732  |  21845 |
+| 23   | -21846 |  0  |  2733  |  21845 |
+| 23   | -21846 |  0  |  2734  |  21845 |
+| 23   | -21846 |  0  |  2735  |  21845 |
+| 23+  |  21845 |  1  |  2728  | -21846 |
+| 24   |  21845 |  1  |  2728  |  21845 |
+| 24+  | -21846 |  1  |  2729  |  21845 |
+| 25   | -21846 |  1  |  2729  | -21846 |
+| 25+  | -21846 |  0  |  2728  |  21845 |
+| 26   | -21846 |  0  |  2728  |  21845 |
+| 26   | -21846 |  0  |  2729  | -21846 |
+| 26   | -21846 |  0  |  2730  |  21845 |
+| 26   | -21846 |  0  |  2731  |  21845 |
+| 26   | -21846 |  0  |  2732  |  21845 |
+| 26   | -21846 |  0  |  2733  |  21845 |
+| 26   | -21846 |  0  |  2734  |  21845 |
+| 26   | -21846 |  0  |  2735  |  21845 |
+| 26+  |  21845 |  1  |  2729  | -21846 |
+| 27   |  21845 |  1  |  2729  |  21845 |
+| 27+  | -21846 |  1  |  2730  |  21845 |
+| 28   | -21846 |  1  |  2730  | -21846 |
+| 28+  | -21846 |  0  |  2728  |  21845 |
+| 29   | -21846 |  0  |  2728  |  21845 |
+| 29   | -21846 |  0  |  2729  |  21845 |
+| 29   | -21846 |  0  |  2730  | -21846 |
+| 29   | -21846 |  0  |  2731  |  21845 |
+| 29   | -21846 |  0  |  2732  |  21845 |
+| 29   | -21846 |  0  |  2733  |  21845 |
+| 29   | -21846 |  0  |  2734  |  21845 |
+| 29   | -21846 |  0  |  2735  |  21845 |
+| 29+  |  21845 |  1  |  2730  | -21846 |
+| 30   |  21845 |  1  |  2730  |  21845 |
+| 30+  | -21846 |  1  |  2731  |  21845 |
+| 31   | -21846 |  1  |  2731  | -21846 |
+| 31+  | -21846 |  0  |  2728  |  21845 |
+| 32   | -21846 |  0  |  2728  |  21845 |
+| 32   | -21846 |  0  |  2729  |  21845 |
+| 32   | -21846 |  0  |  2730  |  21845 |
+| 32   | -21846 |  0  |  2731  | -21846 |
+| 32   | -21846 |  0  |  2732  |  21845 |
+| 32   | -21846 |  0  |  2733  |  21845 |
+| 32   | -21846 |  0  |  2734  |  21845 |
+| 32   | -21846 |  0  |  2735  |  21845 |
+| 32+  |  21845 |  1  |  2731  | -21846 |
+| 33   |  21845 |  1  |  2731  |  21845 |
+| 33+  | -21846 |  1  |  2732  |  21845 |
+| 34   | -21846 |  1  |  2732  | -21846 |
+| 34+  | -21846 |  0  |  2728  |  21845 |
+| 35   | -21846 |  0  |  2728  |  21845 |
+| 35   | -21846 |  0  |  2729  |  21845 |
+| 35   | -21846 |  0  |  2730  |  21845 |
+| 35   | -21846 |  0  |  2731  |  21845 |
+| 35   | -21846 |  0  |  2732  | -21846 |
+| 35   | -21846 |  0  |  2733  |  21845 |
+| 35   | -21846 |  0  |  2734  |  21845 |
+| 35   | -21846 |  0  |  2735  |  21845 |
+| 35+  |  21845 |  1  |  2732  | -21846 |
+| 36   |  21845 |  1  |  2732  |  21845 |
+| 36+  | -21846 |  1  |  2733  |  21845 |
+| 37   | -21846 |  1  |  2733  | -21846 |
+| 37+  | -21846 |  0  |  2728  |  21845 |
+| 38   | -21846 |  0  |  2728  |  21845 |
+| 38   | -21846 |  0  |  2729  |  21845 |
+| 38   | -21846 |  0  |  2730  |  21845 |
+| 38   | -21846 |  0  |  2731  |  21845 |
+| 38   | -21846 |  0  |  2732  |  21845 |
+| 38   | -21846 |  0  |  2733  | -21846 |
+| 38   | -21846 |  0  |  2734  |  21845 |
+| 38   | -21846 |  0  |  2735  |  21845 |
+| 38+  |  21845 |  1  |  2733  | -21846 |
+| 39   |  21845 |  1  |  2733  |  21845 |
+| 39+  | -21846 |  1  |  2734  |  21845 |
+| 40   | -21846 |  1  |  2734  | -21846 |
+| 40+  | -21846 |  0  |  2728  |  21845 |
+| 41   | -21846 |  0  |  2728  |  21845 |
+| 41   | -21846 |  0  |  2729  |  21845 |
+| 41   | -21846 |  0  |  2730  |  21845 |
+| 41   | -21846 |  0  |  2731  |  21845 |
+| 41   | -21846 |  0  |  2732  |  21845 |
+| 41   | -21846 |  0  |  2733  |  21845 |
+| 41   | -21846 |  0  |  2734  | -21846 |
+| 41   | -21846 |  0  |  2735  |  21845 |
+| 41+  |  21845 |  1  |  2734  | -21846 |
+| 42   |  21845 |  1  |  2734  |  21845 |
+| 42+  | -21846 |  1  |  2735  |  21845 |
+| 43   | -21846 |  1  |  2735  | -21846 |
+| 43+  | -21846 |  0  |  2728  |  21845 |
+| 44   | -21846 |  0  |  2728  |  21845 |
+| 44   | -21846 |  0  |  2729  |  21845 |
+| 44   | -21846 |  0  |  2730  |  21845 |
+| 44   | -21846 |  0  |  2731  |  21845 |
+| 44   | -21846 |  0  |  2732  |  21845 |
+| 44   | -21846 |  0  |  2733  |  21845 |
+| 44   | -21846 |  0  |  2734  |  21845 |
+| 44   | -21846 |  0  |  2735  | -21846 |
+| 44+  |  21845 |  1  |  2735  | -21846 |
+| 45   |  21845 |  1  |  2735  |  21845 |
+| 45+  |  21845 |  0  |  2728  |  21845 |
+| 46   |  21845 |  0  |  2728  |  21845 |
+| 46   |  21845 |  0  |  2729  |  21845 |
+| 46   |  21845 |  0  |  2730  |  21845 |
+| 46   |  21845 |  0  |  2731  |  21845 |
+| 46   |  21845 |  0  |  2732  |  21845 |
+| 46   |  21845 |  0  |  2733  |  21845 |
+| 46   |  21845 |  0  |  2734  |  21845 |
+| 46   |  21845 |  0  |  2735  |  21845 |
+| 46+  |  21845 |  0  |   341  |      0 |
+| 47   |  21845 |  0  |   341  |      0 |
+| 47   |  21845 |  0  |   853  |      0 |
+| 47   |  21845 |  0  |  1365  |      0 |
+| 47   |  21845 |  0  |  1877  |      0 |
+| 47   |  21845 |  0  |  2389  |      0 |
+| 47   |  21845 |  0  |  2901  |      0 |
+| 47   |  21845 |  0  |  3413  |      0 |
+| 47   |  21845 |  0  |  3925  |      0 |
+| 47+  |  21845 |  1  |   341  |      0 |
+| 48   |  21845 |  1  |   341  |  21845 |
+| 48+  |  21845 |  1  |   853  |      0 |
+| 49   |  21845 |  1  |   853  |  21845 |
+| 49+  |  21845 |  1  |  1365  |      0 |
+| 50   |  21845 |  1  |  1365  |  21845 |
+| 50+  |  21845 |  1  |  1877  |      0 |
+| 51   |  21845 |  1  |  1877  |  21845 |
+| 51+  |  21845 |  1  |  2389  |      0 |
+| 52   |  21845 |  1  |  2389  |  21845 |
+| 52+  |  21845 |  1  |  2901  |      0 |
+| 53   |  21845 |  1  |  2901  |  21845 |
+| 53+  |  21845 |  1  |  3413  |      0 |
+| 54   |  21845 |  1  |  3413  |  21845 |
+| 54+  |  21845 |  1  |  3925  |      0 |
+| 55   |  21845 |  1  |  3925  |  21845 |
+| 55+  |  21845 |  0  |   341  |  21845 |
+| 56   |  21845 |  0  |   341  |  21845 |
+| 56   |  21845 |  0  |   853  |  21845 |
+| 56   |  21845 |  0  |  1365  |  21845 |
+| 56   |  21845 |  0  |  1877  |  21845 |
+| 56   |  21845 |  0  |  2389  |  21845 |
+| 56   |  21845 |  0  |  2901  |  21845 |
+| 56   |  21845 |  0  |  3413  |  21845 |
+| 56   |  21845 |  0  |  3925  |  21845 |
+| 56+  | -21846 |  1  |   341  |  21845 |
+| 57   | -21846 |  1  |   341  | -21846 |
+| 57+  | -21846 |  0  |   341  | -21846 |
+| 58   | -21846 |  0  |   341  | -21846 |
+| 58   | -21846 |  0  |   853  |  21845 |
+| 58   | -21846 |  0  |  1365  |  21845 |
+| 58   | -21846 |  0  |  1877  |  21845 |
+| 58   | -21846 |  0  |  2389  |  21845 |
+| 58   | -21846 |  0  |  2901  |  21845 |
+| 58   | -21846 |  0  |  3413  |  21845 |
+| 58   | -21846 |  0  |  3925  |  21845 |
+| 58+  |  21845 |  1  |   341  | -21846 |
+| 59   |  21845 |  1  |   341  |  21845 |
+| 59+  | -21846 |  1  |   853  |  21845 |
+| 60   | -21846 |  1  |   853  | -21846 |
+| 60+  | -21846 |  0  |   341  |  21845 |
+| 61   | -21846 |  0  |   341  |  21845 |
+| 61   | -21846 |  0  |   853  | -21846 |
+| 61   | -21846 |  0  |  1365  |  21845 |
+| 61   | -21846 |  0  |  1877  |  21845 |
+| 61   | -21846 |  0  |  2389  |  21845 |
+| 61   | -21846 |  0  |  2901  |  21845 |
+| 61   | -21846 |  0  |  3413  |  21845 |
+| 61   | -21846 |  0  |  3925  |  21845 |
+| 61+  |  21845 |  1  |   853  | -21846 |
+| 62   |  21845 |  1  |   853  |  21845 |
+| 62+  | -21846 |  1  |  1365  |  21845 |
+| 63   | -21846 |  1  |  1365  | -21846 |
+| 63+  | -21846 |  0  |   341  |  21845 |
+| 64   | -21846 |  0  |   341  |  21845 |
+| 64   | -21846 |  0  |   853  |  21845 |
+| 64   | -21846 |  0  |  1365  | -21846 |
+| 64   | -21846 |  0  |  1877  |  21845 |
+| 64   | -21846 |  0  |  2389  |  21845 |
+| 64   | -21846 |  0  |  2901  |  21845 |
+| 64   | -21846 |  0  |  3413  |  21845 |
+| 64   | -21846 |  0  |  3925  |  21845 |
+| 64+  |  21845 |  1  |  1365  | -21846 |
+| 65   |  21845 |  1  |  1365  |  21845 |
+| 65+  | -21846 |  1  |  1877  |  21845 |
+| 66   | -21846 |  1  |  1877  | -21846 |
+| 66+  | -21846 |  0  |   341  |  21845 |
+| 67   | -21846 |  0  |   341  |  21845 |
+| 67   | -21846 |  0  |   853  |  21845 |
+| 67   | -21846 |  0  |  1365  |  21845 |
+| 67   | -21846 |  0  |  1877  | -21846 |
+| 67   | -21846 |  0  |  2389  |  21845 |
+| 67   | -21846 |  0  |  2901  |  21845 |
+| 67   | -21846 |  0  |  3413  |  21845 |
+| 67   | -21846 |  0  |  3925  |  21845 |
+| 67+  |  21845 |  1  |  1877  | -21846 |
+| 68   |  21845 |  1  |  1877  |  21845 |
+| 68+  | -21846 |  1  |  2389  |  21845 |
+| 69   | -21846 |  1  |  2389  | -21846 |
+| 69+  | -21846 |  0  |   341  |  21845 |
+| 70   | -21846 |  0  |   341  |  21845 |
+| 70   | -21846 |  0  |   853  |  21845 |
+| 70   | -21846 |  0  |  1365  |  21845 |
+| 70   | -21846 |  0  |  1877  |  21845 |
+| 70   | -21846 |  0  |  2389  | -21846 |
+| 70   | -21846 |  0  |  2901  |  21845 |
+| 70   | -21846 |  0  |  3413  |  21845 |
+| 70   | -21846 |  0  |  3925  |  21845 |
+| 70+  |  21845 |  1  |  2389  | -21846 |
+| 71   |  21845 |  1  |  2389  |  21845 |
+| 71+  | -21846 |  1  |  2901  |  21845 |
+| 72   | -21846 |  1  |  2901  | -21846 |
+| 72+  | -21846 |  0  |   341  |  21845 |
+| 73   | -21846 |  0  |   341  |  21845 |
+| 73   | -21846 |  0  |   853  |  21845 |
+| 73   | -21846 |  0  |  1365  |  21845 |
+| 73   | -21846 |  0  |  1877  |  21845 |
+| 73   | -21846 |  0  |  2389  |  21845 |
+| 73   | -21846 |  0  |  2901  | -21846 |
+| 73   | -21846 |  0  |  3413  |  21845 |
+| 73   | -21846 |  0  |  3925  |  21845 |
+| 73+  |  21845 |  1  |  2901  | -21846 |
+| 74   |  21845 |  1  |  2901  |  21845 |
+| 74+  | -21846 |  1  |  3413  |  21845 |
+| 75   | -21846 |  1  |  3413  | -21846 |
+| 75+  | -21846 |  0  |   341  |  21845 |
+| 76   | -21846 |  0  |   341  |  21845 |
+| 76   | -21846 |  0  |   853  |  21845 |
+| 76   | -21846 |  0  |  1365  |  21845 |
+| 76   | -21846 |  0  |  1877  |  21845 |
+| 76   | -21846 |  0  |  2389  |  21845 |
+| 76   | -21846 |  0  |  2901  |  21845 |
+| 76   | -21846 |  0  |  3413  | -21846 |
+| 76   | -21846 |  0  |  3925  |  21845 |
+| 76+  |  21845 |  1  |  3413  | -21846 |
+| 77   |  21845 |  1  |  3413  |  21845 |
+| 77+  | -21846 |  1  |  3925  |  21845 |
+| 78   | -21846 |  1  |  3925  | -21846 |
+| 78+  | -21846 |  0  |   341  |  21845 |
+| 79   | -21846 |  0  |   341  |  21845 |
+| 79   | -21846 |  0  |   853  |  21845 |
+| 79   | -21846 |  0  |  1365  |  21845 |
+| 79   | -21846 |  0  |  1877  |  21845 |
+| 79   | -21846 |  0  |  2389  |  21845 |
+| 79   | -21846 |  0  |  2901  |  21845 |
+| 79   | -21846 |  0  |  3413  |  21845 |
+| 79   | -21846 |  0  |  3925  | -21846 |
+| 79+  |  21845 |  1  |  3925  | -21846 |
+| 80   |  21845 |  1  |  3925  |  21845 |
+| 80+  |  21845 |  0  |   341  |  21845 |
+| 81   |  21845 |  0  |   341  |  21845 |
+| 81   |  21845 |  0  |   853  |  21845 |
+| 81   |  21845 |  0  |  1365  |  21845 |
+| 81   |  21845 |  0  |  1877  |  21845 |
+| 81   |  21845 |  0  |  2389  |  21845 |
+| 81   |  21845 |  0  |  2901  |  21845 |
+| 81   |  21845 |  0  |  3413  |  21845 |
+| 81   |  21845 |  0  |  3925  |  21845 |`;
+
+const hdl = `
+CHIP RAM16K {
+    IN in[16], load, address[14];
+    OUT out[16];
+
+    PARTS:
+}`;
+const tst = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.5.2 out%D1.6.1;
+
+set in 0,
+set load 0,
+set address 0,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set in 4321,
+set load 0,
+tick, output; tock, output;
+
+set load 1,
+set address 4321,
+tick, output; tock, output;
+
+set load 0,
+set address 0,
+tick, output; tock, output;
+
+set in 12345,
+set address 12345,
+tick, output; tock, output;
+
+set load 1,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 4321,
+eval,
+output;
+
+set in 16383,
+tick, output; tock, output;
+
+set load 1,
+set address 16383,
+tick, output; tock, output;
+
+set load 0,
+tick, output; tock, output;
+
+set address 12345,
+eval,
+output;
+
+set address 16383,
+eval,
+output;
+
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001,
+tick, output, tock, output;
+set address %B10101010101010,
+tick, output, tock, output;
+set address %B10101010101011,
+tick, output, tock, output;
+set address %B10101010101100,
+tick, output, tock, output;
+set address %B10101010101101,
+tick, output, tock, output;
+set address %B10101010101110,
+tick, output, tock, output;
+set address %B10101010101111,
+tick, output, tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101000,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101000,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101001,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101001,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101010,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101010,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101011,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101011,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101100,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101100,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101110,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101110,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10101010101111,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1,
+set address %B10101010101111,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B10101010101000,
+tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set in %B0101010101010101,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101,
+tick, output, tock, output;
+set address %B01010101010101,
+tick, output, tock, output;
+set address %B01110101010101,
+tick, output, tock, output;
+set address %B10010101010101,
+tick, output, tock, output;
+set address %B10110101010101,
+tick, output, tock, output;
+set address %B11010101010101,
+tick, output, tock, output;
+set address %B11110101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B00010101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B00010101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B00110101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B00110101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B01010101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B01010101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B01110101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B01110101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10010101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B10010101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B10110101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B10110101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B11010101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B11010101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+set address %B11110101010101,
+set in %B1010101010101010,
+tick, output; tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;
+
+set load 1,
+set address %B11110101010101,
+set in %B0101010101010101,
+tick, output, tock, output;
+
+set load 0,
+set address %B00010101010101,
+tick, output; tock, output;
+set address %B00110101010101, eval, output;
+set address %B01010101010101, eval, output;
+set address %B01110101010101, eval, output;
+set address %B10010101010101, eval, output;
+set address %B10110101010101, eval, output;
+set address %B11010101010101, eval, output;
+set address %B11110101010101, eval, output;`;
+const cmp = `| time |   in   |load | address |  out   |
+| 0+   |      0 |  0  |      0  |      0 |
+| 1    |      0 |  0  |      0  |      0 |
+| 1+   |      0 |  1  |      0  |      0 |
+| 2    |      0 |  1  |      0  |      0 |
+| 2+   |   4321 |  0  |      0  |      0 |
+| 3    |   4321 |  0  |      0  |      0 |
+| 3+   |   4321 |  1  |   4321  |      0 |
+| 4    |   4321 |  1  |   4321  |   4321 |
+| 4+   |   4321 |  0  |      0  |      0 |
+| 5    |   4321 |  0  |      0  |      0 |
+| 5+   |  12345 |  0  |  12345  |      0 |
+| 6    |  12345 |  0  |  12345  |      0 |
+| 6+   |  12345 |  1  |  12345  |      0 |
+| 7    |  12345 |  1  |  12345  |  12345 |
+| 7+   |  12345 |  0  |  12345  |  12345 |
+| 8    |  12345 |  0  |  12345  |  12345 |
+| 8    |  12345 |  0  |   4321  |   4321 |
+| 8+   |  16383 |  0  |   4321  |   4321 |
+| 9    |  16383 |  0  |   4321  |   4321 |
+| 9+   |  16383 |  1  |  16383  |      0 |
+| 10   |  16383 |  1  |  16383  |  16383 |
+| 10+  |  16383 |  0  |  16383  |  16383 |
+| 11   |  16383 |  0  |  16383  |  16383 |
+| 11   |  16383 |  0  |  12345  |  12345 |
+| 11   |  16383 |  0  |  16383  |  16383 |
+| 11+  |  16383 |  0  |  10920  |      0 |
+| 12   |  16383 |  0  |  10920  |      0 |
+| 12   |  16383 |  0  |  10921  |      0 |
+| 12   |  16383 |  0  |  10922  |      0 |
+| 12   |  16383 |  0  |  10923  |      0 |
+| 12   |  16383 |  0  |  10924  |      0 |
+| 12   |  16383 |  0  |  10925  |      0 |
+| 12   |  16383 |  0  |  10926  |      0 |
+| 12   |  16383 |  0  |  10927  |      0 |
+| 12+  |  21845 |  1  |  10920  |      0 |
+| 13   |  21845 |  1  |  10920  |  21845 |
+| 13+  |  21845 |  1  |  10921  |      0 |
+| 14   |  21845 |  1  |  10921  |  21845 |
+| 14+  |  21845 |  1  |  10922  |      0 |
+| 15   |  21845 |  1  |  10922  |  21845 |
+| 15+  |  21845 |  1  |  10923  |      0 |
+| 16   |  21845 |  1  |  10923  |  21845 |
+| 16+  |  21845 |  1  |  10924  |      0 |
+| 17   |  21845 |  1  |  10924  |  21845 |
+| 17+  |  21845 |  1  |  10925  |      0 |
+| 18   |  21845 |  1  |  10925  |  21845 |
+| 18+  |  21845 |  1  |  10926  |      0 |
+| 19   |  21845 |  1  |  10926  |  21845 |
+| 19+  |  21845 |  1  |  10927  |      0 |
+| 20   |  21845 |  1  |  10927  |  21845 |
+| 20+  |  21845 |  0  |  10920  |  21845 |
+| 21   |  21845 |  0  |  10920  |  21845 |
+| 21   |  21845 |  0  |  10921  |  21845 |
+| 21   |  21845 |  0  |  10922  |  21845 |
+| 21   |  21845 |  0  |  10923  |  21845 |
+| 21   |  21845 |  0  |  10924  |  21845 |
+| 21   |  21845 |  0  |  10925  |  21845 |
+| 21   |  21845 |  0  |  10926  |  21845 |
+| 21   |  21845 |  0  |  10927  |  21845 |
+| 21+  | -21846 |  1  |  10920  |  21845 |
+| 22   | -21846 |  1  |  10920  | -21846 |
+| 22+  | -21846 |  0  |  10920  | -21846 |
+| 23   | -21846 |  0  |  10920  | -21846 |
+| 23   | -21846 |  0  |  10921  |  21845 |
+| 23   | -21846 |  0  |  10922  |  21845 |
+| 23   | -21846 |  0  |  10923  |  21845 |
+| 23   | -21846 |  0  |  10924  |  21845 |
+| 23   | -21846 |  0  |  10925  |  21845 |
+| 23   | -21846 |  0  |  10926  |  21845 |
+| 23   | -21846 |  0  |  10927  |  21845 |
+| 23+  |  21845 |  1  |  10920  | -21846 |
+| 24   |  21845 |  1  |  10920  |  21845 |
+| 24+  | -21846 |  1  |  10921  |  21845 |
+| 25   | -21846 |  1  |  10921  | -21846 |
+| 25+  | -21846 |  0  |  10920  |  21845 |
+| 26   | -21846 |  0  |  10920  |  21845 |
+| 26   | -21846 |  0  |  10921  | -21846 |
+| 26   | -21846 |  0  |  10922  |  21845 |
+| 26   | -21846 |  0  |  10923  |  21845 |
+| 26   | -21846 |  0  |  10924  |  21845 |
+| 26   | -21846 |  0  |  10925  |  21845 |
+| 26   | -21846 |  0  |  10926  |  21845 |
+| 26   | -21846 |  0  |  10927  |  21845 |
+| 26+  |  21845 |  1  |  10921  | -21846 |
+| 27   |  21845 |  1  |  10921  |  21845 |
+| 27+  | -21846 |  1  |  10922  |  21845 |
+| 28   | -21846 |  1  |  10922  | -21846 |
+| 28+  | -21846 |  0  |  10920  |  21845 |
+| 29   | -21846 |  0  |  10920  |  21845 |
+| 29   | -21846 |  0  |  10921  |  21845 |
+| 29   | -21846 |  0  |  10922  | -21846 |
+| 29   | -21846 |  0  |  10923  |  21845 |
+| 29   | -21846 |  0  |  10924  |  21845 |
+| 29   | -21846 |  0  |  10925  |  21845 |
+| 29   | -21846 |  0  |  10926  |  21845 |
+| 29   | -21846 |  0  |  10927  |  21845 |
+| 29+  |  21845 |  1  |  10922  | -21846 |
+| 30   |  21845 |  1  |  10922  |  21845 |
+| 30+  | -21846 |  1  |  10923  |  21845 |
+| 31   | -21846 |  1  |  10923  | -21846 |
+| 31+  | -21846 |  0  |  10920  |  21845 |
+| 32   | -21846 |  0  |  10920  |  21845 |
+| 32   | -21846 |  0  |  10921  |  21845 |
+| 32   | -21846 |  0  |  10922  |  21845 |
+| 32   | -21846 |  0  |  10923  | -21846 |
+| 32   | -21846 |  0  |  10924  |  21845 |
+| 32   | -21846 |  0  |  10925  |  21845 |
+| 32   | -21846 |  0  |  10926  |  21845 |
+| 32   | -21846 |  0  |  10927  |  21845 |
+| 32+  |  21845 |  1  |  10923  | -21846 |
+| 33   |  21845 |  1  |  10923  |  21845 |
+| 33+  | -21846 |  1  |  10924  |  21845 |
+| 34   | -21846 |  1  |  10924  | -21846 |
+| 34+  | -21846 |  0  |  10920  |  21845 |
+| 35   | -21846 |  0  |  10920  |  21845 |
+| 35   | -21846 |  0  |  10921  |  21845 |
+| 35   | -21846 |  0  |  10922  |  21845 |
+| 35   | -21846 |  0  |  10923  |  21845 |
+| 35   | -21846 |  0  |  10924  | -21846 |
+| 35   | -21846 |  0  |  10925  |  21845 |
+| 35   | -21846 |  0  |  10926  |  21845 |
+| 35   | -21846 |  0  |  10927  |  21845 |
+| 35+  |  21845 |  1  |  10924  | -21846 |
+| 36   |  21845 |  1  |  10924  |  21845 |
+| 36+  | -21846 |  1  |  10925  |  21845 |
+| 37   | -21846 |  1  |  10925  | -21846 |
+| 37+  | -21846 |  0  |  10920  |  21845 |
+| 38   | -21846 |  0  |  10920  |  21845 |
+| 38   | -21846 |  0  |  10921  |  21845 |
+| 38   | -21846 |  0  |  10922  |  21845 |
+| 38   | -21846 |  0  |  10923  |  21845 |
+| 38   | -21846 |  0  |  10924  |  21845 |
+| 38   | -21846 |  0  |  10925  | -21846 |
+| 38   | -21846 |  0  |  10926  |  21845 |
+| 38   | -21846 |  0  |  10927  |  21845 |
+| 38+  |  21845 |  1  |  10925  | -21846 |
+| 39   |  21845 |  1  |  10925  |  21845 |
+| 39+  | -21846 |  1  |  10926  |  21845 |
+| 40   | -21846 |  1  |  10926  | -21846 |
+| 40+  | -21846 |  0  |  10920  |  21845 |
+| 41   | -21846 |  0  |  10920  |  21845 |
+| 41   | -21846 |  0  |  10921  |  21845 |
+| 41   | -21846 |  0  |  10922  |  21845 |
+| 41   | -21846 |  0  |  10923  |  21845 |
+| 41   | -21846 |  0  |  10924  |  21845 |
+| 41   | -21846 |  0  |  10925  |  21845 |
+| 41   | -21846 |  0  |  10926  | -21846 |
+| 41   | -21846 |  0  |  10927  |  21845 |
+| 41+  |  21845 |  1  |  10926  | -21846 |
+| 42   |  21845 |  1  |  10926  |  21845 |
+| 42+  | -21846 |  1  |  10927  |  21845 |
+| 43   | -21846 |  1  |  10927  | -21846 |
+| 43+  | -21846 |  0  |  10920  |  21845 |
+| 44   | -21846 |  0  |  10920  |  21845 |
+| 44   | -21846 |  0  |  10921  |  21845 |
+| 44   | -21846 |  0  |  10922  |  21845 |
+| 44   | -21846 |  0  |  10923  |  21845 |
+| 44   | -21846 |  0  |  10924  |  21845 |
+| 44   | -21846 |  0  |  10925  |  21845 |
+| 44   | -21846 |  0  |  10926  |  21845 |
+| 44   | -21846 |  0  |  10927  | -21846 |
+| 44+  |  21845 |  1  |  10927  | -21846 |
+| 45   |  21845 |  1  |  10927  |  21845 |
+| 45+  |  21845 |  0  |  10920  |  21845 |
+| 46   |  21845 |  0  |  10920  |  21845 |
+| 46   |  21845 |  0  |  10921  |  21845 |
+| 46   |  21845 |  0  |  10922  |  21845 |
+| 46   |  21845 |  0  |  10923  |  21845 |
+| 46   |  21845 |  0  |  10924  |  21845 |
+| 46   |  21845 |  0  |  10925  |  21845 |
+| 46   |  21845 |  0  |  10926  |  21845 |
+| 46   |  21845 |  0  |  10927  |  21845 |
+| 46+  |  21845 |  0  |   1365  |      0 |
+| 47   |  21845 |  0  |   1365  |      0 |
+| 47   |  21845 |  0  |   3413  |      0 |
+| 47   |  21845 |  0  |   5461  |      0 |
+| 47   |  21845 |  0  |   7509  |      0 |
+| 47   |  21845 |  0  |   9557  |      0 |
+| 47   |  21845 |  0  |  11605  |      0 |
+| 47   |  21845 |  0  |  13653  |      0 |
+| 47   |  21845 |  0  |  15701  |      0 |
+| 47+  |  21845 |  1  |   1365  |      0 |
+| 48   |  21845 |  1  |   1365  |  21845 |
+| 48+  |  21845 |  1  |   3413  |      0 |
+| 49   |  21845 |  1  |   3413  |  21845 |
+| 49+  |  21845 |  1  |   5461  |      0 |
+| 50   |  21845 |  1  |   5461  |  21845 |
+| 50+  |  21845 |  1  |   7509  |      0 |
+| 51   |  21845 |  1  |   7509  |  21845 |
+| 51+  |  21845 |  1  |   9557  |      0 |
+| 52   |  21845 |  1  |   9557  |  21845 |
+| 52+  |  21845 |  1  |  11605  |      0 |
+| 53   |  21845 |  1  |  11605  |  21845 |
+| 53+  |  21845 |  1  |  13653  |      0 |
+| 54   |  21845 |  1  |  13653  |  21845 |
+| 54+  |  21845 |  1  |  15701  |      0 |
+| 55   |  21845 |  1  |  15701  |  21845 |
+| 55+  |  21845 |  0  |   1365  |  21845 |
+| 56   |  21845 |  0  |   1365  |  21845 |
+| 56   |  21845 |  0  |   3413  |  21845 |
+| 56   |  21845 |  0  |   5461  |  21845 |
+| 56   |  21845 |  0  |   7509  |  21845 |
+| 56   |  21845 |  0  |   9557  |  21845 |
+| 56   |  21845 |  0  |  11605  |  21845 |
+| 56   |  21845 |  0  |  13653  |  21845 |
+| 56   |  21845 |  0  |  15701  |  21845 |
+| 56+  | -21846 |  1  |   1365  |  21845 |
+| 57   | -21846 |  1  |   1365  | -21846 |
+| 57+  | -21846 |  0  |   1365  | -21846 |
+| 58   | -21846 |  0  |   1365  | -21846 |
+| 58   | -21846 |  0  |   3413  |  21845 |
+| 58   | -21846 |  0  |   5461  |  21845 |
+| 58   | -21846 |  0  |   7509  |  21845 |
+| 58   | -21846 |  0  |   9557  |  21845 |
+| 58   | -21846 |  0  |  11605  |  21845 |
+| 58   | -21846 |  0  |  13653  |  21845 |
+| 58   | -21846 |  0  |  15701  |  21845 |
+| 58+  |  21845 |  1  |   1365  | -21846 |
+| 59   |  21845 |  1  |   1365  |  21845 |
+| 59+  | -21846 |  1  |   3413  |  21845 |
+| 60   | -21846 |  1  |   3413  | -21846 |
+| 60+  | -21846 |  0  |   1365  |  21845 |
+| 61   | -21846 |  0  |   1365  |  21845 |
+| 61   | -21846 |  0  |   3413  | -21846 |
+| 61   | -21846 |  0  |   5461  |  21845 |
+| 61   | -21846 |  0  |   7509  |  21845 |
+| 61   | -21846 |  0  |   9557  |  21845 |
+| 61   | -21846 |  0  |  11605  |  21845 |
+| 61   | -21846 |  0  |  13653  |  21845 |
+| 61   | -21846 |  0  |  15701  |  21845 |
+| 61+  |  21845 |  1  |   3413  | -21846 |
+| 62   |  21845 |  1  |   3413  |  21845 |
+| 62+  | -21846 |  1  |   5461  |  21845 |
+| 63   | -21846 |  1  |   5461  | -21846 |
+| 63+  | -21846 |  0  |   1365  |  21845 |
+| 64   | -21846 |  0  |   1365  |  21845 |
+| 64   | -21846 |  0  |   3413  |  21845 |
+| 64   | -21846 |  0  |   5461  | -21846 |
+| 64   | -21846 |  0  |   7509  |  21845 |
+| 64   | -21846 |  0  |   9557  |  21845 |
+| 64   | -21846 |  0  |  11605  |  21845 |
+| 64   | -21846 |  0  |  13653  |  21845 |
+| 64   | -21846 |  0  |  15701  |  21845 |
+| 64+  |  21845 |  1  |   5461  | -21846 |
+| 65   |  21845 |  1  |   5461  |  21845 |
+| 65+  | -21846 |  1  |   7509  |  21845 |
+| 66   | -21846 |  1  |   7509  | -21846 |
+| 66+  | -21846 |  0  |   1365  |  21845 |
+| 67   | -21846 |  0  |   1365  |  21845 |
+| 67   | -21846 |  0  |   3413  |  21845 |
+| 67   | -21846 |  0  |   5461  |  21845 |
+| 67   | -21846 |  0  |   7509  | -21846 |
+| 67   | -21846 |  0  |   9557  |  21845 |
+| 67   | -21846 |  0  |  11605  |  21845 |
+| 67   | -21846 |  0  |  13653  |  21845 |
+| 67   | -21846 |  0  |  15701  |  21845 |
+| 67+  |  21845 |  1  |   7509  | -21846 |
+| 68   |  21845 |  1  |   7509  |  21845 |
+| 68+  | -21846 |  1  |   9557  |  21845 |
+| 69   | -21846 |  1  |   9557  | -21846 |
+| 69+  | -21846 |  0  |   1365  |  21845 |
+| 70   | -21846 |  0  |   1365  |  21845 |
+| 70   | -21846 |  0  |   3413  |  21845 |
+| 70   | -21846 |  0  |   5461  |  21845 |
+| 70   | -21846 |  0  |   7509  |  21845 |
+| 70   | -21846 |  0  |   9557  | -21846 |
+| 70   | -21846 |  0  |  11605  |  21845 |
+| 70   | -21846 |  0  |  13653  |  21845 |
+| 70   | -21846 |  0  |  15701  |  21845 |
+| 70+  |  21845 |  1  |   9557  | -21846 |
+| 71   |  21845 |  1  |   9557  |  21845 |
+| 71+  | -21846 |  1  |  11605  |  21845 |
+| 72   | -21846 |  1  |  11605  | -21846 |
+| 72+  | -21846 |  0  |   1365  |  21845 |
+| 73   | -21846 |  0  |   1365  |  21845 |
+| 73   | -21846 |  0  |   3413  |  21845 |
+| 73   | -21846 |  0  |   5461  |  21845 |
+| 73   | -21846 |  0  |   7509  |  21845 |
+| 73   | -21846 |  0  |   9557  |  21845 |
+| 73   | -21846 |  0  |  11605  | -21846 |
+| 73   | -21846 |  0  |  13653  |  21845 |
+| 73   | -21846 |  0  |  15701  |  21845 |
+| 73+  |  21845 |  1  |  11605  | -21846 |
+| 74   |  21845 |  1  |  11605  |  21845 |
+| 74+  | -21846 |  1  |  13653  |  21845 |
+| 75   | -21846 |  1  |  13653  | -21846 |
+| 75+  | -21846 |  0  |   1365  |  21845 |
+| 76   | -21846 |  0  |   1365  |  21845 |
+| 76   | -21846 |  0  |   3413  |  21845 |
+| 76   | -21846 |  0  |   5461  |  21845 |
+| 76   | -21846 |  0  |   7509  |  21845 |
+| 76   | -21846 |  0  |   9557  |  21845 |
+| 76   | -21846 |  0  |  11605  |  21845 |
+| 76   | -21846 |  0  |  13653  | -21846 |
+| 76   | -21846 |  0  |  15701  |  21845 |
+| 76+  |  21845 |  1  |  13653  | -21846 |
+| 77   |  21845 |  1  |  13653  |  21845 |
+| 77+  | -21846 |  1  |  15701  |  21845 |
+| 78   | -21846 |  1  |  15701  | -21846 |
+| 78+  | -21846 |  0  |   1365  |  21845 |
+| 79   | -21846 |  0  |   1365  |  21845 |
+| 79   | -21846 |  0  |   3413  |  21845 |
+| 79   | -21846 |  0  |   5461  |  21845 |
+| 79   | -21846 |  0  |   7509  |  21845 |
+| 79   | -21846 |  0  |   9557  |  21845 |
+| 79   | -21846 |  0  |  11605  |  21845 |
+| 79   | -21846 |  0  |  13653  |  21845 |
+| 79   | -21846 |  0  |  15701  | -21846 |
+| 79+  |  21845 |  1  |  15701  | -21846 |
+| 80   |  21845 |  1  |  15701  |  21845 |
+| 80+  |  21845 |  0  |   1365  |  21845 |
+| 81   |  21845 |  0  |   1365  |  21845 |
+| 81   |  21845 |  0  |   3413  |  21845 |
+| 81   |  21845 |  0  |   5461  |  21845 |
+| 81   |  21845 |  0  |   7509  |  21845 |
+| 81   |  21845 |  0  |   9557  |  21845 |
+| 81   |  21845 |  0  |  11605  |  21845 |
+| 81   |  21845 |  0  |  13653  |  21845 |
+| 81   |  21845 |  0  |  15701  |  21845 |`;
+
+async function resetFiles$1(fs) {
+    await fs.pushd("/projects/03");
+    await reset(fs, {
+        Bit: {
+            "Bit.hdl": hdl$7,
+            "Bit.tst": tst$7,
+            "Bit.cmp": cmp$7,
+        },
+        Register: {
+            "Register.hdl": hdl$6,
+            "Register.tst": tst$6,
+            "Register.cmp": cmp$6,
+        },
+        PC: {
+            "PC.hdl": hdl$5,
+            "PC.tst": tst$5,
+            "PC.cmp": cmp$5,
+        },
+        RAM8: {
+            "RAM8.hdl": hdl$4,
+            "RAM8.tst": tst$4,
+            "RAM8.cmp": cmp$4,
+        },
+        RAM64: {
+            "RAM64.hdl": hdl$3,
+            "RAM64.tst": tst$3,
+            "RAM64.cmp": cmp$3,
+        },
+        RAM512: {
+            "RAM512.hdl": hdl$2,
+            "RAM512.tst": tst$2,
+            "RAM512.cmp": cmp$2,
+        },
+        RAM4k: {
+            "RAM4k.hdl": hdl$1,
+            "RAM4k.tst": tst$1,
+            "RAM4k.cmp": cmp$1,
+        },
+        RAM16k: {
+            "RAM16k.hdl": hdl,
+            "RAM16k.tst": tst,
+            "RAM16k.cmp": cmp,
         },
     });
     await fs.popd();
 }
 
 async function resetFiles(fs) {
+    await resetFiles$3(fs);
     await resetFiles$2(fs);
     await resetFiles$1(fs);
 }
@@ -6233,7 +10615,7 @@ async function resetFiles(fs) {
 const App = () => {
     const router = Router.for(urls, "chip");
     const fs = new FileSystem(new LocalStorageFileSystemAdapter());
-    fs.stat("/projects/01/Not.hdl").catch(() => resetFiles(fs));
+    fs.stat("/projects/01/Not/Not.hdl").catch(() => resetFiles(fs));
     provide({ fs, status: (status) => statusLine.update(status) });
     const statusLine = div("\u00a0");
     const settings = dialog(article(header(p("Settings"), a$1({

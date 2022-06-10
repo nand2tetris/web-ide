@@ -16,7 +16,7 @@
     "prettier": "^2.6.2"
   },
   "dependencies": {
-    "@davidsouther/jiffies": "^1.0.0",
+    "@davidsouther/jiffies": "^1.1.0",
     "typescript": "^4.7.1"
   }
 }

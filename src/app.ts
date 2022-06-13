@@ -26,6 +26,7 @@ import {
 
 import urls from "./urls.js";
 import * as projects from "./projects/index.js";
+import { icon } from "./components/icon.js";
 
 export const App = () => {
   const router = Router.for(urls, "chip");
@@ -115,7 +116,7 @@ export const App = () => {
             )
           )
         ),
-        ul(...urls.map((url) => li(link(url))))
+        ul(...urls.map((url) => li(icon(url.icon), link(url))))
       )
     ),
     router(main({ class: "flex flex-1" })),

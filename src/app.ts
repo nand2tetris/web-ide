@@ -116,7 +116,10 @@ export const App = () => {
             )
           )
         ),
-        ul(...urls.map((url) => li(icon(url.icon), link(url))))
+        ul(
+          { class: "icon-list" },
+          ...urls.map((url) => li(icon(url.icon), link(url)))
+        )
       )
     ),
     router(main({ class: "flex flex-1" })),

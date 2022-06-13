@@ -8,4 +8,4 @@ export default [
   { href: "cpu", link: "CPU", icon: "developer_board", target: CPU },
   { href: "vm", link: "VM", icon: "computer", target: VM },
   { href: "test", link: "Tests", icon: "checklist", target: Test },
-];
+] as { href: string; link: string; icon: string; target: () => Element }[];

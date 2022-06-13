@@ -1,5 +1,6 @@
 import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
+import { forEachTrailingCommentRange } from "typescript";
 import { bin } from "../../util/twos.js";
 import { Clock } from "./clock.js";
 
@@ -224,7 +225,8 @@ export class Chip {
   constructor(
     ins: (string | { pin: string; width: number })[],
     outs: (string | { pin: string; width: number })[],
-    public name?: string
+    public name?: string,
+    internals: (string | { pin: string; width: number })[] = []
   ) {
     for (const inn of ins) {
       const { pin, width = 1 } =
@@ -240,6 +242,14 @@ export class Chip {
           ? (out as { pin: string; width: number })
           : parsePinDecl(out as string);
       this.outs.insert(new Bus(pin, width));
+    }
+
+    for (const internal of internals) {
+      const { pin, width = 1 } =
+        (internal as { pin: string }).pin !== undefined
+          ? (internal as { pin: string; width: number })
+          : parsePinDecl(internal as string);
+      this.pins.insert(new Bus(pin, width));
     }
   }
 
@@ -368,6 +378,12 @@ export class Chip {
 
   tock() {
     this.eval();
+  }
+
+  remove() {
+    for (const part of this.parts) {
+      part.remove();
+    }
   }
 }
 

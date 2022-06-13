@@ -1,4 +1,5 @@
 import { display } from "@davidsouther/jiffies/display.js";
+import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
 import {
   article,
   button,
@@ -14,8 +15,9 @@ import {
 } from "@davidsouther/jiffies/dom/html.js";
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
-import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { FileSystem } from "@davidsouther/jiffies/fs.js";
+import { Subject } from "@davidsouther/jiffies/observable/observable.js";
+import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
 import { Runbar } from "../components/runbar.js";
@@ -30,7 +32,7 @@ import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
 import { compare } from "../simulator/compare.js";
 import { DiffPanel } from "../components/diff.js";
-import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
+import { Clock } from "../simulator/chip/clock.js";
 
 const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   "01": [
@@ -173,6 +175,10 @@ export const Chip = () => {
     diffPanel.update();
   }
 
+  const nextState = new Subject<void>();
+  nextState.subscribe(() => setTimeout(setState()));
+  Clock.get().$.subscribe(() => nextState.next());
+
   async function setChip(name: string) {
     localStorage["chip/chip"] = name;
     const hdl = await fs.readFile(`/projects/${project}/${name}/${name}.hdl`);
@@ -185,6 +191,7 @@ export const Chip = () => {
   }
 
   function compileChip(text: string) {
+    chip?.remove();
     const maybeChip = make.parse(text);
     if (isErr(maybeChip)) {
       statusLine(display(Err(maybeChip)));

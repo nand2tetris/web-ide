@@ -35,28 +35,25 @@ export const Pinout = FC(
             ? tr(
                 td({ tabIndex: 0 }, "Clock"),
                 td(
-                  code(
-                    {
-                      style: { cursor: toggle ? "pointer" : "inherit" },
-                      events: {
-                        click: () => clock.toggle(),
-                      },
-                    },
-                    O(
-                      span(display(clock)),
-                      clock.$.map(() => [display(clock)])
-                    )
-                  ),
-                  code(
-                    {
-                      style: { cursor: toggle ? "pointer" : "inherit" },
-                      events: {
-                        click: () => {
-                          clock.reset();
+                  ...(
+                    [
+                      [display(clock), () => clock.toggle()],
+                      ["Tick", () => clock.tick()],
+                      ["Tock", () => clock.tock()],
+                      ["Reset", () => clock.reset()],
+                    ] as [string, () => void][]
+                  ).map(([label, click]) =>
+                    code(
+                      {
+                        style: {
+                          cursor: toggle ? "pointer" : "inherit",
+                          marginRight: "var(--spacing)",
                         },
+                        events: { click },
+                        role: "button",
                       },
-                    },
-                    "Reset"
+                      label
+                    )
                   )
                 )
               )

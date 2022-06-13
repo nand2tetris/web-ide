@@ -49,15 +49,15 @@ export class Clock {
 
   tick() {
     assert(this.level == LOW, "Can only tick up from LOW");
-    this.next();
     this.level = HIGH;
+    this.next();
   }
 
   tock() {
     assert(this.level == HIGH, "Can only tock down from HIGH");
-    this.next();
     this.level = LOW;
     this.ticks += 1;
+    this.next();
   }
 
   toggle() {
@@ -79,15 +79,25 @@ export class ClockedChip extends Chip {
     return true;
   }
 
-  constructor(ins: string[], outs: string[], name?: string) {
-    super(ins, outs, name);
+  #subscription = Clock.get().$.subscribe(({ level }) => {
+    if (level === LOW) {
+      this.tock();
+    } else {
+      this.tick();
+    }
+  });
 
-    Clock.get().$.subscribe(({ level }) => {
-      if (level === LOW) {
-        this.tick();
-      } else {
-        this.tock();
-      }
-    });
+  constructor(
+    ins: string[],
+    outs: string[],
+    name?: string,
+    internal?: string[]
+  ) {
+    super(ins, outs, name, internal);
+  }
+
+  remove() {
+    this.#subscription.unsubscribe();
+    super.remove();
   }
 }

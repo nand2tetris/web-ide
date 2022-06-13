@@ -1,10 +1,8 @@
-import { Chip, LOW, Voltage } from "../../chip.js";
+import { LOW, Voltage } from "../../chip.js";
+import { ClockedChip } from "../../clock.js";
 
-export class DFF extends Chip {
+export class DFF extends ClockedChip {
   private t: Voltage = LOW;
-  get clocked(): boolean {
-    return true;
-  }
 
   constructor() {
     super(["in"], ["out"]);
@@ -19,4 +17,6 @@ export class DFF extends Chip {
     // write t into out
     this.out().pull(this.t);
   }
+
+  eval() {}
 }

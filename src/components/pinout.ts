@@ -1,7 +1,9 @@
 import { display } from "@davidsouther/jiffies/display.js";
 import { FC } from "@davidsouther/jiffies/dom/fc.js";
+import { O } from "@davidsouther/jiffies/dom/observable.js";
 import {
   code,
+  span,
   table,
   tbody,
   td,
@@ -12,6 +14,8 @@ import {
 import { Pin, Pins } from "../simulator/chip/chip.js";
 import { Clock } from "../simulator/chip/clock.js";
 import { bin } from "../util/twos.js";
+
+const clock = Clock.get();
 
 export const Pinout = FC(
   "pin-out",
@@ -35,10 +39,24 @@ export const Pinout = FC(
                     {
                       style: { cursor: toggle ? "pointer" : "inherit" },
                       events: {
-                        click: () => Clock.get().toggle(),
+                        click: () => clock.toggle(),
                       },
                     },
-                    display(Clock.get())
+                    O(
+                      span(display(clock)),
+                      clock.$.map(() => [display(clock)])
+                    )
+                  ),
+                  code(
+                    {
+                      style: { cursor: toggle ? "pointer" : "inherit" },
+                      events: {
+                        click: () => {
+                          clock.reset();
+                        },
+                      },
+                    },
+                    "Reset"
                   )
                 )
               )

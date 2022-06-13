@@ -1,6 +1,7 @@
 import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
 import { bin } from "../../util/twos.js";
+import { Clock } from "./clock.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -19,6 +20,7 @@ export interface Pin {
 export class Bus implements Pin {
   state: Voltage[];
   next: Pin[] = [];
+
   constructor(readonly name: string, readonly width = 1) {
     this.state = range(0, this.width).map(() => 0);
   }
@@ -231,6 +233,7 @@ export class Chip {
           : parsePinDecl(inn as string);
       this.ins.insert(new Bus(pin, width));
     }
+
     for (const out of outs) {
       const { pin, width = 1 } =
         (out as { pin: string }).pin !== undefined

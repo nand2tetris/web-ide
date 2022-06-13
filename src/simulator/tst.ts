@@ -146,7 +146,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
   }
 
   run(): void {
-    Clock.get().reset();
+    this.clock.reset();
     super.run();
   }
 }

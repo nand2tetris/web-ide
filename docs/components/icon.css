@@ -1,0 +1,30 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200");
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+@layer component {
+  ul.icon-list li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    --raise: -20px;
+    --time: 0.33s;
+  }
+  ul.icon-list li span,
+  ul.icon-list li a {
+    position: relative;
+    top: 0;
+    transition: var(--time);
+  }
+  ul.icon-list li a {
+    opacity: 0;
+  }
+  ul.icon-list li:hover span,
+  ul.icon-list li:hover a {
+    top: var(--raise);
+  }
+  ul.icon-list li:hover a {
+    opacity: 1;
+  }
+}

@@ -30,11 +30,13 @@ function update(element, attrs, children) {
     const $events = (element[Events] ??= new Map());
     const { style = {}, events = {}, ...rest } = attrs;
     Object.entries(events).forEach(([k, v]) => {
-        if (v === null && $events.has(k)) {
-            const listener = $events.get(k);
-            element.removeEventListener(k, listener);
+        if (v === null) {
+            if ($events.has(k)) {
+                const listener = $events.get(k);
+                element.removeEventListener(k, listener);
+            }
         }
-        else if (!$events.has(k)) {
+        else if (v !== undefined) {
             element.addEventListener(k, v);
             $events.set(k, v);
         }
@@ -52,8 +54,11 @@ function update(element, attrs, children) {
         }
     }
     Object.entries(rest).forEach(([k, v]) => {
-        if (k === "class" && typeof v === "string") {
-            v.split(/\s+/m)
+        if (k === "class") {
+            v = Array.isArray(v)
+                ? v
+                : (typeof v === "string" ? v : `${v}`).split(/\s+/m);
+            v
                 .filter((s) => s !== "")
                 .forEach((c) => {
                 if (c.startsWith("!")) {
@@ -63,6 +68,7 @@ function update(element, attrs, children) {
                     element.classList.add(c);
                 }
             });
+            return;
         }
         const useNamespace = element.namespaceURI &&
             element.namespaceURI != "http://www.w3.org/1999/xhtml";
@@ -91,12 +97,7 @@ function update(element, attrs, children) {
         }
     });
     if (children?.length > 0) {
-        if (children[0] === CLEAR) {
-            element.replaceChildren();
-        }
-        else {
-            element.replaceChildren(...children);
-        }
+        element.replaceChildren(...(children[0] === CLEAR ? [] : children));
     }
     element.update ??= (attrs, ...children) => update(element, ...normalizeArguments(attrs, children));
     return element;
@@ -482,7 +483,6 @@ function FC(name, component) {
             }
             this.#attrs = { ...this.#attrs, ...attrs };
             // Apply updates from the attrs to the dom node itself
-            // @ts-ignore
             update(this, this.#attrs, []);
             // Re-run the component function using new element, attrs, and children.
             const replace = [component(this, this.#attrs, this.#children)];
@@ -621,7 +621,7 @@ const Pinout = FC("pin-out", (el, { pins, toggle }) => {
 
 const Select = FC("jiffies-select", (el, { name, events: { change }, disabled, value, options }) => select({ name, events: { change }, disabled }, ...options.map(([v, name]) => option({ value: v, selected: value === v }, `${name}`))));
 
-const icon = (icon) => i({ class: `icon-${icon}` });
+const icon$1 = (icon) => i({ class: `icon-${icon}` });
 const Runbar = FC("run-bar", (el, { runner }, children) => div({ class: "input-group" }, a$1({
     href: "#",
     role: "button",
@@ -631,7 +631,8 @@ const Runbar = FC("run-bar", (el, { runner }, children) => div({ class: "input-g
             runner.frame();
         },
     },
-}, icon("fast-fw")), a$1({
+}, icon$1("fast-fw")), a$1({
+    href: "#",
     role: "button",
     events: {
         click: (e) => {
@@ -639,7 +640,8 @@ const Runbar = FC("run-bar", (el, { runner }, children) => div({ class: "input-g
             runner.reset();
         },
     },
-}, icon(`to-start`)), a$1({
+}, icon$1(`to-start`)), a$1({
+    href: "#",
     role: "button",
     events: {
         click: (e) => {
@@ -647,7 +649,7 @@ const Runbar = FC("run-bar", (el, { runner }, children) => div({ class: "input-g
             runner.running ? runner.stop() : runner.start();
         },
     },
-}, runner.running ? icon(`pause`) : icon(`play`)), Select({
+}, runner.running ? icon$1(`pause`) : icon$1(`play`)), Select({
     name: "speed",
     events: {
         change: (e) => {
@@ -2972,7 +2974,7 @@ function debounce(fn, ms = 32) {
 }
 
 function fillVirtualScrollSettings(settings) {
-    const { minIndex = 0, maxIndex = 1, startIndex = 0, itemHeight = 20, count = maxIndex - minIndex + 1, tolerance = count, } = settings;
+    const { minIndex = 0, maxIndex = Number.MAX_SAFE_INTEGER, startIndex = 0, itemHeight = 20, count = maxIndex - minIndex + 1, tolerance = count, } = settings;
     return { minIndex, maxIndex, startIndex, itemHeight, count, tolerance };
 }
 function initialState(settings) {
@@ -3362,7 +3364,7 @@ const CASES = {};
 let cases = [CASES];
 let totalCases = 0;
 function push(title) {
-    const next = (cases[0][title] = {});
+    const next = (cases[0][title] = cases[0][title] ?? {});
     cases.unshift(next);
 }
 function pop() {
@@ -3382,6 +3384,7 @@ function describe(title, block) {
 }
 function it(title, block) {
     logger$1.debug(`it(${title})`);
+    assert(cases[0][title] == undefined, `Block already has test ${title}`);
     totalCases += 1;
     cases[0][title] = block;
 }
@@ -3400,7 +3403,7 @@ function cleanState(init, runner = beforeEach) {
     return state;
 }
 
-async function execute(prefix = "", cases = rootCases()) {
+async function execute(cases = rootCases()) {
     const beforeallfn = cases[beforeall] ?? (() => { });
     const beforeeachfn = cases[beforeeach] ?? (() => { });
     const afterallfn = cases[afterall] ?? (() => { });
@@ -3432,7 +3435,7 @@ async function execute(prefix = "", cases = rootCases()) {
             }
         }
         else if (block) {
-            const run = await execute(title, block);
+            const run = await execute(block);
             result.executed += run.executed;
             result.passed += run.passed;
             result.failed += run.failed;
@@ -4396,16 +4399,6 @@ describe("Chip", () => {
                 this.out().busVoltage = out;
             }
         }
-        it("drives InSubBus", () => {
-            const chipPin = new Bus("in", 3);
-            const notChip = new Not();
-            const inSubBus = new InSubBus(notChip.in(), 1, 1);
-            inSubBus.connect(notChip.in());
-            chipPin.busVoltage = 0b0;
-            expect(notChip.in().busVoltage).toBe(0b0);
-            chipPin.busVoltage = 0b111;
-            expect(notChip.in().busVoltage).toBe(0b1);
-        });
         it("drives OutSubBus", () => {
             const notChip = new Not();
             const inPin = new Bus("in", 3);
@@ -4843,10 +4836,10 @@ const Test = () => {
 const VM = () => article(header(h2("VM")));
 
 var urls = [
-    { href: "chip", link: "Chip", target: Chip },
-    { href: "cpu", link: "CPU", target: CPU },
-    { href: "vm", link: "VM", target: VM },
-    { href: "test", link: "Tests", target: Test },
+    { href: "chip", link: "Chip", icon: "memory", target: Chip },
+    { href: "cpu", link: "CPU", icon: "developer_board", target: CPU },
+    { href: "vm", link: "VM", icon: "computer", target: VM },
+    { href: "test", link: "Tests", icon: "checklist", target: Test },
 ];
 
 const cmp$s = `|  in   |  out  |
@@ -10612,6 +10605,10 @@ async function resetFiles(fs) {
     await resetFiles$1(fs);
 }
 
+function icon(name) {
+    return span({ class: "material-symbols-outlined" }, name);
+}
+
 const App = () => {
     const router = Router.for(urls, "chip");
     const fs = new FileSystem(new LocalStorageFileSystemAdapter());
@@ -10654,7 +10651,7 @@ const App = () => {
     ))));
     const app = [
         settings,
-        header(nav(ul(li(strong(a$1({ href: "https://nand2tetris.org", target: "_blank" }, "NAND2Tetris"), " Online"))), ul(...urls.map((url) => li(link(url)))))),
+        header(nav(ul(li(strong(a$1({ href: "https://nand2tetris.org", target: "_blank" }, "NAND2Tetris"), " Online"))), ul({ class: "icon-list" }, ...urls.map((url) => li(icon(url.icon), link(url)))))),
         router(main({ class: "flex flex-1" })),
         footer({ class: "flex row justify-between" }, statusLine, div({ class: "flex row align-center" }, a$1({ href: "./user_guide/", style: { marginRight: "var(--spacing)" } }, "User\u00a0Guide"), button({
             events: {

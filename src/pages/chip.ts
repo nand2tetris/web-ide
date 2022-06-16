@@ -152,6 +152,9 @@ class ChipPageStore {
     let maybeChip = getBuiltinChip(this.chipName);
     if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
     this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
+    Clock.get().update.$.subscribe(() => {
+      this.next();
+    });
   }
 
   toggle(pin: Pin) {
@@ -165,6 +168,7 @@ class ChipPageStore {
   }
 
   compileChip(text: string) {
+    this.files.hdl = text;
     this.chip?.remove();
     const maybeChip = make.parse(text);
     if (isErr(maybeChip)) {
@@ -212,6 +216,9 @@ class ChipPageStore {
   }
 
   async runTest(tstString: string, cmpString: string) {
+    this.files.tst = tstString;
+    this.files.cmp = cmpString;
+
     const tst = await new Promise<IResult<Tst>>((r) => r(tstParser(tstString)));
 
     if (isErr(tst)) {
@@ -227,11 +234,12 @@ class ChipPageStore {
       r();
     });
 
-    const outString = this.test.log();
+    this.files.out = this.test.log();
+    this.next();
 
     const [cmp, out] = await Promise.all([
       new Promise<IResult<string[][]>>((r) => r(cmpParser(cmpString))),
-      new Promise<IResult<string[][]>>((r) => r(cmpParser(outString))),
+      new Promise<IResult<string[][]>>((r) => r(cmpParser(this.files.out))),
     ]);
 
     if (isErr(cmp)) {
@@ -300,10 +308,11 @@ export const Chip = () => {
   state.selectors.diffs.subscribe((diffs) => {
     diffPanel.update({ diffs });
   });
-  state.selectors.files.subscribe(({ hdl, tst, cmp }) => {
+  state.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
     hdlTextarea.value = hdl;
     tstTextarea.value = tst;
     cmpTextarea.value = cmp;
+    outTextarea.value = out;
   });
   state.selectors.log.subscribe((out) => {
     outTextarea.value = out;

@@ -2,6 +2,7 @@ import { assert } from "@davidsouther/jiffies/assert.js";
 import {
   BehaviorSubject,
   Observable,
+  Subject,
   SyncScheduler,
 } from "@davidsouther/jiffies/observable/observable.js";
 import { Chip, HIGH, LOW, Voltage } from "./chip.js";
@@ -32,11 +33,14 @@ export class Clock {
   );
   readonly $: Observable<Tick> = this.subject;
 
+  readonly update = new Subject<void>();
+
   private next() {
     this.subject.next({
       level: this.level,
       ticks: this.ticks,
     });
+    this.update.next();
   }
 
   private constructor() {}

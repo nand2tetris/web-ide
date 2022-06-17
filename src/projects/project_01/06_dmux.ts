@@ -15,9 +15,9 @@ export const sol = `CHIP DMux {
     OUT a, b;
 
     PARTS:
-    And(a=in,b=sel,out=b);
-    Not(in=sel,out=notsel);
-    And(a=in,b=notsel,out=a);
+    And(a=in, b=sel, out=b);
+    Not(in=sel, out=notsel);
+    And(a=in, b=notsel, out=a);
 }`;
 export const tst = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
 

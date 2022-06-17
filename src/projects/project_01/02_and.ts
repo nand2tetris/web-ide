@@ -15,8 +15,8 @@ CHIP And {
     OUT out;
 
     PARTS:
-    Nand(a=a,b=b,out=nandout);
-    Not(in=nandout,out=out);
+    Nand(a=a, b=b, out=n);
+    Not(in=n, out=out);
 }`;
 export const tst = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 set a 0, set b 0, eval, output;

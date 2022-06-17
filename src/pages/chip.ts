@@ -30,6 +30,7 @@ import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
 import { compare } from "../simulator/compare.js";
 import { DiffPanel } from "../components/diff.js";
+import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
 
 const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   "01": [
@@ -208,6 +209,8 @@ export const Chip = () => {
 
   function runTest() {
     const tst = tstParser(new Span(tstTextarea.value));
+    outTextarea.value = "";
+    diffPanel.update(CLEAR);
     if (isErr(tst)) {
       statusLine(display(Err(tst)));
       return;

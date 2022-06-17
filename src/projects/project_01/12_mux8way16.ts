@@ -38,9 +38,9 @@ export const sol = `CHIP Mux8Way16 {
     OUT out[16];
 
     PARTS:
-    Mux4Way16(a=a,b=b,c=c,d=d,sel=sel[0..1],out=out1);
-    Mux4Way16(a=e,b=f,c=g,d=h,sel=sel[0..1],out=out2);
-    Mux16(a=out1,b=out2,sel=sel[2],out=out);
+    Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=out1);
+    Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=out2);
+    Mux16(a=out1, b=out2, sel=sel[2], out=out);
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
 

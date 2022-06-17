@@ -43,3 +43,28 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
   });
   await fs.popd();
 }
+
+export async function loadSolutions(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/02");
+  await reset(fs, {
+    HalfAdder: {
+      "HalfAdder.hdl": HalfAdder.sol,
+    },
+    FullAdder: {
+      "FullAdder.hdl": FullAdder.sol,
+    },
+    Add16: {
+      "Add16.hdl": Add16.sol,
+    },
+    Inc16: {
+      "Inc16.hdl": Inc16.sol,
+    },
+    AluNoStat: {
+      "AluNoStat.hdl": Alu.sol,
+    },
+    ALU: {
+      "ALU.hdl": AluStatus.sol,
+    },
+  });
+  await fs.popd();
+}

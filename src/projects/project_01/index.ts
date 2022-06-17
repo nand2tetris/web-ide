@@ -97,3 +97,55 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
   });
   await fs.popd();
 }
+
+export async function loadSolutions(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/01");
+  await reset(fs, {
+    Not: {
+      "Not.hdl": Not.sol,
+    },
+    And: {
+      "And.hdl": And.sol,
+    },
+    Or: {
+      "Or.hdl": Or.sol,
+    },
+    XOr: {
+      "XOr.hdl": Xor.sol,
+    },
+    Mux: {
+      "Mux.hdl": Mux.sol,
+    },
+    DMux: {
+      "DMux.hdl": DMux.sol,
+    },
+    Not16: {
+      "Not16.hdl": Not16.sol,
+    },
+    And16: {
+      "And16.hdl": And16.sol,
+    },
+    Or16: {
+      "Or16.hdl": Or16.sol,
+    },
+    Mux16: {
+      "Mux16.hdl": Mux16.sol,
+    },
+    Mux4way16: {
+      "Mux4way16.hdl": Mux4way16.sol,
+    },
+    Mux8way16: {
+      "Mux8way16.hdl": Mux8way16.sol,
+    },
+    DMux4way: {
+      "DMux4way.hdl": DMux4way.sol,
+    },
+    DMux8way: {
+      "DMux8way.hdl": DMux8way.sol,
+    },
+    Or8way: {
+      "Or8way.hdl": Or8way.sol,
+    },
+  });
+  await fs.popd();
+}

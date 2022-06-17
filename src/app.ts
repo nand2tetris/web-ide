@@ -65,6 +65,17 @@ export const App = () => {
                 },
               },
               "Reset"
+            ),
+            button(
+              {
+                events: {
+                  click: (e) => {
+                    projects.loadSolutions(fs);
+                    statusLine.update("Loaded sample solutions...");
+                  },
+                },
+              },
+              "Solutions"
             )
           ),
           dt("References"),

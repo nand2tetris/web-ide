@@ -15,10 +15,7 @@ import {
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 import { FileSystem } from "@davidsouther/jiffies/fs.js";
-import {
-  Observable,
-  Subject,
-} from "@davidsouther/jiffies/observable/observable.js";
+import { Subject } from "@davidsouther/jiffies/observable/observable.js";
 import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
@@ -46,11 +43,11 @@ const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "And16",
     "Or16",
     "Mux16",
-    "Mux4way16",
-    "Mux8way16",
-    "DMux4way",
-    "DMux8way",
-    "Or8way",
+    "Mux4Way16",
+    "Mux8Way16",
+    "DMux4Way",
+    "DMux8Way",
+    "Or8Way",
   ],
   "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],

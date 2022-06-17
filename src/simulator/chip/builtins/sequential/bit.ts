@@ -18,3 +18,21 @@ export class Bit extends ClockedChip {
     this.out().pull(this.bit);
   }
 }
+
+export class Register extends ClockedChip {
+  bits: number = 0x00;
+
+  constructor(name?: string) {
+    super(["in[16]", "load"], ["out[16]"], name);
+  }
+
+  tick() {
+    if (this.in("load").voltage() === HIGH) {
+      this.bits = this.in().busVoltage & 0xffff;
+    }
+  }
+
+  tock() {
+    this.out().busVoltage = this.bits & 0xffff;
+  }
+}

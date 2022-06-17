@@ -52,6 +52,7 @@ export const tst =
         `set in ${inn}, set load ${load}, tick, output; tock, output;`
     )
     .join("\n") +
+  "\n" +
   [
     "%B0000000000000001",
     "%B0000000000000010",
@@ -85,10 +86,12 @@ export const tst =
     "%B1101111111111111",
     "%B1011111111111111",
     "%B0111111111111111",
-  ].map(
-    (n) =>
-      `set in ${n}, set load 0, tick, output; tock, output; set load 1, tick, output; tock, output;`
-  );
+  ]
+    .map(
+      (n) =>
+        `set in ${n}, set load 0, tick, output; tock, output; set load 1, tick, output; tock, output;`
+    )
+    .join("\n");
 
 export const cmp = `| time |   in   |load |  out   |
 | 0+   |      0 |  0  |      0 |

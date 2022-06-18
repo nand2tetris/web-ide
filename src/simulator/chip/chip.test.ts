@@ -1,9 +1,13 @@
-import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "@davidsouther/jiffies/scope/index.js";
 import {
   Bus,
   Chip,
   ConstantBus,
-  DFF,
   HIGH,
   InSubBus,
   LOW,
@@ -15,6 +19,9 @@ import {
 import { Nand } from "./builtins/logic/nand.js";
 import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { bin } from "../../util/twos.js";
+import { DFF } from "./builtins/sequential/dff.js";
+import { Clock } from "./clock.js";
+import { Bit } from "./builtins/sequential/bit.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -342,25 +349,59 @@ describe("Chip", () => {
   });
 
   describe("sequential", () => {
+    const clock = Clock.get();
+    beforeEach(() => {
+      clock.reset();
+    });
+
     describe("dff", () => {
       it("flips and flops", () => {
+        clock.reset();
         const dff = new DFF();
 
-        dff.tick();
+        clock.tick(); // Read input, low
         expect(dff.out().voltage()).toBe(LOW);
-        dff.tock();
+        clock.tock(); // Write t, low
         expect(dff.out().voltage()).toBe(LOW);
 
-        dff.tick();
-        expect(dff.out().voltage()).toBe(LOW);
         dff.in().pull(HIGH);
-        dff.tock();
+        clock.tick(); // Read input, HIGH
         expect(dff.out().voltage()).toBe(LOW);
-
-        dff.tick();
-        expect(dff.out().voltage()).toBe(LOW);
-        dff.tock();
+        clock.tock(); // Write t, HGIH
         expect(dff.out().voltage()).toBe(HIGH);
+
+        clock.tick();
+        expect(dff.out().voltage()).toBe(HIGH);
+        clock.tock();
+        expect(dff.out().voltage()).toBe(HIGH);
+      });
+    });
+
+    describe("bit", () => {
+      it("does not update when load is low", () => {
+        clock.reset();
+        const bit = new Bit();
+
+        bit.in("load").pull(LOW);
+        bit.in().pull(HIGH);
+        expect(bit.out().voltage()).toBe(LOW);
+        clock.tick();
+        expect(bit.out().voltage()).toBe(LOW);
+        clock.tock();
+        expect(bit.out().voltage()).toBe(LOW);
+      });
+
+      it("does updates when load is high", () => {
+        clock.reset();
+        const bit = new Bit();
+
+        bit.in("load").pull(HIGH);
+        bit.in().pull(HIGH);
+        expect(bit.out().voltage()).toBe(LOW);
+        clock.tick();
+        expect(bit.out().voltage()).toBe(HIGH);
+        clock.tock();
+        expect(bit.out().voltage()).toBe(HIGH);
       });
     });
   });

@@ -1,6 +1,8 @@
 import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
+import { forEachTrailingCommentRange } from "typescript";
 import { bin } from "../../util/twos.js";
+import { Clock } from "./clock.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -19,6 +21,7 @@ export interface Pin {
 export class Bus implements Pin {
   state: Voltage[];
   next: Pin[] = [];
+
   constructor(readonly name: string, readonly width = 1) {
     this.state = range(0, this.width).map(() => 0);
   }
@@ -212,10 +215,18 @@ export class Chip {
   pins = new Pins();
   parts = new Set<Chip>();
 
+  get clocked() {
+    for (const part of this.parts) {
+      if (part.clocked) return true;
+    }
+    return false;
+  }
+
   constructor(
     ins: (string | { pin: string; width: number })[],
     outs: (string | { pin: string; width: number })[],
-    public name?: string
+    public name?: string,
+    internals: (string | { pin: string; width: number })[] = []
   ) {
     for (const inn of ins) {
       const { pin, width = 1 } =
@@ -224,12 +235,21 @@ export class Chip {
           : parsePinDecl(inn as string);
       this.ins.insert(new Bus(pin, width));
     }
+
     for (const out of outs) {
       const { pin, width = 1 } =
         (out as { pin: string }).pin !== undefined
           ? (out as { pin: string; width: number })
           : parsePinDecl(out as string);
       this.outs.insert(new Bus(pin, width));
+    }
+
+    for (const internal of internals) {
+      const { pin, width = 1 } =
+        (internal as { pin: string }).pin !== undefined
+          ? (internal as { pin: string; width: number })
+          : parsePinDecl(internal as string);
+      this.pins.insert(new Bus(pin, width));
     }
   }
 
@@ -359,6 +379,12 @@ export class Chip {
   tock() {
     this.eval();
   }
+
+  remove() {
+    for (const part of this.parts) {
+      part.remove();
+    }
+  }
 }
 
 export class Low extends Chip {
@@ -386,26 +412,6 @@ export interface Connection {
   to: PinSide;
   // From is the chip side
   from: PinSide;
-}
-
-export class DFF extends Chip {
-  private t: Voltage = LOW;
-
-  constructor() {
-    super(["in"], ["out"]);
-  }
-
-  tick() {
-    // Read in into t
-    this.t = this.in().voltage();
-    this.eval();
-  }
-
-  tock() {
-    // write t into out
-    this.out().pull(this.t);
-    this.eval();
-  }
 }
 
 export type Pinout = Record<string, string>;

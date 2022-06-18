@@ -1,4 +1,5 @@
 import { display } from "@davidsouther/jiffies/display.js";
+import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
 import {
   article,
   button,
@@ -14,8 +15,12 @@ import {
 } from "@davidsouther/jiffies/dom/html.js";
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
-import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { FileSystem } from "@davidsouther/jiffies/fs.js";
+import {
+  Observable,
+  Subject,
+} from "@davidsouther/jiffies/observable/observable.js";
+import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
 import { Runbar } from "../components/runbar.js";
@@ -24,13 +29,14 @@ import { Timer } from "../simulator/timer.js";
 import { Chip as SimChip } from "../simulator/chip/chip.js";
 import * as make from "../simulator/chip/builder.js";
 import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
-import { tstParser } from "../languages/tst.js";
-import { Span } from "../languages/parser/base.js";
+import { Tst, tstParser } from "../languages/tst.js";
+import { IResult } from "../languages/parser/base.js";
 import { cmpParser } from "../languages/cmp.js";
 import { ChipTest } from "../simulator/tst.js";
-import { compare } from "../simulator/compare.js";
+import { compare, Diff } from "../simulator/compare.js";
 import { DiffPanel } from "../components/diff.js";
-import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
+import { Clock } from "../simulator/chip/clock.js";
+import { State } from "@davidsouther/jiffies/dom/fc";
 
 const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   "01": [
@@ -54,7 +60,10 @@ const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
 };
 
-function makeProjectDropdown(selected: "01" | "02", setProject: Function) {
+function makeProjectDropdown(
+  selected: keyof typeof PROJECTS,
+  setProject: (p: keyof typeof PROJECTS) => void
+) {
   return Dropdown(
     {
       style: {
@@ -63,7 +72,9 @@ function makeProjectDropdown(selected: "01" | "02", setProject: Function) {
       selected,
       events: {
         change: (event: Event) =>
-          setProject((event.target as HTMLSelectElement)?.value),
+          setProject(
+            (event.target as HTMLSelectElement)?.value as keyof typeof PROJECTS
+          ),
       },
     },
     {
@@ -79,7 +90,7 @@ function makeProjectDropdown(selected: "01" | "02", setProject: Function) {
 function makeChipsDropdown(
   selected: string,
   chips: string[],
-  setChip: Function
+  setChip: (chip: string) => void
 ) {
   return Dropdown(
     {
@@ -95,37 +106,174 @@ function makeChipsDropdown(
   );
 }
 
-export const Chip = () => {
-  const fs = unwrap(retrieve<FileSystem>("fs"));
-  const statusLine = unwrap(retrieve<(s: string) => void>("status"));
+class ChipPageStore {
+  project: keyof typeof PROJECTS;
+  chips: string[];
+  chipName: string;
+  chip: SimChip;
+  test?: ChipTest;
+  diffs: Diff[] = [];
+  private readonly statusLine = unwrap(retrieve<(s: string) => void>("status"));
+  private files = {
+    hdl: "",
+    cmp: "",
+    tst: "",
+    out: "",
+  };
 
-  let project = localStorage["chip/project"] ?? "01";
-  let chips: string[] = PROJECTS[project as "01" | "02"];
-  let chipName = localStorage["chip/chip"] ?? "And";
-  let maybeChip = getBuiltinChip(chipName);
-  if (isErr(maybeChip)) statusLine(display(Err(maybeChip)));
-  let chip: SimChip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
+  readonly subject = new Subject<ChipPageStore>();
+  readonly $ = this.subject.$;
+  readonly testLog = new Subject<string>();
 
-  setTimeout(async function () {
-    await setProject(project);
-    await setChip(chip.name!);
-  });
+  next() {
+    this.subject.next(this);
+  }
 
-  const onToggle = (pin: Pin) => {
+  readonly selectors = {
+    project: this.$.map((t) => t.project),
+    chips: this.$.map((t) => t.chips),
+    chipName: this.$.map((t) => t.chipName),
+    chip: this.$.map((t) => t.chip),
+    files: this.$.map((t) => t.files as Readonly<typeof this.files>),
+    test: this.$.map((t) => t.test).filter(
+      (t): t is ChipTest => t !== undefined
+    ),
+    diffs: this.$.map((t) => t.diffs),
+    log: this.testLog.$,
+  };
+
+  constructor(
+    private readonly storage: Record<string, string> = localStorage,
+    private readonly fs: FileSystem
+  ) {
+    this.project = localStorage["chip/project"] ?? "01";
+    this.chips = PROJECTS[this.project];
+    this.chipName = localStorage["chip/chip"] ?? "And";
+    let maybeChip = getBuiltinChip(this.chipName);
+    if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
+    this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
+    Clock.get().update.$.subscribe(() => {
+      this.next();
+    });
+  }
+
+  toggle(pin: Pin) {
     if (pin.width == 1) {
       pin.toggle();
     } else {
       pin.busVoltage += 1;
     }
-    chip.eval();
-    setState();
-  };
+    this.chip.eval();
+    this.next();
+  }
+
+  compileChip(text: string) {
+    this.files.hdl = text;
+    this.chip?.remove();
+    const maybeChip = make.parse(text);
+    if (isErr(maybeChip)) {
+      this.statusLine(display(Err(maybeChip)));
+      return;
+    }
+    this.chip = Ok(maybeChip);
+    this.statusLine(`Compiled ${this.chip.name}`);
+    this.storage["chip/chip"] = this.chip.name!;
+    this.chip.eval();
+    this.next();
+  }
+
+  async saveChip(text: string) {
+    const name = this.chipName;
+    const path = `/projects/${this.project}/${name}/${name}.hdl`;
+    await this.fs.writeFile(path, text);
+    this.statusLine(`Saved ${path}`);
+  }
+
+  async setProject(proj: keyof typeof PROJECTS) {
+    localStorage["chip/project"] = this.project = proj;
+    this.chips = PROJECTS[proj as "01" | "02"];
+    this.chipName =
+      this.chipName && this.chips.includes(this.chipName)
+        ? this.chipName
+        : this.chips[0];
+    return await this.setChip(this.chipName);
+  }
+
+  async setChip(name: string) {
+    const fsName = (ext: string) =>
+      `/projects/${this.project}/${name}/${name}.${ext}`;
+    const hdl = await this.fs.readFile(fsName("hdl"));
+    const tst = await this.fs.readFile(fsName("tst"));
+    const cmp = await this.fs.readFile(fsName("cmp"));
+
+    this.compileChip(hdl);
+    this.files.hdl = hdl;
+    this.files.tst = tst;
+    this.files.cmp = cmp;
+
+    this.next();
+    return this.files;
+  }
+
+  async runTest(tstString: string, cmpString: string) {
+    this.files.tst = tstString;
+    this.files.cmp = cmpString;
+
+    const tst = await new Promise<IResult<Tst>>((r) => r(tstParser(tstString)));
+
+    if (isErr(tst)) {
+      this.statusLine(display(Err(tst)));
+      return;
+    }
+    this.statusLine("Parsed tst");
+
+    this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
+
+    await new Promise<void>((r) => {
+      this.test?.run();
+      r();
+    });
+
+    this.files.out = this.test.log();
+    this.next();
+
+    const [cmp, out] = await Promise.all([
+      new Promise<IResult<string[][]>>((r) => r(cmpParser(cmpString))),
+      new Promise<IResult<string[][]>>((r) => r(cmpParser(this.files.out))),
+    ]);
+
+    if (isErr(cmp)) {
+      this.statusLine(`Error parsing cmp file!`);
+      return;
+    }
+    if (isErr(out)) {
+      this.statusLine(`Error parsing out file!`);
+      return;
+    }
+
+    this.diffs = compare(Ok(cmp)[1], Ok(out)[1]);
+    this.next();
+  }
+}
+
+export const Chip = () => {
+  const fs = unwrap(retrieve<FileSystem>("fs"));
+  const state = new ChipPageStore(localStorage, fs);
+
+  setTimeout(async function () {
+    await state.setProject(state.project);
+    await state.setChip(state.chip.name!);
+  });
 
   const chipsDropdown = span();
   const projectDropdown = span();
-  const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
-  const outPinout = Pinout({ pins: chip.outs });
-  const pinsPinout = Pinout({ pins: chip.pins });
+  const inPinout = Pinout({
+    pins: state.chip.ins,
+    toggle: (pin) => state.toggle(pin),
+    clocked: state.chip.clocked,
+  });
+  const outPinout = Pinout({ pins: state.chip.outs });
+  const pinsPinout = Pinout({ pins: state.chip.pins });
   const hdlTextarea = textarea({ class: "font-monospace flex-1", rows: 10 });
   const tstTextarea = textarea({ class: "font-monospace flex-2", rows: 15 });
   const cmpTextarea = textarea({ class: "font-monospace flex-1", rows: 5 });
@@ -136,104 +284,39 @@ export const Chip = () => {
   });
   const diffPanel = DiffPanel();
 
-  const runner = new (class ChipRunner extends Timer {
-    tick() {
-      chip.eval();
-      // tickScreen();
-    }
-
-    finishFrame() {
-      setState();
-    }
-
-    reset() {
-      for (const pin of chip.ins.entries()) {
-        pin.pull(LOW);
-      }
-      chip.eval();
-      setState();
-    }
-
-    toggle() {
-      runbar.update();
-    }
-  })();
-
-  const runbar = Runbar({ runner });
+  const onSaveChip = () => {
+    state.saveChip(hdlTextarea.value);
+  };
 
   function setState() {
-    inPinout.update({ pins: chip.ins });
-    outPinout.update({ pins: chip.outs });
-    pinsPinout.update({ pins: chip.pins });
-    outTextarea.update("");
-    diffPanel.update();
+    inPinout.update({ pins: state.chip.ins, clocked: state.chip.clocked });
+    outPinout.update({ pins: state.chip.outs });
+    pinsPinout.update({ pins: state.chip.pins });
   }
 
-  async function setChip(name: string) {
-    localStorage["chip/chip"] = name;
-    const hdl = await fs.readFile(`/projects/${project}/${name}/${name}.hdl`);
-    const tst = await fs.readFile(`/projects/${project}/${name}/${name}.tst`);
-    const cmp = await fs.readFile(`/projects/${project}/${name}/${name}.cmp`);
+  state.subject.$.subscribe(setState);
+  state.selectors.project.subscribe((project) => {
+    projectDropdown.update(
+      makeProjectDropdown(project, (p) => state.setProject(p))
+    );
+    chipsDropdown.update(
+      makeChipsDropdown(state.chipName, PROJECTS[project], (chip) =>
+        state.setChip(chip)
+      )
+    );
+  });
+  state.selectors.diffs.subscribe((diffs) => {
+    diffPanel.update({ diffs });
+  });
+  state.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
     hdlTextarea.value = hdl;
     tstTextarea.value = tst;
     cmpTextarea.value = cmp;
-    compileChip(hdl);
-  }
-
-  function compileChip(text: string) {
-    const maybeChip = make.parse(text);
-    if (isErr(maybeChip)) {
-      statusLine(display(Err(maybeChip)));
-      return;
-    }
-    chip = Ok(maybeChip);
-    statusLine(`Compiled ${chip.name}`);
-    chip.eval();
-    setState();
-  }
-
-  async function saveChip(project: string, name: string, text: string) {
-    const path = `/projects/${project}/${name}/${name}.hdl`;
-    await fs.writeFile(path, text);
-    statusLine(`Saved ${path}`);
-  }
-
-  async function setProject(proj: "01" | "02" | "03" | "04" | "05") {
-    localStorage["chip/project"] = project = proj;
-    projectDropdown.update(makeProjectDropdown(project, setProject));
-    chips = PROJECTS[proj as "01" | "02"];
-    chipName = chipName && chips.includes(chipName) ? chipName : chips[0];
-    setChip(chipName);
-    chipsDropdown.update(makeChipsDropdown(chipName, chips, setChip));
-  }
-
-  function runTest() {
-    const tst = tstParser(new Span(tstTextarea.value));
-    outTextarea.value = "";
-    diffPanel.update(CLEAR);
-    if (isErr(tst)) {
-      statusLine(display(Err(tst)));
-      return;
-    }
-    statusLine("Parsed tst");
-
-    const test = ChipTest.from(Ok(tst)[1]).with(chip);
-    test.run();
-    outTextarea.value = test.log();
-    setState();
-    const cmp = cmpParser(new Span(cmpTextarea.value));
-    const out = cmpParser(new Span(outTextarea.value));
-    if (isErr(cmp)) {
-      statusLine(`Error parsing cmp file!`);
-      return;
-    }
-    if (isErr(out)) {
-      statusLine(`Error parsing out file!`);
-      return;
-    }
-    const diffs = compare(Ok(cmp)[1], Ok(out)[1]);
-    diffPanel.update({ diffs });
-  }
+    outTextarea.value = out;
+  });
+  state.selectors.log.subscribe((out) => {
+    outTextarea.value = out;
+  });
 
   const fstyle: FStyle = {
     ".View__Chip": {
@@ -265,7 +348,6 @@ export const Chip = () => {
   return div(
     { class: "View__Chip flex-1 flex" },
     style(compileFStyle(fstyle)),
-    // runbar,
     section(
       { class: "flex-1 grid" },
       div(
@@ -288,8 +370,8 @@ export const Chip = () => {
               button(
                 {
                   events: {
-                    click: () => compileChip(hdlTextarea.value),
-                    keypress: () => compileChip(hdlTextarea.value),
+                    click: () => state.compileChip(hdlTextarea.value),
+                    keypress: () => state.compileChip(hdlTextarea.value),
                   },
                 },
                 "Compile"
@@ -297,10 +379,8 @@ export const Chip = () => {
               button(
                 {
                   events: {
-                    click: () =>
-                      saveChip(project, chip.name!, hdlTextarea.value),
-                    keypress: () =>
-                      saveChip(project, chip.name!, hdlTextarea.value),
+                    click: onSaveChip,
+                    keypress: onSaveChip,
                   },
                 },
                 "Save"
@@ -335,7 +415,9 @@ export const Chip = () => {
                 events: {
                   click: (e) => {
                     e.preventDefault();
-                    runTest();
+                    outTextarea.value = "";
+                    diffPanel.update(CLEAR);
+                    state.runTest(tstTextarea.value, cmpTextarea.value);
                   },
                 },
               },

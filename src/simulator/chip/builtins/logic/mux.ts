@@ -1,11 +1,11 @@
-import { Chip, Voltage } from "../../chip.js";
+import { Chip, LOW, Voltage } from "../../chip.js";
 
 export function mux(a: Voltage, b: Voltage, sel: Voltage): [Voltage] {
-  return [sel === 0 ? a : b];
+  return [sel === LOW ? a : b];
 }
 
 export function mux16(a: number, b: number, sel: Voltage): [number] {
-  return [sel === 0 ? a : b];
+  return [sel === LOW ? a : b];
 }
 
 export function mux16_4(

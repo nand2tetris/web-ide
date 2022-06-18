@@ -13,6 +13,8 @@ import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
 import { Or, Or16, Or8way } from "./logic/or.js";
 import { Xor, Xor16 } from "./logic/xor.js";
+import { Bit } from "./sequential/bit.js";
+import { DFF } from "./sequential/dff.js";
 
 export {
   And,
@@ -62,6 +64,8 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["Inc16", Inc16],
       ["ALU", ALU],
       ["ALUNoStat", ALUNoStat],
+      ["DFF", DFF],
+      ["Bit", Bit],
     ] as [string, { new (): Chip }][]
   ).map(([name, ChipCtor]) => [
     name,

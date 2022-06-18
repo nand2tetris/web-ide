@@ -1,6 +1,7 @@
+import { checkExhaustive } from "@davidsouther/jiffies/assert.js";
 import { Tst, TstOutputSpec } from "../languages/tst.js";
-import { Nand } from "./chip/builtins/logic/nand.js";
-import { Bus, Chip, HIGH, LOW } from "./chip/chip.js";
+import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip.js";
+import { Clock } from "./chip/clock.js";
 import { Output } from "./output.js";
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
@@ -52,19 +53,27 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   abstract hasVar(variable: string | number): boolean;
-  abstract getVar(variable: string | number): number;
+  abstract getVar(variable: string | number): number | string;
   abstract setVar(variable: string, value: number): void;
 }
 
 export class ChipTest extends Test<ChipTestInstruction> {
-  private chip = new Nand();
+  private chip = new Low();
+  private clock = Clock.get();
 
   static from(tst: Tst): ChipTest {
     const test = new ChipTest();
 
     for (const line of tst.lines) {
       for (const inst of line.ops) {
-        switch (inst.op) {
+        const op = inst.op;
+        switch (op) {
+          case "tick":
+            test.addInstruction(new TestTickInstruction());
+            break;
+          case "tock":
+            test.addInstruction(new TestTockInstruction());
+            break;
           case "eval":
             test.addInstruction(new TestEvalInstruction());
             break;
@@ -76,6 +85,9 @@ export class ChipTest extends Test<ChipTestInstruction> {
             break;
           case "output-list":
             test.addInstruction(new TestOutputListInstruction(inst.spec));
+            break;
+          default:
+            checkExhaustive(op, `Unknown tst operation ${op}`);
         }
       }
     }
@@ -89,6 +101,9 @@ export class ChipTest extends Test<ChipTestInstruction> {
   }
 
   hasVar(variable: string | number): boolean {
+    if (variable == "time") {
+      return true;
+    }
     variable = `${variable}`;
     return (
       this.chip.in(variable) !== undefined ||
@@ -96,8 +111,11 @@ export class ChipTest extends Test<ChipTestInstruction> {
     );
   }
 
-  getVar(variable: string | number): number {
+  getVar(variable: string | number): number | string {
     variable = `${variable}`;
+    if (variable == "time") {
+      return this.clock.toString();
+    }
     const pin = this.chip.get(variable);
     if (!pin) return 0;
     return pin instanceof Bus ? pin.busVoltage : pin.voltage();
@@ -114,14 +132,22 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   eval(): void {
     this.chip.eval();
+    this.clock.eval();
   }
 
   tick(): void {
     this.chip.tick();
+    this.clock.tick();
   }
 
   tock(): void {
     this.chip.tock();
+    this.clock.tock();
+  }
+
+  run(): void {
+    this.clock.reset();
+    super.run();
   }
 }
 

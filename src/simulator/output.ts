@@ -44,17 +44,21 @@ export class Output {
   }
 
   header(test: Test) {
-    return this.pad(this.variable);
+    return this.padCenter(this.variable);
   }
 
   print(test: Test) {
     const val = test.getVar(this.variable);
-    const fmt = { B: bin, D: dec, X: hex, S: (i: number) => `${i}` }[this.fmt];
-    let value = fmt(val);
-    return this.pad(value.slice(value.length - this.len));
+    if (this.fmt == "S") {
+      return this.padLeft(val as string);
+    }
+
+    const fmt = { B: bin, D: dec, X: hex }[this.fmt];
+    let value = fmt(val as number);
+    return this.padCenter(value.slice(value.length - this.len));
   }
 
-  private pad(value: string) {
+  private padCenter(value: string) {
     const space = this.lPad + this.len + this.rPad;
     const leftSpace = Math.floor((space - value.length) / 2);
     const rightSpace = space - leftSpace - value.length;
@@ -62,6 +66,15 @@ export class Output {
     const padRight = padLeft + rightSpace;
     value = value.padStart(padLeft);
     value = value.padEnd(padRight);
+    return value;
+  }
+
+  private padLeft(value: string) {
+    value = value.substring(0, this.len);
+    const padRight = this.rPad + this.len;
+    const padLeft = this.lPad + padRight;
+    value = value.padEnd(padRight);
+    value = value.padStart(padLeft);
     return value;
   }
 }

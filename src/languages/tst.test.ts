@@ -16,6 +16,12 @@ output-list in%B3.1.3 out%B3.1.3;
 set in 0, eval, output;
 set in 1, eval, output;`;
 
+const BIT_TST = `
+output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 1, eval, output;
+`;
+
 describe("tst language", () => {
   it("parses values", () => {
     let parsed: IResult<number>;
@@ -135,6 +141,53 @@ describe("tst language", () => {
             {
               ops: [
                 { op: "set", id: "in", value: 1 },
+                { op: "eval" },
+                { op: "output" },
+              ],
+            },
+          ],
+        },
+      ])
+    );
+  });
+
+  it("parses a clocked test file", () => {
+    let parsed: IResult<Tst>;
+
+    parsed = tstParser(BIT_TST);
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        {
+          lines: [
+            {
+              ops: [
+                {
+                  op: "output-list",
+                  spec: [
+                    { id: "time", style: "S", width: 4, lpad: 1, rpad: 1 },
+                    { id: "in", style: "B", width: 1, lpad: 2, rpad: 2 },
+                    { id: "load", style: "B", width: 1, lpad: 2, rpad: 2 },
+                    { id: "out", style: "B", width: 1, lpad: 2, rpad: 2 },
+                  ],
+                },
+              ],
+            },
+            {
+              ops: [
+                { op: "set", id: "in", value: 0 },
+                { op: "set", id: "load", value: 0 },
+                { op: "tick" },
+                { op: "output" },
+              ],
+            },
+            {
+              ops: [{ op: "tock" }, { op: "output" }],
+            },
+            {
+              ops: [
+                { op: "set", id: "in", value: 0 },
+                { op: "set", id: "load", value: 1 },
                 { op: "eval" },
                 { op: "output" },
               ],

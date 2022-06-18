@@ -1,14 +1,12 @@
-import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
 import { FC } from "@davidsouther/jiffies/dom/fc.js";
-import { del, div, ins, li, ol, span } from "@davidsouther/jiffies/dom/html.js";
+import { del, ins, li, ol, span } from "@davidsouther/jiffies/dom/html.js";
 import { Diff } from "../simulator/compare.js";
 
-export const DiffPanel = FC<{ diffs?: Diff[] }>(
+export const DiffPanel = FC<{ diffs?: Diff[]; ran?: boolean }>(
   "diff-panel",
-  (el, { diffs = [] }, ...children) => {
-    return children[0] === CLEAR
-      ? []
-      : [
+  (el, { diffs = [], ran = false }) => {
+    return ran
+      ? [
           span(`Failed ${diffs.length} assertions`),
           ol(
             ...diffs.map(({ a, b, row, col }) =>
@@ -21,6 +19,7 @@ export const DiffPanel = FC<{ diffs?: Diff[] }>(
               )
             )
           ),
-        ];
+        ]
+      : [span()];
   }
 );

@@ -1,5 +1,4 @@
 import { display } from "@davidsouther/jiffies/display.js";
-import { CLEAR } from "@davidsouther/jiffies/dom/dom.js";
 import {
   article,
   button,
@@ -23,9 +22,7 @@ import {
 import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
-import { Runbar } from "../components/runbar.js";
-import { Low, LOW, Pin } from "../simulator/chip/chip.js";
-import { Timer } from "../simulator/timer.js";
+import { Low, Pin } from "../simulator/chip/chip.js";
 import { Chip as SimChip } from "../simulator/chip/chip.js";
 import * as make from "../simulator/chip/builder.js";
 import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
@@ -36,7 +33,6 @@ import { ChipTest } from "../simulator/tst.js";
 import { compare, Diff } from "../simulator/compare.js";
 import { DiffPanel } from "../components/diff.js";
 import { Clock } from "../simulator/chip/clock.js";
-import { State } from "@davidsouther/jiffies/dom/fc";
 
 const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   "01": [
@@ -130,9 +126,9 @@ class ChipPageStore {
   }
 
   readonly selectors = {
-    project: this.$.map((t) => t.project),
+    project: this.$.map((t) => t.project).distinct(),
+    chipName: this.$.map((t) => t.chipName).distinct(),
     chips: this.$.map((t) => t.chips),
-    chipName: this.$.map((t) => t.chipName),
     chip: this.$.map((t) => t.chip),
     files: this.$.map((t) => t.files as Readonly<typeof this.files>),
     test: this.$.map((t) => t.test).filter(
@@ -210,6 +206,7 @@ class ChipPageStore {
     this.files.hdl = hdl;
     this.files.tst = tst;
     this.files.cmp = cmp;
+    this.files.out = "";
 
     this.next();
     return this.files;
@@ -294,19 +291,30 @@ export const Chip = () => {
     pinsPinout.update({ pins: state.chip.pins });
   }
 
+  function clearOutput() {
+    outTextarea.value = "";
+    diffPanel.update({ ran: false });
+  }
+
   state.subject.$.subscribe(setState);
   state.selectors.project.subscribe((project) => {
     projectDropdown.update(
-      makeProjectDropdown(project, (p) => state.setProject(p))
+      makeProjectDropdown(project, (p) => {
+        clearOutput();
+        state.setProject(p);
+      })
     );
+  });
+  state.selectors.chipName.subscribe((chipName) => {
     chipsDropdown.update(
-      makeChipsDropdown(state.chipName, PROJECTS[project], (chip) =>
-        state.setChip(chip)
-      )
+      makeChipsDropdown(chipName, PROJECTS[state.project], (chip) => {
+        clearOutput();
+        state.setChip(chip);
+      })
     );
   });
   state.selectors.diffs.subscribe((diffs) => {
-    diffPanel.update({ diffs });
+    diffPanel.update({ diffs, ran: true });
   });
   state.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
     hdlTextarea.value = hdl;
@@ -415,8 +423,7 @@ export const Chip = () => {
                 events: {
                   click: (e) => {
                     e.preventDefault();
-                    outTextarea.value = "";
-                    diffPanel.update(CLEAR);
+                    clearOutput();
                     state.runTest(tstTextarea.value, cmpTextarea.value);
                   },
                 },

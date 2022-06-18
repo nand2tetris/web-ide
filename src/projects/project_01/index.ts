@@ -10,11 +10,11 @@ import * as Not16 from "./07_not16.js";
 import * as And16 from "./08_and16.js";
 import * as Or16 from "./09_or16.js";
 import * as Mux16 from "./10_mux16.js";
-import * as Mux4way16 from "./11_mux4way16.js";
-import * as Mux8way16 from "./12_mux8way16.js";
-import * as DMux4way from "./13_dmux4way.js";
-import * as DMux8way from "./14_dmux8way.js";
-import * as Or8way from "./15_or8way.js";
+import * as Mux4Way16 from "./11_mux4way16.js";
+import * as Mux8Way16 from "./12_mux8way16.js";
+import * as DMux4Way from "./13_dmux4way.js";
+import * as DMux8Way from "./14_dmux8way.js";
+import * as Or8Way from "./15_or8way.js";
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/01");
@@ -70,29 +70,29 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
       "Mux16.cmp": Mux16.cmp,
     },
     Mux4way16: {
-      "Mux4way16.hdl": Mux4way16.hdl,
-      "Mux4way16.tst": Mux4way16.tst,
-      "Mux4way16.cmp": Mux4way16.cmp,
+      "Mux4Way16.hdl": Mux4Way16.hdl,
+      "Mux4Way16.tst": Mux4Way16.tst,
+      "Mux4Way16.cmp": Mux4Way16.cmp,
     },
-    Mux8way16: {
-      "Mux8way16.hdl": Mux8way16.hdl,
-      "Mux8way16.tst": Mux8way16.tst,
-      "Mux8way16.cmp": Mux8way16.cmp,
+    Mux8Way16: {
+      "Mux8Way16.hdl": Mux8Way16.hdl,
+      "Mux8Way16.tst": Mux8Way16.tst,
+      "Mux8Way16.cmp": Mux8Way16.cmp,
     },
-    DMux4way: {
-      "DMux4way.hdl": DMux4way.hdl,
-      "DMux4way.tst": DMux4way.tst,
-      "DMux4way.cmp": DMux4way.cmp,
+    DMux4Way: {
+      "DMux4Way.hdl": DMux4Way.hdl,
+      "DMux4Way.tst": DMux4Way.tst,
+      "DMux4Way.cmp": DMux4Way.cmp,
     },
-    DMux8way: {
-      "DMux8way.hdl": DMux8way.hdl,
-      "DMux8way.tst": DMux8way.tst,
-      "DMux8way.cmp": DMux8way.cmp,
+    DMux8Way: {
+      "DMux8Way.hdl": DMux8Way.hdl,
+      "DMux8Way.tst": DMux8Way.tst,
+      "DMux8Way.cmp": DMux8Way.cmp,
     },
-    Or8way: {
-      "Or8way.hdl": Or8way.hdl,
-      "Or8way.tst": Or8way.tst,
-      "Or8way.cmp": Or8way.cmp,
+    Or8Way: {
+      "Or8Way.hdl": Or8Way.hdl,
+      "Or8Way.tst": Or8Way.tst,
+      "Or8Way.cmp": Or8Way.cmp,
     },
   });
   await fs.popd();
@@ -131,20 +131,20 @@ export async function loadSolutions(fs: FileSystem): Promise<void> {
     Mux16: {
       "Mux16.hdl": Mux16.sol,
     },
-    Mux4way16: {
-      "Mux4way16.hdl": Mux4way16.sol,
+    Mux4Way16: {
+      "Mux4Way16.hdl": Mux4Way16.sol,
     },
-    Mux8way16: {
-      "Mux8way16.hdl": Mux8way16.sol,
+    Mux8Way16: {
+      "Mux8Way16.hdl": Mux8Way16.sol,
     },
-    DMux4way: {
-      "DMux4way.hdl": DMux4way.sol,
+    DMux4Way: {
+      "DMux4Way.hdl": DMux4Way.sol,
     },
-    DMux8way: {
-      "DMux8way.hdl": DMux8way.sol,
+    DMux8Way: {
+      "DMux8Way.hdl": DMux8Way.sol,
     },
-    Or8way: {
-      "Or8way.hdl": Or8way.sol,
+    Or8Way: {
+      "Or8Way.hdl": Or8Way.sol,
     },
   });
   await fs.popd();

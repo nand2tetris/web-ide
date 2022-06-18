@@ -12,22 +12,14 @@ CHIP DMux4Way {
 
     PARTS:
 }`;
-export const sol = `/**
- * 4-way demultiplexor.
- * {a,b,c,d} = {in,0,0,0} if sel==00
- *             {0,in,0,0} if sel==01
- *             {0,0,in,0} if sel==10
- *             {0,0,0,in} if sel==11
- */
-
-CHIP DMux4Way {
+export const sol = `CHIP DMux4Way {
     IN in, sel[2];
     OUT a, b, c, d;
 
     PARTS:
-    DMux(in=in,sel=sel[1],a=out1,b=out2);
-    DMux(in=out1,sel=sel[0],a=a,b=b);
-    DMux(in=out2,sel=sel[0],a=c,b=d);
+    DMux(in=in, sel=sel[1], a=out1, b=out2);
+    DMux(in=out1, sel=sel[0], a=a, b=b);
+    DMux(in=out2, sel=sel[0], a=c, b=d);
 }`;
 export const tst = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
 

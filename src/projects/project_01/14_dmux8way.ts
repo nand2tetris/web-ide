@@ -14,23 +14,14 @@ CHIP DMux8Way {
     PARTS:
 }`;
 
-export const sol = `/**
- * 8-way demultiplexor.
- * {a,b,c,d,e,f,g,h} = {in,0,0,0,0,0,0,0} if sel==000
- *                     {0,in,0,0,0,0,0,0} if sel==001
- *                     etc.
- *                     {0,0,0,0,0,0,0,in} if sel==111
- */
-
-
-CHIP DMux8Way {
+export const sol = `CHIP DMux8Way {
     IN in, sel[3];
     OUT a, b, c, d, e, f, g, h;
 
     PARTS:
-    DMux(in=in,sel=sel[2],a=out1,b=out2);
-    DMux4Way(in=out1,sel=sel[0..1],a=a,b=b,c=c,d=d);
-    DMux4Way(in=out2,sel=sel[0..1],a=e,b=f,c=g,d=h);
+    DMux(in=in, sel=sel[2], a=out1, b=out2);
+    DMux4Way(in=out1, sel=sel[0..1], a=a, b=b, c=c, d=d);
+    DMux4Way(in=out2, sel=sel[0..1], a=e, b=f, c=g, d=h);
 }`;
 
 export const tst = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;

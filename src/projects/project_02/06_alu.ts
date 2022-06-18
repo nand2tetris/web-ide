@@ -39,7 +39,42 @@ CHIP ALU {
     PARTS:
    // Put you code here:
 }`;
-export const sol = ``;
+export const sol = `CHIP ALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute out = x + y (if 1) or x & y (if 0)
+        no; // negate the out output?
+
+    OUT 
+        out[16], // 16-bit output
+        zr, // 1 if (out == 0), 0 otherwise
+        ng; // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+    Mux16(sel=zx, a=x, b=false, out=xzero);
+    Not16(in=xzero, out=notx);
+    Mux16(sel=nx, a=xzero, b=notx, out=xbus);
+
+    Mux16(sel=zy, a=y, b=false, out=yzero);
+    Not16(in=yzero, out=noty);
+    Mux16(sel=ny, a=yzero, b=noty, out=ybus);
+
+    And16(a=xbus, b=ybus, out=fbusand);
+    Add16(a=xbus, b=ybus, out=fbusadd);
+
+    Mux16(sel=f, a=fbusand, b=fbusadd, out=outbus);
+    Not16(in=outbus, out=notoutbus);
+    Mux16(sel=no, a=outbus, b=notoutbus, out[15]=ng, out[0..7]=zr1, out[8..15]=zr2, out=out);
+
+    Or8Way(in=zr1, out=zra);
+    Or8Way(in=zr2, out=zrb);
+    Or(a=zra, b=zrb, out=zror);
+    Not(in=zror, out=zr);
+}`;
 export const cmp = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |zr |ng |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 | 1 | 0 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 | 0 | 0 |

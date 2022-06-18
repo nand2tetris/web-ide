@@ -8,7 +8,15 @@ CHIP HalfAdder {
    PARTS:
    // Put you code here:
 }`;
-export const sol = ``;
+export const sol = `CHIP HalfAdder {
+    IN a, b;    // 1-bit inputs
+    OUT sum,    // Right bit of a + b 
+        carry;  // Left bit of a + b
+
+    PARTS:
+    Xor(a=a, b=b, out=sum);
+    And(a=a, b=b, out=carry);
+}`;
 export const cmp = `|   a   |   b   |  sum  | carry |
 |   0   |   0   |   0   |   0   |
 |   0   |   1   |   1   |   0   |

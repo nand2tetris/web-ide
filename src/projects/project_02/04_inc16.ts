@@ -10,7 +10,15 @@ CHIP Inc16 {
    PARTS:
   // Put you code here:
 }`;
-export const sol = ``;
+export const sol = `CHIP Inc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    Nand(a=in[0], b=in[0], out=t[0]);
+    Xor(a=in[1], b=in[1], out=t[1]);
+    Add16(a=in, b=t, out=out);
+}`;
 export const cmp = `|        in        |       out        |
 | 0000000000000000 | 0000000000000001 |
 | 1111111111111111 | 0000000000000000 |

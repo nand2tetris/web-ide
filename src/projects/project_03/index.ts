@@ -55,3 +55,34 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
   });
   await fs.popd();
 }
+
+export async function loadSolutions(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/03");
+  await reset(fs, {
+    Bit: {
+      "Bit.hdl": Bit.sol,
+    },
+    Register: {
+      "Register.hdl": Register.sol,
+    },
+    PC: {
+      "PC.hdl": PC.sol,
+    },
+    RAM8: {
+      "RAM8.hdl": RAM8.sol,
+    },
+    RAM64: {
+      "RAM64.hdl": RAM64.sol,
+    },
+    RAM512: {
+      "RAM512.hdl": RAM512.sol,
+    },
+    RAM4k: {
+      "RAM4k.hdl": RAM4k.sol,
+    },
+    RAM16k: {
+      "RAM16k.hdl": RAM16k.sol,
+    },
+  });
+  await fs.popd();
+}

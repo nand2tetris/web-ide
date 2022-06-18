@@ -9,3 +9,9 @@ export async function resetFiles(fs: FileSystem) {
   await project_02.resetFiles(fs);
   await project_03.resetFiles(fs);
 }
+
+export async function loadSolutions(fs: FileSystem) {
+  await project_01.loadSolutions(fs);
+  await project_02.loadSolutions(fs);
+  await project_03.loadSolutions(fs);
+}

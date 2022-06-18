@@ -18,11 +18,11 @@ export const sol = `CHIP XOr {
     OUT out;
 
     PARTS:
-    Not(in=a,out=nota);
-    Not(in=b,out=notb);
-    And(a=nota,b=b,out=t1);
-    And(a=a,b=notb,out=t2);
-    Or(a=t1,b=t2,out=out);
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    And(a=nota, b=b, out=t1);
+    And(a=a, b=notb, out=t2);
+    Or(a=t1, b=t2, out=out);
 }`;
 export const tst = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 

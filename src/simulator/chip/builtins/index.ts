@@ -7,19 +7,31 @@ import { HalfAdder } from "./arithmetic/half_adder.js";
 import { Inc16 } from "./arithmetic/inc16.js";
 
 import { And, And16 } from "./logic/and.js";
-import { Demux } from "./logic/demux.js";
-import { Mux, Mux16 } from "./logic/mux.js";
+import { DMux, DMux4Way, DMux8Way } from "./logic/dmux.js";
+import { Mux, Mux16, Mux4Way16, Mux8Way16 } from "./logic/mux.js";
 import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
 import { Or, Or16, Or8way } from "./logic/or.js";
 import { Xor, Xor16 } from "./logic/xor.js";
 
-export { And, And16 } from "./logic/and.js";
-export { Demux } from "./logic/demux.js";
-export { Mux } from "./logic/mux.js";
-export { Not, Not16 } from "./logic/not.js";
-export { Or } from "./logic/or.js";
-export { Xor } from "./logic/xor.js";
+export {
+  And,
+  And16,
+  DMux,
+  Mux,
+  Mux16,
+  Mux4Way16,
+  Mux8Way16,
+  Nand,
+  Nand16,
+  Not,
+  Not16,
+  Or,
+  Or16,
+  Or8way,
+  Xor,
+  Xor16,
+};
 
 export const REGISTRY = new Map<string, () => Chip>(
   (
@@ -32,14 +44,18 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["And16", And16],
       ["Or", Or],
       ["Or16", Or16],
-      ["Or8way", Or8way],
+      ["Or8Way", Or8way],
       ["XOr", Xor],
       ["XOr16", Xor16],
       ["Xor", Xor],
       ["Xor16", Xor16],
       ["Mux", Mux],
       ["Mux16", Mux16],
-      ["Demux", Demux],
+      ["Mux4Way16", Mux4Way16],
+      ["Mux8Way16", Mux8Way16],
+      ["DMux", DMux],
+      ["DMux4Way", DMux4Way],
+      ["DMux8Way", DMux8Way],
       ["HalfAdder", HalfAdder],
       ["FullAdder", FullAdder],
       ["Add16", Add16],

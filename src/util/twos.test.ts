@@ -18,6 +18,7 @@ describe("twos", () => {
     expect(dec(1)).toBe("1");
     expect(dec(-1)).toBe("-1");
     expect(dec(33413)).toBe("-32123");
+    expect(dec(0x8000)).toBe("-32768");
     expect(dec(256)).toBe("256");
 
     expect(hex(0)).toBe("0x0000");
@@ -40,6 +41,7 @@ describe("twos", () => {
     expect(int10("1")).toBe(1);
     expect(int10("-1")).toBe(65535);
     expect(int10("-32123")).toBe(33413);
+    expect(int10("-32768")).toBe(0x8000);
     expect(int10("256")).toBe(256);
 
     expect(int16("0x0000")).toBe(0);

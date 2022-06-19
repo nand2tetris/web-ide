@@ -98,12 +98,14 @@ export function bin(i: number, precision = 16): string {
 
 export function dec(i: number): string {
   i = i & 0xffff;
-  if (i & 0x8000) {
-    i = (~(i & 0x7fff) + 1) & 0x7fff;
-    return `-${i}`;
-  } else {
-    return `${i}`;
+  if (i == 0x8000) {
+    return "-32768";
   }
+  if (i & 0x8000) {
+    i = (~i + 1) & 0x7fff;
+    return `-${i}`;
+  }
+  return `${i}`;
 }
 
 export function nand16(a: number, b: number): number {

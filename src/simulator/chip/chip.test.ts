@@ -17,7 +17,7 @@ import {
   printChip,
 } from "./chip.js";
 import { Nand } from "./builtins/logic/nand.js";
-import { And, Not, Not16, Or, Xor } from "./builtins/index.js";
+import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { bin } from "../../util/twos.js";
 import { DFF } from "./builtins/sequential/dff.js";
 import { Clock } from "./clock.js";
@@ -187,6 +187,7 @@ describe("Chip", () => {
 
     describe("and16", () => {});
   });
+
   describe("SubBus", () => {
     class Not3 extends Chip {
       constructor() {
@@ -246,6 +247,69 @@ describe("Chip", () => {
       expect(not3Chip.out().busVoltage).toBe(0b0);
       outPin.busVoltage = 0b1;
       expect(not3Chip.out().busVoltage).toBe(0b010);
+    });
+
+    it("widens output busses if necessary", () => {
+      const mux4way16 = new Chip(
+        ["a[16]", "b[16]", "c[16]", "d[16]", "sel[2]"],
+        ["out[16]"]
+      );
+
+      mux4way16.wire(new Mux16(), [
+        {
+          from: { name: "a", start: 0 },
+          to: { name: "a", start: 0 },
+        },
+        {
+          from: { name: "b", start: 0 },
+          to: { name: "b", start: 0 },
+        },
+        {
+          from: { name: "sel", start: 0, width: 1 },
+          to: { name: "sel", start: 0 },
+        },
+        {
+          from: { name: "out1", start: 0 },
+          to: { name: "out", start: 0 },
+        },
+      ]);
+
+      mux4way16.wire(new Mux16(), [
+        {
+          from: { name: "c", start: 0 },
+          to: { name: "a", start: 0 },
+        },
+        {
+          from: { name: "d", start: 0 },
+          to: { name: "b", start: 0 },
+        },
+        {
+          from: { name: "sel", start: 0, width: 1 },
+          to: { name: "sel", start: 0 },
+        },
+        {
+          from: { name: "out2", start: 0 },
+          to: { name: "out", start: 0 },
+        },
+      ]);
+      mux4way16.wire(new Mux16(), [
+        {
+          from: { name: "out1", start: 0 },
+          to: { name: "a", start: 0 },
+        },
+        {
+          from: { name: "out2", start: 0 },
+          to: { name: "b", start: 0 },
+        },
+        {
+          from: { name: "sel", start: 1, width: 1 },
+          to: { name: "sel", start: 1, width: 1 },
+        },
+        {
+          from: { name: "out", start: 0, width: 1 },
+          to: { name: "out", start: 0, width: 1 },
+        },
+      ]);
     });
 
     class Not8 extends Chip {

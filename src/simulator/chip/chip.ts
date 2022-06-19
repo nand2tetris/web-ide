@@ -317,9 +317,10 @@ export class Chip {
       part.outs.get(to.name),
       () => `Cannot wire to missing pin ${to.name}`
     );
-    let chipPin: Pin = this.findPin(from.name, from.width);
-
     to.width ??= partPin.width;
+
+    let chipPin: Pin = this.findPin(from.name, from.width ?? to.width);
+
     from.width ??= chipPin.width;
 
     if (chipPin instanceof ConstantBus) {
@@ -344,9 +345,10 @@ export class Chip {
       part.ins.get(to.name),
       () => `Cannot wire to missing pin ${to.name}`
     );
-    const chipPin = this.findPin(from.name, to.width);
-
     to.width ??= partPin.width;
+
+    const chipPin = this.findPin(from.name, from.width ?? to.width);
+
     from.width ??= chipPin.width;
 
     // Wrap the partPin in an InBus when the part side is dimensioned
@@ -404,7 +406,7 @@ export class High extends Chip {
 export interface PinSide {
   name: string;
   start: number;
-  width: number | undefined;
+  width?: number;
 }
 
 export interface Connection {

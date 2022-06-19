@@ -1,8 +1,8 @@
 /** Reads tst files to apply and perform test runs. */
 
 import { Option, unwrapOr } from "@davidsouther/jiffies/result.js";
-import { int, int10 } from "../util/twos.js";
-import { Parser, StringLike } from "./parser/base.js";
+import { int10, int16, int2 } from "../util/twos.js";
+import { Parser } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
 import { map, opt, valueFn } from "./parser/combinator.js";
@@ -51,22 +51,20 @@ export interface Tst {
   lines: TstLine[];
 }
 
-const tstNumberValue = (p: Parser<StringLike>, r: number): Parser<number> =>
-  map(p, (i) => int(i.toString(), r));
 const tstBinaryValueParser = preceded(tag("B"), tag(/[01]{1,16}/));
 const tstHexValueParser = preceded(tag("X"), tag(/[0-9a-fA-F]{1,4}/));
 const tstDecimalValueParser = preceded(
   opt(tag("D")),
   tag(/(-[1-9])?[0-9]{0,4}/)
 );
-const tstHexValue = tstNumberValue(tstHexValueParser, 16);
-const tstDecimalValue = tstNumberValue(tstDecimalValueParser, 10);
-const tstBinaryValue = tstNumberValue(tstBinaryValueParser, 2);
+const tstHexValue = map(tstHexValueParser, int16);
+const tstDecimalValue = map(tstDecimalValueParser, int10);
+const tstBinaryValue = map(tstBinaryValueParser, int2);
 const tstValueParser = alt(
   preceded(tag("%"), alt(tstBinaryValue, tstHexValue, tstDecimalValue)),
   tstDecimalValue
 );
-const tstValue: Parser<number> = (i) => tstValueParser(i);
+const tstValue: Parser<number> = tstValueParser;
 
 const setParser: Parser<TstSetOperation> = map(
   preceded(token("set"), pair(token(identifier()), token(tstValue))),

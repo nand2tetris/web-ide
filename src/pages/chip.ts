@@ -34,7 +34,7 @@ import { compare, Diff } from "../simulator/compare.js";
 import { DiffPanel } from "../components/diff.js";
 import { Clock } from "../simulator/chip/clock.js";
 
-const PROJECTS: Record<"01" | "02" | "03", string[]> = {
+const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
     "Not",
     "And",
@@ -54,6 +54,7 @@ const PROJECTS: Record<"01" | "02" | "03", string[]> = {
   ],
   "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
+  "05": ["Memory", "Computer"],
 };
 
 function makeProjectDropdown(
@@ -77,7 +78,6 @@ function makeProjectDropdown(
       "01": "Logic",
       "02": "Arithmetic",
       "03": "Memory",
-      "04": "Assembly",
       "05": "Architecture",
     }
   );

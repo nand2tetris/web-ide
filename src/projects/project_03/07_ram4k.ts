@@ -11,8 +11,7 @@ CHIP RAM4K {
 
     PARTS:
 }`;
-export const sol = `
-CHIP RAM4K {
+export const sol = `CHIP RAM4K {
     IN in[16], load, address[12];
     OUT out[16];
 

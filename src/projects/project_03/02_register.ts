@@ -10,8 +10,7 @@ CHIP Register {
 
     PARTS:
 }`;
-export const sol = `
-CHIP Register {
+export const sol = `CHIP Register {
     IN in[16], load;
     OUT out[16];
 

@@ -9,8 +9,7 @@ CHIP RAM64 {
     IN in[16], load, address[6];
     OUT out[16];
 }`;
-export const sol = `
- CHIP RAM64 {
+export const sol = `CHIP RAM64 {
     IN in[16], load, address[6];
     OUT out[16];
 

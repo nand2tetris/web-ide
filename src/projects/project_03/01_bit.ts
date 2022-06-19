@@ -10,8 +10,7 @@ CHIP Bit {
 
     PARTS:
 }`;
-export const sol = `
-CHIP Bit {
+export const sol = `CHIP Bit {
     IN in, load;
     OUT out;
 

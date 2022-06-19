@@ -12,22 +12,19 @@ CHIP PC {
 
     PARTS:
 }`;
-export const sol = `
-CHIP PC {
+export const sol = `CHIP PC {
     IN in[16],load,inc,reset;
     OUT out[16];
 
     PARTS:
     // Read a value into the register if any of load, inc, or reset are set
-    Or(a=load, b=inc, out=doload);
-    Or(a=reset, b=doload, out=read);
+    Or8Way(in[0]=load, in[1]=inc, in[2]=reset, out=read);
 
     // If a value should be read, it'll be in, count, or 0
-    Mux16(a=count, b=in, sel=load, out=value);
-    Mux16(a=value, b=false, sel=reset, out=set);
+    Mux4Way16(a=count, b=in, sel[0]=load, sel[1]=reset, out=set);
 
-    Register(in=set, load=read, out=regout, out=out);
-    Inc16(in=regout, out=count);
+    Register(in=set, load=read, out=out);
+    Inc16(in=out, out=count);
 }`;
 export const tst = `output-list time%S1.4.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
 

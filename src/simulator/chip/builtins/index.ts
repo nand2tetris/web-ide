@@ -15,7 +15,7 @@ import { FullAdder } from "./arithmetic/full_adder.js";
 import { HalfAdder } from "./arithmetic/half_adder.js";
 import { Inc16 } from "./arithmetic/inc16.js";
 
-import { Bit, Register } from "./sequential/bit.js";
+import { Bit, PC, Register } from "./sequential/bit.js";
 import { DFF } from "./sequential/dff.js";
 import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram.js";
 
@@ -83,6 +83,7 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["DFF", DFF],
       ["Bit", Bit],
       ["Register", Register],
+      ["PC", PC],
       ["RAM8", RAM8],
       ["RAM64", RAM64],
       ["RAM512", RAM512],

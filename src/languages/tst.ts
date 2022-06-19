@@ -55,7 +55,7 @@ const tstBinaryValueParser = preceded(tag("B"), tag(/[01]{1,16}/));
 const tstHexValueParser = preceded(tag("X"), tag(/[0-9a-fA-F]{1,4}/));
 const tstDecimalValueParser = preceded(
   opt(tag("D")),
-  tag(/(-[1-9])?[0-9]{0,4}/)
+  tag(/(-[1-9])?[0-9]{0,5}/)
 );
 const tstHexValue = map(tstHexValueParser, int16);
 const tstDecimalValue = map(tstDecimalValueParser, int10);
@@ -116,7 +116,7 @@ const tstConfigLineParser: Parser<TstLine> = map(
 );
 
 export const tstParser: Parser<Tst> = map(
-  terminated(many1(alt(tstConfigLineParser, tstOpLineParser)), filler()),
+  many1(alt(tstConfigLineParser, tstOpLineParser)),
   (lines) => ({ lines })
 );
 

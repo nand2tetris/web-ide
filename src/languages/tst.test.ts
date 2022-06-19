@@ -48,6 +48,9 @@ describe("tst language", () => {
 
     parsed = TEST_ONLY.tstValue("0");
     expect(parsed).toEqual(Ok(["", 0]));
+
+    parsed = TEST_ONLY.tstValue("11111");
+    expect(parsed).toEqual(Ok(["", 11111]));
   });
 
   it("parses an output format", () => {

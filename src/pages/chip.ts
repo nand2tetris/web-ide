@@ -75,10 +75,10 @@ function makeProjectDropdown(
       },
     },
     {
-      "01": "Logic",
-      "02": "Arithmetic",
-      "03": "Memory",
-      "05": "Architecture",
+      "01": "Project 1",
+      "02": "Project 2",
+      "03": "Project 3",
+      // "05": "Project 5",
     }
   );
 }
@@ -382,7 +382,7 @@ export const Chip = () => {
                     keypress: () => state.compileChip(hdlTextarea.value),
                   },
                 },
-                "Compile"
+                "Eval"
               ),
               button(
                 {

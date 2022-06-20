@@ -28,7 +28,7 @@ export const Pinout = FC(
     }: { pins: Pins; toggle?: (pin: Pin) => void; clocked?: boolean }
   ) => {
     const t = table(
-      thead(tr(th({ tabIndex: 0 }, "Name"), th({ tabIndex: 0 }, "Voltage"))),
+      thead(tr(th({ tabIndex: 0 }, "Name"), th({ tabIndex: 0 }, "Value"))),
       tbody(
         ...[
           clocked

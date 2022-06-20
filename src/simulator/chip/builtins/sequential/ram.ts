@@ -2,7 +2,7 @@ import { isSome, None, Option, Some } from "@davidsouther/jiffies/result.js";
 import { HIGH } from "../../chip.js";
 import { ClockedChip } from "../../clock.js";
 
-class RAM extends ClockedChip {
+export class RAM extends ClockedChip {
   private ram: Int16Array;
   private nextData: Option<number> = None();
 

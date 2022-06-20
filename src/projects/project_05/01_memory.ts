@@ -35,8 +35,7 @@ export const sol = `CHIP Memory {
     Screen(in=in, load=writeio, address=address[2..14], out=screenout);
     Keyboard(out=kbdout);
 
-    Mux16(a=screenout, b=kbdout, sel=address[1], out=ioout);
-    Mux16(a=ramout, b=ioout, sel=address[0], out=out);
+    Mux4Way16(a=ramout, b=ioout, c=screenout, d=kbdout, sel=address[0..1], out=out);
 }`;
 export const tst = `output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 

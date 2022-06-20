@@ -59,6 +59,8 @@ export const App = () => {
               {
                 events: {
                   click: (e) => {
+                    localStorage["chip/project"] = "01";
+                    localStorage["chip/chip"] = "Not";
                     projects.resetFiles(fs);
                     statusLine.update("Reset files in local storage");
                   },

@@ -1,10 +1,10 @@
 /** Reads and parses HDL chip descriptions. */
 
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
+import { isErr, isNone, Ok } from "@davidsouther/jiffies/result.js";
 import { IResult, ParseErrors, Parser, StringLike } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
-import { value } from "./parser/combinator.js";
+import { map, opt, value } from "./parser/combinator.js";
 import { many0 } from "./parser/multi.js";
 import { filler, identifier, list, token, ws } from "./parser/recipe.js";
 import {
@@ -116,7 +116,10 @@ const pinDeclParser = list(hdlWs(pinDeclaration), token(","));
 const pinList: Parser<PinDeclaration[]> = (i) => pinDeclParser(i);
 const inDeclParser = delimited(token("IN"), pinList, token(";"));
 const inList: Parser<PinDeclaration[]> = (i) => inDeclParser(i);
-const outDeclParser = delimited(token("OUT"), pinList, token(";"));
+const outDeclParser = map(
+  opt(delimited(token("OUT"), pinList, token(";"))),
+  (i) => (isNone(i) ? [] : i)
+);
 const outList: Parser<PinDeclaration[]> = (i) => outDeclParser(i);
 
 const partsParser = alt<"BUILTIN" | Part[]>(

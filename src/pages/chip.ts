@@ -420,9 +420,12 @@ export const Chip = () => {
                 events: {
                   click: async (e) => {
                     e.preventDefault();
+                    const hdl = hdlTextarea.value;
+                    const tst = tstTextarea.value;
+                    const cmp = cmpTextarea.value;
                     clearOutput();
-                    await state.compileChip(hdlTextarea.value);
-                    await state.runTest(tstTextarea.value, cmpTextarea.value);
+                    await state.compileChip(hdl);
+                    await state.runTest(tst, cmp);
                   },
                 },
               },

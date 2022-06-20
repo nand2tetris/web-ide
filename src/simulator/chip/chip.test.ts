@@ -21,7 +21,7 @@ import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { bin } from "../../util/twos.js";
 import { DFF } from "./builtins/sequential/dff.js";
 import { Clock } from "./clock.js";
-import { Bit } from "./builtins/sequential/bit.js";
+import { Bit, PC } from "./builtins/sequential/bit.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -466,6 +466,88 @@ describe("Chip", () => {
         expect(bit.out().voltage()).toBe(HIGH);
         clock.tock();
         expect(bit.out().voltage()).toBe(HIGH);
+      });
+    });
+
+    describe("PC", () => {
+      it("remains constant when not ticking", () => {
+        clock.reset();
+        const pc = new PC();
+        const out = pc.out();
+
+        expect(out.busVoltage).toBe(0);
+        clock.tick();
+        expect(out.busVoltage).toBe(0);
+        clock.tock();
+        expect(out.busVoltage).toBe(0);
+        clock.tick();
+        expect(out.busVoltage).toBe(0);
+        clock.tock();
+        expect(out.busVoltage).toBe(0);
+      });
+
+      it("increments when ticking", () => {
+        clock.reset();
+        const pc = new PC();
+        const out = pc.out();
+
+        pc.in("inc").pull(HIGH);
+
+        clock.tick();
+        expect(out.busVoltage).toBe(0);
+        clock.tock();
+        expect(out.busVoltage).toBe(1);
+
+        clock.tick();
+        expect(out.busVoltage).toBe(1);
+        clock.tock();
+        expect(out.busVoltage).toBe(2);
+
+        for (let i = 0; i < 10; i++) {
+          clock.eval();
+          expect(out.busVoltage).toBe(i + 3);
+        }
+      });
+
+      it("loads a jump value", () => {
+        clock.reset();
+        const pc = new PC();
+        const out = pc.out();
+
+        pc.in().busVoltage = 0x8286;
+
+        expect(out.busVoltage).toBe(0);
+        clock.tick();
+        expect(out.busVoltage).toBe(0);
+        clock.tock();
+        expect(out.busVoltage).toBe(0);
+
+        pc.in("load").pull(HIGH);
+
+        expect(out.busVoltage).toBe(0);
+        clock.eval();
+        expect(out.busVoltage).toBe(0x8286);
+      });
+
+      it("resets", () => {
+        clock.reset();
+        const pc = new PC();
+        const out = pc.out();
+        pc.in("inc").pull(HIGH);
+
+        expect(out.busVoltage).toBe(0);
+
+        for (let i = 0; i < 10; i++) {
+          clock.eval();
+        }
+
+        expect(out.busVoltage).toBe(10);
+
+        pc.in("reset").pull(HIGH);
+
+        clock.eval();
+
+        expect(out.busVoltage).toBe(0);
       });
     });
   });

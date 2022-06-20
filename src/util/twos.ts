@@ -62,11 +62,7 @@ export function bits(i: number): string {
 
 export function int(n: string, radix: number): number {
   let i = parseInt(n.replace(/[^\d+-.xa-fA-F]/g, ""), radix);
-  i = i & 0xffff;
-  if (i & 0x8000) {
-    return -((~i + 1) & 0xffff);
-  }
-  return i;
+  return i & 0xffff;
 }
 
 export function int16(i: string): number {
@@ -101,9 +97,15 @@ export function bin(i: number, precision = 16): string {
 }
 
 export function dec(i: number): string {
-  const s = Math.sign(i) === -1 ? "-" : "";
-  i = Math.abs(i);
-  return `${s}${i}`;
+  i = i & 0xffff;
+  if (i == 0x8000) {
+    return "-32768";
+  }
+  if (i & 0x8000) {
+    i = (~i + 1) & 0x7fff;
+    return `-${i}`;
+  }
+  return `${i}`;
 }
 
 export function nand16(a: number, b: number): number {

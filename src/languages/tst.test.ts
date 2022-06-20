@@ -22,6 +22,11 @@ set in 0, set load 0, tick, output; tock, output;
 set in 0, set load 1, eval, output;
 `;
 
+const MEM_TST = `
+output-list time%S1.2.1 in%B2.1.2;
+set in -32123, tick, output;
+`;
+
 describe("tst language", () => {
   it("parses values", () => {
     let parsed: IResult<number>;
@@ -39,10 +44,13 @@ describe("tst language", () => {
     expect(parsed).toEqual(Ok(["", 3]));
 
     parsed = TEST_ONLY.tstValue("%D-1");
-    expect(parsed).toEqual(Ok(["", -1]));
+    expect(parsed).toEqual(Ok(["", 0xffff]));
 
     parsed = TEST_ONLY.tstValue("0");
     expect(parsed).toEqual(Ok(["", 0]));
+
+    parsed = TEST_ONLY.tstValue("11111");
+    expect(parsed).toEqual(Ok(["", 11111]));
   });
 
   it("parses an output format", () => {
@@ -189,6 +197,41 @@ describe("tst language", () => {
                 { op: "set", id: "in", value: 0 },
                 { op: "set", id: "load", value: 1 },
                 { op: "eval" },
+                { op: "output" },
+              ],
+            },
+          ],
+        },
+      ])
+    );
+  });
+
+  it("parses a test file with negative integers", () => {
+    let parsed: IResult<Tst>;
+
+    parsed = tstParser(MEM_TST);
+    expect(parsed).toEqual(
+      Ok([
+        "",
+        {
+          lines: [
+            // output-list time%S1.2.1 in%B2.1.2;
+            {
+              ops: [
+                {
+                  op: "output-list",
+                  spec: [
+                    { id: "time", style: "S", width: 2, lpad: 1, rpad: 1 },
+                    { id: "in", style: "B", width: 1, lpad: 2, rpad: 2 },
+                  ],
+                },
+              ],
+            },
+            // set in -32123, tick, output;
+            {
+              ops: [
+                { op: "set", id: "in", value: 33413 /* unsigned */ },
+                { op: "tick" },
                 { op: "output" },
               ],
             },

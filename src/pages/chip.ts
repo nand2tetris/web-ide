@@ -421,10 +421,11 @@ export const Chip = () => {
             button(
               {
                 events: {
-                  click: (e) => {
+                  click: async (e) => {
                     e.preventDefault();
                     clearOutput();
-                    state.runTest(tstTextarea.value, cmpTextarea.value);
+                    await state.compileChip(hdlTextarea.value);
+                    await state.runTest(tstTextarea.value, cmpTextarea.value);
                   },
                 },
               },

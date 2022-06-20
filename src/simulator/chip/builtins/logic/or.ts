@@ -27,7 +27,7 @@ export class Or extends Chip {
 
 export class Or16 extends Chip {
   constructor() {
-    super(["a[16]", "b[16]"], ["out[16"]);
+    super(["a[16]", "b[16]"], ["out[16]"]);
   }
 
   eval() {

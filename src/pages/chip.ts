@@ -106,6 +106,7 @@ class ChipPageStore {
   chip: SimChip;
   test?: ChipTest;
   diffs: Diff[] = [];
+  private runningTest = false;
   private readonly statusLine = unwrap(retrieve<(s: string) => void>("status"));
   private files = {
     hdl: "",
@@ -119,7 +120,7 @@ class ChipPageStore {
   readonly testLog = new Subject<string>();
 
   next() {
-    this.subject.next(this);
+    if (!this.runningTest) this.subject.next(this);
   }
 
   readonly selectors = {
@@ -224,8 +225,13 @@ class ChipPageStore {
     this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
 
     await new Promise<void>((r) => {
-      this.test?.run();
-      r();
+      try {
+        this.runningTest = true;
+        this.test?.run();
+        r();
+      } finally {
+        this.runningTest = false;
+      }
     });
 
     this.files.out = this.test.log();

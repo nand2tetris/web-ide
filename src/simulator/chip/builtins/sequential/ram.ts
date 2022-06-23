@@ -3,11 +3,12 @@ import { HIGH } from "../../chip.js";
 import { ClockedChip } from "../../clock.js";
 
 class RAM extends ClockedChip {
-  private ram = new Int16Array(Math.pow(2, this.width));
+  private ram: Int16Array;
   private nextData: Option<number> = None();
 
   constructor(private readonly width: number) {
     super(["in[16]", "load", `address[${width}]`], [`out[16]`]);
+    this.ram = new Int16Array(Math.pow(2, this.width));
   }
 
   tick() {
@@ -20,6 +21,11 @@ class RAM extends ClockedChip {
     if (isSome(this.nextData)) {
       this.ram[address] = this.nextData;
     }
+    this.out().busVoltage = this.ram?.[address];
+  }
+
+  eval() {
+    const address = this.in("address").busVoltage;
     this.out().busVoltage = this.ram?.[address];
   }
 }

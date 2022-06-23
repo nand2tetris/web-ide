@@ -52,7 +52,7 @@ export const sol = `CHIP RAM64 {
         out=out
     );
 }`;
-export const tst = `load RAM64.hdl, output-file RAM64.out, compare-to RAM64.cmp, output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+export const tst = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
 
 set in 0, set load 0,
 set address 0, tick, output; tock, output;

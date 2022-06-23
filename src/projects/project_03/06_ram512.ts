@@ -74,37 +74,18 @@ set load 0, tick, output; tock, output;
 set address 472, eval, output;
 set address 511, eval, output;
 
-set load 0, set address %B010101000, tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set load 0,
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set in %B0101010101010101,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001,
-tick, output, tock, output;
-set address %B010101010,
-tick, output, tock, output;
-set address %B010101011,
-tick, output, tock, output;
-set address %B010101100,
-tick, output, tock, output;
-set address %B010101101,
-tick, output, tock, output;
-set address %B010101110,
-tick, output, tock, output;
-set address %B010101111,
-tick, output, tock, output;
-
-set load 0,
-set address %B010101000,
-tick, output; tock, output;
+set in %B0101010101010101, set address %B010101000, tick, output; tock, output;
 set address %B010101001, tick, output, tock, output;
 set address %B010101010, tick, output, tock, output;
 set address %B010101011, tick, output, tock, output;
@@ -112,176 +93,154 @@ set address %B010101100, tick, output, tock, output;
 set address %B010101101, tick, output, tock, output;
 set address %B010101110, tick, output, tock, output;
 set address %B010101111, tick, output, tock, output;
+
+set load 0,
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101000,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101000, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101000,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101001,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101000, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101001, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101001,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101001, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101011,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101011, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101011,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101100,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101011, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101100, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101100,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101100, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101110,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101101, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101110, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101110,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101111,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101110, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101111, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101111,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B010101111, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
+
+set load 1,
+set in %B0101010101010101, set address %B000101010, tick, output; tock, output;
 set address %B001101010, tick, output, tock, output;
 set address %B010101010, tick, output, tock, output;
 set address %B011101010, tick, output, tock, output;
@@ -290,200 +249,139 @@ set address %B101101010, tick, output, tock, output;
 set address %B110101010, tick, output, tock, output;
 set address %B111101010, tick, output, tock, output;
 
-set load 1,
-set in %B0101010101010101,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010,
-tick, output, tock, output;
-set address %B010101010,
-tick, output, tock, output;
-set address %B011101010,
-tick, output, tock, output;
-set address %B100101010,
-tick, output, tock, output;
-set address %B101101010,
-tick, output, tock, output;
-set address %B110101010,
-tick, output, tock, output;
-set address %B111101010,
-tick, output, tock, output;
-
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B000101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B000101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B000101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B001101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B000101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B001101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B001101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B001101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B010101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B011101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B011101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B011101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B100101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B011101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B100101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B100101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B100101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B101101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B101101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B110101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B101101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B110101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B110101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B111101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B110101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B111101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B111101010,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B111101010, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;`;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;`;
 export const cmp = `| time |   in   |load |address|  out   |
 | 0+   |      0 |  0  |    0  |      0 |
 | 1    |      0 |  0  |    0  |      0 |

@@ -128,21 +128,19 @@ export class ChipTest extends Test<ChipTestInstruction> {
     } else {
       pinOrBus.pull(value == 0 ? LOW : HIGH);
     }
-    this.chip.eval();
   }
 
   eval(): void {
     this.chip.eval();
-    this.clock.eval();
   }
 
   tick(): void {
-    this.chip.tick();
+    this.chip.eval();
     this.clock.tick();
   }
 
   tock(): void {
-    this.chip.tock();
+    this.chip.eval();
     this.clock.tock();
   }
 

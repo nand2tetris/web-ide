@@ -11,7 +11,7 @@ class RAM extends ClockedChip {
   }
 
   tick() {
-    const load = this.in("low").voltage();
+    const load = this.in("load").voltage();
     this.nextData = load === HIGH ? Some(this.in().busVoltage) : None();
   }
 

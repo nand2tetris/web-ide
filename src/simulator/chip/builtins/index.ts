@@ -1,10 +1,5 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.js";
 import { Chip } from "../chip.js";
-import { Add16 } from "./arithmetic/add_16.js";
-import { ALU, ALUNoStat } from "./arithmetic/alu.js";
-import { FullAdder } from "./arithmetic/full_adder.js";
-import { HalfAdder } from "./arithmetic/half_adder.js";
-import { Inc16 } from "./arithmetic/inc16.js";
 
 import { And, And16 } from "./logic/and.js";
 import { DMux, DMux4Way, DMux8Way } from "./logic/dmux.js";
@@ -13,8 +8,16 @@ import { Nand, Nand16 } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
 import { Or, Or16, Or8way } from "./logic/or.js";
 import { Xor, Xor16 } from "./logic/xor.js";
-import { Bit } from "./sequential/bit.js";
+
+import { Add16 } from "./arithmetic/add_16.js";
+import { ALU, ALUNoStat } from "./arithmetic/alu.js";
+import { FullAdder } from "./arithmetic/full_adder.js";
+import { HalfAdder } from "./arithmetic/half_adder.js";
+import { Inc16 } from "./arithmetic/inc16.js";
+
+import { Bit, PC, Register } from "./sequential/bit.js";
 import { DFF } from "./sequential/dff.js";
+import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram.js";
 
 export {
   And,
@@ -33,6 +36,19 @@ export {
   Or8way,
   Xor,
   Xor16,
+  HalfAdder,
+  FullAdder,
+  Add16,
+  Inc16,
+  ALU,
+  Bit,
+  Register,
+  DFF,
+  RAM8,
+  RAM64,
+  RAM512,
+  RAM4K,
+  RAM16K,
 };
 
 export const REGISTRY = new Map<string, () => Chip>(
@@ -66,6 +82,13 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["ALUNoStat", ALUNoStat],
       ["DFF", DFF],
       ["Bit", Bit],
+      ["Register", Register],
+      ["PC", PC],
+      ["RAM8", RAM8],
+      ["RAM64", RAM64],
+      ["RAM512", RAM512],
+      ["RAM4K", RAM4K],
+      ["RAM16K", RAM16K],
     ] as [string, { new (): Chip }][]
   ).map(([name, ChipCtor]) => [
     name,

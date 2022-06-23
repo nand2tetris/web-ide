@@ -5,11 +5,7 @@ import {
   cleanState,
 } from "@davidsouther/jiffies/scope/index.js";
 import { Output } from "./output.js";
-import {
-  Test,
-  TestOutputInstruction,
-  TestOutputListInstruction,
-} from "./tst.js";
+import { Test, TestOutputInstruction } from "./tst.js";
 
 class OutputTest extends Test {
   private readonly vars: Map<string, number | string>;

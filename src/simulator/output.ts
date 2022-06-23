@@ -11,7 +11,7 @@ export class Output {
   // new Output(inst.id, inst.style, inst.width, inst.lpad, inst.rpad)
   constructor(
     private variable: string,
-    private format = "%B1.1.1",
+    format = "%B1.1.1",
     len?: number,
     lPad?: number,
     rPad?: number
@@ -55,7 +55,11 @@ export class Output {
 
     const fmt = { B: bin, D: dec, X: hex }[this.fmt];
     let value = fmt(val as number);
-    return this.padCenter(value.slice(value.length - this.len));
+    if (this.fmt == "D") {
+      return this.padRight(value);
+    } else {
+      return this.padCenter(value.slice(value.length - this.len));
+    }
   }
 
   private padCenter(value: string) {
@@ -75,6 +79,15 @@ export class Output {
     const padLeft = this.lPad + padRight;
     value = value.padEnd(padRight);
     value = value.padStart(padLeft);
+    return value;
+  }
+
+  private padRight(value: string) {
+    value = value.substring(0, this.len);
+    const padLeft = this.lPad + this.len;
+    const padRight = this.rPad + padLeft;
+    value = value.padStart(padLeft);
+    value = value.padEnd(padRight);
     return value;
   }
 }

@@ -15,10 +15,7 @@ import {
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 import { FileSystem } from "@davidsouther/jiffies/fs.js";
-import {
-  Observable,
-  Subject,
-} from "@davidsouther/jiffies/observable/observable.js";
+import { Subject } from "@davidsouther/jiffies/observable/observable.js";
 import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
@@ -46,11 +43,11 @@ const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "And16",
     "Or16",
     "Mux16",
-    "Mux4way16",
-    "Mux8way16",
-    "DMux4way",
-    "DMux8way",
-    "Or8way",
+    "Mux4Way16",
+    "Mux8Way16",
+    "DMux4Way",
+    "DMux8Way",
+    "Or8Way",
   ],
   "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
@@ -109,6 +106,7 @@ class ChipPageStore {
   chip: SimChip;
   test?: ChipTest;
   diffs: Diff[] = [];
+  private runningTest = false;
   private readonly statusLine = unwrap(retrieve<(s: string) => void>("status"));
   private files = {
     hdl: "",
@@ -122,7 +120,7 @@ class ChipPageStore {
   readonly testLog = new Subject<string>();
 
   next() {
-    this.subject.next(this);
+    if (!this.runningTest) this.subject.next(this);
   }
 
   readonly selectors = {
@@ -227,8 +225,13 @@ class ChipPageStore {
     this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
 
     await new Promise<void>((r) => {
-      this.test?.run();
-      r();
+      try {
+        this.runningTest = true;
+        this.test?.run();
+        r();
+      } finally {
+        this.runningTest = false;
+      }
     });
 
     this.files.out = this.test.log();
@@ -423,9 +426,12 @@ export const Chip = () => {
                 events: {
                   click: async (e) => {
                     e.preventDefault();
+                    const hdl = hdlTextarea.value;
+                    const tst = tstTextarea.value;
+                    const cmp = cmpTextarea.value;
                     clearOutput();
-                    await state.compileChip(hdlTextarea.value);
-                    await state.runTest(tstTextarea.value, cmpTextarea.value);
+                    await state.compileChip(hdl);
+                    await state.runTest(tst, cmp);
                   },
                 },
               },

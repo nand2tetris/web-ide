@@ -105,10 +105,10 @@ export class Mux8Way16 extends Chip {
     const b = this.in("b").busVoltage;
     const c = this.in("c").busVoltage;
     const d = this.in("d").busVoltage;
-    const e = this.in("a").busVoltage;
-    const f = this.in("b").busVoltage;
-    const g = this.in("c").busVoltage;
-    const h = this.in("d").busVoltage;
+    const e = this.in("e").busVoltage;
+    const f = this.in("f").busVoltage;
+    const g = this.in("g").busVoltage;
+    const h = this.in("h").busVoltage;
     const sel = this.in("sel").busVoltage;
     const [out] = mux16_8(a, b, c, d, e, f, g, h, sel);
 

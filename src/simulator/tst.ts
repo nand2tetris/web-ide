@@ -132,16 +132,15 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   eval(): void {
     this.chip.eval();
-    this.clock.eval();
   }
 
   tick(): void {
-    this.chip.tick();
+    this.chip.eval();
     this.clock.tick();
   }
 
   tock(): void {
-    this.chip.tock();
+    this.chip.eval();
     this.clock.tock();
   }
 

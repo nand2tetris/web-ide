@@ -251,6 +251,8 @@ export class Chip {
           : parsePinDecl(internal as string);
       this.pins.insert(new Bus(pin, width));
     }
+
+    Clock.get().$.subscribe(() => this.eval());
   }
 
   in(pin = "in"): Pin {

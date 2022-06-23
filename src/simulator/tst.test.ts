@@ -63,13 +63,32 @@ describe("Simulator Test", () => {
         test.addInstruction(new TestEvalInstruction());
         test.addInstruction(new TestOutputInstruction());
       }
+      for (let i = 0; i < 3; i++) {
+        test.addInstruction(new TestTickInstruction());
+        test.addInstruction(new TestTockInstruction());
+        test.addInstruction(new TestOutputInstruction());
+      }
 
       test.run();
 
-      expect(test.log().split("\n")).toEqual(
-        `|0+  |\n|1   |\n|1+  |\n|2   |\n|2+  |\n|3   |\n|3+  |\n|4   |\n|4+  |\n|5   |\n|6   |\n|7   |\n`.split(
-          "\n"
-        )
+      expect(test.log().trim().split("\n")).toEqual(
+        [
+          "0+",
+          "1",
+          "1+",
+          "2",
+          "2+",
+          "3",
+          "3+",
+          "4",
+          "4+",
+          "5",
+          "5",
+          "5",
+          "6",
+          "7",
+          "8",
+        ].map((i) => `|${i.padEnd(4, " ")}|`)
       );
     });
   });

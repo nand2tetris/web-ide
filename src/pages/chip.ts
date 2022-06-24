@@ -75,7 +75,7 @@ function makeProjectDropdown(
       "01": "Project 1",
       "02": "Project 2",
       "03": "Project 3",
-      // "05": "Project 5",
+      "05": "Project 5",
     }
   );
 }

@@ -7,8 +7,17 @@ export class ROM32K extends RAM {
   }
 }
 
-export class Screen extends Chip {}
-export class Keyboard extends Chip {}
+export class Screen extends RAM {
+  constructor() {
+    super(13);
+  }
+}
+
+export class Keyboard extends Chip {
+  constructor() {
+    super([], ["out[16]"]);
+  }
+}
 
 export class Memory extends Chip {
   // RAM16K(in=in, load=writeram, address=address[1..14], out=ramout);

@@ -50,7 +50,7 @@ export interface Part {
 }
 
 function pinDeclaration(toPin: StringLike): IResult<PinDeclaration> {
-  const match = toPin.toString().match(/^(?<pin>[0-9a-z]+)(\[(?<w>\d+)\])?/);
+  const match = toPin.toString().match(/^(?<pin>[0-9a-zA-Z]+)(\[(?<w>\d+)\])?/);
   if (!match) {
     return ParseErrors.failure("pinDeclaration expected pin");
   }
@@ -70,7 +70,7 @@ function pin(toPin: StringLike): IResult<PinParts> {
   const match = toPin
     .toString()
     .match(
-      /^(?<pin>[0-9a-z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
+      /^(?<pin>[0-9a-zA-Z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
     );
   if (!match) {
     return ParseErrors.failure("toPin expected pin");
@@ -157,6 +157,7 @@ export const TEST_ONLY = {
   hdlWs,
   hdlIdentifier,
   pin,
+  pinList,
   inList,
   outList,
   part,

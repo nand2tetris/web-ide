@@ -1,10 +1,5 @@
+import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { assert } from "@davidsouther/jiffies/assert.js";
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  SyncScheduler,
-} from "@davidsouther/jiffies/observable/observable.js";
 import { Chip, HIGH, LOW, Voltage } from "./chip.js";
 
 interface Tick {
@@ -24,13 +19,10 @@ export class Clock {
     return clock;
   }
 
-  private subject = new BehaviorSubject<Tick>(
-    {
-      level: this.level,
-      ticks: this.ticks,
-    },
-    SyncScheduler
-  );
+  private subject = new BehaviorSubject<Tick>({
+    level: this.level,
+    ticks: this.ticks,
+  });
   readonly $: Observable<Tick> = this.subject;
 
   readonly update = new Subject<void>();

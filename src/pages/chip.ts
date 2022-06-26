@@ -1,3 +1,4 @@
+import { Subject, distinctUntilChanged, filter, map } from "rxjs";
 import { display } from "@davidsouther/jiffies/display.js";
 import {
   article,
@@ -15,7 +16,6 @@ import {
 import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
 import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
 import { FileSystem } from "@davidsouther/jiffies/fs.js";
-import { Subject } from "@davidsouther/jiffies/observable/observable.js";
 import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
 import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
 import { Pinout } from "../components/pinout.js";
@@ -116,7 +116,7 @@ class ChipPageStore {
   };
 
   readonly subject = new Subject<ChipPageStore>();
-  readonly $ = this.subject.$;
+  readonly $ = this.subject.asObservable();
   readonly testLog = new Subject<string>();
 
   next() {
@@ -124,16 +124,23 @@ class ChipPageStore {
   }
 
   readonly selectors = {
-    project: this.$.map((t) => t.project).distinct(),
-    chipName: this.$.map((t) => t.chipName).distinct(),
-    chips: this.$.map((t) => t.chips),
-    chip: this.$.map((t) => t.chip),
-    files: this.$.map((t) => t.files as Readonly<typeof this.files>),
-    test: this.$.map((t) => t.test).filter(
-      (t): t is ChipTest => t !== undefined
+    project: this.$.pipe(
+      map((t) => t.project),
+      distinctUntilChanged()
     ),
-    diffs: this.$.map((t) => t.diffs),
-    log: this.testLog.$,
+    chipName: this.$.pipe(
+      map((t) => t.chipName),
+      distinctUntilChanged()
+    ),
+    chips: this.$.pipe(map((t) => t.chips)),
+    chip: this.$.pipe(map((t) => t.chip)),
+    files: this.$.pipe(map((t) => t.files as Readonly<typeof this.files>)),
+    test: this.$.pipe(
+      map((t) => t.test),
+      filter((t): t is ChipTest => t !== undefined)
+    ),
+    diffs: this.$.pipe(map((t) => t.diffs)),
+    log: this.testLog.asObservable(),
   };
 
   constructor(
@@ -300,7 +307,7 @@ export const Chip = () => {
     diffPanel.update({ ran: false });
   }
 
-  state.subject.$.subscribe(setState);
+  state.subject.subscribe(setState);
   state.selectors.project.subscribe((project) => {
     projectDropdown.update(
       makeProjectDropdown(project, (p) => {

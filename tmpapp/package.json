@@ -1,16 +1,8 @@
 {
-  "name": "computron5k",
-  "version": "1.0.0",
+  "name": "tmpapp",
+  "version": "0.1.0",
   "private": true,
-  "description": "",
-  "author": "David Souther <davidsouther@gmail.com>",
-  "license": "ISC",
-  "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.2.1",
-    "prettier": "^2.6.2"
-  },
   "dependencies": {
-    "@davidsouther/jiffies": "^1.1.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
@@ -21,7 +13,6 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
-    "rxjs": "^7.5.5",
     "typescript": "^4.7.4",
     "web-vitals": "^2.1.4"
   },
@@ -29,8 +20,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "format": "npx prettier --write public/ src/",
-    "check": "npx tsc --noEmit"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": [

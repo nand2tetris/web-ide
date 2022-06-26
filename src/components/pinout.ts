@@ -1,9 +1,7 @@
 import { display } from "@davidsouther/jiffies/display.js";
 import { FC } from "@davidsouther/jiffies/dom/fc.js";
-import { O } from "@davidsouther/jiffies/dom/observable.js";
 import {
   code,
-  span,
   table,
   tbody,
   td,

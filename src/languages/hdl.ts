@@ -1,10 +1,10 @@
 /** Reads and parses HDL chip descriptions. */
 
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
+import { isErr, isNone, Ok } from "@davidsouther/jiffies/result.js";
 import { IResult, ParseErrors, Parser, StringLike } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
-import { value } from "./parser/combinator.js";
+import { map, opt, value } from "./parser/combinator.js";
 import { many0 } from "./parser/multi.js";
 import { filler, identifier, list, token, ws } from "./parser/recipe.js";
 import {
@@ -50,7 +50,7 @@ export interface Part {
 }
 
 function pinDeclaration(toPin: StringLike): IResult<PinDeclaration> {
-  const match = toPin.toString().match(/^(?<pin>[0-9a-z]+)(\[(?<w>\d+)\])?/);
+  const match = toPin.toString().match(/^(?<pin>[0-9a-zA-Z]+)(\[(?<w>\d+)\])?/);
   if (!match) {
     return ParseErrors.failure("pinDeclaration expected pin");
   }
@@ -70,7 +70,7 @@ function pin(toPin: StringLike): IResult<PinParts> {
   const match = toPin
     .toString()
     .match(
-      /^(?<pin>[0-9a-z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
+      /^(?<pin>[0-9a-zA-Z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
     );
   if (!match) {
     return ParseErrors.failure("toPin expected pin");
@@ -116,7 +116,10 @@ const pinDeclParser = list(hdlWs(pinDeclaration), token(","));
 const pinList: Parser<PinDeclaration[]> = (i) => pinDeclParser(i);
 const inDeclParser = delimited(token("IN"), pinList, token(";"));
 const inList: Parser<PinDeclaration[]> = (i) => inDeclParser(i);
-const outDeclParser = delimited(token("OUT"), pinList, token(";"));
+const outDeclParser = map(
+  opt(delimited(token("OUT"), pinList, token(";"))),
+  (i) => (isNone(i) ? [] : i)
+);
 const outList: Parser<PinDeclaration[]> = (i) => outDeclParser(i);
 
 const partsParser = alt<"BUILTIN" | Part[]>(
@@ -154,6 +157,7 @@ export const TEST_ONLY = {
   hdlWs,
   hdlIdentifier,
   pin,
+  pinList,
   inList,
   outList,
   part,

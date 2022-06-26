@@ -51,7 +51,7 @@ const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   ],
   "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
-  "05": ["Memory", "Computer"],
+  "05": ["Memory", "CPU", "Computer"],
 };
 
 function makeProjectDropdown(
@@ -75,7 +75,7 @@ function makeProjectDropdown(
       "01": "Project 1",
       "02": "Project 2",
       "03": "Project 3",
-      // "05": "Project 5",
+      "05": "Project 5",
     }
   );
 }
@@ -140,9 +140,10 @@ class ChipPageStore {
     private readonly storage: Record<string, string> = localStorage,
     private readonly fs: FileSystem
   ) {
-    this.project = localStorage["chip/project"] ?? "01";
+    this.project =
+      (this.storage["chip/project"] as keyof typeof PROJECTS) ?? "01";
     this.chips = PROJECTS[this.project];
-    this.chipName = localStorage["chip/chip"] ?? "And";
+    this.chipName = this.storage["chip/chip"] ?? "Not";
     let maybeChip = getBuiltinChip(this.chipName);
     if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
     this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);

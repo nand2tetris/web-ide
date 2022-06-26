@@ -82,11 +82,6 @@ export const sol = `CHIP CPU {
 
     // ALU control bits are mapped directly in C instructions when in c mode.
     ALU(x=D, y=AM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=alu, out=outM, zr=zr, ng=ng);
-
-    Halt(reset=reset, mMode=a, setM=d3, jump=jump, out=halt);
-    Not(in=halt, out=tick);
-    // Don't write memory if we halted
-    And(a=d3, b=tick, out=writeM);
     
     // Jump
     Not(in=ng, out=nng);

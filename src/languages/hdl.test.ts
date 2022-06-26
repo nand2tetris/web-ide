@@ -1,7 +1,7 @@
 import { assert } from "@davidsouther/jiffies/assert.js";
 import { isErr, Ok } from "@davidsouther/jiffies/result.js";
 import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
-import { HdlParser, Part, PinParts, TEST_ONLY } from "./hdl.js";
+import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl.js";
 import { IResult, Span, StringLike } from "./parser/base.js";
 import { tag } from "./parser/bytes.js";
 import { list } from "./parser/recipe.js";
@@ -40,6 +40,22 @@ describe("hdl language", () => {
     parsed = TEST_ONLY.hdlIdentifier(`/* multi
     line */ a // more`);
     expect(parsed).toEqual(Ok(["", "a"]));
+  });
+
+  it("parses identifiers", () => {
+    let parsed: IResult<StringLike>;
+    parsed = TEST_ONLY.hdlIdentifier("inM");
+    expect(parsed).toEqual(Ok(["", "inM"]));
+
+    parsed = TEST_ONLY.hdlIdentifier("a_b");
+    expect(parsed).toEqual(Ok(["", "a_b"]));
+  });
+
+  it("parses in/out lists", () => {
+    let parsed: IResult<PinDeclaration[]>;
+
+    parsed = TEST_ONLY.pinList("inM");
+    expect(parsed).toEqual(Ok(["", [{ pin: "inM", width: 1 }]]));
   });
 
   it("parses pin wiring", () => {

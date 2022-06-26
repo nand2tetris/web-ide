@@ -1,6 +1,5 @@
 import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
 import { range } from "@davidsouther/jiffies/range.js";
-import { forEachTrailingCommentRange } from "typescript";
 import { bin } from "../../util/twos.js";
 import { Clock } from "./clock.js";
 
@@ -150,7 +149,8 @@ export function parsePinDecl(toPin: string): {
   pin: string;
   width: number;
 } {
-  const { pin, w } = toPin.match(/(?<pin>[a-z]+)(\[(?<w>\d+)\])?/)?.groups as {
+  const { pin, w } = toPin.match(/(?<pin>[a-zA-Z]+)(\[(?<w>\d+)\])?/)
+    ?.groups as {
     pin: string;
     w?: string;
   };

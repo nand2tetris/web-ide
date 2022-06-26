@@ -18,6 +18,14 @@ import { Inc16 } from "./arithmetic/inc16.js";
 import { Bit, PC, Register } from "./sequential/bit.js";
 import { DFF } from "./sequential/dff.js";
 import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram.js";
+import {
+  Computer,
+  CPU,
+  Keyboard,
+  Memory,
+  ROM32K,
+  Screen,
+} from "./computer/computer.js";
 
 export {
   And,
@@ -89,6 +97,12 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["RAM512", RAM512],
       ["RAM4K", RAM4K],
       ["RAM16K", RAM16K],
+      ["ROM32K", ROM32K],
+      ["Screen", Screen],
+      ["Keyboard", Keyboard],
+      ["CPU", CPU],
+      ["Computer", Computer],
+      ["Memory", Memory],
     ] as [string, { new (): Chip }][]
   ).map(([name, ChipCtor]) => [
     name,

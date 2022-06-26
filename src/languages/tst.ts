@@ -5,7 +5,7 @@ import { int10, int16, int2 } from "../util/twos.js";
 import { Parser } from "./parser/base.js";
 import { alt } from "./parser/branch.js";
 import { tag } from "./parser/bytes.js";
-import { map, opt, valueFn } from "./parser/combinator.js";
+import { map, opt, recognize, valueFn } from "./parser/combinator.js";
 import { many1 } from "./parser/multi.js";
 import { filler, identifier, list, token } from "./parser/recipe.js";
 import { pair, preceded, terminated, tuple } from "./parser/sequence.js";
@@ -85,7 +85,7 @@ const tstOpLineParser = map(
 );
 
 const tstOutputFormatParser = tuple(
-  identifier(),
+  recognize(pair(identifier(), opt(tag("[]")))),
   opt(preceded(tag("%"), alt(tag("X"), tag("B"), tag("D"), tag("S")))),
   tag(/\d+\.\d+\.\d+/)
 );

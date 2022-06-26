@@ -1,5 +1,5 @@
-import { alu, Flags } from "../../../cpu/alu.js";
-import { Chip, HIGH, LOW } from "../../chip.js";
+import { alu, Flags } from "../../../cpu/alu"
+import { Chip, HIGH, LOW } from "../../chip"
 
 export class ALUNoStat extends Chip {
   constructor() {
@@ -21,7 +21,7 @@ export class ALUNoStat extends Chip {
     );
   }
 
-  eval() {
+  override eval() {
     const x = this.in("x").busVoltage;
     const y = this.in("y").busVoltage;
     const zx = this.in("zx").busVoltage << 5;
@@ -58,7 +58,7 @@ export class ALU extends Chip {
     );
   }
 
-  eval() {
+  override eval() {
     const x = this.in("x").busVoltage;
     const y = this.in("y").busVoltage;
     const zx = this.in("zx").busVoltage << 5;

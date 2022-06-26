@@ -1,5 +1,5 @@
-import { nand16 } from "../../../../util/twos.js";
-import { HIGH, LOW, Chip, Voltage } from "../../chip.js";
+import { nand16 } from "../../../../util/twos";
+import { HIGH, LOW, Chip, Voltage } from "../../chip";
 
 export function nand(a: Voltage, b: Voltage): [Voltage] {
   return [a == 1 && b == 1 ? LOW : HIGH];
@@ -10,7 +10,7 @@ export class Nand extends Chip {
     super(["a", "b"], ["out"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
     const [out] = nand(a, b);
@@ -23,7 +23,7 @@ export class Nand16 extends Chip {
     super(["a[16]", "b[16]"], ["out[16]"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
     this.out().busVoltage = nand16(a, b);

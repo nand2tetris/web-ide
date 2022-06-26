@@ -1,8 +1,8 @@
-import { checkExhaustive } from "@davidsouther/jiffies/assert.js";
-import { Tst, TstOutputSpec } from "../languages/tst.js";
-import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip.js";
-import { Clock } from "./chip/clock.js";
-import { Output } from "./output.js";
+import { checkExhaustive } from "@davidsouther/jiffies/src/assert";
+import { Tst, TstOutputSpec } from "../languages/tst"
+import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip"
+import { Clock } from "./chip/clock"
+import { Output } from "./output"
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
@@ -144,31 +144,31 @@ export class ChipTest extends Test<ChipTestInstruction> {
     this.clock.tock();
   }
 
-  run(): void {
+  override run(): void {
     this.clock.reset();
     super.run();
   }
 }
 
 export class CPUTest extends Test<CPUTestInstruction> {
-  hasVar(variable: string | number): boolean {
+  hasVar(_variable: string | number): boolean {
     return false;
   }
-  getVar(variable: string | number): number {
+  getVar(_variable: string | number): number {
     return 0;
   }
-  setVar(variable: string, value: number): void {}
+  setVar(_variable: string, _value: number): void {}
   ticktock(): void {}
 }
 
 export class VMTest extends Test<VMTestInstruction> {
-  hasVar(variable: string | number): boolean {
+  hasVar(_variable: string | number): boolean {
     return false;
   }
-  getVar(variable: string | number): number {
+  getVar(_variable: string | number): number {
     return 0;
   }
-  setVar(variable: string, value: number): void {}
+  setVar(_variable: string, _value: number): void {}
   vmstep(): void {}
 }
 

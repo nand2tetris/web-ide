@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip"
 
 export function dmux(inn: Voltage, sel: Voltage): [Voltage, Voltage] {
   const a = sel == LOW && inn == HIGH ? HIGH : LOW;
@@ -37,7 +37,7 @@ export class DMux extends Chip {
     super(["in", "sel"], ["a", "b"]);
   }
 
-  eval() {
+  override eval() {
     const inn = this.in("in").voltage();
     const sel = this.in("sel").voltage();
 
@@ -52,7 +52,7 @@ export class DMux4Way extends Chip {
     super(["in", "sel[2]"], ["a", "b", "c", "d"]);
   }
 
-  eval() {
+  override eval() {
     const inn = this.in("in").voltage();
     const sel = this.in("sel").busVoltage;
 
@@ -69,7 +69,7 @@ export class DMux8Way extends Chip {
     super(["in", "sel[3]"], ["a", "b", "c", "d", "e", "f", "g", "h"]);
   }
 
-  eval() {
+  override eval() {
     const inn = this.in("in").voltage();
     const sel = this.in("sel").busVoltage;
 

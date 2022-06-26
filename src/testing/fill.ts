@@ -1,5 +1,5 @@
-import { CPU } from "../simulator/cpu/cpu.js";
-import { SCREEN } from "../simulator/cpu/memory.js";
+import { CPU } from "../simulator/cpu/cpu"
+import { SCREEN } from "../simulator/cpu/memory"
 
 const colorfn = () => (Math.random() * 0xffff) & 0xffff;
 

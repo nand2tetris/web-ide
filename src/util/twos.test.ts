@@ -1,5 +1,4 @@
-import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos.js";
+import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos"
 
 describe("twos", () => {
   it("formats as base 16", () => {

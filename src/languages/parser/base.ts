@@ -1,8 +1,8 @@
 // https://docs.rs/nom/latest/nom/index.html
 
 /** Base utilities for a common parser combinator toolkit. */
-import { assert } from "@davidsouther/jiffies/assert.js";
-import { Err, Result } from "@davidsouther/jiffies/result.js";
+import { assert } from "@davidsouther/jiffies/src/assert";
+import { Err, Result } from "@davidsouther/jiffies/src/result";
 
 interface ErrorContext {
   message?: string;
@@ -113,12 +113,12 @@ export class Span implements StringLike {
 export type ParseErrorType = ParseErrorError | ParseIncomplete | ParseFailure;
 
 export class ParseErrorError extends ParseError {
-  readonly name = "Parse Error";
+  override readonly name = "Parse Error";
 }
 
 /** Error indicating how much input is necessary */
 export class ParseIncomplete extends ParseError {
-  readonly name = "Parse Incomplete";
+  override readonly name = "Parse Incomplete";
 
   constructor(readonly needed: number, context?: ErrorContext) {
     super(context);
@@ -127,7 +127,7 @@ export class ParseIncomplete extends ParseError {
 
 /** Unrecoverable error */
 export class ParseFailure extends ParseError {
-  readonly name = "Parse Failure";
+  override readonly name = "Parse Failure";
 }
 
 export const ParseErrors = {

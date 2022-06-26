@@ -1,6 +1,6 @@
 // https://docs.rs/nom/latest/nom/combinator/index.html
 
-import { Err, isErr, isOk, Ok, Option } from "@davidsouther/jiffies/result.js";
+import { Err, isErr, isOk, Ok, Option } from "@davidsouther/jiffies/src/result";
 import {
   ParseError,
   ParseErrors,
@@ -8,7 +8,7 @@ import {
   ParseIncomplete,
   Parser,
   StringLike,
-} from "./base.js";
+} from "./base"
 
 // Succeeds if all the input has been consumed by its child parser.
 export const allConsuming = <T>(parser: Parser<T>): Parser<T> => {

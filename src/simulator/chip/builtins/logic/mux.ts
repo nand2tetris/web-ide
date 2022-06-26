@@ -1,4 +1,4 @@
-import { Chip, LOW, Voltage } from "../../chip.js";
+import { Chip, LOW, Voltage } from "../../chip"
 
 export function mux(a: Voltage, b: Voltage, sel: Voltage): [Voltage] {
   return [sel === LOW ? a : b];
@@ -41,7 +41,7 @@ export class Mux extends Chip {
     super(["a", "b", "sel"], ["out"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
     const sel = this.in("sel").voltage();
@@ -56,7 +56,7 @@ export class Mux16 extends Chip {
     super(["a[16]", "b[16]", "sel"], ["out[16]"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
     const sel = this.in("sel").voltage();
@@ -70,7 +70,7 @@ export class Mux4Way16 extends Chip {
     super(["a[16]", "b[16]", "c[16]", "d[16]", "sel[2]"], ["out[16]"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
     const c = this.in("c").busVoltage;
@@ -100,7 +100,7 @@ export class Mux8Way16 extends Chip {
     );
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
     const c = this.in("c").busVoltage;

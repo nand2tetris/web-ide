@@ -1,5 +1,4 @@
-import { Ok } from "@davidsouther/jiffies/result.js";
-import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
+import { Ok } from "@davidsouther/jiffies/src/result";
 import {
   TEST_ONLY,
   Tst,
@@ -7,8 +6,8 @@ import {
   TstOutputListOperation,
   TstOutputSpec,
   tstParser,
-} from "./tst.js";
-import { IResult } from "./parser/base.js";
+} from "./tst"
+import { IResult } from "./parser/base"
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -32,32 +31,32 @@ describe("tst language", () => {
     let parsed: IResult<number>;
 
     parsed = TEST_ONLY.tstValue("%XFF");
-    expect(parsed).toEqual(Ok(["", 255]));
+    expect(parsed).toBeOk(Ok(["", 255]));
 
     parsed = TEST_ONLY.tstValue("%D128");
-    expect(parsed).toEqual(Ok(["", 128]));
+    expect(parsed).toBeOk(Ok(["", 128]));
 
     parsed = TEST_ONLY.tstValue("%127");
-    expect(parsed).toEqual(Ok(["", 127]));
+    expect(parsed).toBeOk(Ok(["", 127]));
 
     parsed = TEST_ONLY.tstValue("%B11");
-    expect(parsed).toEqual(Ok(["", 3]));
+    expect(parsed).toBeOk(Ok(["", 3]));
 
     parsed = TEST_ONLY.tstValue("%D-1");
-    expect(parsed).toEqual(Ok(["", 0xffff]));
+    expect(parsed).toBeOk(Ok(["", 0xffff]));
 
     parsed = TEST_ONLY.tstValue("0");
-    expect(parsed).toEqual(Ok(["", 0]));
+    expect(parsed).toBeOk(Ok(["", 0]));
 
     parsed = TEST_ONLY.tstValue("11111");
-    expect(parsed).toEqual(Ok(["", 11111]));
+    expect(parsed).toBeOk(Ok(["", 11111]));
   });
 
   it("parses an output format", () => {
     let parsed: IResult<TstOutputSpec>;
 
     parsed = TEST_ONLY.tstOutputFormat("a%B3.1.3");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok(["", { id: "a", style: "B", width: 1, lpad: 3, rpad: 3 }])
     );
   });
@@ -66,7 +65,7 @@ describe("tst language", () => {
     let parsed: IResult<TstOutputListOperation>;
 
     parsed = TEST_ONLY.tstOutputListParser("output-list a%B1.1.1 out%X2.3.4");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -84,7 +83,7 @@ describe("tst language", () => {
     let parsed: IResult<Tst>;
 
     parsed = tstParser("eval;\n\neval;\n\n");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         { lines: [{ ops: [{ op: "eval" }] }, { ops: [{ op: "eval" }] }] },
@@ -98,7 +97,7 @@ describe("tst language", () => {
     parsed = TEST_ONLY.tstOutputListParser(
       "\n/// A list\noutput-list a%B1.1.1 /* the output */ out%X2.3.4"
     );
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -116,14 +115,14 @@ describe("tst language", () => {
     let parsed: IResult<TstOperation>;
 
     parsed = TEST_ONLY.set("set a 0");
-    expect(parsed).toEqual(Ok(["", { op: "set", id: "a", value: 0 }]));
+    expect(parsed).toBeOk(Ok(["", { op: "set", id: "a", value: 0 }]));
   });
 
   it("parses a test file", () => {
     let parsed: IResult<Tst>;
 
     parsed = tstParser(NOT_TST);
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -163,7 +162,7 @@ describe("tst language", () => {
     let parsed: IResult<Tst>;
 
     parsed = tstParser(BIT_TST);
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -210,8 +209,7 @@ describe("tst language", () => {
     let parsed: IResult<Tst>;
 
     parsed = tstParser(MEM_TST);
-    expect(parsed).toEqual(
-      Ok([
+    expect(parsed).toBeOk(Ok([
         "",
         {
           lines: [
@@ -236,8 +234,8 @@ describe("tst language", () => {
               ],
             },
           ],
-        },
-      ])
-    );
+        }
+      ]
+    ));
   });
 });

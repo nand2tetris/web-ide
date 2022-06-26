@@ -1,5 +1,4 @@
-import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { alu, COMMANDS, Flags } from "./alu.js";
+import { alu, COMMANDS, Flags } from "./alu"
 
 describe("alu", () => {
   it("calculates", () => {

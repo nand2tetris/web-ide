@@ -1,5 +1,5 @@
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser, StringLike } from "./base.js";
+import { isErr, Ok } from "@davidsouther/jiffies/src/result";
+import { ParseErrors, Parser, StringLike } from "./base"
 
 // https://docs.rs/nom/latest/nom/bytes/complete/index.html
 // escaped	Matches a byte string with escaped characters.

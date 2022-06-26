@@ -1,5 +1,5 @@
-import { alu, Flags } from "./alu.js";
-import { Memory } from "./memory.js";
+import { alu, Flags } from "./alu"
+import { Memory } from "./memory"
 
 export class CPU {
   RAM: Memory;

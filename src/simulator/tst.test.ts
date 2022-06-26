@@ -1,6 +1,5 @@
-import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { Nand } from "./chip/builtins/logic/nand.js";
-import { Output } from "./output.js";
+import { Nand } from "./chip/builtins/logic/nand"
+import { Output } from "./output"
 import {
   ChipTest,
   TestSetInstruction,
@@ -8,7 +7,7 @@ import {
   TestOutputInstruction,
   TestTickInstruction,
   TestTockInstruction,
-} from "./tst.js";
+} from "./tst"
 
 describe("Simulator Test", () => {
   describe("Full tests", () => {

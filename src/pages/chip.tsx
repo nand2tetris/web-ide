@@ -1,35 +1,21 @@
-import { display } from "@davidsouther/jiffies/display.js";
-import {
-  article,
-  button,
-  div,
-  fieldset,
-  h2,
-  header,
-  main,
-  section,
-  span,
-  style,
-  textarea,
-} from "@davidsouther/jiffies/dom/html.js";
-import { Dropdown } from "@davidsouther/jiffies/dom/form/form.js";
-import { compileFStyle, FStyle } from "@davidsouther/jiffies/dom/css/fstyle.js";
-import { FileSystem } from "@davidsouther/jiffies/fs.js";
-import { Subject } from "@davidsouther/jiffies/observable/observable.js";
-import { retrieve } from "@davidsouther/jiffies/dom/provide.js";
-import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.js";
-import { Pinout } from "../components/pinout.js";
-import { Low, Pin } from "../simulator/chip/chip.js";
-import { Chip as SimChip } from "../simulator/chip/chip.js";
-import * as make from "../simulator/chip/builder.js";
-import { getBuiltinChip } from "../simulator/chip/builtins/index.js";
-import { Tst, tstParser } from "../languages/tst.js";
-import { IResult } from "../languages/parser/base.js";
-import { cmpParser } from "../languages/cmp.js";
-import { ChipTest } from "../simulator/tst.js";
-import { compare, Diff } from "../simulator/compare.js";
-import { DiffPanel } from "../components/diff.js";
-import { Clock } from "../simulator/chip/clock.js";
+import { Subject, distinctUntilChanged, filter, map } from "rxjs";
+import { display } from "@davidsouther/jiffies/src/display";
+import { compileFStyle, FStyle } from "@davidsouther/jiffies/src/dom/css/fstyle";
+import { FileSystem } from "@davidsouther/jiffies/src/fs";
+import { retrieve } from "@davidsouther/jiffies/src/dom/provide";
+import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/src/result";
+import { Pinout } from "../components/pinout"
+import { Low, Pin } from "../simulator/chip/chip"
+import { Chip as SimChip } from "../simulator/chip/chip"
+import * as make from "../simulator/chip/builder"
+import { getBuiltinChip } from "../simulator/chip/builtins/index"
+import { Tst, tstParser } from "../languages/tst"
+import { IResult } from "../languages/parser/base"
+import { cmpParser } from "../languages/cmp"
+import { ChipTest } from "../simulator/tst"
+import { compare, Diff } from "../simulator/compare"
+import { DiffPanel } from "../components/diff"
+import { Clock } from "../simulator/chip/clock"
 
 const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
@@ -58,25 +44,24 @@ function makeProjectDropdown(
   selected: keyof typeof PROJECTS,
   setProject: (p: keyof typeof PROJECTS) => void
 ) {
-  return Dropdown(
-    {
-      style: {
+  return (
+    <Dropdown
+      style={{
         display: "inline-block",
-      },
-      selected,
-      events: {
-        change: (event: Event) =>
-          setProject(
-            (event.target as HTMLSelectElement)?.value as keyof typeof PROJECTS
-          ),
-      },
-    },
-    {
-      "01": "Project 1",
-      "02": "Project 2",
-      "03": "Project 3",
-      "05": "Project 5",
-    }
+      }}
+      selected={selected}
+      onChange={(event: Event) =>
+        setProject(
+          (event.target as HTMLSelectElement)?.value as keyof typeof PROJECTS
+        )
+      }
+      options={{
+        "01": "Project 1",
+        "02": "Project 2",
+        "03": "Project 3",
+        "05": "Project 5",
+      }}
+    ></Dropdown>
   );
 }
 
@@ -85,17 +70,15 @@ function makeChipsDropdown(
   chips: string[],
   setChip: (chip: string) => void
 ) {
-  return Dropdown(
-    {
-      style: {
+  return (
+    <Dropdown
+      style={{
         display: "inline-block",
-      },
-      selected,
-      events: {
-        change: (event) => setChip((event.target as HTMLSelectElement)?.value),
-      },
-    },
-    chips
+      }}
+      selected={selected}
+      onChange={(event) => setChip((event.target as HTMLSelectElement)?.value)}
+      options={chips}
+    ></Dropdown>
   );
 }
 
@@ -116,7 +99,7 @@ class ChipPageStore {
   };
 
   readonly subject = new Subject<ChipPageStore>();
-  readonly $ = this.subject.$;
+  readonly $ = this.subject.asObservable();
   readonly testLog = new Subject<string>();
 
   next() {
@@ -124,16 +107,23 @@ class ChipPageStore {
   }
 
   readonly selectors = {
-    project: this.$.map((t) => t.project).distinct(),
-    chipName: this.$.map((t) => t.chipName).distinct(),
-    chips: this.$.map((t) => t.chips),
-    chip: this.$.map((t) => t.chip),
-    files: this.$.map((t) => t.files as Readonly<typeof this.files>),
-    test: this.$.map((t) => t.test).filter(
-      (t): t is ChipTest => t !== undefined
+    project: this.$.pipe(
+      map((t) => t.project),
+      distinctUntilChanged()
     ),
-    diffs: this.$.map((t) => t.diffs),
-    log: this.testLog.$,
+    chipName: this.$.pipe(
+      map((t) => t.chipName),
+      distinctUntilChanged()
+    ),
+    chips: this.$.pipe(map((t) => t.chips)),
+    chip: this.$.pipe(map((t) => t.chip)),
+    files: this.$.pipe(map((t) => t.files as Readonly<typeof this.files>)),
+    test: this.$.pipe(
+      map((t) => t.test),
+      filter((t): t is ChipTest => t !== undefined)
+    ),
+    diffs: this.$.pipe(map((t) => t.diffs)),
+    log: this.testLog.asObservable(),
   };
 
   constructor(
@@ -147,7 +137,7 @@ class ChipPageStore {
     let maybeChip = getBuiltinChip(this.chipName);
     if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
     this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
-    Clock.get().update.$.subscribe(() => {
+    Clock.get().update.subscribe(() => {
       this.next();
     });
   }
@@ -266,24 +256,32 @@ export const Chip = () => {
     await state.setChip(state.chip.name!);
   });
 
-  const chipsDropdown = span();
-  const projectDropdown = span();
+  const chipsDropdown = <span></span>;
+  const projectDropdown = <span></span>;
   const inPinout = Pinout({
     pins: state.chip.ins,
     toggle: (pin) => state.toggle(pin),
     clocked: state.chip.clocked,
   });
-  const outPinout = Pinout({ pins: state.chip.outs });
+  const outPinout = <Pinout pins={state.chip.outs}></Pinout>;
   const pinsPinout = Pinout({ pins: state.chip.pins });
-  const hdlTextarea = textarea({ class: "font-monospace flex-1", rows: 10 });
-  const tstTextarea = textarea({ class: "font-monospace flex-2", rows: 15 });
-  const cmpTextarea = textarea({ class: "font-monospace flex-1", rows: 5 });
-  const outTextarea = textarea({
-    class: "font-monospace flex-1",
-    rows: 5,
-    readOnly: true,
-  });
-  const diffPanel = DiffPanel();
+  const hdlTextarea = (
+    <textarea className="font-monospace flex-1" rows={10}></textarea>
+  );
+  const tstTextarea = (
+    <textarea className="font-monospace flex-2" rows={15}></textarea>
+  );
+  const cmpTextarea = (
+    <textarea className="font-monospace flex-1" rows={5}></textarea>
+  );
+  const outTextarea = (
+    <textarea
+      className="font-monospace flex-1"
+      rows={5}
+      readOnly={true}
+    ></textarea>
+  );
+  const diffPanel = <DiffPanel></DiffPanel>;
 
   const onSaveChip = () => {
     state.saveChip(hdlTextarea.value);
@@ -300,7 +298,7 @@ export const Chip = () => {
     diffPanel.update({ ran: false });
   }
 
-  state.subject.$.subscribe(setState);
+  state.subject.subscribe(setState);
   state.selectors.project.subscribe((project) => {
     projectDropdown.update(
       makeProjectDropdown(project, (p) => {
@@ -330,6 +328,19 @@ export const Chip = () => {
     outTextarea.value = out;
   });
 
+  function compile() {
+    state.compileChip(hdlTextarea.value);
+  }
+
+  async function execute() {
+    const hdl = hdlTextarea.value;
+    const tst = tstTextarea.value;
+    const cmp = cmpTextarea.value;
+    clearOutput();
+    await state.compileChip(hdl);
+    await state.runTest(tst, cmp);
+  }
+
   const fstyle: FStyle = {
     ".View__Chip": {
       "> section": {
@@ -357,94 +368,59 @@ export const Chip = () => {
     },
   };
 
-  return div(
-    { class: "View__Chip flex-1 flex" },
-    style(compileFStyle(fstyle)),
-    section(
-      { class: "flex-1 grid" },
-      div(
-        { class: "pinouts grid" },
-        div(
-          {
-            class: "flex row inline align-end",
-            style: { gridColumn: "1 / span 2" },
-          },
-          projectDropdown,
-          h2({ tabIndex: 0 }, "Chips:"),
-          chipsDropdown
-        ),
-        article(
-          { class: "no-shadow panel" },
-          header(
-            div({ tabIndex: 0 }, "HDL"),
-            fieldset(
-              { class: "button-group" },
-              button(
-                {
-                  events: {
-                    click: () => state.compileChip(hdlTextarea.value),
-                    keypress: () => state.compileChip(hdlTextarea.value),
-                  },
-                },
-                "Eval"
-              ),
-              button(
-                {
-                  events: {
-                    click: onSaveChip,
-                    keypress: onSaveChip,
-                  },
-                },
-                "Save"
-              )
-            )
-          ),
-          main({ class: "flex" }, hdlTextarea)
-        ),
-        article(
-          { class: "no-shadow panel" },
-          header({ tabIndex: 0 }, "Input pins"),
-          inPinout
-        ),
-        article(
-          { class: "no-shadow panel" },
-          header({ tabIndex: 0 }, "Internal Pins"),
-          pinsPinout
-        ),
-        article(
-          { class: "no-shadow panel" },
-          header({ tabIndex: 0 }, "Output pins"),
-          outPinout
-        )
-      ),
-      article(
-        header(
-          div({ tabIndex: 0 }, "Test"),
-          fieldset(
-            { class: "input-group" },
-            button(
-              {
-                events: {
-                  click: async (e) => {
-                    e.preventDefault();
-                    const hdl = hdlTextarea.value;
-                    const tst = tstTextarea.value;
-                    const cmp = cmpTextarea.value;
-                    clearOutput();
-                    await state.compileChip(hdl);
-                    await state.runTest(tst, cmp);
-                  },
-                },
-              },
-              "Execute"
-            )
-          )
-        ),
-        tstTextarea,
-        cmpTextarea,
-        outTextarea,
-        diffPanel
-      )
-    )
+  return (
+    <div className="View__Chip flex-1 flex">
+      <style>{compileFStyle(fstyle)}</style>
+      <section className="flex-1 grid">
+        <div className="pinouts grid">
+          <div
+            className="flex row inline align-end"
+            style={{ gridColumn: "1 / span 2" }}
+          >
+            {projectDropdown}
+            <h2 tabIndex={0}>Chips:</h2>
+            {chipsDropdown}
+          </div>
+          <article className="no-shadow panel">
+            <header>
+              <div tabIndex={0}>HDL</div>
+              <fieldset className="button-group">
+                <button onClick={compile} onKeyDown={compile}>
+                  Eval
+                </button>
+                <button onClick={onSaveChip} onKeyDown={onSaveChip}>
+                  Save
+                </button>
+              </fieldset>
+            </header>
+            <main className="flex">{hdlTextarea}</main>
+            <article className="no-shadow panel">
+              <header tabIndex={0}>Input pins</header>
+              {inPinout}
+            </article>
+            <article className="no-shadow panel">
+              <header tabIndex={0}>Internal Pins</header>
+              {pinsPinout}
+            </article>
+            <article className="no-shadow panel">
+              <header tabIndex={0}>"Output pins"</header>
+              {outPinout}
+            </article>
+          </article>
+          <article>
+            <header>
+              <div tabIndex={0}>Test</div>
+              <fieldset className="input-group">
+                <button onClick={execute}>Execute</button>
+              </fieldset>
+            </header>
+            {tstTextarea}
+            {cmpTextarea}
+            {outTextarea}
+            {diffPanel}
+          </article>
+        </div>
+      </section>
+    </div>
   );
 };

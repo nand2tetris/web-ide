@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip"
 
 export function or(a: Voltage, b: Voltage): [Voltage] {
   return [a == 1 || b == 1 ? HIGH : LOW];
@@ -17,7 +17,7 @@ export class Or extends Chip {
     super(["a", "b"], ["out"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
     const [out] = or(a, b);
@@ -30,7 +30,7 @@ export class Or16 extends Chip {
     super(["a[16]", "b[16]"], ["out[16]"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
     const [out] = or16(a, b);
@@ -43,7 +43,7 @@ export class Or8way extends Chip {
     super(["in[8]"], ["out"], "Or8way");
   }
 
-  eval() {
+  override eval() {
     const inn = this.in().busVoltage;
     const [out] = or8way(inn);
     this.out().pull(out);

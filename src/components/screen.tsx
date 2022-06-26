@@ -1,13 +1,6 @@
-import { assertExists } from "@davidsouther/jiffies/assert.js";
-import { FC, State } from "@davidsouther/jiffies/dom/fc.js";
-import {
-  article,
-  canvas,
-  figure,
-  header,
-  div,
-} from "@davidsouther/jiffies/dom/html.js";
-import { Memory, SCREEN } from "../simulator/cpu/memory.js";
+import { assertExists } from "@davidsouther/jiffies/src/assert";
+import { FC } from "react";
+import { Memory, SCREEN } from "../simulator/cpu/memory"
 
 const WHITE = "white";
 const BLACK = "black";
@@ -28,12 +21,9 @@ function set(data: Uint8ClampedArray, x: number, y: number, value: COLOR) {
   data[pixel + 3] = 255;
 }
 
-export const Screen = FC<
-  { memory: Memory },
-  { screen: HTMLCanvasElement; ctx: CanvasRenderingContext2D }
->("hack-screen", (el, { memory }) => {
+export const Screen: FC<{ memory: Memory }> = ({ memory }) => {
   const state = (el[State] ??= {});
-  const screen = (state.screen ??= canvas({ width: 512, height: 256 }));
+  const screen = (state.screen ??= <canvas width={512} height={256}></canvas>);
   const ctx = (state.ctx ??= screen.getContext("2d") ?? undefined);
 
   if (ctx) {
@@ -50,12 +40,11 @@ export const Screen = FC<
     ctx.putImageData(image, 0, 0);
   }
 
-  return article(
-    { class: "no-shadow panel" },
-    header("Display"),
-    figure(
-      {
-        style: {
+  return (
+    <article className="no-shadow panel">
+      <header>Display</header>
+      <figure
+        style={{
           width: "100%",
           maxWidth: "512px",
           boxSizing: "content-box",
@@ -64,9 +53,10 @@ export const Screen = FC<
           borderLeft: "2px solid gray",
           borderBottom: "2px solid lightgray",
           borderRight: "2px solid lightgray",
-        },
-      },
-      screen
-    )
+        }}
+      >
+        {screen}
+      </figure>
+    </article>
   );
-});
+};

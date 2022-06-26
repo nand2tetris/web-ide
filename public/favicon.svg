@@ -1,7 +1,5 @@
 <svg version="1.1" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
     <style>
-        @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@700");
-
         :root {
             --outline: black;
             --block: red;
@@ -37,13 +35,8 @@
             fill: var(--gate);
         }
 
-        text {
-            font-family: Poppins;
-            font-weight: 700;
-            font-size: 14px;
+        .letter {
             fill: var(--outline);
-            <!-- stroke: white;
-            stroke-width: 0.5px; -->
         }
     </style>
 
@@ -55,5 +48,5 @@
     <path class="gate" d="M2.5,1.5 h5 a 5 5 0 0 1 0,10 h-5 v-10"></path>
     <circle class="gate" cx="14.5" cy="6.5" r="2"></circle>
     
-    <text style="" x="19.5" y="11">2</text>
+    <path class="letter" d="M26,10 h-6 v-1 l5,-4 v-1 l-1,-1 h-2.5 l-.5,1 h-1 v-1 l1,-1 h4 l1,1 v2 l-5,4 h5 v1"></path>
 </svg>

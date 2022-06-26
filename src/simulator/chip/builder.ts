@@ -1,8 +1,8 @@
-import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
-import { HdlParser } from "../../languages/hdl.js";
-import { ParseError } from "../../languages/parser/base.js";
-import { getBuiltinChip } from "./builtins/index.js";
-import { Chip, Connection } from "./chip.js";
+import { isErr, Ok, Result } from "@davidsouther/jiffies/src/result";
+import { HdlParser } from "../../languages/hdl"
+import { ParseError } from "../../languages/parser/base"
+import { getBuiltinChip } from "./builtins/index"
+import { Chip, Connection } from "./chip"
 
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {

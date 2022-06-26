@@ -1,6 +1,5 @@
-import { isSome, None, Option, Some } from "@davidsouther/jiffies/result.js";
-import { HIGH } from "../../chip.js";
-import { ClockedChip } from "../../clock.js";
+import { isSome, None, Option, Some } from "@davidsouther/jiffies/src/result";
+import { ClockedChip, HIGH } from "../../chip"
 
 export class RAM extends ClockedChip {
   private ram: Int16Array;
@@ -11,12 +10,12 @@ export class RAM extends ClockedChip {
     this.ram = new Int16Array(Math.pow(2, this.width));
   }
 
-  tick() {
+  override tick() {
     const load = this.in("load").voltage();
     this.nextData = load === HIGH ? Some(this.in().busVoltage) : None();
   }
 
-  tock() {
+  override tock() {
     const address = this.in("address").busVoltage;
     if (isSome(this.nextData)) {
       this.ram[address] = this.nextData;
@@ -24,7 +23,7 @@ export class RAM extends ClockedChip {
     this.out().busVoltage = this.ram?.[address];
   }
 
-  eval() {
+  override eval() {
     const address = this.in("address").busVoltage;
     this.out().busVoltage = this.ram?.[address];
   }

@@ -1,8 +1,8 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/src/fs";
 
-import * as Memory from "./01_memory.js";
-import * as CPU from "./02_cpu.js";
-import * as Computer from "./03_computer.js";
+import * as Memory from "./01_memory"
+import * as CPU from "./02_cpu"
+import * as Computer from "./03_computer"
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/05");

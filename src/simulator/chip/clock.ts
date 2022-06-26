@@ -1,11 +1,6 @@
-import { assert } from "@davidsouther/jiffies/assert.js";
-import {
-  BehaviorSubject,
-  Observable,
-  Subject,
-  SyncScheduler,
-} from "@davidsouther/jiffies/observable/observable.js";
-import { Chip, HIGH, LOW, Voltage } from "./chip.js";
+import { BehaviorSubject, Observable, Subject } from "rxjs";
+import { assert } from "@davidsouther/jiffies/src/assert";
+import { Chip, HIGH, LOW, Voltage } from "./chip";
 
 interface Tick {
   readonly level: Voltage;
@@ -24,13 +19,10 @@ export class Clock {
     return clock;
   }
 
-  private subject = new BehaviorSubject<Tick>(
-    {
-      level: this.level,
-      ticks: this.ticks,
-    },
-    SyncScheduler
-  );
+  private subject = new BehaviorSubject<Tick>({
+    level: this.level,
+    ticks: this.ticks,
+  });
   readonly $: Observable<Tick> = this.subject;
 
   readonly update = new Subject<void>();
@@ -75,33 +67,5 @@ export class Clock {
 
   toString() {
     return `${this.ticks}${this.level == HIGH ? "+" : ""}`;
-  }
-}
-
-export class ClockedChip extends Chip {
-  get clocked(): boolean {
-    return true;
-  }
-
-  #subscription = Clock.get().$.subscribe(({ level }) => {
-    if (level === LOW) {
-      this.tock();
-    } else {
-      this.tick();
-    }
-  });
-
-  constructor(
-    ins: string[],
-    outs: string[],
-    name?: string,
-    internal?: string[]
-  ) {
-    super(ins, outs, name, internal);
-  }
-
-  remove() {
-    this.#subscription.unsubscribe();
-    super.remove();
   }
 }

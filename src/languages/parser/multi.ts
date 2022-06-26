@@ -1,5 +1,5 @@
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser } from "./base.js";
+import { isErr, Ok } from "@davidsouther/jiffies/src/result";
+import { ParseErrors, Parser } from "./base"
 
 // https://docs.rs/nom/latest/nom/multi/index.html
 // repeat	Runs the embedded parser a specified number of times. Returns the results in a Vec.

@@ -1,4 +1,4 @@
-import { ASSIGN, COMMANDS, JUMP } from "../simulator/cpu/alu.js";
+import { ASSIGN, COMMANDS, JUMP } from "../simulator/cpu/alu"
 
 export type CommandOps = keyof typeof COMMANDS.op;
 export type JumpOps = keyof typeof JUMP.op;

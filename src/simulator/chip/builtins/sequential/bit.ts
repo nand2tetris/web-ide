@@ -1,5 +1,4 @@
-import { HIGH, LOW, Voltage } from "../../chip.js";
-import { ClockedChip } from "../../clock.js";
+import { ClockedChip, HIGH, LOW, Voltage } from "../../chip"
 
 export class Bit extends ClockedChip {
   bit: Voltage = LOW;
@@ -8,14 +7,14 @@ export class Bit extends ClockedChip {
     super(["in", "load"], ["out"], name);
   }
 
-  tick() {
+  override tick() {
     if (this.in("load").voltage() === HIGH) {
       this.bit = this.in().voltage();
     }
   }
 
-  tock() {
-    this.out().pull(this.bit);
+  override tock() {
+    this.out().pull(this.bit ?? 0);
   }
 }
 
@@ -26,13 +25,13 @@ export class Register extends ClockedChip {
     super(["in[16]", "load"], ["out[16]"], name);
   }
 
-  tick() {
+  override tick() {
     if (this.in("load").voltage() === HIGH) {
       this.bits = this.in().busVoltage & 0xffff;
     }
   }
 
-  tock() {
+  override tock() {
     this.out().busVoltage = this.bits & 0xffff;
   }
 }
@@ -44,7 +43,7 @@ export class PC extends ClockedChip {
     super(["in[16]", "load", "inc", "reset"], ["out[16]"], name);
   }
 
-  tick() {
+  override tick() {
     if (this.in("reset").voltage() === HIGH) {
       this.bits = 0;
     } else if (this.in("load").voltage() === HIGH) {
@@ -54,7 +53,7 @@ export class PC extends ClockedChip {
     }
   }
 
-  tock() {
+  override tock() {
     this.out().busVoltage = this.bits & 0xffff;
   }
 }

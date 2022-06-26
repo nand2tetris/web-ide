@@ -3,10 +3,17 @@
     // Assume browser environment & esm
     "lib": ["es2021", "DOM", "DOM.Iterable"],
     "target": "es2022",
-    "module": "es2022",
+    "module": "esnext",
     "moduleResolution": "node",
     "allowJs": true,
     "checkJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
 
     // Checks and strictness
     "strict": true,
@@ -14,16 +21,16 @@
     "allowUnusedLabels": false,
     // "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
-    // "noImplicitOverride": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
     // "noPropertyAccessFromIndexSignature": true,
     // "noUncheckedIndexedAccess": true,
     // "noUnusedLocals": true,
     // "noUnusedParameters": true,
 
-    "incremental": true,
-    "outDir": "build",
-    "declaration": true
+    // "incremental": true,
+    // "outDir": "build",
+    // "declaration": true
   },
-  "include": ["src/**/*"]
+  "include": ["src"]
 }

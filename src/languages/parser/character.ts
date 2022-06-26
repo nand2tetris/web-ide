@@ -1,7 +1,7 @@
-import { Ok } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser, StringLike } from "./base.js";
-import { alt } from "./branch.js";
-import { tag } from "./bytes.js";
+import { Ok } from "@davidsouther/jiffies/src/result";
+import { ParseErrors, Parser, StringLike } from "./base"
+import { alt } from "./branch"
+import { tag } from "./bytes"
 
 // Tests if byte is ASCII alphabetic: A-Z, a-z
 export const is_ascii = (i: string) =>

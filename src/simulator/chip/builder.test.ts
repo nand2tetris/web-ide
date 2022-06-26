@@ -1,9 +1,8 @@
-import { display } from "@davidsouther/jiffies/display.js";
-import { unwrap } from "@davidsouther/jiffies/result.js";
-import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
-import { bin } from "../../util/twos.js";
-import { parse } from "./builder.js";
-import { Chip, HIGH, LOW } from "./chip.js";
+import { display } from "@davidsouther/jiffies/src/display";
+import { unwrap } from "@davidsouther/jiffies/src/result";
+import { bin } from "../../util/twos"
+import { parse } from "./builder"
+import { Chip, HIGH, LOW } from "./chip"
 
 describe("Chip Builder", () => {
   it("builds a chip from a string", () => {

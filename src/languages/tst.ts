@@ -57,9 +57,9 @@ const tstDecimalValueParser = preceded(
   opt(tag("D")),
   tag(/(-[1-9])?[0-9]{0,5}/)
 );
-const tstHexValue = map(tstHexValueParser, int16);
-const tstDecimalValue = map(tstDecimalValueParser, int10);
-const tstBinaryValue = map(tstBinaryValueParser, int2);
+const tstHexValue = map(tstHexValueParser, (s) => int16(s.toString()));
+const tstDecimalValue = map(tstDecimalValueParser,(s) => int10(s.toString()));
+const tstBinaryValue = map(tstBinaryValueParser, (s) => int2(s.toString()));
 const tstValueParser = alt(
   preceded(tag("%"), alt(tstBinaryValue, tstHexValue, tstDecimalValue)),
   tstDecimalValue

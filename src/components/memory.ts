@@ -70,6 +70,7 @@ const MemoryCell = FC<{
     el,
     { index, value, highlight = false, editable = false, onChange = () => {} }
   ) => {
+    // @ts-ignore
     el.style.display = "flex";
     return [
       code(
@@ -123,6 +124,7 @@ const Memory = FC<
     el,
     { name = "Memory", highlight = -1, editable = true, memory, format = "dec" }
   ) => {
+    // @ts-ignore
     el.style.width = "100%";
     const state = (el[State] ??= {});
     state.format ??= format;

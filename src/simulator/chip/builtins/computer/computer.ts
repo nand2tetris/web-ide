@@ -27,6 +27,17 @@ export class Memory extends Chip {
   // Mux4Way16(a=ramout, b=ioout, c=screenout, d=kbdout, sel=address[0..1], out=out);
 }
 
-export class CPU extends Chip {}
+export class CPU extends Chip {
+  constructor() {
+    super(
+      ["inM[16]", "instruction[16]", "reset"],
+      ["outM[16]", "writeM", "addressM[15]", "pc[15]"]
+    );
+  }
+}
 
-export class Computer extends Chip {}
+export class Computer extends Chip {
+  constructor() {
+    super(["reset"], []);
+  }
+}

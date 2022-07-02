@@ -4,7 +4,7 @@ import "./chip.scss";
 
 import { Pinout } from "../components/pinout";
 import { DiffPanel } from "../components/diff";
-import { ChipPageStore, PROJECTS } from "./chip.store";
+import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
 import { Diff } from "../simulator/compare";
 import { StorageContext } from "../util/storage";
 import { StatusLineContext } from "../components/shell/statusline";
@@ -99,12 +99,7 @@ export const Chip = () => {
                 state.setProject(value as keyof typeof PROJECTS);
               }}
             >
-              {[
-                ["01", "Project 1"],
-                ["02", "Project 2"],
-                ["03", "Project 3"],
-                ["05", "Project 5"],
-              ].map(([number, label]) => (
+              {PROJECT_NAMES.map(([number, label]) => (
                 <option key={number} value={number}>
                   {label}
                 </option>

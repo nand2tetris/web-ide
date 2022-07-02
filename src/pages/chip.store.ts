@@ -14,6 +14,12 @@ import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import { Clock } from "../simulator/chip/clock";
 
+export const PROJECT_NAMES = [
+  ["01", "Project 1"],
+  ["02", "Project 2"],
+  ["03", "Project 3"],
+  ["05", "Project 5"],
+];
 export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
     "Not",

@@ -1,6 +1,7 @@
 # NAND2Tetris Web User Guide
 
-This web application implements the [NAND2Tetris](https://nand2tetris.org) software suite, including an hdl chip simulator, a hack CPU, and a Hack VM. Students are able to paste their implementations of the
+This web application implements the [NAND2Tetris](https://nand2tetris.org) software suite, including an hdl chip simulator, a hack CPU, and a Hack VM.
+Students are able to paste their implementations of the various chips and programs
 
 ## Chip Simulator
 

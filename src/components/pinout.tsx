@@ -1,16 +1,19 @@
 import { display } from "@davidsouther/jiffies/lib/esm/display";
-import { FC } from "react";
-import { Pin, Pins } from "../simulator/chip/chip"
-import { Clock } from "../simulator/chip/clock"
-import { bin } from "../util/twos"
+import { Pin, Pins } from "../simulator/chip/chip";
+import { Clock } from "../simulator/chip/clock";
+import { bin } from "../util/twos";
 
 const clock = Clock.get();
 
-export const Pinout: FC<{
+export const Pinout = ({
+  pins,
+  toggle,
+  clocked = false,
+}: {
   pins: Pins;
   toggle?: (pin: Pin) => void;
   clocked?: boolean;
-}> = ({ pins, toggle, clocked = false }) => (
+}) => (
   <table>
     <thead>
       <tr>

@@ -1,17 +1,14 @@
-import { CPU as CPUChip } from "../simulator/cpu/cpu"
-import MemoryGUI from "../components/memory"
-import { Memory } from "../simulator/cpu/memory"
-import { HACK } from "../testing/mult"
-import { Runbar } from "../components/runbar"
-import { Timer } from "../simulator/timer"
-import { Screen } from "../components/screen"
+import { CPU as CPUChip } from "../simulator/cpu/cpu";
+import MemoryGUI from "../components/memory";
+import { Memory } from "../simulator/cpu/memory";
+import { HACK } from "../testing/mult";
+import { Runbar } from "../components/runbar";
+import { Timer } from "../simulator/timer";
+import { Screen } from "../components/screen";
+import { TickScreen } from "../testing/fill";
 
-import { TickScreen } from "../testing/fill"
-import { FC } from "react";
-
-export const CPU: FC<{ cpu?: CPUChip }> = ({
-  cpu = new CPUChip({ ROM: new Memory(HACK) }),
-}) => {
+export const CPU = () => {
+  const cpu = new CPUChip({ ROM: new Memory(HACK) });
   const resetRAM = () => {
     cpu.RAM.set(0, 3);
     cpu.RAM.set(1, 2);

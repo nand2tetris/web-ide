@@ -1,6 +1,3 @@
-import { FC } from "react";
-
-export const Icon: FC<{name: string}> = ({name}) => {
-   return (<span className="material-symbols-outlined">{name}</span>);
-}
-
+export const Icon = ({ name }: { name: string }) => {
+  return <span className="material-symbols-outlined">{name}</span>;
+};

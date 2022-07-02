@@ -1,6 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
-import { FC } from "react";
-import { Memory, SCREEN } from "../simulator/cpu/memory"
+import { useEffect, useRef } from "react";
+import { Memory, SCREEN } from "../simulator/cpu/memory";
 
 const WHITE = "white";
 const BLACK = "black";
@@ -21,24 +21,25 @@ function set(data: Uint8ClampedArray, x: number, y: number, value: COLOR) {
   data[pixel + 3] = 255;
 }
 
-export const Screen: FC<{ memory: Memory }> = ({ memory }) => {
-  const state = (el[State] ??= {});
-  const screen = (state.screen ??= <canvas width={512} height={256}></canvas>);
-  const ctx = (state.ctx ??= screen.getContext("2d") ?? undefined);
+export const Screen = ({ memory }: { memory: Memory }) => {
+  let canvas = useRef<HTMLCanvasElement>();
+  useEffect(() => {
+    const ctx = canvas.current?.getContext("2d") ?? undefined;
 
-  if (ctx) {
-    const image = assertExists(
-      ctx.getImageData(0, 0, 512, 256),
-      "Failed to create Context2d"
-    );
-    for (let col = 0; col < 512; col++) {
-      for (let row = 0; row < 256; row++) {
-        const color = get(memory, col, row);
-        set(image.data, col, row, color);
+    if (ctx) {
+      const image = assertExists(
+        ctx.getImageData(0, 0, 512, 256),
+        "Failed to create Context2d"
+      );
+      for (let col = 0; col < 512; col++) {
+        for (let row = 0; row < 256; row++) {
+          const color = get(memory, col, row);
+          set(image.data, col, row, color);
+        }
       }
+      ctx.putImageData(image, 0, 0);
     }
-    ctx.putImageData(image, 0, 0);
-  }
+  }, [memory]);
 
   return (
     <article className="no-shadow panel">
@@ -55,7 +56,11 @@ export const Screen: FC<{ memory: Memory }> = ({ memory }) => {
           borderRight: "2px solid lightgray",
         }}
       >
-        {screen}
+        <canvas
+          ref={(ref) => (canvas.current = ref ?? undefined)}
+          width={512}
+          height={256}
+        ></canvas>
       </figure>
     </article>
   );

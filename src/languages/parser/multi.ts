@@ -1,4 +1,4 @@
-import { isErr, Ok } from "@davidsouther/jiffies/src/result";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { ParseErrors, Parser } from "./base"
 
 // https://docs.rs/nom/latest/nom/multi/index.html

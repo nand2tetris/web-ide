@@ -1,4 +1,3 @@
-import { div, label, span } from "@davidsouther/jiffies/src/dom/html";
 import { CPU as CPUChip } from "../simulator/cpu/cpu"
 import MemoryGUI from "../components/memory"
 import { Memory } from "../simulator/cpu/memory"
@@ -8,7 +7,7 @@ import { Timer } from "../simulator/timer"
 import { Screen } from "../components/screen"
 
 import { TickScreen } from "../testing/fill"
-import { FC, useState } from "react";
+import { FC } from "react";
 
 export const CPU: FC<{ cpu?: CPUChip }> = ({
   cpu = new CPUChip({ ROM: new Memory(HACK) }),

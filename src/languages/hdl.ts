@@ -1,6 +1,6 @@
 /** Reads and parses HDL chip descriptions. */
 
-import { isErr, isNone, Ok } from "@davidsouther/jiffies/src/result";
+import { isErr, isNone, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { IResult, ParseErrors, Parser, StringLike } from "./parser/base"
 import { alt } from "./parser/branch"
 import { tag } from "./parser/bytes"

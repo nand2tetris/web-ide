@@ -1,9 +1,9 @@
 import { Subject, distinctUntilChanged, filter, map } from "rxjs";
-import { display } from "@davidsouther/jiffies/src/display";
-import { compileFStyle, FStyle } from "@davidsouther/jiffies/src/dom/css/fstyle";
-import { FileSystem } from "@davidsouther/jiffies/src/fs";
-import { retrieve } from "@davidsouther/jiffies/src/dom/provide";
-import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/src/result";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
+import { compileFStyle, FStyle } from "@davidsouther/jiffies/lib/esm/dom/css/fstyle";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { retrieve } from "@davidsouther/jiffies/lib/esm/dom/provide";
+import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { Pinout } from "../components/pinout"
 import { Low, Pin } from "../simulator/chip/chip"
 import { Chip as SimChip } from "../simulator/chip/chip"
@@ -143,7 +143,7 @@ class ChipPageStore {
   }
 
   toggle(pin: Pin) {
-    if (pin.width == 1) {
+    if (pin.width === 1) {
       pin.toggle();
     } else {
       pin.busVoltage += 1;
@@ -424,3 +424,5 @@ export const Chip = () => {
     </div>
   );
 };
+
+export default Chip;

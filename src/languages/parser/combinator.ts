@@ -1,6 +1,6 @@
 // https://docs.rs/nom/latest/nom/combinator/index.html
 
-import { Err, isErr, isOk, Ok, Option } from "@davidsouther/jiffies/src/result";
+import { Err, isErr, isOk, Ok, Option } from "@davidsouther/jiffies/lib/esm/result";
 import {
   ParseError,
   ParseErrors,
@@ -64,13 +64,13 @@ export const cut =
 
 // Returns its input if it is at the end of input data
 export const eof = (): Parser<null> => (i) =>
-  i == "" ? Ok(["", null]) : ParseErrors.error("Not EOF");
+  i === "" ? Ok(["", null]) : ParseErrors.error("Not EOF");
 
 // A parser which always fails.
 export const fail =
   (message = ""): Parser<unknown> =>
   (_) =>
-    message == ""
+    message === ""
       ? ParseErrors.failure("fail", { message })
       : ParseErrors.failure("fail");
 

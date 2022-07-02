@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/src/fs";
+import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
 import * as Memory from "./01_memory"
 import * as CPU from "./02_cpu"

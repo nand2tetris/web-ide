@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/src/assert";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { op } from "../../util/asm"
 import { int10, int16, int2 } from "../../util/twos"
 

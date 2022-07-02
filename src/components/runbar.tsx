@@ -7,7 +7,7 @@ const Icon: FC<{ icon: string }> = ({ icon }) => (
 
 export const Runbar: FC<{ runner: Timer }> = ({ runner }) => (
   <div className="input-group">
-    <button click={() => runner.frame()}>
+    <button onClick={() => runner.frame()}>
       <Icon icon="fast-fw"></Icon>
     </button>
     <button onClick={() => runner.reset()}>
@@ -48,6 +48,6 @@ export const Runbar: FC<{ runner: Timer }> = ({ runner }) => (
         ["2000", "2000"],
       ]}
     ></Select>
-    {...children}
+    {children}
   </div>
 );

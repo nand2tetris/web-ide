@@ -1,7 +1,7 @@
 import { Chip, HIGH, LOW, Voltage } from "../../chip"
 
 export function or(a: Voltage, b: Voltage): [Voltage] {
-  return [a == 1 || b == 1 ? HIGH : LOW];
+  return [a === 1 || b === 1 ? HIGH : LOW];
 }
 
 export function or16(a: number, b: number): [number] {
@@ -9,7 +9,7 @@ export function or16(a: number, b: number): [number] {
 }
 
 export function or8way(a: number): [Voltage] {
-  return [(a & 0xff) == 0 ? LOW : HIGH];
+  return [(a & 0xff) === 0 ? LOW : HIGH];
 }
 
 export class Or extends Chip {

@@ -1,4 +1,4 @@
-import { isSome, None, Option, Some } from "@davidsouther/jiffies/src/result";
+import { isSome, None, Option, Some } from "@davidsouther/jiffies/lib/esm/result";
 import { ClockedChip, HIGH } from "../../chip"
 
 export class RAM extends ClockedChip {

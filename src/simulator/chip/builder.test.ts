@@ -1,5 +1,5 @@
-import { display } from "@davidsouther/jiffies/src/display";
-import { unwrap } from "@davidsouther/jiffies/src/result";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
+import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { bin } from "../../util/twos"
 import { parse } from "./builder"
 import { Chip, HIGH, LOW } from "./chip"

@@ -1,6 +1,6 @@
 import { BehaviorSubject, Observable, Subject } from "rxjs";
-import { assert } from "@davidsouther/jiffies/src/assert";
-import { Chip, HIGH, LOW, Voltage } from "./chip";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
+import { HIGH, LOW, Voltage } from "./chip";
 
 interface Tick {
   readonly level: Voltage;
@@ -13,7 +13,7 @@ export class Clock {
   private ticks = 0;
 
   static get() {
-    if (clock == undefined) {
+    if (clock === undefined) {
       clock = new Clock();
     }
     return clock;
@@ -44,20 +44,20 @@ export class Clock {
   }
 
   tick() {
-    assert(this.level == LOW, "Can only tick up from LOW");
+    assert(this.level === LOW, "Can only tick up from LOW");
     this.level = HIGH;
     this.next();
   }
 
   tock() {
-    assert(this.level == HIGH, "Can only tock down from HIGH");
+    assert(this.level === HIGH, "Can only tock down from HIGH");
     this.level = LOW;
     this.ticks += 1;
     this.next();
   }
 
   toggle() {
-    this.level == HIGH ? this.tock() : this.tick();
+    this.level === HIGH ? this.tock() : this.tick();
   }
 
   eval() {
@@ -66,6 +66,6 @@ export class Clock {
   }
 
   toString() {
-    return `${this.ticks}${this.level == HIGH ? "+" : ""}`;
+    return `${this.ticks}${this.level === HIGH ? "+" : ""}`;
   }
 }

@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/src/fs";
+import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
 import * as HalfAdder from "./01_half_adder"
 import * as FullAdder from "./02_full_adder"

@@ -1,4 +1,4 @@
-import { Ok } from "@davidsouther/jiffies/src/result";
+import { Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { cmpParser } from "./cmp"
 
 describe("cmp language", () => {

@@ -1,4 +1,4 @@
-import { Err, Ok } from "@davidsouther/jiffies/src/result";
+import { Err, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { alt } from "./branch";
 import { alpha1, digit1 } from "./character";
 

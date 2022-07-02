@@ -2,7 +2,7 @@ import { nand16 } from "../../../../util/twos";
 import { HIGH, LOW, Chip, Voltage } from "../../chip";
 
 export function nand(a: Voltage, b: Voltage): [Voltage] {
-  return [a == 1 && b == 1 ? LOW : HIGH];
+  return [a === 1 && b === 1 ? LOW : HIGH];
 }
 
 export class Nand extends Chip {

@@ -1,8 +1,8 @@
 // https://docs.rs/nom/latest/nom/index.html
 
 /** Base utilities for a common parser combinator toolkit. */
-import { assert } from "@davidsouther/jiffies/src/assert";
-import { Err, Result } from "@davidsouther/jiffies/src/result";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
+import { Err, Result } from "@davidsouther/jiffies/lib/esm/result";
 
 interface ErrorContext {
   message?: string;
@@ -84,7 +84,7 @@ export class Span implements StringLike {
 
     for (let i = 0; i < this.start; i++) {
       this.col += 1;
-      if (this.str.charAt(i) == "\n") {
+      if (this.str.charAt(i) === "\n") {
         this.line += 1;
         this.col = 1;
       }

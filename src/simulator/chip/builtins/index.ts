@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/src/result";
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import { Chip } from "../chip"
 
 import { And, And16 } from "./logic/and"

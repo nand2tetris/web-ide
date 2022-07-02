@@ -1,4 +1,4 @@
-import { Ok } from "@davidsouther/jiffies/src/result";
+import { Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { ParseErrors, Parser, StringLike } from "./base"
 import { alt } from "./branch"
 import { tag } from "./bytes"
@@ -21,16 +21,16 @@ export const is_digit = (i: string) => "0" <= i && i <= "9";
 export const is_hex_digit = (i: string) =>
   is_digit(i) || ("A" <= i && i <= "F") || ("a" <= i && i <= "f");
 
-export const is_crlf = (i: string) => i == "\n" || i == "\r";
+export const is_crlf = (i: string) => i === "\n" || i === "\r";
 
 // Tests if byte is ASCII newline: \n
-export const is_newine = (i: string) => i == "\n";
+export const is_newine = (i: string) => i === "\n";
 
 // Tests if byte is ASCII octal digit: 0-7
 export const is_oct_digit = (i: string) => "0" <= i && i <= "7";
 
 // Tests if byte is ASCII space or tab
-export const is_space = (i: string) => i == " " || i == "\t";
+export const is_space = (i: string) => i === " " || i === "\t";
 
 export const chars = (
   charClass: (i: string) => boolean,

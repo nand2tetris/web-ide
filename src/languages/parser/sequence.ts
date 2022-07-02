@@ -1,4 +1,4 @@
-import { isErr, Ok } from "@davidsouther/jiffies/src/result";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { IResult, Parser, StringLike } from "./base"
 import { map } from "./combinator"
 

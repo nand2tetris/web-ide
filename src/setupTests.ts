@@ -2,7 +2,7 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
-import { isErr, Result, Err, Ok, isOk } from '@davidsouther/jiffies/src/result';
+import { isErr, Result, Err, Ok, isOk } from '@davidsouther/jiffies/lib/esm/result';
 import '@testing-library/jest-dom';
 
 expect.extend({

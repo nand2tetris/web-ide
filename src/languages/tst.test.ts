@@ -1,4 +1,4 @@
-import { Ok } from "@davidsouther/jiffies/src/result";
+import { Ok } from "@davidsouther/jiffies/lib/esm/result";
 import {
   TEST_ONLY,
   Tst,

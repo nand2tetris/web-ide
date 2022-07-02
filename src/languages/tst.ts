@@ -1,6 +1,6 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { Option, unwrapOr } from "@davidsouther/jiffies/src/result";
+import { Option, unwrapOr } from "@davidsouther/jiffies/lib/esm/result";
 import { int10, int16, int2 } from "../util/twos"
 import { Parser } from "./parser/base"
 import { alt } from "./parser/branch"

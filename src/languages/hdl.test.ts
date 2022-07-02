@@ -1,5 +1,5 @@
-import { assert } from "@davidsouther/jiffies/src/assert";
-import { isErr, Ok } from "@davidsouther/jiffies/src/result";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl"
 import { IResult, Span, StringLike } from "./parser/base"
 import { tag } from "./parser/bytes"

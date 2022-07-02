@@ -1,6 +1,6 @@
 // https://docs.rs/nom/latest/nom/branch/index.html
 
-import { isOk } from "@davidsouther/jiffies/src/result";
+import { isOk } from "@davidsouther/jiffies/lib/esm/result";
 import { ParseErrors, Parser } from "./base"
 
 // Tests a list of parsers one by one until one succeeds.

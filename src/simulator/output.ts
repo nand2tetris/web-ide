@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/src/assert";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { bin, dec, hex } from "../util/twos"
 import { Test } from "./tst"
 
@@ -18,9 +18,9 @@ export class Output {
   ) {
     if (
       format.startsWith("%") &&
-      len == undefined &&
-      lPad == undefined &&
-      rPad == undefined
+      len === undefined &&
+      lPad === undefined &&
+      rPad === undefined
     ) {
       const { fmt, lPad, rPad, len } = format.match(
         /^%(?<fmt>[BDXS])(?<lPad>\d+)\.(?<len>\d+)\.(?<rPad>\d+)$/
@@ -49,13 +49,13 @@ export class Output {
 
   print(test: Test) {
     const val = test.getVar(this.variable);
-    if (this.fmt == "S") {
+    if (this.fmt === "S") {
       return this.padLeft(val as string);
     }
 
     const fmt = { B: bin, D: dec, X: hex }[this.fmt];
     let value = fmt(val as number);
-    if (this.fmt == "D") {
+    if (this.fmt === "D") {
       return this.padRight(value);
     } else {
       return this.padCenter(value.slice(value.length - this.len));

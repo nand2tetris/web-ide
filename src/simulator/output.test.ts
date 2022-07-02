@@ -1,4 +1,4 @@
-import { cleanState } from "@davidsouther/jiffies/src/scope/state";
+import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
 import { Output } from "./output"
 import { Test, TestOutputInstruction } from "./tst"
 

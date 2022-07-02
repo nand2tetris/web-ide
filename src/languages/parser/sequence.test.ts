@@ -1,4 +1,4 @@
-import { Err, isErr, Ok } from "@davidsouther/jiffies/src/result";
+import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { IResult, StringLike } from "./base"
 import { tag } from "./bytes"
 import {

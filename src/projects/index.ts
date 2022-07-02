@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/src/fs";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 
 import * as project_01 from "./project_01/index"
 import * as project_02 from "./project_02/index"

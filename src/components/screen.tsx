@@ -1,4 +1,4 @@
-import { assertExists } from "@davidsouther/jiffies/src/assert";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { FC } from "react";
 import { Memory, SCREEN } from "../simulator/cpu/memory"
 

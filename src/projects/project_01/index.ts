@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/src/fs";
+import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
 import * as Not from "./01_not"
 import * as And from "./02_and"

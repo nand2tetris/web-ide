@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/src/fs";
+import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
 import * as Bit from "./01_bit"
 import * as Register from "./02_register"

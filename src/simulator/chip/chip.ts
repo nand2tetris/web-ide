@@ -1,5 +1,5 @@
-import { assert, assertExists } from "@davidsouther/jiffies/src/assert";
-import { range } from "@davidsouther/jiffies/src/range";
+import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { bin } from "../../util/twos";
 import { Clock } from "./clock";
 
@@ -53,7 +53,7 @@ export class Bus implements Pin {
   }
 
   toggle(bit = 0) {
-    const nextVoltage = this.voltage(bit) == LOW ? HIGH : LOW;
+    const nextVoltage = this.voltage(bit) === LOW ? HIGH : LOW;
     this.pull(nextVoltage, bit);
   }
 }
@@ -330,12 +330,12 @@ export class Chip {
     }
 
     // Wrap the chipPin in an InBus when the chip side is dimensioned
-    if (from.start > 0 || from.width != chipPin.width) {
+    if (from.start > 0 || from.width !== chipPin.width) {
       chipPin = new InSubBus(chipPin, from.start, from.width);
     }
 
     // Wrap the chipPin in an OutBus when the part side is dimensioned
-    if (to.start > 0 || to.width != chipPin.width) {
+    if (to.start > 0 || to.width !== chipPin.width) {
       chipPin = new OutSubBus(chipPin, to.start, to.width);
     }
 
@@ -354,13 +354,13 @@ export class Chip {
     from.width ??= chipPin.width;
 
     // Wrap the partPin in an InBus when the part side is dimensioned
-    if (to.start > 0 || to.width != chipPin.width) {
+    if (to.start > 0 || to.width !== chipPin.width) {
       partPin = new InSubBus(partPin, to.start, to.width);
     }
 
     // Wrap the partPin in an OutBus when the chip side is dimensioned
     if (!["true", "false"].includes(chipPin.name)) {
-      if (from.start > 0 || from.width != chipPin.width) {
+      if (from.start > 0 || from.width !== chipPin.width) {
         partPin = new OutSubBus(partPin, from.start, from.width);
       }
     }
@@ -417,15 +417,6 @@ export class ClockedChip extends Chip {
       this.tick();
     }
   });
-
-  constructor(
-    ins: string[],
-    outs: string[],
-    name?: string,
-    internal?: string[]
-  ) {
-    super(ins, outs, name, internal);
-  }
 
   override remove() {
     this.#subscription.unsubscribe();

@@ -1,4 +1,4 @@
-import { display } from "@davidsouther/jiffies/src/display";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { FC } from "react";
 import { Pin, Pins } from "../simulator/chip/chip"
 import { Clock } from "../simulator/chip/clock"
@@ -23,7 +23,7 @@ export const Pinout: FC<{
         <tr>
           <td tabIndex={0}>Clock</td>
           <td>
-            {...(
+            {(
               [
                 [display(clock), () => clock.toggle()],
                 ["Tick", () => clock.tick()],
@@ -32,6 +32,7 @@ export const Pinout: FC<{
               ] as [string, () => void][]
             ).map(([label, click]) => (
               <code
+                key={label}
                 style={{
                   cursor: toggle ? "pointer" : "inherit",
                   marginRight: "var(--spacing)",
@@ -47,8 +48,8 @@ export const Pinout: FC<{
       ) : (
         <></>
       )}
-      {...[...pins.entries()].map((pin) => (
-        <tr>
+      {[...pins.entries()].map((pin) => (
+        <tr key={pin.name}>
           <td tabIndex={0}>{pin.name}</td>
           <td
             style={{ cursor: toggle ? "pointer" : "inherit" }}
@@ -56,8 +57,8 @@ export const Pinout: FC<{
             onKeyDown={() => toggle && toggle(pin)}
           >
             <code tabIndex={0}>
-              {pin.width == 1
-                ? pin.voltage() == 0
+              {pin.width === 1
+                ? pin.voltage() === 0
                   ? "Low"
                   : "High"
                 : bin(pin.busVoltage, pin.width)}

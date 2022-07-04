@@ -1,5 +1,4 @@
-import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
-import { Span } from "./base.js";
+import { Span } from "./base"
 
 describe("Parser Base", () => {
   describe("Span", () => {

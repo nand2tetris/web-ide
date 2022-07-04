@@ -1,6 +1,6 @@
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { IResult, Parser, StringLike } from "./base.js";
-import { map } from "./combinator.js";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { IResult, Parser, StringLike } from "./base"
+import { map } from "./combinator"
 
 // delimited	Matches an object from the first parser and discards it, then gets an object from the second parser, and finally matches an object from the third parser and discards it.
 export const delimited = <O>(

@@ -1,23 +1,23 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/result.js";
-import { Chip } from "../chip.js";
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
+import { Chip } from "../chip"
 
-import { And, And16 } from "./logic/and.js";
-import { DMux, DMux4Way, DMux8Way } from "./logic/dmux.js";
-import { Mux, Mux16, Mux4Way16, Mux8Way16 } from "./logic/mux.js";
-import { Nand, Nand16 } from "./logic/nand.js";
-import { Not, Not16 } from "./logic/not.js";
-import { Or, Or16, Or8way } from "./logic/or.js";
-import { Xor, Xor16 } from "./logic/xor.js";
+import { And, And16 } from "./logic/and"
+import { DMux, DMux4Way, DMux8Way } from "./logic/dmux"
+import { Mux, Mux16, Mux4Way16, Mux8Way16 } from "./logic/mux"
+import { Nand, Nand16 } from "./logic/nand"
+import { Not, Not16 } from "./logic/not"
+import { Or, Or16, Or8way } from "./logic/or"
+import { Xor, Xor16 } from "./logic/xor"
 
-import { Add16 } from "./arithmetic/add_16.js";
-import { ALU, ALUNoStat } from "./arithmetic/alu.js";
-import { FullAdder } from "./arithmetic/full_adder.js";
-import { HalfAdder } from "./arithmetic/half_adder.js";
-import { Inc16 } from "./arithmetic/inc16.js";
+import { Add16 } from "./arithmetic/add_16"
+import { ALU, ALUNoStat } from "./arithmetic/alu"
+import { FullAdder } from "./arithmetic/full_adder"
+import { HalfAdder } from "./arithmetic/half_adder"
+import { Inc16 } from "./arithmetic/inc16"
 
-import { Bit, PC, Register } from "./sequential/bit.js";
-import { DFF } from "./sequential/dff.js";
-import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram.js";
+import { Bit, PC, Register } from "./sequential/bit"
+import { DFF } from "./sequential/dff"
+import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram"
 import {
   Computer,
   CPU,
@@ -25,7 +25,7 @@ import {
   Memory,
   ROM32K,
   Screen,
-} from "./computer/computer.js";
+} from "./computer/computer"
 
 export {
   And,

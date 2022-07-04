@@ -1,7 +1,6 @@
-import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { CPU } from "./cpu.js";
-import { Memory } from "./memory.js";
-import { HACK } from "../../testing/mult.js";
+import { CPU } from "./cpu"
+import { Memory } from "./memory"
+import { HACK } from "../../testing/mult"
 
 describe("CPU", () => {
   it("executes instructions", () => {

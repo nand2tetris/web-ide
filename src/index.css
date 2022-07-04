@@ -1,0 +1,53 @@
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Poppins:wght@400;700&display=swap");
+
+@layer user {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :root {
+    --line-height: 1.25; /* 1.5 */
+    --spacing: 0.25rem; /* 1rem */
+    --typography-spacing-vertical: 1.15rem; /* 1.5rem */
+    --grid-spacing-horizontal: 1rem; /* var(--spacing) */
+    --form-element-spacing-vertical: 0.15rem; /* .75rem */
+    --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+    --font-family: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Noto Sans", sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-size-monospace: 16px;
+    --font-family-monospace: "JetBrains Mono", source-code-pro, Menlo, Monaco,
+      Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
+      "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+  }
+}
+
+@layer component {
+  code,
+  kbd,
+  .font-monospace {
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-monospace);
+  }
+
+  textarea.font-monospace {
+    overflow: scroll;
+    white-space: pre;
+  }
+
+  body > footer {
+    border-top: 1px solid var(--card-border-color);
+    background-color: var(--card-background-color);
+  }
+}
+
+@layer user {
+  body > header,
+  body > main,
+  body > footer {
+    width: calc(100vw - (100vw - 100%));
+    overflow-x: hidden;
+  }
+}

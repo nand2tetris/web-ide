@@ -1,8 +1,8 @@
-import { isErr, Ok, Result } from "@davidsouther/jiffies/result.js";
-import { HdlParser } from "../../languages/hdl.js";
-import { ParseError } from "../../languages/parser/base.js";
-import { getBuiltinChip } from "./builtins/index.js";
-import { Chip, Connection } from "./chip.js";
+import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
+import { HdlParser } from "../../languages/hdl"
+import { ParseError } from "../../languages/parser/base"
+import { getBuiltinChip } from "./builtins/index"
+import { Chip, Connection } from "./chip"
 
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {
@@ -11,7 +11,7 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end >= start) {
     return end - start + 1;
   }
-  if (start > 0 && end == 0) {
+  if (start > 0 && end === 0) {
     return 1;
   }
   throw new Error(`Bus specification has start > end (${start} > ${end})`);

@@ -1,6 +1,6 @@
-import { assert } from "@davidsouther/jiffies/assert.js";
-import { op } from "../../util/asm.js";
-import { int10, int16, int2 } from "../../util/twos.js";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
+import { op } from "../../util/asm"
+import { int10, int16, int2 } from "../../util/twos"
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];

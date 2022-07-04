@@ -1,5 +1,5 @@
-import { alu, Flags } from "../../../cpu/alu.js";
-import { Chip, HIGH, LOW } from "../../chip.js";
+import { alu, Flags } from "../../../cpu/alu"
+import { Chip, HIGH, LOW } from "../../chip"
 
 export class ALUNoStat extends Chip {
   constructor() {
@@ -21,7 +21,7 @@ export class ALUNoStat extends Chip {
     );
   }
 
-  eval() {
+  override eval() {
     const x = this.in("x").busVoltage;
     const y = this.in("y").busVoltage;
     const zx = this.in("zx").busVoltage << 5;
@@ -51,14 +51,14 @@ export class ALU extends Chip {
       ],
       [
         "out[16]", // 16-bit output
-        "zr", // 1 if (out == 0), 0 otherwise
+        "zr", // 1 if (out === 0), 0 otherwise
         "ng", // 1 if (out < 0),  0 otherwise
       ],
       "ALU"
     );
   }
 
-  eval() {
+  override eval() {
     const x = this.in("x").busVoltage;
     const y = this.in("y").busVoltage;
     const zx = this.in("zx").busVoltage << 5;
@@ -69,8 +69,8 @@ export class ALU extends Chip {
     const no = this.in("no").busVoltage << 0;
     const op = zx + nx + zy + ny + f + no;
     const [out, flags] = alu(op, x, y);
-    const ng = flags == Flags.Negative ? HIGH : LOW;
-    const zr = flags == Flags.Zero ? HIGH : LOW;
+    const ng = flags === Flags.Negative ? HIGH : LOW;
+    const zr = flags === Flags.Zero ? HIGH : LOW;
     this.out("out").busVoltage = out;
     this.out("ng").pull(ng);
     this.out("zr").pull(zr);

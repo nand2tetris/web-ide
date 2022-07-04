@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip"
 
 export function halfAdder(a: Voltage, b: Voltage): [Voltage, Voltage] {
   const sum = (a === 1 && b === 0) || (a === 0 && b === 1) ? HIGH : LOW;
@@ -12,7 +12,7 @@ export class HalfAdder extends Chip {
     super(["a", "b"], ["sum", "carry"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
     const [sum, carry] = halfAdder(a, b);

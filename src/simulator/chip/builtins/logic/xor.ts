@@ -1,7 +1,7 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip"
 
 export function xor(a: Voltage, b: Voltage): [Voltage] {
-  return [(a == HIGH && b == LOW) || (a == LOW && b == HIGH) ? HIGH : LOW];
+  return [(a === HIGH && b === LOW) || (a === LOW && b === HIGH) ? HIGH : LOW];
 }
 
 export function xor16(a: number, b: number): [number] {
@@ -13,7 +13,7 @@ export class Xor extends Chip {
     super(["a", "b"], ["out"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
     const [out] = xor(a, b);
@@ -26,7 +26,7 @@ export class Xor16 extends Chip {
     super(["a[16]", "b[16]"], ["out[16]"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").busVoltage;
     const b = this.in("b").busVoltage;
     const [out] = xor16(a, b);

@@ -1,6 +1,6 @@
-import { Chip, Voltage } from "../../chip.js";
-import { or } from "../logic/or.js";
-import { halfAdder } from "./half_adder.js";
+import { Chip, Voltage } from "../../chip"
+import { or } from "../logic/or"
+import { halfAdder } from "./half_adder"
 
 export function fullAdder(
   a: Voltage,
@@ -19,7 +19,7 @@ export class FullAdder extends Chip {
     super(["a", "b", "c"], ["sum", "carry"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("a").voltage();
     const b = this.in("b").voltage();
     const c = this.in("c").voltage();

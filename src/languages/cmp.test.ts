@@ -1,6 +1,5 @@
-import { Ok } from "@davidsouther/jiffies/result.js";
-import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
-import { cmpParser } from "./cmp.js";
+import { Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { cmpParser } from "./cmp"
 
 describe("cmp language", () => {
   it("parses a file into lines", () => {
@@ -11,7 +10,7 @@ describe("cmp language", () => {
 | 0 | 1 | 1 |
 | 1 | 1 | 0 |`);
 
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         [

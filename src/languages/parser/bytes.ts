@@ -1,5 +1,5 @@
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser, StringLike } from "./base.js";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { ParseErrors, Parser, StringLike } from "./base"
 
 // https://docs.rs/nom/latest/nom/bytes/complete/index.html
 // escaped	Matches a byte string with escaped characters.
@@ -12,7 +12,7 @@ export const is_not = (chars: string): Parser<StringLike> => {
     let m = i.toString();
     let d = 0;
     while (d < i.length && !chars.includes(m[d])) d++;
-    if (d == 0)
+    if (d === 0)
       return ParseErrors.error("is_not found immediately", { span: i });
     return Ok([i.substring(d), i.substring(0, d)]);
   };
@@ -44,11 +44,11 @@ export const take = (n: number): Parser<StringLike> => {
 export const take_until = (p: Parser<StringLike>): Parser<StringLike> => {
   const take_until: Parser<StringLike> = (i) => {
     let o = "";
-    let noInput = i.length == 0;
+    let noInput = i.length === 0;
     while (isErr(p(i))) {
       o += i.substring(0, 1);
       i = i.substring(1);
-      if (i.length == 0) {
+      if (i.length === 0) {
         if (noInput) {
           return ParseErrors.failure("take_until went past end of input", {
             span: i,
@@ -66,7 +66,7 @@ export const take_until = (p: Parser<StringLike>): Parser<StringLike> => {
 // Recognizes a pattern
 export const tag = (s: string | RegExp): Parser<StringLike> => {
   const tag: Parser<StringLike> =
-    typeof s == "string"
+    typeof s === "string"
       ? (i) =>
           i.indexOf(s) === 0
             ? Ok([i.substring(s.length), s])
@@ -76,7 +76,7 @@ export const tag = (s: string | RegExp): Parser<StringLike> => {
               })
       : (i) => {
           let m = i.toString().match(s);
-          if (m == null)
+          if (m === null)
             return ParseErrors.error("tag did not match", {
               cause: `tag ${s}`,
               span: i,

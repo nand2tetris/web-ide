@@ -2,15 +2,20 @@ import { useContext, useEffect, useState } from "react";
 
 import "./chip.scss";
 
-import { Pinout } from "../components/pinout";
+import { Pinout, ImmPin } from "../components/pinout";
 import { DiffPanel } from "../components/diff";
 import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
 import { Diff } from "../simulator/compare";
 import { StorageContext } from "../util/storage";
 import { StatusLineContext } from "../components/shell/statusline";
 import { Subscription } from "rxjs";
+import { Pins } from "../simulator/chip/chip";
 
 let store = new ChipPageStore();
+
+function reducePins(pins: Pins): ImmPin[] {
+  return [...pins.entries()].map((pin) => ({ pin }));
+}
 
 export const Chip = () => {
   const fs = useContext(StorageContext);
@@ -22,11 +27,11 @@ export const Chip = () => {
     const subs: Subscription[] = [];
 
     subs.push(
-      store.selectors.chip.subscribe(() => {
-        setInPins(store.chip.ins);
-        setClocked(store.chip.clocked);
-        setOutPins(store.chip.outs);
-        setInternalPins(store.chip.pins);
+      store.selectors.chip.subscribe((chip) => {
+        setClocked(chip.clocked);
+        setInPins(reducePins(chip.ins));
+        setOutPins(reducePins(chip.outs));
+        setInternalPins(reducePins(chip.pins));
       })
     );
     subs.push(
@@ -66,15 +71,15 @@ export const Chip = () => {
         sub.unsubscribe();
       }
     };
-  });
+  }, [fs, setStatus]);
 
   const [project, setProject] = useState(store.project);
   const [chips, setChips] = useState<string[]>(PROJECTS[store.project]);
   const [chip, setChip] = useState(store.chip.name ?? "");
   const [clocked, setClocked] = useState(store.chip.clocked);
-  const [inPins, setInPins] = useState(store.chip.ins);
-  const [outPins, setOutPins] = useState(store.chip.outs);
-  const [internalPins, setInternalPins] = useState(store.chip.pins);
+  const [inPins, setInPins] = useState(reducePins(store.chip.ins));
+  const [outPins, setOutPins] = useState(reducePins(store.chip.outs));
+  const [internalPins, setInternalPins] = useState(reducePins(store.chip.pins));
 
   const [cmpText, setCmpText] = useState(store.files.cmp);
   const [hdlText, setHdlText] = useState(store.files.hdl);

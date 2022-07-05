@@ -1,16 +1,20 @@
 import { display } from "@davidsouther/jiffies/lib/esm/display";
-import { Pin, Pins } from "../simulator/chip/chip";
+import { Pin } from "../simulator/chip/chip";
 import { Clock } from "../simulator/chip/clock";
 import { bin } from "../util/twos";
 
 const clock = Clock.get();
+
+export interface ImmPin {
+  pin: Pin;
+}
 
 export const Pinout = ({
   pins,
   toggle,
   clocked = false,
 }: {
-  pins: Pins;
+  pins: ImmPin[];
   toggle?: (pin: Pin) => void;
   clocked?: boolean;
 }) => (
@@ -51,7 +55,7 @@ export const Pinout = ({
       ) : (
         <></>
       )}
-      {[...pins.entries()].map((pin) => (
+      {[...pins].map(({ pin }) => (
         <tr key={pin.name}>
           <td tabIndex={0}>{pin.name}</td>
           <td

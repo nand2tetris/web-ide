@@ -20,6 +20,7 @@ export const PROJECT_NAMES = [
   ["03", "Project 3"],
   ["05", "Project 5"],
 ];
+
 export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
     "Not",
@@ -51,7 +52,7 @@ export class ChipPageStore {
   test?: ChipTest;
   diffs: Diff[] = [];
   private runningTest = false;
-  private files = {
+  files = {
     hdl: "",
     cmp: "",
     tst: "",
@@ -69,11 +70,15 @@ export class ChipPageStore {
   readonly selectors = {
     project: this.$.pipe(
       map((t) => t.project),
-      distinctUntilChanged()
+      distinctUntilChanged((prev, curr) => {
+        return prev === curr;
+      })
     ),
     chipName: this.$.pipe(
       map((t) => t.chipName),
-      distinctUntilChanged()
+      distinctUntilChanged((prev, curr) => {
+        return prev === curr;
+      })
     ),
     chips: this.$.pipe(map((t) => t.chips)),
     chip: this.$.pipe(map((t) => t.chip)),
@@ -113,7 +118,7 @@ export class ChipPageStore {
     this.next();
   }
 
-  compileChip(text: string) {
+  compileChip(text = this.files.hdl) {
     this.files.hdl = text;
     this.chip?.remove();
     const maybeChip = make.parse(text);
@@ -152,12 +157,14 @@ export class ChipPageStore {
     const tst = await this.fs.readFile(fsName("tst"));
     const cmp = await this.fs.readFile(fsName("cmp"));
 
-    this.compileChip(hdl);
     this.files.hdl = hdl;
     this.files.tst = tst;
     this.files.cmp = cmp;
     this.files.out = "";
 
+    this.compileChip();
+
+    this.chip.eval();
     this.next();
     return this.files;
   }

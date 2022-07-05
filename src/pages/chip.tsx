@@ -25,10 +25,10 @@ export const Chip = () => {
   const [outPins, setOutPins] = useState(state.chip.outs);
   const [internalPins, setInternalPins] = useState(state.chip.pins);
 
-  const [hdlText, setHdlText] = useState("");
-  const [cmpText, setCmpText] = useState("");
-  const [tstText, setTstText] = useState("");
-  const [outText, setOutText] = useState("");
+  const [cmpText, setCmpText] = useState(state.files.cmp);
+  const [hdlText, setHdlText] = useState(state.files.hdl);
+  const [outText, setOutText] = useState(state.files.out);
+  const [tstText, setTstText] = useState(state.files.tst);
 
   const [diffs, setDiffs] = useState<Diff[]>([]);
   const [ran, setRan] = useState(false);
@@ -89,10 +89,7 @@ export const Chip = () => {
     <div className="ChipPage flex-1 flex">
       <section className="flex-1 grid">
         <div className="pinouts grid">
-          <div
-            className="flex row inline align-end"
-            style={{ gridColumn: "1 / span 2" }}
-          >
+          <div className="flex row inline align-end">
             <select
               value={project}
               onChange={({ target: { value } }) => {

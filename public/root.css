@@ -35,6 +35,8 @@
   textarea {
     overflow: scroll;
     white-space: pre;
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-monospace);
   }
 
   #root > footer {

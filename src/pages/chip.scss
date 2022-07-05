@@ -5,6 +5,10 @@
     > .pinouts {
       grid: min-content repeat(2, minmax(200px, 1fr)) / 1fr 1fr;
 
+      > div:first-of-type {
+        grid-column: 1 / span 2;
+      }
+
       h2 {
         margin: 0 var(--nav-element-spacing-horizontal);
       }
@@ -14,20 +18,23 @@
 
 @media (max-width: 992px) {
   .ChipPage > section {
-    flex-direction: column;
+    grid: auto / 1fr;
   }
 }
 
 @media (max-width: 576px) {
   .ChipPage > section > .pinouts {
-    flex-direction: column;
+    grid: auto / 1fr;
 
-    > h2 {
+    > div:first-of-type {
+      grid-column: 1 / span 1;
       order: 0;
     }
+
     > article:not(:nth-of-type(3)) {
       order: 1;
     }
+
     > article:nth-of-type(3) {
       order: 2;
     }

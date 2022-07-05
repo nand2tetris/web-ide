@@ -68,7 +68,7 @@ export class ChipPageStore {
   }
 
   readonly selectors = {
-    project: this.$.pipe( map((t) => t.project)),
+    project: this.$.pipe(map((t) => t.project)),
     chipName: this.$.pipe(map((t) => t.chipName)),
     chips: this.$.pipe(map((t) => t.chips)),
     chip: this.$.pipe(map((t) => t.chip)),
@@ -79,9 +79,9 @@ export class ChipPageStore {
   };
 
   constructor(
-    private readonly storage: Record<string, string> = localStorage,
-    private readonly fs: FileSystem,
-    private readonly statusLine: (status: string) => void
+    private readonly fs: FileSystem = new FileSystem(),
+    private readonly storage: Record<string, string> = {},
+    private readonly statusLine: (status: string) => void = () => {}
   ) {
     this.project =
       (this.storage["chip/project"] as keyof typeof PROJECTS) ?? "01";
@@ -106,7 +106,17 @@ export class ChipPageStore {
     this.next();
   }
 
-  setFiles({hdl, tst, cmp, out = ''}:{hdl: string, tst: string, cmp: string, out?: string}) {
+  setFiles({
+    hdl,
+    tst,
+    cmp,
+    out = "",
+  }: {
+    hdl: string;
+    tst: string;
+    cmp: string;
+    out?: string;
+  }) {
     this.files.hdl = hdl;
     this.files.tst = tst;
     this.files.cmp = cmp;
@@ -165,7 +175,9 @@ export class ChipPageStore {
   }
 
   async runTest() {
-    const tst = await new Promise<IResult<Tst>>((r) => r(tstParser(this.files.tst)));
+    const tst = await new Promise<IResult<Tst>>((r) =>
+      r(tstParser(this.files.tst))
+    );
 
     if (isErr(tst)) {
       this.statusLine(display(Err(tst)));

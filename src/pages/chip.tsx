@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import "./chip.scss";
 
@@ -8,59 +8,81 @@ import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
 import { Diff } from "../simulator/compare";
 import { StorageContext } from "../util/storage";
 import { StatusLineContext } from "../components/shell/statusline";
+import { Subscription } from "rxjs";
+
+let store = new ChipPageStore();
 
 export const Chip = () => {
   const fs = useContext(StorageContext);
-  const state = new ChipPageStore(
-    localStorage,
-    fs,
-    useContext(StatusLineContext).setStatus
-  );
+  const { setStatus } = useContext(StatusLineContext);
 
-  const [project, setProject] = useState(state.project);
-  const [chips, setChips] = useState<string[]>(PROJECTS[state.project]);
-  const [chip, setChip] = useState(state.chip.name ?? "");
-  const [clocked, setClocked] = useState(state.chip.clocked);
-  const [inPins, setInPins] = useState(state.chip.ins);
-  const [outPins, setOutPins] = useState(state.chip.outs);
-  const [internalPins, setInternalPins] = useState(state.chip.pins);
+  useEffect(() => {
+    store = new ChipPageStore(fs, localStorage, setStatus);
 
-  const [cmpText, setCmpText] = useState(state.files.cmp);
-  const [hdlText, setHdlText] = useState(state.files.hdl);
-  const [outText, setOutText] = useState(state.files.out);
-  const [tstText, setTstText] = useState(state.files.tst);
+    const subs: Subscription[] = [];
+
+    subs.push(
+      store.selectors.chip.subscribe(() => {
+        setInPins(store.chip.ins);
+        setClocked(store.chip.clocked);
+        setOutPins(store.chip.outs);
+        setInternalPins(store.chip.pins);
+      })
+    );
+    subs.push(
+      store.selectors.project.subscribe((project) => {
+        setProject(project);
+        setChips(PROJECTS[project]);
+        setChip(PROJECTS[project][0]);
+      })
+    );
+    subs.push(
+      store.selectors.chipName.subscribe((chip) => {
+        setChip(chip);
+      })
+    );
+    subs.push(
+      store.selectors.diffs.subscribe((diffs) => {
+        setDiffs(diffs);
+        setRan(true);
+      })
+    );
+    subs.push(
+      store.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
+        setHdlText(hdl);
+        setTstText(tst);
+        setCmpText(cmp);
+        setOutText(out);
+      })
+    );
+    subs.push(
+      store.selectors.log.subscribe((out) => {
+        setOutText(out);
+      })
+    );
+
+    return () => {
+      for (const sub of subs) {
+        sub.unsubscribe();
+      }
+    };
+  });
+
+  const [project, setProject] = useState(store.project);
+  const [chips, setChips] = useState<string[]>(PROJECTS[store.project]);
+  const [chip, setChip] = useState(store.chip.name ?? "");
+  const [clocked, setClocked] = useState(store.chip.clocked);
+  const [inPins, setInPins] = useState(store.chip.ins);
+  const [outPins, setOutPins] = useState(store.chip.outs);
+  const [internalPins, setInternalPins] = useState(store.chip.pins);
+
+  const [cmpText, setCmpText] = useState(store.files.cmp);
+  const [hdlText, setHdlText] = useState(store.files.hdl);
+  const [outText, setOutText] = useState(store.files.out);
+  const [tstText, setTstText] = useState(store.files.tst);
 
   const [diffs, setDiffs] = useState<Diff[]>([]);
   const [ran, setRan] = useState(false);
-
-  state.selectors.chip.subscribe(() => {
-    setInPins(state.chip.ins);
-    setClocked(state.chip.clocked);
-    setOutPins(state.chip.outs);
-    setInternalPins(state.chip.pins);
-
-  });
-  state.selectors.project.subscribe((project) => {
-    setProject(project);
-    setChips(PROJECTS[project]);
-    setChip(PROJECTS[project][0]);
-  });
-  state.selectors.chipName.subscribe((chip) => {
-    setChip(chip);
-  });
-  state.selectors.diffs.subscribe((diffs) => {
-    setDiffs(diffs);
-    setRan(true);
-  });
-  state.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
-    setHdlText(hdl);
-    setTstText(tst);
-    setCmpText(cmp);
-    setOutText(out);
-  });
-  state.selectors.log.subscribe((out) => {
-    setOutText(out);
-  });
 
   function clearOutput() {
     setOutText("");
@@ -68,7 +90,7 @@ export const Chip = () => {
   }
 
   const onSaveChip = () => {
-    state.saveChip(hdlText);
+    store.saveChip(hdlText);
   };
 
   async function setFiles() {
@@ -76,19 +98,18 @@ export const Chip = () => {
     const tst = tstText;
     const cmp = cmpText;
     clearOutput();
-    await state.setFiles({hdl, tst, cmp});
+    await store.setFiles({ hdl, tst, cmp });
   }
-
 
   async function compile() {
     await setFiles();
-    await state.compileChip();
+    await store.compileChip();
   }
 
   async function execute() {
     await setFiles();
-    await state.compileChip();
-    await state.runTest();
+    await store.compileChip();
+    await store.runTest();
   }
 
   return (
@@ -99,7 +120,7 @@ export const Chip = () => {
             <select
               value={project}
               onChange={({ target: { value } }) => {
-                state.setProject(value as keyof typeof PROJECTS);
+                store.setProject(value as keyof typeof PROJECTS);
               }}
             >
               {PROJECT_NAMES.map(([number, label]) => (
@@ -111,7 +132,7 @@ export const Chip = () => {
             <h2 tabIndex={0}>Chips:</h2>
             <select
               value={chip}
-              onChange={({ target: { value } }) => state.setChip(value)}
+              onChange={({ target: { value } }) => store.setChip(value)}
             >
               {chips.map((chip) => (
                 <option key={chip} value={chip}>
@@ -146,7 +167,7 @@ export const Chip = () => {
             <Pinout
               pins={inPins}
               clocked={clocked}
-              toggle={(pin) => state.toggle(pin)}
+              toggle={(pin) => store.toggle(pin)}
             />
           </article>
           <article className="no-shadow panel">

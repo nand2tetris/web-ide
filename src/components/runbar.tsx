@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Timer } from "../simulator/timer";
-import { Icon } from "./icon";
+import { Icon } from "./pico/icon";
 
 export const Runbar = ({
   runner,
@@ -21,6 +21,7 @@ export const Runbar = ({
     </button>
     <select
       name="speed"
+      value={runner.speed}
       onChange={(e) => {
         runner.speed = Number(e.target?.value ?? runner.speed);
       }}
@@ -32,13 +33,14 @@ export const Runbar = ({
         [1000, "Normal"],
         [2000, "Slow"],
       ].map(([speed, label]) => (
-        <option value={speed} selected={runner.speed === speed}>
+        <option key={speed} value={speed}>
           {label}
         </option>
       ))}
     </select>
     <select
       name="steps"
+      value={runner.steps}
       onChange={(e) => {
         runner.steps = Number(e.target?.value ?? runner.steps);
       }}
@@ -50,7 +52,7 @@ export const Runbar = ({
         [1000, "1000"],
         [2000, "2000"],
       ].map(([steps, label]) => (
-        <option value={steps} selected={runner.steps === steps}>
+        <option key={steps} value={steps}>
           {label}
         </option>
       ))}

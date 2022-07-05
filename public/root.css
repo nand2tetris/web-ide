@@ -37,16 +37,16 @@
     white-space: pre;
   }
 
-  body > footer {
+  #root > footer {
     border-top: 1px solid var(--card-border-color);
     background-color: var(--card-background-color);
   }
 }
 
 @layer user {
-  body > header,
-  body > main,
-  body > footer {
+  #root > header,
+  #root > main,
+  #root > footer {
     width: calc(100vw - (100vw - 100%));
     overflow-x: hidden;
   }

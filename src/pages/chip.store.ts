@@ -1,18 +1,18 @@
-import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/lib/esm/result";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { Subject, distinctUntilChanged, filter, map } from "rxjs";
+
+import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
-import { Low, Pin } from "../simulator/chip/chip";
-import { Chip as SimChip } from "../simulator/chip/chip";
-import * as make from "../simulator/chip/builder";
-import { getBuiltinChip } from "../simulator/chip/builtins/index";
-import { Tst, tstParser } from "../languages/tst";
+
 import { IResult } from "../languages/parser/base";
 import { cmpParser } from "../languages/cmp";
+import { Tst, tstParser } from "../languages/tst";
+import { Low, Pin, Chip as SimChip } from "../simulator/chip/chip";
+import * as make from "../simulator/chip/builder";
+import { getBuiltinChip } from "../simulator/chip/builtins/index";
 import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import { Clock } from "../simulator/chip/clock";
-import { retrieve } from "@davidsouther/jiffies/lib/esm/dom/provide.js";
 
 export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
@@ -45,7 +45,6 @@ export class ChipPageStore {
   test?: ChipTest;
   diffs: Diff[] = [];
   private runningTest = false;
-  private readonly statusLine = unwrap(retrieve<(s: string) => void>("status"));
   private files = {
     hdl: "",
     cmp: "",
@@ -83,7 +82,8 @@ export class ChipPageStore {
 
   constructor(
     private readonly storage: Record<string, string> = localStorage,
-    private readonly fs: FileSystem
+    private readonly fs: FileSystem,
+    private readonly statusLine: (status: string) => void
   ) {
     this.project =
       (this.storage["chip/project"] as keyof typeof PROJECTS) ?? "01";

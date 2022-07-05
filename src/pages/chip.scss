@@ -1,0 +1,37 @@
+.View__Chip {
+  > section {
+    grid: auto / 2fr 1fr;
+
+    > .pinouts {
+      grid: min-content repeat(2, minmax(200px, 1fr)) / 1fr 1fr;
+
+      h2 {
+        margin: 0 var(--nav-element-spacing-horizontal);
+      }
+    }
+  }
+}
+
+@media (max-width: 992px) {
+  .View__Chip > section {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 576px) {
+  .View__Chip > section > .pinouts {
+    display: flex;
+    flex-direction: column;
+
+    > h2 {
+      order: 0;
+    }
+    > article:not(:nth-of-type(3)) {
+      order: 1;
+    }
+    > article:nth-of-type(3) {
+      order: 2;
+    }
+  }
+}

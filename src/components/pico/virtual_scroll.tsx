@@ -1,5 +1,5 @@
 import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
-import { ReactNode, useReducer, useRef, useState } from "react";
+import { ReactNode, useRef, useState } from "react";
 
 export interface VirtualScrollSettings {
   minIndex: number;
@@ -39,9 +39,9 @@ export function fillVirtualScrollSettings(
   return { minIndex, maxIndex, startIndex, itemHeight, count, tolerance };
 }
 
-export function initialState<T>(
+export function initialState<T, U extends ReactNode>(
   settings: VirtualScrollSettings
-): VirtualScrollState<T> {
+): VirtualScrollState<T, U> {
   // From Denis Hilt, https://blog.logrocket.com/virtual-scrolling-core-principles-and-basic-implementation-in-react/
   const { minIndex, maxIndex, startIndex, itemHeight, count, tolerance } =
     settings;
@@ -147,12 +147,12 @@ export const VirtualScroll = <T extends {}, U extends ReactNode>(
     return state;
   };
 
-  const [state, setState] = useState(initialState(settings));
+  const [state, setState] = useState(initialState<T, U>(settings));
 
   const scrollTo = () => {
     const scrollTop = viewportRef.current?.scrollTop ?? state.topPaddingHeight;
     const scrollAction = doScroll(scrollTop, state, props.get);
-    setState({ ...state, ...scrollAction });
+    setState(scrollReducer(state, scrollAction));
   };
 
   const viewportRef = useRef<HTMLDivElement>();
@@ -166,8 +166,10 @@ export const VirtualScroll = <T extends {}, U extends ReactNode>(
         className="VirtualScroll__topPadding"
         style={{ height: `${state.topPaddingHeight}px` }}
       />
-      {(state.rows ?? []).map((row) => (
-        <div style={{ height: `${settings.itemHeight}px` }}>{row}</div>
+      {(state.rows ?? []).map((row, i) => (
+        <div key={i} style={{ height: `${settings.itemHeight}px` }}>
+          {row}
+        </div>
       ))}
       <div
         className="VirtualScroll__bottomPadding"

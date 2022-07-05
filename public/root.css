@@ -32,7 +32,7 @@
     font-size: var(--font-size-monospace);
   }
 
-  textarea.font-monospace {
+  textarea {
     overflow: scroll;
     white-space: pre;
   }

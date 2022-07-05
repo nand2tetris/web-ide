@@ -1,4 +1,4 @@
-.View__Chip {
+.ChipPage {
   > section {
     grid: auto / 2fr 1fr;
 
@@ -13,15 +13,13 @@
 }
 
 @media (max-width: 992px) {
-  .View__Chip > section {
-    display: flex;
+  .ChipPage > section {
     flex-direction: column;
   }
 }
 
 @media (max-width: 576px) {
-  .View__Chip > section > .pinouts {
-    display: flex;
+  .ChipPage > section > .pinouts {
     flex-direction: column;
 
     > h2 {

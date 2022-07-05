@@ -27,6 +27,7 @@ export const CPU = () => {
     }
 
     override reset() {
+      resetRAM();
       cpu.reset();
       // setState();
     }

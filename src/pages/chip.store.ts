@@ -1,4 +1,4 @@
-import { Subject, distinctUntilChanged, filter, map } from "rxjs";
+import { Subject, map } from "rxjs";
 
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
@@ -68,25 +68,12 @@ export class ChipPageStore {
   }
 
   readonly selectors = {
-    project: this.$.pipe(
-      map((t) => t.project),
-      distinctUntilChanged((prev, curr) => {
-        return prev === curr;
-      })
-    ),
-    chipName: this.$.pipe(
-      map((t) => t.chipName),
-      distinctUntilChanged((prev, curr) => {
-        return prev === curr;
-      })
-    ),
+    project: this.$.pipe( map((t) => t.project)),
+    chipName: this.$.pipe(map((t) => t.chipName)),
     chips: this.$.pipe(map((t) => t.chips)),
     chip: this.$.pipe(map((t) => t.chip)),
-    files: this.$.pipe(map((t) => t.files as Readonly<typeof this.files>)),
-    test: this.$.pipe(
-      map((t) => t.test),
-      filter((t): t is ChipTest => t !== undefined)
-    ),
+    files: this.$.pipe(map((t) => t.files)),
+    test: this.$.pipe(map((t) => t.test)),
     diffs: this.$.pipe(map((t) => t.diffs)),
     log: this.testLog.asObservable(),
   };
@@ -103,6 +90,7 @@ export class ChipPageStore {
     let maybeChip = getBuiltinChip(this.chipName);
     if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
     this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
+    this.setProject(this.project);
     Clock.get().update.subscribe(() => {
       this.next();
     });
@@ -118,10 +106,16 @@ export class ChipPageStore {
     this.next();
   }
 
-  compileChip(text = this.files.hdl) {
-    this.files.hdl = text;
+  setFiles({hdl, tst, cmp, out = ''}:{hdl: string, tst: string, cmp: string, out?: string}) {
+    this.files.hdl = hdl;
+    this.files.tst = tst;
+    this.files.cmp = cmp;
+    this.files.out = out;
+  }
+
+  compileChip() {
     this.chip?.remove();
-    const maybeChip = make.parse(text);
+    const maybeChip = make.parse(this.files.hdl);
     if (isErr(maybeChip)) {
       this.statusLine(display(Err(maybeChip)));
       return;
@@ -134,20 +128,22 @@ export class ChipPageStore {
   }
 
   async saveChip(text: string) {
+    this.files.hdl = text;
     const name = this.chipName;
     const path = `/projects/${this.project}/${name}/${name}.hdl`;
     await this.fs.writeFile(path, text);
     this.statusLine(`Saved ${path}`);
+    this.next();
   }
 
   async setProject(proj: keyof typeof PROJECTS) {
     localStorage["chip/project"] = this.project = proj;
-    this.chips = PROJECTS[proj as "01" | "02"];
+    this.chips = PROJECTS[proj];
     this.chipName =
       this.chipName && this.chips.includes(this.chipName)
         ? this.chipName
         : this.chips[0];
-    return await this.setChip(this.chipName);
+    await this.setChip(this.chipName);
   }
 
   async setChip(name: string) {
@@ -166,14 +162,10 @@ export class ChipPageStore {
 
     this.chip.eval();
     this.next();
-    return this.files;
   }
 
-  async runTest(tstString: string, cmpString: string) {
-    this.files.tst = tstString;
-    this.files.cmp = cmpString;
-
-    const tst = await new Promise<IResult<Tst>>((r) => r(tstParser(tstString)));
+  async runTest() {
+    const tst = await new Promise<IResult<Tst>>((r) => r(tstParser(this.files.tst)));
 
     if (isErr(tst)) {
       this.statusLine(display(Err(tst)));
@@ -187,17 +179,17 @@ export class ChipPageStore {
       try {
         this.runningTest = true;
         this.test?.run();
-        r();
       } finally {
         this.runningTest = false;
       }
+      r();
     });
 
     this.files.out = this.test.log();
     this.next();
 
     const [cmp, out] = await Promise.all([
-      new Promise<IResult<string[][]>>((r) => r(cmpParser(cmpString))),
+      new Promise<IResult<string[][]>>((r) => r(cmpParser(this.files.cmp))),
       new Promise<IResult<string[][]>>((r) => r(cmpParser(this.files.out))),
     ]);
 

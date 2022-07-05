@@ -33,7 +33,13 @@ export const Chip = () => {
   const [diffs, setDiffs] = useState<Diff[]>([]);
   const [ran, setRan] = useState(false);
 
-  state.subject.subscribe(setState);
+  state.selectors.chip.subscribe(() => {
+    setInPins(state.chip.ins);
+    setClocked(state.chip.clocked);
+    setOutPins(state.chip.outs);
+    setInternalPins(state.chip.pins);
+
+  });
   state.selectors.project.subscribe((project) => {
     setProject(project);
     setChips(PROJECTS[project]);
@@ -56,33 +62,33 @@ export const Chip = () => {
     setOutText(out);
   });
 
-  const onSaveChip = () => {
-    state.saveChip(hdlText);
-  };
-
-  function setState() {
-    setInPins(state.chip.ins);
-    setClocked(state.chip.clocked);
-    setOutPins(state.chip.outs);
-    setInternalPins(state.chip.pins);
-  }
-
   function clearOutput() {
     setOutText("");
     setRan(false);
   }
 
-  function compile() {
-    state.compileChip(hdlText);
-  }
+  const onSaveChip = () => {
+    state.saveChip(hdlText);
+  };
 
-  async function execute() {
+  async function setFiles() {
     const hdl = hdlText;
     const tst = tstText;
     const cmp = cmpText;
     clearOutput();
-    await state.compileChip(hdl);
-    await state.runTest(tst, cmp);
+    await state.setFiles({hdl, tst, cmp});
+  }
+
+
+  async function compile() {
+    await setFiles();
+    await state.compileChip();
+  }
+
+  async function execute() {
+    await setFiles();
+    await state.compileChip();
+    await state.runTest();
   }
 
   return (

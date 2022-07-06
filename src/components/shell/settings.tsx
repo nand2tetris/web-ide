@@ -1,12 +1,23 @@
-import { useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { StorageContext } from "../../util/storage";
 import * as projects from "../../projects";
+import { Subject } from "rxjs";
 
-export const Settings = (props: { open: false }) => {
+export const SettingsContext = createContext<{ open: Subject<void> }>({
+  open: new Subject(),
+});
+
+export const Settings = () => {
   const fs = useContext(StorageContext);
-  // const statusLine = () => {};
+  const settings = useContext(SettingsContext);
 
-  const [open, setOpen] = useState(props.open);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const subscription = settings.open.subscribe(() => {
+      setOpen(true);
+    });
+    return () => subscription.unsubscribe();
+  }, [settings.open]);
 
   return (
     <dialog open={open}>
@@ -28,7 +39,7 @@ export const Settings = (props: { open: false }) => {
             <dt>Files</dt>
             <dd>
               <button
-                onClick={(e) => {
+                onClick={() => {
                   localStorage["chip/project"] = "01";
                   localStorage["chip/chip"] = "Not";
                   projects.resetFiles(fs);

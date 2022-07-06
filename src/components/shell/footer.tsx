@@ -1,18 +1,12 @@
+import { Icon } from "../pico/icon";
 import StatusLine from "./statusline";
 
-const Footer = () => (
+const Footer = ({ openSettings }: { openSettings: () => void }) => (
   <footer className="flex row justify-between">
     <StatusLine />
     <div className="flex row align-center">
-      <a href="./user_guide/" style={{ marginRight: "var(--spacing)" }}>
-        User&nbsp;Guide
-      </a>
-      <button
-        onClick={() => {
-          // settings.setAttribute("open", "open");
-        }}
-      >
-        Settings
+      <button onClick={openSettings}>
+        <Icon name="settings"></Icon>
       </button>
     </div>
   </footer>

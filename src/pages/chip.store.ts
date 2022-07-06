@@ -1,7 +1,10 @@
 import { Subject, map } from "rxjs";
 
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import {
+  FileSystem,
+  ObjectFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 import { IResult } from "../languages/parser/base";
@@ -13,6 +16,7 @@ import { getBuiltinChip } from "../simulator/chip/builtins/index";
 import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import { Clock } from "../simulator/chip/clock";
+import * as not from "../projects/project_01/01_not";
 
 export const PROJECT_NAMES = [
   ["01", "Project 1"],
@@ -79,7 +83,13 @@ export class ChipPageStore {
   };
 
   constructor(
-    private readonly fs: FileSystem = new FileSystem(),
+    private readonly fs: FileSystem = new FileSystem(
+      new ObjectFileSystemAdapter({
+        "/projects/01/Not/Not.hdl": not.hdl,
+        "/projects/01/Not/Not.tst": not.tst,
+        "/projects/01/Not/Not.cmp": not.cmp,
+      })
+    ),
     private readonly storage: Record<string, string> = {},
     private readonly statusLine: (status: string) => void = () => {}
   ) {

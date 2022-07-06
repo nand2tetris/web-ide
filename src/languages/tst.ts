@@ -1,14 +1,14 @@
 /** Reads tst files to apply and perform test runs. */
 
 import { Option, unwrapOr } from "@davidsouther/jiffies/lib/esm/result";
-import { int10, int16, int2 } from "../util/twos"
-import { Parser } from "./parser/base"
-import { alt } from "./parser/branch"
-import { tag } from "./parser/bytes"
-import { map, opt, recognize, valueFn } from "./parser/combinator"
-import { many1 } from "./parser/multi"
-import { filler, identifier, list, token } from "./parser/recipe"
-import { pair, preceded, terminated, tuple } from "./parser/sequence"
+import { int10, int16, int2 } from "../util/twos";
+import { Parser } from "./parser/base";
+import { alt } from "./parser/branch";
+import { tag } from "./parser/bytes";
+import { map, opt, recognize, valueFn } from "./parser/combinator";
+import { many1 } from "./parser/multi";
+import { filler, identifier, list, token } from "./parser/recipe";
+import { pair, preceded, terminated, tuple } from "./parser/sequence";
 
 export interface TstSetOperation {
   op: "set";

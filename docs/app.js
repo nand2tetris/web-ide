@@ -314,7 +314,7 @@ class ObjectFileSystemAdapter {
         return new Promise((resolve, reject) => {
             let file = this.fs[path];
             if (file === undefined) {
-                reject();
+                reject(new Error(`File Not Found ${path}`));
             }
             else {
                 resolve(file);
@@ -418,7 +418,289 @@ function compileFStyle(fstyle, prefix = "") {
     return rule;
 }
 
+const LEVEL = {
+    UNKNOWN: 0,
+    SILENT: 0,
+    DEBUG: 1,
+    VERBOSE: 1,
+    INFO: 2,
+    WARN: 3,
+    ERROR: 4,
+};
+function getLogger(name) {
+    const logger = { level: LEVEL.INFO };
+    const logAt = (level, fn) => (message, data) => level >= (logger.level ?? LEVEL.SILENT)
+        ? fn(display(message), data)
+        : undefined;
+    logger.debug = logAt(LEVEL.VERBOSE, console.debug.bind(console));
+    logger.info = logAt(LEVEL.INFO, console.info.bind(console));
+    logger.warn = logAt(LEVEL.WARN, console.warn.bind(console));
+    logger.error = logAt(LEVEL.ERROR, console.error.bind(console));
+    return logger;
+}
+getLogger();
+
+const AsyncScheduler = {
+    execute(fn) {
+        return Promise.all(fn()).then(() => undefined);
+    },
+};
+const SyncScheduler = {
+    execute(fn) {
+        fn();
+    },
+};
+class Subject {
+    scheduler;
+    #coldWaiters = new Set();
+    #subscribers = new Set();
+    #complete = false;
+    get $() {
+        return this;
+    }
+    get hot() {
+        return this.#subscribers.size > 0;
+    }
+    get cold() {
+        return !this.hot;
+    }
+    constructor(scheduler = AsyncScheduler) {
+        this.scheduler = scheduler;
+    }
+    onWarm(fn) {
+        if (this.cold)
+            this.#coldWaiters.add(fn);
+    }
+    next(t) {
+        if (this.#complete)
+            throw new Error("Cannot call next on a completed subject");
+        return this.scheduler.execute(() => [...this.#subscribers].map((s) => s.next?.(t)));
+    }
+    error(e) {
+        if (this.#complete)
+            throw new Error("Cannot call error on a completed subject");
+        return this.scheduler.execute(() => [...this.#subscribers].map((s) => s.error?.(e)));
+    }
+    complete() {
+        if (this.#complete)
+            throw new Error("Cannot call complete on a completed subject");
+        this.#complete = true;
+        const finished = this.scheduler.execute(() => [...this.#subscribers].map((s) => s.complete?.()));
+        this.#subscribers.clear(); // Free subscribers for garbage collection
+        return finished;
+    }
+    subscribe(subscriber) {
+        if (this.#complete)
+            throw new Error("Cannot call subscribe on a completed subject");
+        if (subscriber instanceof Function) {
+            subscriber = { next: subscriber };
+        }
+        this.#subscribers.add(subscriber);
+        [...this.#coldWaiters].forEach((w) => w());
+        this.#coldWaiters.clear();
+        return {
+            unsubscribe: () => this.#subscribers.delete(subscriber),
+        };
+    }
+    pipe(...os) {
+        this.subscribe(os[0]);
+        for (let i = 1; i < os.length; i++) {
+            os[i - 1].subscribe(os[i]);
+        }
+        return os[os.length - 1];
+    }
+    filter(fn) {
+        return this.pipe(operator.filter(fn));
+    }
+    distinct(fn = Object.is) {
+        return this.pipe(operator.distinct(fn));
+    }
+    map(fn) {
+        return this.pipe(operator.map(fn));
+    }
+    reduce(fn, init) {
+        return this.pipe(operator.reduce(fn, init));
+    }
+    replay(n) {
+        return this.pipe(operator.replay(n));
+    }
+    tap(s) {
+        return this.pipe(operator.tap(s));
+    }
+}
+class BehaviorSubject extends Subject {
+    #current;
+    constructor(t, scheduler) {
+        super(scheduler);
+        this.#current = t;
+    }
+    next(t) {
+        this.#current = t;
+        return super.next(t);
+    }
+    subscribe(subscriber) {
+        if (subscriber instanceof Function) {
+            subscriber = { next: subscriber };
+        }
+        subscriber.next?.(this.#current);
+        return super.subscribe(subscriber);
+    }
+    get current() {
+        return this.#current;
+    }
+}
+class ReplaySubject extends Subject {
+    n;
+    #history = [];
+    constructor(n, scheduler) {
+        super(scheduler);
+        this.n = n;
+    }
+    next(t) {
+        this.#history.push(t);
+        if (this.#history.length > this.n) {
+            this.#history.shift();
+        }
+        return super.next(t);
+    }
+    subscribe(subscriber) {
+        if (subscriber instanceof Function) {
+            subscriber = { next: subscriber };
+        }
+        const history = [...this.#history];
+        (function send() {
+            if (history.length == 0)
+                return;
+            const t = history.shift();
+            subscriber.next?.(t);
+            new Promise(send);
+        })();
+        return super.subscribe(subscriber);
+    }
+}
+class MapOperator extends Subject {
+    mapFn;
+    constructor(mapFn) {
+        super();
+        this.mapFn = mapFn;
+    }
+    next(t) {
+        return super.next(this.mapFn(t));
+    }
+}
+class FilterOperator extends Subject {
+    filterFn;
+    constructor(filterFn) {
+        super();
+        this.filterFn = filterFn;
+    }
+    next(t) {
+        return this.filterFn(t) ? super.next(t) : undefined;
+    }
+}
+class DistinctOperator extends Subject {
+    distinctFn;
+    #prior = undefined;
+    constructor(distinctFn = Object.is) {
+        super();
+        this.distinctFn = distinctFn;
+    }
+    next(t) {
+        if (this.#prior === undefined) {
+            this.#prior = t;
+            return super.next(t);
+        }
+        const same = this.distinctFn(this.#prior, t);
+        if (!same) {
+            this.#prior = t;
+            return super.next(t);
+        }
+        return undefined;
+    }
+}
+class ReduceOperator extends BehaviorSubject {
+    fn;
+    constructor(fn, init) {
+        super(init);
+        this.fn = fn;
+    }
+    next(t) {
+        return super.next(this.fn(this.current, t));
+    }
+}
+class TakeUntilOperator extends Subject {
+    constructor(o) {
+        super();
+        o.subscribe(() => this.complete());
+    }
+}
+class TapOperator extends Subject {
+    subscriber;
+    constructor(fn) {
+        super();
+        this.subscriber = fn instanceof Function ? { next: fn } : fn;
+    }
+    next(t) {
+        this.subscriber.next?.(t);
+        return super.next(t);
+    }
+    error(e) {
+        this.subscriber.error?.(e);
+        return super.error(e);
+    }
+    complete() {
+        this.subscriber.complete?.();
+        return super.complete();
+    }
+}
+class FirstOperator extends Subject {
+    next(t) {
+        const next = super.next(t);
+        this.complete();
+        return next;
+    }
+}
+class LastOperator extends Subject {
+    #latest;
+    next(t) {
+        this.#latest = t;
+    }
+    complete() {
+        if (this.#latest !== undefined) {
+            super.next(this.#latest);
+        }
+        return super.complete();
+    }
+}
+const filter = (fn) => new FilterOperator(fn);
+const distinct = (fn) => new DistinctOperator(fn ?? Object.is);
+const first = () => new FirstOperator();
+const last = () => new LastOperator();
+const map$1 = (fn) => new MapOperator(fn);
+const replay = (n) => new ReplaySubject(n);
+const reduce = (fn, init) => new ReduceOperator(fn, init);
+const takeUntil = (o) => new TakeUntilOperator(o);
+const tap = (fn) => new TapOperator(fn);
+const operator = {
+    filter,
+    distinct,
+    first,
+    last,
+    map: map$1,
+    replay,
+    reduce,
+    takeUntil,
+    tap,
+};
+
 const isNone = (s) => s == null;
+const isSome = (s) => s != null;
+function None(_) {
+    return null;
+}
+function Some(t) {
+    return t;
+}
 const isOk = (t) => t.ok !== undefined;
 const isErr = (e) => e.err !== undefined;
 function Ok(t) {
@@ -499,6 +781,40 @@ function FC(name, component) {
     return ctor;
 }
 
+/**
+ * Throw an error when a condition is not met.
+ */
+function assert(condition, message = "Assertion failed") {
+    if (!condition) {
+        throw new Error(message instanceof Function ? message() : message);
+    }
+}
+/**
+ * Given a value, return it if it is not null nor undefined. Otherwise throw an
+ * error.
+ *
+ * @template T
+ * @returns {NonNullable<T>}
+ */
+function assertExists(t, message = "Assertion failed: value does not exist") {
+    assert(t != null, message);
+    return t;
+}
+/**
+ * Compile time assertion that no value will used at this point in control flow.
+ */
+function checkExhaustive(value, message = `Unexpected value ${value}`) {
+    throw new Error(message instanceof Function ? message() : message);
+}
+
+function range(start, end, stride = 1) {
+    const range = [];
+    for (let i = start; i < end; i += stride) {
+        range.push(i);
+    }
+    return range;
+}
+
 const Hex = [
     "0",
     "1",
@@ -560,11 +876,7 @@ function bits(i) {
 }
 function int(n, radix) {
     let i = parseInt(n.replace(/[^\d+-.xa-fA-F]/g, ""), radix);
-    i = i & 0xffff;
-    if (i & 0x8000) {
-        return -((~i + 1) & 0xffff);
-    }
-    return i;
+    return i & 0xffff;
 }
 function int16(i) {
     return int(i, 16);
@@ -591,9 +903,15 @@ function bin(i, precision = 16) {
     return `${hu}${hl}${lu}${ll}`.substring(16 - precision); // Match the book's formatting
 }
 function dec(i) {
-    const s = Math.sign(i) === -1 ? "-" : "";
-    i = Math.abs(i);
-    return `${s}${i}`;
+    i = i & 0xffff;
+    if (i == 0x8000) {
+        return "-32768";
+    }
+    if (i & 0x8000) {
+        i = (~i + 1) & 0x7fff;
+        return `-${i}`;
+    }
+    return `${i}`;
 }
 function nand16(a, b) {
     a = a & 0xffff;
@@ -601,112 +919,6 @@ function nand16(a, b) {
     let c = ~(a & b);
     c = c & 0xffff;
     return c;
-}
-
-const Pinout = FC("pin-out", (el, { pins, toggle }) => {
-    const t = table(thead(tr(th({ tabIndex: 0 }, "Name"), th({ tabIndex: 0 }, "Voltage"))), tbody(...[...pins.entries()].map((pin) => tr(td({ tabIndex: 0 }, pin.name), td({
-        style: { cursor: toggle ? "pointer" : "inherit" },
-        events: {
-            ...(toggle
-                ? { click: () => toggle(pin), keypress: () => toggle(pin) }
-                : {}),
-        },
-    }, code({ tabIndex: 0 }, pin.width == 1
-        ? pin.voltage() == 0
-            ? "Low"
-            : "High"
-        : bin(pin.busVoltage, pin.width)))))));
-    return t;
-});
-
-const Select = FC("jiffies-select", (el, { name, events: { change }, disabled, value, options }) => select({ name, events: { change }, disabled }, ...options.map(([v, name]) => option({ value: v, selected: value === v }, `${name}`))));
-
-const icon$1 = (icon) => i({ class: `icon-${icon}` });
-const Runbar = FC("run-bar", (el, { runner }, children) => div({ class: "input-group" }, a$1({
-    href: "#",
-    role: "button",
-    events: {
-        click: (e) => {
-            e.preventDefault();
-            runner.frame();
-        },
-    },
-}, icon$1("fast-fw")), a$1({
-    href: "#",
-    role: "button",
-    events: {
-        click: (e) => {
-            e.preventDefault();
-            runner.reset();
-        },
-    },
-}, icon$1(`to-start`)), a$1({
-    href: "#",
-    role: "button",
-    events: {
-        click: (e) => {
-            e.preventDefault();
-            runner.running ? runner.stop() : runner.start();
-        },
-    },
-}, runner.running ? icon$1(`pause`) : icon$1(`play`)), Select({
-    name: "speed",
-    events: {
-        change: (e) => {
-            runner.speed = Number(e.target?.value ?? runner.speed);
-        },
-    },
-    disabled: runner.running,
-    value: `${runner.speed}`,
-    options: [
-        ["16", "60FPS"],
-        ["500", "Fast"],
-        ["1000", "Normal"],
-        ["2000", "Slow"],
-    ],
-}), Select({
-    name: "steps",
-    events: {
-        change: (e) => {
-            runner.steps = Number(e.target?.value ?? runner.steps);
-        },
-    },
-    disabled: runner.running,
-    value: `${runner.steps}`,
-    options: [
-        ["1", "1 Step"],
-        ["500", "500"],
-        ["1000", "1000"],
-        ["2000", "2000"],
-    ],
-}), ...children));
-
-/**
- * Throw an error when a condition is not met.
- */
-function assert(condition, message = "Assertion failed") {
-    if (!condition) {
-        throw new Error(message instanceof Function ? message() : message);
-    }
-}
-/**
- * Given a value, return it if it is not null nor undefined. Otherwise throw an
- * error.
- *
- * @template T
- * @returns {NonNullable<T>}
- */
-function assertExists(t, message = "Assertion failed: value does not exist") {
-    assert(t != null, message);
-    return t;
-}
-
-function range(start, end, stride = 1) {
-    const range = [];
-    for (let i = start; i < end; i += stride) {
-        range.push(i);
-    }
-    return range;
 }
 
 const HIGH = 1;
@@ -827,7 +1039,8 @@ class ConstantBus extends Bus {
 const TRUE_BUS = new ConstantBus("true", 0xffff);
 const FALSE_BUS = new ConstantBus("false", 0);
 function parsePinDecl(toPin) {
-    const { pin, w } = toPin.match(/(?<pin>[a-z]+)(\[(?<w>\d+)\])?/)?.groups;
+    const { pin, w } = toPin.match(/(?<pin>[a-zA-Z]+)(\[(?<w>\d+)\])?/)
+        ?.groups;
     return {
         pin,
         width: w ? Number(w) : 1,
@@ -876,7 +1089,14 @@ class Chip$1 {
     outs = new Pins();
     pins = new Pins();
     parts = new Set();
-    constructor(ins, outs, name) {
+    get clocked() {
+        for (const part of this.parts) {
+            if (part.clocked)
+                return true;
+        }
+        return false;
+    }
+    constructor(ins, outs, name, internals = []) {
         this.name = name;
         for (const inn of ins) {
             const { pin, width = 1 } = inn.pin !== undefined
@@ -890,6 +1110,13 @@ class Chip$1 {
                 : parsePinDecl(out);
             this.outs.insert(new Bus(pin, width));
         }
+        for (const internal of internals) {
+            const { pin, width = 1 } = internal.pin !== undefined
+                ? internal
+                : parsePinDecl(internal);
+            this.pins.insert(new Bus(pin, width));
+        }
+        Clock.get().$.subscribe(() => this.eval());
     }
     in(pin = "in") {
         assert(this.ins.has(pin));
@@ -946,8 +1173,8 @@ class Chip$1 {
     }
     wireOutPin(part, to, from) {
         let partPin = assertExists(part.outs.get(to.name), () => `Cannot wire to missing pin ${to.name}`);
-        let chipPin = this.findPin(from.name, from.width);
         to.width ??= partPin.width;
+        let chipPin = this.findPin(from.name, from.width ?? to.width);
         from.width ??= chipPin.width;
         if (chipPin instanceof ConstantBus) {
             throw new Error(`Cannot wire to constant bus`);
@@ -964,8 +1191,8 @@ class Chip$1 {
     }
     wireInPin(part, to, from) {
         let partPin = assertExists(part.ins.get(to.name), () => `Cannot wire to missing pin ${to.name}`);
-        const chipPin = this.findPin(from.name, to.width);
         to.width ??= partPin.width;
+        const chipPin = this.findPin(from.name, from.width ?? to.width);
         from.width ??= chipPin.width;
         // Wrap the partPin in an InBus when the part side is dimensioned
         if (to.start > 0 || to.width != chipPin.width) {
@@ -993,27 +1220,16 @@ class Chip$1 {
     tock() {
         this.eval();
     }
+    remove() {
+        for (const part of this.parts) {
+            part.remove();
+        }
+    }
 }
 class Low extends Chip$1 {
     constructor() {
         super([], []);
         this.outs.insert(FALSE_BUS);
-    }
-}
-class DFF extends Chip$1 {
-    t = LOW;
-    constructor() {
-        super(["in"], ["out"]);
-    }
-    tick() {
-        // Read in into t
-        this.t = this.in().voltage();
-        this.eval();
-    }
-    tock() {
-        // write t into out
-        this.out().pull(this.t);
-        this.eval();
     }
 }
 function mask(width) {
@@ -1035,52 +1251,110 @@ function printChip(chip) {
     };
 }
 
-const MAX_STEPS = 1000;
-class Timer {
-    frame() {
+let clock$1;
+class Clock {
+    level = LOW;
+    ticks = 0;
+    static get() {
+        if (clock$1 == undefined) {
+            clock$1 = new Clock();
+        }
+        return clock$1;
+    }
+    subject = new BehaviorSubject({
+        level: this.level,
+        ticks: this.ticks,
+    }, SyncScheduler);
+    $ = this.subject;
+    update = new Subject();
+    next() {
+        this.subject.next({
+            level: this.level,
+            ticks: this.ticks,
+        });
+        this.update.next();
+    }
+    constructor() { }
+    reset() {
+        this.level = LOW;
+        this.ticks = 0;
+        this.next();
+    }
+    tick() {
+        assert(this.level == LOW, "Can only tick up from LOW");
+        this.level = HIGH;
+        this.next();
+    }
+    tock() {
+        assert(this.level == HIGH, "Can only tock down from HIGH");
+        this.level = LOW;
+        this.ticks += 1;
+        this.next();
+    }
+    toggle() {
+        this.level == HIGH ? this.tock() : this.tick();
+    }
+    eval() {
         this.tick();
-        this.finishFrame();
+        this.tock();
     }
-    tick() { }
-    finishFrame() { }
-    reset() { }
-    toggle() { }
-    steps = 1; // How many steps to take per update
-    speed = 1000; // how often to update, in ms
-    get running() {
-        return this.#running;
-    }
-    #running = false;
-    #sinceLastFrame = 0;
-    #lastUpdate = 0;
-    #run = () => {
-        if (!this.#running) {
-            return;
-        }
-        const now = Date.now();
-        const delta = now - this.#lastUpdate;
-        this.#lastUpdate = now;
-        this.#sinceLastFrame += delta;
-        if (this.#sinceLastFrame > this.speed) {
-            for (let i = 0; i < Math.min(this.steps, MAX_STEPS); i++) {
-                this.tick();
-            }
-            this.finishFrame();
-            this.#sinceLastFrame -= this.speed;
-        }
-        requestAnimationFrame(this.#run);
-    };
-    start() {
-        this.#running = true;
-        this.#lastUpdate = Date.now() - this.speed;
-        this.#run();
-        this.toggle();
-    }
-    stop() {
-        this.#running = false;
-        this.toggle();
+    toString() {
+        return `${this.ticks}${this.level == HIGH ? "+" : ""}`;
     }
 }
+class ClockedChip extends Chip$1 {
+    get clocked() {
+        return true;
+    }
+    #subscription = Clock.get().$.subscribe(({ level }) => {
+        if (level === LOW) {
+            this.tock();
+        }
+        else {
+            this.tick();
+        }
+    });
+    constructor(ins, outs, name, internal) {
+        super(ins, outs, name, internal);
+    }
+    remove() {
+        this.#subscription.unsubscribe();
+        super.remove();
+    }
+}
+
+const clock = Clock.get();
+const Pinout = FC("pin-out", (el, { pins, toggle, clocked = false, }) => {
+    const t = table(thead(tr(th({ tabIndex: 0 }, "Name"), th({ tabIndex: 0 }, "Value"))), tbody(...[
+        clocked
+            ? tr(td({ tabIndex: 0 }, "Clock"), td(...[
+                [display(clock), () => clock.toggle()],
+                ["Tick", () => clock.tick()],
+                ["Tock", () => clock.tock()],
+                ["Reset", () => clock.reset()],
+            ].map(([label, click]) => code({
+                style: {
+                    cursor: toggle ? "pointer" : "inherit",
+                    marginRight: "var(--spacing)",
+                },
+                events: { click },
+                role: "button",
+            }, label))))
+            : undefined,
+    ].filter((row) => row !== undefined), ...[...pins.entries()].map((pin) => tr(td({ tabIndex: 0 }, pin.name), td({
+        style: { cursor: toggle ? "pointer" : "inherit" },
+        events: {
+            ...(toggle
+                ? { click: () => toggle(pin), keypress: () => toggle(pin) }
+                : {}),
+        },
+    }, code({ tabIndex: 0 }, pin.width == 1
+        ? pin.voltage() == 0
+            ? "Low"
+            : "High"
+        : bin(pin.busVoltage, pin.width)))))));
+    return t;
+});
 
 // https://docs.rs/nom/latest/nom/index.html
 class ParseError {
@@ -1531,7 +1805,7 @@ const hdlIdentifier = (i) =>
 // @ts-ignore
 hdlIdentifierParser(i).map(([rest, id]) => Ok([rest, id.toString()]));
 function pinDeclaration(toPin) {
-    const match = toPin.toString().match(/^(?<pin>[0-9a-z]+)(\[(?<w>\d+)\])?/);
+    const match = toPin.toString().match(/^(?<pin>[0-9a-zA-Z]+)(\[(?<w>\d+)\])?/);
     if (!match) {
         return ParseErrors.failure("pinDeclaration expected pin");
     }
@@ -1548,7 +1822,7 @@ function pinDeclaration(toPin) {
 function pin(toPin) {
     const match = toPin
         .toString()
-        .match(/^(?<pin>[0-9a-z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
+        .match(/^(?<pin>[0-9a-zA-Z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/);
     if (!match) {
         return ParseErrors.failure("toPin expected pin");
     }
@@ -1586,7 +1860,7 @@ const pinDeclParser = list(hdlWs(pinDeclaration), token(","));
 const pinList = (i) => pinDeclParser(i);
 const inDeclParser = delimited(token("IN"), pinList, token(";"));
 const inList = (i) => inDeclParser(i);
-const outDeclParser = delimited(token("OUT"), pinList, token(";"));
+const outDeclParser = map(opt(delimited(token("OUT"), pinList, token(";"))), (i) => (isNone(i) ? [] : i));
 const outList = (i) => outDeclParser(i);
 const partsParser = alt(preceded(token("PARTS:"), many0(terminated(part, token(";")))), value("BUILTIN", terminated(token("BUILTIN"), token(";"))));
 const parts = (i) => partsParser(i);
@@ -1605,6 +1879,7 @@ const TEST_ONLY$1 = {
     hdlWs,
     hdlIdentifier,
     pin,
+    pinList,
     inList,
     outList,
     part,
@@ -1613,6 +1888,308 @@ const TEST_ONLY$1 = {
     chipParser,
     wire,
 };
+
+function and(a, b) {
+    return [a == 1 && b == 1 ? HIGH : LOW];
+}
+function and16(a, b) {
+    return [a & b & 0xffff];
+}
+class And extends Chip$1 {
+    constructor() {
+        super(["a", "b"], ["out"]);
+    }
+    eval() {
+        const a = this.in("a").voltage();
+        const b = this.in("b").voltage();
+        const [n] = and(a, b);
+        this.out().pull(n);
+    }
+}
+class And16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const [n] = and16(a, b);
+        this.out().busVoltage = n;
+    }
+}
+
+function dmux(inn, sel) {
+    const a = sel == LOW && inn == HIGH ? HIGH : LOW;
+    const b = sel == HIGH && inn == HIGH ? HIGH : LOW;
+    return [a, b];
+}
+function dmux4way(inn, sel) {
+    const a = sel == 0b00 && inn == HIGH ? HIGH : LOW;
+    const b = sel == 0b01 && inn == HIGH ? HIGH : LOW;
+    const c = sel == 0b10 && inn == HIGH ? HIGH : LOW;
+    const d = sel == 0b11 && inn == HIGH ? HIGH : LOW;
+    return [a, b, c, d];
+}
+function dmux8way(inn, sel) {
+    const a = sel == 0b000 && inn == HIGH ? HIGH : LOW;
+    const b = sel == 0b001 && inn == HIGH ? HIGH : LOW;
+    const c = sel == 0b010 && inn == HIGH ? HIGH : LOW;
+    const d = sel == 0b011 && inn == HIGH ? HIGH : LOW;
+    const e = sel == 0b100 && inn == HIGH ? HIGH : LOW;
+    const f = sel == 0b101 && inn == HIGH ? HIGH : LOW;
+    const g = sel == 0b110 && inn == HIGH ? HIGH : LOW;
+    const h = sel == 0b111 && inn == HIGH ? HIGH : LOW;
+    return [a, b, c, d, e, f, g, h];
+}
+class DMux extends Chip$1 {
+    constructor() {
+        super(["in", "sel"], ["a", "b"]);
+    }
+    eval() {
+        const inn = this.in("in").voltage();
+        const sel = this.in("sel").voltage();
+        const [a, b] = dmux(inn, sel);
+        this.out("a").pull(a);
+        this.out("b").pull(b);
+    }
+}
+class DMux4Way extends Chip$1 {
+    constructor() {
+        super(["in", "sel[2]"], ["a", "b", "c", "d"]);
+    }
+    eval() {
+        const inn = this.in("in").voltage();
+        const sel = this.in("sel").busVoltage;
+        const [a, b, c, d] = dmux4way(inn, sel);
+        this.out("a").pull(a);
+        this.out("b").pull(b);
+        this.out("c").pull(c);
+        this.out("d").pull(d);
+    }
+}
+class DMux8Way extends Chip$1 {
+    constructor() {
+        super(["in", "sel[3]"], ["a", "b", "c", "d", "e", "f", "g", "h"]);
+    }
+    eval() {
+        const inn = this.in("in").voltage();
+        const sel = this.in("sel").busVoltage;
+        const [a, b, c, d, e, f, g, h] = dmux8way(inn, sel);
+        this.out("a").pull(a);
+        this.out("b").pull(b);
+        this.out("c").pull(c);
+        this.out("d").pull(d);
+        this.out("e").pull(e);
+        this.out("f").pull(f);
+        this.out("g").pull(g);
+        this.out("h").pull(h);
+    }
+}
+
+function mux(a, b, sel) {
+    return [sel === LOW ? a : b];
+}
+function mux16(a, b, sel) {
+    return [sel === LOW ? a : b];
+}
+function mux16_4(a, b, c, d, sel) {
+    const s2 = (sel & 0b01);
+    return (sel & 0b10) === 0b00 ? mux16(a, b, s2) : mux16(c, d, s2);
+}
+function mux16_8(a, b, c, d, e, f, g, h, sel) {
+    const s2 = (sel & 0b11);
+    return (sel & 0b100) === 0b000
+        ? mux16_4(a, b, c, d, s2)
+        : mux16_4(e, f, g, h, s2);
+}
+class Mux extends Chip$1 {
+    constructor() {
+        super(["a", "b", "sel"], ["out"]);
+    }
+    eval() {
+        const a = this.in("a").voltage();
+        const b = this.in("b").voltage();
+        const sel = this.in("sel").voltage();
+        const [set] = mux(a, b, sel);
+        this.out().pull(set);
+    }
+}
+class Mux16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]", "sel"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const sel = this.in("sel").voltage();
+        const [out] = mux16(a, b, sel);
+        this.out().busVoltage = out;
+    }
+}
+class Mux4Way16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]", "c[16]", "d[16]", "sel[2]"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const c = this.in("c").busVoltage;
+        const d = this.in("d").busVoltage;
+        const sel = this.in("sel").busVoltage;
+        const [out] = mux16_4(a, b, c, d, sel);
+        this.out().busVoltage = out;
+    }
+}
+class Mux8Way16 extends Chip$1 {
+    constructor() {
+        super([
+            "a[16]",
+            "b[16]",
+            "c[16]",
+            "d[16]",
+            "e[16]",
+            "f[16]",
+            "g[16]",
+            "h[16]",
+            "sel[3]",
+        ], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const c = this.in("c").busVoltage;
+        const d = this.in("d").busVoltage;
+        const e = this.in("e").busVoltage;
+        const f = this.in("f").busVoltage;
+        const g = this.in("g").busVoltage;
+        const h = this.in("h").busVoltage;
+        const sel = this.in("sel").busVoltage;
+        const [out] = mux16_8(a, b, c, d, e, f, g, h, sel);
+        this.out().busVoltage = out;
+    }
+}
+
+function nand(a, b) {
+    return [a == 1 && b == 1 ? LOW : HIGH];
+}
+class Nand extends Chip$1 {
+    constructor() {
+        super(["a", "b"], ["out"]);
+    }
+    eval() {
+        const a = this.in("a").voltage();
+        const b = this.in("b").voltage();
+        const [out] = nand(a, b);
+        this.out().pull(out);
+    }
+}
+class Nand16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        this.out().busVoltage = nand16(a, b);
+    }
+}
+
+function not(inn) {
+    return [inn === LOW ? HIGH : LOW];
+}
+function not16(inn) {
+    return [~inn & 0xffff];
+}
+class Not extends Chip$1 {
+    constructor() {
+        super(["in"], ["out"]);
+    }
+    eval() {
+        const a = this.in("in").voltage();
+        const [out] = not(a);
+        this.out().pull(out);
+    }
+}
+class Not16 extends Chip$1 {
+    constructor() {
+        super(["in[16]"], ["out[16]"]);
+    }
+    eval() {
+        const [n] = not16(this.in().busVoltage);
+        this.out().busVoltage = n;
+    }
+}
+
+function or(a, b) {
+    return [a == 1 || b == 1 ? HIGH : LOW];
+}
+function or16(a, b) {
+    return [(a | b) & 0xffff];
+}
+function or8way(a) {
+    return [(a & 0xff) == 0 ? LOW : HIGH];
+}
+class Or extends Chip$1 {
+    constructor() {
+        super(["a", "b"], ["out"]);
+    }
+    eval() {
+        const a = this.in("a").voltage();
+        const b = this.in("b").voltage();
+        const [out] = or(a, b);
+        this.out().pull(out);
+    }
+}
+class Or16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const [out] = or16(a, b);
+        this.out().busVoltage = out;
+    }
+}
+class Or8way extends Chip$1 {
+    constructor() {
+        super(["in[8]"], ["out"], "Or8way");
+    }
+    eval() {
+        const inn = this.in().busVoltage;
+        const [out] = or8way(inn);
+        this.out().pull(out);
+    }
+}
+
+function xor(a, b) {
+    return [(a == HIGH && b == LOW) || (a == LOW && b == HIGH) ? HIGH : LOW];
+}
+function xor16(a, b) {
+    return [(a ^ b) & 0xffff];
+}
+class Xor extends Chip$1 {
+    constructor() {
+        super(["a", "b"], ["out"]);
+    }
+    eval() {
+        const a = this.in("a").voltage();
+        const b = this.in("b").voltage();
+        const [out] = xor(a, b);
+        this.out().pull(out);
+    }
+}
+class Xor16 extends Chip$1 {
+    constructor() {
+        super(["a[16]", "b[16]"], ["out[16]"]);
+    }
+    eval() {
+        const a = this.in("a").busVoltage;
+        const b = this.in("b").busVoltage;
+        const [out] = xor16(a, b);
+        this.out().busVoltage = out;
+    }
+}
 
 function add16(a, b) {
     return [(a + b) & 0xffff];
@@ -1851,48 +2428,6 @@ class ALU extends Chip$1 {
     }
 }
 
-function or(a, b) {
-    return [a == 1 || b == 1 ? HIGH : LOW];
-}
-function or16(a, b) {
-    return [(a | b) & 0xffff];
-}
-function or8way(a) {
-    return [(a & 0xff) == 0 ? LOW : HIGH];
-}
-class Or extends Chip$1 {
-    constructor() {
-        super(["a", "b"], ["out"]);
-    }
-    eval() {
-        const a = this.in("a").voltage();
-        const b = this.in("b").voltage();
-        const [out] = or(a, b);
-        this.out().pull(out);
-    }
-}
-class Or16 extends Chip$1 {
-    constructor() {
-        super(["a[16]", "b[16]"], ["out[16"]);
-    }
-    eval() {
-        const a = this.in("a").busVoltage;
-        const b = this.in("b").busVoltage;
-        const [out] = or16(a, b);
-        this.out().busVoltage = out;
-    }
-}
-class Or8way extends Chip$1 {
-    constructor() {
-        super(["in[8]"], ["out"], "Or8way");
-    }
-    eval() {
-        const inn = this.in().busVoltage;
-        const [out] = or8way(inn);
-        this.out().pull(out);
-    }
-}
-
 function halfAdder(a, b) {
     const sum = (a === 1 && b === 0) || (a === 0 && b === 1) ? HIGH : LOW;
     const car = a === 1 && b === 1 ? HIGH : LOW;
@@ -1945,166 +2480,148 @@ class Inc16 extends Chip$1 {
     }
 }
 
-function and(a, b) {
-    return [a == 1 && b == 1 ? HIGH : LOW];
-}
-function and16(a, b) {
-    return [a & b & 0xffff];
-}
-class And extends Chip$1 {
-    constructor() {
-        super(["a", "b"], ["out"]);
+class Bit extends ClockedChip {
+    bit = LOW;
+    constructor(name) {
+        super(["in", "load"], ["out"], name);
     }
-    eval() {
-        const a = this.in("a").voltage();
-        const b = this.in("b").voltage();
-        const [n] = and(a, b);
-        this.out().pull(n);
-    }
-}
-class And16 extends Chip$1 {
-    constructor() {
-        super(["a[16]", "b[16]"], ["out[16]"]);
-    }
-    eval() {
-        const a = this.in("a").busVoltage;
-        const b = this.in("b").busVoltage;
-        const [n] = and16(a, b);
-        this.out().busVoltage = n;
-    }
-}
-
-function demux(inn, sel) {
-    const a = sel == LOW && inn == HIGH ? HIGH : LOW;
-    const b = sel == HIGH && inn == HIGH ? HIGH : LOW;
-    return [a, b];
-}
-class Demux extends Chip$1 {
-    constructor() {
-        super(["in", "sel"], ["a", "b"]);
-    }
-    eval() {
-        const inn = this.in("in").voltage();
-        const sel = this.in("sel").voltage();
-        const [a, b] = demux(inn, sel);
-        this.out("a").pull(a);
-        this.out("b").pull(b);
-    }
-}
-
-function mux(a, b, sel) {
-    return [sel === 0 ? a : b];
-}
-function mux16(a, b, sel) {
-    return [sel === 0 ? a : b];
-}
-class Mux extends Chip$1 {
-    constructor() {
-        super(["a", "b", "sel"], ["out"]);
-    }
-    eval() {
-        const a = this.in("a").voltage();
-        const b = this.in("b").voltage();
-        const sel = this.in("sel").voltage();
-        const set = mux(a, b, sel);
-        if (set) {
-            this.out().pull(HIGH);
-        }
-        else {
-            this.out().pull(LOW);
+    tick() {
+        if (this.in("load").voltage() === HIGH) {
+            this.bit = this.in().voltage();
         }
     }
-}
-class Mux16 extends Chip$1 {
-    constructor() {
-        super(["a[16]", "b[16]", "sel"], ["out[16]"]);
-    }
-    eval() {
-        const a = this.in("a").busVoltage;
-        const b = this.in("b").busVoltage;
-        const sel = this.in("sel").voltage();
-        const [out] = mux16(a, b, sel);
-        this.out().busVoltage = out;
+    tock() {
+        this.out().pull(this.bit);
     }
 }
-
-function nand(a, b) {
-    return [a == 1 && b == 1 ? LOW : HIGH];
-}
-class Nand extends Chip$1 {
-    constructor() {
-        super(["a", "b"], ["out"]);
+class Register extends ClockedChip {
+    bits = 0x00;
+    constructor(name) {
+        super(["in[16]", "load"], ["out[16]"], name);
     }
-    eval() {
-        const a = this.in("a").voltage();
-        const b = this.in("b").voltage();
-        const [out] = nand(a, b);
-        this.out().pull(out);
+    tick() {
+        if (this.in("load").voltage() === HIGH) {
+            this.bits = this.in().busVoltage & 0xffff;
+        }
     }
-}
-class Nand16 extends Chip$1 {
-    constructor() {
-        super(["a[16]", "b[16]"], ["out[16]"]);
-    }
-    eval() {
-        const a = this.in("a").busVoltage;
-        const b = this.in("b").busVoltage;
-        this.out().busVoltage = nand16(a, b);
+    tock() {
+        this.out().busVoltage = this.bits & 0xffff;
     }
 }
-
-function not(inn) {
-    return [inn === LOW ? HIGH : LOW];
-}
-function not16(inn) {
-    return [~inn & 0xffff];
-}
-class Not extends Chip$1 {
-    constructor() {
-        super(["in"], ["out"]);
+class PC extends ClockedChip {
+    bits = 0x00;
+    constructor(name) {
+        super(["in[16]", "load", "inc", "reset"], ["out[16]"], name);
     }
-    eval() {
-        const a = this.in("in").voltage();
-        const [out] = not(a);
-        this.out().pull(out);
+    tick() {
+        if (this.in("reset").voltage() === HIGH) {
+            this.bits = 0;
+        }
+        else if (this.in("load").voltage() === HIGH) {
+            this.bits = this.in().busVoltage & 0xffff;
+        }
+        else if (this.in("inc").voltage() === HIGH) {
+            this.bits += 1;
+        }
     }
-}
-class Not16 extends Chip$1 {
-    constructor() {
-        super(["in[16]"], ["out[16]"]);
-    }
-    eval() {
-        const [n] = not16(this.in().busVoltage);
-        this.out().busVoltage = n;
+    tock() {
+        this.out().busVoltage = this.bits & 0xffff;
     }
 }
 
-function xor(a, b) {
-    return [(a == HIGH && b == LOW) || (a == LOW && b == HIGH) ? HIGH : LOW];
+class DFF extends ClockedChip {
+    constructor(name) {
+        super(["in"], ["out"], name, ["t"]);
+    }
+    tick() {
+        // Read in into t
+        let t = this.in().voltage();
+        this.pin("t").pull(t);
+    }
+    tock() {
+        // write t into out
+        let t = this.pin("t").voltage();
+        this.out().pull(t);
+    }
+    eval() { }
 }
-function xor16(a, b) {
-    return [(a ^ b) & 0xffff];
-}
-class Xor extends Chip$1 {
-    constructor() {
-        super(["a", "b"], ["out"]);
+
+class RAM extends ClockedChip {
+    width;
+    ram;
+    nextData = None();
+    constructor(width) {
+        super(["in[16]", "load", `address[${width}]`], [`out[16]`]);
+        this.width = width;
+        this.ram = new Int16Array(Math.pow(2, this.width));
+    }
+    tick() {
+        const load = this.in("load").voltage();
+        this.nextData = load === HIGH ? Some(this.in().busVoltage) : None();
+    }
+    tock() {
+        const address = this.in("address").busVoltage;
+        if (isSome(this.nextData)) {
+            this.ram[address] = this.nextData;
+        }
+        this.out().busVoltage = this.ram?.[address];
     }
     eval() {
-        const a = this.in("a").voltage();
-        const b = this.in("b").voltage();
-        const [out] = xor(a, b);
-        this.out().pull(out);
+        const address = this.in("address").busVoltage;
+        this.out().busVoltage = this.ram?.[address];
     }
 }
-class Xor16 extends Chip$1 {
+class RAM8 extends RAM {
     constructor() {
-        super(["a[16]", "b[16]"], ["out[16]"]);
+        super(3);
     }
-    eval() {
-        const a = this.in("a").busVoltage;
-        const b = this.in("b").busVoltage;
-        const [out] = xor16(a, b);
-        this.out().busVoltage = out;
+}
+class RAM64 extends RAM {
+    constructor() {
+        super(6);
+    }
+}
+class RAM512 extends RAM {
+    constructor() {
+        super(9);
+    }
+}
+class RAM4K extends RAM {
+    constructor() {
+        super(12);
+    }
+}
+class RAM16K extends RAM {
+    constructor() {
+        super(14);
+    }
+}
+
+class ROM32K extends RAM {
+    constructor() {
+        super(16);
+    }
+}
+class Screen$1 extends RAM {
+    constructor() {
+        super(13);
+    }
+}
+class Keyboard extends Chip$1 {
+    constructor() {
+        super([], ["out[16]"]);
+    }
+}
+class Memory$2 extends Chip$1 {
+}
+class CPU$2 extends Chip$1 {
+    constructor() {
+        super(["inM[16]", "instruction[16]", "reset"], ["outM[16]", "writeM", "addressM[15]", "pc[15]"]);
+    }
+}
+class Computer extends Chip$1 {
+    constructor() {
+        super(["reset"], []);
     }
 }
 
@@ -2117,20 +2634,39 @@ const REGISTRY = new Map([
     ["And16", And16],
     ["Or", Or],
     ["Or16", Or16],
-    ["Or8way", Or8way],
+    ["Or8Way", Or8way],
     ["XOr", Xor],
     ["XOr16", Xor16],
     ["Xor", Xor],
     ["Xor16", Xor16],
     ["Mux", Mux],
     ["Mux16", Mux16],
-    ["Demux", Demux],
+    ["Mux4Way16", Mux4Way16],
+    ["Mux8Way16", Mux8Way16],
+    ["DMux", DMux],
+    ["DMux4Way", DMux4Way],
+    ["DMux8Way", DMux8Way],
     ["HalfAdder", HalfAdder],
     ["FullAdder", FullAdder],
     ["Add16", Add16],
     ["Inc16", Inc16],
     ["ALU", ALU],
     ["ALUNoStat", ALUNoStat],
+    ["DFF", DFF],
+    ["Bit", Bit],
+    ["Register", Register],
+    ["PC", PC],
+    ["RAM8", RAM8],
+    ["RAM64", RAM64],
+    ["RAM512", RAM512],
+    ["RAM4K", RAM4K],
+    ["RAM16K", RAM16K],
+    ["ROM32K", ROM32K],
+    ["Screen", Screen$1],
+    ["Keyboard", Keyboard],
+    ["CPU", CPU$2],
+    ["Computer", Computer],
+    ["Memory", Memory$2],
 ].map(([name, ChipCtor]) => [
     name,
     () => {
@@ -2190,20 +2726,19 @@ function parse(code) {
 }
 
 /** Reads tst files to apply and perform test runs. */
-const tstNumberValue = (p, r) => map(p, (i) => int(i.toString(), r));
 const tstBinaryValueParser = preceded(tag("B"), tag(/[01]{1,16}/));
 const tstHexValueParser = preceded(tag("X"), tag(/[0-9a-fA-F]{1,4}/));
-const tstDecimalValueParser = preceded(opt(tag("D")), tag(/(-[1-9])?[0-9]{0,4}/));
-const tstHexValue = tstNumberValue(tstHexValueParser, 16);
-const tstDecimalValue = tstNumberValue(tstDecimalValueParser, 10);
-const tstBinaryValue = tstNumberValue(tstBinaryValueParser, 2);
+const tstDecimalValueParser = preceded(opt(tag("D")), tag(/(-[1-9])?[0-9]{0,5}/));
+const tstHexValue = map(tstHexValueParser, (s) => int16(s.toString()));
+const tstDecimalValue = map(tstDecimalValueParser, (s) => int10(s.toString()));
+const tstBinaryValue = map(tstBinaryValueParser, (s) => int2(s.toString()));
 const tstValueParser = alt(preceded(tag("%"), alt(tstBinaryValue, tstHexValue, tstDecimalValue)), tstDecimalValue);
-const tstValue = (i) => tstValueParser(i);
+const tstValue = tstValueParser;
 const setParser = map(preceded(token("set"), pair(token(identifier()), token(tstValue))), ([id, value]) => ({ op: "set", id: id.toString(), value }));
 const set$1 = (i) => setParser(i);
-const tstOp = alt(set$1, valueFn(() => ({ op: "eval" }), token("eval")), valueFn(() => ({ op: "output" }), token("output")));
+const tstOp = alt(set$1, valueFn(() => ({ op: "tick" }), token("tick")), valueFn(() => ({ op: "tock" }), token("tock")), valueFn(() => ({ op: "eval" }), token("eval")), valueFn(() => ({ op: "output" }), token("output")));
 const tstOpLineParser = map(terminated(list(tstOp, token(",")), token(";")), (ops) => ({ ops }));
-const tstOutputFormatParser = tuple(identifier(), opt(preceded(tag("%"), alt(tag("X"), tag("B"), tag("D")))), tag(/\d+\.\d+\.\d+/));
+const tstOutputFormatParser = tuple(recognize(pair(identifier(), opt(tag("[]")))), opt(preceded(tag("%"), alt(tag("X"), tag("B"), tag("D"), tag("S")))), tag(/\d+\.\d+\.\d+/));
 const tstOutputFormat = map(tstOutputFormatParser, ([id, style, tag]) => {
     const [a, b, c] = tag.toString().split(".");
     return {
@@ -2218,7 +2753,7 @@ const tstOutputFormat = map(tstOutputFormatParser, ([id, style, tag]) => {
 const tstOutputListParser = map(preceded(token("output-list"), list(token(tstOutputFormat), filler())), (spec) => ({ op: "output-list", spec }));
 const tstConfigParser = alt(tstOutputListParser);
 const tstConfigLineParser = map(terminated(list(tstConfigParser, token(",")), token(";")), (ops) => ({ ops }));
-const tstParser = map(terminated(many1(alt(tstConfigLineParser, tstOpLineParser)), filler()), (lines) => ({ lines }));
+const tstParser = map(many1(alt(tstConfigLineParser, tstOpLineParser)), (lines) => ({ lines }));
 const TEST_ONLY = {
     set: set$1,
     tstValue,
@@ -2233,7 +2768,6 @@ const cmpParser = many0(mapParser(line(), terminated(many1(preceded(tag("|"), ma
 
 class Output {
     variable;
-    format;
     fmt;
     lPad;
     rPad;
@@ -2241,7 +2775,6 @@ class Output {
     // new Output(inst.id, inst.style, inst.width, inst.lpad, inst.rpad)
     constructor(variable, format = "%B1.1.1", len, lPad, rPad) {
         this.variable = variable;
-        this.format = format;
         if (format.startsWith("%") &&
             len == undefined &&
             lPad == undefined &&
@@ -2261,20 +2794,44 @@ class Output {
         }
     }
     header(test) {
-        return this.pad(this.variable);
+        return this.padCenter(this.variable);
     }
     print(test) {
         const val = test.getVar(this.variable);
-        const fmt = { B: bin, D: dec, X: hex, S: (i) => `${i}` }[this.fmt];
+        if (this.fmt == "S") {
+            return this.padLeft(val);
+        }
+        const fmt = { B: bin, D: dec, X: hex }[this.fmt];
         let value = fmt(val);
-        return this.pad(value.slice(value.length - this.len));
+        if (this.fmt == "D") {
+            return this.padRight(value);
+        }
+        else {
+            return this.padCenter(value.slice(value.length - this.len));
+        }
     }
-    pad(value) {
+    padCenter(value) {
         const space = this.lPad + this.len + this.rPad;
         const leftSpace = Math.floor((space - value.length) / 2);
         const rightSpace = space - leftSpace - value.length;
         const padLeft = leftSpace + value.length;
         const padRight = padLeft + rightSpace;
+        value = value.padStart(padLeft);
+        value = value.padEnd(padRight);
+        return value;
+    }
+    padLeft(value) {
+        value = value.substring(0, this.len);
+        const padRight = this.rPad + this.len;
+        const padLeft = this.lPad + padRight;
+        value = value.padEnd(padRight);
+        value = value.padStart(padLeft);
+        return value;
+    }
+    padRight(value) {
+        value = value.substring(0, this.len);
+        const padLeft = this.lPad + this.len;
+        const padRight = this.rPad + padLeft;
         value = value.padStart(padLeft);
         value = value.padEnd(padRight);
         return value;
@@ -2321,12 +2878,20 @@ class Test$1 {
     }
 }
 class ChipTest extends Test$1 {
-    chip = new Nand();
+    chip = new Low();
+    clock = Clock.get();
     static from(tst) {
         const test = new ChipTest();
         for (const line of tst.lines) {
             for (const inst of line.ops) {
-                switch (inst.op) {
+                const op = inst.op;
+                switch (op) {
+                    case "tick":
+                        test.addInstruction(new TestTickInstruction());
+                        break;
+                    case "tock":
+                        test.addInstruction(new TestTockInstruction());
+                        break;
                     case "eval":
                         test.addInstruction(new TestEvalInstruction());
                         break;
@@ -2338,6 +2903,9 @@ class ChipTest extends Test$1 {
                         break;
                     case "output-list":
                         test.addInstruction(new TestOutputListInstruction(inst.spec));
+                        break;
+                    default:
+                        checkExhaustive(op, `Unknown tst operation ${op}`);
                 }
             }
         }
@@ -2348,12 +2916,18 @@ class ChipTest extends Test$1 {
         return this;
     }
     hasVar(variable) {
+        if (variable == "time") {
+            return true;
+        }
         variable = `${variable}`;
         return (this.chip.in(variable) !== undefined ||
             this.chip.out(variable) !== undefined);
     }
     getVar(variable) {
         variable = `${variable}`;
+        if (variable == "time") {
+            return this.clock.toString();
+        }
         const pin = this.chip.get(variable);
         if (!pin)
             return 0;
@@ -2372,10 +2946,16 @@ class ChipTest extends Test$1 {
         this.chip.eval();
     }
     tick() {
-        this.chip.tick();
+        this.chip.eval();
+        this.clock.tick();
     }
     tock() {
-        this.chip.tock();
+        this.chip.eval();
+        this.clock.tock();
+    }
+    run() {
+        this.clock.reset();
+        super.run();
     }
 }
 class TestSetInstruction {
@@ -2415,6 +2995,18 @@ class TestEvalInstruction {
         test.eval();
     }
 }
+class TestTickInstruction {
+    _chipTestInstruction_ = true;
+    do(test) {
+        test.tick();
+    }
+}
+class TestTockInstruction {
+    _chipTestInstruction_ = true;
+    do(test) {
+        test.tock();
+    }
+}
 
 function compare(as, bs) {
     let diffs = [];
@@ -2442,11 +3034,13 @@ function diff(as, bs) {
     return diffs;
 }
 
-const DiffPanel = FC("diff-panel", (el, { diffs = [] }) => {
-    return [
-        span(`Failed ${diffs.length} assertions`),
-        ol(...diffs.map(({ a, b, row, col }) => li("Expected ", del(a), "Actual", ins(b), span(`at ${row}:${col}`)))),
-    ];
+const DiffPanel = FC("diff-panel", (el, { diffs = [], ran = false }) => {
+    return ran
+        ? [
+            span(`Failed ${diffs.length} assertions`),
+            ol(...diffs.map(({ a, b, row, col }) => li("Expected ", del(a), "Actual", ins(b), span(`at ${row}:${col}`)))),
+        ]
+        : [span()];
 });
 
 const PROJECTS = {
@@ -2461,14 +3055,15 @@ const PROJECTS = {
         "And16",
         "Or16",
         "Mux16",
-        "Mux4way16",
-        "Mux8way16",
-        "DMux4way",
-        "DMux8way",
-        "Or8way",
+        "Mux4Way16",
+        "Mux8Way16",
+        "DMux4Way",
+        "DMux8Way",
+        "Or8Way",
     ],
     "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
     "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
+    "05": ["Memory", "CPU", "Computer"],
 };
 function makeProjectDropdown(selected, setProject) {
     return Dropdown({
@@ -2480,11 +3075,10 @@ function makeProjectDropdown(selected, setProject) {
             change: (event) => setProject(event.target?.value),
         },
     }, {
-        "01": "Logic",
-        "02": "Arithmetic",
-        "03": "Memory",
-        "04": "Assembly",
-        "05": "Architecture",
+        "01": "Project 1",
+        "02": "Project 2",
+        "03": "Project 3",
+        "05": "Project 5",
     });
 }
 function makeChipsDropdown(selected, chips, setChip) {
@@ -2498,35 +3092,161 @@ function makeChipsDropdown(selected, chips, setChip) {
         },
     }, chips);
 }
-const Chip = () => {
-    const fs = unwrap(retrieve("fs"));
-    const statusLine = unwrap(retrieve("status"));
-    let project = localStorage["chip/project"] ?? "01";
-    let chips = PROJECTS[project];
-    let chipName = localStorage["chip/chip"] ?? "And";
-    let maybeChip = getBuiltinChip(chipName);
-    if (isErr(maybeChip))
-        statusLine(display(Err(maybeChip)));
-    let chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
-    setTimeout(async function () {
-        await setProject(project);
-        await setChip(chip.name);
-    });
-    const onToggle = (pin) => {
+class ChipPageStore {
+    storage;
+    fs;
+    project;
+    chips;
+    chipName;
+    chip;
+    test;
+    diffs = [];
+    runningTest = false;
+    statusLine = unwrap(retrieve("status"));
+    files = {
+        hdl: "",
+        cmp: "",
+        tst: "",
+        out: "",
+    };
+    subject = new Subject();
+    $ = this.subject.$;
+    testLog = new Subject();
+    next() {
+        if (!this.runningTest)
+            this.subject.next(this);
+    }
+    selectors = {
+        project: this.$.map((t) => t.project).distinct(),
+        chipName: this.$.map((t) => t.chipName).distinct(),
+        chips: this.$.map((t) => t.chips),
+        chip: this.$.map((t) => t.chip),
+        files: this.$.map((t) => t.files),
+        test: this.$.map((t) => t.test).filter((t) => t !== undefined),
+        diffs: this.$.map((t) => t.diffs),
+        log: this.testLog.$,
+    };
+    constructor(storage = localStorage, fs) {
+        this.storage = storage;
+        this.fs = fs;
+        this.project =
+            this.storage["chip/project"] ?? "01";
+        this.chips = PROJECTS[this.project];
+        this.chipName = this.storage["chip/chip"] ?? "Not";
+        let maybeChip = getBuiltinChip(this.chipName);
+        if (isErr(maybeChip))
+            this.statusLine(display(Err(maybeChip)));
+        this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
+        Clock.get().update.$.subscribe(() => {
+            this.next();
+        });
+    }
+    toggle(pin) {
         if (pin.width == 1) {
             pin.toggle();
         }
         else {
             pin.busVoltage += 1;
         }
-        chip.eval();
-        setState();
-    };
+        this.chip.eval();
+        this.next();
+    }
+    compileChip(text) {
+        this.files.hdl = text;
+        this.chip?.remove();
+        const maybeChip = parse(text);
+        if (isErr(maybeChip)) {
+            this.statusLine(display(Err(maybeChip)));
+            return;
+        }
+        this.chip = Ok(maybeChip);
+        this.statusLine(`Compiled ${this.chip.name}`);
+        this.storage["chip/chip"] = this.chip.name;
+        this.chip.eval();
+        this.next();
+    }
+    async saveChip(text) {
+        const name = this.chipName;
+        const path = `/projects/${this.project}/${name}/${name}.hdl`;
+        await this.fs.writeFile(path, text);
+        this.statusLine(`Saved ${path}`);
+    }
+    async setProject(proj) {
+        localStorage["chip/project"] = this.project = proj;
+        this.chips = PROJECTS[proj];
+        this.chipName =
+            this.chipName && this.chips.includes(this.chipName)
+                ? this.chipName
+                : this.chips[0];
+        return await this.setChip(this.chipName);
+    }
+    async setChip(name) {
+        const fsName = (ext) => `/projects/${this.project}/${name}/${name}.${ext}`;
+        const hdl = await this.fs.readFile(fsName("hdl"));
+        const tst = await this.fs.readFile(fsName("tst"));
+        const cmp = await this.fs.readFile(fsName("cmp"));
+        this.compileChip(hdl);
+        this.files.hdl = hdl;
+        this.files.tst = tst;
+        this.files.cmp = cmp;
+        this.files.out = "";
+        this.next();
+        return this.files;
+    }
+    async runTest(tstString, cmpString) {
+        this.files.tst = tstString;
+        this.files.cmp = cmpString;
+        const tst = await new Promise((r) => r(tstParser(tstString)));
+        if (isErr(tst)) {
+            this.statusLine(display(Err(tst)));
+            return;
+        }
+        this.statusLine("Parsed tst");
+        this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
+        await new Promise((r) => {
+            try {
+                this.runningTest = true;
+                this.test?.run();
+                r();
+            }
+            finally {
+                this.runningTest = false;
+            }
+        });
+        this.files.out = this.test.log();
+        this.next();
+        const [cmp, out] = await Promise.all([
+            new Promise((r) => r(cmpParser(cmpString))),
+            new Promise((r) => r(cmpParser(this.files.out))),
+        ]);
+        if (isErr(cmp)) {
+            this.statusLine(`Error parsing cmp file!`);
+            return;
+        }
+        if (isErr(out)) {
+            this.statusLine(`Error parsing out file!`);
+            return;
+        }
+        this.diffs = compare(Ok(cmp)[1], Ok(out)[1]);
+        this.next();
+    }
+}
+const Chip = () => {
+    const fs = unwrap(retrieve("fs"));
+    const state = new ChipPageStore(localStorage, fs);
+    setTimeout(async function () {
+        await state.setProject(state.project);
+        await state.setChip(state.chip.name);
+    });
     const chipsDropdown = span();
     const projectDropdown = span();
-    const inPinout = Pinout({ pins: chip.ins, toggle: onToggle });
-    const outPinout = Pinout({ pins: chip.outs });
-    const pinsPinout = Pinout({ pins: chip.pins });
+    const inPinout = Pinout({
+        pins: state.chip.ins,
+        toggle: (pin) => state.toggle(pin),
+        clocked: state.chip.clocked,
+    });
+    const outPinout = Pinout({ pins: state.chip.outs });
+    const pinsPinout = Pinout({ pins: state.chip.pins });
     const hdlTextarea = textarea({ class: "font-monospace flex-1", rows: 10 });
     const tstTextarea = textarea({ class: "font-monospace flex-2", rows: 15 });
     const cmpTextarea = textarea({ class: "font-monospace flex-1", rows: 5 });
@@ -2536,91 +3256,43 @@ const Chip = () => {
         readOnly: true,
     });
     const diffPanel = DiffPanel();
-    const runner = new (class ChipRunner extends Timer {
-        tick() {
-            chip.eval();
-            // tickScreen();
-        }
-        finishFrame() {
-            setState();
-        }
-        reset() {
-            for (const pin of chip.ins.entries()) {
-                pin.pull(LOW);
-            }
-            chip.eval();
-            setState();
-        }
-        toggle() {
-            runbar.update();
-        }
-    })();
-    const runbar = Runbar({ runner });
+    const onSaveChip = () => {
+        state.saveChip(hdlTextarea.value);
+    };
     function setState() {
-        inPinout.update({ pins: chip.ins });
-        outPinout.update({ pins: chip.outs });
-        pinsPinout.update({ pins: chip.pins });
-        outTextarea.update("");
-        diffPanel.update();
+        inPinout.update({ pins: state.chip.ins, clocked: state.chip.clocked });
+        outPinout.update({ pins: state.chip.outs });
+        pinsPinout.update({ pins: state.chip.pins });
     }
-    async function setChip(name) {
-        localStorage["chip/chip"] = name;
-        const hdl = await fs.readFile(`/projects/${project}/${name}/${name}.hdl`);
-        const tst = await fs.readFile(`/projects/${project}/${name}/${name}.tst`);
-        const cmp = await fs.readFile(`/projects/${project}/${name}/${name}.cmp`);
+    function clearOutput() {
+        outTextarea.value = "";
+        diffPanel.update({ ran: false });
+    }
+    state.subject.$.subscribe(setState);
+    state.selectors.project.subscribe((project) => {
+        projectDropdown.update(makeProjectDropdown(project, (p) => {
+            clearOutput();
+            state.setProject(p);
+        }));
+    });
+    state.selectors.chipName.subscribe((chipName) => {
+        chipsDropdown.update(makeChipsDropdown(chipName, PROJECTS[state.project], (chip) => {
+            clearOutput();
+            state.setChip(chip);
+        }));
+    });
+    state.selectors.diffs.subscribe((diffs) => {
+        diffPanel.update({ diffs, ran: true });
+    });
+    state.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
         hdlTextarea.value = hdl;
         tstTextarea.value = tst;
         cmpTextarea.value = cmp;
-        compileChip(hdl);
-    }
-    function compileChip(text) {
-        const maybeChip = parse(text);
-        if (isErr(maybeChip)) {
-            statusLine(display(Err(maybeChip)));
-            return;
-        }
-        chip = Ok(maybeChip);
-        statusLine(`Compiled ${chip.name}`);
-        chip.eval();
-        setState();
-    }
-    async function saveChip(project, name, text) {
-        const path = `/projects/${project}/${name}/${name}.hdl`;
-        await fs.writeFile(path, text);
-        statusLine(`Saved ${path}`);
-    }
-    async function setProject(proj) {
-        localStorage["chip/project"] = project = proj;
-        projectDropdown.update(makeProjectDropdown(project, setProject));
-        chips = PROJECTS[proj];
-        chipName = chipName && chips.includes(chipName) ? chipName : chips[0];
-        setChip(chipName);
-        chipsDropdown.update(makeChipsDropdown(chipName, chips, setChip));
-    }
-    function runTest() {
-        const tst = tstParser(new Span(tstTextarea.value));
-        if (isErr(tst)) {
-            statusLine(display(Err(tst)));
-            return;
-        }
-        statusLine("Parsed tst");
-        const test = ChipTest.from(Ok(tst)[1]).with(chip);
-        test.run();
-        outTextarea.value = test.log();
-        setState();
-        const cmp = cmpParser(new Span(cmpTextarea.value));
-        const out = cmpParser(new Span(outTextarea.value));
-        if (isErr(cmp)) {
-            statusLine(`Error parsing cmp file!`);
-            return;
-        }
-        if (isErr(out)) {
-            statusLine(`Error parsing out file!`);
-            return;
-        }
-        const diffs = compare(Ok(cmp)[1], Ok(out)[1]);
-        diffPanel.update({ diffs });
-    }
+        outTextarea.value = out;
+    });
+    state.selectors.log.subscribe((out) => {
+        outTextarea.value = out;
+    });
     const fstyle = {
         ".View__Chip": {
             "> section": {
@@ -2647,26 +3319,29 @@ const Chip = () => {
             },
         },
     };
-    return div({ class: "View__Chip flex-1 flex" }, style(compileFStyle(fstyle)), 
-    // runbar,
-    section({ class: "flex-1 grid" }, div({ class: "pinouts grid" }, div({
+    return div({ class: "View__Chip flex-1 flex" }, style(compileFStyle(fstyle)), section({ class: "flex-1 grid" }, div({ class: "pinouts grid" }, div({
         class: "flex row inline align-end",
         style: { gridColumn: "1 / span 2" },
     }, projectDropdown, h2({ tabIndex: 0 }, "Chips:"), chipsDropdown), article({ class: "no-shadow panel" }, header(div({ tabIndex: 0 }, "HDL"), fieldset({ class: "button-group" }, button({
         events: {
-            click: () => compileChip(hdlTextarea.value),
-            keypress: () => compileChip(hdlTextarea.value),
+            click: () => state.compileChip(hdlTextarea.value),
+            keypress: () => state.compileChip(hdlTextarea.value),
         },
-    }, "Compile"), button({
+    }, "Eval"), button({
         events: {
-            click: () => saveChip(project, chip.name, hdlTextarea.value),
-            keypress: () => saveChip(project, chip.name, hdlTextarea.value),
+            click: onSaveChip,
+            keypress: onSaveChip,
         },
     }, "Save"))), main({ class: "flex" }, hdlTextarea)), article({ class: "no-shadow panel" }, header({ tabIndex: 0 }, "Input pins"), inPinout), article({ class: "no-shadow panel" }, header({ tabIndex: 0 }, "Internal Pins"), pinsPinout), article({ class: "no-shadow panel" }, header({ tabIndex: 0 }, "Output pins"), outPinout)), article(header(div({ tabIndex: 0 }, "Test"), fieldset({ class: "input-group" }, button({
         events: {
-            click: (e) => {
+            click: async (e) => {
                 e.preventDefault();
-                runTest();
+                const hdl = hdlTextarea.value;
+                const tst = tstTextarea.value;
+                const cmp = cmpTextarea.value;
+                clearOutput();
+                await state.compileChip(hdl);
+                await state.runTest(tst, cmp);
             },
         },
     }, "Execute"))), tstTextarea, cmpTextarea, outTextarea, diffPanel)));
@@ -3124,6 +3799,7 @@ const MemoryBlock = FC("memory-block", (el, { memory, highlight = -1, editable =
     return state.virtualScroll;
 });
 const MemoryCell = FC("memory-cell", (el, { index, value, highlight = false, editable = false, onChange = () => { } }) => {
+    // @ts-ignore
     el.style.display = "flex";
     return [
         code({
@@ -3155,6 +3831,7 @@ const MemoryCell = FC("memory-cell", (el, { index, value, highlight = false, edi
     ];
 });
 const Memory = FC("memory-gui", (el, { name = "Memory", highlight = -1, editable = true, memory, format = "dec" }) => {
+    // @ts-ignore
     el.style.width = "100%";
     const state = (el[State] ??= {});
     state.format ??= format;
@@ -3213,6 +3890,115 @@ const HACK = new Int16Array([
     0x000f,
     0xda87, // 0;JMP
 ]);
+
+const Select = FC("jiffies-select", (el, { name, events: { change }, disabled, value, options }) => select({ name, events: { change }, disabled }, ...options.map(([v, name]) => option({ value: v, selected: value === v }, `${name}`))));
+
+const icon$1 = (icon) => i({ class: `icon-${icon}` });
+const Runbar = FC("run-bar", (el, { runner }, children) => div({ class: "input-group" }, a$1({
+    href: "#",
+    role: "button",
+    events: {
+        click: (e) => {
+            e.preventDefault();
+            runner.frame();
+        },
+    },
+}, icon$1("fast-fw")), a$1({
+    href: "#",
+    role: "button",
+    events: {
+        click: (e) => {
+            e.preventDefault();
+            runner.reset();
+        },
+    },
+}, icon$1(`to-start`)), a$1({
+    href: "#",
+    role: "button",
+    events: {
+        click: (e) => {
+            e.preventDefault();
+            runner.running ? runner.stop() : runner.start();
+        },
+    },
+}, runner.running ? icon$1(`pause`) : icon$1(`play`)), Select({
+    name: "speed",
+    events: {
+        change: (e) => {
+            runner.speed = Number(e.target?.value ?? runner.speed);
+        },
+    },
+    disabled: runner.running,
+    value: `${runner.speed}`,
+    options: [
+        ["16", "60FPS"],
+        ["500", "Fast"],
+        ["1000", "Normal"],
+        ["2000", "Slow"],
+    ],
+}), Select({
+    name: "steps",
+    events: {
+        change: (e) => {
+            runner.steps = Number(e.target?.value ?? runner.steps);
+        },
+    },
+    disabled: runner.running,
+    value: `${runner.steps}`,
+    options: [
+        ["1", "1 Step"],
+        ["500", "500"],
+        ["1000", "1000"],
+        ["2000", "2000"],
+    ],
+}), ...children));
+
+const MAX_STEPS = 1000;
+class Timer {
+    frame() {
+        this.tick();
+        this.finishFrame();
+    }
+    tick() { }
+    finishFrame() { }
+    reset() { }
+    toggle() { }
+    steps = 1; // How many steps to take per update
+    speed = 1000; // how often to update, in ms
+    get running() {
+        return this.#running;
+    }
+    #running = false;
+    #sinceLastFrame = 0;
+    #lastUpdate = 0;
+    #run = () => {
+        if (!this.#running) {
+            return;
+        }
+        const now = Date.now();
+        const delta = now - this.#lastUpdate;
+        this.#lastUpdate = now;
+        this.#sinceLastFrame += delta;
+        if (this.#sinceLastFrame > this.speed) {
+            for (let i = 0; i < Math.min(this.steps, MAX_STEPS); i++) {
+                this.tick();
+            }
+            this.finishFrame();
+            this.#sinceLastFrame -= this.speed;
+        }
+        requestAnimationFrame(this.#run);
+    };
+    start() {
+        this.#running = true;
+        this.#lastUpdate = Date.now() - this.speed;
+        this.#run();
+        this.toggle();
+    }
+    stop() {
+        this.#running = false;
+        this.toggle();
+    }
+}
 
 const WHITE = "white";
 const BLACK = "black";
@@ -3332,28 +4118,6 @@ const CPU = ({ cpu } = { cpu: new CPU$1({ ROM: new Memory$1(HACK) }) }) => {
         editable: false,
     })), (RAM = Memory({ name: "RAM", memory: cpu.RAM, format: "hex" }))), div((screen = Screen({ memory: cpu.RAM })))));
 };
-
-const LEVEL = {
-    UNKNOWN: 0,
-    SILENT: 0,
-    DEBUG: 1,
-    VERBOSE: 1,
-    INFO: 2,
-    WARN: 3,
-    ERROR: 4,
-};
-function getLogger(name) {
-    const logger = { level: LEVEL.INFO };
-    const logAt = (level, fn) => (message, data) => level >= (logger.level ?? LEVEL.SILENT)
-        ? fn(display(message), data)
-        : undefined;
-    logger.debug = logAt(LEVEL.VERBOSE, console.debug.bind(console));
-    logger.info = logAt(LEVEL.INFO, console.info.bind(console));
-    logger.warn = logAt(LEVEL.WARN, console.warn.bind(console));
-    logger.error = logAt(LEVEL.ERROR, console.error.bind(console));
-    return logger;
-}
-getLogger();
 
 const beforeall = Symbol("beforeAll");
 const beforeeach = Symbol("beforeEach");
@@ -3673,6 +4437,8 @@ describe("twos", () => {
         expect(dec(0)).toBe("0");
         expect(dec(1)).toBe("1");
         expect(dec(-1)).toBe("-1");
+        expect(dec(33413)).toBe("-32123");
+        expect(dec(0x8000)).toBe("-32768");
         expect(dec(256)).toBe("256");
         expect(hex(0)).toBe("0x0000");
         expect(hex(1)).toBe("0x0001");
@@ -3682,20 +4448,22 @@ describe("twos", () => {
     it("parses to integer", () => {
         expect(int2("0000000000000000")).toBe(0);
         expect(int2("0000000000000001")).toBe(1);
-        expect(int2("1111111111111111")).toBe(-1);
+        expect(int2("1111111111111111")).toBe(65535);
         expect(int2("0000000100000000")).toBe(256);
         expect(int2("0000 0000 0000 0000")).toBe(0);
         expect(int2("0000 0000 0000 0001")).toBe(1);
-        expect(int2("1111 1111 1111 1111")).toBe(-1);
+        expect(int2("1111 1111 1111 1111")).toBe(65535);
         expect(int2("0000 0001 0000 0000")).toBe(256);
         expect(int10("0")).toBe(0);
         expect(int10("1")).toBe(1);
-        expect(int10("-1")).toBe(-1);
+        expect(int10("-1")).toBe(65535);
+        expect(int10("-32123")).toBe(33413);
+        expect(int10("-32768")).toBe(0x8000);
         expect(int10("256")).toBe(256);
         expect(int16("0x0000")).toBe(0);
         expect(int16("0x0001")).toBe(1);
-        expect(int16("0xffff")).toBe(-1);
-        expect(int16("0xFFFF")).toBe(-1);
+        expect(int16("0xffff")).toBe(65535);
+        expect(int16("0xFFFF")).toBe(65535);
         expect(int16("0x0100")).toBe(256);
     });
     it("nands 16 bit numbers", () => {
@@ -3759,6 +4527,18 @@ describe("hdl language", () => {
         parsed = TEST_ONLY$1.hdlIdentifier(`/* multi
     line */ a // more`);
         expect(parsed).toEqual(Ok(["", "a"]));
+    });
+    it("parses identifiers", () => {
+        let parsed;
+        parsed = TEST_ONLY$1.hdlIdentifier("inM");
+        expect(parsed).toEqual(Ok(["", "inM"]));
+        parsed = TEST_ONLY$1.hdlIdentifier("a_b");
+        expect(parsed).toEqual(Ok(["", "a_b"]));
+    });
+    it("parses in/out lists", () => {
+        let parsed;
+        parsed = TEST_ONLY$1.pinList("inM");
+        expect(parsed).toEqual(Ok(["", [{ pin: "inM", width: 1 }]]));
     });
     it("parses pin wiring", () => {
         let parsed;
@@ -3971,6 +4751,15 @@ output-list in%B3.1.3 out%B3.1.3;
 
 set in 0, eval, output;
 set in 1, eval, output;`;
+const BIT_TST = `
+output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
+set in 0, set load 0, tick, output; tock, output;
+set in 0, set load 1, eval, output;
+`;
+const MEM_TST = `
+output-list time%S1.2.1 in%B2.1.2;
+set in -32123, tick, output;
+`;
 describe("tst language", () => {
     it("parses values", () => {
         let parsed;
@@ -3983,9 +4772,11 @@ describe("tst language", () => {
         parsed = TEST_ONLY.tstValue("%B11");
         expect(parsed).toEqual(Ok(["", 3]));
         parsed = TEST_ONLY.tstValue("%D-1");
-        expect(parsed).toEqual(Ok(["", -1]));
+        expect(parsed).toEqual(Ok(["", 0xffff]));
         parsed = TEST_ONLY.tstValue("0");
         expect(parsed).toEqual(Ok(["", 0]));
+        parsed = TEST_ONLY.tstValue("11111");
+        expect(parsed).toEqual(Ok(["", 11111]));
     });
     it("parses an output format", () => {
         let parsed;
@@ -4062,6 +4853,80 @@ describe("tst language", () => {
                         ops: [
                             { op: "set", id: "in", value: 1 },
                             { op: "eval" },
+                            { op: "output" },
+                        ],
+                    },
+                ],
+            },
+        ]));
+    });
+    it("parses a clocked test file", () => {
+        let parsed;
+        parsed = tstParser(BIT_TST);
+        expect(parsed).toEqual(Ok([
+            "",
+            {
+                lines: [
+                    {
+                        ops: [
+                            {
+                                op: "output-list",
+                                spec: [
+                                    { id: "time", style: "S", width: 4, lpad: 1, rpad: 1 },
+                                    { id: "in", style: "B", width: 1, lpad: 2, rpad: 2 },
+                                    { id: "load", style: "B", width: 1, lpad: 2, rpad: 2 },
+                                    { id: "out", style: "B", width: 1, lpad: 2, rpad: 2 },
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        ops: [
+                            { op: "set", id: "in", value: 0 },
+                            { op: "set", id: "load", value: 0 },
+                            { op: "tick" },
+                            { op: "output" },
+                        ],
+                    },
+                    {
+                        ops: [{ op: "tock" }, { op: "output" }],
+                    },
+                    {
+                        ops: [
+                            { op: "set", id: "in", value: 0 },
+                            { op: "set", id: "load", value: 1 },
+                            { op: "eval" },
+                            { op: "output" },
+                        ],
+                    },
+                ],
+            },
+        ]));
+    });
+    it("parses a test file with negative integers", () => {
+        let parsed;
+        parsed = tstParser(MEM_TST);
+        expect(parsed).toEqual(Ok([
+            "",
+            {
+                lines: [
+                    // output-list time%S1.2.1 in%B2.1.2;
+                    {
+                        ops: [
+                            {
+                                op: "output-list",
+                                spec: [
+                                    { id: "time", style: "S", width: 2, lpad: 1, rpad: 1 },
+                                    { id: "in", style: "B", width: 1, lpad: 2, rpad: 2 },
+                                ],
+                            },
+                        ],
+                    },
+                    // set in -32123, tick, output;
+                    {
+                        ops: [
+                            { op: "set", id: "in", value: 33413 /* unsigned */ },
+                            { op: "tick" },
                             { op: "output" },
                         ],
                     },
@@ -4439,6 +5304,63 @@ describe("Chip", () => {
             outPin.busVoltage = 0b1;
             expect(not3Chip.out().busVoltage).toBe(0b010);
         });
+        it("widens output busses if necessary", () => {
+            const mux4way16 = new Chip$1(["a[16]", "b[16]", "c[16]", "d[16]", "sel[2]"], ["out[16]"]);
+            mux4way16.wire(new Mux16(), [
+                {
+                    from: { name: "a", start: 0 },
+                    to: { name: "a", start: 0 },
+                },
+                {
+                    from: { name: "b", start: 0 },
+                    to: { name: "b", start: 0 },
+                },
+                {
+                    from: { name: "sel", start: 0, width: 1 },
+                    to: { name: "sel", start: 0 },
+                },
+                {
+                    from: { name: "out1", start: 0 },
+                    to: { name: "out", start: 0 },
+                },
+            ]);
+            mux4way16.wire(new Mux16(), [
+                {
+                    from: { name: "c", start: 0 },
+                    to: { name: "a", start: 0 },
+                },
+                {
+                    from: { name: "d", start: 0 },
+                    to: { name: "b", start: 0 },
+                },
+                {
+                    from: { name: "sel", start: 0, width: 1 },
+                    to: { name: "sel", start: 0 },
+                },
+                {
+                    from: { name: "out2", start: 0 },
+                    to: { name: "out", start: 0 },
+                },
+            ]);
+            mux4way16.wire(new Mux16(), [
+                {
+                    from: { name: "out1", start: 0 },
+                    to: { name: "a", start: 0 },
+                },
+                {
+                    from: { name: "out2", start: 0 },
+                    to: { name: "b", start: 0 },
+                },
+                {
+                    from: { name: "sel", start: 1, width: 1 },
+                    to: { name: "sel", start: 1, width: 1 },
+                },
+                {
+                    from: { name: "out", start: 0, width: 1 },
+                    to: { name: "out", start: 0, width: 1 },
+                },
+            ]);
+        });
         class Not8 extends Chip$1 {
             constructor() {
                 super(["in[8]"], ["out[8]"]);
@@ -4528,22 +5450,114 @@ describe("Chip", () => {
         });
     });
     describe("sequential", () => {
+        const clock = Clock.get();
+        beforeEach(() => {
+            clock.reset();
+        });
         describe("dff", () => {
             it("flips and flops", () => {
+                clock.reset();
                 const dff = new DFF();
-                dff.tick();
+                clock.tick(); // Read input, low
                 expect(dff.out().voltage()).toBe(LOW);
-                dff.tock();
-                expect(dff.out().voltage()).toBe(LOW);
-                dff.tick();
+                clock.tock(); // Write t, low
                 expect(dff.out().voltage()).toBe(LOW);
                 dff.in().pull(HIGH);
-                dff.tock();
+                clock.tick(); // Read input, HIGH
                 expect(dff.out().voltage()).toBe(LOW);
-                dff.tick();
-                expect(dff.out().voltage()).toBe(LOW);
-                dff.tock();
+                clock.tock(); // Write t, HGIH
                 expect(dff.out().voltage()).toBe(HIGH);
+                clock.tick();
+                expect(dff.out().voltage()).toBe(HIGH);
+                clock.tock();
+                expect(dff.out().voltage()).toBe(HIGH);
+            });
+        });
+        describe("bit", () => {
+            it("does not update when load is low", () => {
+                clock.reset();
+                const bit = new Bit();
+                bit.in("load").pull(LOW);
+                bit.in().pull(HIGH);
+                expect(bit.out().voltage()).toBe(LOW);
+                clock.tick();
+                expect(bit.out().voltage()).toBe(LOW);
+                clock.tock();
+                expect(bit.out().voltage()).toBe(LOW);
+            });
+            it("does updates when load is high", () => {
+                clock.reset();
+                const bit = new Bit();
+                bit.in("load").pull(HIGH);
+                bit.in().pull(HIGH);
+                expect(bit.out().voltage()).toBe(LOW);
+                clock.tick();
+                expect(bit.out().voltage()).toBe(HIGH);
+                clock.tock();
+                expect(bit.out().voltage()).toBe(HIGH);
+            });
+        });
+        describe("PC", () => {
+            it("remains constant when not ticking", () => {
+                clock.reset();
+                const pc = new PC();
+                const out = pc.out();
+                expect(out.busVoltage).toBe(0);
+                clock.tick();
+                expect(out.busVoltage).toBe(0);
+                clock.tock();
+                expect(out.busVoltage).toBe(0);
+                clock.tick();
+                expect(out.busVoltage).toBe(0);
+                clock.tock();
+                expect(out.busVoltage).toBe(0);
+            });
+            it("increments when ticking", () => {
+                clock.reset();
+                const pc = new PC();
+                const out = pc.out();
+                pc.in("inc").pull(HIGH);
+                clock.tick();
+                expect(out.busVoltage).toBe(0);
+                clock.tock();
+                expect(out.busVoltage).toBe(1);
+                clock.tick();
+                expect(out.busVoltage).toBe(1);
+                clock.tock();
+                expect(out.busVoltage).toBe(2);
+                for (let i = 0; i < 10; i++) {
+                    clock.eval();
+                    expect(out.busVoltage).toBe(i + 3);
+                }
+            });
+            it("loads a jump value", () => {
+                clock.reset();
+                const pc = new PC();
+                const out = pc.out();
+                pc.in().busVoltage = 0x8286;
+                expect(out.busVoltage).toBe(0);
+                clock.tick();
+                expect(out.busVoltage).toBe(0);
+                clock.tock();
+                expect(out.busVoltage).toBe(0);
+                pc.in("load").pull(HIGH);
+                expect(out.busVoltage).toBe(0);
+                clock.eval();
+                expect(out.busVoltage).toBe(0x8286);
+            });
+            it("resets", () => {
+                clock.reset();
+                const pc = new PC();
+                const out = pc.out();
+                pc.in("inc").pull(HIGH);
+                expect(out.busVoltage).toBe(0);
+                for (let i = 0; i < 10; i++) {
+                    clock.eval();
+                }
+                expect(out.busVoltage).toBe(10);
+                pc.in("reset").pull(HIGH);
+                clock.eval();
+                expect(out.busVoltage).toBe(0);
             });
         });
     });
@@ -4733,6 +5747,7 @@ class OutputTest extends Test$1 {
 describe("Test Output Handler", () => {
     const state = cleanState(() => ({
         test: new OutputTest([
+            ["time", "14+"],
             ["a", 1],
             ["b", 20],
             ["in", 0],
@@ -4778,38 +5793,82 @@ describe("Test Output Handler", () => {
         const b = outB.header(state.test);
         expect(b).toEqual("        b         ");
     });
+    it("does not center %S", () => {
+        const outTime = new Output("time", "S", 6, 1, 1);
+        const time = outTime.print(state.test);
+        expect(`'${time}'`).toEqual("' 14+    '");
+    });
 });
 
 describe("Simulator Test", () => {
-    it("creates a simulator test", () => {
-        const test = new ChipTest();
-        test.outputList(["a", "b", "out"].map((v) => new Output(v)));
-        [
-            new TestSetInstruction("a", 0),
-            new TestSetInstruction("b", 0),
-            new TestEvalInstruction(),
-            new TestOutputInstruction(),
-        ].forEach((i) => test.addInstruction(i));
-        [
-            new TestSetInstruction("a", 1),
-            new TestSetInstruction("b", 1),
-            new TestEvalInstruction(),
-            new TestOutputInstruction(),
-        ].forEach((i) => test.addInstruction(i));
-        [
-            new TestSetInstruction("a", 1),
-            new TestSetInstruction("b", 0),
-            new TestEvalInstruction(),
-            new TestOutputInstruction(),
-        ].forEach((i) => test.addInstruction(i));
-        [
-            new TestSetInstruction("a", 0),
-            new TestSetInstruction("b", 1),
-            new TestEvalInstruction(),
-            new TestOutputInstruction(),
-        ].forEach((i) => test.addInstruction(i));
-        test.run();
-        expect(test.log()).toEqual(`| 0 | 0 | 1 |\n| 1 | 1 | 0 |\n| 1 | 0 | 1 |\n| 0 | 1 | 1 |\n`);
+    describe("Full tests", () => {
+        it("creates a simulator test", () => {
+            const test = new ChipTest().with(new Nand());
+            test.outputList(["a", "b", "out"].map((v) => new Output(v)));
+            [
+                new TestSetInstruction("a", 0),
+                new TestSetInstruction("b", 0),
+                new TestEvalInstruction(),
+                new TestOutputInstruction(),
+            ].forEach((i) => test.addInstruction(i));
+            [
+                new TestSetInstruction("a", 1),
+                new TestSetInstruction("b", 1),
+                new TestEvalInstruction(),
+                new TestOutputInstruction(),
+            ].forEach((i) => test.addInstruction(i));
+            [
+                new TestSetInstruction("a", 1),
+                new TestSetInstruction("b", 0),
+                new TestEvalInstruction(),
+                new TestOutputInstruction(),
+            ].forEach((i) => test.addInstruction(i));
+            [
+                new TestSetInstruction("a", 0),
+                new TestSetInstruction("b", 1),
+                new TestEvalInstruction(),
+                new TestOutputInstruction(),
+            ].forEach((i) => test.addInstruction(i));
+            test.run();
+            expect(test.log()).toEqual(`| 0 | 0 | 1 |\n| 1 | 1 | 0 |\n| 1 | 0 | 1 |\n| 0 | 1 | 1 |\n`);
+        });
+        it("tick tocks a clock", () => {
+            const test = new ChipTest(); //.with(new DFF());
+            test.outputList([new Output("time", "S", 4, 0, 0)]);
+            for (let i = 0; i < 5; i++) {
+                test.addInstruction(new TestTickInstruction());
+                test.addInstruction(new TestOutputInstruction());
+                test.addInstruction(new TestTockInstruction());
+                test.addInstruction(new TestOutputInstruction());
+            }
+            for (let i = 0; i < 2; i++) {
+                test.addInstruction(new TestEvalInstruction());
+                test.addInstruction(new TestOutputInstruction());
+            }
+            for (let i = 0; i < 3; i++) {
+                test.addInstruction(new TestTickInstruction());
+                test.addInstruction(new TestTockInstruction());
+                test.addInstruction(new TestOutputInstruction());
+            }
+            test.run();
+            expect(test.log().trim().split("\n")).toEqual([
+                "0+",
+                "1",
+                "1+",
+                "2",
+                "2+",
+                "3",
+                "3+",
+                "4",
+                "4+",
+                "5",
+                "5",
+                "5",
+                "6",
+                "7",
+                "8",
+            ].map((i) => `|${i.padEnd(4, " ")}|`));
+        });
     });
 });
 
@@ -4842,10 +5901,10 @@ var urls = [
     { href: "test", link: "Tests", icon: "checklist", target: Test },
 ];
 
-const cmp$s = `|  in   |  out  |
+const cmp$v = `|  in   |  out  |
 |   0   |   1   |
 |   1   |   0   |`;
-const hdl$s = `// Not gate: out = not in
+const hdl$v = `// Not gate: out = not in
 
 CHIP Not {
     IN in;
@@ -4853,13 +5912,22 @@ CHIP Not {
 
     PARTS:
 }`;
-const tst$s = `
+const sol$v = `// Not gate: out = not in
+
+CHIP Not {
+    IN in;
+    OUT out;
+
+    PARTS:
+    Nand(a=in, b=in, out=out);
+}`;
+const tst$v = `
 output-list in%B3.1.3 out%B3.1.3;
 
 set in 0, eval, output;
 set in 1, eval, output;`;
 
-const hdl$r = `/**
+const hdl$u = `/**
  * And gate: out = 1 if {a==1 and b==1}, 0 otherwise
  * And gate: if {a==1 and b==1} then out = 1 else out = 0
  */
@@ -4870,23 +5938,32 @@ CHIP And {
 
     PARTS:
 }`;
-const tst$r = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const sol$u = `
+CHIP And {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Nand(a=a, b=b, out=n);
+    Not(in=n, out=out);
+}`;
+const tst$u = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
-const cmp$r = `|   a   |   b   |  out  |
+const cmp$u = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   0   |
 |   1   |   0   |   0   |
 |   1   |   1   |   1   |`;
 
-const cmp$q = `|   a   |   b   |  out  |
+const cmp$t = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   1   |
 |   1   |   0   |   1   |
 |   1   |   1   |   1   |`;
-const hdl$q = `/**
+const hdl$t = `/**
  * Or gate: out = 1 if {a==1 or b==1}, 0 otherwise
  */
 
@@ -4896,19 +5973,28 @@ CHIP Or {
 
     PARTS:
 }`;
-const tst$q = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const sol$t = `CHIP Or {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    Nand(a=nota, b=notb, out=out);
+}`;
+const tst$t = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
 
-const cmp$p = `|   a   |   b   |  out  |
+const cmp$s = `|   a   |   b   |  out  |
 |   0   |   0   |   0   |
 |   0   |   1   |   1   |
 |   1   |   0   |   1   |
 |   1   |   1   |   0   |`;
-const hdl$p = `/**
+const hdl$s = `/**
  *  Exclusive-or gate: out = !(a == b).
  */
 
@@ -4918,14 +6004,25 @@ CHIP XOr {
 
     PARTS:
 }`;
-const tst$p = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
+const sol$s = `CHIP XOr {
+    IN a, b;
+    OUT out;
+
+    PARTS:
+    Not(in=a, out=nota);
+    Not(in=b, out=notb);
+    And(a=nota, b=b, out=t1);
+    And(a=a, b=notb, out=t2);
+    Or(a=t1, b=t2, out=out);
+}`;
+const tst$s = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, eval, output;
 set a 0, set b 1, eval, output;
 set a 1, set b 0, eval, output;
 set a 1, set b 1, eval, output;`;
 
-const cmp$o = `|   a   |   b   |  sel  |  out  |
+const cmp$r = `|   a   |   b   |  sel  |  out  |
 |   0   |   0   |   0   |   0   |
 |   0   |   0   |   1   |   0   |
 |   0   |   1   |   0   |   0   |
@@ -4934,9 +6031,7 @@ const cmp$o = `|   a   |   b   |  sel  |  out  |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |
 |   1   |   1   |   1   |   1   |`;
-const hdl$o = `/** 
- * Multiplexor. If sel==1 then out=b else out=a.
- */
+const hdl$r = `// Multiplexor. If sel==1 then out=b else out=a.
 
 CHIP Mux {
     IN a, b, sel;
@@ -4944,7 +6039,17 @@ CHIP Mux {
 
     PARTS:
 }`;
-const tst$o = `output-list a%B3.1.3 b%B3.1.3 sel%B3.1.3 out%B3.1.3;
+const sol$r = `CHIP Mux {
+    IN a, b, sel;
+    OUT out;
+
+    PARTS:
+    Not(in=sel, out=notsel);
+    And(a=a, b=notsel, out=anotsel);
+    And(a=b, b=sel, out=bsel);
+    Or(a=anotsel, b=bsel, out=out);
+}`;
+const tst$r = `output-list a%B3.1.3 b%B3.1.3 sel%B3.1.3 out%B3.1.3;
 
 set a 0, set b 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -4958,7 +6063,7 @@ set sel 1, eval, output;
 set a 1, set b 1, set sel 0, eval, output;
 set sel 1, eval, output;`;
 
-const hdl$n = `/**
+const hdl$q = `/**
  * Demultiplexor.
  * {a,b} = {in,0} if sel==0
  *         {0,in} if sel==1
@@ -4970,20 +6075,29 @@ CHIP DMux {
 
     PARTS:
 }`;
-const tst$n = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
+const sol$q = `CHIP DMux {
+    IN in, sel;
+    OUT a, b;
+
+    PARTS:
+    And(a=in, b=sel, out=b);
+    Not(in=sel, out=notsel);
+    And(a=in, b=notsel, out=a);
+}`;
+const tst$q = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
 
 set in 0, set sel 0, eval, output;
 set sel 1, eval, output;
 
 set in 1, set sel 0, eval, output;
 set sel 1, eval, output;`;
-const cmp$n = `|  in   |  sel  |   a   |   b   |
+const cmp$q = `|  in   |  sel  |   a   |   b   |
 |   0   |   0   |   0   |   0   |
 |   0   |   1   |   0   |   0   |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |`;
 
-const hdl$m = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
+const hdl$p = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
 
 CHIP Not16 {
    IN in[16];
@@ -4991,20 +6105,44 @@ CHIP Not16 {
 
    PARTS:
 }`;
-const tst$m = `output-list in%B1.16.1 out%B1.16.1;
+const sol$p = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
+
+CHIP Not16 {
+   IN in[16];
+   OUT out[16];
+
+   PARTS:
+   Not(in=in[0], out=out[0]);
+   Not(in=in[1], out=out[1]);
+   Not(in=in[2], out=out[2]);
+   Not(in=in[3], out=out[3]);
+   Not(in=in[4], out=out[4]);
+   Not(in=in[5], out=out[5]);
+   Not(in=in[6], out=out[6]);
+   Not(in=in[7], out=out[7]);
+   Not(in=in[8], out=out[8]);
+   Not(in=in[9], out=out[9]);
+   Not(in=in[10], out=out[10]);
+   Not(in=in[11], out=out[11]);
+   Not(in=in[12], out=out[12]);
+   Not(in=in[13], out=out[13]);
+   Not(in=in[14], out=out[14]);
+   Not(in=in[15], out=out[15]);
+}`;
+const tst$p = `output-list in%B1.16.1 out%B1.16.1;
 set in %B0000000000000000, eval, output;
 set in %B1111111111111111, eval, output;
 set in %B1010101010101010, eval, output;
 set in %B0011110011000011, eval, output;
 set in %B0001001000110100, eval, output;`;
-const cmp$m = `|        in        |       out        |
+const cmp$p = `|        in        |       out        |
 | 0000000000000000 | 1111111111111111 |
 | 1111111111111111 | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |
 | 0011110011000011 | 1100001100111100 |
 | 0001001000110100 | 1110110111001011 |`;
 
-const hdl$l = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
+const hdl$o = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
 
 CHIP And16 {
     IN a[16], b[16];
@@ -5012,7 +6150,29 @@ CHIP And16 {
 
     PARTS:
 }`;
-const tst$l = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const sol$o = `CHIP And16 {
+    IN a[16], b[16];
+    OUT out[16];
+
+    PARTS:
+    And(a=a[0], b=b[0], out=out[0]);
+    And(a=a[1], b=b[1], out=out[1]);
+    And(a=a[2], b=b[2], out=out[2]);
+    And(a=a[3], b=b[3], out=out[3]);
+    And(a=a[4], b=b[4], out=out[4]);
+    And(a=a[5], b=b[5], out=out[5]);
+    And(a=a[6], b=b[6], out=out[6]);
+    And(a=a[7], b=b[7], out=out[7]);
+    And(a=a[8], b=b[8], out=out[8]);
+    And(a=a[9], b=b[9], out=out[9]);
+    And(a=a[10], b=b[10], out=out[10]);
+    And(a=a[11], b=b[11], out=out[11]);
+    And(a=a[12], b=b[12], out=out[12]);
+    And(a=a[13], b=b[13], out=out[13]);
+    And(a=a[14], b=b[14], out=out[14]);
+    And(a=a[15], b=b[15], out=out[15]);
+}`;
+const tst$o = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 
 set a %B0000000000000000, set b %B0000000000000000, eval, output;
 set a %B0000000000000000, set b %B1111111111111111, eval, output;
@@ -5020,7 +6180,7 @@ set a %B1111111111111111, set b %B1111111111111111, eval, output;
 set a %B1010101010101010, set b %B0101010101010101, eval, output;
 set a %B0011110011000011, set b %B0000111111110000, eval, output;
 set a %B0001001000110100, set b %B1001100001110110, eval, output;`;
-const cmp$l = `|        a         |        b         |       out        |
+const cmp$o = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 0000000000000000 |
 | 1111111111111111 | 1111111111111111 | 1111111111111111 |
@@ -5028,14 +6188,14 @@ const cmp$l = `|        a         |        b         |       out        |
 | 0011110011000011 | 0000111111110000 | 0000110011000000 |
 | 0001001000110100 | 1001100001110110 | 0001000000110100 |`;
 
-const cmp$k = `|        a         |        b         |       out        |
+const cmp$n = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1111111111111111 |
 | 1111111111111111 | 1111111111111111 | 1111111111111111 |
 | 1010101010101010 | 0101010101010101 | 1111111111111111 |
 | 0011110011000011 | 0000111111110000 | 0011111111110011 |
 | 0001001000110100 | 1001100001110110 | 1001101001110110 |`;
-const hdl$k = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
+const hdl$n = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
 
 CHIP Or16 {
     IN a[16], b[16];
@@ -5043,7 +6203,29 @@ CHIP Or16 {
 
     PARTS:
 }`;
-const tst$k = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const sol$n = `CHIP Or16 {
+    IN a[16], b[16];
+    OUT out[16];
+
+    PARTS:
+    Or(a=a[0], b=b[0], out=out[0]);
+    Or(a=a[1], b=b[1], out=out[1]);
+    Or(a=a[2], b=b[2], out=out[2]);
+    Or(a=a[3], b=b[3], out=out[3]);
+    Or(a=a[4], b=b[4], out=out[4]);
+    Or(a=a[5], b=b[5], out=out[5]);
+    Or(a=a[6], b=b[6], out=out[6]);
+    Or(a=a[7], b=b[7], out=out[7]);
+    Or(a=a[8], b=b[8], out=out[8]);
+    Or(a=a[9], b=b[9], out=out[9]);
+    Or(a=a[10], b=b[10], out=out[10]);
+    Or(a=a[11], b=b[11], out=out[11]);
+    Or(a=a[12], b=b[12], out=out[12]);
+    Or(a=a[13], b=b[13], out=out[13]);
+    Or(a=a[14], b=b[14], out=out[14]);
+    Or(a=a[15], b=b[15], out=out[15]);
+}`;
+const tst$n = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 set a %B0000000000000000, set b %B0000000000000000, eval, output;
 set a %B0000000000000000, set b %B1111111111111111, eval, output;
 set a %B1111111111111111, set b %B1111111111111111, eval, output;
@@ -5051,7 +6233,7 @@ set a %B1010101010101010, set b %B0101010101010101, eval, output;
 set a %B0011110011000011, set b %B0000111111110000, eval, output;
 set a %B0001001000110100, set b %B1001100001110110, eval, output;`;
 
-const cmp$j = `|        a         |        b         | sel |       out        |
+const cmp$m = `|        a         |        b         | sel |       out        |
 | 0000000000000000 | 0000000000000000 |  0  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 |  1  | 0000000000000000 |
 | 0000000000000000 | 0001001000110100 |  0  | 0000000000000000 |
@@ -5060,7 +6242,7 @@ const cmp$j = `|        a         |        b         | sel |       out        |
 | 1001100001110110 | 0000000000000000 |  1  | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |  0  | 1010101010101010 |
 | 1010101010101010 | 0101010101010101 |  1  | 0101010101010101 |`;
-const hdl$j = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
+const hdl$m = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
 
 CHIP Mux16 {
     IN a[16], b[16], sel;
@@ -5068,7 +6250,29 @@ CHIP Mux16 {
 
     PARTS:
 }`;
-const tst$j = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
+const sol$m = `CHIP Mux16 {
+    IN a[16], b[16], sel;
+    OUT out[16];
+
+    PARTS:
+     Mux(a=a[0], b=b[0], sel=sel, out=out[0]);
+     Mux(a=a[1], b=b[1], sel=sel, out=out[1]);
+     Mux(a=a[2], b=b[2], sel=sel, out=out[2]);
+     Mux(a=a[3], b=b[3], sel=sel, out=out[3]);
+     Mux(a=a[4], b=b[4], sel=sel, out=out[4]);
+     Mux(a=a[5], b=b[5], sel=sel, out=out[5]);
+     Mux(a=a[6], b=b[6], sel=sel, out=out[6]);
+     Mux(a=a[7], b=b[7], sel=sel, out=out[7]);
+     Mux(a=a[8], b=b[8], sel=sel, out=out[8]);
+     Mux(a=a[9], b=b[9], sel=sel, out=out[9]);
+     Mux(a=a[10], b=b[10], sel=sel, out=out[10]);
+     Mux(a=a[11], b=b[11], sel=sel, out=out[11]);
+     Mux(a=a[12], b=b[12], sel=sel, out=out[12]);
+     Mux(a=a[13], b=b[13], sel=sel, out=out[13]);
+     Mux(a=a[14], b=b[14], sel=sel, out=out[14]);
+     Mux(a=a[15], b=b[15], sel=sel, out=out[15]);
+}`;
+const tst$m = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
 
 set a 0, set b 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -5082,7 +6286,7 @@ set sel 1, eval, output;
 set a %B1010101010101010, set b %B0101010101010101, set sel 0, eval, output;
 set sel 1, eval, output;`;
 
-const cmp$i = `|        a         |        b         |        c         |        d         | sel  |       out        |
+const cmp$l = `|        a         |        b         |        c         |        d         | sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  00  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  01  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  10  | 0000000000000000 |
@@ -5091,7 +6295,7 @@ const cmp$i = `|        a         |        b         |        c         |       
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  01  | 1001100001110110 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  10  | 1010101010101010 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 | 0101010101010101 |  11  | 0101010101010101 |`;
-const hdl$i = `/**
+const hdl$l = `/**
  * 4-way 16-bit multiplexor.
  * out = a if sel==00
  *       b if sel==01
@@ -5105,7 +6309,16 @@ CHIP Mux4Way16 {
 
     PARTS:
 }`;
-const tst$i = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
+const sol$l = `CHIP Mux4Way16 {
+    IN a[16], b[16], c[16], d[16], sel[2];
+    OUT out[16];
+
+    PARTS:
+    Mux16(a=a, b=b, sel=sel[0], out=out1);
+    Mux16(a=c, b=d, sel=sel[0], out=out2);
+    Mux16(a=out1, b=out2, sel=sel[1], out=out);
+}`;
+const tst$l = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
 
 set a 0, set b 0, set c 0, set d 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -5117,7 +6330,7 @@ set sel 1, eval, output;
 set sel 2, eval, output;
 set sel 3, eval, output;`;
 
-const cmp$h = `|        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
+const cmp$k = `|        a         |        b         |        c         |        d         |        e         |        f         |        g         |        h         |  sel  |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  000  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  001  | 0000000000000000 |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 | 0000000000000000 |  010  | 0000000000000000 |
@@ -5134,7 +6347,7 @@ const cmp$h = `|        a         |        b         |        c         |       
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  101  | 0110011110001001 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  110  | 0111100010011010 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  111  | 1000100110101011 |`;
-const hdl$h = `/**
+const hdl$k = `/**
  * 8-way 16-bit multiplexor.
  * out = a if sel==000
  *       b if sel==001
@@ -5150,7 +6363,18 @@ CHIP Mux8Way16 {
 
     PARTS:
 }`;
-const tst$h = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
+const sol$k = `CHIP Mux8Way16 {
+    IN a[16], b[16], c[16], d[16],
+       e[16], f[16], g[16], h[16],
+       sel[3];
+    OUT out[16];
+
+    PARTS:
+    Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=out1);
+    Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=out2);
+    Mux16(a=out1, b=out2, sel=sel[2], out=out);
+}`;
+const tst$k = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
 
 set a 0, set b 0, set c 0, set d 0, set e 0, set f 0, set g 0, set h 0, set sel 0, eval, output;
 set sel 1, eval, output;
@@ -5170,7 +6394,7 @@ set sel 5, eval, output;
 set sel 6, eval, output;
 set sel 7, eval, output;`;
 
-const hdl$g = `/**
+const hdl$j = `/**
  * 4-way demultiplexor.
  * {a,b,c,d} = {in,0,0,0} if sel==00
  *             {0,in,0,0} if sel==01
@@ -5184,7 +6408,16 @@ CHIP DMux4Way {
 
     PARTS:
 }`;
-const tst$g = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
+const sol$j = `CHIP DMux4Way {
+    IN in, sel[2];
+    OUT a, b, c, d;
+
+    PARTS:
+    DMux(in=in, sel=sel[1], a=out1, b=out2);
+    DMux(in=out1, sel=sel[0], a=a, b=b);
+    DMux(in=out2, sel=sel[0], a=c, b=d);
+}`;
+const tst$j = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2;
 
 set in 0, set sel %B00, eval, output;
 set sel %B01, eval, output;
@@ -5195,7 +6428,7 @@ set in 1, set sel %B00, eval, output;
 set sel %B01, eval, output;
 set sel %B10, eval, output;
 set sel %B11, eval, output;`;
-const cmp$g = `| in  | sel  |  a  |  b  |  c  |  d  |
+const cmp$j = `| in  | sel  |  a  |  b  |  c  |  d  |
 |  0  |  00  |  0  |  0  |  0  |  0  |
 |  0  |  01  |  0  |  0  |  0  |  0  |
 |  0  |  10  |  0  |  0  |  0  |  0  |
@@ -5205,7 +6438,7 @@ const cmp$g = `| in  | sel  |  a  |  b  |  c  |  d  |
 |  1  |  10  |  0  |  0  |  1  |  0  |
 |  1  |  11  |  0  |  0  |  0  |  1  |`;
 
-const hdl$f = `/**
+const hdl$i = `/**
  * 8-way demultiplexor.
  * {a,b,c,d,e,f,g,h} = {in,0,0,0,0,0,0,0} if sel==000
  *                     {0,in,0,0,0,0,0,0} if sel==001
@@ -5220,7 +6453,16 @@ CHIP DMux8Way {
 
     PARTS:
 }`;
-const tst$f = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;
+const sol$i = `CHIP DMux8Way {
+    IN in, sel[3];
+    OUT a, b, c, d, e, f, g, h;
+
+    PARTS:
+    DMux(in=in, sel=sel[2], a=out1, b=out2);
+    DMux4Way(in=out1, sel=sel[0..1], a=a, b=b, c=c, d=d);
+    DMux4Way(in=out2, sel=sel[0..1], a=e, b=f, c=g, d=h);
+}`;
+const tst$i = `output-list in%B2.1.2 sel%B2.2.2 a%B2.1.2 b%B2.1.2 c%B2.1.2 d%B2.1.2 e%B2.1.2 f%B2.1.2 g%B2.1.2 h%B2.1.2;
 
 set in 0, set sel %B000, eval, output;
 set sel %B001, eval, output;
@@ -5239,7 +6481,7 @@ set sel %B100, eval, output;
 set sel %B101, eval, output;
 set sel %B110, eval, output;
 set sel %B111, eval, output;`;
-const cmp$f = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
+const cmp$i = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  0  |  00  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
 |  0  |  01  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
 |  0  |  10  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |
@@ -5257,13 +6499,13 @@ const cmp$f = `| in  | sel  |  a  |  b  |  c  |  d  |  e  |  f  |  g  |  h  |
 |  1  |  10  |  0  |  0  |  0  |  0  |  0  |  0  |  1  |  0  |
 |  1  |  11  |  0  |  0  |  0  |  0  |  0  |  0  |  0  |  1  |`;
 
-const cmp$e = `|     in     | out |
+const cmp$h = `|     in     | out |
 |  00000000  |  0  |
 |  11111111  |  1  |
 |  00010000  |  1  |
 |  00000001  |  1  |
 |  00100110  |  1  |`;
-const hdl$e = `/**
+const hdl$h = `/**
  * 8-way or gate: out = in[0] or in[1] or ... or in[7].
  */
 
@@ -5273,7 +6515,20 @@ CHIP Or8Way {
 
     PARTS:
 }`;
-const tst$e = `output-list in%B2.8.2 out%B2.1.2;
+const sol$h = `CHIP Or8Way {
+    IN in[8];
+    OUT out;
+
+    PARTS:
+    Or(a=in[0], b=in[1], out=or1);
+    Or(a=in[2], b=in[3], out=or2);
+    Or(a=in[4], b=in[5], out=or3);
+    Or(a=in[6], b=in[7], out=or4);
+    Or(a=or1, b=or2, out=or5);
+    Or(a=or3, b=or4, out=or6);
+    Or(a=or5, b=or6, out=out);
+}`;
+const tst$h = `output-list in%B2.8.2 out%B2.1.2;
 
 set in %B00000000, eval, output;
 set in %B11111111, eval, output;
@@ -5281,89 +6536,140 @@ set in %B00010000, eval, output;
 set in %B00000001, eval, output;
 set in %B00100110, eval, output;`;
 
-async function resetFiles$3(fs) {
+async function resetFiles$4(fs) {
     await fs.pushd("/projects/01");
     await reset(fs, {
         Not: {
-            "Not.hdl": hdl$s,
-            "Not.tst": tst$s,
-            "Not.cmp": cmp$s,
+            "Not.hdl": hdl$v,
+            "Not.tst": tst$v,
+            "Not.cmp": cmp$v,
         },
         And: {
-            "And.hdl": hdl$r,
-            "And.tst": tst$r,
-            "And.cmp": cmp$r,
+            "And.hdl": hdl$u,
+            "And.tst": tst$u,
+            "And.cmp": cmp$u,
         },
         Or: {
-            "Or.hdl": hdl$q,
-            "Or.tst": tst$q,
-            "Or.cmp": cmp$q,
+            "Or.hdl": hdl$t,
+            "Or.tst": tst$t,
+            "Or.cmp": cmp$t,
         },
         XOr: {
-            "XOr.hdl": hdl$p,
-            "XOr.tst": tst$p,
-            "XOr.cmp": cmp$p,
+            "XOr.hdl": hdl$s,
+            "XOr.tst": tst$s,
+            "XOr.cmp": cmp$s,
         },
         Mux: {
-            "Mux.hdl": hdl$o,
-            "Mux.tst": tst$o,
-            "Mux.cmp": cmp$o,
+            "Mux.hdl": hdl$r,
+            "Mux.tst": tst$r,
+            "Mux.cmp": cmp$r,
         },
         DMux: {
-            "DMux.hdl": hdl$n,
-            "DMux.tst": tst$n,
-            "DMux.cmp": cmp$n,
+            "DMux.hdl": hdl$q,
+            "DMux.tst": tst$q,
+            "DMux.cmp": cmp$q,
         },
         Not16: {
-            "Not16.hdl": hdl$m,
-            "Not16.tst": tst$m,
-            "Not16.cmp": cmp$m,
+            "Not16.hdl": hdl$p,
+            "Not16.tst": tst$p,
+            "Not16.cmp": cmp$p,
         },
         And16: {
-            "And16.hdl": hdl$l,
-            "And16.tst": tst$l,
-            "And16.cmp": cmp$l,
+            "And16.hdl": hdl$o,
+            "And16.tst": tst$o,
+            "And16.cmp": cmp$o,
         },
         Or16: {
-            "Or16.hdl": hdl$k,
-            "Or16.tst": tst$k,
-            "Or16.cmp": cmp$k,
+            "Or16.hdl": hdl$n,
+            "Or16.tst": tst$n,
+            "Or16.cmp": cmp$n,
         },
         Mux16: {
-            "Mux16.hdl": hdl$j,
-            "Mux16.tst": tst$j,
-            "Mux16.cmp": cmp$j,
+            "Mux16.hdl": hdl$m,
+            "Mux16.tst": tst$m,
+            "Mux16.cmp": cmp$m,
         },
         Mux4way16: {
-            "Mux4way16.hdl": hdl$i,
-            "Mux4way16.tst": tst$i,
-            "Mux4way16.cmp": cmp$i,
+            "Mux4Way16.hdl": hdl$l,
+            "Mux4Way16.tst": tst$l,
+            "Mux4Way16.cmp": cmp$l,
         },
-        Mux8way16: {
-            "Mux8way16.hdl": hdl$h,
-            "Mux8way16.tst": tst$h,
-            "Mux8way16.cmp": cmp$h,
+        Mux8Way16: {
+            "Mux8Way16.hdl": hdl$k,
+            "Mux8Way16.tst": tst$k,
+            "Mux8Way16.cmp": cmp$k,
         },
-        DMux4way: {
-            "DMux4way.hdl": hdl$g,
-            "DMux4way.tst": tst$g,
-            "DMux4way.cmp": cmp$g,
+        DMux4Way: {
+            "DMux4Way.hdl": hdl$j,
+            "DMux4Way.tst": tst$j,
+            "DMux4Way.cmp": cmp$j,
         },
-        DMux8way: {
-            "DMux8way.hdl": hdl$f,
-            "DMux8way.tst": tst$f,
-            "DMux8way.cmp": cmp$f,
+        DMux8Way: {
+            "DMux8Way.hdl": hdl$i,
+            "DMux8Way.tst": tst$i,
+            "DMux8Way.cmp": cmp$i,
         },
-        Or8way: {
-            "Or8way.hdl": hdl$e,
-            "Or8way.tst": tst$e,
-            "Or8way.cmp": cmp$e,
+        Or8Way: {
+            "Or8Way.hdl": hdl$h,
+            "Or8Way.tst": tst$h,
+            "Or8Way.cmp": cmp$h,
+        },
+    });
+    await fs.popd();
+}
+async function loadSolutions$4(fs) {
+    await fs.pushd("/projects/01");
+    await reset(fs, {
+        Not: {
+            "Not.hdl": sol$v,
+        },
+        And: {
+            "And.hdl": sol$u,
+        },
+        Or: {
+            "Or.hdl": sol$t,
+        },
+        XOr: {
+            "XOr.hdl": sol$s,
+        },
+        Mux: {
+            "Mux.hdl": sol$r,
+        },
+        DMux: {
+            "DMux.hdl": sol$q,
+        },
+        Not16: {
+            "Not16.hdl": sol$p,
+        },
+        And16: {
+            "And16.hdl": sol$o,
+        },
+        Or16: {
+            "Or16.hdl": sol$n,
+        },
+        Mux16: {
+            "Mux16.hdl": sol$m,
+        },
+        Mux4Way16: {
+            "Mux4Way16.hdl": sol$l,
+        },
+        Mux8Way16: {
+            "Mux8Way16.hdl": sol$k,
+        },
+        DMux4Way: {
+            "DMux4Way.hdl": sol$j,
+        },
+        DMux8Way: {
+            "DMux8Way.hdl": sol$i,
+        },
+        Or8Way: {
+            "Or8Way.hdl": sol$h,
         },
     });
     await fs.popd();
 }
 
-const hdl$d = `// Computes the sum of two bits.
+const hdl$g = `// Computes the sum of two bits.
 
 CHIP HalfAdder {
    IN a, b;    // 1-bit inputs
@@ -5373,12 +6679,21 @@ CHIP HalfAdder {
    PARTS:
    // Put you code here:
 }`;
-const cmp$d = `|   a   |   b   |  sum  | carry |
+const sol$g = `CHIP HalfAdder {
+    IN a, b;    // 1-bit inputs
+    OUT sum,    // Right bit of a + b 
+        carry;  // Left bit of a + b
+
+    PARTS:
+    Xor(a=a, b=b, out=sum);
+    And(a=a, b=b, out=carry);
+}`;
+const cmp$g = `|   a   |   b   |  sum  | carry |
 |   0   |   0   |   0   |   0   |
 |   0   |   1   |   1   |   0   |
 |   1   |   0   |   1   |   0   |
 |   1   |   1   |   0   |   1   |`;
-const tst$d = `output-list a%B3.1.3 b%B3.1.3 sum%B3.1.3 carry%B3.1.3;
+const tst$g = `output-list a%B3.1.3 b%B3.1.3 sum%B3.1.3 carry%B3.1.3;
 
 set a 0,
 set b 0,
@@ -5400,7 +6715,7 @@ set b 1,
 eval,
 output;`;
 
-const hdl$c = `// Computes the sum of three bits.
+const hdl$f = `// Computes the sum of three bits.
 
 CHIP FullAdder {
    IN a, b, c;  // 1-bit inputs
@@ -5410,7 +6725,17 @@ CHIP FullAdder {
    PARTS:
    // Put you code here:
 }`;
-const cmp$c = `|   a   |   b   |   c   |  sum  | carry |
+const sol$f = `CHIP FullAdder {
+    IN a, b, c;  // 1-bit inputs
+    OUT sum,     // Right bit of a + b + c
+        carry;   // Left bit of a + b + c
+
+    PARTS:
+    HalfAdder(a=a, b=b, sum=s, carry=c1);
+    HalfAdder(a=c, b=s, sum=sum, carry=c2);
+    Or(a=c1, b=c2, out=carry);
+}`;
+const cmp$f = `|   a   |   b   |   c   |  sum  | carry |
 |   0   |   0   |   0   |   0   |   0   |
 |   0   |   0   |   1   |   1   |   0   |
 |   0   |   1   |   0   |   1   |   0   |
@@ -5419,7 +6744,7 @@ const cmp$c = `|   a   |   b   |   c   |  sum  | carry |
 |   1   |   0   |   1   |   0   |   1   |
 |   1   |   1   |   0   |   0   |   1   |
 |   1   |   1   |   1   |   1   |   1   |`;
-const tst$c = `output-list a%B3.1.3 b%B3.1.3 c%B3.1.3 sum%B3.1.3 carry%B3.1.3;
+const tst$f = `output-list a%B3.1.3 b%B3.1.3 c%B3.1.3 sum%B3.1.3 carry%B3.1.3;
 
 set a 0,
 set b 0,
@@ -5459,7 +6784,7 @@ set c 1,
 eval,
 output;`;
 
-const hdl$b = `/**
+const hdl$e = `/**
 * Adds two 16-bit values.
 * The most significant carry bit is ignored.
 */
@@ -5470,14 +6795,36 @@ CHIP Add16 {
 
    PARTS:
 }`;
-const cmp$b = `|        a         |        b         |       out        |
+const sol$e = `CHIP Add16 {
+    IN a[16], b[16];
+    OUT out[16], overflow;
+
+    PARTS:
+    FullAdder(a=a[0], b=b[0], sum=out[0], carry=c1);
+    FullAdder(a=a[1], b=b[1], c=c1, sum=out[1], carry=c2);
+    FullAdder(a=a[2], b=b[2], c=c2, sum=out[2], carry=c3);
+    FullAdder(a=a[3], b=b[3], c=c3, sum=out[3], carry=c4);
+    FullAdder(a=a[4], b=b[4], c=c4, sum=out[4], carry=c5);
+    FullAdder(a=a[5], b=b[5], c=c5, sum=out[5], carry=c6);
+    FullAdder(a=a[6], b=b[6], c=c6, sum=out[6], carry=c7);
+    FullAdder(a=a[7], b=b[7], c=c7, sum=out[7], carry=c8);
+    FullAdder(a=a[8], b=b[8], c=c8, sum=out[8], carry=c9);
+    FullAdder(a=a[9], b=b[9], c=c9, sum=out[9], carry=c10);
+    FullAdder(a=a[10], b=b[10], c=c10, sum=out[10], carry=c11);
+    FullAdder(a=a[11], b=b[11], c=c11, sum=out[11], carry=c12);
+    FullAdder(a=a[12], b=b[12], c=c12, sum=out[12], carry=c13);
+    FullAdder(a=a[13], b=b[13], c=c13, sum=out[13], carry=c14);
+    FullAdder(a=a[14], b=b[14], c=c14, sum=out[14], carry=c15);
+    FullAdder(a=a[15], b=b[15], c=c15, sum=out[15], carry=overflow);
+}`;
+const cmp$e = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1111111111111111 |
 | 1111111111111111 | 1111111111111111 | 1111111111111110 |
 | 1010101010101010 | 0101010101010101 | 1111111111111111 |
 | 0011110011000011 | 0000111111110000 | 0100110010110011 |
 | 0001001000110100 | 1001100001110110 | 1010101010101010 |`;
-const tst$b = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
+const tst$e = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 
 set a %B0000000000000000,
 set b %B0000000000000000,
@@ -5509,7 +6856,7 @@ set b %B1001100001110110,
 eval,
 output;`;
 
-const hdl$a = `/**
+const hdl$d = `/**
 * 16-bit incrementer:
 * out = in + 1 (arithmetic addition)
 */
@@ -5521,13 +6868,22 @@ CHIP Inc16 {
    PARTS:
   // Put you code here:
 }`;
-const cmp$a = `|        in        |       out        |
+const sol$d = `CHIP Inc16 {
+    IN in[16];
+    OUT out[16];
+
+    PARTS:
+    Nand(a=in[0], b=in[0], out=t[0]);
+    Xor(a=in[1], b=in[1], out=t[1]);
+    Add16(a=in, b=t, out=out);
+}`;
+const cmp$d = `|        in        |       out        |
 | 0000000000000000 | 0000000000000001 |
 | 1111111111111111 | 0000000000000000 |
 | 0000000000000101 | 0000000000000110 |
 | 1111111111111011 | 1111111111111100 |
 `;
-const tst$a = `output-list in%B1.16.1 out%B1.16.1;
+const tst$d = `output-list in%B1.16.1 out%B1.16.1;
 
 set in %B0000000000000000,  // in = 0
 eval,
@@ -5545,7 +6901,7 @@ set in %B1111111111111011,  // in = -5
 eval,
 output;`;
 
-const hdl$9 = `/**
+const hdl$c = `/**
  * The ALU (Arithmetic Logic Unit).
  * Computes one of the following functions:
  * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
@@ -5579,12 +6935,41 @@ CHIP ALU {
         no; // negate the out output?
 
     OUT 
-        out[16], // 16-bit output
+        out[16]; // 16-bit output
 
     PARTS:
    // Put you code here:
 }`;
-const cmp$9 = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |
+const sol$c = `CHIP ALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute out = x + y (if 1) or x & y (if 0)
+        no; // negate the out output?
+
+    OUT 
+        out[16]; // 16-bit output
+
+    PARTS:
+    Mux16(sel=zx, a=x, b=false, out=xzero);
+    Not16(in=xzero, out=notx);
+    Mux16(sel=nx, a=xzero, b=notx, out=xbus);
+
+    Mux16(sel=zy, a=y, b=false, out=yzero);
+    Not16(in=yzero, out=noty);
+    Mux16(sel=ny, a=yzero, b=noty, out=ybus);
+
+    And16(a=xbus, b=ybus, out=fbusand);
+    Add16(a=xbus, b=ybus, out=fbusadd);
+
+    Mux16(sel=f, a=fbusand, b=fbusadd, out=outbus);
+    Not16(in=outbus, out=notoutbus);
+    Mux16(sel=no, a=outbus, b=notoutbus, out=out);
+}`;
+const cmp$c = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 0 | 1 | 0 | 1111111111111111 |
@@ -5622,7 +7007,7 @@ const cmp$9 = `|        x         |        y         |zx |nx |zy |ny | f |no |  
 | 0101101110100000 | 0001111011010010 | 0 | 0 | 0 | 0 | 0 | 0 | 0001101010000000 |
 | 0101101110100000 | 0001111011010010 | 0 | 1 | 0 | 1 | 0 | 1 | 0101111111110010 |
 `;
-const tst$9 = `
+const tst$c = `
 // ALU no stat tst provides a partial test of the ALU chip.
 // It IS NOT a replacement for ALU.tst.
 
@@ -5969,7 +7354,7 @@ set no 1,
 eval,
 output;`;
 
-const hdl$8 = `/**
+const hdl$b = `/**
  * The ALU (Arithmetic Logic Unit).
  * Computes one of the following functions:
  * x+y, x-y, y-x, 0, 1, -1, x, y, -x, -y, !x, !y,
@@ -6010,7 +7395,43 @@ CHIP ALU {
     PARTS:
    // Put you code here:
 }`;
-const cmp$8 = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |zr |ng |
+const sol$b = `CHIP ALU {
+    IN  
+        x[16], y[16],  // 16-bit inputs        
+        zx, // zero the x input?
+        nx, // negate the x input?
+        zy, // zero the y input?
+        ny, // negate the y input?
+        f,  // compute out = x + y (if 1) or x & y (if 0)
+        no; // negate the out output?
+
+    OUT 
+        out[16], // 16-bit output
+        zr, // 1 if (out == 0), 0 otherwise
+        ng; // 1 if (out < 0),  0 otherwise
+
+    PARTS:
+    Mux16(sel=zx, a=x, b=false, out=xzero);
+    Not16(in=xzero, out=notx);
+    Mux16(sel=nx, a=xzero, b=notx, out=xbus);
+
+    Mux16(sel=zy, a=y, b=false, out=yzero);
+    Not16(in=yzero, out=noty);
+    Mux16(sel=ny, a=yzero, b=noty, out=ybus);
+
+    And16(a=xbus, b=ybus, out=fbusand);
+    Add16(a=xbus, b=ybus, out=fbusadd);
+
+    Mux16(sel=f, a=fbusand, b=fbusadd, out=outbus);
+    Not16(in=outbus, out=notoutbus);
+    Mux16(sel=no, a=outbus, b=notoutbus, out[15]=ng, out[0..7]=zr1, out[8..15]=zr2, out=out);
+
+    Or8Way(in=zr1, out=zra);
+    Or8Way(in=zr2, out=zrb);
+    Or(a=zra, b=zrb, out=zror);
+    Not(in=zror, out=zr);
+}`;
+const cmp$b = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |zr |ng |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 | 1 | 0 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 | 0 | 0 |
 | 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 0 | 1 | 0 | 1111111111111111 | 0 | 1 |
@@ -6047,7 +7468,7 @@ const cmp$8 = `|        x         |        y         |zx |nx |zy |ny | f |no |  
 | 0000000000010001 | 0000000000000011 | 0 | 0 | 0 | 1 | 1 | 1 | 1111111111110010 | 0 | 1 |
 | 0000000000010001 | 0000000000000011 | 0 | 0 | 0 | 0 | 0 | 0 | 0000000000000001 | 0 | 0 |
 | 0000000000010001 | 0000000000000011 | 0 | 1 | 0 | 1 | 0 | 1 | 0000000000010011 | 0 | 0 |`;
-const tst$8 = `output-list x%B1.16.1 y%B1.16.1 zx%B1.1.1 nx%B1.1.1 zy%B1.1.1 
+const tst$b = `output-list x%B1.16.1 y%B1.16.1 zx%B1.1.1 nx%B1.1.1 zy%B1.1.1 
 ny%B1.1.1 f%B1.1.1 no%B1.1.1 out%B1.16.1 zr%B1.1.1
 ng%B1.1.1;
 
@@ -6417,44 +7838,68 @@ set no 1,
 eval,
 output;`;
 
-async function resetFiles$2(fs) {
+async function resetFiles$3(fs) {
     await fs.pushd("/projects/02");
     await reset(fs, {
         HalfAdder: {
-            "HalfAdder.hdl": hdl$d,
-            "HalfAdder.tst": tst$d,
-            "HalfAdder.cmp": cmp$d,
+            "HalfAdder.hdl": hdl$g,
+            "HalfAdder.tst": tst$g,
+            "HalfAdder.cmp": cmp$g,
         },
         FullAdder: {
-            "FullAdder.hdl": hdl$c,
-            "FullAdder.tst": tst$c,
-            "FullAdder.cmp": cmp$c,
+            "FullAdder.hdl": hdl$f,
+            "FullAdder.tst": tst$f,
+            "FullAdder.cmp": cmp$f,
         },
         Add16: {
-            "Add16.hdl": hdl$b,
-            "Add16.tst": tst$b,
-            "Add16.cmp": cmp$b,
+            "Add16.hdl": hdl$e,
+            "Add16.tst": tst$e,
+            "Add16.cmp": cmp$e,
         },
         Inc16: {
-            "Inc16.hdl": hdl$a,
-            "Inc16.tst": tst$a,
-            "Inc16.cmp": cmp$a,
+            "Inc16.hdl": hdl$d,
+            "Inc16.tst": tst$d,
+            "Inc16.cmp": cmp$d,
         },
         AluNoStat: {
-            "AluNoStat.hdl": hdl$9,
-            "AluNoStat.tst": tst$9,
-            "AluNoStat.cmp": cmp$9,
+            "AluNoStat.hdl": hdl$c,
+            "AluNoStat.tst": tst$c,
+            "AluNoStat.cmp": cmp$c,
         },
         ALU: {
-            "ALU.hdl": hdl$8,
-            "ALU.tst": tst$8,
-            "ALU.cmp": cmp$8,
+            "ALU.hdl": hdl$b,
+            "ALU.tst": tst$b,
+            "ALU.cmp": cmp$b,
+        },
+    });
+    await fs.popd();
+}
+async function loadSolutions$3(fs) {
+    await fs.pushd("/projects/02");
+    await reset(fs, {
+        HalfAdder: {
+            "HalfAdder.hdl": sol$g,
+        },
+        FullAdder: {
+            "FullAdder.hdl": sol$f,
+        },
+        Add16: {
+            "Add16.hdl": sol$e,
+        },
+        Inc16: {
+            "Inc16.hdl": sol$d,
+        },
+        AluNoStat: {
+            "AluNoStat.hdl": sol$c,
+        },
+        ALU: {
+            "ALU.hdl": sol$b,
         },
     });
     await fs.popd();
 }
 
-const hdl$7 = `/**
+const hdl$a = `/**
  * 1-bit register:
  * If load[t] == 1 then out[t+1] = in[t]
  *                 else out does not change (out[t+1] = out[t])
@@ -6466,7 +7911,16 @@ CHIP Bit {
 
     PARTS:
 }`;
-const tst$7 = `output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
+const sol$a = `CHIP Bit {
+    IN in, load;
+    OUT out;
+
+    PARTS:
+    
+    Mux(sel=load, a=dffout, b=in, out=dffin);
+    DFF(in=dffin, out=dffout, out=out);
+}`;
+const tst$a = `output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
 set in 0, set load 0, tick, output; tock, output;
 set in 0, set load 1, tick, output; tock, output;
 set in 1, set load 0, tick, output; tock, output;
@@ -6574,7 +8028,7 @@ set in 1, set load 0, tick, output; tock, output;
 set in 1, set load 0, tick, output; tock, output;
 set in 1, set load 0, tick, output; tock, output;
 set in 1, set load 0, tick, output; tock, output;`;
-const cmp$7 = `| time | in  |load | out |
+const cmp$a = `| time | in  |load | out |
 | 0+   |  0  |  0  |  0  |
 | 1    |  0  |  0  |  0  |
 | 1+   |  0  |  1  |  0  |
@@ -6790,7 +8244,7 @@ const cmp$7 = `| time | in  |load | out |
 | 106+ |  1  |  0  |  0  |
 | 107  |  1  |  0  |  0  |`;
 
-const hdl$6 = `/**
+const hdl$9 = `/**
  * 16-bit register:
  * If load[t] == 1 then out[t+1] = in[t]
  * else out does not change
@@ -6802,7 +8256,29 @@ CHIP Register {
 
     PARTS:
 }`;
-const tst$6 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 out%D1.6.1;\n` +
+const sol$9 = `CHIP Register {
+    IN in[16], load;
+    OUT out[16];
+
+    PARTS:
+    Bit(in=in[0], load=load, out=out[0]);
+    Bit(in=in[1], load=load, out=out[1]);
+    Bit(in=in[2], load=load, out=out[2]);
+    Bit(in=in[3], load=load, out=out[3]);
+    Bit(in=in[4], load=load, out=out[4]);
+    Bit(in=in[5], load=load, out=out[5]);
+    Bit(in=in[6], load=load, out=out[6]);
+    Bit(in=in[7], load=load, out=out[7]);
+    Bit(in=in[8], load=load, out=out[8]);
+    Bit(in=in[9], load=load, out=out[9]);
+    Bit(in=in[10], load=load, out=out[10]);
+    Bit(in=in[11], load=load, out=out[11]);
+    Bit(in=in[12], load=load, out=out[12]);
+    Bit(in=in[13], load=load, out=out[13]);
+    Bit(in=in[14], load=load, out=out[14]);
+    Bit(in=in[15], load=load, out=out[15]);
+}`;
+const tst$9 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 out%D1.6.1;\n` +
     [
         [0, 0],
         [0, 1],
@@ -6817,6 +8293,7 @@ const tst$6 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 out%D1.6.1;\n` +
     ]
         .map(([inn, load]) => `set in ${inn}, set load ${load}, tick, output; tock, output;`)
         .join("\n") +
+    "\n" +
     [
         "%B0000000000000001",
         "%B0000000000000010",
@@ -6850,8 +8327,10 @@ const tst$6 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 out%D1.6.1;\n` +
         "%B1101111111111111",
         "%B1011111111111111",
         "%B0111111111111111",
-    ].map((n) => `set in ${n}, set load 0, tick, output; tock, output; set load 1, tick, output; tock, output;`);
-const cmp$6 = `| time |   in   |load |  out   |
+    ]
+        .map((n) => `set in ${n}, set load 0, tick, output; tock, output; set load 1, tick, output; tock, output;`)
+        .join("\n");
+const cmp$9 = `| time |   in   |load |  out   |
 | 0+   |      0 |  0  |      0 |
 | 1    |      0 |  0  |      0 |
 | 1+   |      0 |  1  |      0 |
@@ -7001,7 +8480,7 @@ const cmp$6 = `| time |   in   |load |  out   |
 | 73+  |  32767 |  1  | -16385 |
 | 74   |  32767 |  1  |  32767 |`;
 
-const hdl$5 = `/**
+const hdl$8 = `/**
  * A 16-bit counter with load and reset control bits.
  * if      (reset[t] == 1) out[t+1] = 0
  * else if (load[t] == 1)  out[t+1] = in[t]
@@ -7015,7 +8494,21 @@ CHIP PC {
 
     PARTS:
 }`;
-const tst$5 = `output-list time%S1.4.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
+const sol$8 = `CHIP PC {
+    IN in[16],load,inc,reset;
+    OUT out[16];
+
+    PARTS:
+    // Read a value into the register if any of load, inc, or reset are set
+    Or8Way(in[0]=load, in[1]=inc, in[2]=reset, out=read);
+
+    // If a value should be read, it'll be in, count, or 0
+    Mux4Way16(a=count, b=in, sel[0]=load, sel[1]=reset, out=set);
+
+    Register(in=set, load=read, out=out);
+    Inc16(in=out, out=count);
+}`;
+const tst$8 = `output-list time%S1.4.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
 
 set in 0, set reset 0, set load 0, set inc 0, tick, output;
 tock, output;
@@ -7034,7 +8527,7 @@ set reset 1, tick, output; tock, output;
 set in 0, set reset 0, set load 1, tick, output; tock, output;
 set load 0, set inc 1, tick, output; tock, output;
 set in 22222, set reset 1, set inc 0, tick, output; tock, output;`;
-const cmp$5 = `| time |   in   |reset|load | inc |  out   |
+const cmp$8 = `| time |   in   |reset|load | inc |  out   |
 | 0+   |      0 |  0  |  0  |  0  |      0 |
 | 1    |      0 |  0  |  0  |  0  |      0 |
 | 1+   |      0 |  0  |  0  |  1  |      0 |
@@ -7066,7 +8559,7 @@ const cmp$5 = `| time |   in   |reset|load | inc |  out   |
 | 14+  |  22222 |  1  |  0  |  0  |      1 |
 | 15   |  22222 |  1  |  0  |  0  |      0 |`;
 
-const hdl$4 = `/**
+const hdl$7 = `/**
  * Memory of 8 registers, each 16 bit-wide. Out holds the value
  * stored at the memory location specified by address. If load==1, then 
  * the in value is loaded into the memory location specified by address 
@@ -7079,48 +8572,70 @@ CHIP RAM8 {
 
     PARTS:
 }`;
-const tst$4 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D3.1.3 out%D1.6.1;
-set in 0, set load 0, set address 0,
-tick, output; tock, output;
+const sol$7 = `CHIP RAM8 {
+    IN in[16], load, address[3];
+    OUT out[16];
 
+    PARTS:
+    // Demux the address to the 8 load channels
+    DMux8Way(
+        in=load,
+        sel=address,
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd,
+        e=loade,
+        f=loadf,
+        g=loadg,
+        h=loadh
+    );
+
+    // The registers proper
+    Register(in=in, load=loada, out=rega);
+    Register(in=in, load=loadb, out=regb);
+    Register(in=in, load=loadc, out=regc);
+    Register(in=in, load=loadd, out=regd);
+    Register(in=in, load=loade, out=rege);
+    Register(in=in, load=loadf, out=regf);
+    Register(in=in, load=loadg, out=regg);
+    Register(in=in, load=loadh, out=regh);
+
+    // The output logic is a simple muxer
+    Mux8Way16(
+        a=rega,
+        b=regb,
+        c=regc,
+        d=regd,
+        e=rege,
+        f=regf,
+        g=regg,
+        h=regh,
+        sel=address,
+        out=out
+    );
+}`;
+const tst$7 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D3.1.3 out%D1.6.1;
+
+set in 0, set load 0, set address 0, tick, output; tock, output;
 set load 1, tick, output; tock, output;
 
-set in 11111, set load 0,
-tick, output; tock, output;
+set in 11111, set load 0, tick, output; tock, output;
+set load 1, set address 1, tick, output; tock, output;
+set load 0, set address 0, tick, output; tock, output;
 
-set load 1, set address 1,
-tick, output; tock, output;
-
-set load 0, set address 0,
-tick, output; tock, output;
-
-set in 3333, set address 3,
-tick, output; tock, output;
-
-set load 1,
-tick, output; tock, output;
-
-set load 0,
-tick, output; tock, output;
-
+set in 3333, set address 3, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set load 0, tick, output; tock, output;
 set address 1, eval, output;
 
-set in 7777,
-tick, output; tock, output;
-
-set load 1, set address 7,
-tick, output; tock, output;
-
-set load 0,
-tick, output; tock, output;
-
+set in 7777, tick, output; tock, output;
+set load 1, set address 7, tick, output; tock, output;
+set load 0, tick, output; tock, output;
 set address 3, eval, output;
-
 set address 7, eval, output;
 
-set load 0, set address 0,
-tick, output; tock, output;
-
+set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
 set address 3, eval, output;
@@ -7147,9 +8662,7 @@ set address 5, eval, output;
 set address 6, eval, output;
 set address 7, eval, output;
 
-set load 1, set address 0, set in %B1010101010101010,
-tick, output; tock, output;
-
+set load 1, set address 0, set in %B1010101010101010, tick, output; tock, output;
 set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
@@ -7159,24 +8672,8 @@ set address 5, eval, output;
 set address 6, eval, output;
 set address 7, eval, output;
 
-set load 1, set address 0, set in %B0101010101010101,
-tick, output, tock, output;
-set address 1, set in %B1010101010101010,
-tick, output; tock, output;
-
-set load 0, set address 0, tick, output; tock, output;
-set address 1, eval, output; set address 2, eval, output;
-set address 3, eval, output;
-set address 4, eval, output;
-set address 5, eval, output;
-set address 6, eval, output;
-set address 7, eval, output;
-
-set load 1, set address 1, set in %B0101010101010101,
-tick, output, tock, output;
-set address 2, set in %B1010101010101010,
-tick, output; tock, output;
-
+set load 1, set address 0, set in %B0101010101010101, tick, output, tock, output;
+set address 1, set in %B1010101010101010, tick, output; tock, output;
 set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
@@ -7186,11 +8683,20 @@ set address 5, eval, output;
 set address 6, eval, output;
 set address 7, eval, output;
 
-set load 1, set address 2, set in %B0101010101010101,
-tick, output, tock, output;
-set address 3, set in %B1010101010101010,
-tick, output; tock, output;
+set load 1, set address 1, set in %B0101010101010101, tick, output, tock, output;
+set address 2, set in %B1010101010101010, tick, output;
+tock, output;
+set load 0, set address 0, tick, output; tock, output;
+set address 1, eval, output;
+set address 2, eval, output;
+set address 3, eval, output;
+set address 4, eval, output;
+set address 5, eval, output;
+set address 6, eval, output;
+set address 7, eval, output;
 
+set load 1, set address 2, set in %B0101010101010101, tick, output, tock, output;
+set address 3, set in %B1010101010101010, tick, output; tock, output;
 set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
@@ -7213,7 +8719,6 @@ set address 7, eval, output;
 
 set load 1, set address 4, set in %B0101010101010101, tick, output, tock, output;
 set address 5, set in %B1010101010101010, tick, output; tock, output;
-
 set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
@@ -7225,7 +8730,6 @@ set address 7, eval, output;
 
 set load 1, set address 5, set in %B0101010101010101, tick, output, tock, output;
 set address 6, set in %B1010101010101010, tick, output; tock, output;
-
 set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
@@ -7237,7 +8741,6 @@ set address 7, eval, output;
 
 set load 1, set address 6, set in %B0101010101010101, tick, output, tock, output;
 set address 7, set in %B1010101010101010, tick, output; tock, output;
-
 set load 0, set address 0, tick, output; tock, output;
 set address 1, eval, output;
 set address 2, eval, output;
@@ -7256,7 +8759,7 @@ set address 4, eval, output;
 set address 5, eval, output;
 set address 6, eval, output;
 set address 7, eval, output;`;
-const cmp$4 = `| time |   in   |load |address|  out   |
+const cmp$7 = `| time |   in   |load |address|  out   |
 | 0+   |      0 |  0  |   0   |      0 |
 | 1    |      0 |  0  |   0   |      0 |
 | 1+   |      0 |  1  |   0   |      0 |
@@ -7430,7 +8933,7 @@ const cmp$4 = `| time |   in   |load |address|  out   |
 | 46   |  21845 |  0  |   6   |  21845 |
 | 46   |  21845 |  0  |   7   |  21845 |`;
 
-const hdl$3 = `/**
+const hdl$6 = `/**
  * Memory of 64 registers, each 16 bit-wide. Out holds the value
  * stored at the memory location specified by address. If load==1, then 
  * the in value is loaded into the memory location specified by address 
@@ -7441,24 +8944,74 @@ CHIP RAM64 {
     IN in[16], load, address[6];
     OUT out[16];
 }`;
-const tst$3 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+const sol$6 = `CHIP RAM64 {
+    IN in[16], load, address[6];
+    OUT out[16];
 
-set in 0, set load 0, set address 0, tick, output; tock, output;
+    PARTS:
+    // Demux the address to the 8 load channels
+    DMux8Way(
+        in=load,
+        sel=address[0..2],
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd,
+        e=loade,
+        f=loadf,
+        g=loadg,
+        h=loadh
+    );
+
+    // The child blocks
+    RAM8(in=in, load=loada, address=address[3..5], out=rama);
+    RAM8(in=in, load=loadb, address=address[3..5], out=ramb);
+    RAM8(in=in, load=loadc, address=address[3..5], out=ramc);
+    RAM8(in=in, load=loadd, address=address[3..5], out=ramd);
+    RAM8(in=in, load=loade, address=address[3..5], out=rame);
+    RAM8(in=in, load=loadf, address=address[3..5], out=ramf);
+    RAM8(in=in, load=loadg, address=address[3..5], out=ramg);
+    RAM8(in=in, load=loadh, address=address[3..5], out=ramh);
+
+    // The output logic is a simple muxer
+    Mux8Way16(
+        a=rama,
+        b=ramb,
+        c=ramc,
+        d=ramd,
+        e=rame,
+        f=ramf,
+        g=ramg,
+        h=ramh,
+        sel=address[0..2],
+        out=out
+    );
+}`;
+const tst$6 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+
+set in 0, set load 0,
+set address 0, tick, output; tock, output;
 set load 1, tick, output; tock, output;
 set in 1313, set load 0, tick, output; tock, output;
-set load 1, set address 13, tick, output; tock, output;
-set load 0, set address 0, tick, output; tock, output;
+set load 1,
+set address 13, tick, output; tock, output;
+set load 0,
+set address 0, tick, output; tock, output;
 set in 4747, set address 47, tick, output; tock, output;
 set load 1, tick, output; tock, output;
 set load 0, tick, output; tock, output;
 set address 13, eval, output;
+
 set in 6363, tick, output; tock, output;
-set load 1, set address 63, tick, output; tock, output;
+set load 1,
+set address 63, tick, output; tock, output;
 set load 0, tick, output; tock, output;
 set address 47, eval, output;
+
 set address 63, eval, output;
 
-set load 0, set address %B101000, tick, output; tock, output;
+set load 0,
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7467,7 +9020,8 @@ set address %B101101, eval, output;
 set address %B101110, eval, output;
 set address %B101111, eval, output;
 
-set load 1, set in %B0101010101010101, set address %B101000, tick, output; tock, output;
+set load 1,
+set in %B0101010101010101, set address %B101000, tick, output; tock, output;
 set address %B101001, tick, output, tock, output;
 set address %B101010, tick, output, tock, output;
 set address %B101011, tick, output, tock, output;
@@ -7476,7 +9030,8 @@ set address %B101101, tick, output, tock, output;
 set address %B101110, tick, output, tock, output;
 set address %B101111, tick, output, tock, output;
 
-set load 0, set address %B101000, tick, output; tock, output;
+set load 0,
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7485,8 +9040,10 @@ set address %B101101, eval, output;
 set address %B101110, eval, output;
 set address %B101111, eval, output;
 
-set load 1, set address %B101000, set in %B1010101010101010, tick, output; tock, output;
-set load 0, set address %B101000, tick, output; tock, output;
+set load 1,
+set address %B101000, set in %B1010101010101010, tick, output; tock, output;
+set load 0,
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7495,27 +9052,11 @@ set address %B101101, eval, output;
 set address %B101110, eval, output;
 set address %B101111, eval, output;
 
-set load 1, set address %B101000, set in %B0101010101010101, tick, output, tock, output;
+set load 1,
+set address %B101000, set in %B0101010101010101, tick, output, tock, output;
 set address %B101001, set in %B1010101010101010, tick, output; tock, output;
-
-set load 0, set address %B101000, tick, output; tock, output;
-set address %B101001, eval, output;
-set address %B101010, eval, output;
-set address %B101011, eval, output;
-set address %B101100, eval, output;
-set address %B101101, eval, output;
-set address %B101110, eval, output;
-set address %B101111, eval, output;
-
-set load 1, set address %B101001, set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010,
-set in %B1010101010101010,
-tick, output; tock, output;
-
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7525,16 +9066,10 @@ set address %B101110, eval, output;
 set address %B101111, eval, output;
 
 set load 1,
-set address %B101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101011,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101001, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7544,16 +9079,10 @@ set address %B101110, eval, output;
 set address %B101111, eval, output;
 
 set load 1,
-set address %B101011,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101100,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B101011, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7563,16 +9092,10 @@ set address %B101110, eval, output;
 set address %B101111, eval, output;
 
 set load 1,
-set address %B101100,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101011, set in %B0101010101010101, tick, output, tock, output;
+set address %B101100, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7582,16 +9105,10 @@ set address %B101110, eval, output;
 set address %B101111, eval, output;
 
 set load 1,
-set address %B101101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101110,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101100, set in %B0101010101010101, tick, output, tock, output;
+set address %B101101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7601,16 +9118,10 @@ set address %B101110, eval, output;
 set address %B101111, eval, output;
 
 set load 1,
-set address %B101110,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101111,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101101, set in %B0101010101010101, tick, output, tock, output;
+set address %B101110, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7620,13 +9131,10 @@ set address %B101110, eval, output;
 set address %B101111, eval, output;
 
 set load 1,
-set address %B101111,
-set in %B0101010101010101,
-tick, output, tock, output;
-
+set address %B101110, set in %B0101010101010101, tick, output, tock, output;
+set address %B101111, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101000,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
 set address %B101001, eval, output;
 set address %B101010, eval, output;
 set address %B101011, eval, output;
@@ -7635,10 +9143,21 @@ set address %B101101, eval, output;
 set address %B101110, eval, output;
 set address %B101111, eval, output;
 
+set load 1,
+set address %B101111, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B101000, tick, output; tock, output;
+set address %B101001, eval, output;
+set address %B101010, eval, output;
+set address %B101011, eval, output;
+set address %B101100, eval, output;
+set address %B101101, eval, output;
+set address %B101110, eval, output;
+set address %B101111, eval, output;
+
+set load 0,
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7648,9 +9167,7 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set in %B0101010101010101,
-set address %B000101,
-tick, output; tock, output;
+set in %B0101010101010101, set address %B000101, tick, output; tock, output;
 set address %B001101, tick, output, tock, output;
 set address %B010101, tick, output, tock, output;
 set address %B011101, tick, output, tock, output;
@@ -7660,8 +9177,7 @@ set address %B110101, tick, output, tock, output;
 set address %B111101, tick, output, tock, output;
 
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7671,13 +9187,9 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B000101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B000101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7687,16 +9199,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B000101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B001101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B000101, set in %B0101010101010101, tick, output, tock, output;
+set address %B001101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7706,16 +9212,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B001101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B001101, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7725,16 +9225,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B011101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B011101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7744,16 +9238,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B011101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B100101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B011101, set in %B0101010101010101, tick, output, tock, output;
+set address %B100101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7763,16 +9251,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B100101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B100101, set in %B0101010101010101, tick, output, tock, output;
+set address %B101101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7782,16 +9264,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B101101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B110101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101101, set in %B0101010101010101, tick, output, tock, output;
+set address %B110101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7801,16 +9277,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B110101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B111101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B110101, set in %B0101010101010101, tick, output, tock, output;
+set address %B111101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7820,13 +9290,10 @@ set address %B110101, eval, output;
 set address %B111101, eval, output;
 
 set load 1,
-set address %B111101,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B111101, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B000101,
-tick, output; tock, output;
+set address %B000101, tick, output; tock, output;
 set address %B001101, eval, output;
 set address %B010101, eval, output;
 set address %B011101, eval, output;
@@ -7834,7 +9301,7 @@ set address %B100101, eval, output;
 set address %B101101, eval, output;
 set address %B110101, eval, output;
 set address %B111101, eval, output;`;
-const cmp$3 = `| time |   in   |load |address|  out   |
+const cmp$6 = `| time |   in   |load |address|  out   |
 | 0+   |      0 |  0  |    0  |      0 |
 | 1    |      0 |  0  |    0  |      0 |
 | 1+   |      0 |  1  |    0  |      0 |
@@ -8155,7 +9622,7 @@ const cmp$3 = `| time |   in   |load |address|  out   |
 | 81   |  21845 |  0  |   53  |  21845 |
 | 81   |  21845 |  0  |   61  |  21845 |`;
 
-const hdl$2 = `/**
+const hdl$5 = `/**
  * Memory of 512 registers, each 16 bit-wide. Out holds the value
  * stored at the memory location specified by address. If load==1, then 
  * the in value is loaded into the memory location specified by address 
@@ -8168,64 +9635,81 @@ CHIP RAM512 {
     
     PARTS:
 }`;
-const tst$2 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+const sol$5 = `CHIP RAM512 {
+    IN in[16], load, address[9];
+    OUT out[16];
 
-set in 0,
+    PARTS:
+    // Demux the address to the 8 load channels
+    DMux8Way(
+        in=load,
+        sel=address[0..2],
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd,
+        e=loade,
+        f=loadf,
+        g=loadg,
+        h=loadh
+    );
+
+    // The child blocks
+    RAM64(in=in, load=loada, address=address[3..8], out=rama);
+    RAM64(in=in, load=loadb, address=address[3..8], out=ramb);
+    RAM64(in=in, load=loadc, address=address[3..8], out=ramc);
+    RAM64(in=in, load=loadd, address=address[3..8], out=ramd);
+    RAM64(in=in, load=loade, address=address[3..8], out=rame);
+    RAM64(in=in, load=loadf, address=address[3..8], out=ramf);
+    RAM64(in=in, load=loadg, address=address[3..8], out=ramg);
+    RAM64(in=in, load=loadh, address=address[3..8], out=ramh);
+
+    // The output logic is a simple muxer
+    Mux8Way16(
+        a=rama,
+        b=ramb,
+        c=ramc,
+        d=ramd,
+        e=rame,
+        f=ramf,
+        g=ramg,
+        h=ramh,
+        sel=address[0..2],
+        out=out
+    );
+}`;
+const tst$5 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
+
+set in 0, set load 0, set address 0, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+
+set in 13099, set load 0, tick, output; tock, output;
+set load 1, set address 130, tick, output; tock, output;
+set load 0, set address 0, tick, output; tock, output;
+
+set in 4729, set address 472, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 130, eval, output;
+
+set in 5119, tick, output; tock, output;
+set load 1, set address 511, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 472, eval, output;
+set address 511, eval, output;
+
 set load 0,
-set address 0,
-tick, output; tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-tick, output; tock, output;
-
-set in 13099,
-set load 0,
-tick, output; tock, output;
-
-set load 1,
-set address 130,
-tick, output; tock, output;
-
-set load 0,
-set address 0,
-tick, output; tock, output;
-
-set in 4729,
-set address 472,
-tick, output; tock, output;
-
-set load 1,
-tick, output; tock, output;
-
-set load 0,
-tick, output; tock, output;
-
-set address 130,
-eval,
-output;
-
-set in 5119,
-tick, output; tock, output;
-
-set load 1,
-set address 511,
-tick, output; tock, output;
-
-set load 0,
-tick, output; tock, output;
-
-set address 472,
-eval,
-output;
-
-set address 511,
-eval,
-output;
-
-
-set load 0,
-set address %B010101000,
-tick, output; tock, output;
+set in %B0101010101010101, set address %B010101000, tick, output; tock, output;
 set address %B010101001, tick, output, tock, output;
 set address %B010101010, tick, output, tock, output;
 set address %B010101011, tick, output, tock, output;
@@ -8234,205 +9718,153 @@ set address %B010101101, tick, output, tock, output;
 set address %B010101110, tick, output, tock, output;
 set address %B010101111, tick, output, tock, output;
 
-set load 1,
-set in %B0101010101010101,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001,
-tick, output, tock, output;
-set address %B010101010,
-tick, output, tock, output;
-set address %B010101011,
-tick, output, tock, output;
-set address %B010101100,
-tick, output, tock, output;
-set address %B010101101,
-tick, output, tock, output;
-set address %B010101110,
-tick, output, tock, output;
-set address %B010101111,
-tick, output, tock, output;
-
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101000,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101000, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101000,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101001,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101000, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101001, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101001,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101001, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101011,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101011, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101011,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101100,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101011, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101100, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101100,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101100, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101110,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101101, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101110, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101110,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101111,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101110, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101111, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 set load 1,
-set address %B010101111,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B010101111, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B010101000,
-tick, output; tock, output;
-set address %B010101001, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B010101011, tick, output, tock, output;
-set address %B010101100, tick, output, tock, output;
-set address %B010101101, tick, output, tock, output;
-set address %B010101110, tick, output, tock, output;
-set address %B010101111, tick, output, tock, output;
+set address %B010101000, tick, output; tock, output;
+set address %B010101001, eval, output;
+set address %B010101010, eval, output;
+set address %B010101011, eval, output;
+set address %B010101100, eval, output;
+set address %B010101101, eval, output;
+set address %B010101110, eval, output;
+set address %B010101111, eval, output;
 
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
+
+set load 1,
+set in %B0101010101010101, set address %B000101010, tick, output; tock, output;
 set address %B001101010, tick, output, tock, output;
 set address %B010101010, tick, output, tock, output;
 set address %B011101010, tick, output, tock, output;
@@ -8441,201 +9873,140 @@ set address %B101101010, tick, output, tock, output;
 set address %B110101010, tick, output, tock, output;
 set address %B111101010, tick, output, tock, output;
 
-set load 1,
-set in %B0101010101010101,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010,
-tick, output, tock, output;
-set address %B010101010,
-tick, output, tock, output;
-set address %B011101010,
-tick, output, tock, output;
-set address %B100101010,
-tick, output, tock, output;
-set address %B101101010,
-tick, output, tock, output;
-set address %B110101010,
-tick, output, tock, output;
-set address %B111101010,
-tick, output, tock, output;
-
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B000101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B000101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B000101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B001101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B000101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B001101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B001101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B001101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B010101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B011101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B010101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B011101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B011101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B100101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B011101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B100101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B100101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B100101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B101101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B101101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B110101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B101101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B110101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B110101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B111101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B110101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B111101010, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;
 
 set load 1,
-set address %B111101010,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B111101010, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B000101010,
-tick, output; tock, output;
-set address %B001101010, tick, output, tock, output;
-set address %B010101010, tick, output, tock, output;
-set address %B011101010, tick, output, tock, output;
-set address %B100101010, tick, output, tock, output;
-set address %B101101010, tick, output, tock, output;
-set address %B110101010, tick, output, tock, output;
-set address %B111101010, tick, output, tock, output;`;
-const cmp$2 = `| time |   in   |load |address|  out   |
+set address %B000101010, tick, output; tock, output;
+set address %B001101010, eval, output;
+set address %B010101010, eval, output;
+set address %B011101010, eval, output;
+set address %B100101010, eval, output;
+set address %B101101010, eval, output;
+set address %B110101010, eval, output;
+set address %B111101010, eval, output;`;
+const cmp$5 = `| time |   in   |load |address|  out   |
 | 0+   |      0 |  0  |    0  |      0 |
 | 1    |      0 |  0  |    0  |      0 |
 | 1+   |      0 |  1  |    0  |      0 |
@@ -8956,7 +10327,7 @@ const cmp$2 = `| time |   in   |load |address|  out   |
 | 81   |  21845 |  0  |  426  |  21845 |
 | 81   |  21845 |  0  |  490  |  21845 |`;
 
-const hdl$1 = `/**
+const hdl$4 = `/**
  * Memory of 4K registers, each 16 bit-wide. Out holds the value
  * stored at the memory location specified by address. If load==1, then 
  * the in value is loaded into the memory location specified by address 
@@ -8969,64 +10340,80 @@ CHIP RAM4K {
 
     PARTS:
 }`;
-const tst$1 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.4.2 out%D1.6.1;
+const sol$4 = `CHIP RAM4K {
+    IN in[16], load, address[12];
+    OUT out[16];
 
-set in 0,
+    PARTS:
+    // Demux the address to the 8 load channels
+    DMux8Way(
+        in=load,
+        sel=address[0..2],
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd,
+        e=loade,
+        f=loadf,
+        g=loadg,
+        h=loadh
+    );
+
+    // The child blocks
+    RAM512(in=in, load=loada, address=address[3..11], out=rama);
+    RAM512(in=in, load=loadb, address=address[3..11], out=ramb);
+    RAM512(in=in, load=loadc, address=address[3..11], out=ramc);
+    RAM512(in=in, load=loadd, address=address[3..11], out=ramd);
+    RAM512(in=in, load=loade, address=address[3..11], out=rame);
+    RAM512(in=in, load=loadf, address=address[3..11], out=ramf);
+    RAM512(in=in, load=loadg, address=address[3..11], out=ramg);
+    RAM512(in=in, load=loadh, address=address[3..11], out=ramh);
+
+    // The output logic is a simple muxer
+    Mux8Way16(
+        a=rama,
+        b=ramb,
+        c=ramc,
+        d=ramd,
+        e=rame,
+        f=ramf,
+        g=ramg,
+        h=ramh,
+        sel=address[0..2],
+        out=out
+    );
+}`;
+const tst$4 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.4.2 out%D1.6.1;
+
+set in 0, set load 0, set address 0, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set in 1111, set load 0, tick, output; tock, output;
+set load 1, set address 1111, tick, output; tock, output;
+set load 0, set address 0, tick, output; tock, output;
+set in 3513, set address 3513, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 1111, eval, output;
+
+set in 4095, tick, output; tock, output;
+set load 1, set address 4095, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 3513, eval, output;
+
+set address 4095, eval, output;
+
 set load 0,
-set address 0,
-tick, output; tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-tick, output; tock, output;
-
-set in 1111,
-set load 0,
-tick, output; tock, output;
-
-set load 1,
-set address 1111,
-tick, output; tock, output;
-
-set load 0,
-set address 0,
-tick, output; tock, output;
-
-set in 3513,
-set address 3513,
-tick, output; tock, output;
-
-set load 1,
-tick, output; tock, output;
-
-set load 0,
-tick, output; tock, output;
-
-set address 1111,
-eval,
-output;
-
-set in 4095,
-tick, output; tock, output;
-
-set load 1,
-set address 4095,
-tick, output; tock, output;
-
-set load 0,
-tick, output; tock, output;
-
-set address 3513,
-eval,
-output;
-
-set address 4095,
-eval,
-output;
-
-
-set load 0,
-set address %B101010101000,
-tick, output; tock, output;
+set in %B0101010101010101, set address %B101010101000, tick, output; tock, output;
 set address %B101010101001, tick, output, tock, output;
 set address %B101010101010, tick, output, tock, output;
 set address %B101010101011, tick, output, tock, output;
@@ -9035,205 +10422,144 @@ set address %B101010101101, tick, output, tock, output;
 set address %B101010101110, tick, output, tock, output;
 set address %B101010101111, tick, output, tock, output;
 
-set load 1,
-set in %B0101010101010101,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001,
-tick, output, tock, output;
-set address %B101010101010,
-tick, output, tock, output;
-set address %B101010101011,
-tick, output, tock, output;
-set address %B101010101100,
-tick, output, tock, output;
-set address %B101010101101,
-tick, output, tock, output;
-set address %B101010101110,
-tick, output, tock, output;
-set address %B101010101111,
-tick, output, tock, output;
-
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101000,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101000, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101000,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101001,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101000, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101001, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101001,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101010,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101001, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101010, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101011,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101011, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101011,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101100,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101011, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101100, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101100,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101100, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101110,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101101, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101110, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101110,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101010101111,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101010101110, set in %B0101010101010101, tick, output, tock, output;
+set address %B101010101111, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 1,
-set address %B101010101111,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B101010101111, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B101010101000,
-tick, output; tock, output;
-set address %B101010101001, tick, output, tock, output;
-set address %B101010101010, tick, output, tock, output;
-set address %B101010101011, tick, output, tock, output;
-set address %B101010101100, tick, output, tock, output;
-set address %B101010101101, tick, output, tock, output;
-set address %B101010101110, tick, output, tock, output;
-set address %B101010101111, tick, output, tock, output;
-
+set address %B101010101000, tick, output; tock, output;
+set address %B101010101001, eval, output;
+set address %B101010101010, eval, output;
+set address %B101010101011, eval, output;
+set address %B101010101100, eval, output;
+set address %B101010101101, eval, output;
+set address %B101010101110, eval, output;
+set address %B101010101111, eval, output;
 
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
+
+set load 1,
+set in %B0101010101010101, set address %B000101010101, tick, output; tock, output;
 set address %B001101010101, tick, output, tock, output;
 set address %B010101010101, tick, output, tock, output;
 set address %B011101010101, tick, output, tock, output;
@@ -9242,201 +10568,132 @@ set address %B101101010101, tick, output, tock, output;
 set address %B110101010101, tick, output, tock, output;
 set address %B111101010101, tick, output, tock, output;
 
-set load 1,
-set in %B0101010101010101,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101,
-tick, output, tock, output;
-set address %B010101010101,
-tick, output, tock, output;
-set address %B011101010101,
-tick, output, tock, output;
-set address %B100101010101,
-tick, output, tock, output;
-set address %B101101010101,
-tick, output, tock, output;
-set address %B110101010101,
-tick, output, tock, output;
-set address %B111101010101,
-tick, output, tock, output;
-
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B000101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B000101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B000101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B001101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B000101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B001101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B001101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B010101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B001101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B010101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B010101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B011101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B010101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B011101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B011101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B100101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B011101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B100101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B100101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B101101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B100101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B101101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B101101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B110101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B101101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B110101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B110101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B111101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B110101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B111101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;
 
 set load 1,
-set address %B111101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
+set address %B111101010101, set in %B0101010101010101, tick, output, tock, output;
 
 set load 0,
-set address %B000101010101,
-tick, output; tock, output;
-set address %B001101010101, tick, output, tock, output;
-set address %B010101010101, tick, output, tock, output;
-set address %B011101010101, tick, output, tock, output;
-set address %B100101010101, tick, output, tock, output;
-set address %B101101010101, tick, output, tock, output;
-set address %B110101010101, tick, output, tock, output;
-set address %B111101010101, tick, output, tock, output;`;
-const cmp$1 = `| time |   in   |load |address |  out   |
+set address %B000101010101, tick, output; tock, output;
+set address %B001101010101, eval, output;
+set address %B010101010101, eval, output;
+set address %B011101010101, eval, output;
+set address %B100101010101, eval, output;
+set address %B101101010101, eval, output;
+set address %B110101010101, eval, output;
+set address %B111101010101, eval, output;`;
+const cmp$4 = `| time |   in   |load |address |  out   |
 | 0+   |      0 |  0  |     0  |      0 |
 | 1    |      0 |  0  |     0  |      0 |
 | 1+   |      0 |  1  |     0  |      0 |
@@ -9757,71 +11014,139 @@ const cmp$1 = `| time |   in   |load |address |  out   |
 | 81   |  21845 |  0  |  3413  |  21845 |
 | 81   |  21845 |  0  |  3925  |  21845 |`;
 
-const hdl = `
+const hdl$3 = `
 CHIP RAM16K {
     IN in[16], load, address[14];
     OUT out[16];
 
     PARTS:
 }`;
-const tst = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.5.2 out%D1.6.1;
+const sol$3 = `CHIP RAM16K {
+    IN in[16], load, address[14];
+    OUT out[16];
 
-set in 0,
-set load 0,
-set address 0,
-tick, output; tock, output;
+    PARTS:
+    // Demux the address to the 8 load channels
+    DMux4Way(
+        in=load,
+        sel=address[0..1],
+        a=loada,
+        b=loadb,
+        c=loadc,
+        d=loadd
+    );
 
-set load 1,
-tick, output; tock, output;
+    // The child blocks
+    RAM4K(in=in, load=loada, address=address[2..13], out=rama);
+    RAM4K(in=in, load=loadb, address=address[2..13], out=ramb);
+    RAM4K(in=in, load=loadc, address=address[2..13], out=ramc);
+    RAM4K(in=in, load=loadd, address=address[2..13], out=ramd);
 
-set in 4321,
-set load 0,
-tick, output; tock, output;
+    // The output logic is a simple muxer
+    Mux4Way16(
+        a=rama,
+        b=ramb,
+        c=ramc,
+        d=ramd,
+        sel=address[0..1],
+        out=out
+    );
+}`;
+const tst$3 = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.5.2 out%D1.6.1;
 
-set load 1,
-set address 4321,
-tick, output; tock, output;
+set in 0, set load 0, set address 0, tick, output; tock, output;
+set load 1, tick, output; tock, output;
 
-set load 0,
-set address 0,
-tick, output; tock, output;
+set in 4321, set load 0, tick, output; tock, output;
+set load 1, set address 4321, tick, output; tock, output;
+set load 0, set address 0, tick, output; tock, output;
 
-set in 12345,
-set address 12345,
-tick, output; tock, output;
+set in 12345, set address 12345, tick, output; tock, output;
+set load 1, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 4321, eval, output;
 
-set load 1,
-tick, output; tock, output;
+set in 16383, tick, output; tock, output;
+set load 1, set address 16383, tick, output; tock, output;
+set load 0, tick, output; tock, output;
+set address 12345, eval, output;
+set address 16383, eval, output;
 
-set load 0,
-tick, output; tock, output;
+set load 0, set address %B10101010101000, tick, output;
+tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
 
-set address 4321,
-eval,
-output;
+set load 1, set in %B0101010101010101, set address %B10101010101000, tick, output;
+tock, output;
+set address %B10101010101001, tick, output, tock, output;
+set address %B10101010101010, tick, output, tock, output;
+set address %B10101010101011, tick, output, tock, output;
+set address %B10101010101100, tick, output, tock, output;
+set address %B10101010101101, tick, output, tock, output;
+set address %B10101010101110, tick, output, tock, output;
+set address %B10101010101111, tick, output, tock, output;
 
-set in 16383,
-tick, output; tock, output;
+set load 0, set address %B10101010101000, tick, output;
+tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
 
-set load 1,
-set address 16383,
-tick, output; tock, output;
+set load 1, set address %B10101010101000, set in %B1010101010101010, tick, output;
+tock, output;
 
-set load 0,
-tick, output; tock, output;
+set load 0, set address %B10101010101000, tick, output;
+tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
 
-set address 12345,
-eval,
-output;
+set load 1, set address %B10101010101000, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101001, set in %B1010101010101010, tick, output;
+tock, output;
 
-set address 16383,
-eval,
-output;
+set load 0, set address %B10101010101000, tick, output;
+tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
 
+set load 1, set address %B10101010101001, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101010, set in %B1010101010101010, tick, output;
+tock, output;
 
-set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
+set load 0, set address %B10101010101000, tick, output; tock, output;
+set address %B10101010101001, eval, output;
+set address %B10101010101010, eval, output;
+set address %B10101010101011, eval, output;
+set address %B10101010101100, eval, output;
+set address %B10101010101101, eval, output;
+set address %B10101010101110, eval, output;
+set address %B10101010101111, eval, output;
+
+set load 1;
+set address %B10101010101010, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101011, set in %B1010101010101010, tick, output; tock, output;
+
+set load 0, set address %B10101010101000, tick, output; tock, output;
 set address %B10101010101001, eval, output;
 set address %B10101010101010, eval, output;
 set address %B10101010101011, eval, output;
@@ -9831,27 +11156,11 @@ set address %B10101010101110, eval, output;
 set address %B10101010101111, eval, output;
 
 set load 1,
-set in %B0101010101010101,
-set address %B10101010101000,
-tick, output; tock, output;
-set address %B10101010101001,
-tick, output, tock, output;
-set address %B10101010101010,
-tick, output, tock, output;
-set address %B10101010101011,
-tick, output, tock, output;
-set address %B10101010101100,
-tick, output, tock, output;
-set address %B10101010101101,
-tick, output, tock, output;
-set address %B10101010101110,
-tick, output, tock, output;
-set address %B10101010101111,
-tick, output, tock, output;
+set address %B10101010101011, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101100, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
+set address %B10101010101000, tick, output; tock, output;
 set address %B10101010101001, eval, output;
 set address %B10101010101010, eval, output;
 set address %B10101010101011, eval, output;
@@ -9861,13 +11170,10 @@ set address %B10101010101110, eval, output;
 set address %B10101010101111, eval, output;
 
 set load 1,
-set address %B10101010101000,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B10101010101100, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
+set address %B10101010101000, tick, output; tock, output;
 set address %B10101010101001, eval, output;
 set address %B10101010101010, eval, output;
 set address %B10101010101011, eval, output;
@@ -9877,16 +11183,10 @@ set address %B10101010101110, eval, output;
 set address %B10101010101111, eval, output;
 
 set load 1,
-set address %B10101010101000,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101001,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B10101010101101, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101110, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
+set address %B10101010101000, tick, output; tock, output;
 set address %B10101010101001, eval, output;
 set address %B10101010101010, eval, output;
 set address %B10101010101011, eval, output;
@@ -9896,16 +11196,11 @@ set address %B10101010101110, eval, output;
 set address %B10101010101111, eval, output;
 
 set load 1,
-set address %B10101010101001,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101010,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B10101010101110, set in %B0101010101010101, tick, output, tock, output;
+set address %B10101010101111, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
+set address %B10101010101000, tick, output; tock, output;
 set address %B10101010101001, eval, output;
 set address %B10101010101010, eval, output;
 set address %B10101010101011, eval, output;
@@ -9915,16 +11210,9 @@ set address %B10101010101110, eval, output;
 set address %B10101010101111, eval, output;
 
 set load 1,
-set address %B10101010101010,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101011,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B10101010101111, set in %B0101010101010101, tick, output, tock, output;
 set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
+set address %B10101010101000, tick, output; tock, output;
 set address %B10101010101001, eval, output;
 set address %B10101010101010, eval, output;
 set address %B10101010101011, eval, output;
@@ -9933,102 +11221,8 @@ set address %B10101010101101, eval, output;
 set address %B10101010101110, eval, output;
 set address %B10101010101111, eval, output;
 
-set load 1,
-set address %B10101010101011,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101100,
-set in %B1010101010101010,
-tick, output; tock, output;
-
 set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
-set address %B10101010101001, eval, output;
-set address %B10101010101010, eval, output;
-set address %B10101010101011, eval, output;
-set address %B10101010101100, eval, output;
-set address %B10101010101101, eval, output;
-set address %B10101010101110, eval, output;
-set address %B10101010101111, eval, output;
-
-set load 1,
-set address %B10101010101100,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
-set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
-set address %B10101010101001, eval, output;
-set address %B10101010101010, eval, output;
-set address %B10101010101011, eval, output;
-set address %B10101010101100, eval, output;
-set address %B10101010101101, eval, output;
-set address %B10101010101110, eval, output;
-set address %B10101010101111, eval, output;
-
-set load 1,
-set address %B10101010101101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101110,
-set in %B1010101010101010,
-tick, output; tock, output;
-
-set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
-set address %B10101010101001, eval, output;
-set address %B10101010101010, eval, output;
-set address %B10101010101011, eval, output;
-set address %B10101010101100, eval, output;
-set address %B10101010101101, eval, output;
-set address %B10101010101110, eval, output;
-set address %B10101010101111, eval, output;
-
-set load 1,
-set address %B10101010101110,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10101010101111,
-set in %B1010101010101010,
-tick, output; tock, output;
-
-set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
-set address %B10101010101001, eval, output;
-set address %B10101010101010, eval, output;
-set address %B10101010101011, eval, output;
-set address %B10101010101100, eval, output;
-set address %B10101010101101, eval, output;
-set address %B10101010101110, eval, output;
-set address %B10101010101111, eval, output;
-
-set load 1,
-set address %B10101010101111,
-set in %B0101010101010101,
-tick, output, tock, output;
-
-set load 0,
-set address %B10101010101000,
-tick, output; tock, output;
-set address %B10101010101001, eval, output;
-set address %B10101010101010, eval, output;
-set address %B10101010101011, eval, output;
-set address %B10101010101100, eval, output;
-set address %B10101010101101, eval, output;
-set address %B10101010101110, eval, output;
-set address %B10101010101111, eval, output;
-
-
-set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10038,27 +11232,17 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set in %B0101010101010101,
-set address %B00010101010101,
-tick, output; tock, output;
-set address %B00110101010101,
-tick, output, tock, output;
-set address %B01010101010101,
-tick, output, tock, output;
-set address %B01110101010101,
-tick, output, tock, output;
-set address %B10010101010101,
-tick, output, tock, output;
-set address %B10110101010101,
-tick, output, tock, output;
-set address %B11010101010101,
-tick, output, tock, output;
-set address %B11110101010101,
-tick, output, tock, output;
+set in %B0101010101010101, set address %B00010101010101, tick, output; tock, output;
+set address %B00110101010101, tick, output, tock, output;
+set address %B01010101010101, tick, output, tock, output;
+set address %B01110101010101, tick, output, tock, output;
+set address %B10010101010101, tick, output, tock, output;
+set address %B10110101010101, tick, output, tock, output;
+set address %B11010101010101, tick, output, tock, output;
+set address %B11110101010101, tick, output, tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10068,13 +11252,9 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B00010101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B00010101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10084,16 +11264,11 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B00010101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B00110101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B00010101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B00110101010101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10103,16 +11278,11 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B00110101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B01010101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B00110101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B01010101010101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10122,16 +11292,11 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B01010101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B01110101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B01010101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B01110101010101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10141,16 +11306,11 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B01110101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10010101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B01110101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B10010101010101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10160,16 +11320,11 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B10010101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B10110101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B10010101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B10110101010101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10179,16 +11334,11 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B10110101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B11010101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
+set address %B10110101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B11010101010101, set in %B1010101010101010, tick, output; tock, output;
 
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10198,16 +11348,10 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B11010101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-set address %B11110101010101,
-set in %B1010101010101010,
-tick, output; tock, output;
-
+set address %B11010101010101, set in %B0101010101010101, tick, output, tock, output;
+set address %B11110101010101, set in %B1010101010101010, tick, output; tock, output;
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10217,13 +11361,9 @@ set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;
 
 set load 1,
-set address %B11110101010101,
-set in %B0101010101010101,
-tick, output, tock, output;
-
+set address %B11110101010101, set in %B0101010101010101, tick, output, tock, output;
 set load 0,
-set address %B00010101010101,
-tick, output; tock, output;
+set address %B00010101010101, tick, output; tock, output;
 set address %B00110101010101, eval, output;
 set address %B01010101010101, eval, output;
 set address %B01110101010101, eval, output;
@@ -10231,7 +11371,7 @@ set address %B10010101010101, eval, output;
 set address %B10110101010101, eval, output;
 set address %B11010101010101, eval, output;
 set address %B11110101010101, eval, output;`;
-const cmp = `| time |   in   |load | address |  out   |
+const cmp$3 = `| time |   in   |load | address |  out   |
 | 0+   |      0 |  0  |      0  |      0 |
 | 1    |      0 |  0  |      0  |      0 |
 | 1+   |      0 |  1  |      0  |      0 |
@@ -10552,57 +11692,770 @@ const cmp = `| time |   in   |load | address |  out   |
 | 81   |  21845 |  0  |  13653  |  21845 |
 | 81   |  21845 |  0  |  15701  |  21845 |`;
 
-async function resetFiles$1(fs) {
+async function resetFiles$2(fs) {
     await fs.pushd("/projects/03");
     await reset(fs, {
         Bit: {
-            "Bit.hdl": hdl$7,
-            "Bit.tst": tst$7,
-            "Bit.cmp": cmp$7,
+            "Bit.hdl": hdl$a,
+            "Bit.tst": tst$a,
+            "Bit.cmp": cmp$a,
         },
         Register: {
-            "Register.hdl": hdl$6,
-            "Register.tst": tst$6,
-            "Register.cmp": cmp$6,
+            "Register.hdl": hdl$9,
+            "Register.tst": tst$9,
+            "Register.cmp": cmp$9,
         },
         PC: {
-            "PC.hdl": hdl$5,
-            "PC.tst": tst$5,
-            "PC.cmp": cmp$5,
+            "PC.hdl": hdl$8,
+            "PC.tst": tst$8,
+            "PC.cmp": cmp$8,
         },
         RAM8: {
-            "RAM8.hdl": hdl$4,
-            "RAM8.tst": tst$4,
-            "RAM8.cmp": cmp$4,
+            "RAM8.hdl": hdl$7,
+            "RAM8.tst": tst$7,
+            "RAM8.cmp": cmp$7,
         },
         RAM64: {
-            "RAM64.hdl": hdl$3,
-            "RAM64.tst": tst$3,
-            "RAM64.cmp": cmp$3,
+            "RAM64.hdl": hdl$6,
+            "RAM64.tst": tst$6,
+            "RAM64.cmp": cmp$6,
         },
         RAM512: {
-            "RAM512.hdl": hdl$2,
-            "RAM512.tst": tst$2,
-            "RAM512.cmp": cmp$2,
+            "RAM512.hdl": hdl$5,
+            "RAM512.tst": tst$5,
+            "RAM512.cmp": cmp$5,
         },
         RAM4k: {
-            "RAM4k.hdl": hdl$1,
-            "RAM4k.tst": tst$1,
-            "RAM4k.cmp": cmp$1,
+            "RAM4k.hdl": hdl$4,
+            "RAM4k.tst": tst$4,
+            "RAM4k.cmp": cmp$4,
         },
         RAM16k: {
-            "RAM16k.hdl": hdl,
-            "RAM16k.tst": tst,
-            "RAM16k.cmp": cmp,
+            "RAM16k.hdl": hdl$3,
+            "RAM16k.tst": tst$3,
+            "RAM16k.cmp": cmp$3,
+        },
+    });
+    await fs.popd();
+}
+async function loadSolutions$2(fs) {
+    await fs.pushd("/projects/03");
+    await reset(fs, {
+        Bit: {
+            "Bit.hdl": sol$a,
+        },
+        Register: {
+            "Register.hdl": sol$9,
+        },
+        PC: {
+            "PC.hdl": sol$8,
+        },
+        RAM8: {
+            "RAM8.hdl": sol$7,
+        },
+        RAM64: {
+            "RAM64.hdl": sol$6,
+        },
+        RAM512: {
+            "RAM512.hdl": sol$5,
+        },
+        RAM4k: {
+            "RAM4k.hdl": sol$4,
+        },
+        RAM16k: {
+            "RAM16k.hdl": sol$3,
+        },
+    });
+    await fs.popd();
+}
+
+const hdl$2 = `/**
+ * The complete address space of the Hack computer's memory,
+ * including RAM and memory-mapped I/O. 
+ * The chip facilitates read and write operations, as follows:
+ *     Read:  out(t) = Memory[address(t)](t)
+ *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
+ * In words: the chip always outputs the value stored at the memory 
+ * location specified by address. If load==1, the in value is loaded 
+ * into the memory location specified by address. This value becomes 
+ * available through the out output from the next time step onward.
+ * Address space rules:
+ * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Access to address>0x6000 is invalid. Access to any address in 
+ * the range 0x4000-0x5FFF results in accessing the screen memory 
+ * map. Access to address 0x6000 results in accessing the keyboard 
+ * memory map. The behavior in these addresses is described in the 
+ * Screen and Keyboard chip specifications given in the book.
+ */
+
+CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+}`;
+const sol$2 = `CHIP Memory {
+    IN in[16], load, address[15];
+    OUT out[16];
+
+    PARTS:
+
+    RAM16K(in=in, load=writeram, address=address[1..14], out=ramout);
+
+    DMux(in=load, sel=address[0], a=writeram, b=writeio);
+    Screen(in=in, load=writeio, address=address[2..14], out=screenout);
+    Keyboard(out=kbdout);
+
+    Mux4Way16(a=ramout, b=ioout, c=screenout, d=kbdout, sel=address[0..1], out=out);
+}`;
+const tst$2 = `output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
+
+echo "Before you run this script, select the 'Screen' option from the 'View' menu";
+
+set in -1,				// Set RAM[0] = -1
+set load 1, set address 0, tick, output; tock, output;
+
+set in 9999,			// RAM[0] holds value
+set load 0, tick, output; tock, output;
+
+set address %X2000,		// Did not also write to upper RAM or Screen
+eval, output; set address %X4000, eval, output;
+
+set in 2222,			// Set RAM[2000] = 2222
+set load 1, set address %X2000, tick, output; tock, output;
+
+set in 9999,			// RAM[2000] holds value
+set load 0, tick, output; tock, output;
+
+set address 0,			// Did not also write to lower RAM or Screen
+eval, output; set address %X4000, eval, output;
+
+set load 0,				// Low order address bits connected
+set address %X0001, eval, output;
+set address %X0002, eval, output;
+set address %X0004, eval, output;
+set address %X0008, eval, output;
+set address %X0010, eval, output;
+set address %X0020, eval, output;
+set address %X0040, eval, output;
+set address %X0080, eval, output;
+set address %X0100, eval, output;
+set address %X0200, eval, output;
+set address %X0400, eval, output;
+set address %X0800, eval, output;
+set address %X1000, eval, output;
+set address %X2000, eval, output;
+
+set address %X1234,		// RAM[1234] = 1234
+set in 1234, set load 1, tick, output; tock, output;
+
+set load 0, set address %X2234,		// Did not also write to upper RAM or Screen 
+eval, output; set address %X6234, eval, output;
+
+set address %X2345,		// RAM[2345] = 2345
+set in 2345, set load 1, tick, output; tock, output;
+
+set load 0, set address %X0345,		// Did not also write to lower RAM or Screen 
+eval, output; set address %X4345, eval, output;
+
+// Keyboard test
+
+set address 24576,
+echo "Click the Keyboard icon and hold down the 'K' key (uppercase) until you see the next message (it should appear shortly after that) ...",
+// It's important to keep holding the key down since if the system is busy,
+// the memory will zero itself before being outputted.
+
+while out <> 75 {
+    eval,
+}
+
+clear-echo, output;
+
+// Screen test
+
+set load 1, set in -1, set address %X4FCF, tick, tock, output;
+set address %X504F, tick, tock, output;
+
+set address %X0FCF,		// Did not also write to lower or upper RAM
+eval, output; set address %X2FCF, eval, output;
+
+set load 0,				// Low order address bits connected
+set address %X4FCE, eval, output;
+set address %X4FCD, eval, output;
+set address %X4FCB, eval, output;
+set address %X4FC7, eval, output;
+set address %X4FDF, eval, output;
+set address %X4FEF, eval, output;
+set address %X4F8F, eval, output;
+set address %X4F4F, eval, output;
+set address %X4ECF, eval, output;
+set address %X4DCF, eval, output;
+set address %X4BCF, eval, output;
+set address %X47CF, eval, output;
+set address %X5FCF, eval, output;
+
+
+set load 0, set address 24576,
+echo "Make sure you see ONLY two horizontal lines in the middle of the screen. Hold down 'Y' (uppercase) until you see the next message ...",
+// It's important to keep holding the key down since if the system is busy,
+// the memory will zero itself before being outputted.
+
+while out <> 89 {
+    eval,
+}
+
+clear-echo, output;`;
+const cmp$2 = `|   in   |load |     address     |  out   |
+|     -1 |  1  | 000000000000000 |      0 |
+|     -1 |  1  | 000000000000000 |     -1 |
+|   9999 |  0  | 000000000000000 |     -1 |
+|   9999 |  0  | 000000000000000 |     -1 |
+|   9999 |  0  | 010000000000000 |      0 |
+|   9999 |  0  | 100000000000000 |      0 |
+|   2222 |  1  | 010000000000000 |      0 |
+|   2222 |  1  | 010000000000000 |   2222 |
+|   9999 |  0  | 010000000000000 |   2222 |
+|   9999 |  0  | 010000000000000 |   2222 |
+|   9999 |  0  | 000000000000000 |     -1 |
+|   9999 |  0  | 100000000000000 |      0 |
+|   9999 |  0  | 000000000000001 |      0 |
+|   9999 |  0  | 000000000000010 |      0 |
+|   9999 |  0  | 000000000000100 |      0 |
+|   9999 |  0  | 000000000001000 |      0 |
+|   9999 |  0  | 000000000010000 |      0 |
+|   9999 |  0  | 000000000100000 |      0 |
+|   9999 |  0  | 000000001000000 |      0 |
+|   9999 |  0  | 000000010000000 |      0 |
+|   9999 |  0  | 000000100000000 |      0 |
+|   9999 |  0  | 000001000000000 |      0 |
+|   9999 |  0  | 000010000000000 |      0 |
+|   9999 |  0  | 000100000000000 |      0 |
+|   9999 |  0  | 001000000000000 |      0 |
+|   9999 |  0  | 010000000000000 |   2222 |
+|   1234 |  1  | 001001000110100 |      0 |
+|   1234 |  1  | 001001000110100 |   1234 |
+|   1234 |  0  | 010001000110100 |      0 |
+|   1234 |  0  | 110001000110100 |      0 |
+|   2345 |  1  | 010001101000101 |      0 |
+|   2345 |  1  | 010001101000101 |   2345 |
+|   2345 |  0  | 000001101000101 |      0 |
+|   2345 |  0  | 100001101000101 |      0 |
+|   2345 |  0  | 110000000000000 |     75 |
+|     -1 |  1  | 100111111001111 |     -1 |
+|     -1 |  1  | 101000001001111 |     -1 |
+|     -1 |  1  | 000111111001111 |      0 |
+|     -1 |  1  | 010111111001111 |      0 |
+|     -1 |  0  | 100111111001110 |      0 |
+|     -1 |  0  | 100111111001101 |      0 |
+|     -1 |  0  | 100111111001011 |      0 |
+|     -1 |  0  | 100111111000111 |      0 |
+|     -1 |  0  | 100111111011111 |      0 |
+|     -1 |  0  | 100111111101111 |      0 |
+|     -1 |  0  | 100111110001111 |      0 |
+|     -1 |  0  | 100111101001111 |      0 |
+|     -1 |  0  | 100111011001111 |      0 |
+|     -1 |  0  | 100110111001111 |      0 |
+|     -1 |  0  | 100101111001111 |      0 |
+|     -1 |  0  | 100011111001111 |      0 |
+|     -1 |  0  | 101111111001111 |      0 |
+|     -1 |  0  | 110000000000000 |     89 |`;
+
+const hdl$1 = `/**
+ * The Hack CPU (Central Processing unit), consisting of an ALU,
+ * two registers named A and D, and a program counter named PC.
+ * The CPU is designed to fetch and execute instructions written in 
+ * the Hack machine language. In particular, functions as follows:
+ * Executes the inputted instruction according to the Hack machine 
+ * language specification. The D and A in the language specification
+ * refer to CPU-resident registers, while M refers to the external
+ * memory location addressed by A, i.e. to Memory[A]. The inM input 
+ * holds the value of this location. If the current instruction needs 
+ * to write a value to M, the value is placed in outM, the address 
+ * of the target location is placed in the addressM output, and the 
+ * writeM control bit is asserted. (When writeM==0, any value may 
+ * appear in outM). The outM and writeM outputs are combinational: 
+ * they are affected instantaneously by the execution of the current 
+ * instruction. The addressM and pc outputs are clocked: although they 
+ * are affected by the execution of the current instruction, they commit 
+ * to their new values only in the next time step. If reset==1 then the 
+ * CPU jumps to address 0 (i.e. pc is set to 0 in next time step) rather 
+ * than to the address resulting from executing the current instruction. 
+ */
+
+CHIP CPU {
+
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+}`;
+const sol$1 = `CHIP CPU {
+    IN  inM[16],         // M value input  (M = contents of RAM[A])
+        instruction[16], // Instruction for execution
+        reset;           // Signals whether to re-start the current
+                         // program (reset==1) or continue executing
+                         // the current program (reset==0).
+
+    OUT outM[16],        // M value output
+        writeM,          // Write to M? 
+        addressM[15],    // Address in data memory (of M)
+        pc[15];          // address of next instruction
+
+    PARTS:
+
+    // From figure 5.9
+    Not(in=instruction[15], out=aInstruction);
+    Mux16(
+        b=false,
+        a=instruction,
+        sel=aInstruction,
+        out[12]=a,
+        out[11]=c1,
+        out[10]=c2,
+        out[9]=c3,
+        out[8]=c4,
+        out[7]=c5,
+        out[6]=c6,
+        out[5]=d1,
+        out[4]=d2,
+        out[3]=d3,
+        out[0..2]=jump
+    );
+
+    // Register A will be filled from either the instruction line or the ALU
+    Mux16(a=alu, b=instruction, sel=aInstruction, out=regA);
+
+    // Only read 15 bits of memory address in register A
+    Or(a=aInstruction, b=d1, out=setA);
+    Register(in=regA, in[15]=false, load=setA, out[0..14]=addressM, out=A);
+
+    // D register is loaded from the ALU when d2 is set
+    Register(in=alu, load=d2, out=D);
+
+    Mux16(a=A, b=inM, sel=a, out=AM);
+
+    // ALU control bits are mapped directly in C instructions when in c mode.
+    ALU(x=D, y=AM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=alu, out=outM, zr=zr, ng=ng);
+    
+    // Jump
+    Not(in=ng, out=nng);
+    Not(in=zr, out=nzr);
+    And(a=nng, b=nzr, out=pt); // Positive is not negative and not zero
+
+    And(a=jump[2], b=ng, out=jlt);
+    And(a=jump[1], b=zr, out=jeq);
+    And(a=jump[0], b=pt, out=jgt);
+
+    And(a=jgt, b=jeq, out=jge);
+    And(a=jlt, b=jeq, out=jle);
+    And(a=jgt, b=jlt, out=jne);
+
+    And(a=jump[2], b=jump[1], out=jumpu1);
+    And(a=jump[0], b=jumpu1, out=jumpu);
+
+    Or(a=jgt, b=jeq, out=j1);
+    Or(a=jge, b=j1, out=j2);
+    Or(a=jlt, b=j2, out=j3);
+    Or(a=jne, b=j3, out=j4);
+    Or(a=jle, b=j4, out=j5);
+    Or(a=jumpu, b=j5, out=jmp);
+
+    PC(in=A, load=jmp, reset=reset, inc=tick, out[0..14]=pc);
+}`;
+const tst$1 = `output-list time%S0.4.0 inM%D0.6.0 instruction%B0.16.0 reset%B2.1.2 outM%D1.6.0 writeM%B3.1.3 addressM%D0.5.0 pc%D0.5.0 DRegister[]%D1.6.1;
+
+
+set instruction %B0011000000111001, // @12345
+tick, output, tock, output;
+
+set instruction %B1110110000010000, // D=A
+tick, output, tock, output;
+
+set instruction %B0101101110100000, // @23456
+tick, output, tock, output;
+
+set instruction %B1110000111010000, // D=A-D
+tick, output, tock, output;
+
+set instruction %B0000001111101000, // @1000
+tick, output, tock, output;
+
+set instruction %B1110001100001000, // M=D
+tick, output, tock, output;
+
+set instruction %B0000001111101001, // @1001
+tick, output, tock, output;
+
+set instruction %B1110001110011000, // MD=D-1
+tick, output, tock, output;
+
+set instruction %B0000001111101000, // @1000
+tick, output, tock, output;
+
+set instruction %B1111010011010000, // D=D-M
+set inM 11111,
+tick, output, tock, output;
+
+set instruction %B0000000000001110, // @14
+tick, output, tock, output;
+
+set instruction %B1110001100000100, // D;jlt
+tick, output, tock, output;
+
+set instruction %B0000001111100111, // @999
+tick, output, tock, output;
+
+set instruction %B1110110111100000, // A=A+1
+tick, output, tock, output;
+
+set instruction %B1110001100001000, // M=D
+tick, output, tock, output;
+
+set instruction %B0000000000010101, // @21
+tick, output, tock, output;
+
+set instruction %B1110011111000010, // D+1;jeq
+tick, output, tock, output;
+
+set instruction %B0000000000000010, // @2
+tick, output, tock, output;
+
+set instruction %B1110000010010000, // D=D+A
+tick, output, tock, output;
+
+set instruction %B0000001111101000, // @1000
+tick, output, tock, output;
+
+set instruction %B1110111010010000, // D=-1
+tick, output, tock, output;
+
+set instruction %B1110001100000001, // D;JGT
+tick, output, tock, output;
+
+set instruction %B1110001100000010, // D;JEQ
+tick, output, tock, output;
+
+set instruction %B1110001100000011, // D;JGE
+tick, output, tock, output;
+
+set instruction %B1110001100000100, // D;JLT
+tick, output, tock, output;
+
+set instruction %B1110001100000101, // D;JNE
+tick, output, tock, output;
+
+set instruction %B1110001100000110, // D;JLE
+tick, output, tock, output;
+
+set instruction %B1110001100000111, // D;JMP
+tick, output, tock, output;
+
+set instruction %B1110101010010000, // D=0
+tick, output, tock, output;
+
+set instruction %B1110001100000001, // D;JGT
+tick, output, tock, output;
+
+set instruction %B1110001100000010, // D;JEQ
+tick, output, tock, output;
+
+set instruction %B1110001100000011, // D;JGE
+tick, output, tock, output;
+
+set instruction %B1110001100000100, // D;JLT
+tick, output, tock, output;
+
+set instruction %B1110001100000101, // D;JNE
+tick, output, tock, output;
+
+set instruction %B1110001100000110, // D;JLE
+tick, output, tock, output;
+
+set instruction %B1110001100000111, // D;JMP
+tick, output, tock, output;
+
+set instruction %B1110111111010000, // D=1
+tick, output, tock, output;
+
+set instruction %B1110001100000001, // D;JGT
+tick, output, tock, output;
+
+set instruction %B1110001100000010, // D;JEQ
+tick, output, tock, output;
+
+set instruction %B1110001100000011, // D;JGE
+tick, output, tock, output;
+
+set instruction %B1110001100000100, // D;JLT
+tick, output, tock, output;
+
+set instruction %B1110001100000101, // D;JNE
+tick, output, tock, output;
+
+set instruction %B1110001100000110, // D;JLE
+tick, output, tock, output;
+
+set instruction %B1110001100000111, // D;JMP
+tick, output, tock, output;
+
+set reset 1;
+tick, output, tock, output;
+
+set instruction %B0111111111111111, // @32767
+set reset 0;
+tick, output, tock, output;`;
+const cmp$1 = `|time| inM  |  instruction   |reset| outM  |writeM |addre| pc  |DRegiste|
+|0+  |     0|0011000000111001|  0  |*******|   0   |    0|    0|      0 |
+|1   |     0|0011000000111001|  0  |*******|   0   |12345|    1|      0 |
+|1+  |     0|1110110000010000|  0  |*******|   0   |12345|    1|  12345 |
+|2   |     0|1110110000010000|  0  |*******|   0   |12345|    2|  12345 |
+|2+  |     0|0101101110100000|  0  |*******|   0   |12345|    2|  12345 |
+|3   |     0|0101101110100000|  0  |*******|   0   |23456|    3|  12345 |
+|3+  |     0|1110000111010000|  0  |*******|   0   |23456|    3|  11111 |
+|4   |     0|1110000111010000|  0  |*******|   0   |23456|    4|  11111 |
+|4+  |     0|0000001111101000|  0  |*******|   0   |23456|    4|  11111 |
+|5   |     0|0000001111101000|  0  |*******|   0   | 1000|    5|  11111 |
+|5+  |     0|1110001100001000|  0  |  11111|   1   | 1000|    5|  11111 |
+|6   |     0|1110001100001000|  0  |  11111|   1   | 1000|    6|  11111 |
+|6+  |     0|0000001111101001|  0  |*******|   0   | 1000|    6|  11111 |
+|7   |     0|0000001111101001|  0  |*******|   0   | 1001|    7|  11111 |
+|7+  |     0|1110001110011000|  0  |  11110|   1   | 1001|    7|  11110 |
+|8   |     0|1110001110011000|  0  |  11109|   1   | 1001|    8|  11110 |
+|8+  |     0|0000001111101000|  0  |*******|   0   | 1001|    8|  11110 |
+|9   |     0|0000001111101000|  0  |*******|   0   | 1000|    9|  11110 |
+|9+  | 11111|1111010011010000|  0  |*******|   0   | 1000|    9|     -1 |
+|10  | 11111|1111010011010000|  0  |*******|   0   | 1000|   10|     -1 |
+|10+ | 11111|0000000000001110|  0  |*******|   0   | 1000|   10|     -1 |
+|11  | 11111|0000000000001110|  0  |*******|   0   |   14|   11|     -1 |
+|11+ | 11111|1110001100000100|  0  |*******|   0   |   14|   11|     -1 |
+|12  | 11111|1110001100000100|  0  |*******|   0   |   14|   14|     -1 |
+|12+ | 11111|0000001111100111|  0  |*******|   0   |   14|   14|     -1 |
+|13  | 11111|0000001111100111|  0  |*******|   0   |  999|   15|     -1 |
+|13+ | 11111|1110110111100000|  0  |*******|   0   |  999|   15|     -1 |
+|14  | 11111|1110110111100000|  0  |*******|   0   | 1000|   16|     -1 |
+|14+ | 11111|1110001100001000|  0  |     -1|   1   | 1000|   16|     -1 |
+|15  | 11111|1110001100001000|  0  |     -1|   1   | 1000|   17|     -1 |
+|15+ | 11111|0000000000010101|  0  |*******|   0   | 1000|   17|     -1 |
+|16  | 11111|0000000000010101|  0  |*******|   0   |   21|   18|     -1 |
+|16+ | 11111|1110011111000010|  0  |*******|   0   |   21|   18|     -1 |
+|17  | 11111|1110011111000010|  0  |*******|   0   |   21|   21|     -1 |
+|17+ | 11111|0000000000000010|  0  |*******|   0   |   21|   21|     -1 |
+|18  | 11111|0000000000000010|  0  |*******|   0   |    2|   22|     -1 |
+|18+ | 11111|1110000010010000|  0  |*******|   0   |    2|   22|      1 |
+|19  | 11111|1110000010010000|  0  |*******|   0   |    2|   23|      1 |
+|19+ | 11111|0000001111101000|  0  |*******|   0   |    2|   23|      1 |
+|20  | 11111|0000001111101000|  0  |*******|   0   | 1000|   24|      1 |
+|20+ | 11111|1110111010010000|  0  |*******|   0   | 1000|   24|     -1 |
+|21  | 11111|1110111010010000|  0  |*******|   0   | 1000|   25|     -1 |
+|21+ | 11111|1110001100000001|  0  |*******|   0   | 1000|   25|     -1 |
+|22  | 11111|1110001100000001|  0  |*******|   0   | 1000|   26|     -1 |
+|22+ | 11111|1110001100000010|  0  |*******|   0   | 1000|   26|     -1 |
+|23  | 11111|1110001100000010|  0  |*******|   0   | 1000|   27|     -1 |
+|23+ | 11111|1110001100000011|  0  |*******|   0   | 1000|   27|     -1 |
+|24  | 11111|1110001100000011|  0  |*******|   0   | 1000|   28|     -1 |
+|24+ | 11111|1110001100000100|  0  |*******|   0   | 1000|   28|     -1 |
+|25  | 11111|1110001100000100|  0  |*******|   0   | 1000| 1000|     -1 |
+|25+ | 11111|1110001100000101|  0  |*******|   0   | 1000| 1000|     -1 |
+|26  | 11111|1110001100000101|  0  |*******|   0   | 1000| 1000|     -1 |
+|26+ | 11111|1110001100000110|  0  |*******|   0   | 1000| 1000|     -1 |
+|27  | 11111|1110001100000110|  0  |*******|   0   | 1000| 1000|     -1 |
+|27+ | 11111|1110001100000111|  0  |*******|   0   | 1000| 1000|     -1 |
+|28  | 11111|1110001100000111|  0  |*******|   0   | 1000| 1000|     -1 |
+|28+ | 11111|1110101010010000|  0  |*******|   0   | 1000| 1000|      0 |
+|29  | 11111|1110101010010000|  0  |*******|   0   | 1000| 1001|      0 |
+|29+ | 11111|1110001100000001|  0  |*******|   0   | 1000| 1001|      0 |
+|30  | 11111|1110001100000001|  0  |*******|   0   | 1000| 1002|      0 |
+|30+ | 11111|1110001100000010|  0  |*******|   0   | 1000| 1002|      0 |
+|31  | 11111|1110001100000010|  0  |*******|   0   | 1000| 1000|      0 |
+|31+ | 11111|1110001100000011|  0  |*******|   0   | 1000| 1000|      0 |
+|32  | 11111|1110001100000011|  0  |*******|   0   | 1000| 1000|      0 |
+|32+ | 11111|1110001100000100|  0  |*******|   0   | 1000| 1000|      0 |
+|33  | 11111|1110001100000100|  0  |*******|   0   | 1000| 1001|      0 |
+|33+ | 11111|1110001100000101|  0  |*******|   0   | 1000| 1001|      0 |
+|34  | 11111|1110001100000101|  0  |*******|   0   | 1000| 1002|      0 |
+|34+ | 11111|1110001100000110|  0  |*******|   0   | 1000| 1002|      0 |
+|35  | 11111|1110001100000110|  0  |*******|   0   | 1000| 1000|      0 |
+|35+ | 11111|1110001100000111|  0  |*******|   0   | 1000| 1000|      0 |
+|36  | 11111|1110001100000111|  0  |*******|   0   | 1000| 1000|      0 |
+|36+ | 11111|1110111111010000|  0  |*******|   0   | 1000| 1000|      1 |
+|37  | 11111|1110111111010000|  0  |*******|   0   | 1000| 1001|      1 |
+|37+ | 11111|1110001100000001|  0  |*******|   0   | 1000| 1001|      1 |
+|38  | 11111|1110001100000001|  0  |*******|   0   | 1000| 1000|      1 |
+|38+ | 11111|1110001100000010|  0  |*******|   0   | 1000| 1000|      1 |
+|39  | 11111|1110001100000010|  0  |*******|   0   | 1000| 1001|      1 |
+|39+ | 11111|1110001100000011|  0  |*******|   0   | 1000| 1001|      1 |
+|40  | 11111|1110001100000011|  0  |*******|   0   | 1000| 1000|      1 |
+|40+ | 11111|1110001100000100|  0  |*******|   0   | 1000| 1000|      1 |
+|41  | 11111|1110001100000100|  0  |*******|   0   | 1000| 1001|      1 |
+|41+ | 11111|1110001100000101|  0  |*******|   0   | 1000| 1001|      1 |
+|42  | 11111|1110001100000101|  0  |*******|   0   | 1000| 1000|      1 |
+|42+ | 11111|1110001100000110|  0  |*******|   0   | 1000| 1000|      1 |
+|43  | 11111|1110001100000110|  0  |*******|   0   | 1000| 1001|      1 |
+|43+ | 11111|1110001100000111|  0  |*******|   0   | 1000| 1001|      1 |
+|44  | 11111|1110001100000111|  0  |*******|   0   | 1000| 1000|      1 |
+|44+ | 11111|1110001100000111|  1  |*******|   0   | 1000| 1000|      1 |
+|45  | 11111|1110001100000111|  1  |*******|   0   | 1000|    0|      1 |
+|45+ | 11111|0111111111111111|  0  |*******|   0   | 1000|    0|      1 |
+|46  | 11111|0111111111111111|  0  |*******|   0   |32767|    1|      1 |`;
+
+const hdl = `/**
+ * The HACK computer, including CPU, ROM and RAM.
+ * When reset is 0, the program stored in the computer's ROM executes.
+ * When reset is 1, the execution of the program restarts. 
+ * Thus, to start a program's execution, reset must be pushed "up" (1)
+ * and "down" (0). From this point onward the user is at the mercy of 
+ * the software. In particular, depending on the program's code, the 
+ * screen may show some output and the user may be able to interact 
+ * with the computer via the keyboard.
+ */
+
+CHIP Computer {
+
+    IN reset;
+
+    PARTS:
+}`;
+const sol = `CHIP Computer {
+    IN reset;
+
+    PARTS:
+    CPU(reset=reset, inM=outM, instruction=instruction, outM=inM, writeM=writeM, addressM=addressM, pc=pc);
+    ROM32K(address=pc, out=instruction);
+    Memory(in=inM, load=writeM, address=addressM, out=outM);
+}`;
+const tst = `output-list time%S1.4.1 reset%B2.1.2 ARegister[]%D1.7.1 DRegister[]%D1.7.1 PC[]%D0.4.0 RAM16K[0]%D1.7.1 RAM16K[1]%D1.7.1 RAM16K[2]%D1.7.1;
+
+// Load a program written in the Hack machine language.
+// The program computes the maximum of RAM[0] and RAM[1] 
+// and writes the result in RAM[2].
+
+ROM32K load Max.hack,
+
+// first run: compute max(3,5)
+set RAM16K[0] 3,
+set RAM16K[1] 5,
+output;
+
+repeat 14 {
+    tick, tock, output;
+}
+
+// reset the PC
+set reset 1,
+tick, tock, output;
+
+// second run: compute max(23456,12345)
+set reset 0,
+set RAM16K[0] 23456,
+set RAM16K[1] 12345,
+output;
+
+// The run on these inputs needs less cycles (different branching)
+repeat 10 {
+    tick, tock, output;
+}`;
+const hack = `0000000000000000
+1111110000010000
+0000000000000001
+1111010011010000
+0000000000001010
+1110001100000001
+0000000000000001
+1111110000010000
+0000000000001100
+1110101010000111
+0000000000000000
+1111110000010000
+0000000000000010
+1110001100001000
+0000000000001110
+1110101010000111`;
+const cmp = `| time |reset|ARegister|DRegister|PC[]|RAM16K[0]|RAM16K[1]|RAM16K[2]|
+| 0    |  0  |       0 |       0 |   0|       3 |       5 |       0 |
+| 1    |  0  |       0 |       0 |   1|       3 |       5 |       0 |
+| 2    |  0  |       0 |       3 |   2|       3 |       5 |       0 |
+| 3    |  0  |       1 |       3 |   3|       3 |       5 |       0 |
+| 4    |  0  |       1 |      -2 |   4|       3 |       5 |       0 |
+| 5    |  0  |      10 |      -2 |   5|       3 |       5 |       0 |
+| 6    |  0  |      10 |      -2 |   6|       3 |       5 |       0 |
+| 7    |  0  |       1 |      -2 |   7|       3 |       5 |       0 |
+| 8    |  0  |       1 |       5 |   8|       3 |       5 |       0 |
+| 9    |  0  |      12 |       5 |   9|       3 |       5 |       0 |
+| 10   |  0  |      12 |       5 |  12|       3 |       5 |       0 |
+| 11   |  0  |       2 |       5 |  13|       3 |       5 |       0 |
+| 12   |  0  |       2 |       5 |  14|       3 |       5 |       5 |
+| 13   |  0  |      14 |       5 |  15|       3 |       5 |       5 |
+| 14   |  0  |      14 |       5 |  14|       3 |       5 |       5 |
+| 15   |  1  |      14 |       5 |   0|       3 |       5 |       5 |
+| 15   |  0  |      14 |       5 |   0|   23456 |   12345 |       5 |
+| 16   |  0  |       0 |       5 |   1|   23456 |   12345 |       5 |
+| 17   |  0  |       0 |   23456 |   2|   23456 |   12345 |       5 |
+| 18   |  0  |       1 |   23456 |   3|   23456 |   12345 |       5 |
+| 19   |  0  |       1 |   11111 |   4|   23456 |   12345 |       5 |
+| 20   |  0  |      10 |   11111 |   5|   23456 |   12345 |       5 |
+| 21   |  0  |      10 |   11111 |  10|   23456 |   12345 |       5 |
+| 22   |  0  |       0 |   11111 |  11|   23456 |   12345 |       5 |
+| 23   |  0  |       0 |   23456 |  12|   23456 |   12345 |       5 |
+| 24   |  0  |       2 |   23456 |  13|   23456 |   12345 |       5 |
+| 25   |  0  |       2 |   23456 |  14|   23456 |   12345 |   23456 |`;
+
+async function resetFiles$1(fs) {
+    await fs.pushd("/projects/05");
+    await reset(fs, {
+        Memory: {
+            "Memory.hdl": hdl$2,
+            "Memory.tst": tst$2,
+            "Memory.cmp": cmp$2,
+        },
+        CPU: {
+            "CPU.hdl": hdl$1,
+            "CPU.tst": tst$1,
+            "CPU.cmp": cmp$1,
+        },
+        Computer: {
+            "Computer.hdl": hdl,
+            "Computer.tst": tst,
+            "Computer.cmp": cmp,
+            "Max.hack": hack,
+        },
+    });
+    await fs.popd();
+}
+async function loadSolutions$1(fs) {
+    await fs.pushd("/projects/05");
+    await reset(fs, {
+        Memory: {
+            "Memory.hdl": sol$2,
+        },
+        CPU: {
+            "CPU.hdl": sol$1,
+        },
+        Computer: {
+            "Computer.hdl": sol,
         },
     });
     await fs.popd();
 }
 
 async function resetFiles(fs) {
+    await resetFiles$4(fs);
     await resetFiles$3(fs);
     await resetFiles$2(fs);
     await resetFiles$1(fs);
+}
+async function loadSolutions(fs) {
+    await loadSolutions$4(fs);
+    await loadSolutions$3(fs);
+    await loadSolutions$2(fs);
+    await loadSolutions$1(fs);
 }
 
 function icon(name) {
@@ -10627,11 +12480,20 @@ const App = () => {
     })), main(dl(header("Project"), dt("Files"), dd(button({
         events: {
             click: (e) => {
+                localStorage["chip/project"] = "01";
+                localStorage["chip/chip"] = "Not";
                 resetFiles(fs);
                 statusLine.update("Reset files in local storage");
             },
         },
-    }, "Reset")), dt("References"), dd(a$1({
+    }, "Reset"), button({
+        events: {
+            click: (e) => {
+                loadSolutions(fs);
+                statusLine.update("Loaded sample solutions...");
+            },
+        },
+    }, "Solutions")), dt("References"), dd(a$1({
         href: "https://github.com/davidsouther/computron5k",
         target: "_blank",
     }, "Github")), dd(a$1({

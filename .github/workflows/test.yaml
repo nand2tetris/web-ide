@@ -1,9 +1,13 @@
 name: Run Javascript Tests
 
-on: [push]
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  all:
     runs-on: ubuntu-latest
 
     strategy:
@@ -16,9 +20,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: npm install, build, and test
-        run: |
-          npm i
-          npm test
+          cache: "npm"
+      - run: npm install
+      - run: npm test
         env:
           CI: true

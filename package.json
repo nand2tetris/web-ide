@@ -33,7 +33,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!remark-markdown)/\"",
     "format": "npx prettier --write public/ src/",
     "check": "npx tsc --noEmit"
   },

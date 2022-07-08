@@ -5,7 +5,7 @@ const Mode = { VIEW: 0, EDIT: 1 };
 
 export const InlineEdit = (props: {
   mode?: keyof typeof Mode;
-  value: number;
+  value: string;
   onChange: (value: string) => void;
 }) => {
   const [mode, setMode] = useState(props.mode ?? Mode.VIEW);

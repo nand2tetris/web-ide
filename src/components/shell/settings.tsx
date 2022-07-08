@@ -49,7 +49,7 @@ export const Settings = () => {
                 Reset
               </button>
               <button
-                onClick={(e) => {
+                onClick={() => {
                   projects.loadSolutions(fs);
                   // statusLine.update("Loaded sample solutions...");
                 }}
@@ -65,15 +65,6 @@ export const Settings = () => {
                 rel="noreferrer"
               >
                 Github
-              </a>
-            </dd>
-            <dd>
-              <a
-                href="https://davidsouther.github.io/computron5k/user_guide"
-                target="_blank"
-                rel="noreferrer"
-              >
-                User Guide
               </a>
             </dd>
           </dl>

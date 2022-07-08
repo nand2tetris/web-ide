@@ -101,9 +101,9 @@ export class ChipPageStore {
     if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
     this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
     this.setProject(this.project);
-    Clock.get().update.subscribe(() => {
-      this.next();
-    });
+    // Clock.get().update.subscribe(() => {
+    //   this.next();
+    // });
   }
 
   toggle(pin: Pin) {

@@ -23,9 +23,9 @@ function App() {
   return (
     <StatusLineContext.Provider value={{ status, setStatus }}>
       <StorageContext.Provider value={fs}>
-        <Settings></Settings>
+        <Settings />
         <Router>
-          <Header urls={urls}></Header>
+          <Header urls={urls} />
           <main className="flex flex-1">
             <Suspense fallback={<div>Loading...</div>}>
               <Routes>
@@ -35,7 +35,7 @@ function App() {
               </Routes>
             </Suspense>
           </main>
-          <Footer openSettings={() => open.next()}></Footer>
+          <Footer openSettings={() => open.next()} />
         </Router>
       </StorageContext.Provider>
     </StatusLineContext.Provider>

@@ -8,18 +8,18 @@ import VirtualScroll from "./pico/virtual_scroll";
 
 const ITEM_HEIGHT = 33.5;
 
-const MemoryBlock = ({
+export const MemoryBlock = ({
   memory,
   highlight = -1,
   editable = false,
-  format,
+  format = dec,
   onChange,
 }: {
   memory: MemoryChip;
   highlight?: number;
   editable?: boolean;
-  format: (v: number) => string;
-  onChange: (i: number, value: string, previous: number) => void;
+  format?: (v: number) => string;
+  onChange?: (i: number, value: string, previous: number) => void;
 }) => (
   <VirtualScroll<[number, number], ReactNode>
     settings={{ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }}
@@ -27,16 +27,16 @@ const MemoryBlock = ({
     row={([i, v]) => (
       <MemoryCell
         index={i}
-        value={v}
+        value={format(v)}
         editable={editable}
         highlight={i === highlight}
-        onChange={(value) => onChange(i, `${value}`, v)}
+        onChange={(value) => onChange && onChange(i, `${value}`, v)}
       ></MemoryCell>
     )}
   ></VirtualScroll>
 );
 
-const MemoryCell = ({
+export const MemoryCell = ({
   index,
   value,
   highlight = false,
@@ -44,10 +44,10 @@ const MemoryCell = ({
   onChange = () => {},
 }: {
   index: number;
-  value: number;
+  value: string;
   highlight?: boolean;
   editable?: boolean;
-  onChange: (i: number, value: string, previous: number) => void;
+  onChange?: (i: number, value: string, previous: number) => void;
 }) => (
   <>
     <code
@@ -73,7 +73,9 @@ const MemoryCell = ({
       {editable ? (
         <InlineEdit
           value={value}
-          onChange={(newValue: string) => onChange(index, newValue, value)}
+          onChange={(newValue: string) =>
+            onChange(index, newValue, Number(value))
+          }
         />
       ) : (
         <span>{value}</span>
@@ -82,7 +84,7 @@ const MemoryCell = ({
   </>
 );
 
-const Memory = ({
+export const Memory = ({
   name = "Memory",
   highlight = -1,
   editable = true,
@@ -97,45 +99,39 @@ const Memory = ({
 }) => {
   const [fmt, setFormat] = useState(format);
 
-  const buttonBar = (
-    <fieldset className="input-group">
-      {FORMATS.map((option) => {
-        const opt = option.replace(/\s+/g, "_").toLowerCase();
-        const id = `${name}-${opt}`;
-        return (
-          <label key={id} role="button" htmlFor={id}>
-            <input
-              type="radio"
-              id={id}
-              name={name}
-              value={option}
-              checked={option === fmt}
-              onChange={() => setFormat(option)}
-            />
-            {option}
-          </label>
-        );
-      })}
-    </fieldset>
-  );
-
-  const memoryBlock = MemoryBlock({
-    memory,
-    highlight,
-    editable,
-    format: (v) => doFormat(fmt ?? "dec", v),
-    onChange: (i, v) => {
-      memory.update(i, v, fmt ?? "dec");
-    },
-  });
-
   return (
     <article>
       <header>
         <div>{name}</div>
-        {buttonBar}
+        <fieldset className="input-group">
+          {FORMATS.map((option) => {
+            const opt = option.replace(/\s+/g, "_").toLowerCase();
+            const id = `${name}-${opt}`;
+            return (
+              <label key={id} role="button" htmlFor={id}>
+                <input
+                  type="radio"
+                  id={id}
+                  name={name}
+                  value={option}
+                  checked={option === fmt}
+                  onChange={() => setFormat(option)}
+                />
+                {option}
+              </label>
+            );
+          })}
+        </fieldset>
       </header>
-      {memoryBlock}
+      <MemoryBlock
+        memory={memory}
+        highlight={highlight}
+        editable={editable}
+        format={(v) => doFormat(fmt ?? "dec", v)}
+        onChange={(i, v) => {
+          memory.update(i, v, fmt ?? "dec");
+        }}
+      />
     </article>
   );
 };

@@ -19,7 +19,7 @@ export function arrayAdapter<T>(data: T[]): VirtualScrollDataAdapter<T> {
 }
 
 export interface VirtualScrollProps<T, U extends ReactNode> {
-  settings: Partial<VirtualScrollSettings>;
+  settings?: Partial<VirtualScrollSettings>;
   get: VirtualScrollDataAdapter<T>;
   row: (t: T) => U;
 }
@@ -39,9 +39,9 @@ export function fillVirtualScrollSettings(
   return { minIndex, maxIndex, startIndex, itemHeight, count, tolerance };
 }
 
-export function initialState<T, U extends ReactNode>(
+export function initialState<T>(
   settings: VirtualScrollSettings
-): VirtualScrollState<T, U> {
+): VirtualScrollState<T> {
   // From Denis Hilt, https://blog.logrocket.com/virtual-scrolling-core-principles-and-basic-implementation-in-react/
   const { minIndex, maxIndex, startIndex, itemHeight, count, tolerance } =
     settings;
@@ -65,7 +65,6 @@ export function initialState<T, U extends ReactNode>(
     topPaddingHeight,
     bottomPaddingHeight,
     data: [],
-    rows: [],
   };
 }
 
@@ -112,7 +111,7 @@ export function doScroll<T>(
   return { scrollTop, topPaddingHeight, bottomPaddingHeight, data };
 }
 
-interface VirtualScrollState<T, U extends ReactNode = ReactNode> {
+interface VirtualScrollState<T> {
   settings: VirtualScrollSettings;
   scrollTop: number; // px
   bufferedItems: number; // count
@@ -122,53 +121,40 @@ interface VirtualScrollState<T, U extends ReactNode = ReactNode> {
   bottomPaddingHeight: number; // px
   toleranceHeight: number; // px
   data: T[];
-  rows: U[];
 }
 
-// export interface VirtualScroll<T, U extends HTMLElement> {
-//   state: VirtualScrollState<T>;
-//   rows: UHTMLElement<U>[];
-// }
+const scrollReducer =
+  <T extends {}>(get: VirtualScrollDataAdapter<T>) =>
+  (state: VirtualScrollState<T>, { scrollTop }: { scrollTop: number }) => ({
+    ...state,
+    ...doScroll(scrollTop, state, get),
+  });
 
-export const VirtualScroll = <T extends {}, U extends ReactNode>(
+export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
   props: VirtualScrollProps<T, U>
 ) => {
-  const settings = fillVirtualScrollSettings(props.settings);
+  const settings = fillVirtualScrollSettings(props.settings ?? {});
 
-  const scrollReducer = (
-    state: VirtualScrollState<T, U>,
-    newState: ScrollUpdate<T>
-  ) => {
-    state.scrollTop = newState.scrollTop;
-    state.topPaddingHeight = newState.topPaddingHeight;
-    state.bottomPaddingHeight = newState.bottomPaddingHeight;
-    state.data = newState.data;
-    state.rows = state.data.map(props.row);
-    return state;
-  };
-
-  const [state, setState] = useState(initialState<T, U>(settings));
-
-  const scrollTo = () => {
-    const scrollTop = viewportRef.current?.scrollTop ?? state.topPaddingHeight;
-    const scrollAction = doScroll(scrollTop, state, props.get);
-    setState(scrollReducer(state, scrollAction));
-  };
+  const [state, setState] = useState(initialState<T>(settings));
+  // const [state, onScroll] = useReducer(
+  //   scrollReducer(props.get),
+  //   initialState(settings)
+  // );
 
   const viewportRef = useRef<HTMLDivElement>();
-  const viewportElement = (
+  return (
     <div
       ref={(ref) => (viewportRef.current = ref ?? undefined)}
       style={{ height: `${state.viewportHeight}px`, overflowY: "scroll" }}
-      onScroll={debounce(scrollTo, 0)}
+      onScroll={debounce(setState, 0)}
     >
       <div
         className="VirtualScroll__topPadding"
         style={{ height: `${state.topPaddingHeight}px` }}
       />
-      {(state.rows ?? []).map((row, i) => (
+      {(state.data ?? []).map((d: T, i: number) => (
         <div key={i} style={{ height: `${settings.itemHeight}px` }}>
-          {row}
+          {props.row(d)}
         </div>
       ))}
       <div
@@ -177,14 +163,6 @@ export const VirtualScroll = <T extends {}, U extends ReactNode>(
       />
     </div>
   );
-
-  setTimeout(() => {
-    viewportRef.current?.scroll({ top: state.scrollTop });
-  });
-
-  scrollTo();
-
-  return viewportElement;
 };
 
 export default VirtualScroll;

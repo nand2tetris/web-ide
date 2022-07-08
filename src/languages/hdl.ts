@@ -1,12 +1,12 @@
 /** Reads and parses HDL chip descriptions. */
 
-import { isErr, isNone, Ok } from "@davidsouther/jiffies/result.js";
-import { IResult, ParseErrors, Parser, StringLike } from "./parser/base.js";
-import { alt } from "./parser/branch.js";
-import { tag } from "./parser/bytes.js";
-import { map, opt, value } from "./parser/combinator.js";
-import { many0 } from "./parser/multi.js";
-import { filler, identifier, list, token, ws } from "./parser/recipe.js";
+import { isErr, isNone, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { IResult, ParseErrors, Parser, StringLike } from "./parser/base"
+import { alt } from "./parser/branch"
+import { tag } from "./parser/bytes"
+import { map, opt, value } from "./parser/combinator"
+import { many0 } from "./parser/multi"
+import { filler, identifier, list, token, ws } from "./parser/recipe"
 import {
   delimited,
   pair,
@@ -14,7 +14,7 @@ import {
   separated,
   terminated,
   tuple,
-} from "./parser/sequence.js";
+} from "./parser/sequence"
 
 const hdlWs = <O>(p: Parser<O>): Parser<O> => {
   const parser = ws(p, filler);

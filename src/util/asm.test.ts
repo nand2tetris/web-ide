@@ -1,5 +1,4 @@
-import { describe, it, expect } from "@davidsouther/jiffies/scope/index.js";
-import { asm } from "./asm.js";
+import { asm } from "./asm"
 
 describe("asm", () => {
   it("converts int16 to asm", () => {

@@ -1,9 +1,9 @@
-import { FileSystem } from "@davidsouther/jiffies/fs.js";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 
-import * as project_01 from "./project_01/index.js";
-import * as project_02 from "./project_02/index.js";
-import * as project_03 from "./project_03/index.js";
-import * as project_05 from "./project_05/index.js";
+import * as project_01 from "./project_01/index"
+import * as project_02 from "./project_02/index"
+import * as project_03 from "./project_03/index"
+import * as project_05 from "./project_05/index"
 
 export async function resetFiles(fs: FileSystem) {
   await project_01.resetFiles(fs);

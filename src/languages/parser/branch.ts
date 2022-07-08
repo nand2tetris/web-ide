@@ -1,7 +1,7 @@
 // https://docs.rs/nom/latest/nom/branch/index.html
 
-import { isOk } from "@davidsouther/jiffies/result.js";
-import { ParseErrors, Parser } from "./base.js";
+import { isOk } from "@davidsouther/jiffies/lib/esm/result";
+import { ParseErrors, Parser } from "./base"
 
 // Tests a list of parsers one by one until one succeeds.
 export const alt =

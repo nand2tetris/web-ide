@@ -98,7 +98,7 @@ export function bin(i: number, precision = 16): string {
 
 export function dec(i: number): string {
   i = i & 0xffff;
-  if (i == 0x8000) {
+  if (i === 0x8000) {
     return "-32768";
   }
   if (i & 0x8000) {

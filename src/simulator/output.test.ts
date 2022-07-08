@@ -1,11 +1,6 @@
-import {
-  expect,
-  it,
-  describe,
-  cleanState,
-} from "@davidsouther/jiffies/scope/index.js";
-import { Output } from "./output.js";
-import { Test, TestOutputInstruction } from "./tst.js";
+import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
+import { Output } from "./output"
+import { Test, TestOutputInstruction } from "./tst"
 
 class OutputTest extends Test {
   private readonly vars: Map<string, number | string>;
@@ -35,7 +30,7 @@ describe("Test Output Handler", () => {
       ["in", 0],
       ["out", -1],
     ]),
-  }));
+  }), beforeEach);
 
   it("outputs padded values", () => {
     const outA = new Output("a", "D", 1, 3, 3);

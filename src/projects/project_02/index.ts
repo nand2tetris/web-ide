@@ -1,11 +1,11 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
-import * as HalfAdder from "./01_half_adder.js";
-import * as FullAdder from "./02_full_adder.js";
-import * as Add16 from "./03_add16.js";
-import * as Inc16 from "./04_inc16.js";
-import * as Alu from "./05_alu_no_stat.js";
-import * as AluStatus from "./06_alu.js";
+import * as HalfAdder from "./01_half_adder"
+import * as FullAdder from "./02_full_adder"
+import * as Add16 from "./03_add16"
+import * as Inc16 from "./04_inc16"
+import * as Alu from "./05_alu_no_stat"
+import * as AluStatus from "./06_alu"
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/02");

@@ -1,10 +1,4 @@
 import {
-  beforeEach,
-  describe,
-  expect,
-  it,
-} from "@davidsouther/jiffies/scope/index.js";
-import {
   Bus,
   Chip,
   ConstantBus,
@@ -15,13 +9,13 @@ import {
   TRUE_BUS,
   parseToPin,
   printChip,
-} from "./chip.js";
-import { Nand } from "./builtins/logic/nand.js";
-import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
-import { bin } from "../../util/twos.js";
-import { DFF } from "./builtins/sequential/dff.js";
-import { Clock } from "./clock.js";
-import { Bit, PC } from "./builtins/sequential/bit.js";
+} from "./chip";
+import { Nand } from "./builtins/logic/nand";
+import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index";
+import { bin } from "../../util/twos";
+import { DFF } from "./builtins/sequential/dff";
+import { Clock } from "./clock";
+import { Bit, PC } from "./builtins/sequential/bit";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -194,9 +188,9 @@ describe("Chip", () => {
         super(["in[3]"], ["out[3]"]);
       }
 
-      eval() {
+      override eval() {
         const inn = this.in().busVoltage;
-        const out = ~inn & 0b11;
+        const out = ~inn & 0b111;
         this.out().busVoltage = out;
       }
     }
@@ -226,27 +220,33 @@ describe("Chip", () => {
       ]);
 
       inPin.busVoltage = 0b0;
+      not3Chip.eval();
       expect(notPart.in().busVoltage).toBe(0b0);
       inPin.busVoltage = 0b111;
+      not3Chip.eval();
       expect(notPart.in().busVoltage).toBe(0b1);
     });
 
     it("wires SubBus out=out[1]", () => {
-      const not3Chip = new Not3();
+      const threeChip = new (class ThreeChip extends Chip {
+        constructor() {
+          super([], ["out[3]"]);
+        }
+      })();
+
       const notPart = new Not();
+          threeChip.wire(notPart, [
+            {
+              from: { name: "out", start: 1, width: 1 },
+              to: { name: "out", start: 0, width: 1 },
+            },
+          ]);
       const outPin = notPart.out();
 
-      not3Chip.wire(notPart, [
-        {
-          from: { name: "out", start: 1, width: 1 },
-          to: { name: "out", start: 0, width: 1 },
-        },
-      ]);
-
       outPin.busVoltage = 0b0;
-      expect(not3Chip.out().busVoltage).toBe(0b0);
+      expect(threeChip.out().busVoltage).toBe(0b0);
       outPin.busVoltage = 0b1;
-      expect(not3Chip.out().busVoltage).toBe(0b010);
+      expect(threeChip.out().busVoltage).toBe(0b010);
     });
 
     it("widens output busses if necessary", () => {
@@ -292,6 +292,7 @@ describe("Chip", () => {
           to: { name: "out", start: 0 },
         },
       ]);
+
       mux4way16.wire(new Mux16(), [
         {
           from: { name: "out1", start: 0 },
@@ -303,7 +304,7 @@ describe("Chip", () => {
         },
         {
           from: { name: "sel", start: 1, width: 1 },
-          to: { name: "sel", start: 1, width: 1 },
+          to: { name: "sel", start: 0, width: 1 },
         },
         {
           from: { name: "out", start: 0, width: 1 },
@@ -317,7 +318,7 @@ describe("Chip", () => {
         super(["in[8]"], ["out[8]"]);
       }
 
-      eval() {
+      override eval() {
         const inn = this.in().busVoltage;
         const out = ~inn & 0xff;
         this.out().busVoltage = out;
@@ -431,7 +432,7 @@ describe("Chip", () => {
         dff.in().pull(HIGH);
         clock.tick(); // Read input, HIGH
         expect(dff.out().voltage()).toBe(LOW);
-        clock.tock(); // Write t, HGIH
+        clock.tock(); // Write t, HIGH
         expect(dff.out().voltage()).toBe(HIGH);
 
         clock.tick();
@@ -446,26 +447,34 @@ describe("Chip", () => {
         clock.reset();
         const bit = new Bit();
 
-        bit.in("load").pull(LOW);
-        bit.in().pull(HIGH);
-        expect(bit.out().voltage()).toBe(LOW);
+        const inn = bit.in();
+        const load = bit.in("load");
+        const out = bit.out();
+
+        load.pull(LOW);
+        inn.pull(HIGH);
+        expect(out.voltage()).toBe(LOW);
         clock.tick();
-        expect(bit.out().voltage()).toBe(LOW);
+        expect(out.voltage()).toBe(LOW);
         clock.tock();
-        expect(bit.out().voltage()).toBe(LOW);
+        expect(out.voltage()).toBe(LOW);
       });
 
       it("does updates when load is high", () => {
         clock.reset();
         const bit = new Bit();
 
-        bit.in("load").pull(HIGH);
-        bit.in().pull(HIGH);
-        expect(bit.out().voltage()).toBe(LOW);
+        const inn = bit.in();
+        const load = bit.in("load");
+        const out = bit.out();
+
+        load.pull(HIGH);
+        inn.pull(HIGH);
+        expect(out.voltage()).toBe(LOW);
         clock.tick();
-        expect(bit.out().voltage()).toBe(HIGH);
+        expect(out.voltage()).toBe(LOW);
         clock.tock();
-        expect(bit.out().voltage()).toBe(HIGH);
+        expect(out.voltage()).toBe(HIGH);
       });
     });
 

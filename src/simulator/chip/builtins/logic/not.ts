@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip"
 
 export function not(inn: Voltage): [Voltage] {
   return [inn === LOW ? HIGH : LOW];
@@ -13,7 +13,7 @@ export class Not extends Chip {
     super(["in"], ["out"]);
   }
 
-  eval() {
+  override eval() {
     const a = this.in("in").voltage();
     const [out] = not(a);
     this.out().pull(out);
@@ -25,7 +25,7 @@ export class Not16 extends Chip {
     super(["in[16]"], ["out[16]"]);
   }
 
-  eval() {
+  override eval() {
     const [n] = not16(this.in().busVoltage);
     this.out().busVoltage = n;
   }

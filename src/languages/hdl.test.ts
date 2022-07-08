@@ -1,10 +1,9 @@
-import { assert } from "@davidsouther/jiffies/assert.js";
-import { isErr, Ok } from "@davidsouther/jiffies/result.js";
-import { describe, expect, it } from "@davidsouther/jiffies/scope/index.js";
-import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl.js";
-import { IResult, Span, StringLike } from "./parser/base.js";
-import { tag } from "./parser/bytes.js";
-import { list } from "./parser/recipe.js";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl"
+import { IResult, Span, StringLike } from "./parser/base"
+import { tag } from "./parser/bytes"
+import { list } from "./parser/recipe"
 
 const AND_BUILTIN = `CHIP And {
     IN a, b;
@@ -35,46 +34,46 @@ describe("hdl language", () => {
   it("parses comments", () => {
     let parsed: IResult<StringLike>;
     parsed = TEST_ONLY.hdlIdentifier("a // comment");
-    expect(parsed).toEqual(Ok(["", "a"]));
+    expect(parsed).toBeOk(Ok(["", "a"]));
 
     parsed = TEST_ONLY.hdlIdentifier(`/* multi
     line */ a // more`);
-    expect(parsed).toEqual(Ok(["", "a"]));
+    expect(parsed).toBeOk(Ok(["", "a"]));
   });
 
   it("parses identifiers", () => {
     let parsed: IResult<StringLike>;
     parsed = TEST_ONLY.hdlIdentifier("inM");
-    expect(parsed).toEqual(Ok(["", "inM"]));
+    expect(parsed).toBeOk(Ok(["", "inM"]));
 
     parsed = TEST_ONLY.hdlIdentifier("a_b");
-    expect(parsed).toEqual(Ok(["", "a_b"]));
+    expect(parsed).toBeOk(Ok(["", "a_b"]));
   });
 
   it("parses in/out lists", () => {
     let parsed: IResult<PinDeclaration[]>;
 
     parsed = TEST_ONLY.pinList("inM");
-    expect(parsed).toEqual(Ok(["", [{ pin: "inM", width: 1 }]]));
+    expect(parsed).toBeOk(Ok(["", [{ pin: "inM", width: 1 }]]));
   });
 
   it("parses pin wiring", () => {
     let parsed: IResult<[PinParts, PinParts]>;
 
     parsed = TEST_ONLY.wire("a=a");
-    expect(parsed).toEqual(Ok(["", [{ pin: "a" }, { pin: "a" }]]));
+    expect(parsed).toBeOk(Ok(["", [{ pin: "a" }, { pin: "a" }]]));
 
     parsed = TEST_ONLY.wire("b = /* to */ a // things");
-    expect(parsed).toEqual(Ok(["", [{ pin: "b" }, { pin: "a" }]]));
+    expect(parsed).toBeOk(Ok(["", [{ pin: "b" }, { pin: "a" }]]));
 
     // parsed = TEST_ONLY.wire("b = 0");
-    // expect(parsed).toEqual(Ok(["", [{ pin: "b", start: 0, end: 0 }, {pin: "0", start: 0, end: 0}]]));
+    // expect(parsed).toBeOk(Ok(["", [{ pin: "b", start: 0, end: 0 }, {pin: "0", start: 0, end: 0}]]));
 
     parsed = TEST_ONLY.wire("b = False");
-    expect(parsed).toEqual(Ok(["", [{ pin: "b" }, { pin: "False" }]]));
+    expect(parsed).toBeOk(Ok(["", [{ pin: "b" }, { pin: "False" }]]));
 
     parsed = TEST_ONLY.wire("b = True");
-    expect(parsed).toEqual(Ok(["", [{ pin: "b" }, { pin: "True" }]]));
+    expect(parsed).toBeOk(Ok(["", [{ pin: "b" }, { pin: "True" }]]));
 
     // parsed = TEST_ONLY.wire("b = Foo");
     // expect(isErr(parsed)).toBe(true);
@@ -85,7 +84,7 @@ describe("hdl language", () => {
     let parser = list(TEST_ONLY.wire, tag(","));
 
     parsed = parser("a=a , b=b");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         [
@@ -101,22 +100,22 @@ describe("hdl language", () => {
     let parser = TEST_ONLY.wire;
 
     parsed = parser("a[2..4]=b");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok(["", [{ pin: "a", start: 2, end: 4 }, { pin: "b" }]])
     );
 
     parsed = parser("a=b[0]");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok(["", [{ pin: "a" }, { pin: "b", start: 0, end: 0 }]])
     );
 
     parsed = parser("a=b[2]");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok(["", [{ pin: "a" }, { pin: "b", start: 2, end: 2 }]])
     );
 
     parsed = parser("a[2..4]=b[10..12]");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         [
@@ -131,7 +130,7 @@ describe("hdl language", () => {
     let parsed: IResult<Part>;
 
     parsed = TEST_ONLY.part("Nand(a=a, b=b, out=out)");
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -159,7 +158,7 @@ describe("hdl language", () => {
     let parsed: IResult<"BUILTIN" | Part[]>;
 
     parsed = TEST_ONLY.parts(`PARTS: Not(a=a, o=o); And(b=b, c=c, i=i);`);
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         [
@@ -198,14 +197,14 @@ describe("hdl language", () => {
     );
 
     parsed = TEST_ONLY.parts(`BUILTIN;`);
-    expect(parsed).toEqual(Ok(["", "BUILTIN"]));
+    expect(parsed).toBeOk(Ok(["", "BUILTIN"]));
   });
 
   it("parses IN list", () => {
     let parsed: IResult<PinParts[]>;
 
     parsed = TEST_ONLY.inList(`IN a, b;`);
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         [
@@ -220,13 +219,13 @@ describe("hdl language", () => {
     let parsed: IResult<PinParts[]>;
 
     parsed = TEST_ONLY.outList(`OUT out;`);
-    expect(parsed).toEqual(Ok(["", [{ pin: "out", width: 1 }]]));
+    expect(parsed).toBeOk(Ok(["", [{ pin: "out", width: 1 }]]));
   });
 
   it("parses a file into a builtin", () => {
     const parsed = HdlParser(AND_BUILTIN);
 
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -244,7 +243,7 @@ describe("hdl language", () => {
 
   it("parses a file with parts", () => {
     const parsed = HdlParser(NOT_PARTS);
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -277,7 +276,7 @@ describe("hdl language", () => {
 
   it("parses a file without parts", () => {
     const parsed = HdlParser(NOT_NO_PARTS);
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {
@@ -293,7 +292,7 @@ describe("hdl language", () => {
   it("Parses a file with 16-bit pins", () => {
     const parsed = HdlParser(AND_16_BUILTIN);
 
-    expect(parsed).toEqual(
+    expect(parsed).toBeOk(
       Ok([
         "",
         {

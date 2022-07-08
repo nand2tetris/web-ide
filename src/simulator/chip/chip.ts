@@ -1,7 +1,7 @@
-import { assert, assertExists } from "@davidsouther/jiffies/assert.js";
-import { range } from "@davidsouther/jiffies/range.js";
-import { bin } from "../../util/twos.js";
-import { Clock } from "./clock.js";
+import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+import { range } from "@davidsouther/jiffies/lib/esm/range";
+import { bin } from "../../util/twos";
+import { Clock } from "./clock";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -53,13 +53,13 @@ export class Bus implements Pin {
   }
 
   toggle(bit = 0) {
-    const nextVoltage = this.voltage(bit) == LOW ? HIGH : LOW;
+    const nextVoltage = this.voltage(bit) === LOW ? HIGH : LOW;
     this.pull(nextVoltage, bit);
   }
 }
 
 export class InSubBus extends Bus {
-  constructor(private bus: Pin, private start: number, readonly width = 1) {
+  constructor(private bus: Pin, private start: number, override readonly width = 1) {
     super(bus.name);
     assert(
       start >= 0 && start + width <= bus.width,
@@ -68,28 +68,28 @@ export class InSubBus extends Bus {
     this.connect(bus);
   }
 
-  pull(voltage: Voltage, bit = 0) {
+  override pull(voltage: Voltage, bit = 0) {
     assert(bit >= 0 && bit < this.width);
     this.bus.pull(voltage, this.start + bit);
   }
 
-  voltage(bit = 0): Voltage {
+  override voltage(bit = 0): Voltage {
     assert(bit >= 0 && bit < this.width);
     return this.bus.voltage(this.start + bit);
   }
 
-  set busVoltage(voltage: number) {
+  override set busVoltage(voltage: number) {
     const high = this.bus.busVoltage & ~mask(this.width + this.start);
     const low = this.bus.busVoltage & mask(this.start);
     const mid = (voltage & mask(this.width)) << this.start;
     this.bus.busVoltage = high | mid | low;
   }
 
-  get busVoltage(): number {
+  override get busVoltage(): number {
     return (this.bus.busVoltage >> this.start) & mask(this.width);
   }
 
-  connect(bus: Pin): void {
+  override connect(bus: Pin): void {
     assert(
       this.start + this.width <= bus.width,
       `Mismatched InSubBus connection dimensions`
@@ -99,22 +99,22 @@ export class InSubBus extends Bus {
 }
 
 export class OutSubBus extends Bus {
-  constructor(private bus: Pin, private start: number, readonly width = 1) {
+  constructor(private bus: Pin, private start: number, override readonly width = 1) {
     super(bus.name);
     assert(start >= 0 && width <= bus.width, `Mismatched OutSubBus dimensions`);
     this.connect(bus);
   }
 
-  set busVoltage(voltage: number) {
+  override set busVoltage(voltage: number) {
     this.bus.busVoltage =
       (voltage & mask(this.width + this.start)) >> this.start;
   }
 
-  get busVoltage(): number {
+  override get busVoltage(): number {
     return this.bus.busVoltage & mask(this.width);
   }
 
-  connect(bus: Pin): void {
+  override connect(bus: Pin): void {
     assert(
       this.width <= bus.width,
       `Mismatched OutSubBus connection dimensions`
@@ -130,14 +130,14 @@ export class ConstantBus extends Bus {
 
   pullHigh(_ = 0) {}
   pullLow(_ = 0) {}
-  voltage(_ = 0): Voltage {
+  override voltage(_ = 0): Voltage {
     return (this.busVoltage & 0x1) as Voltage;
   }
 
-  set busVoltage(voltage: number) {
+  override set busVoltage(voltage: number) {
     // Noop
   }
-  get busVoltage(): number {
+  override get busVoltage(): number {
     return this.value;
   }
 }
@@ -330,12 +330,12 @@ export class Chip {
     }
 
     // Wrap the chipPin in an InBus when the chip side is dimensioned
-    if (from.start > 0 || from.width != chipPin.width) {
+    if (from.start > 0 || from.width !== chipPin.width) {
       chipPin = new InSubBus(chipPin, from.start, from.width);
     }
 
-    // Wrap the chipPin in an OutBus when the part side is dimensionsed
-    if (to.start > 0 || to.width != chipPin.width) {
+    // Wrap the chipPin in an OutBus when the part side is dimensioned
+    if (to.start > 0 || to.width !== chipPin.width) {
       chipPin = new OutSubBus(chipPin, to.start, to.width);
     }
 
@@ -354,13 +354,13 @@ export class Chip {
     from.width ??= chipPin.width;
 
     // Wrap the partPin in an InBus when the part side is dimensioned
-    if (to.start > 0 || to.width != chipPin.width) {
+    if (to.start > 0 || to.width !== chipPin.width) {
       partPin = new InSubBus(partPin, to.start, to.width);
     }
 
     // Wrap the partPin in an OutBus when the chip side is dimensioned
     if (!["true", "false"].includes(chipPin.name)) {
-      if (from.start > 0 || from.width != chipPin.width) {
+      if (from.start > 0 || from.width !== chipPin.width) {
         partPin = new OutSubBus(partPin, from.start, from.width);
       }
     }
@@ -402,6 +402,25 @@ export class High extends Chip {
   constructor() {
     super([], []);
     this.outs.insert(TRUE_BUS);
+  }
+}
+
+export class ClockedChip extends Chip {
+  override get clocked(): boolean {
+    return true;
+  }
+
+  #subscription = Clock.get().$.subscribe(({ level }) => {
+    if (level === LOW) {
+      this.tock();
+    } else {
+      this.tick();
+    }
+  });
+
+  override remove() {
+    this.#subscription.unsubscribe();
+    super.remove();
   }
 }
 

@@ -24,7 +24,7 @@ Edit the `package.json` as such:
 
 ```
    dependencies: {
--    "@davidsouther/jiffies": "1.0.0",
+-    "@davidsouther/jiffies": "^2.0.0",
 +    "@davidsouther/jiffies": "file:../jiffies",
 ```
 

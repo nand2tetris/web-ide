@@ -9,9 +9,7 @@
     "@rollup/plugin-node-resolve": "^13.2.1",
     "prettier": "^2.6.2",
     "react-router-dom": "^6.3.0",
-    "sass": "^1.53.0"
-  },
-  "dependencies": {
+    "sass": "^1.53.0",
     "@davidsouther/jiffies": "^2.0.0",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",

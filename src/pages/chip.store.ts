@@ -141,7 +141,7 @@ export class ChipPageStore {
     }
     this.chip = Ok(maybeChip);
     this.statusLine(`Compiled ${this.chip.name}`);
-    this.storage["chip/chip"] = this.chip.name!;
+    this.chipName = this.storage["chip/chip"] = this.chip.name!;
     this.chip.eval();
     this.next();
   }

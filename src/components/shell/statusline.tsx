@@ -1,14 +1,14 @@
-import { createContext, useContext } from "react";
-
-export const StatusLineContext = createContext({
-  status: "",
-  setStatus(status: string) {
-    this.status = status;
-  },
-});
+import { useContext, useEffect, useState } from "react";
+import { AppContext } from "../../App.context";
 
 function StatusLine() {
-  const { status } = useContext(StatusLineContext);
+  const { statusLine } = useContext(AppContext);
+  const [status, setStatus] = useState("");
+  useEffect(() => {
+    const sub = statusLine.subscribe(setStatus);
+    return () => sub.unsubscribe();
+  }, [statusLine]);
+  statusLine.subscribe();
   return <div>{status}</div>;
 }
 

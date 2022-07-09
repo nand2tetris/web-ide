@@ -1,8 +1,8 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
-import * as Memory from "./01_memory"
-import * as CPU from "./02_cpu"
-import * as Computer from "./03_computer"
+import * as Memory from "./01_memory";
+import * as CPU from "./02_cpu";
+import * as Computer from "./03_computer";
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/05");

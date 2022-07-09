@@ -6,8 +6,8 @@ import {
   TstOutputListOperation,
   TstOutputSpec,
   tstParser,
-} from "./tst"
-import { IResult } from "./parser/base"
+} from "./tst";
+import { IResult } from "./parser/base";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -209,7 +209,8 @@ describe("tst language", () => {
     let parsed: IResult<Tst>;
 
     parsed = tstParser(MEM_TST);
-    expect(parsed).toBeOk(Ok([
+    expect(parsed).toBeOk(
+      Ok([
         "",
         {
           lines: [
@@ -234,8 +235,8 @@ describe("tst language", () => {
               ],
             },
           ],
-        }
-      ]
-    ));
+        },
+      ])
+    );
   });
 });

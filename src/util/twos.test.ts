@@ -1,4 +1,4 @@
-import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos"
+import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos";
 
 describe("twos", () => {
   it("formats as base 16", () => {

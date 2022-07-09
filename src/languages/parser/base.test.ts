@@ -1,4 +1,4 @@
-import { Span } from "./base"
+import { Span } from "./base";
 
 describe("Parser Base", () => {
   describe("Span", () => {

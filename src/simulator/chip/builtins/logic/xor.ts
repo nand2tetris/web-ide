@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip"
+import { Chip, HIGH, LOW, Voltage } from "../../chip";
 
 export function xor(a: Voltage, b: Voltage): [Voltage] {
   return [(a === HIGH && b === LOW) || (a === LOW && b === HIGH) ? HIGH : LOW];

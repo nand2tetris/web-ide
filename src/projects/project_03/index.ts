@@ -1,13 +1,13 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
-import * as Bit from "./01_bit"
-import * as Register from "./02_register"
-import * as PC from "./03_pc"
-import * as RAM8 from "./04_ram8"
-import * as RAM64 from "./05_ram64"
-import * as RAM512 from "./06_ram512"
-import * as RAM4k from "./07_ram4k"
-import * as RAM16k from "./08_ram16k"
+import * as Bit from "./01_bit";
+import * as Register from "./02_register";
+import * as PC from "./03_pc";
+import * as RAM8 from "./04_ram8";
+import * as RAM64 from "./05_ram64";
+import * as RAM512 from "./06_ram512";
+import * as RAM4k from "./07_ram4k";
+import * as RAM16k from "./08_ram16k";
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/03");

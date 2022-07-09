@@ -1,5 +1,5 @@
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { ParseErrors, Parser } from "./base"
+import { ParseErrors, Parser } from "./base";
 
 // https://docs.rs/nom/latest/nom/multi/index.html
 // repeat	Runs the embedded parser a specified number of times. Returns the results in a Vec.

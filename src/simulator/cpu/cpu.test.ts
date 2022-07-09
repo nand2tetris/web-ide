@@ -1,6 +1,6 @@
-import { CPU } from "./cpu"
-import { Memory } from "./memory"
-import { HACK } from "../../testing/mult"
+import { CPU } from "./cpu";
+import { Memory } from "./memory";
+import { HACK } from "../../testing/mult";
 
 describe("CPU", () => {
   it("executes instructions", () => {

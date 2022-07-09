@@ -1,6 +1,6 @@
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { IResult, StringLike } from "./base"
-import { comment, eolComment, identifier, list, token } from "./recipe"
+import { IResult, StringLike } from "./base";
+import { comment, eolComment, identifier, list, token } from "./recipe";
 
 describe("Parser Recipes", () => {
   describe("comments", () => {

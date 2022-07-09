@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip"
+import { Chip, HIGH, LOW, Voltage } from "../../chip";
 
 export function or(a: Voltage, b: Voltage): [Voltage] {
   return [a === 1 || b === 1 ? HIGH : LOW];

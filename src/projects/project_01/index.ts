@@ -1,20 +1,20 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 
-import * as Not from "./01_not"
-import * as And from "./02_and"
-import * as Or from "./03_or"
-import * as Xor from "./04_xor"
-import * as Mux from "./05_mux"
-import * as DMux from "./06_dmux"
-import * as Not16 from "./07_not16"
-import * as And16 from "./08_and16"
-import * as Or16 from "./09_or16"
-import * as Mux16 from "./10_mux16"
-import * as Mux4Way16 from "./11_mux4way16"
-import * as Mux8Way16 from "./12_mux8way16"
-import * as DMux4Way from "./13_dmux4way"
-import * as DMux8Way from "./14_dmux8way"
-import * as Or8Way from "./15_or8way"
+import * as Not from "./01_not";
+import * as And from "./02_and";
+import * as Or from "./03_or";
+import * as Xor from "./04_xor";
+import * as Mux from "./05_mux";
+import * as DMux from "./06_dmux";
+import * as Not16 from "./07_not16";
+import * as And16 from "./08_and16";
+import * as Or16 from "./09_or16";
+import * as Mux16 from "./10_mux16";
+import * as Mux4Way16 from "./11_mux4way16";
+import * as Mux8Way16 from "./12_mux8way16";
+import * as DMux4Way from "./13_dmux4way";
+import * as DMux8Way from "./14_dmux8way";
+import * as Or8Way from "./15_or8way";
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/01");

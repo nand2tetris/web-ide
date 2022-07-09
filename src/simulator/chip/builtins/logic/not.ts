@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip"
+import { Chip, HIGH, LOW, Voltage } from "../../chip";
 
 export function not(inn: Voltage): [Voltage] {
   return [inn === LOW ? HIGH : LOW];

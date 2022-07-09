@@ -1,6 +1,6 @@
-import { Chip, Voltage } from "../../chip"
-import { or } from "../logic/or"
-import { halfAdder } from "./half_adder"
+import { Chip, Voltage } from "../../chip";
+import { or } from "../logic/or";
+import { halfAdder } from "./half_adder";
 
 export function fullAdder(
   a: Voltage,

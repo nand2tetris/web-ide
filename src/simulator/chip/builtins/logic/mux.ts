@@ -1,4 +1,4 @@
-import { Chip, LOW, Voltage } from "../../chip"
+import { Chip, LOW, Voltage } from "../../chip";
 
 export function mux(a: Voltage, b: Voltage, sel: Voltage): [Voltage] {
   return [sel === LOW ? a : b];

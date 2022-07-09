@@ -1,8 +1,8 @@
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
-import { bin } from "../../util/twos"
-import { parse } from "./builder"
-import { Chip, HIGH, LOW } from "./chip"
+import { bin } from "../../util/twos";
+import { parse } from "./builder";
+import { Chip, HIGH, LOW } from "./chip";
 
 describe("Chip Builder", () => {
   it("builds a chip from a string", () => {

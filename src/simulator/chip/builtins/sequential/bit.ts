@@ -1,4 +1,4 @@
-import { ClockedChip, HIGH, LOW, Voltage } from "../../chip"
+import { ClockedChip, HIGH, LOW, Voltage } from "../../chip";
 
 export class Bit extends ClockedChip {
   bit: Voltage = LOW;

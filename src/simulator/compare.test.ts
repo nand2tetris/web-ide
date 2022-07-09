@@ -1,6 +1,6 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
-import { cmpParser } from "../languages/cmp"
-import { compare, diff } from "./compare"
+import { cmpParser } from "../languages/cmp";
+import { compare, diff } from "./compare";
 
 const a = `| 0 | 0 | 0 |
 | 0 | 1 | 1 |

@@ -18,11 +18,10 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
       - name: Install
         run: npm install
       - name: CI
-        run: npm ci
+        run: npm run ci
         env:
           CI: true
       - name: CD

@@ -5,6 +5,7 @@
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
+  "homepage": "https://davidsouther.github.io/computron5k",
   "devDependencies": {
     "@davidsouther/jiffies": "^2.0.0",
     "@rollup/plugin-node-resolve": "^13.2.1",
@@ -13,15 +14,16 @@
     "@testing-library/user-event": "^13.5.0",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.11.41",
-    "@types/react-dom": "^18.0.5",
     "@types/react": "^18.0.14",
+    "@types/react-dom": "^18.0.5",
+    "gh-pages": "^4.0.0",
     "prettier": "^2.6.2",
     "raw.macro": "^0.5.0",
+    "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.3",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
-    "react": "^18.2.0",
     "remark-gfm": "^3.0.1",
     "rxjs": "^7.5.5",
     "sass": "^1.53.0",
@@ -30,15 +32,17 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
-    "ci": "npm run check && npm run test",
     "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!remark-markdown)/\"",
+    "build": "react-scripts build",
     "format": "prettier --write public/ src/",
     "fix": "eslint --fix src/",
+    "ci": "npm run check && npm run test",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
     "check:types": "tsc --noEmit",
     "check:format": "prettier --check public/ src/",
-    "check:lint": "eslint src/"
+    "check:lint": "eslint src/",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "eslintConfig": {
     "extends": [

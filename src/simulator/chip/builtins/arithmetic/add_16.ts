@@ -1,4 +1,4 @@
-import { Chip } from "../../chip"
+import { Chip } from "../../chip";
 
 export function add16(a: number, b: number): [number] {
   return [(a + b) & 0xffff];

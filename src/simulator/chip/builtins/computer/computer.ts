@@ -1,5 +1,5 @@
-import { Chip } from "../../chip"
-import { RAM } from "../sequential/ram"
+import { Chip } from "../../chip";
+import { RAM } from "../sequential/ram";
 
 export class ROM32K extends RAM {
   constructor() {

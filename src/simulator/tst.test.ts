@@ -1,5 +1,5 @@
-import { Nand } from "./chip/builtins/logic/nand"
-import { Output } from "./output"
+import { Nand } from "./chip/builtins/logic/nand";
+import { Output } from "./output";
 import {
   ChipTest,
   TestSetInstruction,
@@ -7,7 +7,7 @@ import {
   TestOutputInstruction,
   TestTickInstruction,
   TestTockInstruction,
-} from "./tst"
+} from "./tst";
 
 describe("Simulator Test", () => {
   describe("Full tests", () => {

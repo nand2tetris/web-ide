@@ -1,4 +1,4 @@
-import { alu, COMMANDS, Flags } from "./alu"
+import { alu, COMMANDS, Flags } from "./alu";
 
 describe("alu", () => {
   it("calculates", () => {

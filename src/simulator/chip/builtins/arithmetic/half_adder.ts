@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip"
+import { Chip, HIGH, LOW, Voltage } from "../../chip";
 
 export function halfAdder(a: Voltage, b: Voltage): [Voltage, Voltage] {
   const sum = (a === 1 && b === 0) || (a === 0 && b === 1) ? HIGH : LOW;

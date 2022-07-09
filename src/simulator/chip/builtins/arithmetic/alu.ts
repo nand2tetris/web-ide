@@ -1,5 +1,5 @@
-import { alu, Flags } from "../../../cpu/alu"
-import { Chip, HIGH, LOW } from "../../chip"
+import { alu, Flags } from "../../../cpu/alu";
+import { Chip, HIGH, LOW } from "../../chip";
 
 export class ALUNoStat extends Chip {
   constructor() {

@@ -1,5 +1,5 @@
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { cmpParser } from "./cmp"
+import { cmpParser } from "./cmp";
 
 describe("cmp language", () => {
   it("parses a file into lines", () => {

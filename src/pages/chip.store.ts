@@ -15,7 +15,6 @@ import * as make from "../simulator/chip/builder";
 import { getBuiltinChip } from "../simulator/chip/builtins/index";
 import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
-import { Clock } from "../simulator/chip/clock";
 import * as not from "../projects/project_01/01_not";
 
 export const PROJECT_NAMES = [

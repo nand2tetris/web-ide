@@ -1,7 +1,7 @@
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { ParseErrors, Parser, StringLike } from "./base"
-import { alt } from "./branch"
-import { tag } from "./bytes"
+import { ParseErrors, Parser, StringLike } from "./base";
+import { alt } from "./branch";
+import { tag } from "./bytes";
 
 // Tests if byte is ASCII alphabetic: A-Z, a-z
 export const is_ascii = (i: string) =>

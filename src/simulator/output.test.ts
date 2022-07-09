@@ -1,6 +1,6 @@
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
-import { Output } from "./output"
-import { Test, TestOutputInstruction } from "./tst"
+import { Output } from "./output";
+import { Test, TestOutputInstruction } from "./tst";
 
 class OutputTest extends Test {
   private readonly vars: Map<string, number | string>;
@@ -22,15 +22,18 @@ class OutputTest extends Test {
 }
 
 describe("Test Output Handler", () => {
-  const state = cleanState(() => ({
-    test: new OutputTest([
-      ["time", "14+"],
-      ["a", 1],
-      ["b", 20],
-      ["in", 0],
-      ["out", -1],
-    ]),
-  }), beforeEach);
+  const state = cleanState(
+    () => ({
+      test: new OutputTest([
+        ["time", "14+"],
+        ["a", 1],
+        ["b", 20],
+        ["in", 0],
+        ["out", -1],
+      ]),
+    }),
+    beforeEach
+  );
 
   it("outputs padded values", () => {
     const outA = new Output("a", "D", 1, 3, 3);

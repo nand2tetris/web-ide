@@ -1,8 +1,8 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
-import { HdlParser } from "../../languages/hdl"
-import { ParseError } from "../../languages/parser/base"
-import { getBuiltinChip } from "./builtins/index"
-import { Chip, Connection } from "./chip"
+import { HdlParser } from "../../languages/hdl";
+import { ParseError } from "../../languages/parser/base";
+import { getBuiltinChip } from "./builtins/index";
+import { Chip, Connection } from "./chip";
 
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {

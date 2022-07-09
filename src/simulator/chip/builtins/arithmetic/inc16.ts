@@ -1,5 +1,5 @@
-import { Chip } from "../../chip"
-import { add16 } from "./add_16"
+import { Chip } from "../../chip";
+import { add16 } from "./add_16";
 
 export function inc16(n: number): [number] {
   return add16(n, 1);

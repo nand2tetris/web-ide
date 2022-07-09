@@ -1,16 +1,16 @@
-import { Parser, StringLike } from "./base"
-import { alt } from "./branch"
-import { tag, take_until } from "./bytes"
+import { Parser, StringLike } from "./base";
+import { alt } from "./branch";
+import { tag, take_until } from "./bytes";
 import {
   alpha1,
   alphanumeric1,
   line_ending,
   multispace0,
   multispace1,
-} from "./character"
-import { eof, map, opt, recognize, value } from "./combinator"
-import { many0 } from "./multi"
-import { delimited, pair, preceded, terminated, tuple } from "./sequence"
+} from "./character";
+import { eof, map, opt, recognize, value } from "./combinator";
+import { many0 } from "./multi";
+import { delimited, pair, preceded, terminated, tuple } from "./sequence";
 
 export const line = (): Parser<StringLike> =>
   terminated(

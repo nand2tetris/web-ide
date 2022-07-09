@@ -1,8 +1,8 @@
 import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert";
-import { Tst, TstOutputSpec } from "../languages/tst"
-import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip"
-import { Clock } from "./chip/clock"
-import { Output } from "./output"
+import { Tst, TstOutputSpec } from "../languages/tst";
+import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip";
+import { Clock } from "./chip/clock";
+import { Output } from "./output";
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];

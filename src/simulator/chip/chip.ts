@@ -59,7 +59,11 @@ export class Bus implements Pin {
 }
 
 export class InSubBus extends Bus {
-  constructor(private bus: Pin, private start: number, override readonly width = 1) {
+  constructor(
+    private bus: Pin,
+    private start: number,
+    override readonly width = 1
+  ) {
     super(bus.name);
     assert(
       start >= 0 && start + width <= bus.width,
@@ -99,7 +103,11 @@ export class InSubBus extends Bus {
 }
 
 export class OutSubBus extends Bus {
-  constructor(private bus: Pin, private start: number, override readonly width = 1) {
+  constructor(
+    private bus: Pin,
+    private start: number,
+    override readonly width = 1
+  ) {
     super(bus.name);
     assert(start >= 0 && width <= bus.width, `Mismatched OutSubBus dimensions`);
     this.connect(bus);

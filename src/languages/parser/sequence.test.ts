@@ -1,6 +1,6 @@
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { IResult, StringLike } from "./base"
-import { tag } from "./bytes"
+import { IResult, StringLike } from "./base";
+import { tag } from "./bytes";
 import {
   delimited,
   pair,
@@ -8,7 +8,7 @@ import {
   separated,
   terminated,
   tuple,
-} from "./sequence"
+} from "./sequence";
 
 describe("Parser sequences", () => {
   describe("tuple", () => {

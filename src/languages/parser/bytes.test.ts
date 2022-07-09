@@ -1,5 +1,5 @@
 import { Err, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { tag, take } from "./bytes"
+import { tag, take } from "./bytes";
 
 describe("TS Parser Combinator", () => {
   describe("bytes", () => {

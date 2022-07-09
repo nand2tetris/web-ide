@@ -1,9 +1,9 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl"
-import { IResult, Span, StringLike } from "./parser/base"
-import { tag } from "./parser/bytes"
-import { list } from "./parser/recipe"
+import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl";
+import { IResult, Span, StringLike } from "./parser/base";
+import { tag } from "./parser/bytes";
+import { list } from "./parser/recipe";
 
 const AND_BUILTIN = `CHIP And {
     IN a, b;

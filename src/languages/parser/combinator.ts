@@ -1,6 +1,12 @@
 // https://docs.rs/nom/latest/nom/combinator/index.html
 
-import { Err, isErr, isOk, Ok, Option } from "@davidsouther/jiffies/lib/esm/result";
+import {
+  Err,
+  isErr,
+  isOk,
+  Ok,
+  Option,
+} from "@davidsouther/jiffies/lib/esm/result";
 import {
   ParseError,
   ParseErrors,
@@ -8,7 +14,7 @@ import {
   ParseIncomplete,
   Parser,
   StringLike,
-} from "./base"
+} from "./base";
 
 // Succeeds if all the input has been consumed by its child parser.
 export const allConsuming = <T>(parser: Parser<T>): Parser<T> => {

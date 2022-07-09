@@ -1,5 +1,10 @@
-import { isSome, None, Option, Some } from "@davidsouther/jiffies/lib/esm/result";
-import { ClockedChip, HIGH } from "../../chip"
+import {
+  isSome,
+  None,
+  Option,
+  Some,
+} from "@davidsouther/jiffies/lib/esm/result";
+import { ClockedChip, HIGH } from "../../chip";
 
 export class RAM extends ClockedChip {
   private ram: Int16Array;

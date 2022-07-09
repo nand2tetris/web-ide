@@ -235,12 +235,12 @@ describe("Chip", () => {
       })();
 
       const notPart = new Not();
-          threeChip.wire(notPart, [
-            {
-              from: { name: "out", start: 1, width: 1 },
-              to: { name: "out", start: 0, width: 1 },
-            },
-          ]);
+      threeChip.wire(notPart, [
+        {
+          from: { name: "out", start: 1, width: 1 },
+          to: { name: "out", start: 0, width: 1 },
+        },
+      ]);
       const outPin = notPart.out();
 
       outPin.busVoltage = 0b0;

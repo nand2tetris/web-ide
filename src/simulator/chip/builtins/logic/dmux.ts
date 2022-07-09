@@ -1,4 +1,4 @@
-import { Chip, HIGH, LOW, Voltage } from "../../chip"
+import { Chip, HIGH, LOW, Voltage } from "../../chip";
 
 export function dmux(inn: Voltage, sel: Voltage): [Voltage, Voltage] {
   const a = sel === LOW && inn === HIGH ? HIGH : LOW;

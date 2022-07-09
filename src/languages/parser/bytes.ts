@@ -1,5 +1,5 @@
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { ParseErrors, Parser, StringLike } from "./base"
+import { ParseErrors, Parser, StringLike } from "./base";
 
 // https://docs.rs/nom/latest/nom/bytes/complete/index.html
 // escaped	Matches a byte string with escaped characters.

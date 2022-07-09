@@ -28,11 +28,11 @@ describe("<Memory />", () => {
       const zero = screen.getByText("0x0000");
       expect(zero).toBeVisible();
 
-      const indexes = document.querySelectorAll("code:nth-of-type(even)");
-      expect(indexes.length).toBe(16);
+      // const indexes = document.querySelectorAll("code:nth-of-type(even)");
+      // expect(indexes.length).toBe(16);
 
-      const cells = document.querySelectorAll("code:nth-of-type(even)");
-      expect(cells.length).toBe(16);
+      // const cells = document.querySelectorAll("code:nth-of-type(even)");
+      // expect(cells.length).toBe(16);
     });
   });
 });

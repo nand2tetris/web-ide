@@ -1,4 +1,4 @@
-import { asm } from "./asm"
+import { asm } from "./asm";
 
 describe("asm", () => {
   it("converts int16 to asm", () => {

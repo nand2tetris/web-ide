@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/macro";
 import { useContext, useEffect, useState } from "react";
 import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
@@ -17,7 +18,9 @@ export const Settings = () => {
     <dialog open={open}>
       <article>
         <header>
-          <p>Settings</p>
+          <p>
+            <Trans>Settings</Trans>
+          </p>
           <a
             style={{ color: "rgba(0, 0, 0, 0)" }}
             className="close"
@@ -32,8 +35,12 @@ export const Settings = () => {
         </header>
         <main>
           <dl>
-            <header>Project</header>
-            <dt>Files</dt>
+            <header>
+              <Trans>Project</Trans>
+            </header>
+            <dt>
+              <Trans>Files</Trans>
+            </dt>
             <dd>
               <button
                 onClick={() => {
@@ -43,7 +50,7 @@ export const Settings = () => {
                   // statusLine.update("Reset files in local storage");
                 }}
               >
-                Reset
+                <Trans>Reset</Trans>
               </button>
               <button
                 onClick={() => {
@@ -51,17 +58,19 @@ export const Settings = () => {
                   // statusLine.update("Loaded sample solutions...");
                 }}
               >
-                Solutions
+                <Trans>Solutions</Trans>
               </button>
             </dd>
-            <dt>References</dt>
+            <dt>
+              <Trans>References</Trans>
+            </dt>
             <dd>
               <a
                 href="https://github.com/davidsouther/computron5k"
                 target="_blank"
                 rel="noreferrer"
               >
-                Github
+                <Trans>Github</Trans>
               </a>
             </dd>
           </dl>

@@ -1,6 +1,10 @@
+import { Trans } from "@lingui/macro";
+
 const Home = () => (
   <>
-    <h1>NAND2Tetris Web IDE</h1>
+    <h1>
+      <Trans>NAND2Tetris Web IDE</Trans>
+    </h1>
   </>
 );
 

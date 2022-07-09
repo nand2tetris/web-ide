@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { ParseErrors, Parser, StringLike } from "./base";
 
@@ -13,7 +14,7 @@ export const is_not = (chars: string): Parser<StringLike> => {
     let d = 0;
     while (d < i.length && !chars.includes(m[d])) d++;
     if (d === 0)
-      return ParseErrors.error("is_not found immediately", { span: i });
+      return ParseErrors.error(t`is_not found immediately`, { span: i });
     return Ok([i.substring(d), i.substring(0, d)]);
   };
   return is_not;
@@ -50,7 +51,7 @@ export const take_until = (p: Parser<StringLike>): Parser<StringLike> => {
       i = i.substring(1);
       if (i.length === 0) {
         if (noInput) {
-          return ParseErrors.failure("take_until went past end of input", {
+          return ParseErrors.failure(t`take_until went past end of input`, {
             span: i,
           });
         } else {
@@ -70,15 +71,15 @@ export const tag = (s: string | RegExp): Parser<StringLike> => {
       ? (i) =>
           i.indexOf(s) === 0
             ? Ok([i.substring(s.length), s])
-            : ParseErrors.error("tag not found", {
-                cause: `tag '${s}'`,
+            : ParseErrors.error(t`tag not found`, {
+                cause: t`tag '${s}'`,
                 span: i,
               })
       : (i) => {
           let m = i.toString().match(s);
           if (m === null)
-            return ParseErrors.error("tag did not match", {
-              cause: `tag ${s}`,
+            return ParseErrors.error(t`tag did not match`, {
+              cause: t`tag ${s}`,
               span: i,
             });
           let o = m[0];

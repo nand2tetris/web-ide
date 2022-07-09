@@ -1,5 +1,6 @@
 // https://docs.rs/nom/latest/nom/branch/index.html
 
+import { t } from "@lingui/macro";
 import { isOk } from "@davidsouther/jiffies/lib/esm/result";
 import { ParseErrors, Parser } from "./base";
 
@@ -13,7 +14,7 @@ export const alt =
         return result;
       }
     }
-    return ParseErrors.error("alt did not match any branches.", { span: i });
+    return ParseErrors.error(t`alt did not match any branches.`, { span: i });
   };
 
 // permutation	Applies a list of parsers in any order.

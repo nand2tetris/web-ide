@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import { Subject, map } from "rxjs";
 
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
@@ -18,33 +19,44 @@ import { compare, Diff } from "../simulator/compare";
 import * as not from "../projects/project_01/01_not";
 
 export const PROJECT_NAMES = [
-  ["01", "Project 1"],
-  ["02", "Project 2"],
-  ["03", "Project 3"],
-  ["05", "Project 5"],
+  ["01", t`Project 1`],
+  ["02", t`Project 2`],
+  ["03", t`Project 3`],
+  ["05", t`Project 5`],
 ];
 
 export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
-    "Not",
-    "And",
-    "Or",
-    "XOr",
-    "Mux",
-    "DMux",
-    "Not16",
-    "And16",
-    "Or16",
-    "Mux16",
-    "Mux4Way16",
-    "Mux8Way16",
-    "DMux4Way",
-    "DMux8Way",
-    "Or8Way",
+    t`Not`,
+    t`And`,
+    t`Or`,
+    t`XOr`,
+    t`Mux`,
+    t`DMux`,
+    t`Not16`,
+    t`And16`,
+    t`Or16`,
+    t`Mux16`,
+    t`Mux4Way16`,
+    t`Mux8Way16`,
+    t`DMux4Way`,
+    t`DMux8Way`,
+    t`Or8Way`,
   ],
-  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
-  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
-  "05": ["Memory", "CPU", "Computer"],
+  "02": [t`HalfAdder`, t`FullAdder`, t`Add16`, t`Inc16`, t`AluNoStat`, t`ALU`],
+
+  "03": [
+    t`Bit`,
+    t`Register`,
+    t`PC`,
+    t`RAM8`,
+    t`RAM64`,
+    t`RAM512`,
+    t`RAM4k`,
+    t`RAM16k`,
+  ],
+
+  "05": [t`Memory`, t`CPU`, t`Computer`],
 };
 
 export class ChipPageStore {
@@ -140,7 +152,7 @@ export class ChipPageStore {
       return;
     }
     this.chip = Ok(maybeChip);
-    this.statusLine(`Compiled ${this.chip.name}`);
+    this.statusLine(t`Compiled ${this.chip.name}`);
     this.chipName = this.storage["chip/chip"] = this.chip.name!;
     this.chip.eval();
     this.next();
@@ -192,7 +204,7 @@ export class ChipPageStore {
       this.statusLine(display(Err(tst)));
       return;
     }
-    this.statusLine("Parsed tst");
+    this.statusLine(t`Parsed tst`);
 
     this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
 
@@ -215,11 +227,11 @@ export class ChipPageStore {
     ]);
 
     if (isErr(cmp)) {
-      this.statusLine(`Error parsing cmp file!`);
+      this.statusLine(t`Error parsing cmp file!`);
       return;
     }
     if (isErr(out)) {
-      this.statusLine(`Error parsing out file!`);
+      this.statusLine(t`Error parsing out file!`);
       return;
     }
 

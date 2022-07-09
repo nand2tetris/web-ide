@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/macro";
 import { Diff } from "../simulator/compare";
 
 export const DiffPanel = ({
@@ -9,15 +10,19 @@ export const DiffPanel = ({
 }) => {
   return ran ? (
     <>
-      <span>Failed {diffs.length} assertions</span>
+      <span>
+        <Trans>Failed {diffs.length} assertions</Trans>
+      </span>
       <ol>
         {diffs.map(({ a, b, row, col }) => (
           <li key={`${row}:${col}`}>
-            Expected <del>{a}</del>
-            Actual <ins>{b}</ins>
-            <span>
-              at {row}:{col}
-            </span>
+            <Trans>
+              Expected <del>{a}</del>
+              Actual <ins>{b}</ins>
+              <span>
+                at {row}:{col}
+              </span>
+            </Trans>
           </li>
         ))}
       </ol>

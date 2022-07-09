@@ -1,4 +1,5 @@
 // https://docs.rs/nom/latest/nom/index.html
+import { t } from "@lingui/macro";
 
 /** Base utilities for a common parser combinator toolkit. */
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
@@ -71,7 +72,7 @@ export class Span implements StringLike {
   ) {
     assert(
       end <= str.length,
-      "Creating Span longer than underlying StringLike"
+      t`Creating Span longer than underlying StringLike`
     );
 
     if (str instanceof Span) {
@@ -104,7 +105,7 @@ export class Span implements StringLike {
   }
 
   substring(start: number, end: number = this.length): StringLike {
-    assert(start >= 0, "Cannot use negative substring");
+    assert(start >= 0, t`Cannot use negative substring`);
     assert(end >= start);
     return new Span(this, start, end);
   }
@@ -113,12 +114,12 @@ export class Span implements StringLike {
 export type ParseErrorType = ParseErrorError | ParseIncomplete | ParseFailure;
 
 export class ParseErrorError extends ParseError {
-  override readonly name = "Parse Error";
+  override readonly name = t`Parse Error`;
 }
 
 /** Error indicating how much input is necessary */
 export class ParseIncomplete extends ParseError {
-  override readonly name = "Parse Incomplete";
+  override readonly name = t`Parse Incomplete`;
 
   constructor(readonly needed: number, context?: ErrorContext) {
     super(context);
@@ -127,7 +128,7 @@ export class ParseIncomplete extends ParseError {
 
 /** Unrecoverable error */
 export class ParseFailure extends ParseError {
-  override readonly name = "Parse Failure";
+  override readonly name = t`Parse Failure`;
 }
 
 export const ParseErrors = {

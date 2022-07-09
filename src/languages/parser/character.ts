@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { ParseErrors, Parser, StringLike } from "./base";
 import { alt } from "./branch";
@@ -73,7 +74,7 @@ export const char =
   (i) =>
     i.substring(0, 1) === c
       ? Ok([i.substring(1), c])
-      : ParseErrors.error("char not found", { cause: c, span: i });
+      : ParseErrors.error(t`char not found`, { cause: c, span: i });
 
 // Recognizes the string “\r\n”.
 export const crlf = () => tag("\r\n");

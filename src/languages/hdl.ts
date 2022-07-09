@@ -1,5 +1,6 @@
 /** Reads and parses HDL chip descriptions. */
 
+import { t } from "@lingui/macro";
 import { isErr, isNone, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { IResult, ParseErrors, Parser, StringLike } from "./parser/base";
 import { alt } from "./parser/branch";
@@ -73,7 +74,7 @@ function pin(toPin: StringLike): IResult<PinParts> {
       /^(?<pin>[0-9a-zA-Z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
     );
   if (!match) {
-    return ParseErrors.failure("toPin expected pin");
+    return ParseErrors.failure(t`could not make a pin from ${toPin}`);
   }
 
   const matched = match[0];
@@ -102,7 +103,7 @@ const partParser = tuple(
 const part: Parser<Part> = (i) => {
   const parse = partParser(i);
   if (isErr(parse)) {
-    return ParseErrors.error("part parser has no identifier");
+    return ParseErrors.error(t`part parser has no identifier`);
   }
   const [input, [name, wires]] = Ok(parse);
   const part: Part = {

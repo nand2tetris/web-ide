@@ -1,6 +1,5 @@
 import { Suspense, useEffect, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { Subject } from "rxjs";
 
 import { LocalStorageFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";

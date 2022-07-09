@@ -24,7 +24,7 @@ function App() {
     <StatusLineContext.Provider value={{ status, setStatus }}>
       <StorageContext.Provider value={fs}>
         <Settings />
-        <Router>
+        <Router basename={process.env.PUBLIC_URL}>
           <Header urls={urls} />
           <main className="flex flex-1">
             <Suspense fallback={<div>Loading...</div>}>

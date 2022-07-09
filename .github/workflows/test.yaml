@@ -1,8 +1,6 @@
 name: Run Javascript Tests
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
@@ -21,7 +19,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      - run: npm install
-      - run: npm ci
+      - name: Install
+        run: npm install
+      - name: CI
+        run: npm ci
         env:
           CI: true

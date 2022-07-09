@@ -1,15 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { StorageContext } from "../../util/storage";
+import { useContext, useEffect, useState } from "react";
 import * as projects from "../../projects";
-import { Subject } from "rxjs";
-
-export const SettingsContext = createContext<{ open: Subject<void> }>({
-  open: new Subject(),
-});
+import { AppContext } from "../../App.context";
 
 export const Settings = () => {
-  const fs = useContext(StorageContext);
-  const settings = useContext(SettingsContext);
+  const { settings, fs } = useContext(AppContext);
 
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -25,13 +19,16 @@ export const Settings = () => {
         <header>
           <p>Settings</p>
           <a
+            style={{ color: "rgba(0, 0, 0, 0)" }}
             className="close"
-            href="#"
+            href="#root"
             onClick={(e) => {
               e.preventDefault();
               setOpen(false);
             }}
-          ></a>
+          >
+            close
+          </a>
         </header>
         <main>
           <dl>

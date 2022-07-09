@@ -7,9 +7,9 @@ import { DiffPanel } from "../components/diff";
 import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
 import { Diff } from "../simulator/compare";
 import { StorageContext } from "../util/storage";
-import { StatusLineContext } from "../components/shell/statusline";
 import { Subscription } from "rxjs";
 import { Pins } from "../simulator/chip/chip";
+import { AppContext } from "../App.context";
 
 let store = new ChipPageStore();
 
@@ -19,7 +19,7 @@ function reducePins(pins: Pins): ImmPin[] {
 
 export const Chip = () => {
   const fs = useContext(StorageContext);
-  const { setStatus } = useContext(StatusLineContext);
+  const { setStatus } = useContext(AppContext);
 
   useEffect(() => {
     store = new ChipPageStore(fs, localStorage, setStatus);

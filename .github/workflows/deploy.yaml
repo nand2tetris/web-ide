@@ -1,4 +1,4 @@
-name: Run Javascript Tests
+name: Deploy to gh-pages
 
 on:
   push:

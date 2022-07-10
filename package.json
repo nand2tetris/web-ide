@@ -6,6 +6,10 @@
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "homepage": "https://davidsouther.github.io/computron5k",
+  "dependencies": {
+    "@lingui/react": "^3.14.0",
+    "make-plural": "^7.1.0"
+  },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.0.1",
     "@lingui/cli": "^3.14.0",
@@ -77,8 +81,25 @@
       "last 1 safari version"
     ]
   },
-  "dependencies": {
-    "@lingui/react": "^3.14.0",
-    "make-plural": "^7.1.0"
+  "lingui": {
+    "locales": [
+      "en",
+      "en-PL"
+    ],
+    "sourceLocale": "en",
+    "pseudoLocale": "en-PL",
+    "fallbackLocales": {
+      "en-PL": "en"
+    },
+    "catalogs": [
+      {
+        "path": "src/locales/{locale}/messages",
+        "include": [
+          "src",
+          "public"
+        ]
+      }
+    ],
+    "format": "po"
   }
 }

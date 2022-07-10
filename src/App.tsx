@@ -15,10 +15,13 @@ import Footer from "./components/shell/footer";
 import { AppContext, makeAppContext } from "./App.context";
 import { Settings } from "./components/shell/settings";
 import { messages } from "./locales/en/messages";
+import { messages as plMessages } from "./locales/en-PL/messages";
 
 i18n.load("en", messages);
+i18n.load("en-PL", plMessages);
 i18n.loadLocaleData({
   en: { plurals: en },
+  "en-PL": { plurals: en },
 });
 i18n.activate("en");
 

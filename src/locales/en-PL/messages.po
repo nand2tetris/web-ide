@@ -1,11 +1,11 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2022-07-09 19:34-0700\n"
+"POT-Creation-Date: 2022-07-09 19:51-0700\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
-"Language: en\n"
+"Language: en-PL\n"
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
 "PO-Revision-Date: \n"
@@ -15,149 +15,149 @@ msgstr ""
 
 #: src/components/runbar.tsx:51
 msgid "1 Step"
-msgstr "1 Step"
+msgstr ""
 
 #: src/components/runbar.tsx:32
 msgid "60FPS"
-msgstr "60FPS"
+msgstr ""
 
 #: src/pages/chip.tsx:139
 msgid "Chips:"
-msgstr "Chips:"
+msgstr ""
 
 #: src/pages/chip.store.ts:144
 msgid "Compiled {0}"
-msgstr "Compiled {0}"
+msgstr ""
 
 #: src/components/shell/settings.tsx:94
 msgid "English"
-msgstr "English"
+msgstr ""
 
 #: src/pages/chip.store.ts:219
 msgid "Error parsing cmp file!"
-msgstr "Error parsing cmp file!"
+msgstr ""
 
 #: src/pages/chip.store.ts:223
 msgid "Error parsing out file!"
-msgstr "Error parsing out file!"
+msgstr ""
 
 #: src/pages/chip.tsx:157
 msgid "Eval"
-msgstr "Eval"
+msgstr ""
 
 #: src/pages/chip.tsx:203
 msgid "Execute"
-msgstr "Execute"
+msgstr ""
 
 #: src/components/diff.tsx:19
 msgid "Expected <0>{a}</0>Actual <1>{b}</1><2>at {row}:{col}</2>"
-msgstr "Expected <0>{a}</0>Actual <1>{b}</1><2>at {row}:{col}</2>"
+msgstr ""
 
 #: src/components/diff.tsx:14
 msgid "Failed {0} assertions"
-msgstr "Failed {0} assertions"
+msgstr ""
 
 #: src/components/runbar.tsx:33
 msgid "Fast"
-msgstr "Fast"
+msgstr ""
 
 #: src/components/shell/settings.tsx:55
 msgid "Files"
-msgstr "Files"
+msgstr ""
 
 #: src/components/shell/settings.tsx:86
 msgid "Github"
-msgstr "Github"
+msgstr ""
 
 #: src/components/pinout.tsx:88
 msgid "High"
-msgstr "High"
+msgstr ""
 
 #: src/pages/chip.tsx:175
 msgid "Input pins"
-msgstr "Input pins"
+msgstr ""
 
 #: src/pages/chip.tsx:185
 msgid "Internal Pins"
-msgstr "Internal Pins"
+msgstr ""
 
 #: src/components/shell/settings.tsx:90
 msgid "Language"
-msgstr "Language"
+msgstr ""
 
 #: src/components/pinout.tsx:87
 msgid "Low"
-msgstr "Low"
+msgstr ""
 
 #: src/components/pinout.tsx:37
 msgid "Name"
-msgstr "Name"
+msgstr ""
 
 #: src/components/runbar.tsx:34
 msgid "Normal"
-msgstr "Normal"
+msgstr ""
 
 #: src/pages/chip.tsx:191
 msgid "Output pins"
-msgstr "Output pins"
+msgstr ""
 
 #: src/pages/chip.store.ts:196
 msgid "Parsed tst"
-msgstr "Parsed tst"
+msgstr ""
 
 #: src/components/shell/settings.tsx:52
 msgid "Project"
-msgstr "Project"
+msgstr ""
 
 #: src/components/shell/settings.tsx:97
 msgid "Pseudolocale"
-msgstr "Pseudolocale"
+msgstr ""
 
 #: src/components/shell/settings.tsx:78
 msgid "References"
-msgstr "References"
+msgstr ""
 
 #: src/components/pinout.tsx:54
 #: src/components/shell/settings.tsx:66
 msgid "Reset"
-msgstr "Reset"
+msgstr ""
 
 #: src/pages/chip.tsx:160
 msgid "Save"
-msgstr "Save"
+msgstr ""
 
 #: src/components/shell/settings.tsx:35
 msgid "Settings"
-msgstr "Settings"
+msgstr ""
 
 #: src/components/runbar.tsx:35
 msgid "Slow"
-msgstr "Slow"
+msgstr ""
 
 #: src/components/shell/settings.tsx:74
 msgid "Solutions"
-msgstr "Solutions"
+msgstr ""
 
 #: src/pages/chip.tsx:199
 msgid "Test"
-msgstr "Test"
+msgstr ""
 
 #: src/components/pinout.tsx:52
 msgid "Tick"
-msgstr "Tick"
+msgstr ""
 
 #: src/components/pinout.tsx:53
 msgid "Tock"
-msgstr "Tock"
+msgstr ""
 
 #: src/components/pinout.tsx:40
 msgid "Value"
-msgstr "Value"
+msgstr ""
 
 #: src/languages/hdl.ts:77
 msgid "could not make a pin from {toPin}"
-msgstr "could not make a pin from {toPin}"
+msgstr ""
 
 #: src/languages/hdl.ts:106
 msgid "part has no identifier"
-msgstr "part has no identifier"
+msgstr ""

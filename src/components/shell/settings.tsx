@@ -1,5 +1,6 @@
 import { Trans } from "@lingui/macro";
-import { useContext, useEffect, useState } from "react";
+import { useMemo, useContext, useEffect, useState } from "react";
+import { i18n } from "@lingui/core";
 import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
@@ -7,12 +8,24 @@ export const Settings = () => {
   const { settings, fs } = useContext(AppContext);
 
   const [open, setOpen] = useState(false);
+
+  const writeLocale = useMemo(
+    () => (locale: string) => {
+      i18n.activate(locale);
+      fs.writeFile("locale", locale);
+    },
+    [fs]
+  );
+
   useEffect(() => {
     const subscription = settings.open.subscribe(() => {
       setOpen(true);
     });
+    fs.readFile("locale")
+      .then((locale) => i18n.activate(locale))
+      .catch(() => writeLocale("en"));
     return () => subscription.unsubscribe();
-  }, [settings.open]);
+  }, [settings.open, fs, writeLocale]);
 
   return (
     <dialog open={open}>
@@ -72,6 +85,17 @@ export const Settings = () => {
               >
                 <Trans>Github</Trans>
               </a>
+            </dd>
+            <dt>
+              <Trans>Language</Trans>
+            </dt>
+            <dd>
+              <button onClick={() => writeLocale("en")}>
+                <Trans>English</Trans>
+              </button>
+              <button onClick={() => writeLocale("en-PL")}>
+                <Trans>Pseudolocale</Trans>
+              </button>
             </dd>
           </dl>
         </main>

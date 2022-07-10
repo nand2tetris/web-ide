@@ -39,6 +39,7 @@
   "scripts": {
     "start": "react-scripts start",
     "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!remark-markdown)/\"",
+    "pretest": "npm run lingui",
     "prebuild": "cp ./node_modules/@davidsouther/jiffies/build/pico.css public && npm run lingui",
     "build": "react-scripts build",
     "format": "prettier --write public/ src/",

@@ -88,9 +88,6 @@ export const Chip = () => {
   const [outText, setOutText] = useState(store.files.out);
   const [tstText, setTstText] = useState(store.files.tst);
 
-  const [diffs, setDiffs] = useState<Diff[]>([]);
-  const [ran, setRan] = useState(false);
-
   function clearOutput() {
     setOutText("");
     setRan(false);

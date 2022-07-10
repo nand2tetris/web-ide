@@ -11,6 +11,7 @@ import { StorageContext } from "../util/storage";
 import { Subscription } from "rxjs";
 import { Pins } from "../simulator/chip/chip";
 import { AppContext } from "../App.context";
+import { DiffTable } from "../components/difftable";
 
 let store = new ChipPageStore();
 
@@ -216,13 +217,7 @@ export const Chip = () => {
             onChange={(e) => setCmpText(e.target.value)}
             value={cmpText}
           />
-          <textarea
-            className="flex-1"
-            rows={5}
-            readOnly={true}
-            value={outText}
-          />
-          <DiffPanel diffs={diffs} ran={ran} />
+          <DiffTable cmp={cmpText} out={outText} />
         </article>
       </section>
     </div>

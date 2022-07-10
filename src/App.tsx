@@ -21,9 +21,10 @@ i18n.load("en", messages);
 i18n.load("en-PL", plMessages);
 i18n.loadLocaleData({
   en: { plurals: en },
+  "en-US": { plurals: en },
   "en-PL": { plurals: en },
 });
-i18n.activate("en");
+i18n.activate(navigator.language);
 
 function App() {
   const appContext = useMemo(

@@ -47,7 +47,7 @@
     "extract": "lingui extract",
     "lingui": "lingui compile",
     "ci": "npm run check && CI=true npm run test",
-    "check": "npm run check:format && npm run check:types && npm run check:lint",
+    "check": "npm run lingui && npm run check:format && npm run check:types && npm run check:lint",
     "check:types": "tsc --noEmit",
     "check:format": "prettier --check public/ src/",
     "check:lint": "eslint src/",
@@ -82,6 +82,7 @@
       "last 1 safari version"
     ]
   },
+  "prettier": {},
   "lingui": {
     "locales": [
       "en",
@@ -94,7 +95,7 @@
     },
     "catalogs": [
       {
-        "path": "src/locales/{locale}/messages",
+        "path": "locales/{locale}/messages",
         "include": [
           "src",
           "public"

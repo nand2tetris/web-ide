@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { Memory as MemoryChip } from "../simulator/cpu/memory";
+import { render, screen } from "../testing";
 import { MemoryBlock, MemoryCell } from "./memory";
 
 describe("<Memory />", () => {

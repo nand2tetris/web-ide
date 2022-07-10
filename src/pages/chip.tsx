@@ -4,9 +4,7 @@ import { Trans } from "@lingui/macro";
 import "./chip.scss";
 
 import { Pinout, ImmPin } from "../components/pinout";
-import { DiffPanel } from "../components/diff";
 import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
-import { Diff } from "../simulator/compare";
 import { StorageContext } from "../util/storage";
 import { Subscription } from "rxjs";
 import { Pins } from "../simulator/chip/chip";
@@ -49,12 +47,6 @@ export const Chip = () => {
       })
     );
     subs.push(
-      store.selectors.diffs.subscribe((diffs) => {
-        setDiffs(diffs);
-        setRan(true);
-      })
-    );
-    subs.push(
       store.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
         setHdlText(hdl);
         setTstText(tst);
@@ -90,7 +82,6 @@ export const Chip = () => {
 
   function clearOutput() {
     setOutText("");
-    setRan(false);
   }
 
   const onSaveChip = () => {

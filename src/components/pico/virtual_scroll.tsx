@@ -123,6 +123,7 @@ interface VirtualScrollState<T> {
   data: T[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const scrollReducer =
   <T extends {}>(get: VirtualScrollDataAdapter<T>) =>
   (state: VirtualScrollState<T>, { scrollTop }: { scrollTop: number }) => ({

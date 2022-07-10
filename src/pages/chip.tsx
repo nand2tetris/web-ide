@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
 
@@ -134,7 +135,9 @@ export const Chip = () => {
                 </option>
               ))}
             </select>
-            <h2 tabIndex={0}>Chips:</h2>
+            <h2 tabIndex={0}>
+              <Trans>Chips:</Trans>
+            </h2>
             <select
               value={chip}
               onChange={({ target: { value } }) => store.setChip(value)}
@@ -151,10 +154,10 @@ export const Chip = () => {
               <div tabIndex={0}>HDL</div>
               <fieldset className="button-group">
                 <button onClick={compile} onKeyDown={compile}>
-                  Eval
+                  <Trans>Eval</Trans>
                 </button>
                 <button onClick={onSaveChip} onKeyDown={onSaveChip}>
-                  Save
+                  <Trans>Save</Trans>
                 </button>
               </fieldset>
             </header>
@@ -168,7 +171,9 @@ export const Chip = () => {
             </main>
           </article>
           <article className="no-shadow panel">
-            <header tabIndex={0}>Input pins</header>
+            <header tabIndex={0}>
+              <Trans>Input pins</Trans>
+            </header>
             <Pinout
               pins={inPins}
               clocked={clocked}
@@ -176,19 +181,27 @@ export const Chip = () => {
             />
           </article>
           <article className="no-shadow panel">
-            <header tabIndex={0}>Internal Pins</header>
+            <header tabIndex={0}>
+              <Trans>Internal Pins</Trans>
+            </header>
             <Pinout pins={internalPins} />
           </article>
           <article className="no-shadow panel">
-            <header tabIndex={0}>Output pins</header>
+            <header tabIndex={0}>
+              <Trans>Output pins</Trans>
+            </header>
             <Pinout pins={outPins} />
           </article>
         </div>
         <article>
           <header>
-            <div tabIndex={0}>Test</div>
+            <div tabIndex={0}>
+              <Trans>Test</Trans>
+            </div>
             <fieldset className="input-group">
-              <button onClick={execute}>Execute</button>
+              <button onClick={execute}>
+                <Trans>Execute</Trans>
+              </button>
             </fieldset>
           </header>
           <textarea

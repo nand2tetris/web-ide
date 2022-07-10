@@ -1,4 +1,6 @@
-import { useContext, useEffect, useState } from "react";
+import { Trans } from "@lingui/macro";
+import { useMemo, useContext, useEffect, useState } from "react";
+import { i18n } from "@lingui/core";
 import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
@@ -6,18 +8,32 @@ export const Settings = () => {
   const { settings, fs } = useContext(AppContext);
 
   const [open, setOpen] = useState(false);
+
+  const writeLocale = useMemo(
+    () => (locale: string) => {
+      i18n.activate(locale);
+      fs.writeFile("locale", locale);
+    },
+    [fs]
+  );
+
   useEffect(() => {
     const subscription = settings.open.subscribe(() => {
       setOpen(true);
     });
+    fs.readFile("locale")
+      .then((locale) => i18n.activate(locale))
+      .catch(() => writeLocale("en"));
     return () => subscription.unsubscribe();
-  }, [settings.open]);
+  }, [settings.open, fs, writeLocale]);
 
   return (
     <dialog open={open}>
       <article>
         <header>
-          <p>Settings</p>
+          <p>
+            <Trans>Settings</Trans>
+          </p>
           <a
             style={{ color: "rgba(0, 0, 0, 0)" }}
             className="close"
@@ -32,8 +48,12 @@ export const Settings = () => {
         </header>
         <main>
           <dl>
-            <header>Project</header>
-            <dt>Files</dt>
+            <header>
+              <Trans>Project</Trans>
+            </header>
+            <dt>
+              <Trans>Files</Trans>
+            </dt>
             <dd>
               <button
                 onClick={() => {
@@ -43,7 +63,7 @@ export const Settings = () => {
                   // statusLine.update("Reset files in local storage");
                 }}
               >
-                Reset
+                <Trans>Reset</Trans>
               </button>
               <button
                 onClick={() => {
@@ -51,18 +71,31 @@ export const Settings = () => {
                   // statusLine.update("Loaded sample solutions...");
                 }}
               >
-                Solutions
+                <Trans>Solutions</Trans>
               </button>
             </dd>
-            <dt>References</dt>
+            <dt>
+              <Trans>References</Trans>
+            </dt>
             <dd>
               <a
                 href="https://github.com/davidsouther/computron5k"
                 target="_blank"
                 rel="noreferrer"
               >
-                Github
+                <Trans>Github</Trans>
               </a>
+            </dd>
+            <dt>
+              <Trans>Language</Trans>
+            </dt>
+            <dd>
+              <button onClick={() => writeLocale("en")}>
+                <Trans>English</Trans>
+              </button>
+              <button onClick={() => writeLocale("en-PL")}>
+                <Trans>Pseudolocale</Trans>
+              </button>
             </dd>
           </dl>
         </main>

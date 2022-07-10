@@ -104,7 +104,7 @@ export class Span implements StringLike {
   }
 
   substring(start: number, end: number = this.length): StringLike {
-    assert(start >= 0, "Cannot use negative substring");
+    assert(start >= 0, `Cannot use negative substring`);
     assert(end >= start);
     return new Span(this, start, end);
   }
@@ -113,12 +113,12 @@ export class Span implements StringLike {
 export type ParseErrorType = ParseErrorError | ParseIncomplete | ParseFailure;
 
 export class ParseErrorError extends ParseError {
-  override readonly name = "Parse Error";
+  override readonly name = `Parse Error`;
 }
 
 /** Error indicating how much input is necessary */
 export class ParseIncomplete extends ParseError {
-  override readonly name = "Parse Incomplete";
+  override readonly name = `Parse Incomplete`;
 
   constructor(readonly needed: number, context?: ErrorContext) {
     super(context);
@@ -127,7 +127,7 @@ export class ParseIncomplete extends ParseError {
 
 /** Unrecoverable error */
 export class ParseFailure extends ParseError {
-  override readonly name = "Parse Failure";
+  override readonly name = `Parse Failure`;
 }
 
 export const ParseErrors = {

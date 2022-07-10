@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen } from "../testing";
 import { DiffPanel } from "./diff";
 
 describe("<DiffPanel />", () => {

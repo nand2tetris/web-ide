@@ -1,3 +1,4 @@
+import { t } from "@lingui/macro";
 import { Subject, map } from "rxjs";
 
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
@@ -42,7 +43,7 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "DMux8Way",
     "Or8Way",
   ],
-  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
+  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoSta", "ALU"],
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
   "05": ["Memory", "CPU", "Computer"],
 };
@@ -140,7 +141,7 @@ export class ChipPageStore {
       return;
     }
     this.chip = Ok(maybeChip);
-    this.statusLine(`Compiled ${this.chip.name}`);
+    this.statusLine(t`Compiled ${this.chip.name}`);
     this.chipName = this.storage["chip/chip"] = this.chip.name!;
     this.chip.eval();
     this.next();
@@ -192,7 +193,7 @@ export class ChipPageStore {
       this.statusLine(display(Err(tst)));
       return;
     }
-    this.statusLine("Parsed tst");
+    this.statusLine(t`Parsed tst`);
 
     this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
 
@@ -215,11 +216,11 @@ export class ChipPageStore {
     ]);
 
     if (isErr(cmp)) {
-      this.statusLine(`Error parsing cmp file!`);
+      this.statusLine(t`Error parsing cmp file!`);
       return;
     }
     if (isErr(out)) {
-      this.statusLine(`Error parsing out file!`);
+      this.statusLine(t`Error parsing out file!`);
       return;
     }
 

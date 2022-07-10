@@ -1,3 +1,4 @@
+import { t, Trans } from "@lingui/macro";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { useEffect, useState } from "react";
 import { Pin } from "../simulator/chip/chip";
@@ -32,8 +33,12 @@ export const Pinout = ({
     <table>
       <thead>
         <tr>
-          <th tabIndex={0}>Name</th>
-          <th tabIndex={0}>Value</th>
+          <th tabIndex={0}>
+            <Trans>Name</Trans>
+          </th>
+          <th tabIndex={0}>
+            <Trans>Value</Trans>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -44,9 +49,9 @@ export const Pinout = ({
               {(
                 [
                   [clockface, () => clock.toggle()],
-                  ["Tick", () => clock.tick()],
-                  ["Tock", () => clock.tock()],
-                  ["Reset", () => clock.reset()],
+                  [t`Tick`, () => clock.tick()],
+                  [t`Tock`, () => clock.tock()],
+                  [t`Reset`, () => clock.reset()],
                 ] as [string, () => void][]
               ).map(([label, click]) => (
                 <code
@@ -79,8 +84,8 @@ export const Pinout = ({
               >
                 {pin.width === 1
                   ? pin.voltage() === 0
-                    ? "Low"
-                    : "High"
+                    ? t`Low`
+                    : t`High`
                   : bin(pin.busVoltage, pin.width)}
               </code>
             </td>

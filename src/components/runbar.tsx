@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { t } from "@lingui/macro";
 import { Timer } from "../simulator/timer";
 import { Icon } from "./pico/icon";
 
@@ -28,10 +29,10 @@ export const Runbar = ({
       disabled={runner.running}
     >
       {[
-        [16, "60FPS"],
-        [500, "Fast"],
-        [1000, "Normal"],
-        [2000, "Slow"],
+        [16, t`60FPS`],
+        [500, t`Fast`],
+        [1000, t`Normal`],
+        [2000, t`Slow`],
       ].map(([speed, label]) => (
         <option key={speed} value={speed}>
           {label}
@@ -47,7 +48,7 @@ export const Runbar = ({
       disabled={runner.running}
     >
       {[
-        [1, "1 Step"],
+        [1, t`1 Step`],
         [500, "500"],
         [1000, "1000"],
         [2000, "2000"],

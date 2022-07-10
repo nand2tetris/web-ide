@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { act } from "react-dom/test-utils";
 import { Bus, HIGH } from "../simulator/chip/chip";
 import { Pinout } from "./pinout";
+import { render, screen } from "../testing";
 
 describe("<Pinout />", () => {
   it("renders pins", () => {

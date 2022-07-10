@@ -6,8 +6,14 @@
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "homepage": "https://davidsouther.github.io/computron5k",
+  "dependencies": {
+    "@lingui/react": "^3.14.0",
+    "make-plural": "^7.1.0"
+  },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.0.1",
+    "@lingui/cli": "^3.14.0",
+    "@lingui/macro": "^3.14.0",
     "@rollup/plugin-node-resolve": "^13.2.1",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
@@ -37,6 +43,8 @@
     "build": "react-scripts build",
     "format": "prettier --write public/ src/",
     "fix": "eslint --fix src/",
+    "extract": "lingui extract",
+    "lingui": "lingui compile",
     "ci": "npm run check && CI=true npm run test",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
     "check:types": "tsc --noEmit",
@@ -72,5 +80,27 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "prettier": {},
+  "lingui": {
+    "locales": [
+      "en",
+      "en-PL"
+    ],
+    "sourceLocale": "en",
+    "pseudoLocale": "en-PL",
+    "fallbackLocales": {
+      "en-PL": "en"
+    },
+    "catalogs": [
+      {
+        "path": "locales/{locale}/messages",
+        "include": [
+          "src",
+          "public"
+        ]
+      }
+    ],
+    "format": "po"
   }
 }

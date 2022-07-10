@@ -103,7 +103,7 @@ const partParser = tuple(
 const part: Parser<Part> = (i) => {
   const parse = partParser(i);
   if (isErr(parse)) {
-    return ParseErrors.error(t`part parser has no identifier`);
+    return ParseErrors.error(t`part has no identifier`);
   }
   const [input, [name, wires]] = Ok(parse);
   const part: Part = {

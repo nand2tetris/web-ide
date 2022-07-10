@@ -1,4 +1,3 @@
-import { Trans } from "@lingui/macro";
 import { Link } from "react-router-dom";
 
 import URLs from "../../urls";
@@ -10,16 +9,10 @@ const Header = ({ urls }: { urls: typeof URLs }) => (
       <ul>
         <li>
           <strong>
-            <Trans>
-              <a
-                href="https://nand2tetris.org"
-                target="_blank"
-                rel="noreferrer"
-              >
-                NAND2Tetris
-              </a>
-              &nbsp;Online
-            </Trans>
+            <a href="https://nand2tetris.org" target="_blank" rel="noreferrer">
+              NAND2Tetris
+            </a>
+            &nbsp;Online
           </strong>
         </li>
       </ul>

@@ -1,10 +1,7 @@
-import { Trans } from "@lingui/macro";
 const VM = () => (
   <article>
     <header>
-      <h2>
-        <Trans>VM</Trans>
-      </h2>
+      <h2>VM</h2>
     </header>
   </article>
 );

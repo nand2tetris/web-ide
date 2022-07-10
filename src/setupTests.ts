@@ -10,6 +10,15 @@ import {
   isOk,
 } from "@davidsouther/jiffies/lib/esm/result";
 import "@testing-library/jest-dom";
+import { i18n } from "@lingui/core";
+import { en } from "make-plural/plurals";
+import { messages } from "./locales/en/messages";
+
+i18n.load("en", messages);
+i18n.loadLocaleData({
+  en: { plurals: en },
+});
+i18n.activate("en");
 
 interface CustomMatchers<R = unknown, T = unknown> {
   toBeOk(result: T): R;

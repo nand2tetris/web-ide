@@ -20,6 +20,9 @@ export class Keyboard extends Chip {
 }
 
 export class Memory extends Chip {
+  constructor() {
+    super([], [], "Memory");
+  }
   // RAM16K(in=in, load=writeram, address=address[1..14], out=ramout);
   // DMux(in=load, sel=address[0], a=writeram, b=writeio);
   // Screen(in=in, load=writeio, address=address[2..14], out=screenout);

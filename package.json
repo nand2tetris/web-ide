@@ -78,6 +78,7 @@
     ]
   },
   "dependencies": {
-    "@lingui/react": "^3.14.0"
+    "@lingui/react": "^3.14.0",
+    "make-plural": "^7.1.0"
   }
 }

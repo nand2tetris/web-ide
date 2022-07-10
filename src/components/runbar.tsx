@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { t } from "@lingui/macro";
 import { Timer } from "../simulator/timer";
 import { Icon } from "./pico/icon";
@@ -47,7 +48,7 @@ export const Runbar = ({
       disabled={runner.running}
     >
       {[
-        [1, "1 Step"],
+        [1, t`1 Step`],
         [500, "500"],
         [1000, "1000"],
         [2000, "2000"],

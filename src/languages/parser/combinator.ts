@@ -128,9 +128,10 @@ export const recognize = <O>(p: Parser<O>): Parser<StringLike> => {
   const recognize: Parser<StringLike> = (i) => {
     const res = p(i);
     if (isErr(res)) return res;
-    const [inp, _] = Ok(res);
-    const idx = i.length - inp.length;
-    return Ok([inp, i.substring(0, idx)]);
+    const [rest, _] = Ok(res);
+    const idx = i.length - rest.length;
+    const match = i.substring(0, idx);
+    return Ok([rest, match]);
   };
   return recognize;
 };

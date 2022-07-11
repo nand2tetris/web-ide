@@ -1,6 +1,6 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import { HdlParser } from "../../languages/hdl";
-import { ParseError } from "../../languages/parser/base";
+import { ParseError, StringLike } from "../../languages/parser/base";
 import { getBuiltinChip } from "./builtins/index";
 import { Chip, Connection } from "./chip";
 
@@ -17,7 +17,7 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
   throw new Error(`Bus specification has start > end (${start} > ${end})`);
 }
 
-export function parse(code: string): Result<Chip, Error | ParseError> {
+export function parse(code: StringLike): Result<Chip, Error | ParseError> {
   const parsed = HdlParser(code);
   if (isErr(parsed)) return parsed;
   const [_, parts] = Ok(parsed);

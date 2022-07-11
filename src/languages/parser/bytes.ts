@@ -12,9 +12,12 @@ export const is_not = (chars: string): Parser<StringLike> => {
     let m = i.toString();
     let d = 0;
     while (d < i.length && !chars.includes(m[d])) d++;
-    if (d === 0)
+    if (d === 0) {
       return ParseErrors.error("is_not found immediately", { span: i });
-    return Ok([i.substring(d), i.substring(0, d)]);
+    }
+    const match = i.substring(0, d);
+    const rest = i.substring(d);
+    return Ok([match, rest]);
   };
   return is_not;
 };
@@ -82,7 +85,9 @@ export const tag = (s: string | RegExp): Parser<StringLike> => {
               span: i,
             });
           let o = m[0];
-          return Ok([i.substring(o.length), i.substring(0, o.length)]);
+          const match = i.substring(0, o.length);
+          const rest = i.substring(o.length);
+          return Ok([rest, match]);
         };
   return tag;
 };

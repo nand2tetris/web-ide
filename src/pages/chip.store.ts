@@ -8,7 +8,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
-import { IResult } from "../languages/parser/base";
+import { IResult, Span, StringLike } from "../languages/parser/base";
 import { cmpParser } from "../languages/cmp";
 import { Tst, tstParser } from "../languages/tst";
 import { Low, Pin, Chip as SimChip } from "../simulator/chip/chip";
@@ -47,6 +47,11 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
   "05": ["Memory", "CPU", "Computer"],
 };
+
+function doParse<T>(parser: (s: StringLike) => T, str: string) {
+  return parser(new Span(str));
+  // return parser(str);
+}
 
 export class ChipPageStore {
   project: keyof typeof PROJECTS;
@@ -135,7 +140,7 @@ export class ChipPageStore {
 
   compileChip() {
     this.chip?.remove();
-    const maybeChip = make.parse(this.files.hdl);
+    const maybeChip = doParse(make.parse, this.files.hdl);
     if (isErr(maybeChip)) {
       this.statusLine(display(Err(maybeChip)));
       return;
@@ -186,7 +191,7 @@ export class ChipPageStore {
 
   async runTest() {
     const tst = await new Promise<IResult<Tst>>((r) =>
-      r(tstParser(this.files.tst))
+      r(doParse(tstParser, this.files.tst))
     );
 
     if (isErr(tst)) {
@@ -211,8 +216,12 @@ export class ChipPageStore {
     this.next();
 
     const [cmp, out] = await Promise.all([
-      new Promise<IResult<string[][]>>((r) => r(cmpParser(this.files.cmp))),
-      new Promise<IResult<string[][]>>((r) => r(cmpParser(this.files.out))),
+      new Promise<IResult<string[][]>>((r) =>
+        r(doParse(cmpParser, this.files.cmp))
+      ),
+      new Promise<IResult<string[][]>>((r) =>
+        r(doParse(cmpParser, this.files.out))
+      ),
     ]);
 
     if (isErr(cmp)) {

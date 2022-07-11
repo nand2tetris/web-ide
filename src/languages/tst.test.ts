@@ -58,7 +58,11 @@ describe("tst language", () => {
     const input = new Span("a%B3.1.3");
     parsed = TEST_ONLY.tstOutputFormat(input);
     expect(parsed).toBeOk(
-      Ok(["", { id: "a", style: "B", width: 1, lpad: 3, rpad: 3 }])
+      Ok([
+        // @ts-ignore
+        { start: 8, end: 8 } as Span,
+        { id: "a", style: "B", width: 1, lpad: 3, rpad: 3 },
+      ])
     );
   });
 
@@ -69,7 +73,8 @@ describe("tst language", () => {
     parsed = TEST_ONLY.tstOutputListParser(input);
     expect(parsed).toBeOk(
       Ok([
-        "",
+        // @ts-ignore
+        { start: 31, end: 31 } as Span,
         {
           op: "output-list",
           spec: [

@@ -107,6 +107,21 @@ export const Chip = () => {
     await store.runTest();
   }
 
+  /* Layout:
+
+    [Project] [Chip]  +------+
+    +--------+--------+ Test +
+    |   HDL  | InPins |      |
+    |        +--------|      |
+    |        | OutPin |      |
+    +--------+--------+------+
+    |Internal|  Vis   |  Out |
+    |        |        +------+
+    |        |        | Diffs|
+    +--------+--------+------+
+
+  */
+
   return (
     <div className="ChipPage flex-1 flex">
       <section className="flex-1 grid">

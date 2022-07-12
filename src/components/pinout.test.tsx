@@ -9,7 +9,7 @@ describe("<Pinout />", () => {
     const pin = new Bus("pin");
     render(<Pinout pins={[{ pin }]} />);
 
-    const pinOut = screen.getByText("Low");
+    const pinOut = screen.getByText("0");
     expect(pinOut).toBeVisible();
   });
 
@@ -28,12 +28,12 @@ describe("<Pinout />", () => {
 
     render(<Wrapper />);
 
-    const pinOut = screen.getByText("Low");
+    const pinOut = screen.getByText("0");
     act(() => {
       pinOut.click();
     });
     expect(pin.busVoltage).toBe(HIGH);
-    expect(screen.getByText("High")).toBeVisible();
+    expect(screen.getByText("1")).toBeVisible();
   });
 
   it("increments buses", () => {

@@ -1,6 +1,6 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
-import { HdlParser } from "../../languages/hdl";
-import { ParseError, StringLike } from "../../languages/parser/base";
+import { HdlParse, HdlParser } from "../../languages/hdl";
+import { ParseError, Span, StringLike } from "../../languages/parser/base";
 import { getBuiltinChip } from "./builtins/index";
 import { Chip, Connection } from "./chip";
 
@@ -18,29 +18,36 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
 }
 
 export function parse(code: StringLike): Result<Chip, Error | ParseError> {
-  const parsed = HdlParser(code);
+  const parsed = HdlParser(new Span(code));
   if (isErr(parsed)) return parsed;
   const [_, parts] = Ok(parsed);
+  return build(parts);
+}
 
+export function build(parts: HdlParse): Result<Chip, Error> {
   if (parts.parts === "BUILTIN") {
-    return getBuiltinChip(parts.name);
+    return getBuiltinChip(parts.name.value);
   }
 
-  const buildChip = new Chip(parts.ins, parts.outs, parts.name);
+  const buildChip = new Chip(
+    parts.ins.map(({ pin: { value }, width }) => ({ pin: value, width })),
+    parts.outs.map(({ pin: { value }, width }) => ({ pin: value, width })),
+    parts.name.value
+  );
 
   for (const part of parts.parts) {
-    const builtin = getBuiltinChip(part.name);
+    const builtin = getBuiltinChip(part.name.value);
     if (isErr(builtin)) return builtin;
     const partChip = Ok(builtin);
 
     const wires = part.wires.map<Connection>(({ lhs, rhs }) => ({
       to: {
-        name: lhs.pin,
+        name: lhs.pin.value,
         start: lhs.start ?? 0,
         width: pinWidth(lhs.start ?? 0, lhs.end),
       },
       from: {
-        name: rhs.pin,
+        name: rhs.pin.value,
         start: rhs.start ?? 0,
         width: pinWidth(rhs.start ?? 0, rhs.end),
       },

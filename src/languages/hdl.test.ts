@@ -1,7 +1,8 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { Token } from "./base";
 import { HdlParser, Part, PinDeclaration, PinParts, TEST_ONLY } from "./hdl";
-import { IResult, Span, StringLike } from "./parser/base";
+import { IResult, Span } from "./parser/base";
 import { tag } from "./parser/bytes";
 import { list } from "./parser/recipe";
 
@@ -32,48 +33,63 @@ const AND_16_BUILTIN = `CHIP And16 {
 
 describe("hdl language", () => {
   it("parses comments", () => {
-    let parsed: IResult<StringLike>;
+    let parsed: IResult<Token>;
     parsed = TEST_ONLY.hdlIdentifier("a // comment");
-    expect(parsed).toBeOk(Ok(["", "a"]));
+    expect(Ok(parsed)).toMatchObject(["", { value: "a" }]);
 
     parsed = TEST_ONLY.hdlIdentifier(`/* multi
     line */ a // more`);
-    expect(parsed).toBeOk(Ok(["", "a"]));
+    expect(Ok(parsed)).toMatchObject(["", { value: "a" }]);
   });
 
   it("parses identifiers", () => {
-    let parsed: IResult<StringLike>;
+    let parsed: IResult<Token>;
     parsed = TEST_ONLY.hdlIdentifier("inM");
-    expect(parsed).toBeOk(Ok(["", "inM"]));
+    expect(Ok(parsed)).toMatchObject(["", { value: "inM" }]);
 
     parsed = TEST_ONLY.hdlIdentifier("a_b");
-    expect(parsed).toBeOk(Ok(["", "a_b"]));
+    expect(Ok(parsed)).toMatchObject(["", { value: "a_b" }]);
   });
 
   it("parses in/out lists", () => {
     let parsed: IResult<PinDeclaration[]>;
 
     parsed = TEST_ONLY.pinList("inM");
-    expect(parsed).toBeOk(Ok(["", [{ pin: "inM", width: 1 }]]));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "inM" }, width: 1 }],
+    ]);
   });
 
   it("parses pin wiring", () => {
     let parsed: IResult<[PinParts, PinParts]>;
 
     parsed = TEST_ONLY.wire("a=a");
-    expect(parsed).toBeOk(Ok(["", [{ pin: "a" }, { pin: "a" }]]));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "a" } }, { pin: { value: "a" } }],
+    ]);
 
     parsed = TEST_ONLY.wire("b = /* to */ a // things");
-    expect(parsed).toBeOk(Ok(["", [{ pin: "b" }, { pin: "a" }]]));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "b" } }, { pin: { value: "a" } }],
+    ]);
 
     // parsed = TEST_ONLY.wire("b = 0");
-    // expect(parsed).toBeOk(Ok(["", [{ pin: "b", start: 0, end: 0 }, {pin: "0", start: 0, end: 0}]]));
+    // expect(parsed).toMatchObject(Ok(["", [{ pin: "b", start: 0, end: 0 }, {pin: "0", start: 0, end: 0}]]));
 
     parsed = TEST_ONLY.wire("b = False");
-    expect(parsed).toBeOk(Ok(["", [{ pin: "b" }, { pin: "False" }]]));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "b" } }, { pin: { value: "False" } }],
+    ]);
 
     parsed = TEST_ONLY.wire("b = True");
-    expect(parsed).toBeOk(Ok(["", [{ pin: "b" }, { pin: "True" }]]));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "b" } }, { pin: { value: "True" } }],
+    ]);
 
     // parsed = TEST_ONLY.wire("b = Foo");
     // expect(isErr(parsed)).toBe(true);
@@ -84,15 +100,13 @@ describe("hdl language", () => {
     let parser = list(TEST_ONLY.wire, tag(","));
 
     parsed = parser("a=a , b=b");
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        [
-          [{ pin: "a" }, { pin: "a" }],
-          [{ pin: "b" }, { pin: "b" }],
-        ],
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [
+        [{ pin: { value: "a" } }, { pin: { value: "a" } }],
+        [{ pin: { value: "b" } }, { pin: { value: "b" } }],
+      ],
+    ]);
   });
 
   it("parses bus pins", () => {
@@ -100,212 +114,203 @@ describe("hdl language", () => {
     let parser = TEST_ONLY.wire;
 
     parsed = parser("a[2..4]=b");
-    expect(parsed).toBeOk(
-      Ok(["", [{ pin: "a", start: 2, end: 4 }, { pin: "b" }]])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "a" }, start: 2, end: 4 }, { pin: { value: "b" } }],
+    ]);
 
     parsed = parser("a=b[0]");
-    expect(parsed).toBeOk(
-      Ok(["", [{ pin: "a" }, { pin: "b", start: 0, end: 0 }]])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "a" } }, { pin: { value: "b" }, start: 0, end: 0 }],
+    ]);
 
     parsed = parser("a=b[2]");
-    expect(parsed).toBeOk(
-      Ok(["", [{ pin: "a" }, { pin: "b", start: 2, end: 2 }]])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "a" } }, { pin: { value: "b" }, start: 2, end: 2 }],
+    ]);
 
     parsed = parser("a[2..4]=b[10..12]");
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        [
-          { pin: "a", start: 2, end: 4 },
-          { pin: "b", start: 10, end: 12 },
-        ],
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [
+        { pin: { value: "a" }, start: 2, end: 4 },
+        { pin: { value: "b" }, start: 10, end: 12 },
+      ],
+    ]);
   });
 
   it("parses a part", () => {
     let parsed: IResult<Part>;
 
     parsed = TEST_ONLY.part("Nand(a=a, b=b, out=out)");
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        {
-          name: "Nand",
-          wires: [
-            {
-              lhs: { pin: "a" },
-              rhs: { pin: "a" },
-            },
-            {
-              lhs: { pin: "b" },
-              rhs: { pin: "b" },
-            },
-            {
-              lhs: { pin: "out" },
-              rhs: { pin: "out" },
-            },
-          ],
-        },
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      {
+        name: { value: "Nand" },
+        wires: [
+          {
+            lhs: { pin: { value: "a" } },
+            rhs: { pin: { value: "a" } },
+          },
+          {
+            lhs: { pin: { value: "b" } },
+            rhs: { pin: { value: "b" } },
+          },
+          {
+            lhs: { pin: { value: "out" } },
+            rhs: { pin: { value: "out" } },
+          },
+        ],
+      },
+    ]);
   });
 
   it("parses a list of parts", () => {
     let parsed: IResult<"BUILTIN" | Part[]>;
 
     parsed = TEST_ONLY.parts(`PARTS: Not(a=a, o=o); And(b=b, c=c, i=i);`);
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        [
-          {
-            name: "Not",
-            wires: [
-              {
-                lhs: { pin: "a" },
-                rhs: { pin: "a" },
-              },
-              {
-                lhs: { pin: "o" },
-                rhs: { pin: "o" },
-              },
-            ],
-          },
-          {
-            name: "And",
-            wires: [
-              {
-                lhs: { pin: "b" },
-                rhs: { pin: "b" },
-              },
-              {
-                lhs: { pin: "c" },
-                rhs: { pin: "c" },
-              },
-              {
-                lhs: { pin: "i" },
-                rhs: { pin: "i" },
-              },
-            ],
-          },
-        ],
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [
+        {
+          name: { value: "Not" },
+          wires: [
+            {
+              lhs: { pin: { value: "a" } },
+              rhs: { pin: { value: "a" } },
+            },
+            {
+              lhs: { pin: { value: "o" } },
+              rhs: { pin: { value: "o" } },
+            },
+          ],
+        },
+        {
+          name: { value: "And" },
+          wires: [
+            {
+              lhs: { pin: { value: "b" } },
+              rhs: { pin: { value: "b" } },
+            },
+            {
+              lhs: { pin: { value: "c" } },
+              rhs: { pin: { value: "c" } },
+            },
+            {
+              lhs: { pin: { value: "i" } },
+              rhs: { pin: { value: "i" } },
+            },
+          ],
+        },
+      ],
+    ]);
 
     parsed = TEST_ONLY.parts(`BUILTIN;`);
-    expect(parsed).toBeOk(Ok(["", "BUILTIN"]));
+    // expect(Ok(parsed)).toMatchObject(["", { value: "BUILTIN" }]);
+    expect(Ok(parsed)).toMatchObject(["", "BUILTIN"]);
   });
 
   it("parses IN list", () => {
     let parsed: IResult<PinParts[]>;
 
     parsed = TEST_ONLY.inList(`IN a, b;`);
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        [
-          { pin: "a", width: 1 },
-          { pin: "b", width: 1 },
-        ],
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [
+        { pin: { value: "a" }, width: 1 },
+        { pin: { value: "b" }, width: 1 },
+      ],
+    ]);
   });
 
   it("parses OUT list", () => {
     let parsed: IResult<PinParts[]>;
 
     parsed = TEST_ONLY.outList(`OUT out;`);
-    expect(parsed).toBeOk(Ok(["", [{ pin: "out", width: 1 }]]));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      [{ pin: { value: "out" }, width: 1 }],
+    ]);
   });
 
   it("parses a file into a builtin", () => {
-    const parsed = HdlParser(AND_BUILTIN);
+    const parsed = HdlParser(new Span(AND_BUILTIN));
 
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        {
-          name: "And",
-          ins: [
-            { pin: "a", width: 1 },
-            { pin: "b", width: 1 },
-          ],
-          outs: [{ pin: "out", width: 1 }],
-          parts: "BUILTIN",
-        },
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      {
+        name: { value: "And" },
+        ins: [
+          { pin: { value: "a" }, width: 1 },
+          { pin: { value: "b" }, width: 1 },
+        ],
+        outs: [{ pin: { value: "out" }, width: 1 }],
+        parts: "BUILTIN",
+      },
+    ]);
   });
 
   it("parses a file with parts", () => {
-    const parsed = HdlParser(NOT_PARTS);
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        {
-          name: "Not",
-          ins: [{ pin: "in", width: 1 }],
-          outs: [{ pin: "out", width: 1 }],
-          parts: [
-            {
-              name: "Nand",
-              wires: [
-                {
-                  lhs: { pin: "a" },
-                  rhs: { pin: "in" },
-                },
-                {
-                  lhs: { pin: "b" },
-                  rhs: { pin: "in" },
-                },
-                {
-                  lhs: { pin: "out" },
-                  rhs: { pin: "out" },
-                },
-              ],
-            },
-          ],
-        },
-      ])
-    );
+    const parsed = HdlParser(new Span(NOT_PARTS));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      {
+        name: { value: "Not" },
+        ins: [{ pin: { value: "in" }, width: 1 }],
+        outs: [{ pin: { value: "out" }, width: 1 }],
+        parts: [
+          {
+            name: { value: "Nand" },
+            wires: [
+              {
+                lhs: { pin: { value: "a" } },
+                rhs: { pin: { value: "in" } },
+              },
+              {
+                lhs: { pin: { value: "b" } },
+                rhs: { pin: { value: "in" } },
+              },
+              {
+                lhs: { pin: { value: "out" } },
+                rhs: { pin: { value: "out" } },
+              },
+            ],
+          },
+        ],
+      },
+    ]);
   });
 
   it("parses a file without parts", () => {
-    const parsed = HdlParser(NOT_NO_PARTS);
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        {
-          name: "Not",
-          ins: [{ pin: "in", width: 1 }],
-          outs: [{ pin: "out", width: 1 }],
-          parts: [],
-        },
-      ])
-    );
+    const parsed = HdlParser(new Span(NOT_NO_PARTS));
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      {
+        name: { value: "Not" },
+        ins: [{ pin: { value: "in" }, width: 1 }],
+        outs: [{ pin: { value: "out" }, width: 1 }],
+        parts: [],
+      },
+    ]);
   });
 
   it("Parses a file with 16-bit pins", () => {
-    const parsed = HdlParser(AND_16_BUILTIN);
+    const parsed = HdlParser(new Span(AND_16_BUILTIN));
 
-    expect(parsed).toBeOk(
-      Ok([
-        "",
-        {
-          name: "And16",
-          ins: [
-            { pin: "a", width: 16 },
-            { pin: "b", width: 16 },
-          ],
-          outs: [{ pin: "out", width: 16 }],
-          parts: "BUILTIN",
-        },
-      ])
-    );
+    expect(Ok(parsed)).toMatchObject([
+      "",
+      {
+        name: { value: "And16" },
+        ins: [
+          { pin: { value: "a" }, width: 16 },
+          { pin: { value: "b" }, width: 16 },
+        ],
+        outs: [{ pin: { value: "out" }, width: 16 }],
+        parts: "BUILTIN",
+      },
+    ]);
   });
 
   describe("errors", () => {

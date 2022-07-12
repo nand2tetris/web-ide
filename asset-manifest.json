@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/computron5k/static/css/main.ed5da71a.css",
-    "main.js": "/computron5k/static/js/main.abbf4431.js",
+    "main.js": "/computron5k/static/js/main.5bb4d5f1.js",
     "static/js/787.ef8b0fad.chunk.js": "/computron5k/static/js/787.ef8b0fad.chunk.js",
     "index.html": "/computron5k/index.html",
     "main.ed5da71a.css.map": "/computron5k/static/css/main.ed5da71a.css.map",
-    "main.abbf4431.js.map": "/computron5k/static/js/main.abbf4431.js.map",
+    "main.5bb4d5f1.js.map": "/computron5k/static/js/main.5bb4d5f1.js.map",
     "787.ef8b0fad.chunk.js.map": "/computron5k/static/js/787.ef8b0fad.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.ed5da71a.css",
-    "static/js/main.abbf4431.js"
+    "static/js/main.5bb4d5f1.js"
   ]
 }

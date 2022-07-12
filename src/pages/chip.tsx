@@ -119,110 +119,132 @@ export const Chip = () => {
     |        |        +------+
     |        |        | Diffs|
     +--------+--------+------+
-
   */
 
-  return (
-    <div className="ChipPage flex-1 flex">
-      <section className="flex-1 grid">
-        <div className="pinouts grid">
-          <div className="flex row inline align-end">
-            <select
-              value={project}
-              onChange={({ target: { value } }) => {
-                store.setProject(value as keyof typeof PROJECTS);
-              }}
-            >
-              {PROJECT_NAMES.map(([number, label]) => (
-                <option key={number} value={number}>
-                  {label}
-                </option>
-              ))}
-            </select>
-            <h2 tabIndex={0}>
-              <Trans>Chips:</Trans>
-            </h2>
-            <select
-              value={chip}
-              onChange={({ target: { value } }) => store.setChip(value)}
-            >
-              {chips.map((chip) => (
-                <option key={chip} value={chip}>
-                  {chip}
-                </option>
-              ))}
-            </select>
-          </div>
-          <article className="no-shadow panel">
-            <header>
-              <div tabIndex={0}>HDL</div>
-              <fieldset className="button-group">
-                <button onClick={compile} onKeyDown={compile}>
-                  <Trans>Eval</Trans>
-                </button>
-                <button onClick={onSaveChip} onKeyDown={onSaveChip}>
-                  <Trans>Save</Trans>
-                </button>
-              </fieldset>
-            </header>
-            <main className="flex">
-              <textarea
-                className="flex-1"
-                rows={10}
-                onChange={(e) => setHdlText(e.target.value)}
-                value={hdlText}
-              />
-            </main>
-          </article>
-          <article className="no-shadow panel">
-            <header tabIndex={0}>
-              <Trans>Input pins</Trans>
-            </header>
-            <Pinout
-              pins={inPins}
-              clocked={clocked}
-              toggle={(pin) => store.toggle(pin)}
-            />
-          </article>
-          <article className="no-shadow panel">
-            <header tabIndex={0}>
-              <Trans>Internal Pins</Trans>
-            </header>
-            <Pinout pins={internalPins} />
-          </article>
-          <article className="no-shadow panel">
-            <header tabIndex={0}>
-              <Trans>Output pins</Trans>
-            </header>
-            <Pinout pins={outPins} />
-          </article>
+  const selectors = (
+    <div className="_selectors flex row inline align-end">
+      <select
+        value={project}
+        onChange={({ target: { value } }) => {
+          store.setProject(value as keyof typeof PROJECTS);
+        }}
+      >
+        {PROJECT_NAMES.map(([number, label]) => (
+          <option key={number} value={number}>
+            {label}
+          </option>
+        ))}
+      </select>
+      <h2 tabIndex={0}>
+        <Trans>Chips:</Trans>
+      </h2>
+      <select
+        value={chip}
+        onChange={({ target: { value } }) => store.setChip(value)}
+      >
+        {chips.map((chip) => (
+          <option key={chip} value={chip}>
+            {chip}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+  const hdlPanel = (
+    <article className="_hdl_panel no-shadow panel">
+      <header>
+        <div tabIndex={0}>HDL</div>
+        <fieldset className="button-group">
+          <button onClick={compile} onKeyDown={compile}>
+            <Trans>Eval</Trans>
+          </button>
+          <button onClick={onSaveChip} onKeyDown={onSaveChip}>
+            <Trans>Save</Trans>
+          </button>
+        </fieldset>
+      </header>
+      <main className="flex">
+        <textarea
+          className="flex-1"
+          rows={10}
+          onChange={(e) => setHdlText(e.target.value)}
+          value={hdlText}
+        />
+      </main>
+    </article>
+  );
+  const inputPanel = (
+    <article className="_input_panel no-shadow panel">
+      <header tabIndex={0}>
+        <Trans>Input pins</Trans>
+      </header>
+      <Pinout
+        pins={inPins}
+        clocked={clocked}
+        toggle={(pin) => store.toggle(pin)}
+      />
+    </article>
+  );
+  const outputPanel = (
+    <article className="_output_panel no-shadow panel">
+      <header tabIndex={0}>
+        <Trans>Output pins</Trans>
+      </header>
+      <Pinout pins={outPins} />
+    </article>
+  );
+  const internalPanel = (
+    <article className="_internal_panel no-shadow panel">
+      <header tabIndex={0}>
+        <Trans>Internal Pins</Trans>
+      </header>
+      <Pinout pins={internalPins} />
+    </article>
+  );
+  const testPanel = (
+    <article className="_test_panel">
+      <header>
+        <div tabIndex={0}>
+          <Trans>Test</Trans>
         </div>
-        <article>
-          <header>
-            <div tabIndex={0}>
-              <Trans>Test</Trans>
-            </div>
-            <fieldset className="input-group">
-              <button onClick={execute}>
-                <Trans>Execute</Trans>
-              </button>
-            </fieldset>
-          </header>
-          <textarea
-            className="flex-2"
-            rows={15}
-            onChange={(e) => setTstText(e.target.value)}
-            value={tstText}
-          />
-          <textarea
-            className="flex-1"
-            rows={5}
-            onChange={(e) => setCmpText(e.target.value)}
-            value={cmpText}
-          />
-          <DiffTable cmp={cmpText} out={outText} />
-        </article>
-      </section>
+        <fieldset className="input-group">
+          <button onClick={execute}>
+            <Trans>Execute</Trans>
+          </button>
+        </fieldset>
+      </header>
+      <textarea
+        className="flex-2"
+        rows={15}
+        onChange={(e) => setTstText(e.target.value)}
+        value={tstText}
+      />
+      <textarea
+        className="flex-1"
+        rows={5}
+        onChange={(e) => setCmpText(e.target.value)}
+        value={cmpText}
+      />
+      <DiffTable cmp={cmpText} out={outText} />
+    </article>
+  );
+  const visualizationPanel = (
+    <article className="_visualization_panel no-shadow panel">
+      <header>
+        <Trans>Visualizations</Trans>
+      </header>
+    </article>
+  );
+
+  return (
+    <div className="ChipPage flex-1 grid">
+      {selectors}
+      {hdlPanel}
+      {inputPanel}
+      {outputPanel}
+      {internalPanel}
+      {visualizationPanel}
+      {testPanel}
     </div>
   );
 };

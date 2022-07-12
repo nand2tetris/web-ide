@@ -74,20 +74,19 @@ export const Pinout = ({
         {[...pins].map(({ pin }) => (
           <tr key={pin.name}>
             <td tabIndex={0}>{pin.name}</td>
-            <td>
-              <code
-                tabIndex={0}
-                role="button"
-                style={{ cursor: toggle ? "pointer" : "inherit" }}
-                onClick={() => toggle && toggle(pin)}
-                onKeyDown={() => toggle && toggle(pin)}
-              >
-                {pin.width === 1
-                  ? pin.voltage() === 0
-                    ? t`Low`
-                    : t`High`
-                  : bin(pin.busVoltage, pin.width)}
-              </code>
+            <td
+              tabIndex={0}
+              style={{ cursor: toggle ? "pointer" : "inherit" }}
+              onClick={() => toggle && toggle(pin)}
+              onKeyDown={(e) => {
+                if (e.key === " ") {
+                  if (toggle) {
+                    toggle(pin);
+                  }
+                }
+              }}
+            >
+              <code role="button">{bin(pin.busVoltage, pin.width)}</code>
             </td>
           </tr>
         ))}

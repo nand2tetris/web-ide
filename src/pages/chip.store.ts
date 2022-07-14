@@ -142,7 +142,6 @@ export class ChipPageStore {
     }
     this.chip = Ok(maybeChip);
     this.statusLine(t`Compiled ${this.chip.name}`);
-    this.chipName = this.storage["chip/chip"] = this.chip.name!;
     this.chip.eval();
     this.next();
   }
@@ -157,7 +156,7 @@ export class ChipPageStore {
   }
 
   async setProject(proj: keyof typeof PROJECTS) {
-    localStorage["chip/project"] = this.project = proj;
+    this.storage["chip/project"] = this.project = proj;
     this.chips = PROJECTS[proj];
     this.chipName =
       this.chipName && this.chips.includes(this.chipName)
@@ -167,6 +166,7 @@ export class ChipPageStore {
   }
 
   async setChip(name: string) {
+    this.chipName = this.storage["chip/chip"] = name;
     const fsName = (ext: string) =>
       `/projects/${this.project}/${name}/${name}.${ext}`;
     const hdl = await this.fs.readFile(fsName("hdl"));
@@ -178,9 +178,12 @@ export class ChipPageStore {
     this.files.cmp = cmp;
     this.files.out = "";
 
-    this.compileChip();
+    try {
+      this.compileChip();
+    } catch (e) {
+      this.statusLine(display(e));
+    }
 
-    this.chip.eval();
     this.next();
   }
 

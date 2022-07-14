@@ -1,5 +1,13 @@
 .ChipPage {
-  grid: min-content auto / 1fr 1fr 1fr;
+  --cols: 3;
+
+  grid: min-content auto / repeat(var(--cols), 532px);
+  justify-content: center;
+
+  > article {
+    box-sizing: content-box;
+    // max-width: 512px;
+  }
 
   grid-template-areas:
     "sel sel tst"
@@ -40,9 +48,9 @@
   }
 }
 
-@media (max-width: 992px) {
+@media (max-width: 1616px) {
   .ChipPage {
-    grid: min-content auto / 1fr 1fr;
+    --cols: 2;
 
     grid-template-areas:
       "sel sel"
@@ -54,9 +62,9 @@
   }
 }
 
-@media (max-width: 576px) {
+@media (max-width: 1074px) {
   .ChipPage {
-    grid: min-content auto / 1fr;
+    --cols: 1;
 
     grid-template-areas:
       "sel"

@@ -21,7 +21,7 @@ export class Keyboard extends Chip {
 
 export class Memory extends Chip {
   constructor() {
-    super([], [], "Memory");
+    super(["in16", "load", "address[16])"], ["out[16]"], "Memory");
   }
   // RAM16K(in=in, load=writeram, address=address[1..14], out=ramout);
   // DMux(in=load, sel=address[0], a=writeram, b=writeio);

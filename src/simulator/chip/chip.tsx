@@ -1,5 +1,6 @@
 import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
+import { ReactNode } from "react";
 import { bin } from "../../util/twos";
 import { Clock } from "./clock";
 
@@ -304,6 +305,10 @@ export class Chip {
         this.wireInPin(part, to, from);
       }
     }
+  }
+
+  render(): ReactNode | undefined {
+    return undefined;
   }
 
   private findPin(from: string, minWidth?: number): Pin {

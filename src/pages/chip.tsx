@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -7,7 +7,7 @@ import { Pinout, ImmPin } from "../components/pinout";
 import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
 import { StorageContext } from "../util/storage";
 import { Subscription } from "rxjs";
-import { Pins } from "../simulator/chip/chip";
+import { Chip as Part, Pins } from "../simulator/chip/chip";
 import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
 
@@ -29,6 +29,7 @@ export const Chip = () => {
     subs.push(
       store.selectors.chip.subscribe((chip) => {
         setClocked(chip.clocked);
+        setParts(new Set(chip.parts));
         setInPins(reducePins(chip.ins));
         setOutPins(reducePins(chip.outs));
         setInternalPins(reducePins(chip.pins));
@@ -74,6 +75,7 @@ export const Chip = () => {
   const [inPins, setInPins] = useState(reducePins(store.chip.ins));
   const [outPins, setOutPins] = useState(reducePins(store.chip.outs));
   const [internalPins, setInternalPins] = useState(reducePins(store.chip.pins));
+  const [parts, setParts] = useState(store.chip.parts);
 
   const [cmpText, setCmpText] = useState(store.files.cmp);
   const [hdlText, setHdlText] = useState(store.files.hdl);
@@ -108,7 +110,6 @@ export const Chip = () => {
   }
 
   /* Layout:
-
     [Project] [Chip]  +------+
     +--------+--------+ Test +
     |   HDL  | InPins |      |
@@ -233,6 +234,16 @@ export const Chip = () => {
       <header>
         <Trans>Visualizations</Trans>
       </header>
+      <main>
+        <ul>
+          {[...parts]
+            .map((part) => [part, part.render()] as [Part, ReactNode])
+            .filter(([_, v]) => v !== undefined)
+            .map(([p, v]) => (
+              <li key={p.id}>{v}</li>
+            ))}
+        </ul>
+      </main>
     </article>
   );
 

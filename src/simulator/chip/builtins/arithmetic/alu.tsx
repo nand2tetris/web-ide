@@ -1,4 +1,6 @@
-import { alu, Flags } from "../../../cpu/alu";
+import { ReactNode } from "react";
+import { bin } from "../../../../util/twos";
+import { alu, COMMANDS, Flags } from "../../../cpu/alu";
 import { Chip, HIGH, LOW } from "../../chip";
 
 export class ALUNoStat extends Chip {
@@ -58,6 +60,20 @@ export class ALU extends Chip {
     );
   }
 
+  override render(): ReactNode {
+    return (
+      <div>
+        <span>ALU</span>
+        <dl>
+          <dt>A</dt> <dd>{bin(this.in("x").busVoltage)}</dd>
+          <dt>op</dt> <dd>{this.op()}</dd>
+          <dt>D</dt> <dd>{bin(this.in("y").busVoltage)}</dd>
+          <dt>=</dt> <dd>{bin(this.out().busVoltage)}</dd>
+        </dl>
+      </div>
+    );
+  }
+
   override eval() {
     const x = this.in("x").busVoltage;
     const y = this.in("y").busVoltage;
@@ -74,5 +90,17 @@ export class ALU extends Chip {
     this.out("out").busVoltage = out;
     this.out("ng").pull(ng);
     this.out("zr").pull(zr);
+  }
+
+  op(): string {
+    const zx = this.in("zx").busVoltage << 5;
+    const nx = this.in("nx").busVoltage << 4;
+    const zy = this.in("zy").busVoltage << 3;
+    const ny = this.in("ny").busVoltage << 2;
+    const f = this.in("f").busVoltage << 1;
+    const no = this.in("no").busVoltage << 0;
+    const op = zx + nx + zy + ny + f + no;
+
+    return COMMANDS.op[op as keyof typeof COMMANDS.op] ?? "(??)";
   }
 }

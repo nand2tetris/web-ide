@@ -85,8 +85,8 @@ export const DiffTable = ({ out, cmp }: { out: string; cmp: string }) => {
               {row.map(({ cmp, out, pass }, i) =>
                 pass ? (
                   <>
-                    <td key={`${i}_cmp`}>{cmp}</td>
-                    <td key={`${i}_out`}></td>
+                    <td>{cmp}</td>
+                    <td></td>
                   </>
                 ) : (
                   <>

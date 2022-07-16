@@ -15,7 +15,7 @@ import { FullAdder } from "./arithmetic/full_adder";
 import { HalfAdder } from "./arithmetic/half_adder";
 import { Inc16 } from "./arithmetic/inc16";
 
-import { Bit, PC, Register } from "./sequential/bit";
+import { Bit, PC, Register, VRegister } from "./sequential/bit";
 import { DFF } from "./sequential/dff";
 import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram";
 import {
@@ -51,6 +51,8 @@ export {
   ALU,
   Bit,
   Register,
+  VRegister as ARegister,
+  VRegister as DRegister,
   DFF,
   RAM8,
   RAM64,
@@ -103,6 +105,8 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["CPU", CPU],
       ["Computer", Computer],
       ["Memory", Memory],
+      ["ARegister", VRegister],
+      ["DRegister", VRegister],
     ] as [string, { new (): Chip }][]
   ).map(([name, ChipCtor]) => [
     name,

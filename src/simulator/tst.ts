@@ -105,6 +105,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
       return true;
     }
     variable = `${variable}`;
+    // Look up built-in chip state variables
     return (
       this.chip.in(variable) !== undefined ||
       this.chip.out(variable) !== undefined
@@ -122,6 +123,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
   }
 
   setVar(variable: string, value: number): void {
+    // Look up built-in chip state variables
     const pinOrBus = this.chip.in(`${variable}`);
     if (pinOrBus instanceof Bus) {
       pinOrBus.busVoltage = value;

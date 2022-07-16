@@ -33,9 +33,9 @@ function App() {
   );
 
   useEffect(() => {
-    appContext.fs
-      .stat("/projects/01/Not/Not.hdl")
-      .catch(() => projects.resetFiles(appContext.fs));
+    appContext.fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
+      await projects.resetFiles(appContext.fs);
+    });
   }, [appContext.fs]);
 
   return (

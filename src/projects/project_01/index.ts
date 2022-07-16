@@ -69,7 +69,7 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
       "Mux16.tst": Mux16.tst,
       "Mux16.cmp": Mux16.cmp,
     },
-    Mux4way16: {
+    Mux4Way16: {
       "Mux4Way16.hdl": Mux4Way16.hdl,
       "Mux4Way16.tst": Mux4Way16.tst,
       "Mux4Way16.cmp": Mux4Way16.cmp,

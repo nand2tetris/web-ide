@@ -1,0 +1,12 @@
+table.pinout {
+  tbody {
+    button {
+      font-family: var(--font-family-monospace);
+      max-width: 2em;
+
+      &.increment {
+        margin-left: var(--spacing);
+      }
+    }
+  }
+}

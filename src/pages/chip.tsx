@@ -10,8 +10,11 @@ import { Subscription } from "rxjs";
 import { Chip as Part, Pins } from "../simulator/chip/chip";
 import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
+import { Clock } from "../simulator/chip/clock";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 let store = new ChipPageStore();
+const clock = Clock.get();
 
 function reducePins(pins: Pins): ImmPin[] {
   return [...pins.entries()].map((pin) => ({ pin }));
@@ -67,6 +70,15 @@ export const Chip = () => {
       }
     };
   }, [fs, setStatus]);
+
+  const [clockface, setClockface] = useState(display(clock));
+
+  useEffect(() => {
+    const subscription = clock.$.subscribe(() => {
+      setClockface(display(clock));
+    });
+    return () => subscription.unsubscribe();
+  });
 
   const [project, setProject] = useState(store.project);
   const [chips, setChips] = useState<string[]>(PROJECTS[store.project]);
@@ -162,6 +174,17 @@ export const Chip = () => {
           <button onClick={onSaveChip} onKeyDown={onSaveChip}>
             <Trans>Save</Trans>
           </button>
+          <button
+            style={{ whiteSpace: "nowrap" }}
+            onClick={() => clock.toggle()}
+            disabled={!clocked}
+            data-testid="clock"
+          >
+            <Trans>Clock:</Trans> {display(clockface)}
+          </button>
+          <button onClick={() => store.reset()} data-testid="clock">
+            <Trans>Reset</Trans>
+          </button>
         </fieldset>
       </header>
       <main className="flex">
@@ -181,8 +204,8 @@ export const Chip = () => {
       </header>
       <Pinout
         pins={inPins}
-        clocked={clocked}
-        toggle={(pin) => store.toggle(pin)}
+        toggle={(pin, i) => store.toggle(pin, i)}
+        allowIncrement={(pin) => pin.width > 1}
       />
     </article>
   );

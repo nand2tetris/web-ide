@@ -11,7 +11,7 @@ import {
 } from "./hdl";
 
 const hdlGrammar = raw("./grammars/hdl.ohm");
-// console.log(hdlGrammar);
+console.log(hdlGrammar);
 export const grammar = ohm.grammar(hdlGrammar, grammars);
 
 export const hdlSemantics = grammar.extendSemantics(valueSemantics);
@@ -55,15 +55,18 @@ hdlSemantics.addAttribute<Part>("Part", {
   },
 });
 
-hdlSemantics.addAttribute<Part[]>("Parts", {
+hdlSemantics.addAttribute<Part[] | "BUILTIN">("Parts", {
   Parts(_, parts) {
     return parts.children.map((c) => c.Part);
+  },
+  BuiltinPart(_a, _b) {
+    return "BUILTIN";
   },
 });
 
 hdlSemantics.addAttribute<"BUILTIN" | Part[]>("PartList", {
   PartList(list) {
-    return list.sourceString === "BUILTIN;" ? "BUILTIN" : list.Parts;
+    return list.Parts;
   },
 });
 
@@ -91,7 +94,7 @@ hdlSemantics.addAttribute<HdlParse>("Chip", {
       name,
       ins: body.child(0)?.child(0)?.child(1)?.PinList ?? [],
       outs: body.child(1)?.child(0)?.child(1)?.PinList ?? [],
-      parts: body.child(2)?.child(0)?.PartList ?? [],
+      parts: body.child(2)?.PartList ?? [],
     };
   },
 });

@@ -31,10 +31,12 @@ const ERRORS = [
   ["CHIP { BUILTIN }", "Line 1, col 6: expected a letter"], // A chip name is expected
   ["CHIP Not BUILTIN }", 'Line 1, col 10: expected "{"'],
   ["CHIP Not { BUILTIN }", 'Line 1, col 20: expected ";"'],
-  ["CHIP Not { BONKERS; }", 'Line 1, col 12: expected "}"'],
-  ["CHIP Not { ", 'Line 1, col 12: expected "}"'],
-  ["CHIP Not { PARTS: }", ""],
-  ["CHIP Not { PARTS: (); }", 'Line 1, col 19: expected "}" or a letter'],
+  ["CHIP Not { BONKERS; }", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
+  ["CHIP Not { ", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
+  [
+    "CHIP Not { PARTS: (); }",
+    'Line 1, col 19: expected "}", "CLOCKED", or a letter', // A chip name is expected
+  ],
   ["CHIP Not { PARTS: Nand; }", 'Line 1, col 23: expected "("'],
   ["CHIP Not { PARTS: Nand() }", "Line 1, col 24: expected a letter"], // A pin name is expected
   ["CHIP Not { PARTS: Nand(=a) }", "Line 1, col 24: expected a letter"], // A pin name is expected

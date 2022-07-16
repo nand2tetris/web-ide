@@ -9,7 +9,7 @@ Hdl <: Base{
   PinDecl = Name PinWidth?
   PinWidth = OpenSquare decNumber CloseSquare
   BuiltinPart = "BUILTIN" Semi
-  Parts = "PARTS:" Part+
+  Parts = "PARTS:" Part*
   Part = Name OpenParen Wires CloseParen Semi
   Wires = NonemptyListOf<Wire, Comma>
   Wire = WireSide Equal (WireSide | True | False) 

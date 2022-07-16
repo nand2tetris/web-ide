@@ -91,6 +91,8 @@ export const REGISTRY = new Map<string, () => Chip>(
       ["DFF", DFF],
       ["Bit", Bit],
       ["Register", Register],
+      ["ARegister", Register],
+      ["DRegister", Register],
       ["PC", PC],
       ["RAM8", RAM8],
       ["RAM64", RAM64],

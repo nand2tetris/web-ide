@@ -50,9 +50,9 @@ export const DiffTable = ({ out, cmp }: { out: string; cmp: string }) => {
         )
         .map(([cmp, out]) => {
           const cell = {
-            cmp: cmp ?? '""',
+            cmp: cmp ?? '"',
             out: out ?? '"',
-            pass: out?.trim() === cmp?.trim(),
+            pass: cmp?.trim().match(/^\*+$/) || out?.trim() === cmp?.trim(),
           };
           if (!cell.pass) {
             failures += 1;

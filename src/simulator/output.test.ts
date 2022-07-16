@@ -30,6 +30,7 @@ describe("Test Output Handler", () => {
         ["b", 20],
         ["in", 0],
         ["out", -1],
+        ["address", 1234],
       ]),
     }),
     beforeEach
@@ -81,6 +82,13 @@ describe("Test Output Handler", () => {
     const outB = new Output("b", "B", 16, 1, 1);
     const b = outB.header(state.test);
     expect(b).toEqual("        b         ");
+  });
+
+  it.only("truncates a narrow header", () => {
+    const wideOut = new Output("addressM", "D", 5, 0, 0);
+
+    const wide = wideOut.header(state.test);
+    expect(wide).toEqual("addre");
   });
 
   it("does not center %S", () => {

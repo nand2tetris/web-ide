@@ -44,6 +44,9 @@ export class Output {
   }
 
   header(test: Test) {
+    if (this.variable.length > this.len + this.lPad + this.rPad) {
+      return this.variable.substring(0, this.len + this.lPad + this.rPad);
+    }
     return this.padCenter(this.variable);
   }
 

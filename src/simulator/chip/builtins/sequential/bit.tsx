@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { ClockedChip, HIGH, LOW, Voltage } from "../../chip";
 
 export class Bit extends ClockedChip {
@@ -36,11 +37,25 @@ export class Register extends ClockedChip {
   }
 }
 
+export class VRegister extends Register {
+  override render(): ReactNode {
+    return (
+      <span>
+        {this.name}: {this.bits}
+      </span>
+    );
+  }
+}
+
 export class PC extends ClockedChip {
   bits: number = 0x00;
 
   constructor(name?: string) {
     super(["in[16]", "load", "inc", "reset"], ["out[16]"], name);
+  }
+
+  override render(): ReactNode {
+    return <span>PC: {this.bits}</span>;
   }
 
   override tick() {

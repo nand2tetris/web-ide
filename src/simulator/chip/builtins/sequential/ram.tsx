@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import {
   isSome,
   None,
@@ -10,7 +11,7 @@ export class RAM extends ClockedChip {
   private ram: Int16Array;
   private nextData: Option<number> = None();
 
-  constructor(private readonly width: number) {
+  constructor(protected readonly width: number) {
     super(["in[16]", "load", `address[${width}]`], [`out[16]`]);
     this.ram = new Int16Array(Math.pow(2, this.width));
   }
@@ -37,6 +38,10 @@ export class RAM extends ClockedChip {
 export class RAM8 extends RAM {
   constructor() {
     super(3);
+  }
+
+  override render(): ReactNode {
+    return <span>RAM {this.width}</span>;
   }
 }
 

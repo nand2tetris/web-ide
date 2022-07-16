@@ -11,7 +11,7 @@
         "--runInBand",
         "--no-cache",
         "--env=jsdom",
-        "--transformIgnorePatterns=\"node_modules/(?!@davidsouther)/\""
+        "--transformIgnorePatterns=\"node_modules/(?!remark-markdown|@davidsouther)/\""
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",

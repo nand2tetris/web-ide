@@ -1,42 +1,79 @@
 .ChipPage {
-  > section {
-    grid: auto / 2fr 1fr;
+  --cols: 3;
 
-    > .pinouts {
-      grid: min-content repeat(2, minmax(200px, 1fr)) / 1fr 1fr;
+  grid: min-content auto / repeat(var(--cols), 532px);
+  justify-content: center;
 
-      > div:first-of-type {
-        grid-column: 1 / span 2;
-      }
+  > article {
+    box-sizing: content-box;
+    // max-width: 512px;
+  }
 
-      h2 {
-        margin: 0 var(--nav-element-spacing-horizontal);
-      }
-    }
+  grid-template-areas:
+    "sel sel tst"
+    "hdl ins tst"
+    "hdl ots tst"
+    "int vis tst";
+
+  ._selectors {
+    grid-area: sel;
+  }
+
+  ._hdl_panel {
+    grid-area: hdl;
+  }
+
+  ._input_panel {
+    grid-area: ins;
+  }
+
+  ._output_panel {
+    grid-area: ots;
+  }
+
+  ._internal_panel {
+    grid-area: int;
+  }
+
+  ._test_panel {
+    grid-area: tst;
+  }
+
+  ._visualization_panel {
+    grid-area: vis;
+  }
+
+  h2 {
+    margin: 0 var(--nav-element-spacing-horizontal);
   }
 }
 
-@media (max-width: 992px) {
-  .ChipPage > section {
-    grid: auto / 1fr;
+@media (max-width: 1616px) {
+  .ChipPage {
+    --cols: 2;
+
+    grid-template-areas:
+      "sel sel"
+      "hdl ins"
+      "hdl ots"
+      "int vis"
+      "tst tst"
+      "tst tst";
   }
 }
 
-@media (max-width: 576px) {
-  .ChipPage > section > .pinouts {
-    grid: auto / 1fr;
+@media (max-width: 1074px) {
+  .ChipPage {
+    --cols: 1;
 
-    > div:first-of-type {
-      grid-column: 1 / span 1;
-      order: 0;
-    }
-
-    > article:not(:nth-of-type(3)) {
-      order: 1;
-    }
-
-    > article:nth-of-type(3) {
-      order: 2;
-    }
+    grid-template-areas:
+      "sel"
+      "hdl"
+      "ins"
+      "ots"
+      "int"
+      "vis"
+      "tst"
+      "tst";
   }
 }

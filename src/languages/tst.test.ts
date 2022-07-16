@@ -7,7 +7,7 @@ import {
   TstOutputSpec,
   tstParser,
 } from "./tst";
-import { IResult } from "./parser/base";
+import { IResult, Span } from "./parser/base";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -55,19 +55,26 @@ describe("tst language", () => {
   it("parses an output format", () => {
     let parsed: IResult<TstOutputSpec>;
 
-    parsed = TEST_ONLY.tstOutputFormat("a%B3.1.3");
+    const input = new Span("a%B3.1.3");
+    parsed = TEST_ONLY.tstOutputFormat(input);
     expect(parsed).toBeOk(
-      Ok(["", { id: "a", style: "B", width: 1, lpad: 3, rpad: 3 }])
+      Ok([
+        // @ts-ignore
+        { start: 8, end: 8 } as Span,
+        { id: "a", style: "B", width: 1, lpad: 3, rpad: 3 },
+      ])
     );
   });
 
   it("parses an output list", () => {
     let parsed: IResult<TstOutputListOperation>;
 
-    parsed = TEST_ONLY.tstOutputListParser("output-list a%B1.1.1 out%X2.3.4");
+    let input = new Span("output-list a%B1.1.1 out%X2.3.4");
+    parsed = TEST_ONLY.tstOutputListParser(input);
     expect(parsed).toBeOk(
       Ok([
-        "",
+        // @ts-ignore
+        { start: 31, end: 31 } as Span,
         {
           op: "output-list",
           spec: [

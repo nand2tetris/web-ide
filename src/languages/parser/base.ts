@@ -20,7 +20,7 @@ export class ParseError {
       str = `${str} (${message})`;
     }
     if (span instanceof Span) {
-      str = `${str} [${span.pos}; ${span.line},${span.col}]`;
+      str = `${str} [${span.start}; ${span.line},${span.col}]`;
     }
     if (span) {
       if (span.length > 15) {
@@ -56,7 +56,7 @@ export interface Parser<O = StringLike> {
 }
 
 export class Span implements StringLike {
-  readonly pos: number = 0;
+  // readonly pos: number = 0;
   readonly line: number = 1;
   readonly col: number = 1;
 
@@ -66,23 +66,26 @@ export class Span implements StringLike {
 
   constructor(
     private readonly str: StringLike,
-    private readonly start: number = 0,
+    readonly start: number = 0,
     readonly end: number = str.length - start
   ) {
-    assert(
-      end <= str.length,
-      "Creating Span longer than underlying StringLike"
-    );
+    // assert(
+    //   end <= str.length,
+    //   `Creating Span ${end} longer than underlying StringLike ${str.length}`
+    // );
 
+    let offset = 0;
     if (str instanceof Span) {
-      this.pos = str.pos + start;
+      this.str = str.str;
+      offset = str.start;
+      this.start += offset;
+      this.end += offset;
+      // this.pos = str.pos + start;
       this.line = str.line;
       this.col = str.col;
-    } else {
-      this.pos = start;
     }
 
-    for (let i = 0; i < this.start; i++) {
+    for (let i = offset; i < this.start; i++) {
       this.col += 1;
       if (this.str.charAt(i) === "\n") {
         this.line += 1;

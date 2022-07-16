@@ -1,5 +1,5 @@
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { IResult, StringLike } from "./base";
+import { IResult, Span, StringLike } from "./base";
 import { comment, eolComment, identifier, list, token } from "./recipe";
 
 describe("Parser Recipes", () => {
@@ -15,6 +15,28 @@ describe("Parser Recipes", () => {
 
       parsed = eolComment("//")("// foo\r\nnext line");
       expect(parsed).toBeOk(Ok(["next line", "// foo\r\n"]));
+    });
+
+    it("parses EOL comments in spans", () => {
+      let parsed: IResult<StringLike>;
+
+      parsed = eolComment("//")(new Span("// foo"));
+      expect(Ok(parsed)).toMatchObject([
+        { start: 6, end: 6 },
+        { start: 0, end: 6 },
+      ]);
+
+      parsed = eolComment("//")(new Span("// foo\nnext line"));
+      expect(Ok(parsed)).toMatchObject([
+        { start: 7, end: 16 },
+        { start: 0, end: 7 },
+      ]);
+
+      parsed = eolComment("//")(new Span("// foo\r\nnext line"));
+      expect(Ok(parsed)).toMatchObject([
+        { start: 8, end: 17 },
+        { start: 0, end: 8 },
+      ]);
     });
 
     it("parses multiline comments", () => {

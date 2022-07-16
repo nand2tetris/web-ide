@@ -43,7 +43,9 @@ export const chars = (
     if (d < min) {
       return ParseErrors.incomplete(min - d, { span: i });
     }
-    return Ok([i.substring(d), i.substring(0, d)]);
+    const match = i.substring(0, d);
+    const rest = i.substring(d);
+    return Ok([rest, match]);
   };
   return chars;
 };

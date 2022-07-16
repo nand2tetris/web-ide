@@ -28,8 +28,8 @@ describe("ChipStore", () => {
           })
         ),
         {
-          "chip/project": "03",
-          "chip/chip": "Bit",
+          "/chip/project": "03",
+          "/chip/chip": "Bit",
         }
       );
 

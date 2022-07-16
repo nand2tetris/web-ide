@@ -214,6 +214,10 @@ export class Pins {
   entries(): Iterable<Pin> {
     return this.map.values();
   }
+
+  [Symbol.iterator]() {
+    return this.map[Symbol.iterator]();
+  }
 }
 
 let id = 0;
@@ -262,6 +266,13 @@ export class Chip {
     }
 
     Clock.get().$.subscribe(() => this.eval());
+  }
+
+  reset() {
+    for (const [_, pin] of this.ins) {
+      pin.busVoltage = 0;
+    }
+    this.eval();
   }
 
   in(pin = "in"): Pin {

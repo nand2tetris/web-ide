@@ -17,6 +17,7 @@ import { getBuiltinChip } from "../simulator/chip/builtins/index";
 import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import * as not from "../projects/project_01/01_not";
+import { Clock } from "../simulator/chip/clock";
 
 export const PROJECT_NAMES = [
   ["01", "Project 1"],
@@ -47,6 +48,22 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
   "05": ["Memory", "CPU", "Computer"],
 };
+
+function makeHdl(name: string) {
+  return `CHIP ${name} {
+    INS: in;
+    OUTS: out;
+    PARTS:
+  }`;
+}
+
+function makeTst() {
+  return `output-list in%D1.1.1 out%D1.1.1; eval;`;
+}
+
+function makeCmp() {
+  return `| in|out|`;
+}
 
 function doParse<T>(parser: (s: StringLike) => T, str: string) {
   return parser(new Span(str));
@@ -99,7 +116,7 @@ export class ChipPageStore {
     private readonly statusLine: (status: string) => void = () => {}
   ) {
     this.project =
-      (this.storage["chip/project"] as keyof typeof PROJECTS) ?? "01";
+      (this.storage["/chip/project"] as keyof typeof PROJECTS) ?? "01";
     this.chips = PROJECTS[this.project];
     this.chipName = this.storage["chip/chip"] ?? "Not";
     let maybeChip = getBuiltinChip(this.chipName);
@@ -111,11 +128,20 @@ export class ChipPageStore {
     // });
   }
 
-  toggle(pin: Pin) {
-    if (pin.width === 1) {
-      pin.toggle();
+  reset() {
+    Clock.get().reset();
+    this.chip?.reset();
+  }
+
+  toggle(pin: Pin, i?: number) {
+    if (i !== undefined) {
+      pin.busVoltage = pin.busVoltage ^ (1 << i);
     } else {
-      pin.busVoltage += 1;
+      if (pin.width === 1) {
+        pin.toggle();
+      } else {
+        pin.busVoltage += 1;
+      }
     }
     this.chip.eval();
     this.next();
@@ -174,9 +200,11 @@ export class ChipPageStore {
     this.chipName = this.storage["chip/chip"] = name;
     const fsName = (ext: string) =>
       `/projects/${this.project}/${name}/${name}.${ext}`;
-    const hdl = await this.fs.readFile(fsName("hdl"));
-    const tst = await this.fs.readFile(fsName("tst"));
-    const cmp = await this.fs.readFile(fsName("cmp"));
+    const hdl = await this.fs
+      .readFile(fsName("hdl"))
+      .catch(() => makeHdl(name));
+    const tst = await this.fs.readFile(fsName("tst")).catch(() => makeTst());
+    const cmp = await this.fs.readFile(fsName("cmp")).catch(() => makeCmp());
 
     this.files.hdl = hdl;
     this.files.tst = tst;

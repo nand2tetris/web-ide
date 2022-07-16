@@ -12,7 +12,7 @@ export const Settings = () => {
   const writeLocale = useMemo(
     () => (locale: string) => {
       i18n.activate(locale);
-      fs.writeFile("locale", locale);
+      fs.writeFile("/locale", locale);
     },
     [fs]
   );
@@ -21,7 +21,7 @@ export const Settings = () => {
     const subscription = settings.open.subscribe(() => {
       setOpen(true);
     });
-    fs.readFile("locale")
+    fs.readFile("/locale")
       .then((locale) => i18n.activate(locale))
       .catch(() => writeLocale("en"));
     return () => subscription.unsubscribe();
@@ -56,10 +56,11 @@ export const Settings = () => {
             </dt>
             <dd>
               <button
-                onClick={() => {
-                  localStorage["chip/project"] = "01";
-                  localStorage["chip/chip"] = "Not";
-                  projects.resetFiles(fs);
+                onClick={async () => {
+                  localStorage.clear();
+                  localStorage["/chip/project"] = "01";
+                  localStorage["/chip/chip"] = "Not";
+                  await projects.resetFiles(fs);
                   // statusLine.update("Reset files in local storage");
                 }}
               >

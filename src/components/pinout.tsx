@@ -1,96 +1,77 @@
-import { t, Trans } from "@lingui/macro";
-import { display } from "@davidsouther/jiffies/lib/esm/display";
-import { useEffect, useState } from "react";
-import { Pin } from "../simulator/chip/chip";
-import { Clock } from "../simulator/chip/clock";
-import { bin } from "../util/twos";
+import { Trans } from "@lingui/macro";
+import { Pin as ChipPin } from "../simulator/chip/chip";
+import { range } from "@davidsouther/jiffies/lib/esm/range";
 
-const clock = Clock.get();
+import "./pinout.scss";
 
 export interface ImmPin {
-  pin: Pin;
+  pin: ChipPin;
 }
 
 export const Pinout = ({
   pins,
   toggle,
-  clocked = false,
+  allowIncrement = () => false,
 }: {
   pins: ImmPin[];
-  toggle?: (pin: Pin) => void;
-  clocked?: boolean;
+  toggle?: (pin: ChipPin, bit?: number) => void;
+  allowIncrement?: (pin: ChipPin) => boolean;
 }) => {
-  const [clockface, setClockface] = useState(display(clock));
-
-  useEffect(() => {
-    const subscription = clock.$.subscribe(() => {
-      setClockface(display(clock));
-    });
-    return () => subscription.unsubscribe();
-  });
-
   return (
-    <table>
+    <table className="pinout">
       <thead>
         <tr>
-          <th tabIndex={0}>
+          <th>
             <Trans>Name</Trans>
           </th>
-          <th tabIndex={0}>
+          <th>
             <Trans>Value</Trans>
           </th>
         </tr>
       </thead>
       <tbody>
-        {clocked ? (
-          <tr>
-            <td tabIndex={0}>Clock</td>
-            <td>
-              {(
-                [
-                  [clockface, () => clock.toggle()],
-                  [t`Tick`, () => clock.tick()],
-                  [t`Tock`, () => clock.tock()],
-                  [t`Reset`, () => clock.reset()],
-                ] as [string, () => void][]
-              ).map(([label, click]) => (
-                <code
-                  key={label}
-                  style={{
-                    cursor: toggle ? "pointer" : "inherit",
-                    marginRight: "var(--spacing)",
-                  }}
-                  onClick={click}
-                  role="button"
-                >
-                  {label}
-                </code>
-              ))}
-            </td>
-          </tr>
-        ) : (
-          <></>
-        )}
         {[...pins].map(({ pin }) => (
           <tr key={pin.name}>
-            <td tabIndex={0}>{pin.name}</td>
-            <td
-              tabIndex={0}
-              style={{ cursor: toggle ? "pointer" : "inherit" }}
-              onClick={() => toggle && toggle(pin)}
-              onKeyDown={(e) => {
-                if (e.key === " ") {
-                  if (toggle) {
-                    toggle(pin);
-                  }
-                }
-              }}
-            >
-              <code role="button">{bin(pin.busVoltage, pin.width)}</code>
+            <td>{pin.name}</td>
+            <td>
+              <Pin pin={pin} toggle={toggle} allowIncrement={allowIncrement} />
             </td>
           </tr>
         ))}
       </tbody>
     </table>
+  );
+};
+
+const Pin = ({
+  pin,
+  toggle,
+  allowIncrement,
+}: {
+  pin: ChipPin;
+  toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
+  allowIncrement: (pin: ChipPin) => boolean;
+}) => {
+  return (
+    <fieldset className="button-group">
+      {range(0, pin.width)
+        .reverse()
+        .map((i) => (
+          <button
+            key={i}
+            onClick={() => toggle?.(pin, i)}
+            disabled={toggle === undefined}
+          >
+            {pin.voltage(i)}
+          </button>
+        ))}
+      {allowIncrement(pin) ? (
+        <button className="increment" onClick={() => toggle?.(pin)}>
+          +1
+        </button>
+      ) : (
+        <></>
+      )}
+    </fieldset>
   );
 };

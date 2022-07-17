@@ -33,4 +33,6 @@ Base {
   comment = commentStart (~commentEnd any)* commentEnd
   lineCommentStart = "//"
   lineComment = lineCommentStart (~"\n" any)* "\n"
+
+  List<elem, sep> = NonemptyListOf<elem, sep> sep?
 }

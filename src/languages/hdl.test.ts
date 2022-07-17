@@ -216,7 +216,7 @@ describe("hdl language", () => {
   });
 
   it("parses IN list", () => {
-    let parsed: IResult<PinParts[]>;
+    let parsed: IResult<PinDeclaration[]>;
 
     parsed = TEST_ONLY.inList(`IN a, b;`);
     expect(Ok(parsed)).toMatchObject([
@@ -229,7 +229,7 @@ describe("hdl language", () => {
   });
 
   it("parses OUT list", () => {
-    let parsed: IResult<PinParts[]>;
+    let parsed: IResult<PinDeclaration[]>;
 
     parsed = TEST_ONLY.outList(`OUT out;`);
     expect(Ok(parsed)).toMatchObject([

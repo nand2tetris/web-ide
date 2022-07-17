@@ -81,6 +81,13 @@ describe("HDL w/ Ohm", () => {
       });
     });
 
+    it("parses trailing commas", () => {
+      const parse1 = grammar.match(`a=a, b=b,`, "Wires");
+      expect(parse1).toHaveSucceeded();
+      const parse2 = grammar.match(`Foo(a=a, b=b,);`, "Part");
+      expect(parse2).toHaveSucceeded();
+    });
+
     it("parses complex parts", () => {
       const not8 = grammar.match(
         `Not(in[0..1] = true,

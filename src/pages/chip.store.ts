@@ -18,6 +18,7 @@ import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import * as not from "../projects/project_01/01_not";
 import { Clock } from "../simulator/chip/clock";
+import { HDL } from "../languages/hdl-ohm";
 
 export const PROJECT_NAMES = [
   ["01", "Project 1"],
@@ -166,7 +167,13 @@ export class ChipPageStore {
 
   compileChip() {
     this.chip?.remove();
-    const maybeChip = doParse(make.parse, this.files.hdl);
+    // const maybeChip = doParse(make.parse, this.files.hdl);
+    const maybeParsed = HDL.parse(this.files.hdl);
+    if (isErr(maybeParsed)) {
+      this.statusLine(display(Err(maybeParsed).shortMessage));
+      return;
+    }
+    const maybeChip = make.build(Ok(maybeParsed));
     if (isErr(maybeChip)) {
       this.statusLine(display(Err(maybeChip)));
       return;

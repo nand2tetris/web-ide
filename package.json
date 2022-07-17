@@ -8,7 +8,8 @@
   "homepage": "https://davidsouther.github.io/computron5k",
   "dependencies": {
     "@lingui/react": "^3.14.0",
-    "make-plural": "^7.1.0"
+    "make-plural": "^7.1.0",
+    "ohm-js": "^16.3.4"
   },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.0.1",
@@ -24,6 +25,7 @@
     "@types/react-dom": "^18.0.5",
     "gh-pages": "^4.0.0",
     "prettier": "^2.6.2",
+    "raw-loader": "^4.0.2",
     "raw.macro": "^0.5.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

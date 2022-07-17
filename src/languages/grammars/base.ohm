@@ -1,0 +1,36 @@
+Base {
+  Root = (Name | Number)*
+
+  Semi = ";"
+  OpenParen = "("
+  CloseParen = ")"
+  OpenSquare = "["
+  CloseSquare = "]"
+  OpenBrace = "{"
+  CloseBrace = "}"
+  OpenAngle = "<"
+  CloseAngle = ">"
+  Comma = ","
+  Dot = "."
+  Equal = "="
+
+  True = "True"|"true"
+  False = "False"|"false"
+
+  Name = identifier
+  identifier = letter alnum*
+
+  Number = hexNumber | decNumber | binNumber
+  binNumber = ("0b"|"0B") ("0"|"1")+
+  hexNumber = ("0x"|"0X") hexDigit+
+  decNumber = ("0d"|"0D")? (wholeDec | realDec)
+  wholeDec = digit+
+  realDec = digit* "." digit+
+  
+  spaces := lineComment | comment | space*
+  commentStart = "/*"
+  commentEnd = "*/"
+  comment = commentStart (~commentEnd any)* commentEnd
+  lineCommentStart = "//"
+  lineComment = lineCommentStart (~"\n" any)* "\n"
+}

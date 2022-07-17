@@ -122,7 +122,10 @@ describe("hdl language", () => {
     parsed = parser("a=b[0]");
     expect(Ok(parsed)).toMatchObject([
       "",
-      [{ pin: { value: "a" } }, { pin: { value: "b" }, start: 0, end: 0 }],
+      [
+        { pin: { value: "a" }, start: undefined, end: undefined },
+        { pin: { value: "b" }, start: 0, end: 0 },
+      ],
     ]);
 
     parsed = parser("a=b[2]");

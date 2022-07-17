@@ -30,14 +30,17 @@ const hdlIdentifier: Parser<Token> = (i: StringLike) =>
     Ok([rest, new Token(id)])
   );
 
-export interface PinParts {
-  pin: Token;
+export interface PinIndex {
   start?: number | undefined;
   end?: number | undefined;
 }
 
-export interface PinDeclaration {
+export interface PinParts extends PinIndex {
   pin: Token;
+}
+
+export interface PinDeclaration {
+  pin: Token | string;
   width: number;
 }
 
@@ -47,12 +50,12 @@ export interface Wire {
 }
 
 export interface Part {
-  name: Token;
+  name: Token | string;
   wires: Wire[];
 }
 
 export interface HdlParse {
-  name: Token;
+  name: Token | string;
   ins: PinDeclaration[];
   outs: PinDeclaration[];
   parts: "BUILTIN" | Part[];

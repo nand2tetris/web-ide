@@ -2,6 +2,7 @@
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
+import ohm from "ohm-js";
 import {
   isErr,
   Result,
@@ -25,11 +26,18 @@ interface CustomMatchers<R = unknown, T = unknown> {
   toBeErr(result: T): R;
 }
 
+interface OhmMatchers<R = unknown> {
+  toHaveSucceeded(): R;
+  toHaveFailed(message: string): R;
+}
+
 declare global {
   namespace jest {
     interface Expect extends CustomMatchers {}
-    interface Matchers<R, T = {}> extends CustomMatchers<R, T> {}
-    interface InverseAsymmetricMatchers extends CustomMatchers {}
+    interface Matchers<R, T = {}>
+      extends CustomMatchers<R, T>,
+        OhmMatchers<R> {}
+    interface InverseAsymmetricMatchers extends CustomMatchers, OhmMatchers {}
   }
 }
 
@@ -55,5 +63,20 @@ expect.extend({
       expect(Ok(result)).toMatchObject(Ok(expected));
     }
     return { pass: true, message: () => `Ok(${Ok(result)}) is expected` };
+  },
+  toHaveSucceeded(match: ohm.MatchResult) {
+    if (match.succeeded()) {
+      return { pass: true, message: () => "Match succeeded" };
+    } else {
+      return { pass: false, message: () => match.message ?? "Match failed" };
+    }
+  },
+  toHaveFailed(match: ohm.MatchResult, message: string) {
+    expect(match.failed()).toBe(true);
+    expect(match.shortMessage).toBe(message);
+    return {
+      pass: true,
+      message: () => "Failed to parse with correct message",
+    };
   },
 });

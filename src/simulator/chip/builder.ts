@@ -1,6 +1,5 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
-import { HdlParse } from "../../languages/hdl";
-import { HDL } from "../../languages/hdl-ohm";
+import { HDL, HdlParse } from "../../languages/hdl";
 import { ParseError, StringLike } from "../../languages/parser/base";
 import { getBuiltinChip } from "./builtins/index";
 import { Chip, Connection } from "./chip";

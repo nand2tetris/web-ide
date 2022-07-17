@@ -18,7 +18,7 @@ import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import * as not from "../projects/project_01/01_not";
 import { Clock } from "../simulator/chip/clock";
-import { HDL } from "../languages/hdl-ohm";
+import { HDL } from "../languages/hdl";
 
 export const PROJECT_NAMES = [
   ["01", "Project 1"],

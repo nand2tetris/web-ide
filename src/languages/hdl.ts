@@ -1,34 +1,8 @@
 /** Reads and parses HDL chip descriptions. */
-
-import { t } from "@lingui/macro";
-import { isErr, isNone, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { IResult, ParseErrors, Parser, Span, StringLike } from "./parser/base";
-import { alt } from "./parser/branch";
-import { tag } from "./parser/bytes";
-import { map, opt, value } from "./parser/combinator";
-import { many0 } from "./parser/multi";
-import { filler, identifier, list, token, ws } from "./parser/recipe";
-import {
-  delimited,
-  pair,
-  preceded,
-  separated,
-  terminated,
-  tuple,
-} from "./parser/sequence";
-import { Token } from "./base";
-
-const hdlWs = <O>(p: Parser<O>): Parser<O> => {
-  const parser = ws(p, filler);
-  const hdlWs: Parser<O> = (i) => parser(i);
-  return hdlWs;
-};
-const hdlIdentifierParser = hdlWs(identifier());
-const hdlIdentifier: Parser<Token> = (i: StringLike) =>
-  // @ts-ignore
-  hdlIdentifierParser(i).map(([rest, id]: [StringLike, StringLike]) =>
-    Ok([rest, new Token(id)])
-  );
+import raw from "raw.macro";
+import ohm from "ohm-js";
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
+import { grammars, UNKNOWN_PARSE_ERROR, valueSemantics } from "./base-ohm";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -36,11 +10,11 @@ export interface PinIndex {
 }
 
 export interface PinParts extends PinIndex {
-  pin: Token;
+  pin: string;
 }
 
 export interface PinDeclaration {
-  pin: Token | string;
+  pin: string | string;
   width: number;
 }
 
@@ -50,126 +24,120 @@ export interface Wire {
 }
 
 export interface Part {
-  name: Token | string;
+  name: string;
   wires: Wire[];
 }
 
 export interface HdlParse {
-  name: Token | string;
+  name: string;
   ins: PinDeclaration[];
   outs: PinDeclaration[];
   parts: "BUILTIN" | Part[];
 }
 
-function pinDeclaration(toPin: StringLike): IResult<PinDeclaration> {
-  const match = toPin.toString().match(/^(?<pin>[0-9a-zA-Z]+)(\[(?<w>\d+)\])?/);
-  if (!match) {
-    return ParseErrors.failure("pinDeclaration expected pin");
-  }
+const hdlGrammar = raw("./grammars/hdl.ohm");
+export const grammar = ohm.grammar(hdlGrammar, grammars);
 
-  const matched = match[0];
-  const { pin, w } = match.groups as { pin: string; w?: string };
-  return Ok([
-    toPin.substring(matched.length),
-    {
-      pin: new Token(new Span(toPin, 0, pin.length)),
-      width: w ? Number(w) : 1,
-    },
-  ]);
-}
+export const hdlSemantics = grammar.extendSemantics(valueSemantics);
 
-function pin(toPin: StringLike): IResult<PinParts> {
-  const match = toPin
-    .toString()
-    .match(
-      /^(?<pin>[0-9a-zA-Z]+|[Tt]rue|[Ff]alse)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
-    );
-  if (!match) {
-    return ParseErrors.failure(t`could not make a pin from ${toPin}`);
-  }
+hdlSemantics.addAttribute<PinIndex>("SubBus", {
+  SubBus(_a, startNode, endNode, _b) {
+    const start = startNode.value;
+    const end = endNode.child(0)?.child(1)?.value ?? start;
+    return { start, end };
+  },
+});
 
-  const matched = match[0];
-  const { pin, i, j } = match.groups as { pin: string; i?: string; j?: string };
-  const start = i ? Number(i) : undefined;
-  const end = j ? Number(j) : start !== undefined ? start : undefined;
-  return Ok([
-    toPin.substring(matched.length),
-    {
-      pin: new Token(new Span(toPin, 0, pin.length)),
-      start,
-      end,
-    },
-  ]);
-}
+hdlSemantics.addAttribute<PinParts>("WireSide", {
+  WireSide({ name }, index) {
+    const { start, end } = (index.child(0)?.SubBus as PinIndex) ?? {
+      start: undefined,
+      end: undefined,
+    };
+    return { pin: name, start, end };
+  },
+});
 
-const wireParser = separated(hdlWs(pin), token("="), hdlWs(pin));
-const wire: Parser<[PinParts, PinParts]> = (i) => wireParser(i);
-const wireListParser = list(wire, tag(","));
-const wireList: Parser<[PinParts, PinParts][]> = (i) => wireListParser(i);
+hdlSemantics.addAttribute<Wire>("Wire", {
+  Wire(left, _, right) {
+    let rhs: PinParts = right.isTerminal()
+      ? { pin: right.sourceString }
+      : right.WireSide;
+    return { lhs: left.WireSide as PinParts, rhs };
+  },
+});
 
-const partParser = tuple(
-  hdlIdentifier,
-  delimited(token("("), wireList, token(")"))
-);
-const part: Parser<Part> = (i) => {
-  const parse = partParser(i);
-  if (isErr(parse)) {
-    return ParseErrors.error(t`part has no identifier`);
-  }
-  const [input, [name, wires]] = Ok(parse);
-  const part: Part = {
-    name,
-    wires: wires.map(([lhs, rhs]) => ({ lhs, rhs })),
-  };
-  return Ok([input, part]);
-};
+hdlSemantics.addAttribute<Wire[]>("Wires", {
+  Wires(list) {
+    return list.asIteration().children.map(({ Wire }: { Wire: Wire }) => Wire);
+  },
+});
 
-const pinDeclParser = list(hdlWs(pinDeclaration), token(","));
-const pinList: Parser<PinDeclaration[]> = (i) => pinDeclParser(i);
-const inDeclParser = delimited(token("IN"), pinList, token(";"));
-const inList: Parser<PinDeclaration[]> = (i) => inDeclParser(i);
-const outDeclParser = map(
-  opt(delimited(token("OUT"), pinList, token(";"))),
-  (i) => (isNone(i) ? [] : i)
-);
-const outList: Parser<PinDeclaration[]> = (i) => outDeclParser(i);
+hdlSemantics.addAttribute<Part>("Part", {
+  Part({ name }, _a, { Wires }, _b, _c) {
+    return { name: name as string, wires: Wires as Wire[] };
+  },
+});
 
-const partsParser = alt<"BUILTIN" | Part[]>(
-  preceded(token("PARTS:"), many0(terminated(part, token(";")))),
-  value("BUILTIN", token("BUILTIN;"))
-);
-const parts: Parser<"BUILTIN" | Part[]> = (i) => partsParser(i);
+hdlSemantics.addAttribute<Part[] | "BUILTIN">("Parts", {
+  Parts(_, parts) {
+    return parts.children.map((c) => c.Part);
+  },
+  BuiltinPart(_a, _b) {
+    return "BUILTIN";
+  },
+});
 
-const chipBlockParser = delimited(
-  token("{"),
-  tuple(inList, outList, parts),
-  token("}")
-);
-const chipBlock = (i: StringLike) => chipBlockParser(i);
+hdlSemantics.addAttribute<"BUILTIN" | Part[]>("PartList", {
+  PartList(list) {
+    return list.Parts;
+  },
+});
 
-const chipParser = preceded(hdlWs(tag("CHIP")), pair(hdlIdentifier, chipBlock));
+hdlSemantics.addAttribute<PinDeclaration>("PinDecl", {
+  PinDecl({ name }, width) {
+    return {
+      pin: name,
+      width: width.child(0)?.child(1)?.value ?? 1,
+    };
+  },
+});
 
-export function HdlParser(i: Span): IResult<HdlParse> {
-  const chipParse = chipParser(i);
-  if (isErr(chipParse)) {
-    return chipParse;
-  }
+hdlSemantics.addAttribute<PinDeclaration[]>("PinList", {
+  PinList(list) {
+    return list
+      .asIteration()
+      .children.map(({ PinDecl }: { PinDecl: PinDeclaration }) => PinDecl);
+  },
+});
 
-  const [_, [name, [ins, outs, parts]]] = Ok(chipParse);
+hdlSemantics.addAttribute<HdlParse>("Chip", {
+  Chip(_a, { name }, _b, body, _c) {
+    return {
+      name,
+      ins: body.child(0)?.child(0)?.child(1)?.PinList ?? [],
+      outs: body.child(1)?.child(0)?.child(1)?.PinList ?? [],
+      parts: body.child(2)?.PartList ?? [],
+    };
+  },
+});
 
-  return Ok(["", { name, ins, outs, parts }]);
-}
-
-export const TEST_ONLY = {
-  hdlWs,
-  hdlIdentifier,
-  pin,
-  pinList,
-  inList,
-  outList,
-  part,
-  parts,
-  chipBlock,
-  chipParser,
-  wire,
+export const HDL = {
+  grammar: hdlGrammar,
+  semantics: hdlSemantics,
+  parse(
+    source: string
+  ): Result<HdlParse, { message: string; shortMessage: string }> {
+    const match = grammar.match(source);
+    if (match.succeeded()) {
+      const semantics = hdlSemantics(match);
+      const parse = semantics.Chip;
+      return Ok(parse);
+    } else {
+      return Err({
+        message: match.message ?? UNKNOWN_PARSE_ERROR,
+        shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
+      });
+    }
+  },
 };

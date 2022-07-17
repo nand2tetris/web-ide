@@ -41,7 +41,7 @@ const ERRORS = [
   ["CHIP Not { PARTS: Nand(=a) }", "Line 1, col 24: expected a letter"], // A pin name is expected
   [
     "CHIP Not { PARTS: Nand(a=) }",
-    'Line 1, col 26: expected "false", "False", "true", "True", or a letter',
+    'Line 1, col 26: expected "false", "true", or a letter',
   ], // A pin name is expected
   ["CHIP Not { PARTS: Nand(a) }", 'Line 1, col 25: expected "="'],
   ["CHIP Not { PARTS: Nand(a=a }", 'Line 1, col 28: expected ")", ",", or "["'],

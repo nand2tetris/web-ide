@@ -9,7 +9,6 @@ import {
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 import { IResult, Span, StringLike } from "../languages/parser/base";
-import { cmpParser } from "../languages/cmp";
 import { Tst, tstParser } from "../languages/tst";
 import { Low, Pin, Chip as SimChip } from "../simulator/chip/chip";
 import * as make from "../simulator/chip/builder";
@@ -19,6 +18,7 @@ import { compare, Diff } from "../simulator/compare";
 import * as not from "../projects/project_01/01_not";
 import { Clock } from "../simulator/chip/clock";
 import { HDL } from "../languages/hdl";
+import { CMP } from "../languages/cmp";
 
 export const PROJECT_NAMES = [
   ["01", "Project 1"],
@@ -253,25 +253,19 @@ export class ChipPageStore {
     this.files.out = this.test.log();
     this.next();
 
-    const [cmp, out] = await Promise.all([
-      new Promise<IResult<string[][]>>((r) =>
-        r(doParse(cmpParser, this.files.cmp))
-      ),
-      new Promise<IResult<string[][]>>((r) =>
-        r(doParse(cmpParser, this.files.out))
-      ),
-    ]);
+    const cmp = CMP.parse(this.files.cmp);
+    const out = CMP.parse(this.files.out);
 
     if (isErr(cmp)) {
-      this.statusLine(t`Error parsing cmp file!`);
+      this.statusLine(t`Error parsing cmp file! ${display(Err(cmp))}`);
       return;
     }
     if (isErr(out)) {
-      this.statusLine(t`Error parsing out file!`);
+      this.statusLine(t`Error parsing out file! ${display(Err(out))}`);
       return;
     }
 
-    this.diffs = compare(Ok(cmp)[1], Ok(out)[1]);
+    this.diffs = compare(Ok(cmp), Ok(out));
     this.next();
   }
 }

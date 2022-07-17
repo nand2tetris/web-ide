@@ -1,12 +1,12 @@
 import { Trans } from "@lingui/macro";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { cmpParser } from "../languages/cmp";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
+import { CMP } from "../languages/cmp";
 
 export const DiffTable = ({ out, cmp }: { out: string; cmp: string }) => {
-  const output = cmpParser(out);
-  const compare = cmpParser(cmp);
+  const output = CMP.parse(out);
+  const compare = CMP.parse(cmp);
 
   if (isErr(output)) {
     return (
@@ -36,31 +36,26 @@ export const DiffTable = ({ out, cmp }: { out: string; cmp: string }) => {
     );
   }
 
-  const [_a, cmpData] = Ok(compare);
-  const [_b, outData] = Ok(output);
+  const cmpData = Ok(compare);
+  const outData = Ok(output);
   let failures = 0;
-  const table = range(0, Math.max(cmpData.length, outData.length)).map(
-    (_, i) => {
-      const cmpI: string[] = cmpData[i] ?? [];
-      const outI: string[] = outData[i] ?? [];
-      return range(0, Math.max(cmpI.length, outI.length))
-        .map(
-          (_, j) =>
-            [cmpI[j], outI[j]] as [string | undefined, string | undefined]
-        )
-        .map(([cmp, out]) => {
-          const cell = {
-            cmp: cmp ?? '"',
-            out: out ?? '"',
-            pass: cmp?.trim().match(/^\*+$/) || out?.trim() === cmp?.trim(),
-          };
-          if (!cell.pass) {
-            failures += 1;
-          }
-          return cell;
-        });
-    }
-  );
+  const table = range(0, Math.max(cmpData.length, outData.length)).map((i) => {
+    const cmpI = cmpData[i] ?? [];
+    const outI = outData[i] ?? [];
+    return range(0, Math.max(cmpI.length, outI.length))
+      .map((_, j) => [cmpI[j] ?? "", outI[j] ?? ""])
+      .map(([cmp, out]) => {
+        const cell = {
+          cmp: cmp ?? '"',
+          out: out ?? '"',
+          pass: cmp?.trim().match(/^\*+$/) || out?.trim() === cmp?.trim(),
+        };
+        if (!cell.pass) {
+          failures += 1;
+        }
+        return cell;
+      });
+  });
 
   return (
     <div

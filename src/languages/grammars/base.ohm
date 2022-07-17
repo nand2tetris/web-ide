@@ -1,21 +1,39 @@
 Base {
   Root = (Name | Number)*
 
-  Semi = ";"
-  OpenParen = "("
-  CloseParen = ")"
-  OpenSquare = "["
-  CloseSquare = "]"
-  OpenBrace = "{"
-  CloseBrace = "}"
-  OpenAngle = "<"
-  CloseAngle = ">"
-  Comma = ","
-  Dot = "."
-  Equal = "="
+  Semi = semi
+  OpenParen = openParen
+  CloseParen = closeParen
+  OpenSquare = openSquare
+  CloseSquare = closeSquare
+  OpenBrace = openBrace
+  CloseBrace = closeBrace
+  OpenAngle = openAngle
+  CloseAngle = closeAngle
+  Comma = comma
+  Dot = dot
+  Equal = equal
+  Bar = bar
 
-  True = "True"|"true"
-  False = "False"|"false"
+  semi = ";"
+  openParen = "("
+  closeParen = ")"
+  openSquare = "["
+  closeSquare = "]"
+  openBrace = "{"
+  closeBrace = "}"
+  openAngle = "<"
+  closeAngle = ">"
+  comma = ","
+  dot = "."
+  equal = "="
+  bar = "|"
+  newline = "\r"? "\n"
+
+  True = true
+  False = false
+  true = "true"
+  false = "false"
 
   Name = identifier
   identifier = letter alnum*
@@ -35,4 +53,5 @@ Base {
   lineComment = lineCommentStart (~"\n" any)* "\n"
 
   List<elem, sep> = NonemptyListOf<elem, sep> sep?
+  EmptyList<elem, sep> = EmptyList<elem, sep> sep?
 }

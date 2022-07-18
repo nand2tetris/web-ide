@@ -1,8 +1,8 @@
 /** Reads and parses HDL chip descriptions. */
 import raw from "raw.macro";
 import ohm from "ohm-js";
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
-import { grammars, UNKNOWN_PARSE_ERROR, baseSemantics } from "./base-ohm";
+import { grammars, baseSemantics } from "./base";
+import { makeParser } from "./base";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -122,22 +122,15 @@ hdlSemantics.addAttribute<HdlParse>("Chip", {
   },
 });
 
+hdlSemantics.addAttribute<HdlParse>("Root", {
+  Root(_) {
+    return this.Chip;
+  },
+});
+
 export const HDL = {
+  parser: grammar,
   grammar: hdlGrammar,
   semantics: hdlSemantics,
-  parse(
-    source: string
-  ): Result<HdlParse, { message: string; shortMessage: string }> {
-    const match = grammar.match(source);
-    if (match.succeeded()) {
-      const semantics = hdlSemantics(match);
-      const parse = semantics.Chip;
-      return Ok(parse);
-    } else {
-      return Err({
-        message: match.message ?? UNKNOWN_PARSE_ERROR,
-        shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
-      });
-    }
-  },
+  parse: makeParser<HdlParse>(grammar, hdlSemantics),
 };

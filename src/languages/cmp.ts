@@ -1,7 +1,6 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import ohm from "ohm-js";
 import raw from "raw.macro";
-import { grammars, UNKNOWN_PARSE_ERROR, baseSemantics } from "./base-ohm";
+import { grammars, makeParser, baseSemantics } from "./base";
 
 export type Cell = string;
 export type Line = Cell[];
@@ -23,32 +22,14 @@ cmpSemantics.addAttribute<Line>("line", {
   },
 });
 
-cmpSemantics.addAttribute<Cmp>("lines", {
+cmpSemantics.addAttribute<Cmp>("root", {
   Root(lines) {
     return lines.children.map((c) => c.line);
   },
 });
 
 export const CMP = {
-  grammar: cmpGrammar,
+  grammar: grammar,
   semantics: cmpSemantics,
-  parse(
-    source: string
-  ): Result<Cmp, Error | { message: string; shortMessage: string }> {
-    try {
-      const match = grammar.match(source);
-      if (match.succeeded()) {
-        const semantics = cmpSemantics(match);
-        const parse = semantics.lines;
-        return Ok(parse);
-      } else {
-        return Err({
-          message: match.message ?? UNKNOWN_PARSE_ERROR,
-          shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
-        });
-      }
-    } catch (e) {
-      return Err(e as Error);
-    }
-  },
+  parse: makeParser<Cmp>(grammar, cmpSemantics),
 };

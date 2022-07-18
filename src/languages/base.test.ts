@@ -1,6 +1,6 @@
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
 import ohm from "ohm-js";
-import { baseSemantics, grammars } from "./base-ohm";
+import { baseSemantics, grammars } from "./base";
 
 describe("Ohm Base", () => {
   it("parses numbers", () => {

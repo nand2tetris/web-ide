@@ -2,6 +2,7 @@ import raw from "raw.macro";
 import ohm from "ohm-js";
 import { int10, int16, int2 } from "../util/twos";
 import { t } from "@lingui/macro";
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 
 export const UNKNOWN_PARSE_ERROR = t`Unknown parse error`;
 
@@ -46,3 +47,29 @@ baseSemantics.addAttribute("name", {
     return this.child(0)?.name;
   },
 });
+
+export type ParseError = Error | { message: string; shortMessage: string };
+
+export function makeParser<ResultType>(
+  grammar: ohm.Grammar,
+  semantics: ohm.Semantics,
+  property: (obj: ohm.Dict) => ResultType = ({ root }) => root
+): (source: string) => Result<ResultType, ParseError> {
+  return function parse(source) {
+    try {
+      const match = grammar.match(source);
+      if (match.succeeded()) {
+        const parsed = semantics(match);
+        const parse = property(parsed);
+        return Ok(parse);
+      } else {
+        return Err({
+          message: match.message ?? UNKNOWN_PARSE_ERROR,
+          shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
+        });
+      }
+    } catch (e) {
+      return Err(e as Error);
+    }
+  };
+}

@@ -1,4 +1,4 @@
-import { TST } from "./tst";
+import { grammar, TST } from "./tst";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -19,7 +19,7 @@ set in -32123, tick, output;
 
 describe("tst language", () => {
   it("parses an output format", () => {
-    let match = TST.grammar.match("a%B3.1.3", "OutputFormat");
+    let match = grammar.match("a%B3.1.3", "OutputFormat");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).format).toStrictEqual({
       id: "a",
@@ -31,7 +31,7 @@ describe("tst language", () => {
   });
 
   it("parses an output list", () => {
-    let match = TST.grammar.match(
+    let match = grammar.match(
       "output-list a%B1.1.1 out%X2.3.4",
       "TstOutputListOperation"
     );
@@ -46,7 +46,7 @@ describe("tst language", () => {
   });
 
   it("parses an output list with junk", () => {
-    let match = TST.grammar.match(
+    let match = grammar.match(
       "\n/// A list\noutput-list a%B1.1.1 /* the output */ out%X2.3.4",
       "TstOutputListOperation"
     );
@@ -61,7 +61,7 @@ describe("tst language", () => {
   });
 
   it("parses a single set", () => {
-    let match = TST.grammar.match("set a 0", "TstSetOperation");
+    let match = grammar.match("set a 0", "TstSetOperation");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).operation).toEqual({
       op: "set",
@@ -71,7 +71,7 @@ describe("tst language", () => {
   });
 
   it("parses simple multiline", () => {
-    let match = TST.grammar.match("eval;\n\neval;\n\n");
+    let match = grammar.match("eval;\n\neval;\n\n");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [{ ops: [{ op: "eval" }] }, { ops: [{ op: "eval" }] }],
@@ -79,7 +79,7 @@ describe("tst language", () => {
   });
 
   it("parses a test file", () => {
-    let match = TST.grammar.match(NOT_TST);
+    let match = grammar.match(NOT_TST);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -113,7 +113,7 @@ describe("tst language", () => {
   });
 
   it("parses a clocked test file", () => {
-    let match = TST.grammar.match(BIT_TST);
+    let match = grammar.match(BIT_TST);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -154,7 +154,7 @@ describe("tst language", () => {
   });
 
   it("parses a test file with negative integers", () => {
-    let match = TST.grammar.match(MEM_TST);
+    let match = grammar.match(MEM_TST);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [

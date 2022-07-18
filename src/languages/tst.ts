@@ -1,9 +1,8 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import ohm from "ohm-js";
 import raw from "raw.macro";
-import { UNKNOWN_PARSE_ERROR, baseSemantics, grammars } from "./base-ohm";
+import { baseSemantics, grammars, makeParser } from "./base";
 
 export interface TstSetOperation {
   op: "set";
@@ -121,28 +120,14 @@ tstSemantics.addAttribute<Tst>("tst", {
   },
 });
 
-export function parse(
-  source: string
-): Result<Tst, Error | { message: string; shortMessage: string }> {
-  try {
-    const match = grammar.match(source);
-    if (match.succeeded()) {
-      const semantics = tstSemantics(match);
-      const parse = semantics.tst;
-      return Ok(parse);
-    } else {
-      return Err({
-        message: match.message ?? UNKNOWN_PARSE_ERROR,
-        shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
-      });
-    }
-  } catch (e) {
-    return Err(e as Error);
-  }
-}
+tstSemantics.addAttribute<Tst>("root", {
+  Root({ tst }) {
+    return tst;
+  },
+});
 
 export const TST = {
-  grammar,
+  grammar: tstGrammar,
   semantics: tstSemantics,
-  parse,
+  parse: makeParser<Tst>(grammar, tstSemantics),
 };

@@ -164,10 +164,9 @@ export class ChipPageStore {
 
   compileChip() {
     this.chip?.remove();
-    // const maybeChip = doParse(make.parse, this.files.hdl);
     const maybeParsed = HDL.parse(this.files.hdl);
     if (isErr(maybeParsed)) {
-      this.statusLine(display(Err(maybeParsed).shortMessage));
+      this.statusLine(display(Err(maybeParsed).message));
       return;
     }
     const maybeChip = make.build(Ok(maybeParsed));

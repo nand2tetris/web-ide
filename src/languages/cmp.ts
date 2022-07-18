@@ -8,7 +8,6 @@ export type Line = Cell[];
 export type Cmp = Line[];
 
 export const cmpGrammar = raw("./grammars/cmp.ohm");
-// console.log(cmpGrammar);
 export const grammar = ohm.grammar(cmpGrammar, grammars);
 export const cmpSemantics = grammar.extendSemantics(baseSemantics);
 

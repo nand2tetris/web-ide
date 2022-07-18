@@ -1,5 +1,5 @@
 Cmp <: Base {
-  Root := line+
+  Root := line*
   line = bar cell+ newline?
   cell = cellvalue bar
   cellvalue = (~(bar|newline) any)*

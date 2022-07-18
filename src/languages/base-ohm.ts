@@ -3,26 +3,28 @@ import ohm from "ohm-js";
 import { int10, int16, int2 } from "../util/twos";
 import { t } from "@lingui/macro";
 
+export const UNKNOWN_PARSE_ERROR = t`Unknown parse error`;
+
+// Reload ..
+
 const baseGrammar = raw("./grammars/base.ohm");
-// console.log(baseGrammar);
 export const grammars = {
   Base: ohm.grammar(baseGrammar),
 };
 
-export const UNKNOWN_PARSE_ERROR = t`Unknown parse error`;
+export const baseSemantics = grammars.Base.createSemantics();
 
-// Reload
-
-export const valueSemantics = grammars.Base.createSemantics();
-
-valueSemantics.extendOperation("asIteration", {
+baseSemantics.extendOperation("asIteration", {
   List(list, _) {
     return list.asIteration();
   },
 });
 
-valueSemantics.addAttribute("value", {
+baseSemantics.addAttribute("value", {
   decNumber(_, digits): number {
+    return int10(digits.sourceString);
+  },
+  wholeDec(_, digits): number {
     return int10(digits.sourceString);
   },
   binNumber(_, digits) {
@@ -36,7 +38,7 @@ valueSemantics.addAttribute("value", {
   },
 });
 
-valueSemantics.addAttribute("name", {
+baseSemantics.addAttribute("name", {
   identifier(_, __): string {
     return this.sourceString;
   },

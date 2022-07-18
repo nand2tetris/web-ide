@@ -8,8 +8,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
-import { IResult, Span, StringLike } from "../languages/parser/base";
-import { Tst, tstParser } from "../languages/tst";
+import { TST } from "../languages/tst";
 import { Low, Pin, Chip as SimChip } from "../simulator/chip/chip";
 import * as make from "../simulator/chip/builder";
 import { getBuiltinChip } from "../simulator/chip/builtins/index";
@@ -59,16 +58,14 @@ function makeHdl(name: string) {
 }
 
 function makeTst() {
-  return `output-list in%D1.1.1 out%D1.1.1; eval;`;
+  return `repeat {
+    tick,
+    tock;
+  }`;
 }
 
 function makeCmp() {
   return `| in|out|`;
-}
-
-function doParse<T>(parser: (s: StringLike) => T, str: string) {
-  return parser(new Span(str));
-  // return parser(str);
 }
 
 export class ChipPageStore {
@@ -228,9 +225,7 @@ export class ChipPageStore {
   }
 
   async runTest() {
-    const tst = await new Promise<IResult<Tst>>((r) =>
-      r(doParse(tstParser, this.files.tst))
-    );
+    const tst = TST.parse(this.files.tst);
 
     if (isErr(tst)) {
       this.statusLine(display(Err(tst)));
@@ -238,7 +233,7 @@ export class ChipPageStore {
     }
     this.statusLine(t`Parsed tst`);
 
-    this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
+    this.test = ChipTest.from(Ok(tst)).with(this.chip);
 
     await new Promise<void>((r) => {
       try {

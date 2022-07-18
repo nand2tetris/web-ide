@@ -1,6 +1,5 @@
 import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import { HDL, HdlParse } from "../../languages/hdl";
-import { ParseError, StringLike } from "../../languages/parser/base";
 import { getBuiltinChip } from "./builtins/index";
 import { Chip, Connection } from "./chip";
 
@@ -18,11 +17,8 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
 }
 
 export function parse(
-  code: StringLike
-): Result<
-  Chip,
-  Error | ParseError | { message: string; shortMessage: string }
-> {
+  code: string
+): Result<Chip, Error | { message: string; shortMessage: string }> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) return parsed;
   return build(Ok(parsed));

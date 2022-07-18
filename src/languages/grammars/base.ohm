@@ -2,6 +2,7 @@ Base {
   Root = (Name | Number)*
 
   Semi = semi
+  Bang = bang
   OpenParen = openParen
   CloseParen = closeParen
   OpenSquare = openSquare
@@ -14,8 +15,10 @@ Base {
   Dot = dot
   Equal = equal
   Bar = bar
+  Percent = percent
 
   semi = ";"
+  bang = "!"
   openParen = "("
   closeParen = ")"
   openSquare = "["
@@ -26,6 +29,8 @@ Base {
   closeAngle = ">"
   comma = ","
   dot = "."
+  minus = "-"
+  percent = "%"
   equal = "="
   bar = "|"
   newline = "\r"? "\n"
@@ -39,11 +44,11 @@ Base {
   identifier = letter alnum*
 
   Number = hexNumber | decNumber | binNumber
-  binNumber = ("0b"|"0B") ("0"|"1")+
-  hexNumber = ("0x"|"0X") hexDigit+
-  decNumber = ("0d"|"0D")? (wholeDec | realDec)
-  wholeDec = digit+
-  realDec = digit* "." digit+
+  binNumber = ("%B") ("0"|"1")+
+  hexNumber = ("%X") hexDigit+
+  decNumber = ("%D")? (wholeDec | realDec)
+  wholeDec = minus? digit+
+  realDec = minus? digit* "." digit+
   
   spaces := lineComment | comment | space*
   commentStart = "/*"

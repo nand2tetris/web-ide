@@ -2,7 +2,7 @@
 import raw from "raw.macro";
 import ohm from "ohm-js";
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
-import { grammars, UNKNOWN_PARSE_ERROR, valueSemantics } from "./base-ohm";
+import { grammars, UNKNOWN_PARSE_ERROR, baseSemantics } from "./base-ohm";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -38,7 +38,7 @@ export interface HdlParse {
 const hdlGrammar = raw("./grammars/hdl.ohm");
 export const grammar = ohm.grammar(hdlGrammar, grammars);
 
-export const hdlSemantics = grammar.extendSemantics(valueSemantics);
+export const hdlSemantics = grammar.extendSemantics(baseSemantics);
 
 hdlSemantics.addAttribute<PinIndex>("SubBus", {
   SubBus(_a, startNode, endNode, _b) {

@@ -1,18 +1,14 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { Option, unwrapOr } from "@davidsouther/jiffies/lib/esm/result";
-import { int10, int16, int2 } from "../util/twos";
-import { Parser } from "./parser/base";
-import { alt } from "./parser/branch";
-import { tag } from "./parser/bytes";
-import { map, opt, recognize, valueFn } from "./parser/combinator";
-import { many1 } from "./parser/multi";
-import { filler, identifier, list, token } from "./parser/recipe";
-import { pair, preceded, terminated, tuple } from "./parser/sequence";
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
+import ohm from "ohm-js";
+import raw from "raw.macro";
+import { UNKNOWN_PARSE_ERROR, baseSemantics, grammars } from "./base-ohm";
 
 export interface TstSetOperation {
   op: "set";
   id: string;
+  index?: number;
   value: number;
 }
 
@@ -43,88 +39,110 @@ export type TstOperation =
   | TstSetOperation
   | TstOutputListOperation;
 
-export interface TstLine {
+export interface TstStatement {
   ops: TstOperation[];
+  break?: true;
 }
 
 export interface Tst {
-  lines: TstLine[];
+  lines: TstStatement[];
 }
 
-const tstBinaryValueParser = preceded(tag("B"), tag(/[01]{1,16}/));
-const tstHexValueParser = preceded(tag("X"), tag(/[0-9a-fA-F]{1,4}/));
-const tstDecimalValueParser = preceded(
-  opt(tag("D")),
-  tag(/(-[1-9])?[0-9]{0,5}/)
-);
-const tstHexValue = map(tstHexValueParser, (s) => int16(s.toString()));
-const tstDecimalValue = map(tstDecimalValueParser, (s) => int10(s.toString()));
-const tstBinaryValue = map(tstBinaryValueParser, (s) => int2(s.toString()));
-const tstValueParser = alt(
-  preceded(tag("%"), alt(tstBinaryValue, tstHexValue, tstDecimalValue)),
-  tstDecimalValue
-);
-const tstValue: Parser<number> = tstValueParser;
+// reload .....
 
-const setParser: Parser<TstSetOperation> = map(
-  preceded(token("set"), pair(token(identifier()), token(tstValue))),
-  ([id, value]) => ({ op: "set", id: id.toString(), value })
-);
-const set: Parser<TstSetOperation> = (i) => setParser(i);
+export const tstGrammar = raw("./grammars/tst.ohm");
+export const grammar = ohm.grammar(tstGrammar, grammars);
+export const tstSemantics = grammar.extendSemantics(baseSemantics);
 
-const tstOp = alt<TstOperation>(
-  set,
-  valueFn(() => ({ op: "tick" }), token("tick")),
-  valueFn(() => ({ op: "tock" }), token("tock")),
-  valueFn(() => ({ op: "eval" }), token("eval")),
-  valueFn(() => ({ op: "output" }), token("output"))
-);
-const tstOpLineParser = map(
-  terminated(list(tstOp, token(",")), token(";")),
-  (ops) => ({ ops })
-);
+tstSemantics.extendAttribute<number>("value", {
+  Index(_a, idx, _b) {
+    return idx.value;
+  },
+});
 
-const tstOutputFormatParser = tuple(
-  recognize(pair(identifier(), opt(tag("[]")))),
-  opt(preceded(tag("%"), alt(tag("X"), tag("B"), tag("D"), tag("S")))),
-  tag(/\d+\.\d+\.\d+/)
-);
-const tstOutputFormat: Parser<TstOutputSpec> = map(
-  tstOutputFormatParser,
-  ([id, style, tag]) => {
-    const [a, b, c] = tag.toString().split(".");
+tstSemantics.addAttribute<TstOutputSpec>("format", {
+  OutputFormat({ name }, _a, type, leftPad, _b, len, _c, rightPad) {
     return {
-      id: id.toString(),
-      // @ts-ignore
-      style: unwrapOr<"D" | "B" | "X">(style as Option<"D" | "B" | "X">, "D"),
-      width: int10(b),
-      lpad: int10(a),
-      rpad: int10(c),
+      id: name,
+      style: type.sourceString as TstOutputSpec["style"],
+      width: len.value,
+      lpad: leftPad.value,
+      rpad: rightPad.value,
     };
+  },
+});
+
+tstSemantics.addAttribute<TstOperation>("operation", {
+  TstEvalOperation(op) {
+    return { op: op.sourceString as TstEvalOperation["op"] };
+  },
+  TstOutputOperation(_) {
+    return { op: "output" };
+  },
+  TstOutputListOperation(_, formats) {
+    return {
+      op: "output-list",
+      spec: formats.children.map((n) => n.format),
+    };
+  },
+  TstSetOperation(op, { name }, index, { value }) {
+    const setOp: TstSetOperation = {
+      op: "set",
+      id: name,
+      value,
+    };
+    const child = index.child(0);
+    if (child) {
+      setOp.index = child.value;
+    }
+    return setOp;
+  },
+});
+
+tstSemantics.addAttribute<TstStatement>("statement", {
+  TstStatement(list, end) {
+    const stmt: TstStatement = {
+      ops: list
+        .asIteration()
+        .children.map(
+          ({ operation }: { operation: TstOperation }) => operation
+        ),
+    };
+    if (end.sourceString === "!") {
+      stmt.break = true;
+    }
+    return stmt;
+  },
+});
+
+tstSemantics.addAttribute<Tst>("tst", {
+  Tst(lines) {
+    return { lines: lines.children.map((n) => n.statement) };
+  },
+});
+
+export function parse(
+  source: string
+): Result<Tst, Error | { message: string; shortMessage: string }> {
+  try {
+    const match = grammar.match(source);
+    if (match.succeeded()) {
+      const semantics = tstSemantics(match);
+      const parse = semantics.tst;
+      return Ok(parse);
+    } else {
+      return Err({
+        message: match.message ?? UNKNOWN_PARSE_ERROR,
+        shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
+      });
+    }
+  } catch (e) {
+    return Err(e as Error);
   }
-);
+}
 
-const tstOutputListParser: Parser<TstOutputListOperation> = map(
-  preceded(token("output-list"), list(token(tstOutputFormat), filler())),
-  (spec) => ({ op: "output-list", spec })
-);
-const tstConfigParser = alt(tstOutputListParser);
-
-const tstConfigLineParser: Parser<TstLine> = map(
-  terminated(list(tstConfigParser, token(",")), token(";")),
-  (ops) => ({ ops } as TstLine)
-);
-
-export const tstParser: Parser<Tst> = map(
-  many1(alt(tstConfigLineParser, tstOpLineParser)),
-  (lines) => ({ lines })
-);
-
-export const TEST_ONLY = {
-  set,
-  tstValue,
-  tstOp,
-  tstOutputFormat,
-  tstOutputListParser,
-  tstConfigParser,
+export const TST = {
+  grammar,
+  semantics: tstSemantics,
+  parse,
 };

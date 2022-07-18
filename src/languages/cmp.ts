@@ -1,17 +1,16 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import ohm from "ohm-js";
 import raw from "raw.macro";
-import { grammars, UNKNOWN_PARSE_ERROR, valueSemantics } from "./base-ohm";
-
-const cmpGrammar = raw("./grammars/cmp.ohm");
-// console.log(cmpGrammar);
-export const grammar = ohm.grammar(cmpGrammar, grammars);
-
-export const cmpSemantics = grammar.extendSemantics(valueSemantics);
+import { grammars, UNKNOWN_PARSE_ERROR, baseSemantics } from "./base-ohm";
 
 export type Cell = string;
 export type Line = Cell[];
 export type Cmp = Line[];
+
+export const cmpGrammar = raw("./grammars/cmp.ohm");
+// console.log(cmpGrammar);
+export const grammar = ohm.grammar(cmpGrammar, grammars);
+export const cmpSemantics = grammar.extendSemantics(baseSemantics);
 
 cmpSemantics.addAttribute<Cell>("cell", {
   cell(value, _) {

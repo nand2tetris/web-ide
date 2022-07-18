@@ -1,0 +1,27 @@
+Tst <: Base {
+  Root := Tst
+  Tst = TstStatement*
+
+  TstStatement = List<TstOperation, ","> (Semi | Bang)
+
+  TstOperation =
+    | TstOutputListOperation
+    | TstEvalOperation
+    | TstSetOperation
+    | TstOutputOperation
+
+  TstOutputListOperation = "output-list" OutputFormat+
+  OutputFormat = Name percent FormatStyle wholeDec dot wholeDec dot wholeDec
+  TstSetOperation = Set Name Index? Number
+  Index = OpenSquare wholeDec CloseSquare
+  TstEvalOperation = Eval | Tick | Tock
+  TstOutputOperation = Output
+
+  Set = "set"
+  Eval = "eval"
+  Tick = "tick"
+  Tock = "tock"
+  Output = "output"
+  OutputList = "output-list"
+  FormatStyle = "B"|"D"|"S"|"X"
+}

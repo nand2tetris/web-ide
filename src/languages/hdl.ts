@@ -123,8 +123,8 @@ hdlSemantics.addAttribute<HdlParse>("Chip", {
 });
 
 hdlSemantics.addAttribute<HdlParse>("Root", {
-  Root(_) {
-    return this.Chip;
+  Root(root) {
+    return root.child(0)?.Chip;
   },
 });
 
@@ -132,5 +132,5 @@ export const HDL = {
   parser: grammar,
   grammar: hdlGrammar,
   semantics: hdlSemantics,
-  parse: makeParser<HdlParse>(grammar, hdlSemantics),
+  parse: makeParser<HdlParse>(grammar, hdlSemantics, (n) => n.Chip),
 };

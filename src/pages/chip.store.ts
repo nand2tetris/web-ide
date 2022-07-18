@@ -75,7 +75,6 @@ export class ChipPageStore {
   chip: SimChip;
   test?: ChipTest;
   diffs: Diff[] = [];
-  private runningTest = false;
   files = {
     hdl: "",
     cmp: "",
@@ -93,8 +92,11 @@ export class ChipPageStore {
   readonly $ = this.subject.asObservable();
   readonly testLog = new Subject<string>();
 
+  private runningTest = false;
+  private initialized = false;
+
   next() {
-    if (!this.runningTest) this.subject.next(this);
+    if (this.initialized && !this.runningTest) this.subject.next(this);
   }
 
   readonly selectors = {
@@ -238,6 +240,7 @@ export class ChipPageStore {
     }
 
     this.next();
+    this.initialized = true;
   }
 
   async runTest() {

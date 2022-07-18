@@ -45,6 +45,7 @@ export const Chip = () => {
         setInternalPins(reducePins(chip.pins));
       })
     );
+
     subs.push(
       store.selectors.project.subscribe((project) => {
         setProject(project);
@@ -218,13 +219,15 @@ export const Chip = () => {
           </button>
           <button
             style={{ whiteSpace: "nowrap" }}
-            onClick={() => clock.toggle()}
-            disabled={!clocked}
+            onClick={() => {
+              clock.toggle();
+            }}
+            // disabled={!clocked}
             data-testid="clock"
           >
             <Trans>Clock:</Trans> {display(clockface)}
           </button>
-          <button onClick={() => store.reset()} data-testid="clock">
+          <button onClick={() => store.reset()} data-testid="clock-reset">
             <Trans>Reset</Trans>
           </button>
         </fieldset>

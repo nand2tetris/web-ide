@@ -61,17 +61,18 @@ const Pin = ({
             key={i}
             onClick={() => toggle?.(pin, i)}
             disabled={toggle === undefined}
+            data-testid={`pin-${i}`}
           >
             {pin.voltage(i)}
           </button>
         ))}
-      {allowIncrement(pin) ? (
+      {/* {allowIncrement(pin) ? (
         <button className="increment" onClick={() => toggle?.(pin)}>
           +1
         </button>
       ) : (
         <></>
-      )}
+      )} */}
     </fieldset>
   );
 };

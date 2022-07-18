@@ -7,6 +7,17 @@
   > article {
     box-sizing: content-box;
     // max-width: 512px;
+
+    > main {
+      position: relative;
+
+      > .ErrorPanel {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        left: 0;
+      }
+    }
   }
 
   grid-template-areas:

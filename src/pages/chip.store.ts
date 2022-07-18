@@ -82,6 +82,12 @@ export class ChipPageStore {
     tst: "",
     out: "",
   };
+  errors = {
+    hdl: "",
+    cmp: "",
+    tst: "",
+    out: "",
+  };
 
   readonly subject = new Subject<ChipPageStore>();
   readonly $ = this.subject.asObservable();
@@ -97,6 +103,7 @@ export class ChipPageStore {
     chips: this.$.pipe(map((t) => t.chips)),
     chip: this.$.pipe(map((t) => t.chip)),
     files: this.$.pipe(map((t) => t.files)),
+    errors: this.$.pipe(map((t) => t.errors)),
     test: this.$.pipe(map((t) => t.test)),
     diffs: this.$.pipe(map((t) => t.diffs)),
     log: this.testLog.asObservable(),
@@ -160,13 +167,18 @@ export class ChipPageStore {
     this.files.tst = tst;
     this.files.cmp = cmp;
     this.files.out = out;
+    this.errors.hdl = "";
+    this.errors.tst = "";
+    this.errors.cmp = "";
+    this.errors.out = "";
   }
 
   compileChip() {
     this.chip?.remove();
     const maybeParsed = HDL.parse(this.files.hdl);
     if (isErr(maybeParsed)) {
-      this.statusLine(display(Err(maybeParsed).message));
+      this.errors.hdl = Err(maybeParsed).message;
+      this.statusLine("Failed to parse chip");
       return;
     }
     const maybeChip = make.build(Ok(maybeParsed));
@@ -182,6 +194,7 @@ export class ChipPageStore {
 
   async saveChip(text: string) {
     this.files.hdl = text;
+    this.errors.hdl = "";
     const name = this.chipName;
     const path = `/projects/${this.project}/${name}/${name}.hdl`;
     await this.fs.writeFile(path, text);
@@ -213,6 +226,10 @@ export class ChipPageStore {
     this.files.tst = tst;
     this.files.cmp = cmp;
     this.files.out = "";
+    this.errors.hdl = "";
+    this.errors.tst = "";
+    this.errors.cmp = "";
+    this.errors.out = "";
 
     try {
       this.compileChip();
@@ -227,7 +244,9 @@ export class ChipPageStore {
     const tst = TST.parse(this.files.tst);
 
     if (isErr(tst)) {
-      this.statusLine(display(Err(tst)));
+      this.errors.tst = display(Err(tst).message);
+      this.statusLine(t`Failed to parse test`);
+      this.next();
       return;
     }
     this.statusLine(t`Parsed tst`);
@@ -251,11 +270,15 @@ export class ChipPageStore {
     const out = CMP.parse(this.files.out);
 
     if (isErr(cmp)) {
-      this.statusLine(t`Error parsing cmp file! ${display(Err(cmp))}`);
+      this.errors.cmp = Err(cmp).message;
+      this.statusLine(t`Error parsing cmp`);
+      this.next();
       return;
     }
     if (isErr(out)) {
-      this.statusLine(t`Error parsing out file! ${display(Err(out))}`);
+      this.errors.out = Err(out).message;
+      this.statusLine(t`Error parsing out`);
+      this.next();
       return;
     }
 

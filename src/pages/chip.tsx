@@ -1,4 +1,10 @@
-import { ReactNode, useContext, useEffect, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -12,6 +18,7 @@ import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
 import { Clock } from "../simulator/chip/clock";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
+import { Icon } from "../components/pico/icon";
 
 let store = new ChipPageStore();
 const clock = Clock.get();
@@ -59,6 +66,14 @@ export const Chip = () => {
       })
     );
     subs.push(
+      store.selectors.errors.subscribe(({ hdl, tst, cmp, out }) => {
+        setHdlError(hdl);
+        setTstError(tst);
+        setCmpError(cmp);
+        setOutError(out);
+      })
+    );
+    subs.push(
       store.selectors.log.subscribe((out) => {
         setOutText(out);
       })
@@ -93,6 +108,11 @@ export const Chip = () => {
   const [hdlText, setHdlText] = useState(store.files.hdl);
   const [outText, setOutText] = useState(store.files.out);
   const [tstText, setTstText] = useState(store.files.tst);
+
+  const [hdlError, setHdlError] = useState(store.errors.hdl);
+  const [tstError, setTstError] = useState(store.errors.tst);
+  const [cmpError, setCmpError] = useState(store.errors.cmp);
+  const [outError, setOutError] = useState(store.errors.out);
 
   function clearOutput() {
     setOutText("");
@@ -133,6 +153,28 @@ export const Chip = () => {
     |        |        | Diffs|
     +--------+--------+------+
   */
+
+  const ErrorPanel = ({ error }: { error: string }) => {
+    const [open, setOpen] = useState(error.length > 0);
+    return (
+      <>
+        {open ? (
+          <div className="ErrorPanel flex align-top">
+            <div>
+              <a role="button" onClick={() => setOpen(false)} href="#root">
+                <Icon name="close"></Icon>
+              </a>
+            </div>
+            <pre class-name="flex-1">
+              <code>{error}</code>
+            </pre>
+          </div>
+        ) : (
+          <></>
+        )}
+      </>
+    );
+  };
 
   const selectors = (
     <div className="_selectors flex row inline align-end">
@@ -194,6 +236,7 @@ export const Chip = () => {
           onChange={(e) => setHdlText(e.target.value)}
           value={hdlText}
         />
+        <ErrorPanel error={hdlError} />
       </main>
     </article>
   );
@@ -237,19 +280,28 @@ export const Chip = () => {
           </button>
         </fieldset>
       </header>
-      <textarea
-        className="flex-2"
-        rows={15}
-        onChange={(e) => setTstText(e.target.value)}
-        value={tstText}
-      />
-      <textarea
-        className="flex-1"
-        rows={5}
-        onChange={(e) => setCmpText(e.target.value)}
-        value={cmpText}
-      />
-      <DiffTable cmp={cmpText} out={outText} />
+      <main>
+        <textarea
+          className="flex-2"
+          rows={15}
+          onChange={(e) => setTstText(e.target.value)}
+          value={tstText}
+        />
+        <ErrorPanel error={tstError} />
+      </main>
+      <main>
+        <textarea
+          className="flex-1"
+          rows={5}
+          onChange={(e) => setCmpText(e.target.value)}
+          value={cmpText}
+        />
+        <ErrorPanel error={cmpError} />
+      </main>
+      <main>
+        <DiffTable cmp={cmpText} out={outText} />
+        <ErrorPanel error={outError} />
+      </main>
     </article>
   );
   const visualizationPanel = (

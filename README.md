@@ -6,7 +6,7 @@ Project files from "The Elements of Computing Systems" by Nisan and Schocken, MI
 
 ## User Guide
 
-The [user guide](./docs/user_guide/) is available here and also included in the published project at https://davidsouther.github.io/user_guide.
+The user guide is available [here](./src/pages/USER_GUIDE.md) and can also be accessed by clicking "Guide" at the top right of the [published project](https://davidsouther.github.io/computron5k).
 
 ## Architecture
 

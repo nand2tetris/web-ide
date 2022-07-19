@@ -205,7 +205,7 @@ export class ChipPageStore {
   }
 
   async setProject(proj: keyof typeof PROJECTS) {
-    this.storage["chip/project"] = this.project = proj;
+    this.storage["/chip/project"] = this.project = proj;
     this.chips = PROJECTS[proj];
     this.chipName =
       this.chipName && this.chips.includes(this.chipName)

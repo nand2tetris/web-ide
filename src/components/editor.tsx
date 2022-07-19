@@ -1,6 +1,7 @@
 import ohm from "ohm-js";
 import { Trans } from "@lingui/macro";
-import { useState } from "react";
+import MonacoEditor, { OnMount } from "@monaco-editor/react";
+import { useCallback, useState } from "react";
 import "./editor.scss";
 import { UNKNOWN_PARSE_ERROR } from "../languages/base";
 
@@ -21,30 +22,54 @@ export const ErrorPanel = ({ error }: { error: string }) => {
 
 export const Editor = ({
   className = "",
-  source,
-  onSourceChange,
+  value,
+  onChange,
   grammar,
+  language,
 }: {
   className?: string;
-  source: string;
-  onSourceChange: (source: string) => void;
+  value: string;
+  onChange: (source: string) => void;
   grammar: ohm.Grammar;
+  language: string;
 }) => {
-  const [text, setText] = useState(source);
   const [error, setError] = useState("");
 
-  const onChange = (text: string) => {
-    onSourceChange(text);
-    setText(text);
-    const parsed = grammar.match(text);
-    if (parsed.failed()) {
-      setError(parsed.message ?? parsed.shortMessage ?? UNKNOWN_PARSE_ERROR);
-    }
-  };
+  const onChangeCB = useCallback(
+    (text: string = "") => {
+      onChange(text);
+      const parsed = grammar.match(text);
+      if (parsed.failed()) {
+        setError(parsed.message ?? parsed.shortMessage ?? UNKNOWN_PARSE_ERROR);
+      } else {
+        setError("");
+      }
+    },
+    [onChange, setError, grammar]
+  );
+
+  const onMount: OnMount = useCallback((editor) => {
+    editor.updateOptions({
+      fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
+      Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
+      "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji"`,
+      fontSize: 16,
+      minimap: {
+        enabled: false,
+      },
+    });
+  }, []);
 
   return (
     <div className={`Editor flex ${className}`}>
-      <textarea value={text} onChange={(e) => onChange(e.target.value)} />
+      <MonacoEditor
+        value={value}
+        onChange={onChangeCB}
+        language={language}
+        theme="vs"
+        onMount={onMount}
+      />
       <ErrorPanel error={error} />
     </div>
   );

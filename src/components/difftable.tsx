@@ -4,7 +4,15 @@ import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { CMP } from "../languages/cmp";
 
-export const DiffTable = ({ out, cmp }: { out: string; cmp: string }) => {
+export const DiffTable = ({
+  className = "",
+  out,
+  cmp,
+}: {
+  out: string;
+  cmp: string;
+  className?: string;
+}) => {
   const output = CMP.parse(out);
   const compare = CMP.parse(cmp);
 
@@ -60,6 +68,7 @@ export const DiffTable = ({ out, cmp }: { out: string; cmp: string }) => {
 
   return (
     <div
+      className={className}
       style={{
         overflow: "auto",
         maxHeight: "200px",

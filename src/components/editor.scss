@@ -1,6 +1,8 @@
 .Editor {
   position: relative;
   display: flex;
+  border: var(--border-width) solid var(--form-element-border-color);
+  border-radius: var(--border-radius);
 
   textarea {
     flex: 1;

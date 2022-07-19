@@ -200,9 +200,10 @@ export const Chip = () => {
       <main className="flex">
         <Editor
           className="flex-1"
-          source={hdlText}
-          onSourceChange={(value) => setHdlText(value)}
+          value={hdlText}
+          onChange={setHdlText}
           grammar={HDL.parser}
+          language={"hdl"}
         />
       </main>
     </article>
@@ -250,17 +251,19 @@ export const Chip = () => {
       <main className="flex">
         <Editor
           className="flex-2"
-          source={tstText}
-          onSourceChange={(value) => setTstText(value)}
+          value={tstText}
+          onChange={setTstText}
           grammar={TST.parser}
+          language={"tst"}
         />
         <Editor
           className="flex-1"
-          source={cmpText}
-          onSourceChange={(value) => setCmpText(value)}
+          value={cmpText}
+          onChange={setCmpText}
           grammar={CMP.parser}
+          language={"cmp"}
         />
-        <DiffTable cmp={cmpText} out={outText} />
+        <DiffTable className="flex-1" cmp={cmpText} out={outText} />
         {/* <ErrorPanel error={outError} /> */}
       </main>
     </article>

@@ -16,6 +16,7 @@ import { AppContext, makeAppContext } from "./App.context";
 import { Settings } from "./components/shell/settings";
 import { messages } from "./locales/en/messages";
 import { messages as plMessages } from "./locales/en-PL/messages";
+import { registerLanguages } from "./languages/loader";
 
 i18n.load("en", messages);
 i18n.load("en-PL", plMessages);
@@ -36,6 +37,7 @@ function App() {
     appContext.fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
       await projects.resetFiles(appContext.fs);
     });
+    registerLanguages();
   }, [appContext.fs]);
 
   return (

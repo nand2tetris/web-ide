@@ -1,6 +1,22 @@
 table.pinout {
+  th:first-child,
+  td:first-child {
+    text-align: right;
+    --font-size: 1rem;
+  }
+
   tbody {
+    td:first-child {
+      width: 77px;
+      max-width: 77px;
+      border-right: var(--border-width) solid var(--table-border-color);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     button {
+      --font-size: 0.875em;
       font-family: var(--font-family-monospace);
       max-width: 2em;
 

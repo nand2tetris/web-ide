@@ -1,10 +1,4 @@
-import {
-  MouseEventHandler,
-  ReactNode,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { ReactNode, useContext, useEffect, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -18,7 +12,10 @@ import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
 import { Clock } from "../simulator/chip/clock";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
-import { Icon } from "../components/pico/icon";
+import { Editor } from "../components/editor";
+import { HDL } from "../languages/hdl";
+import { TST } from "../languages/tst";
+import { CMP } from "../languages/cmp";
 
 let store = new ChipPageStore();
 const clock = Clock.get();
@@ -67,14 +64,6 @@ export const Chip = () => {
       })
     );
     subs.push(
-      store.selectors.errors.subscribe(({ hdl, tst, cmp, out }) => {
-        setHdlError(hdl);
-        setTstError(tst);
-        setCmpError(cmp);
-        setOutError(out);
-      })
-    );
-    subs.push(
       store.selectors.log.subscribe((out) => {
         setOutText(out);
       })
@@ -109,11 +98,6 @@ export const Chip = () => {
   const [hdlText, setHdlText] = useState(store.files.hdl);
   const [outText, setOutText] = useState(store.files.out);
   const [tstText, setTstText] = useState(store.files.tst);
-
-  const [hdlError, setHdlError] = useState(store.errors.hdl);
-  const [tstError, setTstError] = useState(store.errors.tst);
-  const [cmpError, setCmpError] = useState(store.errors.cmp);
-  const [outError, setOutError] = useState(store.errors.out);
 
   function clearOutput() {
     setOutText("");
@@ -154,29 +138,6 @@ export const Chip = () => {
     |        |        | Diffs|
     +--------+--------+------+
   */
-
-  const ErrorPanel = ({ error }: { error: string }) => {
-    const [open, setOpen] = useState(error.length > 0);
-    return (
-      <>
-        {open ? (
-          <div className="ErrorPanel flex align-top">
-            <div>
-              <a role="button" onClick={() => setOpen(false)} href="#root">
-                <Icon name="close"></Icon>
-              </a>
-            </div>
-            <pre class-name="flex-1">
-              <code>{error}</code>
-            </pre>
-          </div>
-        ) : (
-          <></>
-        )}
-      </>
-    );
-  };
-
   const selectors = (
     <div className="_selectors flex row inline align-end">
       <select
@@ -222,24 +183,27 @@ export const Chip = () => {
             onClick={() => {
               clock.toggle();
             }}
-            // disabled={!clocked}
+            disabled={!clocked}
             data-testid="clock"
           >
             <Trans>Clock:</Trans> {display(clockface)}
           </button>
-          <button onClick={() => store.reset()} data-testid="clock-reset">
+          <button
+            onClick={() => store.reset()}
+            disabled={!clocked}
+            data-testid="clock-reset"
+          >
             <Trans>Reset</Trans>
           </button>
         </fieldset>
       </header>
       <main className="flex">
-        <textarea
+        <Editor
           className="flex-1"
-          rows={10}
-          onChange={(e) => setHdlText(e.target.value)}
-          value={hdlText}
+          source={hdlText}
+          onSourceChange={(value) => setHdlText(value)}
+          grammar={HDL.parser}
         />
-        <ErrorPanel error={hdlError} />
       </main>
     </article>
   );
@@ -283,27 +247,21 @@ export const Chip = () => {
           </button>
         </fieldset>
       </header>
-      <main>
-        <textarea
+      <main className="flex">
+        <Editor
           className="flex-2"
-          rows={15}
-          onChange={(e) => setTstText(e.target.value)}
-          value={tstText}
+          source={tstText}
+          onSourceChange={(value) => setTstText(value)}
+          grammar={TST.parser}
         />
-        <ErrorPanel error={tstError} />
-      </main>
-      <main>
-        <textarea
+        <Editor
           className="flex-1"
-          rows={5}
-          onChange={(e) => setCmpText(e.target.value)}
-          value={cmpText}
+          source={cmpText}
+          onSourceChange={(value) => setCmpText(value)}
+          grammar={CMP.parser}
         />
-        <ErrorPanel error={cmpError} />
-      </main>
-      <main>
         <DiffTable cmp={cmpText} out={outText} />
-        <ErrorPanel error={outError} />
+        {/* <ErrorPanel error={outError} /> */}
       </main>
     </article>
   );

@@ -129,5 +129,6 @@ tstSemantics.addAttribute<Tst>("root", {
 export const TST = {
   grammar: tstGrammar,
   semantics: tstSemantics,
+  parser: grammar,
   parse: makeParser<Tst>(grammar, tstSemantics),
 };

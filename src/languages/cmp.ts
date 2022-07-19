@@ -29,7 +29,8 @@ cmpSemantics.addAttribute<Cmp>("root", {
 });
 
 export const CMP = {
-  grammar: grammar,
+  grammar: cmpGrammar,
   semantics: cmpSemantics,
+  parser: grammar,
   parse: makeParser<Cmp>(grammar, cmpSemantics),
 };

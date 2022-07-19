@@ -1,0 +1,15 @@
+.Editor {
+  position: relative;
+  display: flex;
+
+  textarea {
+    flex: 1;
+  }
+
+  .ErrorPanel {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
+}

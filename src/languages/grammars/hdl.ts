@@ -3,7 +3,7 @@ import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 export const HdlLanguage: monaco.languages.IMonarchLanguage = {
   defaultToken: "invalid",
 
-  keywords: ["CHIP", "CPU", "IN", "OUT", "PARTS", "BUILTIN"],
+  keywords: ["CHIP", "CPU", "IN", "OUT", "PARTS", "BUILTIN", "CLOCKED"],
 
   chips: [
     "Nand",

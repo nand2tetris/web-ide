@@ -51,8 +51,8 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
 
 function makeHdl(name: string) {
   return `CHIP ${name} {
-    INS: in;
-    OUTS: out;
+    IN: in;
+    OUT: out;
     PARTS:
   }`;
 }

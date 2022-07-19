@@ -1,9 +1,13 @@
-import ohm from "ohm-js";
+import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
 import { Trans } from "@lingui/macro";
-import MonacoEditor, { OnMount } from "@monaco-editor/react";
-import { useCallback, useState } from "react";
-import "./editor.scss";
+import MonacoEditor from "@monaco-editor/react";
+import { OnMount } from "@monaco-editor/react";
+import ohm from "ohm-js";
+import { useCallback, useEffect, useMemo, useState } from "react";
+
 import { UNKNOWN_PARSE_ERROR } from "../languages/base";
+
+import "./editor.scss";
 
 export const ErrorPanel = ({ error }: { error: string }) => {
   return error.length ? (
@@ -35,17 +39,27 @@ export const Editor = ({
 }) => {
   const [error, setError] = useState("");
 
+  const parse = useCallback(
+    (text: string = "") => {
+      const parsed = grammar.match(text);
+      setError(
+        parsed.failed()
+          ? parsed.message ?? parsed.shortMessage ?? UNKNOWN_PARSE_ERROR
+          : ""
+      );
+    },
+    [setError, grammar]
+  );
+
+  useEffect(() => parse(value), [parse, value]);
+  const doParse = useMemo(() => debounce(parse, 500), [parse]);
+
   const onChangeCB = useCallback(
     (text: string = "") => {
       onChange(text);
-      const parsed = grammar.match(text);
-      if (parsed.failed()) {
-        setError(parsed.message ?? parsed.shortMessage ?? UNKNOWN_PARSE_ERROR);
-      } else {
-        setError("");
-      }
+      doParse(text);
     },
-    [onChange, setError, grammar]
+    [doParse, onChange]
   );
 
   const onMount: OnMount = useCallback((editor) => {
@@ -67,7 +81,6 @@ export const Editor = ({
         value={value}
         onChange={onChangeCB}
         language={language}
-        theme="vs"
         onMount={onMount}
       />
       <ErrorPanel error={error} />

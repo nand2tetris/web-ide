@@ -25,6 +25,14 @@ const AND_16_BUILTIN = `CHIP And16 {
   BUILTIN;
 }`;
 
+const CLOCKED = `CHIP Foo {
+    IN in;
+
+    PARTS:
+
+    CLOCKED in;
+}`;
+
 const ERRORS = [
   ["Not { BUILTIN }", 'Line 1, col 1: expected "CHIP"'],
   ["CHIP { BUILTIN }", "Line 1, col 6: expected a letter"], // A chip name is expected
@@ -211,6 +219,18 @@ describe("HDL w/ Ohm", () => {
         ],
         outs: [{ pin: "out", width: 16 }],
         parts: "BUILTIN",
+      });
+    });
+
+    it("parses a chip with clocked pins", () => {
+      const match = grammar.match(CLOCKED);
+      expect(match).toHaveSucceeded();
+      expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
+        name: "Foo",
+        ins: [{ pin: "in", width: 1 }],
+        outs: [],
+        parts: [],
+        clocked: ["in"],
       });
     });
   });

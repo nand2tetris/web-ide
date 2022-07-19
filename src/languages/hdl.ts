@@ -32,6 +32,7 @@ export interface HdlParse {
   name: string;
   ins: PinDeclaration[];
   outs: PinDeclaration[];
+  clocked: string[];
   parts: "BUILTIN" | Part[];
 }
 
@@ -94,6 +95,18 @@ hdlSemantics.addAttribute<"BUILTIN" | Part[]>("PartList", {
   },
 });
 
+hdlSemantics.addAttribute<string[]>("Clocked", {
+  ClockedList(_a, clocked, _b) {
+    return (
+      clocked
+        .asIteration()
+        .children.map(
+          ({ sourceString }: { sourceString: string }) => sourceString
+        ) ?? []
+    );
+  },
+});
+
 hdlSemantics.addAttribute<PinDeclaration>("PinDecl", {
   PinDecl({ name }, width) {
     return {
@@ -115,9 +128,10 @@ hdlSemantics.addAttribute<HdlParse>("Chip", {
   Chip(_a, { name }, _b, body, _c) {
     return {
       name,
-      ins: body.child(0)?.child(0)?.child(1)?.PinList ?? [],
-      outs: body.child(1)?.child(0)?.child(1)?.PinList ?? [],
-      parts: body.child(2)?.PartList ?? [],
+      ins: body.child(0).child(0)?.child(1)?.PinList ?? [],
+      outs: body.child(1).child(0)?.child(1)?.PinList ?? [],
+      parts: body.child(2).PartList ?? [],
+      clocked: body.child(3).child(0)?.Clocked,
     };
   },
 });

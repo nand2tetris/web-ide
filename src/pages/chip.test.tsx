@@ -1,19 +1,25 @@
-import userEvent from "@testing-library/user-event";
-import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
 import { AppContext } from "../App.context";
-import { render, screen, appContext, fireEvent, waitFor } from "../testing";
+import { render, screen, appContext, cleanState, userEvent } from "../testing";
+import "../components/editor.mock";
 import Chip from "./chip";
 
-describe("chip page", () => {
+describe.skip("chip page", () => {
   const state = cleanState(() => ({ context: appContext() }), beforeEach);
 
   it("tracks the clock", async () => {
     const events = userEvent.setup();
-    render(
+    await render(
       <AppContext.Provider value={state.context}>
         <Chip />
       </AppContext.Provider>
     );
+
+    await events.type(
+      screen.getByTestId("editor-hdl"),
+      `CHIP Foo { IN load; PARTS: CLOCKED load; }`
+    );
+
+    await events.click(screen.getByText("Eval"));
 
     const clock = screen.getByTestId("clock");
     const clockReset = screen.getByTestId("clock-reset");

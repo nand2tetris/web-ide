@@ -32,7 +32,9 @@ export function build(parts: HdlParse): Result<Chip, Error> {
   const buildChip = new Chip(
     parts.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
     parts.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
-    parts.name.toString()
+    parts.name.toString(),
+    [],
+    parts.clocked
   );
 
   for (const part of parts.parts) {

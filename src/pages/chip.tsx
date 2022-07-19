@@ -61,6 +61,9 @@ export const Chip = () => {
         setTstText(tst);
         setCmpText(cmp);
         setOutText(out);
+        setHdlFile(hdl);
+        setTstFile(tst);
+        setCmpFile(cmp);
       })
     );
     subs.push(
@@ -99,6 +102,10 @@ export const Chip = () => {
   const [outText, setOutText] = useState(store.files.out);
   const [tstText, setTstText] = useState(store.files.tst);
 
+  const [cmpFile, setCmpFile] = useState(store.files.cmp);
+  const [hdlFile, setHdlFile] = useState(store.files.hdl);
+  const [tstFile, setTstFile] = useState(store.files.tst);
+
   function clearOutput() {
     setOutText("");
   }
@@ -108,9 +115,9 @@ export const Chip = () => {
   };
 
   async function setFiles() {
-    const hdl = hdlText;
-    const tst = tstText;
-    const cmp = cmpText;
+    const hdl = hdlFile;
+    const tst = tstFile;
+    const cmp = cmpFile;
     clearOutput();
     await store.setFiles({ hdl, tst, cmp });
   }
@@ -201,7 +208,7 @@ export const Chip = () => {
         <Editor
           className="flex-1"
           value={hdlText}
-          onChange={setHdlText}
+          onChange={setHdlFile}
           grammar={HDL.parser}
           language={"hdl"}
         />
@@ -252,14 +259,14 @@ export const Chip = () => {
         <Editor
           className="flex-2"
           value={tstText}
-          onChange={setTstText}
+          onChange={setTstFile}
           grammar={TST.parser}
           language={"tst"}
         />
         <Editor
           className="flex-1"
           value={cmpText}
-          onChange={setCmpText}
+          onChange={setCmpFile}
           grammar={CMP.parser}
           language={"cmp"}
         />

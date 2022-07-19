@@ -6,13 +6,8 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/react-scripts",
-      "args": [
-        "test",
-        "--runInBand",
-        "--no-cache",
-        "--env=jsdom",
-        "--transformIgnorePatterns=\"node_modules/(?!remark-markdown|@davidsouther)/\""
-      ],
+      "args": ["test", "--runInBand", "--no-cache", "--env=jsdom", "${file}"],
+      "env": { "CI": "true" },
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

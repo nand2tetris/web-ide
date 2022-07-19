@@ -31,13 +31,12 @@ describe("Chip Builder", () => {
             in[0..1] = true,
             in[3..5] = six,
             in[7] = true,
-            // out[3..7] = out1,
             );
           }`
         )
       );
-    } catch (e) {
-      throw new Error(display(e));
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
     }
     const six = foo.in("six");
     six.busVoltage = 6;
@@ -64,8 +63,8 @@ describe("Chip Builder", () => {
         }
       `)
       );
-    } catch (e) {
-      throw new Error(display(e));
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
     }
 
     foo.in().busVoltage = 0b00;
@@ -93,8 +92,8 @@ describe("Chip Builder", () => {
           }`
         )
       );
-    } catch (e) {
-      throw new Error(display(e));
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
     }
 
     foo.in().busVoltage = 0b1010_1100_0011_0101;

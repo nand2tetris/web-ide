@@ -1,33 +1,35 @@
-import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
 import { AppContext } from "../App.context";
-import { act, render, screen, appContext } from "../testing";
+import { render, screen, appContext, cleanState, userEvent } from "../testing";
+import "../components/editor.mock";
 import Chip from "./chip";
 
-describe("chip page", () => {
+describe.skip("chip page", () => {
   const state = cleanState(() => ({ context: appContext() }), beforeEach);
-  it.skip("tracks the clock", async () => {
+
+  it("tracks the clock", async () => {
+    const events = userEvent.setup();
     await render(
       <AppContext.Provider value={state.context}>
         <Chip />
       </AppContext.Provider>
     );
 
+    await events.type(
+      screen.getByTestId("editor-hdl"),
+      `CHIP Foo { IN load; PARTS: CLOCKED load; }`
+    );
+
+    await events.click(screen.getByText("Eval"));
+
     const clock = screen.getByTestId("clock");
     const clockReset = screen.getByTestId("clock-reset");
 
-    expect(clock.innerText).toBe("Clock: 0");
-    act(() => {
-      clock.click();
-    });
-    expect(clock.innerText).toBe("Clock: 0+");
-    act(() => {
-      clock.click();
-    });
-    expect(clock.innerText).toBe("Clock: 1");
-    act(() => {
-      clockReset.click();
-    });
-    expect(clock.innerText).toBe("Clock: 0");
-    expect(screen.getByText("0")).toBeVisible();
+    expect(clock).toHaveTextContent("Clock: 0");
+    await events.click(clock);
+    expect(clock).toHaveTextContent("Clock: 0+");
+    await events.click(clock);
+    expect(clock).toHaveTextContent("Clock: 1");
+    await events.click(clockReset);
+    expect(clock).toHaveTextContent("Clock: 0");
   });
 });

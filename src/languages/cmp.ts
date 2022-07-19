@@ -1,23 +1,36 @@
-/** Reads and parses a .cmp file, to compare lines of output between test runs. */
+import ohm from "ohm-js";
+import raw from "raw.macro";
+import { grammars, makeParser, baseSemantics } from "./base";
 
-import { Parser } from "./parser/base";
-import { tag, take_until } from "./parser/bytes";
-import { map, mapParser } from "./parser/combinator";
-import { many0, many1 } from "./parser/multi";
-import { line } from "./parser/recipe";
-import { preceded, terminated } from "./parser/sequence";
+export type Cell = string;
+export type Line = Cell[];
+export type Cmp = Line[];
 
-export const cmpParser: Parser<string[][]> = many0(
-  mapParser(
-    line(),
-    terminated(
-      many1(
-        preceded(
-          tag("|"),
-          map(take_until(tag("|")), (s) => s.toString())
-        )
-      ),
-      tag("|")
-    )
-  )
-);
+export const cmpGrammar = raw("./grammars/cmp.ohm");
+export const grammar = ohm.grammar(cmpGrammar, grammars);
+export const cmpSemantics = grammar.extendSemantics(baseSemantics);
+
+cmpSemantics.addAttribute<Cell>("cell", {
+  cell(value, _) {
+    return value.sourceString;
+  },
+});
+
+cmpSemantics.addAttribute<Line>("line", {
+  line(_a, cells, _b) {
+    return cells.children.map((c) => c.cell);
+  },
+});
+
+cmpSemantics.addAttribute<Cmp>("root", {
+  Root(lines) {
+    return lines.children.map((c) => c.line);
+  },
+});
+
+export const CMP = {
+  grammar: cmpGrammar,
+  semantics: cmpSemantics,
+  parser: grammar,
+  parse: makeParser<Cmp>(grammar, cmpSemantics),
+};

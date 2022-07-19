@@ -227,8 +227,12 @@ export class Chip {
   outs = new Pins();
   pins = new Pins();
   parts = new Set<Chip>();
+  clockedPins: Set<string>;
 
   get clocked() {
+    if (this.clockedPins.size > 0) {
+      return true;
+    }
     for (const part of this.parts) {
       if (part.clocked) return true;
     }
@@ -239,7 +243,8 @@ export class Chip {
     ins: (string | { pin: string; width: number })[],
     outs: (string | { pin: string; width: number })[],
     public name?: string,
-    internals: (string | { pin: string; width: number })[] = []
+    internals: (string | { pin: string; width: number })[] = [],
+    clocked: string[] = []
   ) {
     for (const inn of ins) {
       const { pin, width = 1 } =
@@ -264,6 +269,8 @@ export class Chip {
           : parsePinDecl(internal as string);
       this.pins.insert(new Bus(pin, width));
     }
+
+    this.clockedPins = new Set(clocked);
 
     Clock.get().$.subscribe(() => this.eval());
   }

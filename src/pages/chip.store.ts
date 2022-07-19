@@ -8,9 +8,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
-import { IResult, Span, StringLike } from "../languages/parser/base";
-import { cmpParser } from "../languages/cmp";
-import { Tst, tstParser } from "../languages/tst";
+import { TST } from "../languages/tst";
 import { Low, Pin, Chip as SimChip } from "../simulator/chip/chip";
 import * as make from "../simulator/chip/builder";
 import { getBuiltinChip } from "../simulator/chip/builtins/index";
@@ -18,6 +16,8 @@ import { ChipTest } from "../simulator/tst";
 import { compare, Diff } from "../simulator/compare";
 import * as not from "../projects/project_01/01_not";
 import { Clock } from "../simulator/chip/clock";
+import { HDL } from "../languages/hdl";
+import { CMP } from "../languages/cmp";
 
 export const PROJECT_NAMES = [
   ["01", "Project 1"],
@@ -51,23 +51,21 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
 
 function makeHdl(name: string) {
   return `CHIP ${name} {
-    INS: in;
-    OUTS: out;
+    IN: in;
+    OUT: out;
     PARTS:
   }`;
 }
 
 function makeTst() {
-  return `output-list in%D1.1.1 out%D1.1.1; eval;`;
+  return `repeat {
+    tick,
+    tock;
+  }`;
 }
 
 function makeCmp() {
   return `| in|out|`;
-}
-
-function doParse<T>(parser: (s: StringLike) => T, str: string) {
-  return parser(new Span(str));
-  // return parser(str);
 }
 
 export class ChipPageStore {
@@ -77,8 +75,13 @@ export class ChipPageStore {
   chip: SimChip;
   test?: ChipTest;
   diffs: Diff[] = [];
-  private runningTest = false;
   files = {
+    hdl: "",
+    cmp: "",
+    tst: "",
+    out: "",
+  };
+  errors = {
     hdl: "",
     cmp: "",
     tst: "",
@@ -89,8 +92,11 @@ export class ChipPageStore {
   readonly $ = this.subject.asObservable();
   readonly testLog = new Subject<string>();
 
+  private runningTest = false;
+  private initialized = false;
+
   next() {
-    if (!this.runningTest) this.subject.next(this);
+    if (this.initialized && !this.runningTest) this.subject.next(this);
   }
 
   readonly selectors = {
@@ -99,6 +105,7 @@ export class ChipPageStore {
     chips: this.$.pipe(map((t) => t.chips)),
     chip: this.$.pipe(map((t) => t.chip)),
     files: this.$.pipe(map((t) => t.files)),
+    errors: this.$.pipe(map((t) => t.errors)),
     test: this.$.pipe(map((t) => t.test)),
     diffs: this.$.pipe(map((t) => t.diffs)),
     log: this.testLog.asObservable(),
@@ -162,11 +169,21 @@ export class ChipPageStore {
     this.files.tst = tst;
     this.files.cmp = cmp;
     this.files.out = out;
+    this.errors.hdl = "";
+    this.errors.tst = "";
+    this.errors.cmp = "";
+    this.errors.out = "";
   }
 
   compileChip() {
     this.chip?.remove();
-    const maybeChip = doParse(make.parse, this.files.hdl);
+    const maybeParsed = HDL.parse(this.files.hdl);
+    if (isErr(maybeParsed)) {
+      this.errors.hdl = Err(maybeParsed).message;
+      this.statusLine("Failed to parse chip");
+      return;
+    }
+    const maybeChip = make.build(Ok(maybeParsed));
     if (isErr(maybeChip)) {
       this.statusLine(display(Err(maybeChip)));
       return;
@@ -179,6 +196,7 @@ export class ChipPageStore {
 
   async saveChip(text: string) {
     this.files.hdl = text;
+    this.errors.hdl = "";
     const name = this.chipName;
     const path = `/projects/${this.project}/${name}/${name}.hdl`;
     await this.fs.writeFile(path, text);
@@ -187,7 +205,7 @@ export class ChipPageStore {
   }
 
   async setProject(proj: keyof typeof PROJECTS) {
-    this.storage["chip/project"] = this.project = proj;
+    this.storage["/chip/project"] = this.project = proj;
     this.chips = PROJECTS[proj];
     this.chipName =
       this.chipName && this.chips.includes(this.chipName)
@@ -210,6 +228,10 @@ export class ChipPageStore {
     this.files.tst = tst;
     this.files.cmp = cmp;
     this.files.out = "";
+    this.errors.hdl = "";
+    this.errors.tst = "";
+    this.errors.cmp = "";
+    this.errors.out = "";
 
     try {
       this.compileChip();
@@ -218,20 +240,21 @@ export class ChipPageStore {
     }
 
     this.next();
+    this.initialized = true;
   }
 
   async runTest() {
-    const tst = await new Promise<IResult<Tst>>((r) =>
-      r(doParse(tstParser, this.files.tst))
-    );
+    const tst = TST.parse(this.files.tst);
 
     if (isErr(tst)) {
-      this.statusLine(display(Err(tst)));
+      this.errors.tst = display(Err(tst).message);
+      this.statusLine(t`Failed to parse test`);
+      this.next();
       return;
     }
     this.statusLine(t`Parsed tst`);
 
-    this.test = ChipTest.from(Ok(tst)[1]).with(this.chip);
+    this.test = ChipTest.from(Ok(tst)).with(this.chip);
 
     await new Promise<void>((r) => {
       try {
@@ -246,25 +269,23 @@ export class ChipPageStore {
     this.files.out = this.test.log();
     this.next();
 
-    const [cmp, out] = await Promise.all([
-      new Promise<IResult<string[][]>>((r) =>
-        r(doParse(cmpParser, this.files.cmp))
-      ),
-      new Promise<IResult<string[][]>>((r) =>
-        r(doParse(cmpParser, this.files.out))
-      ),
-    ]);
+    const cmp = CMP.parse(this.files.cmp);
+    const out = CMP.parse(this.files.out);
 
     if (isErr(cmp)) {
-      this.statusLine(t`Error parsing cmp file!`);
+      this.errors.cmp = Err(cmp).message;
+      this.statusLine(t`Error parsing cmp`);
+      this.next();
       return;
     }
     if (isErr(out)) {
-      this.statusLine(t`Error parsing out file!`);
+      this.errors.out = Err(out).message;
+      this.statusLine(t`Error parsing out`);
+      this.next();
       return;
     }
 
-    this.diffs = compare(Ok(cmp)[1], Ok(out)[1]);
+    this.diffs = compare(Ok(cmp), Ok(out));
     this.next();
   }
 }

@@ -1,0 +1,62 @@
+Base {
+  Root = (Name | Number)*
+
+  Semi = semi
+  Bang = bang
+  OpenParen = openParen
+  CloseParen = closeParen
+  OpenSquare = openSquare
+  CloseSquare = closeSquare
+  OpenBrace = openBrace
+  CloseBrace = closeBrace
+  OpenAngle = openAngle
+  CloseAngle = closeAngle
+  Comma = comma
+  Dot = dot
+  Equal = equal
+  Bar = bar
+  Percent = percent
+
+  semi = ";"
+  bang = "!"
+  openParen = "("
+  closeParen = ")"
+  openSquare = "["
+  closeSquare = "]"
+  openBrace = "{"
+  closeBrace = "}"
+  openAngle = "<"
+  closeAngle = ">"
+  comma = ","
+  dot = "."
+  minus = "-"
+  percent = "%"
+  equal = "="
+  bar = "|"
+  newline = "\r"? "\n"
+
+  True = true
+  False = false
+  true = "true"
+  false = "false"
+
+  Name = identifier
+  identifier = letter alnum*
+
+  Number = hexNumber | decNumber | binNumber
+  binNumber = ("%B") ("0"|"1")+
+  hexNumber = ("%X") hexDigit+
+  decNumber = ("%D")? (wholeDec | realDec)
+  wholeDec = minus? digit+
+  realDec = minus? digit* "." digit+
+  
+  spaces := lineComment | comment | space*
+  commentStart = "/*"
+  commentEnd = "*/"
+  comment = commentStart (~commentEnd any)* commentEnd
+  lineCommentStart = "//"
+  lineComment = lineCommentStart (~"\n" any)* "\n"
+
+  List<elem, sep> = NonemptyListOf<elem, sep> sep?
+  EmptyList<elem, sep> = EmptyList<elem, sep> sep?
+}

@@ -12,6 +12,10 @@ import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
 import { Clock } from "../simulator/chip/clock";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
+import { Editor } from "../components/editor";
+import { HDL } from "../languages/hdl";
+import { TST } from "../languages/tst";
+import { CMP } from "../languages/cmp";
 
 let store = new ChipPageStore();
 const clock = Clock.get();
@@ -38,6 +42,7 @@ export const Chip = () => {
         setInternalPins(reducePins(chip.pins));
       })
     );
+
     subs.push(
       store.selectors.project.subscribe((project) => {
         setProject(project);
@@ -56,6 +61,9 @@ export const Chip = () => {
         setTstText(tst);
         setCmpText(cmp);
         setOutText(out);
+        setHdlFile(hdl);
+        setTstFile(tst);
+        setCmpFile(cmp);
       })
     );
     subs.push(
@@ -94,6 +102,10 @@ export const Chip = () => {
   const [outText, setOutText] = useState(store.files.out);
   const [tstText, setTstText] = useState(store.files.tst);
 
+  const [cmpFile, setCmpFile] = useState(store.files.cmp);
+  const [hdlFile, setHdlFile] = useState(store.files.hdl);
+  const [tstFile, setTstFile] = useState(store.files.tst);
+
   function clearOutput() {
     setOutText("");
   }
@@ -103,9 +115,9 @@ export const Chip = () => {
   };
 
   async function setFiles() {
-    const hdl = hdlText;
-    const tst = tstText;
-    const cmp = cmpText;
+    const hdl = hdlFile;
+    const tst = tstFile;
+    const cmp = cmpFile;
     clearOutput();
     await store.setFiles({ hdl, tst, cmp });
   }
@@ -133,7 +145,6 @@ export const Chip = () => {
     |        |        | Diffs|
     +--------+--------+------+
   */
-
   const selectors = (
     <div className="_selectors flex row inline align-end">
       <select
@@ -176,23 +187,30 @@ export const Chip = () => {
           </button>
           <button
             style={{ whiteSpace: "nowrap" }}
-            onClick={() => clock.toggle()}
+            onClick={() => {
+              clock.toggle();
+            }}
             disabled={!clocked}
             data-testid="clock"
           >
             <Trans>Clock:</Trans> {display(clockface)}
           </button>
-          <button onClick={() => store.reset()} data-testid="clock">
+          <button
+            onClick={() => store.reset()}
+            disabled={!clocked}
+            data-testid="clock-reset"
+          >
             <Trans>Reset</Trans>
           </button>
         </fieldset>
       </header>
       <main className="flex">
-        <textarea
+        <Editor
           className="flex-1"
-          rows={10}
-          onChange={(e) => setHdlText(e.target.value)}
           value={hdlText}
+          onChange={setHdlFile}
+          grammar={HDL.parser}
+          language={"hdl"}
         />
       </main>
     </article>
@@ -237,19 +255,24 @@ export const Chip = () => {
           </button>
         </fieldset>
       </header>
-      <textarea
-        className="flex-2"
-        rows={15}
-        onChange={(e) => setTstText(e.target.value)}
-        value={tstText}
-      />
-      <textarea
-        className="flex-1"
-        rows={5}
-        onChange={(e) => setCmpText(e.target.value)}
-        value={cmpText}
-      />
-      <DiffTable cmp={cmpText} out={outText} />
+      <main className="flex">
+        <Editor
+          className="flex-2"
+          value={tstText}
+          onChange={setTstFile}
+          grammar={TST.parser}
+          language={"tst"}
+        />
+        <Editor
+          className="flex-1"
+          value={cmpText}
+          onChange={setCmpFile}
+          grammar={CMP.parser}
+          language={"cmp"}
+        />
+        <DiffTable className="flex-1" cmp={cmpText} out={outText} />
+        {/* <ErrorPanel error={outError} /> */}
+      </main>
     </article>
   );
   const visualizationPanel = (

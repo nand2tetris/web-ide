@@ -152,6 +152,7 @@ export const Chip = () => {
         onChange={({ target: { value } }) => {
           store.setProject(value as keyof typeof PROJECTS);
         }}
+        data-testid="project-picker"
       >
         {PROJECT_NAMES.map(([number, label]) => (
           <option key={number} value={number}>
@@ -165,6 +166,7 @@ export const Chip = () => {
       <select
         value={chip}
         onChange={({ target: { value } }) => store.setChip(value)}
+        data-testid="chip-picker"
       >
         {chips.map((chip) => (
           <option key={chip} value={chip}>
@@ -238,7 +240,7 @@ export const Chip = () => {
   const internalPanel = (
     <article className="_internal_panel no-shadow panel">
       <header tabIndex={0}>
-        <Trans>Internal Pins</Trans>
+        <Trans>Internal pins</Trans>
       </header>
       <Pinout pins={internalPins} />
     </article>

@@ -6,6 +6,18 @@
 
   > article {
     box-sizing: content-box;
+    border: var(--border-width) solid var(--card-border-color);
+    border-radius: 0;
+    margin: 0;
+
+    > main {
+      margin: 0 calc(-1 * var(--block-spacing-horizontal));
+      margin-bottom: calc(-1 * var(--block-spacing-vertical));
+    }
+
+    &._test_panel > main .Editor {
+      border-bottom: var(--border-width) solid var(--card-border-color);
+    }
   }
 
   grid-template-areas:

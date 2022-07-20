@@ -1,9 +1,18 @@
 import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
 import { Trans } from "@lingui/macro";
 import MonacoEditor from "@monaco-editor/react";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { OnMount } from "@monaco-editor/react";
 import ohm from "ohm-js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { AppContext } from "../App.context";
 
 import { UNKNOWN_PARSE_ERROR } from "../languages/base";
 
@@ -38,6 +47,7 @@ export const Editor = ({
   language: string;
 }) => {
   const [error, setError] = useState("");
+  const { theme } = useContext(AppContext);
 
   const parse = useCallback(
     (text: string = "") => {
@@ -62,8 +72,21 @@ export const Editor = ({
     [doParse, onChange]
   );
 
-  const onMount: OnMount = useCallback((editor) => {
-    editor.updateOptions({
+  const editor = useRef<monaco.editor.IStandaloneCodeEditor>();
+
+  useEffect(() => {
+    const isDark =
+      theme === "system"
+        ? window.matchMedia("prefers-color-scheme: dark").matches
+        : theme === "dark";
+    editor.current?.updateOptions({
+      theme: isDark ? "vs-dark" : "vs",
+    });
+  }, [editor, theme]);
+
+  const onMount: OnMount = useCallback((ed) => {
+    editor.current = ed;
+    editor.current?.updateOptions({
       fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
       Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
       "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
@@ -76,7 +99,10 @@ export const Editor = ({
   }, []);
 
   return (
-    <div className={`Editor flex ${className}`}>
+    <div
+      className={`Editor flex ${className}`}
+      data-testid={`editor-${language}`}
+    >
       <MonacoEditor
         value={value}
         onChange={onChangeCB}

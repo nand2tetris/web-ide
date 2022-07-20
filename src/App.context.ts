@@ -1,6 +1,8 @@
 import { createContext, useCallback, useState } from "react";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 
+export type Theme = "light" | "dark" | "system";
+
 export function useSettings() {
   const [open, setOpen] = useState(false);
   return {
@@ -37,18 +39,26 @@ export function useMonaco() {
 
 export function useAppContext(fs: FileSystem = new FileSystem()) {
   const [status, setStatus] = useState("");
+  const [theme, setTheme] = useState<Theme>("system");
 
   return {
     fs,
+    monaco: useMonaco(),
     status,
     setStatus,
     settings: useSettings(),
-    monaco: useMonaco(),
+    theme,
+    setTheme,
   };
 }
 
 export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   fs: new FileSystem(),
+  monaco: {
+    canUse: true,
+    wants: true,
+    toggle() {},
+  },
   status: "",
   setStatus: () => {},
   settings: {
@@ -56,9 +66,6 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     open() {},
     isOpen: false,
   },
-  monaco: {
-    canUse: true,
-    wants: true,
-    toggle() {},
-  },
+  theme: "system",
+  setTheme() {},
 });

@@ -1,4 +1,4 @@
-import { isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 import { HDL, HdlParse } from "../../languages/hdl";
 import { getBuiltinChip } from "./builtins/index";
 import { Chip, Connection } from "./chip";
@@ -55,7 +55,11 @@ export function build(parts: HdlParse): Result<Chip, Error> {
       },
     }));
 
-    buildChip.wire(partChip, wires);
+    try {
+      buildChip.wire(partChip, wires);
+    } catch (e) {
+      return Err(e as Error);
+    }
   }
 
   return Ok(buildChip);

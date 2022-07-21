@@ -4,6 +4,15 @@ import ohm from "ohm-js";
 import raw from "raw.macro";
 import { baseSemantics, grammars, makeParser } from "./base";
 
+export interface TstEchoOperation {
+  op: "echo";
+  message: string;
+}
+
+export interface TstClearEchoOperation {
+  op: "clear-echo";
+}
+
 export interface TstSetOperation {
   op: "set";
   id: string;
@@ -34,6 +43,8 @@ export interface TstOutputListOperation {
 
 export type TstOperation =
   | TstEvalOperation
+  | TstEchoOperation
+  | TstClearEchoOperation
   | TstOutputOperation
   | TstSetOperation
   | TstOutputListOperation;
@@ -60,7 +71,7 @@ tstSemantics.extendAttribute<number>("value", {
 });
 
 tstSemantics.addAttribute<TstOutputSpec>("format", {
-  OutputFormat({ name }, _a, type, leftPad, _b, len, _c, rightPad) {
+  OutputFormat({ name }, index, _a, type, leftPad, _b, len, _c, rightPad) {
     return {
       id: name,
       style: type.sourceString as TstOutputSpec["style"],
@@ -90,11 +101,22 @@ tstSemantics.addAttribute<TstOperation>("operation", {
       id: name,
       value,
     };
-    const child = index.child(0);
+    const child = index.child(0)?.child(1)?.child(0);
     if (child) {
       setOp.index = child.value;
     }
     return setOp;
+  },
+  TstEchoOperation(op, str) {
+    return {
+      op: "echo",
+      message: str.String as string,
+    };
+  },
+  TstClearEchoOperation(op) {
+    return {
+      op: "clear-echo",
+    };
   },
 });
 

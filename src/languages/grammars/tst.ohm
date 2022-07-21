@@ -9,18 +9,24 @@ Tst <: Base {
     | TstEvalOperation
     | TstSetOperation
     | TstOutputOperation
+    | TstEchoOperation
+    | TstClearEchoOperation
 
   TstOutputListOperation = "output-list" OutputFormat+
-  OutputFormat = Name percent FormatStyle wholeDec dot wholeDec dot wholeDec
+  OutputFormat = Name Index? percent FormatStyle wholeDec dot wholeDec dot wholeDec
   TstSetOperation = Set Name Index? Number
-  Index = OpenSquare wholeDec CloseSquare
+  Index = OpenSquare wholeDec? CloseSquare
   TstEvalOperation = Eval | Tick | Tock
   TstOutputOperation = Output
+  TstEchoOperation = Echo String
+  TstClearEchoOperation = ClearEcho
 
   Set = "set"
   Eval = "eval"
   Tick = "tick"
   Tock = "tock"
+  Echo = "echo"
+  ClearEcho = "clear-echo"
   Output = "output"
   OutputList = "output-list"
   FormatStyle = "B"|"D"|"S"|"X"

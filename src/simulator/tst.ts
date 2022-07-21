@@ -86,6 +86,12 @@ export class ChipTest extends Test<ChipTestInstruction> {
           case "output-list":
             test.addInstruction(new TestOutputListInstruction(inst.spec));
             break;
+          case "echo":
+            test.addInstruction(new TestEchoInstruction(inst.message));
+            break;
+          case "clear-echo":
+            test.addInstruction(new TestClearEchoInstruction());
+            break;
           default:
             checkExhaustive(op, `Unknown tst operation ${op}`);
         }

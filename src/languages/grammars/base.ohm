@@ -16,6 +16,7 @@ Base {
   Equal = equal
   Bar = bar
   Percent = percent
+  DoubleQuote = doubleQuote
 
   semi = ";"
   bang = "!"
@@ -33,6 +34,7 @@ Base {
   percent = "%"
   equal = "="
   bar = "|"
+  doubleQuote = "\""
   newline = "\r"? "\n"
 
   True = true
@@ -49,8 +51,10 @@ Base {
   decNumber = ("%D")? (wholeDec | realDec)
   wholeDec = minus? digit+
   realDec = minus? digit* "." digit+
+
+  String = DoubleQuote (~doubleQuote any)* doubleQuote
   
-  spaces := lineComment | comment | space*
+  spaces := (lineComment | comment | space)*
   commentStart = "/*"
   commentEnd = "*/"
   comment = commentStart (~commentEnd any)* commentEnd

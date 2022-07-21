@@ -9,8 +9,7 @@ CHIP And {
 
     PARTS:
 }`;
-export const sol = `
-CHIP And {
+export const sol = `CHIP And {
     IN a, b;
     OUT out;
 

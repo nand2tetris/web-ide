@@ -29,16 +29,18 @@ export const tst = `output-list time%S1.4.1 reset%B2.1.2 ARegister[]%D1.7.1 DReg
 // The program computes the maximum of RAM[0] and RAM[1] 
 // and writes the result in RAM[2].
 
-ROM32K load Max.hack,
+//ROM32K load Max.hack,
 
 // first run: compute max(3,5)
 set RAM16K[0] 3,
 set RAM16K[1] 5,
 output;
 
+/*
 repeat 14 {
     tick, tock, output;
 }
+*/
 
 // reset the PC
 set reset 1,
@@ -51,9 +53,12 @@ set RAM16K[1] 12345,
 output;
 
 // The run on these inputs needs less cycles (different branching)
+/*
 repeat 10 {
     tick, tock, output;
-}`;
+}
+*/
+`;
 export const hack = `0000000000000000
 1111110000010000
 0000000000000001

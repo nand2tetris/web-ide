@@ -1,22 +1,64 @@
-import { createContext } from "react";
-import { Subject } from "rxjs";
+import { createContext, useCallback, useState } from "react";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 
-export function makeAppContext(fs: FileSystem) {
-  const open = new Subject<void>();
-  const statusLine = new Subject<string>();
-  const setStatus = (status: string) => statusLine.next(status);
+export function useSettings() {
+  const [open, setOpen] = useState(false);
   return {
-    fs,
-    settings: { open },
-    statusLine,
-    setStatus,
+    isOpen: open,
+    open() {
+      setOpen(true);
+    },
+    close() {
+      setOpen(false);
+    },
   };
 }
 
-export const AppContext = createContext<{
-  fs: FileSystem;
-  settings: { open: Subject<void> };
-  statusLine: Subject<string>;
-  setStatus: (line: string) => void;
-}>(makeAppContext(new FileSystem()));
+export function useMonaco() {
+  const canUseMonaco = true;
+  const [wantsMonaco, setWantsMonaco] = useState(canUseMonaco);
+  const toggleMonaco = useCallback(
+    (pleaseUseMonaco: boolean) => {
+      if (canUseMonaco && pleaseUseMonaco) {
+        setWantsMonaco(true);
+      } else {
+        setWantsMonaco(false);
+      }
+    },
+    [canUseMonaco]
+  );
+
+  return {
+    canUse: canUseMonaco,
+    wants: wantsMonaco,
+    toggle: toggleMonaco,
+  };
+}
+
+export function useAppContext(fs: FileSystem = new FileSystem()) {
+  const [status, setStatus] = useState("");
+
+  return {
+    fs,
+    status,
+    setStatus,
+    settings: useSettings(),
+    monaco: useMonaco(),
+  };
+}
+
+export const AppContext = createContext<ReturnType<typeof useAppContext>>({
+  fs: new FileSystem(),
+  status: "",
+  setStatus: () => {},
+  settings: {
+    close() {},
+    open() {},
+    isOpen: false,
+  },
+  monaco: {
+    canUse: true,
+    wants: true,
+    toggle() {},
+  },
+});

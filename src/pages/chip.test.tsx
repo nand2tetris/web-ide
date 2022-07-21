@@ -1,10 +1,19 @@
 import { AppContext } from "../App.context";
-import { render, screen, appContext, cleanState, userEvent } from "../testing";
+import {
+  render,
+  screen,
+  cleanState,
+  userEvent,
+  useTestingAppContext,
+} from "../testing";
 import "../components/editor.mock";
 import Chip from "./chip";
 
 describe.skip("chip page", () => {
-  const state = cleanState(() => ({ context: appContext() }), beforeEach);
+  const state = cleanState(
+    () => ({ context: useTestingAppContext() }),
+    beforeEach
+  );
 
   it("tracks the clock", async () => {
     const events = userEvent.setup();

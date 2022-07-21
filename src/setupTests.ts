@@ -14,6 +14,7 @@ import "@testing-library/jest-dom";
 import { i18n } from "@lingui/core";
 import { en } from "make-plural/plurals";
 import { messages } from "./locales/en/messages";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 i18n.load("en", messages);
 i18n.loadLocaleData({
@@ -22,8 +23,8 @@ i18n.loadLocaleData({
 i18n.activate("en");
 
 interface CustomMatchers<R = unknown, T = unknown> {
-  toBeOk(result: T): R;
-  toBeErr(result: T): R;
+  toBeOk(expected?: T): R;
+  toBeErr(expected?: T): R;
 }
 
 interface OhmMatchers<R = unknown> {
@@ -42,27 +43,39 @@ declare global {
 }
 
 expect.extend({
-  toBeErr<R, T = {}>(result: Result<R>, expected: Err<T>) {
+  toBeErr<R, T = {}>(result: Result<R>, expected?: Err<T>) {
     if (isOk(result)) {
       return {
         pass: false,
-        message: () => `Expected Err(${expected}), got Ok(${Err(result)})`,
+        message: () =>
+          `Expected Err(${display(expected)}), got Ok(${display(Err(result))})`,
       };
     } else {
-      expect(Err(result)).toMatchObject(Err(expected));
+      if (expected) {
+        expect(Err(result)).toMatchObject(Err(expected));
+      }
     }
-    return { pass: true, message: () => `Err(${Err(result)}) is expected` };
+    return {
+      pass: true,
+      message: () => `Err(${display(Err(result))}) is expected`,
+    };
   },
-  toBeOk<R, T = {}>(result: Result<R>, expected: Ok<T>) {
+  toBeOk<R, T = {}>(result: Result<R>, expected?: Ok<T>) {
     if (isErr(result)) {
       return {
         pass: false,
-        message: () => `Expected Ok(${expected}), got Err(${Err(result)})`,
+        message: () =>
+          `Expected Ok(${display(expected)}), got Err(${display(Err(result))})`,
       };
     } else {
-      expect(Ok(result)).toMatchObject(Ok(expected));
+      if (expected) {
+        expect(Ok(result)).toMatchObject(Ok(expected));
+      }
     }
-    return { pass: true, message: () => `Ok(${Ok(result)}) is expected` };
+    return {
+      pass: true,
+      message: () => `Ok(${display(Ok(result))}) is expected`,
+    };
   },
   toHaveSucceeded(match: ohm.MatchResult) {
     if (match.succeeded()) {

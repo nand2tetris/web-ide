@@ -6,7 +6,7 @@ import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 
 export const UNKNOWN_PARSE_ERROR = t`Unknown parse error`;
 
-// Reload ..
+// Reload ...
 
 const baseGrammar = raw("./grammars/base.ohm");
 export const grammars = {
@@ -45,6 +45,12 @@ baseSemantics.addAttribute("name", {
   },
   Name(_): string {
     return this.child(0)?.name;
+  },
+});
+
+baseSemantics.addAttribute("String", {
+  String(_a, str, _b) {
+    return str.sourceString;
   },
 });
 

@@ -68,7 +68,7 @@ export class InSubBus extends Bus {
     super(bus.name);
     assert(
       start >= 0 && start + width <= bus.width,
-      `Mismatched InSubBus dimensions`
+      `Mismatched InSubBus dimensions on ${bus.name} (${width} + ${start} > ${bus.width})`
     );
     this.connect(bus);
   }
@@ -97,7 +97,7 @@ export class InSubBus extends Bus {
   override connect(bus: Pin): void {
     assert(
       this.start + this.width <= bus.width,
-      `Mismatched InSubBus connection dimensions`
+      `Mismatched InSubBus connection dimensions (From ${bus.name} to ${this.name})`
     );
     this.bus = bus;
   }

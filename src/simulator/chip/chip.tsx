@@ -23,7 +23,18 @@ export class Bus implements Pin {
   next: Pin[] = [];
 
   constructor(readonly name: string, readonly width = 1) {
-    this.state = range(0, this.width).map(() => 0);
+    this.state = range(0, this.width).map(() => LOW);
+  }
+
+  ensureWidth(newWidth: number) {
+    assert(newWidth <= 16, `Cannot widen past 16 to ${newWidth} bits`);
+    if (this.width < newWidth) {
+      (this as { width: number }).width = newWidth;
+      this.state = [
+        ...this.state,
+        ...range(this.width, newWidth).map(() => LOW as Voltage),
+      ];
+    }
   }
 
   connect(next: Pin) {
@@ -32,7 +43,10 @@ export class Bus implements Pin {
   }
 
   pull(voltage: Voltage, bit = 0) {
-    assert(bit >= 0 && bit < this.width);
+    assert(
+      bit >= 0 && bit < this.width,
+      `Bit out of bounds: ${this.name}@${bit}`
+    );
     this.state[bit] = voltage;
     this.next.forEach((n) => n.pull(voltage, bit));
   }
@@ -352,12 +366,18 @@ export class Chip {
     );
     to.width ??= partPin.width;
 
-    let chipPin: Pin = this.findPin(from.name, from.width ?? to.width);
+    let chipPin = this.findPin(from.name, from.width ?? to.width);
+    const isInternal = this.pins.has(chipPin.name);
 
     from.width ??= chipPin.width;
 
     if (chipPin instanceof ConstantBus) {
       throw new Error(`Cannot wire to constant bus`);
+    }
+
+    // Widen internal pins
+    if (isInternal && chipPin instanceof Bus) {
+      chipPin.ensureWidth(from.start + from.width);
     }
 
     // Wrap the chipPin in an InBus when the chip side is dimensioned

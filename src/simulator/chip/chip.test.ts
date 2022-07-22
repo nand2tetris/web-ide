@@ -251,7 +251,7 @@ describe("Chip", () => {
 
     it("widens output busses if necessary", () => {
       const mux4way16 = new Chip(
-        ["a[16]", "b[16]", "c[16]", "d[16]", "sel[2]"],
+        ["in[16]", "b[16]", "c[16]", "d[16]", "sel[2]"],
         ["out[16]"]
       );
 
@@ -311,6 +311,25 @@ describe("Chip", () => {
           to: { name: "out", start: 0, width: 1 },
         },
       ]);
+    });
+
+    it("widens internal busses if necessary", () => {
+      const chip = new Chip(["in"], [], "test", ["t"]);
+
+      chip.wire(new Not(), [
+        {
+          from: { name: "in", start: 0, width: 1 },
+          to: { name: "in", start: 0, width: 1 },
+        },
+        {
+          from: { name: "t", start: 1, width: 1 },
+          to: { name: "out", start: 0, width: 1 },
+        },
+      ]);
+
+      chip.in().busVoltage = 0b0;
+      chip.eval();
+      expect(chip.pin("t").busVoltage).toBe(0b10);
     });
 
     class Not8 extends Chip {

@@ -1,13 +1,11 @@
 import { Trans } from "@lingui/macro";
-import { useMemo, useContext, useEffect, useState } from "react";
+import { useMemo, useContext, useEffect } from "react";
 import { i18n } from "@lingui/core";
 import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
 export const Settings = () => {
-  const { settings, fs } = useContext(AppContext);
-
-  const [open, setOpen] = useState(false);
+  const { settings, fs, monaco } = useContext(AppContext);
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -18,17 +16,13 @@ export const Settings = () => {
   );
 
   useEffect(() => {
-    const subscription = settings.open.subscribe(() => {
-      setOpen(true);
-    });
     fs.readFile("/locale")
       .then((locale) => i18n.activate(locale))
       .catch(() => writeLocale("en"));
-    return () => subscription.unsubscribe();
-  }, [settings.open, fs, writeLocale]);
+  }, [fs, writeLocale]);
 
   return (
-    <dialog open={open}>
+    <dialog open={settings.isOpen}>
       <article>
         <header>
           <p>
@@ -40,7 +34,7 @@ export const Settings = () => {
             href="#root"
             onClick={(e) => {
               e.preventDefault();
-              setOpen(false);
+              settings.close();
             }}
           >
             close
@@ -97,6 +91,23 @@ export const Settings = () => {
               <button onClick={() => writeLocale("en-PL")}>
                 <Trans>Pseudolocale</Trans>
               </button>
+            </dd>
+            <dt>
+              <Trans>Editor</Trans>
+            </dt>
+            <dd>
+              <label htmlFor="monaco_editor_switch">
+                <input
+                  type="checkbox"
+                  id="monaco_editor_switch"
+                  name="switch"
+                  role="switch"
+                  checked={monaco.wants}
+                  disabled={!monaco.canUse}
+                  onChange={(e) => monaco.toggle(e.target.checked)}
+                />
+                Use Monaco Editor
+              </label>
             </dd>
           </dl>
         </main>

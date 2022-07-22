@@ -6,7 +6,7 @@ import { render, RenderOptions } from "@testing-library/react";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { ReactElement } from "react";
-import { makeAppContext } from "../App.context";
+import { useAppContext } from "../App.context";
 import * as Not from "../projects/project_01/01_not";
 import ue from "@testing-library/user-event";
 export const userEvent = ue;
@@ -19,8 +19,8 @@ const I18nWrapper = ({ children }: any) => (
 const i18nRender = (ui: ReactElement, options: RenderOptions = {}) =>
   render(ui, { wrapper: I18nWrapper, ...options });
 
-export const appContext = () =>
-  makeAppContext(
+export const useTestingAppContext = () =>
+  useAppContext(
     new FileSystem(
       new ObjectFileSystemAdapter({
         "/chip/project": "01",

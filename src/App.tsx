@@ -1,18 +1,20 @@
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { en } from "make-plural/plurals";
 
-import { LocalStorageFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import {
+  FileSystem,
+  LocalStorageFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs";
 
 import urls from "./urls";
 import * as projects from "./projects";
 import Header from "./components/shell/header";
 import Footer from "./components/shell/footer";
-import { AppContext, makeAppContext } from "./App.context";
+import { AppContext, useAppContext } from "./App.context";
 import { Settings } from "./components/shell/settings";
 import { messages } from "./locales/en/messages";
 import { messages as plMessages } from "./locales/en-PL/messages";
@@ -26,12 +28,10 @@ i18n.loadLocaleData({
   "en-PL": { plurals: en },
 });
 i18n.activate(navigator.language);
+const fs = new FileSystem(new LocalStorageFileSystemAdapter());
 
 function App() {
-  const appContext = useMemo(
-    () => makeAppContext(new FileSystem(new LocalStorageFileSystemAdapter())),
-    []
-  );
+  const appContext = useAppContext(fs);
 
   useEffect(() => {
     appContext.fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
@@ -55,7 +55,7 @@ function App() {
               </Routes>
             </Suspense>
           </main>
-          <Footer openSettings={() => appContext.settings.open.next()} />
+          <Footer />
         </Router>
       </AppContext.Provider>
     </I18nProvider>

@@ -34,11 +34,19 @@ function App() {
   const appContext = useAppContext(fs);
 
   useEffect(() => {
+    registerLanguages();
+  }, []);
+
+  useEffect(() => {
     appContext.fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
       await projects.resetFiles(appContext.fs);
     });
-    registerLanguages();
   }, [appContext.fs]);
+
+  useEffect(() => {
+    (document.children[0] as HTMLHtmlElement).dataset.theme =
+      appContext.theme === "system" ? "" : appContext.theme;
+  }, [appContext.theme]);
 
   return (
     <I18nProvider i18n={i18n}>

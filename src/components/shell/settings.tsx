@@ -5,7 +5,7 @@ import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
 export const Settings = () => {
-  const { settings, fs, monaco } = useContext(AppContext);
+  const { settings, fs, monaco, theme, setTheme } = useContext(AppContext);
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -108,6 +108,46 @@ export const Settings = () => {
                 />
                 Use Monaco Editor
               </label>
+            </dd>
+            <dt>
+              <Trans>Theme</Trans>
+            </dt>
+            <dd>
+              <fieldset>
+                <input
+                  type="radio"
+                  name="theme"
+                  id="theme-light"
+                  value="light"
+                  checked={theme === "light"}
+                  onChange={() => setTheme("light")}
+                />
+                <label htmlFor="theme-light">
+                  <Trans>Light</Trans>
+                </label>
+                <input
+                  type="radio"
+                  name="theme"
+                  id="theme-dark"
+                  value="dark"
+                  checked={theme === "dark"}
+                  onChange={() => setTheme("dark")}
+                />
+                <label htmlFor="theme-dark">
+                  <Trans>Dark</Trans>
+                </label>
+                <input
+                  type="radio"
+                  name="theme"
+                  id="theme-system"
+                  value="system"
+                  checked={theme === "system"}
+                  onChange={() => setTheme("system")}
+                />
+                <label htmlFor="theme-system">
+                  <Trans>System</Trans>
+                </label>
+              </fieldset>
             </dd>
           </dl>
         </main>

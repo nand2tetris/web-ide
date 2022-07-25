@@ -72,8 +72,6 @@ export const DiffTable = ({
       style={{
         overflow: "auto",
         maxHeight: "200px",
-        border: "var(--border-width) solid var(--form-element-border-color)",
-        borderRadius: "var(--border-radius)",
       }}
     >
       <p>

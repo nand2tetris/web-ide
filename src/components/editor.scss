@@ -1,18 +1,7 @@
 .Editor {
-  position: relative;
   display: flex;
-  border: var(--border-width) solid var(--form-element-border-color);
-  border-radius: var(--border-radius);
-  padding: var(--border-width);
 
   textarea {
     flex: 1;
-  }
-
-  .ErrorPanel {
-    position: absolute;
-    bottom: 0;
-    right: 0;
-    left: 0;
   }
 }

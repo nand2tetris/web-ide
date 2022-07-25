@@ -73,10 +73,10 @@ export const sol = `CHIP CPU {
 
     // Only read 15 bits of memory address in register A
     Or(a=aInstruction, b=d1, out=setA);
-    Register(in=regA, in[15]=false, load=setA, out[0..14]=addressM, out=A);
+    ARegister(in=regA, in[15]=false, load=setA, out[0..14]=addressM, out=A);
 
     // D register is loaded from the ALU when d2 is set
-    Register(in=alu, load=d2, out=D);
+    DRegister(in=alu, load=d2, out=D);
 
     Mux16(a=A, b=inM, sel=a, out=AM);
 
@@ -106,7 +106,7 @@ export const sol = `CHIP CPU {
     Or(a=jle, b=j4, out=j5);
     Or(a=jumpu, b=j5, out=jmp);
 
-    PC(in=A, load=jmp, reset=reset, inc=tick, out[0..14]=pc);
+    PC(in=A, load=jmp, reset=reset, inc=true, out[0..14]=pc);
 }`;
 export const tst = `output-list time%S0.4.0 inM%D0.6.0 instruction%B0.16.0 reset%B2.1.2 outM%D1.6.0 writeM%B3.1.3 addressM%D0.5.0 pc%D0.5.0 DRegister[]%D1.6.1;
 

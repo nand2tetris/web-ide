@@ -5,7 +5,8 @@ import {
   Option,
   Some,
 } from "@davidsouther/jiffies/lib/esm/result";
-import { ClockedChip, HIGH } from "../../chip";
+import { ClockedChip, ConstantBus, HIGH, Pin } from "../../chip";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 
 export class RAM extends ClockedChip {
   private ram: Int16Array;
@@ -32,6 +33,11 @@ export class RAM extends ClockedChip {
   override eval() {
     const address = this.in("address").busVoltage;
     this.out().busVoltage = this.ram?.[address];
+  }
+
+  at(idx: number): Pin {
+    assert(idx < this.ram.length);
+    return new ConstantBus(`${this.name}[${idx}]`, this.ram[idx]);
   }
 }
 

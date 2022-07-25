@@ -1,7 +1,8 @@
 import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { ReactNode } from "react";
-import { bin } from "../../util/twos";
+import { bin, int10 } from "../../util/twos";
+import { RAM } from "./builtins/sequential/ram";
 import { Clock } from "./clock";
 
 export const HIGH = 1;
@@ -234,6 +235,20 @@ export class Pins {
   }
 }
 
+const BUILTIN_NAMES = [
+  "Register",
+  "ARegister",
+  "DRegister",
+  "PC",
+  "RAM8",
+  "RAM64",
+  "RAM512",
+  "RAM4K",
+  "RAM12K",
+  "ROM32K",
+  "SCREEN",
+  "Keyboard",
+];
 let id = 0;
 export class Chip {
   readonly id = id++;
@@ -320,6 +335,19 @@ export class Chip {
     }
     if (this.pins.has(name)) {
       return this.pins.get(name)!;
+    }
+    return this.getBuiltin(name);
+  }
+
+  private getBuiltin(name: string): Pin | undefined {
+    const { chip, idx } = name.match(/(?<chip>[ADKRSP].+)(\[(?<idx>\d+)\])?/)
+      ?.groups ?? { chip: "", idx: 0 };
+    if (BUILTIN_NAMES.includes(chip)) {
+      for (const part of this.parts) {
+        if (part.name === chip) {
+          return getBuiltinValue(chip, part, int10(`${idx ?? "0"}`));
+        }
+      }
     }
     return undefined;
   }
@@ -519,4 +547,28 @@ export function printChip(chip: Chip): SerializedChip {
     pins: [...chip.pins.entries()].reduce(setBus, {} as Pinout),
     children: [...chip.parts.values()].map(printChip),
   };
+}
+
+export function getBuiltinValue(
+  chip: string,
+  part: Chip,
+  idx: number
+): Pin | undefined {
+  switch (chip) {
+    case "Register":
+    case "ARegister":
+    case "DRegister":
+    case "PC":
+    case "KEYBOARD":
+      return part.out();
+    case "RAM8":
+    case "RAM64":
+    case "RAM512":
+    case "RAM4K":
+    case "RAM16K":
+    case "ROM32K":
+      return (part as RAM).at(idx);
+    default:
+      return undefined;
+  }
 }

@@ -28,14 +28,13 @@ export const sol = `CHIP Memory {
     OUT out[16];
 
     PARTS:
+    DMux(in=load, sel=address[14], a=writeram, b=writeio);
 
-    RAM16K(in=in, load=writeram, address=address[1..14], out=ramout);
+    RAM16K(in=in, load=writeram, address=address[0..13], out=ram);
+    Screen(in=in, load=writeio, address=address[0..12], out=screen);
+    Keyboard(out=kbd);
 
-    DMux(in=load, sel=address[0], a=writeram, b=writeio);
-    Screen(in=in, load=writeio, address=address[2..14], out=screenout);
-    Keyboard(out=kbdout);
-
-    Mux4Way16(a=ramout, b=ioout, c=screenout, d=kbdout, sel=address[0..1], out=out);
+    Mux4Way16(a=ram, b=ram, c=screen, d=kbd, sel=address[0..1], out=out);
 }`;
 export const tst = `output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 
@@ -98,9 +97,9 @@ echo "Click the Keyboard icon and hold down the 'K' key (uppercase) until you se
 while out <> 75 {
     eval,
 }
-*/
 
 clear-echo, output;
+*/ output;
 
 // Screen test
 
@@ -135,9 +134,10 @@ echo "Make sure you see ONLY two horizontal lines in the middle of the screen. H
 while out <> 89 {
     eval,
 }
-*/
+clear-echo, output;
+*/ output;
 
-clear-echo, output;`;
+`;
 export const cmp = `|   in   |load |     address     |  out   |
 |     -1 |  1  | 000000000000000 |      0 |
 |     -1 |  1  | 000000000000000 |     -1 |

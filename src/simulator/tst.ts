@@ -81,7 +81,9 @@ export class ChipTest extends Test<ChipTestInstruction> {
             test.addInstruction(new TestOutputInstruction());
             break;
           case "set":
-            test.addInstruction(new TestSetInstruction(inst.id, inst.value));
+            test.addInstruction(
+              new TestSetInstruction(inst.id, inst.value, inst.index)
+            );
             break;
           case "output-list":
             test.addInstruction(new TestOutputListInstruction(inst.spec));
@@ -130,11 +132,11 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   setVar(variable: string, value: number): void {
     // Look up built-in chip state variables
-    const pinOrBus = this.chip.in(`${variable}`);
+    const pinOrBus = this.chip.get(`${variable}`);
     if (pinOrBus instanceof Bus) {
       pinOrBus.busVoltage = value;
     } else {
-      pinOrBus.pull(value === 0 ? LOW : HIGH);
+      pinOrBus?.pull(value === 0 ? LOW : HIGH);
     }
   }
 
@@ -185,9 +187,17 @@ export interface TestInstruction {
 }
 
 export class TestSetInstruction implements TestInstruction {
-  constructor(private variable: string, private value: number) {}
+  constructor(
+    private variable: string,
+    private value: number,
+    private index?: number | undefined
+  ) {}
   do(test: Test): void {
-    test.setVar(this.variable, this.value);
+    let variable = this.variable;
+    if (this.index !== undefined) {
+      variable += `[${this.index}]`;
+    }
+    test.setVar(variable, this.value);
   }
 }
 

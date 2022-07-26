@@ -1,5 +1,54 @@
 import { alu, Flags } from "./alu";
 import { Memory } from "./memory";
+export function cpu(
+  {
+    inM,
+    instruction,
+    reset,
+  }: { inM: number; instruction: number; reset: boolean },
+  { A, D, PC }: { A: number; D: number; PC: number }
+): [
+  { outM: number; writeM: boolean; addressM: number; pc: number },
+  { A: number; D: number }
+] {
+  if (reset) {
+    return [
+      { outM: 0, writeM: false, addressM: 0, pc: 0 },
+      { A: 0, D: 0 },
+    ];
+  }
+
+  // Calculate ALU result
+  const mode = (instruction & 0x1000) > 0;
+  const op = (instruction & 0x0fc0) >> 6;
+  const a = mode ? inM : A;
+  const [d, flag] = alu(op, D, a);
+
+  let out = { outM: 0, writeM: false, addressM: 0, pc: PC + 1 };
+  let regs = { A, D };
+
+  // Store M uses old A, this must come first
+  if ((instruction & 0x0008) > 0) {
+    out.outM = a;
+    out.writeM = true;
+  }
+  if ((instruction & 0x0020) > 0) {
+    regs.A = d;
+  }
+  if ((instruction & 0x0010) > 0) {
+    regs.D = d;
+  }
+
+  // Check jump
+  const jn = (instruction & 0x0004) > 0 && flag === Flags.Negative;
+  const je = (instruction & 0x0002) > 0 && flag === Flags.Zero;
+  const jg = (instruction & 0x0001) > 0 && flag === Flags.Positive;
+  if (jn || je || jg) {
+    out.pc = a;
+  }
+
+  return [out, regs];
+}
 
 export class CPU {
   RAM: Memory;
@@ -39,41 +88,21 @@ export class CPU {
   }
 
   tick() {
-    let instruction = this.ROM.get(this.#pc);
-    let pc = this.#pc + 1;
-    if (instruction & 0x8000) {
-      // Calculate ALU result
-      const mode = (instruction & 0x1000) > 0;
-      const op = (instruction & 0x0fc0) >> 6;
-      const a = mode ? this.RAM.get(this.#a) : this.#a;
-      const [d, flag] = alu(op, this.#d, a);
+    const [{ addressM, outM, writeM, pc }, { A, D }] = cpu(
+      {
+        inM: this.RAM.get(this.#a),
+        instruction: this.ROM.get(this.#pc),
+        reset: false,
+      },
+      { A: this.#a, D: this.#d, PC: this.#pc }
+    );
 
-      // Store M uses old A, this must come first
-      if ((instruction & 0x0008) > 0) {
-        this.RAM.set(this.#a, d);
-      }
-      if ((instruction & 0x0020) > 0) {
-        this.#a = d;
-      }
-      if ((instruction & 0x0010) > 0) {
-        this.#d = d;
-      }
-
-      // Check jump
-      const jn = (instruction & 0x0004) > 0 && flag === Flags.Negative;
-      const je = (instruction & 0x0002) > 0 && flag === Flags.Zero;
-      const jg = (instruction & 0x0001) > 0 && flag === Flags.Positive;
-      if (jn || je || jg) {
-        pc = this.#a;
-      }
-    } else {
-      this.#a = instruction;
-    }
-    if (pc < 0 || pc >= this.ROM.size) {
-      throw new Error(
-        `HALT: Jump to ${this.#a} out of bounds [0, ${this.ROM.size})`
-      );
-    }
+    this.#a = A;
+    this.#d = D;
     this.#pc = pc;
+
+    if (writeM) {
+      this.RAM.set(addressM, outM);
+    }
   }
 }

@@ -15,6 +15,7 @@ import { i18n } from "@lingui/core";
 import { en } from "make-plural/plurals";
 import { messages } from "./locales/en/messages";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
+import { Diff } from "./simulator/compare";
 
 i18n.load("en", messages);
 i18n.loadLocaleData({
@@ -32,12 +33,17 @@ interface OhmMatchers<R = unknown> {
   toHaveFailed(message: string): R;
 }
 
+interface CmpMatchers<R = unknown> {
+  toHaveNoDiff(): R;
+}
+
 declare global {
   namespace jest {
     interface Expect extends CustomMatchers {}
     interface Matchers<R, T = {}>
       extends CustomMatchers<R, T>,
-        OhmMatchers<R> {}
+        OhmMatchers<R>,
+        CmpMatchers<R> {}
     interface InverseAsymmetricMatchers extends CustomMatchers, OhmMatchers {}
   }
 }
@@ -90,6 +96,15 @@ expect.extend({
     return {
       pass: true,
       message: () => "Failed to parse with correct message",
+    };
+  },
+  toHaveNoDiff(diffs: Diff[]) {
+    expect(
+      diffs.map(({ a, b, col, row }) => `${a} <> ${b} (${row}:${col})`)
+    ).toEqual([]);
+    return {
+      pass: true,
+      message: () => "There were no diffs",
     };
   },
 });

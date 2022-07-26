@@ -5,7 +5,7 @@ import {
   Option,
   Some,
 } from "@davidsouther/jiffies/lib/esm/result";
-import { ClockedChip, ConstantBus, HIGH, Pin } from "../../chip";
+import { Bus, ClockedChip, HIGH, Pin } from "../../chip";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 
 export class RAM extends ClockedChip {
@@ -37,7 +37,25 @@ export class RAM extends ClockedChip {
 
   at(idx: number): Pin {
     assert(idx < this.ram.length);
-    return new ConstantBus(`${this.name}[${idx}]`, this.ram[idx]);
+    return new RamBus(`${this.name}[${idx}]`, idx, this.ram);
+  }
+}
+
+export class RamBus extends Bus {
+  constructor(
+    name: string,
+    private readonly index: number,
+    private ram: Int16Array
+  ) {
+    super(name);
+  }
+
+  override get busVoltage(): number {
+    return this.ram[this.index];
+  }
+
+  override set busVoltage(num: number) {
+    this.ram[this.index] = num;
   }
 }
 

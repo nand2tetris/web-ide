@@ -32,8 +32,8 @@ export const tst = `output-list time%S1.4.1 reset%B2.1.2 ARegister[]%D1.7.1 DReg
 //ROM32K load Max.hack,
 
 // first run: compute max(3,5)
-set RAM16K[0] 3,
-set RAM16K[1] 5,
+set Memory[0] 3,
+set Memory[1] 5,
 output;
 
 /*
@@ -48,8 +48,8 @@ tick, tock, output;
 
 // second run: compute max(23456,12345)
 set reset 0,
-set RAM16K[0] 23456,
-set RAM16K[1] 12345,
+set Memory[0] 23456,
+set Memory[1] 12345,
 output;
 
 // The run on these inputs needs less cycles (different branching)

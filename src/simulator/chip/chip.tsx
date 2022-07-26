@@ -244,7 +244,7 @@ const BUILTIN_NAMES = [
   "RAM64",
   "RAM512",
   "RAM4K",
-  "RAM12K",
+  "RAM16K",
   "ROM32K",
   "SCREEN",
   "Keyboard",
@@ -312,7 +312,7 @@ export class Chip {
   }
 
   in(pin = "in"): Pin {
-    assert(this.ins.has(pin));
+    assert(this.ins.has(pin), `No pin ${pin}`);
     return this.ins.get(pin)!;
   }
 
@@ -340,7 +340,7 @@ export class Chip {
   }
 
   private getBuiltin(name: string): Pin | undefined {
-    const { chip, idx } = name.match(/(?<chip>[ADKRSP].+)(\[(?<idx>\d+)\])?/)
+    const { chip, idx } = name.match(/(?<chip>[ADKRSP]\w+)(\[(?<idx>\d+)\])?/)
       ?.groups ?? { chip: "", idx: 0 };
     if (BUILTIN_NAMES.includes(chip)) {
       for (const part of this.parts) {

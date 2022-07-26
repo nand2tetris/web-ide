@@ -46,7 +46,7 @@ describe("All Projects", () => {
         expect(out).toBeOk();
 
         const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));
-        expect(diffs).toEqual([]);
+        expect(diffs).toHaveNoDiff();
       }
     );
   });

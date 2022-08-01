@@ -76,14 +76,14 @@ export class CPU extends Chip {
     const instruction = this.in("instruction").busVoltage;
     const reset = this.in("reset").busVoltage === 1;
 
-    const [{ addressM, outM, writeM, pc }, { A, D }] = cpu(
+    const [{ addressM, outM, writeM }, { A, D, PC }] = cpu(
       { inM, instruction, reset },
       { A: this.A, D: this.D, PC: this.PC }
     );
 
     this.A = A;
     this.D = D;
-    this.PC = pc;
+    this.PC = PC;
 
     this.out("addressM").busVoltage = addressM;
     this.out("outM").busVoltage = outM;

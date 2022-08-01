@@ -84,7 +84,7 @@ describe("Test Output Handler", () => {
     expect(b).toEqual("        b         ");
   });
 
-  it.only("truncates a narrow header", () => {
+  it("truncates a narrow header", () => {
     const wideOut = new Output("addressM", "D", 5, 0, 0);
 
     const wide = wideOut.header(state.test);

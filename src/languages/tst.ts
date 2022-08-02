@@ -30,6 +30,8 @@ export interface TstOutputOperation {
 
 export interface TstOutputSpec {
   id: string;
+  builtin: boolean;
+  address: number;
   style: "D" | "X" | "B" | "S";
   width: number;
   lpad: number;
@@ -71,18 +73,36 @@ export const tstSemantics = grammar.extendSemantics(baseSemantics);
 
 tstSemantics.extendAttribute<number>("value", {
   Index(_a, idx, _b) {
-    return idx.value;
+    return idx?.child(0)?.value ?? -1;
+  },
+});
+
+tstSemantics.addAttribute<number>("index", {
+  Index(_open, dec, _close) {
+    return dec.child(0)?.value ?? 0;
   },
 });
 
 tstSemantics.addAttribute<TstOutputSpec>("format", {
-  OutputFormat({ name }, index, _a, type, leftPad, _b, len, _c, rightPad) {
+  OutputFormat(
+    { name: id },
+    index,
+    _a,
+    { sourceString: style },
+    { value: lpad },
+    _b,
+    { value: width },
+    _c,
+    { value: rpad }
+  ) {
     return {
-      id: name,
-      style: type.sourceString as TstOutputSpec["style"],
-      width: len.value,
-      lpad: leftPad.value,
-      rpad: rightPad.value,
+      id,
+      builtin: index?.child(0) !== undefined,
+      address: index?.child(0)?.value ?? -1,
+      style: style as TstOutputSpec["style"],
+      width,
+      lpad,
+      rpad,
     };
   },
 });

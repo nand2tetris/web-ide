@@ -236,7 +236,15 @@ export class TestOutputListInstruction implements TestInstruction {
 
   addOutput(inst: TstOutputSpec) {
     this.outputs.push(
-      new Output(inst.id, inst.style, inst.width, inst.lpad, inst.rpad)
+      new Output(
+        inst.id,
+        inst.style,
+        inst.width,
+        inst.lpad,
+        inst.rpad,
+        inst.builtin,
+        inst.address
+      )
     );
   }
 

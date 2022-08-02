@@ -12,30 +12,33 @@ export const TstLanguage: monaco.languages.IMonarchLanguage = {
     "clear-echo",
     "repeat",
     "while",
+    "load",
   ],
 
   // The main tokenizer for our languages
   tokenizer: {
     root: [
-      // numbers
-      [/%X[0-9a-fA-F]+/, "number.hex"],
-      [/(%D)?\d+/, "number"],
-      [/%B[01]+/, "number"],
-
       // Output Formats
       [/%[BDSX]\d+\.\d+\.\d+/, "keyword"],
 
       // identifiers and keywords
+      [/ROM32K/, "keyword"],
       [
         /[a-zA-Z-]+/,
         { cases: { "@keywords": "keyword", "@default": "identifier" } },
       ],
 
+      // numbers
+      [/%X[0-9a-fA-F]+/, "number.hex"],
+      [/(%D)?\d+/, "number"],
+      [/%B[01]+/, "number"],
+
       // whitespace
       { include: "@whitespace" },
 
-      [/[{}]/, "bracket"],
+      [/[{}]/, "@bracket"],
       [/<>/, "operator"],
+      [/[[\].]/, "operator"],
 
       // strings
       [/"([^"\\]|\\.)*$/, "string.invalid"], // non-teminated string

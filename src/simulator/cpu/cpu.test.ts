@@ -3,7 +3,7 @@ import { Memory } from "./memory";
 import { HACK } from "../../testing/mult";
 
 describe("CPU", () => {
-  describe.only("cpu step function", () => {
+  describe("cpu step function", () => {
     it("@A: sets A for @ instuructions", () => {
       const input: CPUInput = { inM: 0, reset: false, instruction: 0x0002 };
       const inState: CPUState = { A: 0, D: 0, PC: 0 };
@@ -49,7 +49,7 @@ describe("CPU", () => {
       const [output, outState] = cpu(input, inState);
 
       expect(output).toEqual({ outM: 0, writeM: false, addressM: 0 });
-      expect(outState).toEqual({ A: 0xf, D: 3, PC: 15 });
+      expect(outState).toEqual({ A: 0xf, D: 0, PC: 15 });
     });
 
     it("D;JEQ: does not jump when D is not 0", () => {
@@ -77,7 +77,7 @@ describe("CPU", () => {
       const [output, outState] = cpu(input, inState);
 
       expect(output).toEqual({ outM: 0, writeM: false, addressM: 0 });
-      expect(outState).toEqual({ A: 0, D: 13, PC: 1 });
+      expect(outState).toEqual({ A: 0, D: 8, PC: 1 });
     });
   });
 

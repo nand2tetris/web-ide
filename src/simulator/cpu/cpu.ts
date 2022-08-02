@@ -58,7 +58,7 @@ export function cpu(
     const je = (instruction & 0b010) > 0 && flag === Flags.Zero;
     const jg = (instruction & 0b001) > 0 && flag === Flags.Positive;
     if (jn || je || jg) {
-      regs.PC = a;
+      regs.PC = regs.A;
     }
   }
 

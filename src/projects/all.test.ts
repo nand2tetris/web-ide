@@ -1,5 +1,4 @@
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { skip } from "rxjs";
 import { Projects } from ".";
 import { Cmp, CMP } from "../languages/cmp";
 import { HDL, HdlParse } from "../languages/hdl";

@@ -42,9 +42,8 @@ export class Memory extends Chip {
   override tick() {}
 
   override tock() {
-    const load = this.in("load").voltage();
-    const address = this.in("address").busVoltage;
-
+    // const load = this.in("load").voltage();
+    // const address = this.in("address").busVoltage;
     // if (load === HIGH) {
     //   this.ram.
     // }

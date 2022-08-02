@@ -34,31 +34,33 @@ export const sol = `CHIP Memory {
     Screen(in=in, load=writeio, address=address[0..12], out=screen);
     Keyboard(out=kbd);
 
-    Mux4Way16(a=ram, b=ram, c=screen, d=kbd, sel=address[0..1], out=out);
+    Mux4Way16(a=ram, b=ram, c=screen, d=kbd, sel=address[13..14], out=out);
 }`;
 export const tst = `output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 
-echo "Before you run this script, select the 'Screen' option from the 'View' menu";
+// Set RAM[0] = -1
+set address 0,
+set in   -1, set load 1, tick, output; tock, output;
 
-set in -1,				// Set RAM[0] = -1
-set load 1, set address 0, tick, output; tock, output;
+// RAM[0] holds value
+set in 9999, set load 0, tick, output; tock, output;
 
-set in 9999,			// RAM[0] holds value
-set load 0, tick, output; tock, output;
+// Did not also write to upper RAM or Screen
+set address %X2000, eval, output;
+set address %X4000, eval, output;
 
-set address %X2000,		// Did not also write to upper RAM or Screen
-eval, output; set address %X4000, eval, output;
+// Set RAM[0x2000] = 2222
+set address %X2000,
+set in 2222, set load 1, tick, output; tock, output;
 
-set in 2222,			// Set RAM[2000] = 2222
-set load 1, set address %X2000, tick, output; tock, output;
+// RAM[0x2000] holds value
+set in 9999, set load 0, tick, output; tock, output;
 
-set in 9999,			// RAM[2000] holds value
-set load 0, tick, output; tock, output;
+// Did not also write to lower RAM or Screen
+set address 0, eval, output;
+set address %X4000, eval, output;
 
-set address 0,			// Did not also write to lower RAM or Screen
-eval, output; set address %X4000, eval, output;
-
-set load 0,				// Low order address bits connected
+set load 0,	// Low order address bits connected
 set address %X0001, eval, output;
 set address %X0002, eval, output;
 set address %X0004, eval, output;
@@ -74,40 +76,48 @@ set address %X0800, eval, output;
 set address %X1000, eval, output;
 set address %X2000, eval, output;
 
-set address %X1234,		// RAM[1234] = 1234
+// RAM[1234] = 1234
+set address %X1234,
 set in 1234, set load 1, tick, output; tock, output;
 
-set load 0, set address %X2234,		// Did not also write to upper RAM or Screen 
-eval, output; set address %X6234, eval, output;
+// Did not also write to upper RAM or Screen 
+set load 0,
+set address %X2234, eval, output;
+set address %X6234, eval, output;
 
-set address %X2345,		// RAM[2345] = 2345
+// RAM[0x2345] = 2345
+set address %X2345,
 set in 2345, set load 1, tick, output; tock, output;
 
-set load 0, set address %X0345,		// Did not also write to lower RAM or Screen 
-eval, output; set address %X4345, eval, output;
+// Did not also write to lower RAM or Screen 
+set load 0,
+set address %X0345, eval, output;
+set address %X4345, eval, output;
 
 // Keyboard test
 
-set address 24576,
-echo "Click the Keyboard icon and hold down the 'K' key (uppercase) until you see the next message (it should appear shortly after that) ...",
+// set address 24576,
+// echo "Click the Keyboard icon and hold down the 'K' key (uppercase) until you see the next message (it should appear shortly after that) ...",
 // It's important to keep holding the key down since if the system is busy,
 // the memory will zero itself before being outputted.
 
 /*
+set Keyboard 'K';
 while out <> 75 {
     eval,
 }
-
 clear-echo, output;
-*/ output;
+output;
+*/
 
 // Screen test
 
 set load 1, set in -1, set address %X4FCF, tick, tock, output;
 set address %X504F, tick, tock, output;
 
-set address %X0FCF,		// Did not also write to lower or upper RAM
-eval, output; set address %X2FCF, eval, output;
+// Did not also write to lower or upper RAM
+set address %X0FCF, eval, output;
+set address %X2FCF, eval, output;
 
 set load 0,				// Low order address bits connected
 set address %X4FCE, eval, output;
@@ -125,17 +135,18 @@ set address %X47CF, eval, output;
 set address %X5FCF, eval, output;
 
 
+/*
 set load 0, set address 24576,
 echo "Make sure you see ONLY two horizontal lines in the middle of the screen. Hold down 'Y' (uppercase) until you see the next message ...",
 // It's important to keep holding the key down since if the system is busy,
 // the memory will zero itself before being outputted.
 
-/*
 while out <> 89 {
     eval,
 }
 clear-echo, output;
-*/ output;
+output;
+*/
 
 `;
 export const cmp = `|   in   |load |     address     |  out   |
@@ -173,7 +184,6 @@ export const cmp = `|   in   |load |     address     |  out   |
 |   2345 |  1  | 010001101000101 |   2345 |
 |   2345 |  0  | 000001101000101 |      0 |
 |   2345 |  0  | 100001101000101 |      0 |
-|   2345 |  0  | 110000000000000 |     75 |
 |     -1 |  1  | 100111111001111 |     -1 |
 |     -1 |  1  | 101000001001111 |     -1 |
 |     -1 |  1  | 000111111001111 |      0 |
@@ -190,5 +200,4 @@ export const cmp = `|   in   |load |     address     |  out   |
 |     -1 |  0  | 100110111001111 |      0 |
 |     -1 |  0  | 100101111001111 |      0 |
 |     -1 |  0  | 100011111001111 |      0 |
-|     -1 |  0  | 101111111001111 |      0 |
-|     -1 |  0  | 110000000000000 |     89 |`;
+|     -1 |  0  | 101111111001111 |      0 |`;

@@ -33,6 +33,8 @@ describe("tst language", () => {
       width: 1,
       lpad: 3,
       rpad: 3,
+      builtin: false,
+      address: -1,
     });
   });
 
@@ -45,8 +47,24 @@ describe("tst language", () => {
     expect(TST.semantics(match).operation).toStrictEqual({
       op: "output-list",
       spec: [
-        { id: "a", style: "B", width: 1, lpad: 1, rpad: 1 },
-        { id: "out", style: "X", width: 3, lpad: 2, rpad: 4 },
+        {
+          id: "a",
+          style: "B",
+          width: 1,
+          lpad: 1,
+          rpad: 1,
+          builtin: false,
+          address: -1,
+        },
+        {
+          id: "out",
+          style: "X",
+          width: 3,
+          lpad: 2,
+          rpad: 4,
+          builtin: false,
+          address: -1,
+        },
       ],
     });
   });
@@ -60,8 +78,55 @@ describe("tst language", () => {
     expect(TST.semantics(match).operation).toStrictEqual({
       op: "output-list",
       spec: [
-        { id: "a", style: "B", width: 1, lpad: 1, rpad: 1 },
-        { id: "out", style: "X", width: 3, lpad: 2, rpad: 4 },
+        {
+          id: "a",
+          style: "B",
+          width: 1,
+          lpad: 1,
+          rpad: 1,
+          builtin: false,
+          address: -1,
+        },
+        {
+          id: "out",
+          style: "X",
+          width: 3,
+          lpad: 2,
+          rpad: 4,
+          builtin: false,
+          address: -1,
+        },
+      ],
+    });
+  });
+
+  it("parses an output list with builtins", () => {
+    let match = grammar.match(
+      "output-list PC[]%D0.4.0 RAM16K[0]%D1.7.1",
+      "TstOutputListOperation"
+    );
+    expect(match).toHaveSucceeded();
+    expect(TST.semantics(match).operation).toStrictEqual({
+      op: "output-list",
+      spec: [
+        {
+          id: "PC",
+          style: "D",
+          width: 4,
+          lpad: 0,
+          rpad: 0,
+          builtin: true,
+          address: -1,
+        },
+        {
+          id: "RAM16K",
+          style: "D",
+          width: 7,
+          lpad: 1,
+          rpad: 1,
+          builtin: true,
+          address: 0,
+        },
       ],
     });
   });
@@ -94,8 +159,24 @@ describe("tst language", () => {
             {
               op: "output-list",
               spec: [
-                { id: "in", style: "B", width: 1, lpad: 3, rpad: 3 },
-                { id: "out", style: "B", width: 1, lpad: 3, rpad: 3 },
+                {
+                  id: "in",
+                  style: "B",
+                  width: 1,
+                  lpad: 3,
+                  rpad: 3,
+                  builtin: false,
+                  address: -1,
+                },
+                {
+                  id: "out",
+                  style: "B",
+                  width: 1,
+                  lpad: 3,
+                  rpad: 3,
+                  builtin: false,
+                  address: -1,
+                },
               ],
             },
           ],
@@ -128,10 +209,42 @@ describe("tst language", () => {
             {
               op: "output-list",
               spec: [
-                { id: "time", style: "S", width: 4, lpad: 1, rpad: 1 },
-                { id: "in", style: "B", width: 1, lpad: 2, rpad: 2 },
-                { id: "load", style: "B", width: 1, lpad: 2, rpad: 2 },
-                { id: "out", style: "B", width: 1, lpad: 2, rpad: 2 },
+                {
+                  id: "time",
+                  style: "S",
+                  width: 4,
+                  lpad: 1,
+                  rpad: 1,
+                  builtin: false,
+                  address: -1,
+                },
+                {
+                  id: "in",
+                  style: "B",
+                  width: 1,
+                  lpad: 2,
+                  rpad: 2,
+                  builtin: false,
+                  address: -1,
+                },
+                {
+                  id: "load",
+                  style: "B",
+                  width: 1,
+                  lpad: 2,
+                  rpad: 2,
+                  builtin: false,
+                  address: -1,
+                },
+                {
+                  id: "out",
+                  style: "B",
+                  width: 1,
+                  lpad: 2,
+                  rpad: 2,
+                  builtin: false,
+                  address: -1,
+                },
               ],
             },
           ],
@@ -170,8 +283,24 @@ describe("tst language", () => {
             {
               op: "output-list",
               spec: [
-                { id: "time", style: "S", width: 2, lpad: 1, rpad: 1 },
-                { id: "in", style: "B", width: 1, lpad: 2, rpad: 2 },
+                {
+                  id: "time",
+                  style: "S",
+                  width: 2,
+                  lpad: 1,
+                  rpad: 1,
+                  builtin: false,
+                  address: -1,
+                },
+                {
+                  id: "in",
+                  style: "B",
+                  width: 1,
+                  lpad: 2,
+                  rpad: 2,
+                  builtin: false,
+                  address: -1,
+                },
               ],
             },
           ],

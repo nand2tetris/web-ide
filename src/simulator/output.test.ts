@@ -96,4 +96,16 @@ describe("Test Output Handler", () => {
     const time = outTime.print(state.test);
     expect(`'${time}'`).toEqual("' 14+    '");
   });
+
+  it("outputs builtin header with no index", () => {
+    const outPC = new Output("PC", "D", 4, 0, 0, true, -1);
+    const header = outPC.header(state.test);
+    expect(header).toEqual("PC[]");
+  });
+
+  it("outputs builtin header with index", () => {
+    const outPC = new Output("RAM16K", "D", 7, 1, 1, true, 2);
+    const header = outPC.header(state.test);
+    expect(header).toEqual("RAM16K[2]");
+  });
 });

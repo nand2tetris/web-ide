@@ -7,6 +7,8 @@ export class Output {
   private readonly lPad: number;
   private readonly rPad: number;
   private readonly len: number;
+  private readonly index: number;
+  private readonly builtin: boolean;
 
   // new Output(inst.id, inst.style, inst.width, inst.lpad, inst.rpad)
   constructor(
@@ -14,7 +16,9 @@ export class Output {
     format = "%B1.1.1",
     len?: number,
     lPad?: number,
-    rPad?: number
+    rPad?: number,
+    builtin?: boolean,
+    index?: number
   ) {
     if (
       format.startsWith("%") &&
@@ -34,20 +38,29 @@ export class Output {
       this.lPad = parseInt(lPad);
       this.rPad = parseInt(rPad);
       this.len = parseInt(len);
+      this.builtin = false;
+      this.index = -1;
     } else {
       assert(["B", "X", "D", "S"].includes(format[0]));
       this.fmt = format[0] as "B" | "X" | "D" | "S";
       this.len = len ?? 3;
       this.lPad = lPad ?? 1;
       this.rPad = rPad ?? 1;
+      this.builtin = builtin ?? false;
+      this.index = index ?? -1;
     }
   }
 
   header(test: Test) {
-    if (this.variable.length > this.len + this.lPad + this.rPad) {
-      return this.variable.substring(0, this.len + this.lPad + this.rPad);
+    let variable = `${this.variable}`;
+    if (this.builtin) {
+      const index = this.index >= 0 ? this.index : "";
+      variable = `${variable}[${index}]`;
     }
-    return this.padCenter(this.variable);
+    if (variable.length > this.len + this.lPad + this.rPad) {
+      return variable.substring(0, this.len + this.lPad + this.rPad);
+    }
+    return this.padCenter(variable);
   }
 
   print(test: Test) {

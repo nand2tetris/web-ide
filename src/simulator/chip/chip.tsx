@@ -1,7 +1,8 @@
 import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { ReactNode } from "react";
-import { bin, int10 } from "../../util/twos";
+import { bin } from "../../util/twos";
+import { Memory } from "./builtins/computer/computer";
 import { RAM } from "./builtins/sequential/ram";
 import { Clock } from "./clock";
 
@@ -246,8 +247,9 @@ const BUILTIN_NAMES = [
   "RAM4K",
   "RAM16K",
   "ROM32K",
-  "SCREEN",
+  "Screen",
   "Keyboard",
+  "Memory",
 ];
 let id = 0;
 export class Chip {
@@ -326,7 +328,7 @@ export class Chip {
     return this.pins.get(name)!;
   }
 
-  get(name: string): Pin | undefined {
+  get(name: string, offset?: number): Pin | undefined {
     if (this.ins.has(name)) {
       return this.ins.get(name)!;
     }
@@ -336,16 +338,15 @@ export class Chip {
     if (this.pins.has(name)) {
       return this.pins.get(name)!;
     }
-    return this.getBuiltin(name);
+    return this.getBuiltin(name, offset);
   }
 
-  private getBuiltin(name: string): Pin | undefined {
-    const { chip, idx } = name.match(/(?<chip>[ADKRSP]\w+)(\[(?<idx>\d+)\])?/)
-      ?.groups ?? { chip: "", idx: 0 };
-    if (BUILTIN_NAMES.includes(chip)) {
+  private getBuiltin(name: string, offset = 0): Pin | undefined {
+    if (BUILTIN_NAMES.includes(name)) {
       for (const part of this.parts) {
-        if (part.name === chip) {
-          return getBuiltinValue(chip, part, int10(`${idx ?? "0"}`));
+        const pin = part.get(name, offset);
+        if (pin) {
+          return pin;
         }
       }
     }
@@ -567,7 +568,10 @@ export function getBuiltinValue(
     case "RAM4K":
     case "RAM16K":
     case "ROM32K":
+    case "Screen":
       return (part as RAM).at(idx);
+    case "Memory":
+      return (part as Memory).at(idx);
     default:
       return undefined;
   }

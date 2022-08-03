@@ -49,16 +49,21 @@ export type TstOperation =
   | TstSetOperation
   | TstOutputListOperation;
 
-export interface TstStatement {
+export interface TstLineStatement {
   ops: TstOperation[];
   break?: true;
 }
 
+export interface TstRepeat {
+  statements: TstLineStatement[];
+  count: number;
+}
+
+export type TstStatement = TstLineStatement | TstRepeat;
+
 export interface Tst {
   lines: TstStatement[];
 }
-
-// reload .....
 
 export const tstGrammar = raw("./grammars/tst.ohm");
 export const grammar = ohm.grammar(tstGrammar, grammars);
@@ -121,6 +126,12 @@ tstSemantics.addAttribute<TstOperation>("operation", {
 });
 
 tstSemantics.addAttribute<TstStatement>("statement", {
+  TstRepeat(op, { value: count }, _o, statements, _c) {
+    return {
+      statements: statements.children.map(({ statement }) => statement),
+      count,
+    };
+  },
   TstStatement(list, end) {
     const stmt: TstStatement = {
       ops: list
@@ -138,7 +149,9 @@ tstSemantics.addAttribute<TstStatement>("statement", {
 
 tstSemantics.addAttribute<Tst>("tst", {
   Tst(lines) {
-    return { lines: lines.children.map((n) => n.statement) };
+    return {
+      lines: lines.children.map((n) => n.statement),
+    };
   },
 });
 

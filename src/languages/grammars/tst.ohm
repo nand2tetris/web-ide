@@ -1,7 +1,8 @@
 Tst <: Base {
   Root := Tst
-  Tst = TstStatement*
+  Tst = (TstStatement | TstRepeat)+
 
+  TstRepeat = Repeat Number OpenBrace TstStatement+ CloseBrace
   TstStatement = List<TstOperation, ","> (Semi | Bang)
 
   TstOperation =
@@ -26,6 +27,7 @@ Tst <: Base {
   Tick = "tick"
   Tock = "tock"
   Echo = "echo"
+  Repeat = "repeat"
   ClearEcho = "clear-echo"
   Output = "output"
   OutputList = "output-list"

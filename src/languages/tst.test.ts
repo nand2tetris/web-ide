@@ -17,6 +17,12 @@ output-list time%S1.2.1 in%B2.1.2;
 set in -32123, tick, output;
 `;
 
+const MEM_REPEAT = `
+repeat 14 {
+  eval, output;
+}
+`;
+
 describe("tst language", () => {
   it("parses an output format", () => {
     let match = grammar.match("a%B3.1.3", "OutputFormat");
@@ -177,6 +183,19 @@ describe("tst language", () => {
             { op: "tick" },
             { op: "output" },
           ],
+        },
+      ],
+    });
+  });
+
+  it("repeats blocks", () => {
+    let match = grammar.match(MEM_REPEAT);
+    expect(match).toHaveSucceeded();
+    expect(TST.semantics(match).tst).toEqual({
+      lines: [
+        {
+          count: 14,
+          statements: [{ ops: [{ op: "eval" }, { op: "output" }] }],
         },
       ],
     });

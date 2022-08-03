@@ -64,7 +64,7 @@ export class Output {
   }
 
   print(test: Test) {
-    const val = test.getVar(this.variable);
+    const val = test.getVar(this.variable, this.index);
     if (this.fmt === "S") {
       return this.padLeft(val as string);
     }

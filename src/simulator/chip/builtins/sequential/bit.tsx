@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { ClockedChip, HIGH, LOW, Voltage } from "../../chip";
+import { ClockedChip, HIGH, LOW, Pin, Voltage } from "../../chip";
 
 export class Bit extends ClockedChip {
   bit: Voltage = LOW;
@@ -34,6 +34,10 @@ export class Register extends ClockedChip {
 
   override tock() {
     this.out().busVoltage = this.bits & 0xffff;
+  }
+
+  override get(name: string): Pin | undefined {
+    return name === this.name ? this.out() : undefined;
   }
 }
 
@@ -70,5 +74,9 @@ export class PC extends ClockedChip {
 
   override tock() {
     this.out().busVoltage = this.bits & 0xffff;
+  }
+
+  override get(name: string, offset?: number | undefined): Pin | undefined {
+    return this.out();
   }
 }

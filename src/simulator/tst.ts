@@ -59,8 +59,8 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   abstract hasVar(variable: string | number): boolean;
-  abstract getVar(variable: string | number): number | string;
-  abstract setVar(variable: string, value: number): void;
+  abstract getVar(variable: string | number, offset?: number): number | string;
+  abstract setVar(variable: string, value: number, offset?: number): void;
 }
 
 function isTstLineStatment(line: TstStatement): line is TstLineStatement {
@@ -138,19 +138,19 @@ export class ChipTest extends Test<ChipTestInstruction> {
     );
   }
 
-  getVar(variable: string | number): number | string {
+  getVar(variable: string | number, offset?: number): number | string {
     variable = `${variable}`;
     if (variable === "time") {
       return this.clock.toString();
     }
-    const pin = this.chip.get(variable);
+    const pin = this.chip.get(variable, offset);
     if (!pin) return 0;
     return pin instanceof Bus ? pin.busVoltage : pin.voltage();
   }
 
-  setVar(variable: string, value: number): void {
+  setVar(variable: string, value: number, offset?: number): void {
     // Look up built-in chip state variables
-    const pinOrBus = this.chip.get(`${variable}`);
+    const pinOrBus = this.chip.get(variable, offset);
     if (pinOrBus instanceof Bus) {
       pinOrBus.busVoltage = value;
     } else {
@@ -210,12 +210,9 @@ export class TestSetInstruction implements TestInstruction {
     private value: number,
     private index?: number | undefined
   ) {}
+
   do(test: Test): void {
-    let variable = this.variable;
-    if (this.index !== undefined) {
-      variable += `[${this.index}]`;
-    }
-    test.setVar(variable, this.value);
+    test.setVar(this.variable, this.value, this.index);
   }
 }
 

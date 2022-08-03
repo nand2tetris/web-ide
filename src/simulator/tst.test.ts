@@ -1,4 +1,5 @@
 import { TstRepeat } from "../languages/tst";
+import { Computer } from "./chip/builtins/computer/computer";
 import { Nand } from "./chip/builtins/logic/nand";
 import { Output } from "./output";
 import {
@@ -12,6 +13,30 @@ import {
 } from "./tst";
 
 describe("Simulator Test", () => {
+  describe("Builtins", () => {
+    it("can set Memory", () => {
+      const computer = new Computer();
+      const test = new ChipTest().with(computer);
+
+      test.addInstruction(new TestSetInstruction("RAM16K", 0x1234, 2));
+      test.run();
+
+      expect(computer.get("RAM16K", 2)?.busVoltage).toBe(0x1234);
+    });
+
+    it("can read memory", () => {
+      const computer = new Computer();
+      const test = new ChipTest().with(computer);
+      test.outputList([new Output("RAM16K", "D", 4, 0, 0, true, 2)]);
+
+      test.addInstruction(new TestSetInstruction("RAM16K", 1234, 2));
+      test.addInstruction(new TestOutputInstruction());
+      test.run();
+
+      expect(test.log()).toEqual(`|1234|\n`);
+    });
+  });
+
   describe("Full tests", () => {
     it("creates a simulator test", () => {
       const test = new ChipTest().with(new Nand());

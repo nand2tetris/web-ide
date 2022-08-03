@@ -1,16 +1,11 @@
 import { ReactNode } from "react";
-import {
-  isSome,
-  None,
-  Option,
-  Some,
-} from "@davidsouther/jiffies/lib/esm/result";
-import { Bus, ClockedChip, HIGH, Pin } from "../../chip";
+import { Bus, ClockedChip, Pin } from "../../chip";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 
 export class RAM extends ClockedChip {
   private ram: Int16Array;
-  private nextData: Option<number> = None();
+  private nextData: number = 0;
+  private address: number = 0;
 
   constructor(protected readonly width: number) {
     super(["in[16]", "load", `address[${width}]`], [`out[16]`]);
@@ -19,15 +14,15 @@ export class RAM extends ClockedChip {
 
   override tick() {
     const load = this.in("load").voltage();
-    this.nextData = load === HIGH ? Some(this.in().busVoltage) : None();
+    this.address = this.in("address").busVoltage;
+    if (load) {
+      this.nextData = this.in().busVoltage;
+      this.ram[this.address] = this.nextData;
+    }
   }
 
   override tock() {
-    const address = this.in("address").busVoltage;
-    if (isSome(this.nextData)) {
-      this.ram[address] = this.nextData;
-    }
-    this.out().busVoltage = this.ram?.[address];
+    this.out().busVoltage = this.ram?.[this.address];
   }
 
   override eval() {

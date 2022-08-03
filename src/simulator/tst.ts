@@ -1,5 +1,11 @@
 import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert";
-import { Tst, TstOutputSpec } from "../languages/tst";
+import {
+  Tst,
+  TstLineStatement,
+  TstOperation,
+  TstOutputSpec,
+  TstStatement,
+} from "../languages/tst";
 import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip";
 import { Clock } from "./chip/clock";
 import { Output } from "./output";
@@ -57,6 +63,10 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   abstract setVar(variable: string, value: number): void;
 }
 
+function isTstLineStatment(line: TstStatement): line is TstLineStatement {
+  return (line as TstLineStatement).ops !== undefined;
+}
+
 export class ChipTest extends Test<ChipTestInstruction> {
   private chip = new Low();
   private clock = Clock.get();
@@ -65,42 +75,50 @@ export class ChipTest extends Test<ChipTestInstruction> {
     const test = new ChipTest();
 
     for (const line of tst.lines) {
-      for (const inst of line.ops) {
-        const op = inst.op;
-        switch (op) {
-          case "tick":
-            test.addInstruction(new TestTickInstruction());
-            break;
-          case "tock":
-            test.addInstruction(new TestTockInstruction());
-            break;
-          case "eval":
-            test.addInstruction(new TestEvalInstruction());
-            break;
-          case "output":
-            test.addInstruction(new TestOutputInstruction());
-            break;
-          case "set":
-            test.addInstruction(
-              new TestSetInstruction(inst.id, inst.value, inst.index)
-            );
-            break;
-          case "output-list":
-            test.addInstruction(new TestOutputListInstruction(inst.spec));
-            break;
-          case "echo":
-            test.addInstruction(new TestEchoInstruction(inst.message));
-            break;
-          case "clear-echo":
-            test.addInstruction(new TestClearEchoInstruction());
-            break;
-          default:
-            checkExhaustive(op, `Unknown tst operation ${op}`);
+      if (isTstLineStatment(line)) {
+        test.addInstruction(ChipTest.makeLineStatement(line));
+      } else {
+        const repeat = new TestRepeatInstruction(line.count);
+        test.addInstruction(repeat);
+        for (const statement of line.statements) {
+          repeat.addInstruction(ChipTest.makeLineStatement(statement));
         }
       }
     }
 
     return test;
+  }
+
+  private static makeLineStatement(line: TstLineStatement) {
+    const statement = new TestCompoundInstruction();
+    for (const op of line.ops) {
+      statement.addInstruction(ChipTest.makeInstruction(op));
+    }
+    return statement;
+  }
+
+  private static makeInstruction(inst: TstOperation) {
+    const { op } = inst;
+    switch (op) {
+      case "tick":
+        return new TestTickInstruction();
+      case "tock":
+        return new TestTockInstruction();
+      case "eval":
+        return new TestEvalInstruction();
+      case "output":
+        return new TestOutputInstruction();
+      case "set":
+        return new TestSetInstruction(inst.id, inst.value, inst.index);
+      case "output-list":
+        return new TestOutputListInstruction(inst.spec);
+      case "echo":
+        return new TestEchoInstruction(inst.message);
+      case "clear-echo":
+        return new TestClearEchoInstruction();
+      default:
+        checkExhaustive(op, `Unknown tst operation ${op}`);
+    }
   }
 
   with(chip: Chip): this {
@@ -228,26 +246,28 @@ export class TestOutputListInstruction implements TestInstruction {
   }
 }
 
-export abstract class CompoundTestInstruction implements TestInstruction {
+export class TestCompoundInstruction implements TestInstruction {
   protected readonly instructions: TestInstruction[] = [];
 
   addInstruction(instruction: TestInstruction) {
     this.instructions.push(instruction);
   }
 
-  abstract do(test: Test): void;
+  do(test: Test): void {
+    for (const instruction of this.instructions) {
+      instruction.do(test);
+    }
+  }
 }
 
-export class TestRepeatInstruction extends CompoundTestInstruction {
+export class TestRepeatInstruction extends TestCompoundInstruction {
   constructor(public readonly repeat: number) {
     super();
   }
 
-  do(test: Test): void {
+  override do(test: Test): void {
     for (let i = 0; i < this.repeat; i++) {
-      for (const instruction of this.instructions) {
-        instruction.do(test);
-      }
+      super.do(test);
     }
   }
 }
@@ -290,12 +310,12 @@ export class Condition {
   }
 }
 
-export class TestWhileInstruction extends CompoundTestInstruction {
+export class TestWhileInstruction extends TestCompoundInstruction {
   constructor(public readonly condition: Condition) {
     super();
   }
 
-  do(test: Test): void {
+  override do(test: Test): void {
     while (this.condition.check(test)) {
       for (const instruction of this.instructions) {
         instruction.do(test);

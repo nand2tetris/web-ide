@@ -1,3 +1,4 @@
+import { TstRepeat } from "../languages/tst";
 import { Nand } from "./chip/builtins/logic/nand";
 import { Output } from "./output";
 import {
@@ -7,6 +8,7 @@ import {
   TestOutputInstruction,
   TestTickInstruction,
   TestTockInstruction,
+  TestCompoundInstruction,
 } from "./tst";
 
 describe("Simulator Test", () => {
@@ -15,33 +17,42 @@ describe("Simulator Test", () => {
       const test = new ChipTest().with(new Nand());
       test.outputList(["a", "b", "out"].map((v) => new Output(v)));
 
+      let statement: TestCompoundInstruction;
+      statement = new TestCompoundInstruction();
+      test.addInstruction(statement);
       [
         new TestSetInstruction("a", 0),
         new TestSetInstruction("b", 0),
         new TestEvalInstruction(),
         new TestOutputInstruction(),
-      ].forEach((i) => test.addInstruction(i));
+      ].forEach((i) => statement.addInstruction(i));
 
+      statement = new TestCompoundInstruction();
+      test.addInstruction(statement);
       [
         new TestSetInstruction("a", 1),
         new TestSetInstruction("b", 1),
         new TestEvalInstruction(),
         new TestOutputInstruction(),
-      ].forEach((i) => test.addInstruction(i));
+      ].forEach((i) => statement.addInstruction(i));
 
+      statement = new TestCompoundInstruction();
+      test.addInstruction(statement);
       [
         new TestSetInstruction("a", 1),
         new TestSetInstruction("b", 0),
         new TestEvalInstruction(),
         new TestOutputInstruction(),
-      ].forEach((i) => test.addInstruction(i));
+      ].forEach((i) => statement.addInstruction(i));
 
+      statement = new TestCompoundInstruction();
+      test.addInstruction(statement);
       [
         new TestSetInstruction("a", 0),
         new TestSetInstruction("b", 1),
         new TestEvalInstruction(),
         new TestOutputInstruction(),
-      ].forEach((i) => test.addInstruction(i));
+      ].forEach((i) => statement.addInstruction(i));
 
       test.run();
       expect(test.log()).toEqual(
@@ -53,19 +64,25 @@ describe("Simulator Test", () => {
       const test = new ChipTest(); //.with(new DFF());
       test.outputList([new Output("time", "S", 4, 0, 0)]);
       for (let i = 0; i < 5; i++) {
-        test.addInstruction(new TestTickInstruction());
-        test.addInstruction(new TestOutputInstruction());
-        test.addInstruction(new TestTockInstruction());
-        test.addInstruction(new TestOutputInstruction());
+        const statement = new TestCompoundInstruction();
+        test.addInstruction(statement);
+        statement.addInstruction(new TestTickInstruction());
+        statement.addInstruction(new TestOutputInstruction());
+        statement.addInstruction(new TestTockInstruction());
+        statement.addInstruction(new TestOutputInstruction());
       }
       for (let i = 0; i < 2; i++) {
-        test.addInstruction(new TestEvalInstruction());
-        test.addInstruction(new TestOutputInstruction());
+        const statement = new TestCompoundInstruction();
+        test.addInstruction(statement);
+        statement.addInstruction(new TestEvalInstruction());
+        statement.addInstruction(new TestOutputInstruction());
       }
       for (let i = 0; i < 3; i++) {
-        test.addInstruction(new TestTickInstruction());
-        test.addInstruction(new TestTockInstruction());
-        test.addInstruction(new TestOutputInstruction());
+        const statement = new TestCompoundInstruction();
+        test.addInstruction(statement);
+        statement.addInstruction(new TestTickInstruction());
+        statement.addInstruction(new TestTockInstruction());
+        statement.addInstruction(new TestOutputInstruction());
       }
 
       test.run();
@@ -88,6 +105,33 @@ describe("Simulator Test", () => {
           "7",
           "8",
         ].map((i) => `|${i.padEnd(4, " ")}|`)
+      );
+    });
+
+    it("tick tocks a clock with a repeat", () => {
+      const repeat: TstRepeat = {
+        count: 5,
+        statements: [
+          {
+            ops: [
+              { op: "tick" },
+              { op: "output" },
+              { op: "tock" },
+              { op: "output" },
+            ],
+          },
+        ],
+      };
+
+      const test = ChipTest.from({ lines: [repeat] });
+      test.outputList([new Output("time", "S", 4, 0, 0)]);
+
+      test.run();
+
+      expect(test.log().trim().split("\n")).toEqual(
+        ["0+", "1", "1+", "2", "2+", "3", "3+", "4", "4+", "5"].map(
+          (i) => `|${i.padEnd(4, " ")}|`
+        )
       );
     });
   });

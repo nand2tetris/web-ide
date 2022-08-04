@@ -1,12 +1,11 @@
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
 import {
-  cpu,
   CPUInput,
-  CPUOutput,
   CPUState,
   cpuTick,
   cpuTock,
+  emptyState,
 } from "../../../cpu/cpu";
 import { int10 } from "../../../../util/twos";
 
@@ -125,15 +124,7 @@ export class Memory extends ClockedChip {
 }
 
 export class CPU extends ClockedChip {
-  private state: CPUState = {
-    A: 0,
-    D: 0,
-    PC: 0,
-    ALU: 0,
-    flag: 0,
-    writeM: false,
-  };
-  private output: CPUOutput = { addressM: 0, outM: 0, writeM: false, pc: 0 };
+  private state: CPUState = emptyState();
 
   constructor() {
     super(
@@ -143,18 +134,19 @@ export class CPU extends ClockedChip {
   }
 
   override tick(): void {
-    this.state = cpuTick(this.cpuInput(), this.state);
-
-    this.out("writeM").pull(this.state.writeM ? HIGH : LOW);
+    const [state, writeM] = cpuTick(this.cpuInput(), this.state);
+    this.state = state;
+    this.out("writeM").pull(writeM ? HIGH : LOW);
+    this.out("outM").busVoltage = this.state.ALU ?? 0;
   }
 
   override tock(): void {
     const [output, state] = cpuTock(this.cpuInput(), this.state);
-    this.output = output;
     this.state = state;
 
-    this.out("outM").busVoltage = this.output?.outM ?? 0;
-    this.out("writeM").pull(this.output?.writeM ? HIGH : LOW);
+    this.out("addressM").busVoltage = output.addressM ?? 0;
+    this.out("outM").busVoltage = output.outM ?? 0;
+    this.out("writeM").pull(output.writeM ? HIGH : LOW);
     this.out("pc").busVoltage = this.state?.PC ?? 0;
   }
 

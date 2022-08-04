@@ -9,7 +9,7 @@ import { ChipTest } from "../../tst";
 import { build } from "../builder";
 import { Chip } from "../chip";
 
-const SKIP = new Set(["Computer"]);
+const SKIP = new Set(["Computer", "CPU"]);
 
 describe("All Projects", () => {
   describe.each(Object.keys(PROJECTS))("project %s", (project) => {

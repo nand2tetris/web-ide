@@ -36,8 +36,8 @@ export class Register extends ClockedChip {
     this.out().busVoltage = this.bits & 0xffff;
   }
 
-  override get(name: string): Pin | undefined {
-    return name === this.name ? this.out() : undefined;
+  override get(name: string, offset?: number): Pin | undefined {
+    return name === this.name ? this.out() : super.get(name, offset);
   }
 }
 
@@ -76,7 +76,7 @@ export class PC extends ClockedChip {
     this.out().busVoltage = this.bits & 0xffff;
   }
 
-  override get(name: string, offset?: number | undefined): Pin | undefined {
-    return this.out();
+  override get(name: string, offset?: number): Pin | undefined {
+    return name === this.name ? this.out() : super.get(name, offset);
   }
 }

@@ -31,7 +31,10 @@ export class RAM extends ClockedChip {
   }
 
   at(idx: number): Pin {
-    assert(idx < this.ram.length);
+    assert(
+      idx < this.ram.length,
+      () => `Request out of bounds (${idx} >= ${this.ram.length})`
+    );
     return new RamBus(`${this.name}[${idx}]`, idx, this.ram);
   }
 }

@@ -130,6 +130,9 @@ export const Editor = ({
       "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
       "Segoe UI Symbol", "Noto Color Emoji"`,
       fontSize: 16,
+      wordWrap: "wordWrapColumn",
+      wordWrapColumn: 40,
+      wrappingIndent: "indent",
       minimap: {
         enabled: false,
       },

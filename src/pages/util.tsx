@@ -1,9 +1,15 @@
-import { ChangeEventHandler, useState } from "react";
+import { ChangeEventHandler, useCallback, useState } from "react";
 import { asm, op } from "../util/asm";
-import { bin, dec, hex, int10, int16, int2 } from "../util/twos";
+import { bin, dec, hex, int10, int16, int2, uns } from "../util/twos";
 
 export const Util = () => {
   const [value, setValue] = useState(0);
+
+  const binValue = useCallback(() => bin(value), [value]);
+  const decValue = useCallback(() => dec(value), [value]);
+  const unsValue = useCallback(() => uns(value), [value]);
+  const hexValue = useCallback(() => hex(value), [value]);
+  const asmValue = useCallback(() => asm(value), [value]);
 
   const set =
     (parse: (v: string) => number): ChangeEventHandler<HTMLInputElement> =>
@@ -15,16 +21,20 @@ export const Util = () => {
     <form>
       <div className="grid">
         <label>
-          Binary <input type="text" value={bin(value)} onChange={set(int2)} />
+          Binary <input type="text" value={binValue()} onChange={set(int2)} />
         </label>
         <label>
-          Decimal <input type="text" value={dec(value)} onChange={set(int10)} />
+          Decimal <input type="text" value={decValue()} onChange={set(int10)} />
         </label>
         <label>
-          Hex <input type="text" value={hex(value)} onChange={set(int16)} />
+          Unsigned{" "}
+          <input type="text" value={unsValue()} onChange={set(int10)} />
         </label>
         <label>
-          HACK ASM <input type="text" value={asm(value)} onChange={set(op)} />
+          Hex <input type="text" value={hexValue()} onChange={set(int16)} />
+        </label>
+        <label>
+          HACK ASM <input type="text" value={asmValue()} onChange={set(op)} />
         </label>
       </div>
     </form>

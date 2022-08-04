@@ -11,7 +11,6 @@ export interface CPUOutput {
   outM: number;
   writeM: boolean;
   addressM: number;
-  pc: number;
 }
 
 export interface CPUState {
@@ -20,22 +19,42 @@ export interface CPUState {
   PC: number;
   ALU: number;
   flag: number;
-  writeM: boolean;
 }
 
+export function emptyState(): CPUState {
+  return { A: 0, D: 0, PC: 0, ALU: 0, flag: Flags.Zero };
+}
+
+const BITS = {
+  c: 0b1000_0000_0000_0000,
+  x1: 0b1001_0000_0000_0000,
+  x2: 0b1001_0000_0000_0000,
+  am: 0b1001_0000_0000_0000,
+  op: 0b0000_1111_1100_0000,
+  d1: 0b1000_0000_0010_0000,
+  d2: 0b1000_0000_0001_0000,
+  d3: 0b1000_0000_0000_1000,
+  j1: 0b1000_0000_0000_0001,
+  j2: 0b1000_0000_0000_0010,
+  j3: 0b1000_0000_0000_0100,
+};
+
 function decode(instruction: number) {
+  function bit(bit: number): boolean {
+    return (instruction & bit) === bit;
+  }
   const bits = {
-    c: (instruction & 0b1000_0000_0000_0000) === 0b1000_0000_0000_0000,
-    x1: (instruction & 0b1100_0000_0000_0000) === 0b1001_0000_0000_0000,
-    x2: (instruction & 0b1010_0000_0000_0000) === 0b1001_0000_0000_0000,
-    am: (instruction & 0b1001_0000_0000_0000) === 0b1001_0000_0000_0000,
-    op: (instruction & 0b000_1111_1100_0000) >> 6,
-    d1: (instruction & 0b1000_0000_0010_0000) === 0b1000_0000_0010_0000,
-    d2: (instruction & 0b1000_0000_0001_0000) === 0b1000_0000_0001_0000,
-    d3: (instruction & 0b1000_0000_0000_1000) === 0b1000_0000_0001_0000,
-    j1: (instruction & 0b1000_0000_0000_0001) === 0b1000_0000_0000_0001,
-    j2: (instruction & 0b1000_0000_0000_0001) === 0b1000_0000_0000_0010,
-    j3: (instruction & 0b1000_0000_0000_0001) === 0b1000_0000_0000_0100,
+    c: bit(BITS.c),
+    x1: bit(BITS.x1),
+    x2: bit(BITS.x2),
+    am: bit(BITS.am),
+    op: (instruction & BITS.op) >> 6,
+    d1: bit(BITS.d1),
+    d2: bit(BITS.d2),
+    d3: bit(BITS.d3),
+    j1: bit(BITS.j1),
+    j2: bit(BITS.j2),
+    j3: bit(BITS.j3),
   };
 
   return bits;
@@ -44,18 +63,17 @@ function decode(instruction: number) {
 export function cpuTick(
   { inM, instruction }: CPUInput,
   { A, D, PC }: CPUState
-): CPUState {
+): [CPUState, boolean] {
   const bits = decode(instruction);
   const a = bits.am ? inM : A;
   const [ALU, flag] = alu(bits.op, D, a);
-  const writeM = bits.d3;
 
-  return { A, D, PC, ALU, flag, writeM };
+  return [{ A, D, PC: PC + 1, ALU, flag }, bits.d3];
 }
 
 export function cpuTock(
-  { instruction, reset }: CPUInput,
-  { A, D, PC, ALU, flag, writeM }: CPUState
+  { inM, instruction, reset }: CPUInput,
+  { A, D, PC, ALU, flag }: CPUState
 ): [CPUOutput, CPUState] {
   const bits = decode(instruction);
 
@@ -64,7 +82,7 @@ export function cpuTock(
   const j3 = bits.j3 && flag === Flags.Negative;
   const jmp = j1 || j2 || j3;
 
-  PC = reset ? 0 : jmp ? A : PC + 1;
+  PC = reset ? 0 : jmp ? A : PC;
 
   if (bits.d2) {
     D = ALU;
@@ -76,11 +94,16 @@ export function cpuTock(
     A = ALU;
   }
 
+  const a = bits.am ? inM : A;
+  const alu2 = alu(bits.op, D, a);
+
+  ALU = alu2[0];
+  flag = alu2[1];
+
   const output: CPUOutput = {
     addressM: A,
     outM: ALU,
-    writeM,
-    pc: PC,
+    writeM: bits.d3,
   };
 
   const state: CPUState = {
@@ -89,23 +112,14 @@ export function cpuTock(
     ALU,
     flag,
     PC,
-    writeM,
   };
 
   return [output, state];
 }
 
-export function cpuTickTock(
-  input: CPUInput,
-  state: CPUState
-): [CPUOutput, CPUState] {
-  const tickState = cpuTick(input, state);
+export function cpu(input: CPUInput, state: CPUState): [CPUOutput, CPUState] {
+  const [tickState, _writeM] = cpuTick(input, state);
   return cpuTock(input, tickState);
-}
-
-export function cpu(inn: CPUInput, state: CPUState): [CPUOutput, CPUState] {
-  state = cpuTick(inn, state);
-  return cpuTock(inn, state);
 }
 
 export class CPU {
@@ -122,7 +136,6 @@ export class CPU {
     PC: 0,
     ALU: 0,
     flag: Flags.Zero,
-    writeM: false,
   };
 
   get PC() {
@@ -167,7 +180,6 @@ export class CPU {
         PC: this.#pc,
         ALU: this.#d,
         flag: Flags.Zero,
-        writeM: false,
       }
     );
 

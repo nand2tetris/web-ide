@@ -88,12 +88,12 @@ export const JUMP = {
 };
 
 export const Flags = {
-  0x00: "Positive",
-  0x01: "Zero",
-  0x02: "Negative",
-  Positive: 0x00,
-  Zero: 0x01,
-  Negative: 0x02,
+  0x01: "Positive",
+  0x00: "Zero",
+  0x0f: "Negative",
+  Positive: 0x01,
+  Zero: 0x00,
+  Negative: 0x0f,
 };
 
 export function alu(op: number, d: number, a: number): [number, number] {

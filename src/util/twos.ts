@@ -108,6 +108,11 @@ export function dec(i: number): string {
   return `${i}`;
 }
 
+export function uns(i: number): string {
+  i = i & 0xffff;
+  return `${i}`;
+}
+
 export function nand16(a: number, b: number): number {
   a = a & 0xffff;
   b = b & 0xffff;

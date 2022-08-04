@@ -1,6 +1,6 @@
-import { Chip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
+import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
-import { cpu } from "../../../cpu/cpu";
+import { cpu, CPUOutput, CPUState } from "../../../cpu/cpu";
 import { int10 } from "../../../../util/twos";
 
 export class ROM32K extends RAM {
@@ -33,7 +33,7 @@ export class Keyboard extends Chip {
   }
 }
 
-export class Memory extends Chip {
+export class Memory extends ClockedChip {
   private ram = new RAM16K();
   private screen = new Screen();
   private keyboard = new Keyboard();
@@ -51,7 +51,7 @@ export class Memory extends Chip {
       if (this.address >= Keyboard.OFFSET) {
         // Keyboard, do nothing
       } else if (this.address >= Screen.OFFSET) {
-        this.screen.at(this.address).busVoltage = inn;
+        this.screen.at(this.address - Screen.OFFSET).busVoltage = inn;
       } else {
         this.ram.at(this.address).busVoltage = inn;
       }
@@ -59,14 +59,20 @@ export class Memory extends Chip {
   }
 
   override tock() {
-    let out: number;
+    this.eval();
+  }
+
+  override eval() {
+    if (!this.ram) return;
+    this.address = this.in("address").busVoltage;
+    let out = 0;
     if (this.address >= Keyboard.OFFSET) {
       // Keyboard, do nothing
-      out = this.keyboard.out().busVoltage;
+      out = this.keyboard?.out().busVoltage ?? 0;
     } else if (this.address >= Screen.OFFSET) {
-      out = this.screen.at(this.address).busVoltage;
+      out = this.screen?.at(this.address - Screen.OFFSET).busVoltage ?? 0;
     } else {
-      out = this.ram.at(this.address).busVoltage;
+      out = this.ram?.at(this.address).busVoltage ?? 0;
     }
     this.out().busVoltage = out;
   }
@@ -111,10 +117,10 @@ export class Memory extends Chip {
   }
 }
 
-export class CPU extends Chip {
-  private A = 0;
-  private D = 0;
-  private PC = 0;
+export class CPU extends ClockedChip {
+  private state: CPUState = { A: 0, D: 0, PC: 0, ALU: 0, flag: 0 };
+  private nextState: CPUState = { A: 0, D: 0, PC: 0, ALU: 0, flag: 0 };
+  private output: CPUOutput = { addressM: 0, outM: 0, writeM: false };
 
   constructor() {
     super(
@@ -123,36 +129,38 @@ export class CPU extends Chip {
     );
   }
 
-  override eval(): void {
+  override tick(): void {
     const inM = this.in("inM").busVoltage;
     const instruction = this.in("instruction").busVoltage;
     const reset = this.in("reset").busVoltage === 1;
 
-    const [{ addressM, outM, writeM }, { A, D, PC }] = cpu(
-      { inM, instruction, reset },
-      { A: this.A, D: this.D, PC: this.PC }
-    );
+    const [output, state] = cpu({ inM, instruction, reset }, this.state);
 
-    this.A = A;
-    this.D = D;
-    this.PC = PC;
-
-    this.out("addressM").busVoltage = addressM;
-    this.out("outM").busVoltage = outM;
-    this.out("writeM").pull(writeM ? HIGH : LOW);
+    this.output = output;
+    this.nextState = state;
+    this.out("outM").busVoltage = output.outM ?? 0;
+    this.out("writeM").pull(output.writeM ? HIGH : LOW);
+    this.out("addressM").busVoltage = output.addressM ?? 0;
   }
 
-  override get(pin: string): Pin | undefined {
+  override tock(): void {
+    this.state = this.nextState;
+    this.out("outM").busVoltage = this.output?.outM ?? 0;
+    this.out("writeM").pull(this.output?.writeM ? HIGH : LOW);
+    this.out("pc").busVoltage = this.state?.PC ?? 0;
+  }
+
+  override get(pin: string, offset?: number): Pin | undefined {
     if (pin?.startsWith("ARegister")) {
-      return new ConstantBus("ARegister", this.A);
+      return new ConstantBus("ARegister", this.state.A);
     }
     if (pin?.startsWith("DRegister")) {
-      return new ConstantBus("DRegister", this.D);
+      return new ConstantBus("DRegister", this.state.D);
     }
     if (pin?.startsWith("PC")) {
-      return new ConstantBus("PC", this.PC);
+      return new ConstantBus("PC", this.state.PC);
     }
-    return super.get(pin);
+    return super.get(pin, offset);
   }
 }
 
@@ -204,10 +212,10 @@ export class Computer extends Chip {
       name.startsWith("DRegister")
     ) {
       return this.#cpu.get(name);
-    } else if (name.startsWith("RAM16K")) {
-      return this.#ram.get(name, offset);
-    } else {
-      return super.get(name, offset);
     }
+    if (name.startsWith("RAM16K")) {
+      return this.#ram.get(name, offset);
+    }
+    return super.get(name, offset);
   }
 }

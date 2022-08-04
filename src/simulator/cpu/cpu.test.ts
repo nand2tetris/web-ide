@@ -7,21 +7,42 @@ describe("CPU", () => {
   describe("cpu step function", () => {
     it("@A: sets A for @ instuructions", () => {
       const input: CPUInput = { inM: 0, reset: false, instruction: 0x0002 };
-      const inState: CPUState = { A: 0, D: 0, PC: 0, ALU: 0, flag: 0 };
+      const inState: CPUState = {
+        A: 0,
+        D: 0,
+        PC: 0,
+        ALU: 0,
+        flag: 0,
+        writeM: false,
+      };
 
       const [output, outState] = cpu(input, inState);
 
-      expect(output).toEqual({ outM: 0, writeM: false, addressM: 2 });
-      expect(outState).toEqual({ A: 2, D: 0, PC: 1, ALU: 0, flag: 0 });
+      expect(output).toEqual({ outM: 0, writeM: false, addressM: 0, pc: 1 });
+      expect(outState).toEqual({
+        A: 2,
+        D: 0,
+        PC: 1,
+        ALU: 0,
+        flag: Flags.Zero,
+        writeM: false,
+      });
     });
 
     it("M=0: writes to memory", () => {
       const input: CPUInput = { inM: 0, reset: false, instruction: 0xda88 };
-      const inState: CPUState = { A: 2, D: 0, PC: 0, ALU: 0, flag: 0 };
+      const inState: CPUState = {
+        A: 2,
+        D: 0,
+        PC: 0,
+        ALU: 0,
+        flag: 0,
+        writeM: false,
+      };
 
       const [output, outState] = cpu(input, inState);
 
-      expect(output).toEqual({ outM: 0, writeM: true, addressM: 2 });
+      expect(output).toEqual({ outM: 0, writeM: true, addressM: 2, pc: 1 });
       expect(outState).toEqual({ A: 2, D: 0, PC: 1, ALU: 0, flag: Flags.Zero });
     });
 

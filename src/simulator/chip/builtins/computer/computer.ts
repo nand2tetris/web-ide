@@ -1,6 +1,13 @@
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
-import { cpu, CPUOutput, CPUState } from "../../../cpu/cpu";
+import {
+  cpu,
+  CPUInput,
+  CPUOutput,
+  CPUState,
+  cpuTick,
+  cpuTock,
+} from "../../../cpu/cpu";
 import { int10 } from "../../../../util/twos";
 
 export class ROM32K extends RAM {
@@ -118,9 +125,15 @@ export class Memory extends ClockedChip {
 }
 
 export class CPU extends ClockedChip {
-  private state: CPUState = { A: 0, D: 0, PC: 0, ALU: 0, flag: 0 };
-  private nextState: CPUState = { A: 0, D: 0, PC: 0, ALU: 0, flag: 0 };
-  private output: CPUOutput = { addressM: 0, outM: 0, writeM: false };
+  private state: CPUState = {
+    A: 0,
+    D: 0,
+    PC: 0,
+    ALU: 0,
+    flag: 0,
+    writeM: false,
+  };
+  private output: CPUOutput = { addressM: 0, outM: 0, writeM: false, pc: 0 };
 
   constructor() {
     super(
@@ -130,24 +143,26 @@ export class CPU extends ClockedChip {
   }
 
   override tick(): void {
-    const inM = this.in("inM").busVoltage;
-    const instruction = this.in("instruction").busVoltage;
-    const reset = this.in("reset").busVoltage === 1;
+    this.state = cpuTick(this.cpuInput(), this.state);
 
-    const [output, state] = cpu({ inM, instruction, reset }, this.state);
-
-    this.output = output;
-    this.nextState = state;
-    this.out("outM").busVoltage = output.outM ?? 0;
-    this.out("writeM").pull(output.writeM ? HIGH : LOW);
-    this.out("addressM").busVoltage = output.addressM ?? 0;
+    this.out("writeM").pull(this.state.writeM ? HIGH : LOW);
   }
 
   override tock(): void {
-    this.state = this.nextState;
+    const [output, state] = cpuTock(this.cpuInput(), this.state);
+    this.output = output;
+    this.state = state;
+
     this.out("outM").busVoltage = this.output?.outM ?? 0;
     this.out("writeM").pull(this.output?.writeM ? HIGH : LOW);
     this.out("pc").busVoltage = this.state?.PC ?? 0;
+  }
+
+  private cpuInput(): CPUInput {
+    const inM = this.in("inM").busVoltage;
+    const instruction = this.in("instruction").busVoltage;
+    const reset = this.in("reset").busVoltage === 1;
+    return { inM, instruction, reset };
   }
 
   override get(pin: string, offset?: number): Pin | undefined {

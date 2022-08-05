@@ -1,6 +1,8 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { op } from "../../util/asm";
 import { int10, int16, int2 } from "../../util/twos";
+import { load, loadHack } from "../fs";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];
@@ -57,6 +59,15 @@ export class Memory {
 
     if (isFinite(current) && current <= 0xffff) {
       this.set(cell, current);
+    }
+  }
+
+  async load(fs: FileSystem, path: string) {
+    try {
+      (await load(fs, path)).map((v, i) => this.set(i, v));
+    } catch (cause) {
+      // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
+      throw new Error(`Memory Failed to load file ${path}`);
     }
   }
 

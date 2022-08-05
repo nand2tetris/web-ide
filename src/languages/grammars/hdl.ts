@@ -1,4 +1,5 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import { base } from "./base";
 
 export const HdlLanguage: monaco.languages.IMonarchLanguage = {
   defaultToken: "invalid",
@@ -110,24 +111,6 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
       [/'/, "string.invalid"],
     ],
 
-    comment: [
-      [/[^/*]+/, "comment"],
-      [/\/\*/, "comment", "@push"], // nested comment
-      ["\\*/", "comment", "@pop"],
-      [/[/*]/, "comment"],
-    ],
-
-    string: [
-      [/[^\\"]+/, "string"],
-      [/@escapes/, "string.escape"],
-      [/\\./, "string.escape.invalid"],
-      [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
-    ],
-
-    whitespace: [
-      [/[ \t\r\n]+/, "white"],
-      [/\/\*/, "comment", "@comment"],
-      [/\/\/.*$/, "comment"],
-    ],
+    ...base.tokenizer,
   },
 };

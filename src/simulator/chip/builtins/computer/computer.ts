@@ -7,8 +7,9 @@ import {
   cpuTock,
   emptyState,
 } from "../../../cpu/cpu";
-import { int10, int2 } from "../../../../util/twos";
+import { int10 } from "../../../../util/twos";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { loadHack } from "../../../fs";
 
 export class ROM32K extends RAM {
   constructor() {
@@ -17,12 +18,7 @@ export class ROM32K extends RAM {
 
   override async load(fs: FileSystem, path: string) {
     try {
-      const file = await fs.readFile(path);
-      file
-        .split("\n")
-        .filter((line) => line.trim() !== "")
-        .map(int2)
-        .map((v, i) => (this.at(i).busVoltage = v));
+      (await loadHack(fs, path)).map((v, i) => (this.at(i).busVoltage = v));
     } catch (cause) {
       // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
       throw new Error(`ROM32K Failed to load file ${path}`);

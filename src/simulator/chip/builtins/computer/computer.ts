@@ -7,11 +7,26 @@ import {
   cpuTock,
   emptyState,
 } from "../../../cpu/cpu";
-import { int10 } from "../../../../util/twos";
+import { int10, int2 } from "../../../../util/twos";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 
 export class ROM32K extends RAM {
   constructor() {
     super(16);
+  }
+
+  override async load(fs: FileSystem, path: string) {
+    try {
+      const file = await fs.readFile(path);
+      file
+        .split("\n")
+        .filter((line) => line.trim() !== "")
+        .map(int2)
+        .map((v, i) => (this.at(i).busVoltage = v));
+    } catch (cause) {
+      // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
+      throw new Error(`ROM32K Failed to load file ${path}`);
+    }
   }
 }
 
@@ -141,6 +156,7 @@ export class CPU extends ClockedChip {
   }
 
   override tock(): void {
+    if (!this.state) return; // Skip initial tock
     const [output, state] = cpuTock(this.cpuInput(), this.state);
     this.state = state;
 
@@ -185,7 +201,7 @@ export class Computer extends Chip {
         from: { name: "instruction", start: 0 },
         to: { name: "instruction", start: 0 },
       },
-      { from: { name: "inM", start: 0 }, to: { name: "outM", start: 0 } },
+      { from: { name: "outM", start: 0 }, to: { name: "inM", start: 0 } },
       { from: { name: "writeM", start: 0 }, to: { name: "writeM", start: 0 } },
       {
         from: { name: "addressM", start: 0 },
@@ -212,6 +228,10 @@ export class Computer extends Chip {
     ]);
   }
 
+  override eval() {
+    super.eval();
+  }
+
   override get(name: string, offset?: number): Pin | undefined {
     if (
       name.startsWith("PC") ||
@@ -224,5 +244,9 @@ export class Computer extends Chip {
       return this.#ram.get(name, offset);
     }
     return super.get(name, offset);
+  }
+
+  override load(fs: FileSystem, path: string): Promise<void> {
+    return this.#rom.load(fs, path);
   }
 }

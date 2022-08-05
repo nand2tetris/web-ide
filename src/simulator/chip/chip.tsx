@@ -1,8 +1,9 @@
 import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { ReactNode } from "react";
 import { bin } from "../../util/twos";
-import { Memory } from "./builtins/computer/computer";
+import { Memory, ROM32K } from "./builtins/computer/computer";
 import { RAM } from "./builtins/sequential/ram";
 import { Clock } from "./clock";
 
@@ -467,6 +468,15 @@ export class Chip {
   remove() {
     for (const part of this.parts) {
       part.remove();
+    }
+  }
+
+  // For the ROM32K builtin to load from a file system
+  async load(fs: FileSystem, path: string) {
+    for (const part of this.parts) {
+      if (part.name === "ROM32K") {
+        await part.load(fs, path);
+      }
     }
   }
 }

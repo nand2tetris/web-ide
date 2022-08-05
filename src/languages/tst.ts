@@ -43,13 +43,19 @@ export interface TstOutputListOperation {
   spec: TstOutputSpec[];
 }
 
+export interface TstLoadROMOperation {
+  op: "load";
+  file: string;
+}
+
 export type TstOperation =
   | TstEvalOperation
   | TstEchoOperation
   | TstClearEchoOperation
   | TstOutputOperation
   | TstSetOperation
-  | TstOutputListOperation;
+  | TstOutputListOperation
+  | TstLoadROMOperation;
 
 export interface TstLineStatement {
   ops: TstOperation[];
@@ -74,6 +80,12 @@ export const tstSemantics = grammar.extendSemantics(baseSemantics);
 tstSemantics.extendAttribute<number>("value", {
   Index(_a, idx, _b) {
     return idx?.child(0)?.value ?? -1;
+  },
+});
+
+tstSemantics.extendAttribute<string>("name", {
+  FileName(name, _dot, ext) {
+    return `${name.name}.${ext.name}`;
   },
 });
 
@@ -141,6 +153,12 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   TstClearEchoOperation(op) {
     return {
       op: "clear-echo",
+    };
+  },
+  TstLoadROMOperation(_r, _l, { name }) {
+    return {
+      op: "load",
+      file: name,
     };
   },
 });

@@ -329,4 +329,17 @@ describe("tst language", () => {
       ],
     });
   });
+
+  it("loads ROMs", () => {
+    let match = grammar.match(`ROM32K load Max.hack;`);
+
+    expect(match).toHaveSucceeded();
+    expect(TST.semantics(match).tst).toEqual({
+      lines: [
+        {
+          ops: [{ op: "load", file: "Max.hack" }],
+        },
+      ],
+    });
+  });
 });

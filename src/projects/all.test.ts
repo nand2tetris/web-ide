@@ -1,3 +1,7 @@
+import {
+  FileSystem,
+  ObjectFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs";
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { Projects } from ".";
 import { Cmp, CMP } from "../languages/cmp";
@@ -8,8 +12,9 @@ import { build } from "../simulator/chip/builder";
 import { Chip } from "../simulator/chip/chip";
 import { compare } from "../simulator/compare";
 import { ChipTest } from "../simulator/tst";
+import { Max } from "./project_05/hack";
 
-const SKIP = new Set(["Computer"]);
+const SKIP = new Set<string>([]);
 
 describe("All Projects", () => {
   describe.each(Object.keys(PROJECTS))("project %s", (project) => {
@@ -35,6 +40,12 @@ describe("All Projects", () => {
       const chip = build(Ok(hdl as Ok<HdlParse>));
       expect(chip).toBeOk();
       const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(Ok(chip as Ok<Chip>));
+
+      if (chipName === "Computer") {
+        test.setFileSystem(
+          new FileSystem(new ObjectFileSystemAdapter({ "/Max.hack": Max }))
+        );
+      }
 
       await test.run();
 

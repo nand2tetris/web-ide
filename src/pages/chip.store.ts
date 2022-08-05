@@ -255,16 +255,20 @@ export class ChipPageStore {
     this.statusLine(t`Parsed tst`);
 
     this.test = ChipTest.from(Ok(tst)).with(this.chip);
+    this.test.setFileSystem(this.fs);
+    this.fs.pushd("/samples");
 
-    await new Promise<void>((r) => {
+    const run = async () => {
       try {
         this.runningTest = true;
-        this.test?.run();
+        await this.test?.run();
       } finally {
         this.runningTest = false;
       }
-      r();
-    });
+    };
+    await run();
+
+    this.fs.popd();
 
     this.files.out = this.test.log();
     this.next();

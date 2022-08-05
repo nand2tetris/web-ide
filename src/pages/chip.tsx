@@ -11,11 +11,11 @@ import { Chip as Part, Pins } from "../simulator/chip/chip";
 import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
 import { Clock } from "../simulator/chip/clock";
-import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { Editor } from "../components/editor";
 import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
+import { Clockface } from "../components/clockface";
 
 let store = new ChipPageStore();
 const clock = Clock.get();
@@ -78,15 +78,6 @@ export const Chip = () => {
       }
     };
   }, [fs, setStatus]);
-
-  const [clockface, setClockface] = useState(display(clock));
-
-  useEffect(() => {
-    const subscription = clock.$.subscribe(() => {
-      setClockface(display(clock));
-    });
-    return () => subscription.unsubscribe();
-  });
 
   const [project, setProject] = useState(store.project);
   const [chips, setChips] = useState<string[]>(PROJECTS[store.project]);
@@ -195,7 +186,7 @@ export const Chip = () => {
             disabled={!clocked}
             data-testid="clock"
           >
-            <Trans>Clock:</Trans> {display(clockface)}
+            <Clockface />
           </button>
           <button
             onClick={() => store.reset()}

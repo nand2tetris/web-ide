@@ -1,4 +1,5 @@
 import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import {
   Tst,
   TstLineStatement,
@@ -14,9 +15,14 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
   protected _outputList: Output[] = [];
   protected _log: string = "";
+  fs: FileSystem = new FileSystem();
 
-  load(filename: string): void {}
-  compareTo(filename: string): void {}
+  setFileSystem(fs: FileSystem) {
+    this.fs = fs;
+  }
+
+  async load(filename: string) {}
+  async compareTo(filename: string) {}
   outputFile(filename: string): void {}
   outputList(outputs: Output[]): void {
     this._outputList = outputs;
@@ -26,9 +32,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this.instructions.push(instruction);
   }
 
-  run() {
+  async run() {
     for (const instruction of this.instructions) {
-      instruction.do(this);
+      await instruction.do(this);
     }
   }
 
@@ -68,7 +74,7 @@ function isTstLineStatment(line: TstStatement): line is TstLineStatement {
 }
 
 export class ChipTest extends Test<ChipTestInstruction> {
-  private chip = new Low();
+  private chip: Chip = new Low();
   private clock = Clock.get();
 
   static from(tst: Tst): ChipTest {
@@ -116,6 +122,8 @@ export class ChipTest extends Test<ChipTestInstruction> {
         return new TestEchoInstruction(inst.message);
       case "clear-echo":
         return new TestClearEchoInstruction();
+      case "load":
+        return new TestLoadROMInstruction(inst.file);
       default:
         checkExhaustive(op, `Unknown tst operation ${op}`);
     }
@@ -172,9 +180,13 @@ export class ChipTest extends Test<ChipTestInstruction> {
     this.clock.tock();
   }
 
-  override run(): void {
+  override async load(filename: string) {
+    await this.chip.load(this.fs, filename);
+  }
+
+  override async run() {
     this.clock.reset();
-    super.run();
+    await super.run();
   }
 }
 
@@ -201,7 +213,7 @@ export class VMTest extends Test<VMTestInstruction> {
 }
 
 export interface TestInstruction {
-  do(test: Test): void;
+  do(test: Test): Promise<void> | void;
 }
 
 export class TestSetInstruction implements TestInstruction {
@@ -217,7 +229,7 @@ export class TestSetInstruction implements TestInstruction {
 }
 
 export class TestOutputInstruction implements TestInstruction {
-  do(test: Test): void {
+  do(test: Test) {
     test.output();
   }
 }
@@ -245,7 +257,7 @@ export class TestOutputListInstruction implements TestInstruction {
     );
   }
 
-  do(test: Test): void {
+  do(test: Test) {
     test.outputList(this.outputs);
     test.header();
   }
@@ -258,9 +270,9 @@ export class TestCompoundInstruction implements TestInstruction {
     this.instructions.push(instruction);
   }
 
-  do(test: Test): void {
+  async do(test: Test) {
     for (const instruction of this.instructions) {
-      instruction.do(test);
+      await instruction.do(test);
     }
   }
 }
@@ -270,9 +282,9 @@ export class TestRepeatInstruction extends TestCompoundInstruction {
     super();
   }
 
-  override do(test: Test): void {
+  override async do(test: Test) {
     for (let i = 0; i < this.repeat; i++) {
-      super.do(test);
+      await super.do(test);
     }
   }
 }
@@ -320,10 +332,10 @@ export class TestWhileInstruction extends TestCompoundInstruction {
     super();
   }
 
-  override do(test: Test): void {
+  override async do(test: Test) {
     while (this.condition.check(test)) {
       for (const instruction of this.instructions) {
-        instruction.do(test);
+        await instruction.do(test);
       }
     }
   }
@@ -342,11 +354,15 @@ export class TestClearEchoInstruction implements TestInstruction {
   }
 }
 
+export class TestLoadROMInstruction implements TestInstruction {
+  constructor(readonly file: string) {}
+  async do(test: Test) {
+    await test.load(this.file);
+  }
+}
+
 export class TestBreakpointInstruction implements TestInstruction {
-  constructor(
-    public readonly variable: string,
-    public readonly value: number
-  ) {}
+  constructor(readonly variable: string, readonly value: number) {}
 
   do(test: Test) {
     test.addBreakpoint(this.variable, this.value);
@@ -361,33 +377,33 @@ export class TestClearBreakpointsInstruction implements TestInstruction {
 
 export interface ChipTestInstruction extends TestInstruction {
   _chipTestInstruction_: true;
-  do(test: ChipTest): void;
+  do(test: ChipTest): Promise<void> | void;
 }
 
 export class TestEvalInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  do(test: ChipTest): void {
+  do(test: ChipTest) {
     test.eval();
   }
 }
 
 export class TestTickInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  do(test: ChipTest): void {
+  do(test: ChipTest) {
     test.tick();
   }
 }
 
 export class TestTockInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  do(test: ChipTest): void {
+  do(test: ChipTest) {
     test.tock();
   }
 }
 
 export interface CPUTestInstruction extends TestInstruction {
   _cpuTestInstruction_: true;
-  do(test: CPUTest): void;
+  do(test: CPUTest): Promise<void> | void;
 }
 
 export class TestTickTockInstruction implements CPUTestInstruction {
@@ -399,7 +415,7 @@ export class TestTickTockInstruction implements CPUTestInstruction {
 
 export interface VMTestInstruction extends TestInstruction {
   _vmTestInstruction_: true;
-  do(test: VMTest): void;
+  do(test: VMTest): Promise<void> | void;
 }
 
 export class TestVMStepInstruction implements VMTestInstruction {

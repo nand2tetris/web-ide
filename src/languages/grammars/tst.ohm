@@ -12,7 +12,9 @@ Tst <: Base {
     | TstOutputOperation
     | TstEchoOperation
     | TstClearEchoOperation
+    | TstLoadROMOperation
 
+  TstLoadROMOperation = ROM32K Load FileName
   TstOutputListOperation = "output-list" OutputFormat+
   OutputFormat = Name Index? percent FormatStyle wholeDec dot wholeDec dot wholeDec
   TstSetOperation = Set Name Index? Number
@@ -21,6 +23,8 @@ Tst <: Base {
   TstOutputOperation = Output
   TstEchoOperation = Echo String
   TstClearEchoOperation = ClearEcho
+
+  FileName = Name dot identifier 
 
   Set = "set"
   Eval = "eval"
@@ -32,4 +36,6 @@ Tst <: Base {
   Output = "output"
   OutputList = "output-list"
   FormatStyle = "B"|"D"|"S"|"X"
+  ROM32K = "ROM32K"
+  Load = "load"
 }

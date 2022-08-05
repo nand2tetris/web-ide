@@ -1,7 +1,25 @@
+import {
+  FileSystem,
+  ObjectFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs";
+import { Max } from "../../../../projects/project_05/hack";
 import { HIGH } from "../../chip";
-import { CPU } from "./computer";
+import { CPU, ROM32K } from "./computer";
 
 describe("Computer Chip Builtins", () => {
+  describe("ROM Builtin", () => {
+    it("can load a file", async () => {
+      const fs = new FileSystem(
+        new ObjectFileSystemAdapter({ "/Max.hack": Max })
+      );
+      const rom = new ROM32K();
+
+      await rom.load(fs, "Max.hack");
+
+      expect(rom.at(4).busVoltage).toBe(10);
+    });
+  });
+
   describe("CPU Chip Builtin", () => {
     it("updates PC on tock", () => {
       const cpu = new CPU();

@@ -3,6 +3,7 @@ import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs";
 import * as Memory from "./01_memory";
 import * as CPU from "./02_cpu";
 import * as Computer from "./03_computer";
+import * as Hack from "./hack";
 
 export const CHIPS = {
   Memory: {
@@ -35,9 +36,18 @@ export const SOLS = {
   },
 };
 
+const HACK = {
+  "Add.hack": Hack.Add,
+  "Max.hack": Hack.Max,
+  "Rect.hack": Hack.Max,
+};
+
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/05");
   await reset(fs, CHIPS);
+  await fs.popd();
+  await fs.pushd("/samples");
+  await reset(fs, HACK);
   await fs.popd();
 }
 

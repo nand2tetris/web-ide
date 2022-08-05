@@ -1,7 +1,58 @@
-export const COMMANDS = {
+export type COMMANDS_ASM =
+  | "0"
+  | "1"
+  | "-1"
+  | "D"
+  | "A"
+  | "M"
+  | "!D"
+  | "!A"
+  | "-D"
+  | "-A"
+  | "D+1"
+  | "A+1"
+  | "D-1"
+  | "A-1"
+  | "D+A"
+  | "D-A"
+  | "D-M"
+  | "A-D"
+  | "D&A"
+  | "D&M"
+  | "D|A"
+  | "D|M";
+
+export type COMMANDS_OP =
+  | 0b101010
+  | 0b111111
+  | 0b111010
+  | 0b001100
+  | 0b110000
+  | 0b110000
+  | 0b001101
+  | 0b110001
+  | 0b001111
+  | 0b110011
+  | 0b011111
+  | 0b110111
+  | 0b001110
+  | 0b110010
+  | 0b000010
+  | 0b010011
+  | 0b010011
+  | 0b000111
+  | 0b000000
+  | 0b000000
+  | 0b010101
+  | 0b010101;
+
+export const COMMANDS: {
+  asm: Record<COMMANDS_ASM, COMMANDS_OP>;
+  op: Record<COMMANDS_OP, COMMANDS_ASM>;
+} = {
   asm: {
-    0: 0b101010, // 42 0x2A
-    1: 0b111111, // 63 0x3F
+    "0": 0b101010, // 42 0x2A
+    "1": 0b111111, // 63 0x3F
     "-1": 0b111010, // 58 0x3A
     D: 0b001100, // 12 0x0C
     A: 0b110000, // 48 0x30
@@ -16,9 +67,12 @@ export const COMMANDS = {
     "A-1": 0b110010, // 50 0x32
     "D+A": 0b000010, //  2 0x02
     "D-A": 0b010011, // 19 0x13
+    "D-M": 0b010011, // 19 0x13
     "A-D": 0b000111, //  7 0x07
     "D&A": 0b000000, //  0 0x00
+    "D&M": 0b000000, //  0 0x00
     "D|A": 0b010101, // 21 0x15
+    "D|M": 0b010101, // 21 0x15
   },
   op: {
     0x2a: "0",
@@ -42,7 +96,13 @@ export const COMMANDS = {
   },
 };
 
-export const ASSIGN = {
+export type ASSIGN_ASM = "" | "M" | "D" | "MD" | "A" | "AM" | "AD" | "AMD";
+export type ASSIGN_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export const ASSIGN: {
+  asm: Record<ASSIGN_ASM, ASSIGN_OP>;
+  op: Record<ASSIGN_OP, ASSIGN_ASM>;
+} = {
   asm: {
     "": 0x0,
     M: 0b001,
@@ -65,7 +125,20 @@ export const ASSIGN = {
   },
 };
 
-export const JUMP = {
+export type JUMP_ASM =
+  | ""
+  | "JGT"
+  | "JEQ"
+  | "JGE"
+  | "JLT"
+  | "JNE"
+  | "JLE"
+  | "JMP";
+export type JUMP_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export const JUMP: {
+  asm: Record<JUMP_ASM, JUMP_OP>;
+  op: Record<JUMP_OP, JUMP_ASM>;
+} = {
   asm: {
     "": 0b0,
     JGT: 0b001,

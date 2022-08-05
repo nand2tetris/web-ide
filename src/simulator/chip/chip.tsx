@@ -3,7 +3,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { ReactNode } from "react";
 import { bin } from "../../util/twos";
-import { Memory, ROM32K } from "./builtins/computer/computer";
+import { Memory } from "./builtins/computer/computer";
 import { RAM } from "./builtins/sequential/ram";
 import { Clock } from "./clock";
 

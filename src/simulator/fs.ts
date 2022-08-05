@@ -1,4 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
+import { ASM } from "../languages/asm";
 import { int2 } from "../util/twos";
 
 export async function load(fs: FileSystem, path: string): Promise<number[]> {
@@ -14,7 +16,15 @@ export async function load(fs: FileSystem, path: string): Promise<number[]> {
 }
 
 export async function loadAsm(fs: FileSystem, path: string): Promise<number[]> {
-  return [];
+  const source = await fs.readFile(path);
+  const parsed = ASM.parse(source);
+  if (isErr(parsed)) {
+    throw Err(parsed);
+  }
+
+  const asm = Ok(parsed);
+  ASM.passes.fillLabel(asm);
+  return ASM.passes.emit(asm);
 }
 
 export async function loadHack(

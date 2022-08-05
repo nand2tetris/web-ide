@@ -2,7 +2,7 @@ import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { op } from "../../util/asm";
 import { int10, int16, int2 } from "../../util/twos";
-import { load, loadHack } from "../fs";
+import { load } from "../fs";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];

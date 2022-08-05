@@ -1,4 +1,14 @@
-import { ASSIGN, COMMANDS, JUMP } from "../simulator/cpu/alu";
+import {
+  ASSIGN,
+  ASSIGN_ASM,
+  ASSIGN_OP,
+  COMMANDS,
+  COMMANDS_ASM,
+  COMMANDS_OP,
+  JUMP,
+  JUMP_ASM,
+  JUMP_OP,
+} from "../simulator/cpu/alu";
 
 export type CommandOps = keyof typeof COMMANDS.op;
 export type JumpOps = keyof typeof JUMP.op;
@@ -25,13 +35,13 @@ function cInstruction(op: number): string {
 
   let command = COMMANDS.op[cop];
   if (mop) {
-    command = command.replace(/A/g, "M");
+    command = command.replace(/A/g, "M") as COMMANDS_ASM;
   }
 
   const store = ASSIGN.op[sop];
   const jump = JUMP.op[jop];
 
-  let instruction = command;
+  let instruction: string = command;
   if (store) {
     instruction = `${store}=${instruction}`;
   }
@@ -60,24 +70,27 @@ function aop(asm: string): number {
 
 function cop(asm: string): number {
   let parts = asm.match(
-    /(?:([AMD]{1,3})=)?([-!01ADM&|]{1,3})(?:;(JGT|JLT|JGE|JLE|JEQ|JMP))?/
+    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
   );
-  if (!parts) {
-    parts = ["", "", ""];
-  } else if (parts.length === 2) {
-    parts = ["", parts[1], ""];
-  } else if (parts.length === 3) {
-    if (parts[2][0] === ";") {
-      parts = ["", parts[1], parts[2]];
-    } else {
-      parts = [parts[1], parts[2], ""];
-    }
-  }
-  const [_, assign, operation, jump] = parts;
-  const mode = operation.indexOf("M") > 0 ? 1 : 0;
-  const aop = ASSIGN.asm[assign as keyof typeof ASSIGN.asm] ?? 0;
-  const jop = JUMP.asm[jump as keyof typeof JUMP.asm] ?? 0;
-  const cop = COMMANDS.asm[operation as keyof typeof COMMANDS.asm] ?? 0;
+  const { assign, operation, jump } = parts?.groups ?? {};
+  const mode = operation.includes("M") || assign.includes("M");
+  const aop = ASSIGN.asm[(assign as ASSIGN_ASM) ?? ""];
+  const jop = JUMP.asm[(jump as JUMP_ASM) ?? ""];
+  const cop = COMMANDS.asm[(operation as COMMANDS_ASM) ?? ""];
 
-  return 0xd000 | (mode << 12) | (cop << 6) | (aop << 3) | jop;
+  return makeC(mode, cop, aop, jop);
+}
+
+export function makeC(
+  isM: boolean,
+  op: COMMANDS_OP,
+  assign: ASSIGN_OP = 0,
+  jmp: JUMP_OP = 0
+): number {
+  const C = 0xe000;
+  const A = isM ? 0x1000 : 0;
+  const O = op << 6;
+  const D = (assign ?? 0) << 3;
+  const J = jmp ?? 0;
+  return C + A + O + D + J;
 }

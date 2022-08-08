@@ -19,7 +19,7 @@ import { KEYBOARD, SCREEN } from "../../../cpu/memory";
 
 export class ROM32K extends RAM {
   constructor() {
-    super(16);
+    super(16, "ROM");
   }
 
   override async load(fs: FileSystem, path: string) {

@@ -6,16 +6,14 @@ export const Visualizations = ({ parts }: { parts: Set<Chip> }) => {
   if (parts.size === 0) {
     return <Trans>None</Trans>;
   }
-  const visualizations: [Chip, ReactNode][] = [...parts].flatMap((part) => {
-    return (part.render() ?? [])
-      .filter((v) => v !== undefined)
-      .map((v) => [part, v] as [Chip, ReactNode]);
-  });
+  const visualizations: [string, ReactNode][] = [...parts].flatMap((part) =>
+    part.render().map((v, i) => [`${part.id}_${i}`, v] as [string, ReactNode])
+  );
 
   return (
     <>
       {visualizations.map(([p, v]) => (
-        <div key={p.id}>{v}</div>
+        <div key={p}>{v}</div>
       ))}
     </>
   );

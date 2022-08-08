@@ -115,24 +115,22 @@ export const Memory = ({
             const opt = option.replace(/\s+/g, "_").toLowerCase();
             const id = `${name}-${opt}`;
             return (
-              <>
-                <label
-                  key={id}
-                  role="button"
-                  htmlFor={id}
-                  aria-current={option === fmt}
-                >
-                  <input
-                    type="radio"
-                    id={id}
-                    name={name}
-                    value={option}
-                    checked={option === fmt}
-                    onChange={() => setFormat(option)}
-                  />
-                  {option}
-                </label>
-              </>
+              <label
+                key={id}
+                role="button"
+                htmlFor={id}
+                aria-current={option === fmt}
+              >
+                <input
+                  type="radio"
+                  id={id}
+                  name={name}
+                  value={option}
+                  checked={option === fmt}
+                  onChange={() => setFormat(option)}
+                />
+                {option}
+              </label>
             );
           })}
         </fieldset>

@@ -3,8 +3,6 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 import { ReactNode } from "react";
 import { bin } from "../../util/twos";
-import { Memory } from "./builtins/computer/computer";
-import { RAM } from "./builtins/sequential/ram";
 import { Clock } from "./clock";
 
 export const HIGH = 1;
@@ -237,21 +235,6 @@ export class Pins {
   }
 }
 
-const BUILTIN_NAMES = [
-  "Register",
-  "ARegister",
-  "DRegister",
-  "PC",
-  "RAM8",
-  "RAM64",
-  "RAM512",
-  "RAM4K",
-  "RAM16K",
-  "ROM32K",
-  "Screen",
-  "Keyboard",
-  "Memory",
-];
 let id = 0;
 export class Chip {
   readonly id = id++;
@@ -560,29 +543,18 @@ export function printChip(chip: Chip): SerializedChip {
   };
 }
 
-export function getBuiltinValue(
-  chip: string,
-  part: Chip,
-  idx: number
-): Pin | undefined {
-  switch (chip) {
-    case "Register":
-    case "ARegister":
-    case "DRegister":
-    case "PC":
-    case "KEYBOARD":
-      return part.out();
-    case "RAM8":
-    case "RAM64":
-    case "RAM512":
-    case "RAM4K":
-    case "RAM16K":
-    case "ROM32K":
-    case "Screen":
-      return (part as RAM).at(idx);
-    case "Memory":
-      return (part as Memory).at(idx);
-    default:
-      return undefined;
-  }
-}
+export const BUILTIN_NAMES = [
+  "Register",
+  "ARegister",
+  "DRegister",
+  "PC",
+  "RAM8",
+  "RAM64",
+  "RAM512",
+  "RAM4K",
+  "RAM16K",
+  "ROM32K",
+  "Screen",
+  "Keyboard",
+  "Memory",
+];

@@ -10,6 +10,7 @@ export type Format = typeof FORMATS[number];
 export const SCREEN = 0x4000;
 export const SCREEN_ROWS = 512;
 export const SCREEN_COLS = 256;
+export const KEYBOARD = 0x6000;
 
 export class Memory {
   #memory: Int16Array;

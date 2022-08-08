@@ -1,3 +1,5 @@
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { Screen as ScreenComponent } from "../../../../components/screen";
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
 import {
@@ -5,11 +7,15 @@ import {
   CPUState,
   cpuTick,
   cpuTock,
+  decode,
   emptyState,
 } from "../../../cpu/cpu";
 import { int10 } from "../../../../util/twos";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { loadHack } from "../../../fs";
+import { Flags } from "../../../cpu/alu";
+import { RegisterComponent } from "../../../../components/chips/register";
+import { ALUComponent } from "../../../../components/chips/alu";
+import { KEYBOARD, SCREEN } from "../../../cpu/memory";
 
 export class ROM32K extends RAM {
   constructor() {
@@ -27,18 +33,22 @@ export class ROM32K extends RAM {
 }
 
 export class Screen extends RAM {
-  static readonly OFFSET = 0x4000;
+  static readonly OFFSET = SCREEN;
 
   constructor() {
-    super(13);
+    super(13, "Screen");
+  }
+
+  override render() {
+    return <ScreenComponent memory={this.memory} />;
   }
 }
 
 export class Keyboard extends Chip {
-  static readonly OFFSET = 0x6000;
+  static readonly OFFSET = KEYBOARD;
 
   constructor() {
-    super([], ["out[16]"]);
+    super([], ["out[16]"], "Keyboard");
   }
 
   setKey(key: number) {
@@ -47,6 +57,10 @@ export class Keyboard extends Chip {
 
   clearKey() {
     this.out().busVoltage = 0;
+  }
+
+  override render() {
+    return <RegisterComponent name="Keyboard" bits={this.out().busVoltage} />;
   }
 }
 
@@ -58,6 +72,9 @@ export class Memory extends ClockedChip {
 
   constructor() {
     super(["in[16]", "load", "address[16])"], ["out[16]"], "Memory");
+    this.parts.add(this.ram);
+    this.parts.add(this.screen);
+    this.parts.add(this.keyboard);
   }
 
   override tick() {
@@ -180,6 +197,22 @@ export class CPU extends ClockedChip {
       return new ConstantBus("PC", this.state.PC);
     }
     return super.get(pin, offset);
+  }
+
+  override render() {
+    const bits = decode(this.in("instruction").busVoltage);
+    return [
+      <RegisterComponent name={"A"} bits={this.state.A} />,
+      <RegisterComponent name={"D"} bits={this.state.D} />,
+      <RegisterComponent name={"PC"} bits={this.state.PC} />,
+      <ALUComponent
+        A={bits.am ? this.in("inM").busVoltage : this.state.A}
+        D={this.state.D}
+        out={this.state.ALU}
+        op={bits.op}
+        flag={this.state.flag as keyof typeof Flags}
+      />,
+    ];
   }
 }
 

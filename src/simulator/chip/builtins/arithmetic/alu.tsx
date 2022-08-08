@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { bin } from "../../../../util/twos";
-import { alu, COMMANDS, Flags } from "../../../cpu/alu";
+import { ALUComponent } from "../../../../components/chips/alu";
+import { alu, COMMANDS_OP, Flags } from "../../../cpu/alu";
 import { Chip, HIGH, LOW } from "../../chip";
 
 export class ALUNoStat extends Chip {
@@ -62,15 +62,19 @@ export class ALU extends Chip {
 
   override render(): ReactNode {
     return (
-      <div>
-        <span>ALU</span>
-        <dl>
-          <dt>A</dt> <dd>{bin(this.in("x").busVoltage)}</dd>
-          <dt>op</dt> <dd>{this.op()}</dd>
-          <dt>D</dt> <dd>{bin(this.in("y").busVoltage)}</dd>
-          <dt>=</dt> <dd>{bin(this.out().busVoltage)}</dd>
-        </dl>
-      </div>
+      <ALUComponent
+        A={this.in("x").busVoltage}
+        op={this.op()}
+        D={this.in("y").busVoltage}
+        out={this.out().busVoltage}
+        flag={
+          (this.out("zr").voltage() === HIGH
+            ? Flags.Zero
+            : this.out("ng").voltage() === HIGH
+            ? Flags.Negative
+            : Flags.Positive) as keyof typeof Flags
+        }
+      />
     );
   }
 
@@ -92,7 +96,7 @@ export class ALU extends Chip {
     this.out("zr").pull(zr);
   }
 
-  op(): string {
+  op(): COMMANDS_OP {
     const zx = this.in("zx").busVoltage << 5;
     const nx = this.in("nx").busVoltage << 4;
     const zy = this.in("zy").busVoltage << 3;
@@ -100,7 +104,6 @@ export class ALU extends Chip {
     const f = this.in("f").busVoltage << 1;
     const no = this.in("no").busVoltage << 0;
     const op = zx + nx + zy + ny + f + no;
-
-    return COMMANDS.op[op as keyof typeof COMMANDS.op] ?? "(??)";
+    return op as COMMANDS_OP;
   }
 }

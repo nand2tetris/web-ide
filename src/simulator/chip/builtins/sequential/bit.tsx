@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { RegisterComponent } from "../../../../components/chips/register";
 import { ClockedChip, HIGH, LOW, Pin, Voltage } from "../../chip";
 
@@ -43,13 +42,13 @@ export class Register extends ClockedChip {
 }
 
 export class VRegister extends Register {
-  override render(): ReactNode {
-    return (
+  override render() {
+    return [
       <RegisterComponent
         name={this.name ?? `Chip ${this.id}`}
         bits={this.bits}
-      />
-    );
+      />,
+    ];
   }
 }
 
@@ -60,8 +59,8 @@ export class PC extends ClockedChip {
     super(["in[16]", "load", "inc", "reset"], ["out[16]"], name);
   }
 
-  override render(): ReactNode {
-    return <span>PC: {this.bits}</span>;
+  override render() {
+    return [<RegisterComponent name="PC" bits={this.bits} />];
   }
 
   override tick() {

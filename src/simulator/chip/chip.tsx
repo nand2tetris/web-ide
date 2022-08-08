@@ -352,7 +352,7 @@ export class Chip {
     }
   }
 
-  render(): ReactNode | undefined {
+  render(): ReactNode[] | undefined {
     return undefined;
   }
 

@@ -40,7 +40,7 @@ export class Screen extends RAM {
   }
 
   override render() {
-    return <ScreenComponent memory={this.memory} />;
+    return [<ScreenComponent memory={this.memory} />];
   }
 }
 
@@ -60,7 +60,7 @@ export class Keyboard extends Chip {
   }
 
   override render() {
-    return <RegisterComponent name="Keyboard" bits={this.out().busVoltage} />;
+    return [<RegisterComponent name="Keyboard" bits={this.out().busVoltage} />];
   }
 }
 

@@ -1,4 +1,4 @@
-import { ReactNode, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -7,7 +7,7 @@ import { Pinout, ImmPin } from "../components/pinout";
 import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
 import { StorageContext } from "../util/storage";
 import { Subscription } from "rxjs";
-import { Chip as Part, Pins } from "../simulator/chip/chip";
+import { Pins } from "../simulator/chip/chip";
 import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
 import { Clock } from "../simulator/chip/clock";
@@ -16,6 +16,7 @@ import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
 import { Clockface } from "../components/clockface";
+import { Visualizations } from "../components/chips/visualizations";
 
 let store = new ChipPageStore();
 const clock = Clock.get();
@@ -171,7 +172,8 @@ export const Chip = () => {
     <article className="_hdl_panel no-shadow panel">
       <header>
         <div tabIndex={0}>HDL</div>
-        <fieldset className="button-group">
+        {/* <fieldset className="button-group"> */}
+        <fieldset role="group">
           <button onClick={compile} onKeyDown={compile}>
             <Trans>Eval</Trans>
           </button>
@@ -242,7 +244,7 @@ export const Chip = () => {
         <div tabIndex={0}>
           <Trans>Test</Trans>
         </div>
-        <fieldset className="input-group">
+        <fieldset role="group">
           <button onClick={execute}>
             <Trans>Execute</Trans>
           </button>
@@ -264,7 +266,6 @@ export const Chip = () => {
           language={"cmp"}
         />
         <DiffTable className="flex-1" cmp={cmpText} out={outText} />
-        {/* <ErrorPanel error={outError} /> */}
       </main>
     </article>
   );
@@ -274,14 +275,7 @@ export const Chip = () => {
         <Trans>Visualizations</Trans>
       </header>
       <main>
-        <ul>
-          {[...parts]
-            .map((part) => [part, part.render()] as [Part, ReactNode])
-            .filter(([_, v]) => v !== undefined)
-            .map(([p, v]) => (
-              <li key={p.id}>{v}</li>
-            ))}
-        </ul>
+        <Visualizations parts={parts} />
       </main>
     </article>
   );

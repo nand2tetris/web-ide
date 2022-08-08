@@ -4,6 +4,8 @@ import { i18n } from "@lingui/core";
 import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
+import "../pico/button-group.scss";
+
 export const Settings = () => {
   const { settings, fs, monaco, theme, setTheme } = useContext(AppContext);
 
@@ -113,38 +115,35 @@ export const Settings = () => {
               <Trans>Theme</Trans>
             </dt>
             <dd>
-              <fieldset>
-                <input
-                  type="radio"
-                  name="theme"
-                  id="theme-light"
-                  value="light"
-                  checked={theme === "light"}
-                  onChange={() => setTheme("light")}
-                />
-                <label htmlFor="theme-light">
+              <fieldset role="group">
+                <label role="button" aria-current={theme === "light"}>
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="light"
+                    checked={theme === "light"}
+                    onChange={() => setTheme("light")}
+                  />
                   <Trans>Light</Trans>
                 </label>
-                <input
-                  type="radio"
-                  name="theme"
-                  id="theme-dark"
-                  value="dark"
-                  checked={theme === "dark"}
-                  onChange={() => setTheme("dark")}
-                />
-                <label htmlFor="theme-dark">
+                <label role="button" aria-current={theme === "dark"}>
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="dark"
+                    checked={theme === "dark"}
+                    onChange={() => setTheme("dark")}
+                  />
                   <Trans>Dark</Trans>
                 </label>
-                <input
-                  type="radio"
-                  name="theme"
-                  id="theme-system"
-                  value="system"
-                  checked={theme === "system"}
-                  onChange={() => setTheme("system")}
-                />
-                <label htmlFor="theme-system">
+                <label role="button" aria-current={theme === "system"}>
+                  <input
+                    type="radio"
+                    name="theme"
+                    value="system"
+                    checked={theme === "system"}
+                    onChange={() => setTheme("system")}
+                  />
                   <Trans>System</Trans>
                 </label>
               </fieldset>

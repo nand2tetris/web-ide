@@ -17,6 +17,9 @@ export const Pinout = ({
   toggle?: (pin: ChipPin, bit?: number) => void;
   allowIncrement?: (pin: ChipPin) => boolean;
 }) => {
+  if (pins.length === 0) {
+    return <Trans>None</Trans>;
+  }
   return (
     <table className="pinout">
       <thead>

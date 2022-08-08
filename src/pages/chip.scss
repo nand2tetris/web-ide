@@ -1,7 +1,12 @@
+@use "../components/pico/button-group.scss";
+@use "../components/pico/page.scss";
+
 .ChipPage {
   --cols: 3;
+  --screen-size: calc(512px + calc(var(--spacing) * 2));
 
-  grid: min-content auto / repeat(var(--cols), 532px);
+  grid-template-rows: min-content auto;
+  grid-template-columns: auto var(--screen-size) auto;
   justify-content: center;
 
   > article {
@@ -24,7 +29,8 @@
     "sel sel tst"
     "hdl ins tst"
     "hdl ots tst"
-    "int vis tst";
+    "hdl int tst"
+    "hdl vis tst";
 
   ._selectors {
     grid-area: sel;
@@ -62,20 +68,22 @@
 @media (max-width: 1616px) {
   .ChipPage {
     --cols: 2;
+    grid-template-columns: auto var(--screen-size);
 
     grid-template-areas:
       "sel sel"
       "hdl ins"
       "hdl ots"
-      "int vis"
-      "tst tst"
-      "tst tst";
+      "hdl int"
+      "vis tst"
+      "vis tst";
   }
 }
 
 @media (max-width: 1074px) {
   .ChipPage {
     --cols: 1;
+    grid-template-columns: auto;
 
     grid-template-areas:
       "sel"

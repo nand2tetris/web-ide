@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { Bus, ClockedChip, Pin } from "../../chip";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { Memory as MemoryComponent } from "../../../../components/chips/memory";
@@ -40,8 +39,8 @@ export class RAM extends ClockedChip {
     return new RamBus(`${this.name}[${idx}]`, idx, this.memory);
   }
 
-  override render(): ReactNode {
-    return <MemoryComponent memory={this.memory} format="dec" />;
+  override render() {
+    return [<MemoryComponent memory={this.memory} format="dec" />];
   }
 }
 
@@ -68,8 +67,8 @@ export class RAM8 extends RAM {
     super(3, name);
   }
 
-  override render(): ReactNode {
-    return <span>RAM {this.width}</span>;
+  override render() {
+    return [<span>RAM {this.width}</span>];
   }
 }
 

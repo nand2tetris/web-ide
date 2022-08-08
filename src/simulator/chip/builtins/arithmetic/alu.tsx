@@ -1,4 +1,3 @@
-import { ReactNode } from "react";
 import { ALUComponent } from "../../../../components/chips/alu";
 import { alu, COMMANDS_OP, Flags } from "../../../cpu/alu";
 import { Chip, HIGH, LOW } from "../../chip";
@@ -60,8 +59,8 @@ export class ALU extends Chip {
     );
   }
 
-  override render(): ReactNode {
-    return (
+  override render() {
+    return [
       <ALUComponent
         A={this.in("x").busVoltage}
         op={this.op()}
@@ -74,8 +73,8 @@ export class ALU extends Chip {
             ? Flags.Negative
             : Flags.Positive) as keyof typeof Flags
         }
-      />
-    );
+      />,
+    ];
   }
 
   override eval() {

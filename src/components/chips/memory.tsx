@@ -13,7 +13,7 @@ import { bin, dec, hex } from "../../util/twos";
 import InlineEdit from "../pico/inline_edit";
 import VirtualScroll from "../pico/virtual_scroll";
 import { Icon } from "../pico/icon";
-import { AppContext, useAppContext } from "../../App.context";
+import { AppContext } from "../../App.context";
 
 const ITEM_HEIGHT = 34;
 

@@ -1,5 +1,5 @@
 import { width } from "@davidsouther/jiffies/lib/esm/dom/css/sizing";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 
 const Mode = { VIEW: 0, EDIT: 1 };
 

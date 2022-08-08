@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useCallback, useContext, useState } from "react";
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border";
 
 import "../pico/button-group.scss";
@@ -12,15 +12,17 @@ import { asm } from "../../util/asm";
 import { bin, dec, hex } from "../../util/twos";
 import InlineEdit from "../pico/inline_edit";
 import VirtualScroll from "../pico/virtual_scroll";
+import { Icon } from "../pico/icon";
+import { AppContext, useAppContext } from "../../App.context";
 
-const ITEM_HEIGHT = 33.5;
+const ITEM_HEIGHT = 34;
 
 export const MemoryBlock = ({
   memory,
   highlight = -1,
   editable = false,
   format = dec,
-  onChange,
+  onChange = () => {},
 }: {
   memory: MemoryChip;
   highlight?: number;
@@ -37,7 +39,7 @@ export const MemoryBlock = ({
         value={format(v)}
         editable={editable}
         highlight={i === highlight}
-        onChange={(value) => onChange && onChange(i, `${value}`, v)}
+        onChange={onChange}
       ></MemoryCell>
     )}
   ></VirtualScroll>
@@ -56,7 +58,7 @@ export const MemoryCell = ({
   editable?: boolean;
   onChange?: (i: number, value: string, previous: number) => void;
 }) => (
-  <>
+  <div style={{ display: "flex", height: "100%" }}>
     <code
       style={{
         ...rounded("none"),
@@ -88,7 +90,7 @@ export const MemoryCell = ({
         <span>{value}</span>
       )}
     </code>
-  </>
+  </div>
 );
 
 export const Memory = ({
@@ -106,24 +108,28 @@ export const Memory = ({
 }) => {
   const [fmt, setFormat] = useState(format);
 
+  const { fs } = useContext(AppContext);
+
+  const doLoad = useCallback(async () => {
+    // Show dialog
+    memory.load(fs, "/samples/Add.hack");
+  }, [fs, memory]);
+
   return (
     <article>
       <header>
-        <div>{name}</div>
+        <fieldset role="group">
+          <label>{name}</label>
+          <button onClick={doLoad}>
+            <Icon name="upload_file" />
+          </button>
+        </fieldset>
         <fieldset role="group">
           {FORMATS.map((option) => {
-            const opt = option.replace(/\s+/g, "_").toLowerCase();
-            const id = `${name}-${opt}`;
             return (
-              <label
-                key={id}
-                role="button"
-                htmlFor={id}
-                aria-current={option === fmt}
-              >
+              <label key={option} role="button" aria-current={option === fmt}>
                 <input
                   type="radio"
-                  id={id}
                   name={name}
                   value={option}
                   checked={option === fmt}

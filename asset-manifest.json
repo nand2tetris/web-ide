@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/computron5k/static/css/main.d73bd0a7.css",
-    "main.js": "/computron5k/static/js/main.a91937c4.js",
+    "main.css": "/computron5k/static/css/main.8b65e9ad.css",
+    "main.js": "/computron5k/static/js/main.a7458c77.js",
     "static/js/787.ef8b0fad.chunk.js": "/computron5k/static/js/787.ef8b0fad.chunk.js",
     "static/media/codicon.ttf": "/computron5k/static/media/codicon.ade705761eb7e702770d.ttf",
     "index.html": "/computron5k/index.html",
-    "main.d73bd0a7.css.map": "/computron5k/static/css/main.d73bd0a7.css.map",
-    "main.a91937c4.js.map": "/computron5k/static/js/main.a91937c4.js.map",
+    "main.8b65e9ad.css.map": "/computron5k/static/css/main.8b65e9ad.css.map",
+    "main.a7458c77.js.map": "/computron5k/static/js/main.a7458c77.js.map",
     "787.ef8b0fad.chunk.js.map": "/computron5k/static/js/787.ef8b0fad.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.d73bd0a7.css",
-    "static/js/main.a91937c4.js"
+    "static/css/main.8b65e9ad.css",
+    "static/js/main.a7458c77.js"
   ]
 }

@@ -1,6 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { useEffect, useRef } from "react";
-import { Memory, SCREEN } from "../simulator/cpu/memory";
+import { Memory, SCREEN } from "../../simulator/cpu/memory";
 
 const WHITE = "white";
 const BLACK = "black";

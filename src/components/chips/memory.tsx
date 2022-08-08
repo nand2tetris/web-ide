@@ -1,10 +1,14 @@
 import { ReactNode, useState } from "react";
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border";
-import { Format, FORMATS, Memory as MemoryChip } from "../simulator/cpu/memory";
-import { asm } from "../util/asm";
-import { bin, dec, hex } from "../util/twos";
-import InlineEdit from "./pico/inline_edit";
-import VirtualScroll from "./pico/virtual_scroll";
+import {
+  Format,
+  FORMATS,
+  Memory as MemoryChip,
+} from "../../simulator/cpu/memory";
+import { asm } from "../../util/asm";
+import { bin, dec, hex } from "../../util/twos";
+import InlineEdit from "../pico/inline_edit";
+import VirtualScroll from "../pico/virtual_scroll";
 
 const ITEM_HEIGHT = 33.5;
 

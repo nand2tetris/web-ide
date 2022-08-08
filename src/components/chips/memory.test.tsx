@@ -1,6 +1,6 @@
 import { range } from "@davidsouther/jiffies/lib/esm/range";
-import { Memory as MemoryChip } from "../simulator/cpu/memory";
-import { render, screen } from "../testing";
+import { Memory as MemoryChip } from "../../simulator/cpu/memory";
+import { render, screen } from "../../testing";
 import { MemoryBlock, MemoryCell } from "./memory";
 
 describe("<Memory />", () => {

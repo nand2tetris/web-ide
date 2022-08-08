@@ -1,10 +1,10 @@
 import { CPU as CPUChip } from "../simulator/cpu/cpu";
-import MemoryGUI from "../components/memory";
+import MemoryComponent from "../components/chips/memory";
 import { Memory } from "../simulator/cpu/memory";
 import { HACK } from "../testing/mult";
 import { Runbar } from "../components/runbar";
 import { Timer } from "../simulator/timer";
-import { Screen } from "../components/screen";
+import { Screen } from "../components/chips/screen";
 import { TickScreen } from "../testing/fill";
 
 export const CPU = () => {
@@ -54,14 +54,14 @@ export const CPU = () => {
             gridTemplateColumns: "repeat(2, 1fr)",
           }}
         >
-          <MemoryGUI name="RAM" memory={cpu.RAM} format="hex"></MemoryGUI>
-          <MemoryGUI
+          <MemoryComponent name="RAM" memory={cpu.RAM} format="hex" />
+          <MemoryComponent
             name="ROM"
             memory={cpu.ROM}
             highlight={cpu.PC}
             format="asm"
             editable={false}
-          ></MemoryGUI>
+          />
         </div>
         <div>
           <Screen memory={cpu.RAM}></Screen>;

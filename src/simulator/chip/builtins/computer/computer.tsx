@@ -1,5 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { Screen as ScreenComponent } from "../../../../components/screen";
+import { Screen as ScreenComponent } from "../../../../components/chips/screen";
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
 import {

@@ -352,8 +352,10 @@ export class Chip {
     }
   }
 
-  render(): ReactNode[] | undefined {
-    return undefined;
+  render(): ReactNode[] {
+    return [...this.parts]
+      .map((part) => part.render())
+      .filter((v) => v !== undefined);
   }
 
   private findPin(from: string, minWidth?: number): Pin {

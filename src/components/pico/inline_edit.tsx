@@ -1,5 +1,5 @@
 import { width } from "@davidsouther/jiffies/lib/esm/dom/css/sizing";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 const Mode = { VIEW: 0, EDIT: 1 };
 
@@ -32,33 +32,39 @@ export const InlineEdit = (props: {
     </span>
   );
 
-  const editRef = useRef<HTMLInputElement>();
+  const doSelect = useCallback(
+    (ref: HTMLInputElement | null) => ref?.select(),
+    []
+  );
+  const doChange = useCallback(
+    (target: EventTarget & HTMLInputElement) => {
+      setMode(Mode.VIEW);
+      props.onChange(target.value ?? "");
+    },
+    [props]
+  );
   const edit = () => {
     const edit = (
       <span style={{ display: "block", position: "relative" }}>
         <input
-          ref={(input) => {
-            if (input) {
-              editRef.current = input;
-            }
-          }}
+          ref={doSelect}
           style={{
             zIndex: "10",
             position: "absolute",
             left: "0",
             marginTop: "-0.375rem",
           }}
-          onBlur={({ target }) => {
-            props.onChange(target.value ?? "");
+          onBlur={({ target }) => doChange(target)}
+          onKeyPress={({ key, target }) => {
+            if (key === "Enter") {
+              doChange(target);
+            }
           }}
           type="text"
-          value={props.value}
+          defaultValue={props.value}
         />
       </span>
     );
-    setTimeout(() => {
-      editRef.current?.dispatchEvent(new Event("focus"));
-    });
     return edit;
   };
 

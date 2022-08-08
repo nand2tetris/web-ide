@@ -1,5 +1,4 @@
-import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
-import { ReactNode, useRef, useState } from "react";
+import { ReactNode, useCallback, useMemo, useReducer, useRef } from "react";
 
 export interface VirtualScrollSettings {
   minIndex: number;
@@ -40,7 +39,8 @@ export function fillVirtualScrollSettings(
 }
 
 export function initialState<T>(
-  settings: VirtualScrollSettings
+  settings: VirtualScrollSettings,
+  adapter: VirtualScrollDataAdapter<T>
 ): VirtualScrollState<T> {
   // From Denis Hilt, https://blog.logrocket.com/virtual-scrolling-core-principles-and-basic-implementation-in-react/
   const { minIndex, maxIndex, startIndex, itemHeight, count, tolerance } =
@@ -55,7 +55,7 @@ export function initialState<T>(
   const topPaddingHeight = itemsAbove * itemHeight;
   const bottomPaddingHeight = totalHeight - (topPaddingHeight + bufferHeight);
 
-  return {
+  const state: VirtualScrollState<T> = {
     scrollTop: 0,
     settings,
     viewportHeight,
@@ -66,6 +66,8 @@ export function initialState<T>(
     bottomPaddingHeight,
     data: [],
   };
+
+  return { ...state, ...doScroll(0, state, adapter) };
 }
 
 export function getData<T>(
@@ -136,24 +138,40 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
 ) => {
   const settings = fillVirtualScrollSettings(props.settings ?? {});
 
-  const [state, setState] = useState(initialState<T>(settings));
-  // const [state, onScroll] = useReducer(
-  //   scrollReducer(props.get),
-  //   initialState(settings)
-  // );
+  const reducer = useMemo(() => scrollReducer(props.get), [props.get]);
+  const startState = useMemo(
+    () => initialState<T>(settings, props.get),
+    [settings, props.get]
+  );
+
+  // const [state, setState] = useState(initialState<T>(settings));
+  const [state, onScroll] = useReducer<
+    (
+      state: VirtualScrollState<T>,
+      action: { scrollTop: number }
+    ) => VirtualScrollState<T>
+  >(reducer, startState);
+
+  const doOnScroll = useCallback(
+    ({ target }: { target: { scrollTop: number } }) => {
+      onScroll({ scrollTop: target?.scrollTop ?? 0 });
+    },
+    [onScroll]
+  );
 
   const viewportRef = useRef<HTMLDivElement>();
   return (
     <div
       ref={(ref) => (viewportRef.current = ref ?? undefined)}
       style={{ height: `${state.viewportHeight}px`, overflowY: "scroll" }}
-      onScroll={debounce(setState, 0)}
+      // @ts-ignore
+      onScroll={doOnScroll}
     >
       <div
         className="VirtualScroll__topPadding"
         style={{ height: `${state.topPaddingHeight}px` }}
       />
-      {(state.data ?? []).map((d: T, i: number) => (
+      {state.data.map((d, i) => (
         <div key={i} style={{ height: `${settings.itemHeight}px` }}>
           {props.row(d)}
         </div>

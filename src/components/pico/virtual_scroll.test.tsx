@@ -2,7 +2,7 @@ import { render, screen } from "../../testing";
 import VirtualScroll, { arrayAdapter } from "./virtual_scroll";
 
 describe("<VirtualScroll />", () => {
-  it.skip("initializes & renders", () => {
+  it("initializes & renders", () => {
     render(
       <VirtualScroll<number>
         settings={{ maxIndex: 3 }}

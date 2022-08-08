@@ -38,6 +38,7 @@
 
   ._hdl_panel {
     grid-area: hdl;
+    min-height: calc(var(--line-height) * 10rem);
   }
 
   ._input_panel {
@@ -54,6 +55,7 @@
 
   ._test_panel {
     grid-area: tst;
+    min-height: calc(var(--line-height) * 10rem);
   }
 
   ._visualization_panel {

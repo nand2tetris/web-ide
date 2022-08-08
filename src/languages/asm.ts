@@ -1,7 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import ohm from "ohm-js";
 import raw from "raw.macro";
-import { Keyboard } from "../simulator/chip/builtins/computer/computer";
 import {
   ASSIGN,
   ASSIGN_ASM,
@@ -13,7 +12,7 @@ import {
   JUMP_ASM,
   JUMP_OP,
 } from "../simulator/cpu/alu";
-import { SCREEN } from "../simulator/cpu/memory";
+import { KEYBOARD, SCREEN } from "../simulator/cpu/memory";
 import { makeC } from "../util/asm";
 import { grammars, makeParser, baseSemantics } from "./base";
 
@@ -136,7 +135,7 @@ export function fillLabel(asm: Asm) {
     ["THIS", 3],
     ["THAT", 4],
     ["SCREEN", SCREEN],
-    ["KBD", Keyboard.OFFSET],
+    ["KBD", KEYBOARD],
   ]);
 
   function transmuteAInstruction(instruction: AsmALabelInstruction) {

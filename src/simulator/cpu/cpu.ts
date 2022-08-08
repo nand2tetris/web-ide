@@ -1,4 +1,4 @@
-import { alu, Flags } from "./alu";
+import { alu, COMMANDS_OP, Flags } from "./alu";
 import { Memory } from "./memory";
 
 export interface CPUInput {
@@ -39,7 +39,7 @@ const BITS = {
   j3: 0b1000_0000_0000_0100,
 };
 
-function decode(instruction: number) {
+export function decode(instruction: number) {
   function bit(bit: number): boolean {
     return (instruction & bit) === bit;
   }
@@ -48,7 +48,7 @@ function decode(instruction: number) {
     x1: bit(BITS.x1),
     x2: bit(BITS.x2),
     am: bit(BITS.am),
-    op: (instruction & BITS.op) >> 6,
+    op: ((instruction & BITS.op) >> 6) as COMMANDS_OP,
     d1: bit(BITS.d1),
     d2: bit(BITS.d2),
     d3: bit(BITS.d3),

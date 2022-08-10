@@ -1,5 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { Screen as ScreenComponent } from "../../../../components/chips/screen";
+import { Keyboard as KeyboardComponent } from "../../../../components/chips/keyboard";
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
 import {
@@ -60,7 +61,7 @@ export class Keyboard extends Chip {
   }
 
   override render() {
-    return [<RegisterComponent name="Keyboard" bits={this.out().busVoltage} />];
+    return [<KeyboardComponent keyboard={this} />];
   }
 }
 

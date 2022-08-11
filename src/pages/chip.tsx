@@ -98,6 +98,17 @@ export const Chip = () => {
   const [hdlFile, setHdlFile] = useState(store.files.hdl);
   const [tstFile, setTstFile] = useState(store.files.tst);
 
+  const [useBuiltin, setUseBuiltin] = useState(false);
+  const toggleUseBuiltin = async () => {
+    if (useBuiltin) {
+      await compile();
+      setUseBuiltin(false);
+    } else {
+      let builtin = store.useBuiltin();
+      setUseBuiltin(builtin);
+    }
+  };
+
   function clearOutput() {
     setOutText("");
   }
@@ -120,8 +131,10 @@ export const Chip = () => {
   }
 
   async function execute() {
-    await setFiles();
-    await store.compileChip();
+    if (!useBuiltin) {
+      await setFiles();
+      await store.compileChip();
+    }
     await store.runTest();
   }
 
@@ -206,6 +219,7 @@ export const Chip = () => {
           onChange={setHdlFile}
           grammar={HDL.parser}
           language={"hdl"}
+          disabled={!useBuiltin}
         />
       </main>
     </article>
@@ -232,8 +246,16 @@ export const Chip = () => {
   );
   const internalPanel = (
     <article className="_internal_panel no-shadow panel">
-      <header tabIndex={0}>
-        <Trans>Internal pins</Trans>
+      <header>
+        <div tabIndex={0}>
+          <Trans>Internal pins</Trans>
+        </div>
+        <fieldset role="group">
+          <label>
+            <input type="checkbox" onChange={toggleUseBuiltin} />
+            <Trans>Builtin</Trans>
+          </label>
+        </fieldset>
       </header>
       <Pinout pins={internalPins} />
     </article>

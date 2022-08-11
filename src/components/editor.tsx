@@ -39,15 +39,18 @@ const Textarea = ({
   value,
   onChange,
   language,
+  disabled = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   language: string;
+  disabled?: boolean;
 }) => {
   const [text, setText] = useState(value);
   return (
     <textarea
       data-testid={`editor-${language}`}
+      disabled={disabled}
       value={text}
       onChange={(e) => {
         const value = e.target?.value;
@@ -63,11 +66,13 @@ const Monaco = ({
   onChange,
   language,
   error,
+  disabled = false,
 }: {
   value: string;
   onChange: (value: string) => void;
   language: string;
   error?: ohm.MatchResult | undefined;
+  disabled?: boolean;
 }) => {
   const { theme } = useContext(AppContext);
   const monaco = useMonaco();
@@ -97,6 +102,11 @@ const Monaco = ({
       theme: isDark ? "vs-dark" : "vs",
     });
   }, [editor, theme]);
+
+  useEffect(() => {
+    if (editor.current === undefined) return;
+    editor.current.updateOptions({ readOnly: !disabled });
+  }, [editor, disabled]);
 
   useEffect(() => {
     if (editor.current === undefined) return;
@@ -148,12 +158,14 @@ const Monaco = ({
 
 export const Editor = ({
   className = "",
+  disabled = false,
   value,
   onChange,
   grammar,
   language,
 }: {
   className?: string;
+  disabled?: boolean;
   value: string;
   onChange: (source: string) => void;
   grammar: ohm.Grammar;
@@ -189,10 +201,16 @@ export const Editor = ({
           onChange={onChangeCB}
           language={language}
           error={error}
+          disabled={disabled}
         />
       ) : (
         <>
-          <Textarea value={value} onChange={onChangeCB} language={language} />
+          <Textarea
+            value={value}
+            onChange={onChangeCB}
+            language={language}
+            disabled={disabled}
+          />
           <ErrorPanel error={error} />
         </>
       )}

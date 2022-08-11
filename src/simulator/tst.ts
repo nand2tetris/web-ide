@@ -32,6 +32,8 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this.instructions.push(instruction);
   }
 
+  async step() {}
+
   async run() {
     for (const instruction of this.instructions) {
       await instruction.do(this);

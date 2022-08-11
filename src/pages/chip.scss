@@ -26,13 +26,7 @@
     }
   }
 
-  grid-template-areas:
-    // "hdl sel tst"
-    "hdl prt tst";
-
-  ._selectors {
-    grid-area: sel;
-  }
+  grid-template-areas: "hdl prt tst";
 
   ._hdl_panel {
     grid-area: hdl;
@@ -57,8 +51,6 @@
     grid-template-columns: 1fr var(--screen-size);
 
     grid-template-areas:
-      // "hdl sel"
-
       "hdl prt"
       "tst tst";
   }
@@ -69,8 +61,6 @@
     grid-template-columns: 1fr;
 
     grid-template-areas:
-      // "sel"
-
       "hdl"
       "prt"
       "tst";

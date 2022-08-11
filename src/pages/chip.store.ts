@@ -135,6 +135,19 @@ export class ChipPageStore {
     // });
   }
 
+  useBuiltin() {
+    const nextChip = getBuiltinChip(this.chipName);
+    if (isErr(nextChip)) {
+      this.statusLine(
+        `Failed to load builtin ${this.chipName}: ${display(Err(nextChip))}`
+      );
+      return false;
+    }
+    this.chip = Ok(nextChip);
+    this.next();
+    return true;
+  }
+
   reset() {
     Clock.get().reset();
     this.chip?.reset();

@@ -1,17 +1,17 @@
 export const MAX_STEPS = 1000;
-export class Timer {
+export abstract class Timer {
   frame() {
     this.tick();
     this.finishFrame();
   }
 
-  tick() {}
+  abstract tick(): void;
 
-  finishFrame() {}
+  abstract finishFrame(): void;
 
-  reset() {}
+  abstract reset(): void;
 
-  toggle() {}
+  abstract toggle(): void;
 
   steps = 1; // How many steps to take per update
   speed = 1000; // how often to update, in ms

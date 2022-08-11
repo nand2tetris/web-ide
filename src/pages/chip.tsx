@@ -13,6 +13,7 @@ import { CMP } from "../languages/cmp";
 import { Clockface } from "../components/clockface";
 import { Visualizations } from "../components/chips/visualizations";
 import { Accordian, Panel } from "../components/shell/panel";
+import { Runbar } from "../components/runbar";
 
 function useReducerState<T>(init: T): [T, Dispatch<T>] {
   const [state, setState] = useState<T>(init);
@@ -23,7 +24,7 @@ function useReducerState<T>(init: T): [T, Dispatch<T>] {
 }
 
 export const Chip = () => {
-  const { state, actions } = useChipPageStore();
+  const { state, actions, runner } = useChipPageStore();
 
   const [hdl, setHdl] = useReducerState(state.files.hdl);
   const [tst, setTst] = useReducerState(state.files.tst);
@@ -169,6 +170,7 @@ export const Chip = () => {
   );
   const testPanel = (
     <Panel className="_test_panel">
+      <Runbar runner={runner} />
       <Accordian summary={<Trans>Test</Trans>} open={true}>
         <Editor
           className="flex-2"

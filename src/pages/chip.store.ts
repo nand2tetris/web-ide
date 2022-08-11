@@ -23,6 +23,7 @@ import { ImmPin, reducePins } from "../components/pinout";
 import { REGISTRY } from "../simulator/chip/builtins";
 import produce from "immer";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { Timer } from "../simulator/timer";
 
 export const PROJECT_NAMES = [
   ["01", t`Project 1`],
@@ -344,19 +345,25 @@ export function makeChipStore(
       this.loadChip(project, chipName);
     },
 
-    async runTest(file: string) {
+    prepTest(file: string) {
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
         setStatus(t`Failed to parse test`);
-        return;
+        return false;
       }
       setStatus(t`Parsed tst`);
 
       test = ChipTest.from(Ok(tst)).with(chip);
       test.setFileSystem(fs);
+      return true;
+    },
 
+    async runTest(file: string) {
+      if (!this.prepTest(file)) {
+        return;
+      }
       dispatch.current({ action: "testRunning" });
 
       fs.pushd("/samples");
@@ -367,7 +374,26 @@ export function makeChipStore(
     },
   };
 
-  return { initialState, reducers, actions };
+  const runner = new (class ChipTimer extends Timer {
+    reset(): void {
+      actions.reset();
+    }
+
+    finishFrame(): void {
+      dispatch.current({ action: "updateChip" });
+    }
+
+    tick(): void {
+      // actions.tick();
+      dispatch.current({ action: "updateChip" });
+    }
+
+    toggle(): void {
+      dispatch.current({ action: "updateChip" });
+    }
+  })();
+
+  return { initialState, reducers, actions, runner };
 }
 
 export function useChipPageStore() {
@@ -377,7 +403,7 @@ export function useChipPageStore() {
 
   const dispatch = useRef<ChipStoreDispatch>(() => {});
 
-  const { initialState, reducers, actions } = useMemo(
+  const { initialState, reducers, actions, runner } = useMemo(
     () => makeChipStore(fs, setStatus, storage, dispatch),
     [fs, setStatus, storage, dispatch]
   );
@@ -398,5 +424,5 @@ export function useChipPageStore() {
 
   dispatch.current = dispatcher;
 
-  return { state, dispatch, actions };
+  return { state, dispatch, actions, runner };
 }

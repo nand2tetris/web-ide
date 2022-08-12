@@ -105,7 +105,7 @@ const Monaco = ({
 
   useEffect(() => {
     if (editor.current === undefined) return;
-    editor.current.updateOptions({ readOnly: !disabled });
+    editor.current.updateOptions({ readOnly: disabled });
   }, [editor, disabled]);
 
   useEffect(() => {
@@ -147,12 +147,23 @@ const Monaco = ({
   }, [error, editor, monaco, language]);
 
   return (
-    <MonacoEditor
-      value={value}
-      onChange={(v = "") => onChange(v)}
-      language={language}
-      onMount={onMount}
-    />
+    <>
+      <MonacoEditor
+        value={value}
+        onChange={(v = "") => onChange(v)}
+        language={language}
+        onMount={onMount}
+      />
+      {disabled && (
+        <div
+          style={{
+            position: "relative",
+            inset: 0,
+            backgroundColor: "hsla(0, 0, 75%, 75%)",
+          }}
+        />
+      )}
+    </>
   );
 };
 

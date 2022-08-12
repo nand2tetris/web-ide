@@ -154,15 +154,7 @@ const Monaco = ({
         language={language}
         onMount={onMount}
       />
-      {disabled && (
-        <div
-          style={{
-            position: "relative",
-            inset: 0,
-            backgroundColor: "hsla(0, 0, 75%, 75%)",
-          }}
-        />
-      )}
+      {disabled && <div className="overlay" />}
     </>
   );
 };

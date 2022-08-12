@@ -1,7 +1,15 @@
 .Editor {
   display: flex;
+  position: relative;
 
   textarea {
     flex: 1;
+  }
+
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background-color: var(--form-element-disabled-background-color);
+    opacity: var(--form-element-disabled-opacity);
   }
 }

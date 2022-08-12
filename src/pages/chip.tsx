@@ -185,12 +185,26 @@ export const Chip = () => {
     <article className="_hdl_panel no-shadow panel">
       <header>
         <div tabIndex={0}>HDL</div>
-        {/* <fieldset className="button-group"> */}
+        <fieldset>
+          <label>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={useBuiltin}
+              onChange={toggleUseBuiltin}
+            />
+            <Trans>Builtin</Trans>
+          </label>
+        </fieldset>
         <fieldset role="group">
-          <button onClick={compile} onKeyDown={compile}>
+          <button onClick={compile} onKeyDown={compile} disabled={useBuiltin}>
             <Trans>Eval</Trans>
           </button>
-          <button onClick={onSaveChip} onKeyDown={onSaveChip}>
+          <button
+            onClick={onSaveChip}
+            onKeyDown={onSaveChip}
+            disabled={useBuiltin}
+          >
             <Trans>Save</Trans>
           </button>
           <button
@@ -250,12 +264,7 @@ export const Chip = () => {
         <div tabIndex={0}>
           <Trans>Internal pins</Trans>
         </div>
-        <fieldset role="group">
-          <label>
-            <input type="checkbox" onChange={toggleUseBuiltin} />
-            <Trans>Builtin</Trans>
-          </label>
-        </fieldset>
+        <fieldset role="group"></fieldset>
       </header>
       <Pinout pins={internalPins} />
     </article>

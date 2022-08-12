@@ -233,7 +233,7 @@ export const Chip = () => {
           onChange={setHdlFile}
           grammar={HDL.parser}
           language={"hdl"}
-          disabled={!useBuiltin}
+          disabled={useBuiltin}
         />
       </main>
     </article>

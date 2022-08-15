@@ -100,14 +100,16 @@
 }
 
 @layer user {
-  #root > header,
-  #root > main,
-  #root > footer {
-    width: calc(100vw - (100vw - 100%));
-    overflow-x: hidden;
+  nav ol,
+  nav ul {
+    margin-right: 0;
   }
 
   #root > main {
     padding: 0;
+  }
+
+  nav li {
+    padding: 0 var(--nav-link-spacing-horizontal);
   }
 }

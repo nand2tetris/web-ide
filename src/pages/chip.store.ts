@@ -135,6 +135,20 @@ export class ChipPageStore {
     // });
   }
 
+  replaceChip(chip: Ok<SimChip>) {
+    // Store current inPins
+    const inPins = this.chip.ins;
+    this.chip = Ok(chip);
+    for (const [pin, { busVoltage }] of inPins) {
+      if (this.chip.ins.has(pin)) {
+        this.chip.ins.get(pin)!.busVoltage = busVoltage;
+      }
+    }
+    this.chip.eval();
+    this.next();
+    return true;
+  }
+
   useBuiltin() {
     const nextChip = getBuiltinChip(this.chipName);
     if (isErr(nextChip)) {
@@ -143,9 +157,7 @@ export class ChipPageStore {
       );
       return false;
     }
-    this.chip = Ok(nextChip);
-    this.next();
-    return true;
+    return this.replaceChip(nextChip);
   }
 
   reset() {
@@ -201,10 +213,8 @@ export class ChipPageStore {
       this.statusLine(display(Err(maybeChip)));
       return;
     }
-    this.chip = Ok(maybeChip);
     this.statusLine(t`Compiled ${this.chip.name}`);
-    this.chip.eval();
-    this.next();
+    this.replaceChip(maybeChip);
   }
 
   async saveChip(text: string) {

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -17,6 +17,7 @@ import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
 import { Clockface } from "../components/clockface";
 import { Visualizations } from "../components/chips/visualizations";
+import { REGISTRY } from "../simulator/chip/builtins";
 
 let store = new ChipPageStore();
 const clock = Clock.get();
@@ -41,6 +42,7 @@ export const Chip = () => {
         setInPins(reducePins(chip.ins));
         setOutPins(reducePins(chip.outs));
         setInternalPins(reducePins(chip.pins));
+        setHasBuiltin(REGISTRY.has(chip.name ?? ""));
       })
     );
 
@@ -98,6 +100,8 @@ export const Chip = () => {
   const [hdlFile, setHdlFile] = useState(store.files.hdl);
   const [tstFile, setTstFile] = useState(store.files.tst);
 
+  // const hasBuiltin = useMemo(() => REGISTRY.has(chip), [chip]);
+  const [hasBuiltin, setHasBuiltin] = useState(false);
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
     if (useBuiltin) {
@@ -186,15 +190,17 @@ export const Chip = () => {
       <header>
         <div tabIndex={0}>HDL</div>
         <fieldset>
-          <label>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={useBuiltin}
-              onChange={toggleUseBuiltin}
-            />
-            <Trans>Builtin</Trans>
-          </label>
+          {hasBuiltin && (
+            <label>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={useBuiltin}
+                onChange={toggleUseBuiltin}
+              />
+              <Trans>Builtin</Trans>
+            </label>
+          )}
         </fieldset>
         <fieldset role="group">
           <button onClick={compile} onKeyDown={compile} disabled={useBuiltin}>

@@ -32,6 +32,8 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this.instructions.push(instruction);
   }
 
+  reset() {}
+
   async step() {}
 
   async run() {

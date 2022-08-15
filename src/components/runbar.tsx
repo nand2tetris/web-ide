@@ -11,13 +11,16 @@ export const Runbar = ({
   children?: ReactNode;
 }) => (
   <div className="input-group">
-    <button onClick={() => runner.frame()}>
+    <button onClick={() => runner.frame()} data-tooltip={t`Next`}>
       <Icon name="skip_next"></Icon>
     </button>
-    <button onClick={() => runner.reset()}>
+    <button onClick={() => runner.reset()} data-tooltip={t`Reset`}>
       <Icon name="first_page"></Icon>
     </button>
-    <button onClick={() => (runner.running ? runner.stop() : runner.reset())}>
+    <button
+      onClick={() => (runner.running ? runner.stop() : runner.reset())}
+      data-tooltip={runner.running ? t`Stop` : t`Run`}
+    >
       <Icon name={runner.running ? "pause" : "play_arrow"}></Icon>
     </button>
     <select

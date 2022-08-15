@@ -72,7 +72,7 @@ export class Memory extends ClockedChip {
   private address = 0;
 
   constructor() {
-    super(["in[16]", "load", "address[16])"], ["out[16]"], "Memory");
+    super(["in[16]", "load", "address[15])"], ["out[16]"], "Memory");
     this.parts.add(this.ram);
     this.parts.add(this.screen);
     this.parts.add(this.keyboard);

@@ -258,6 +258,7 @@ export class ChipPageStore {
 
     try {
       this.compileChip();
+      this.reset();
     } catch (e) {
       this.statusLine(display(e));
     }

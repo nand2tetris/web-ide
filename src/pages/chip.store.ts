@@ -245,7 +245,7 @@ export function makeChipStore(
     reset() {
       Clock.get().reset();
       chip.reset();
-      // test.current?.reset();
+      test.reset();
       dispatch.current({ action: "updateChip" });
     },
 
@@ -345,7 +345,7 @@ export function makeChipStore(
       this.loadChip(project, chipName);
     },
 
-    prepTest(file: string) {
+    compileTest(file: string) {
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
 
@@ -361,7 +361,7 @@ export function makeChipStore(
     },
 
     async runTest(file: string) {
-      if (!this.prepTest(file)) {
+      if (!this.compileTest(file)) {
         return;
       }
       dispatch.current({ action: "testRunning" });

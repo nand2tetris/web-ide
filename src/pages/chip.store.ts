@@ -246,6 +246,7 @@ export function makeChipStore(
       Clock.get().reset();
       chip.reset();
       test.reset();
+      dispatch.current({ action: "setFiles", payload: {} });
       dispatch.current({ action: "updateChip" });
     },
 
@@ -302,6 +303,7 @@ export function makeChipStore(
 
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       this.compileChip(hdl);
+      this.compileTest(tst);
     },
 
     async saveChip(hdl: string, prj = project, name = chipName) {
@@ -372,6 +374,11 @@ export function makeChipStore(
 
       dispatch.current({ action: "updateTestStep" });
     },
+
+    async tick() {
+      await test.step();
+      dispatch.current({ action: "updateTestStep" });
+    },
   };
 
   const runner = new (class ChipTimer extends Timer {
@@ -384,8 +391,9 @@ export function makeChipStore(
     }
 
     tick(): void {
-      // actions.tick();
-      dispatch.current({ action: "updateChip" });
+      actions.tick().then(() => {
+        dispatch.current({ action: "updateChip" });
+      });
     }
 
     toggle(): void {

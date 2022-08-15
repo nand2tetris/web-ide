@@ -32,14 +32,31 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this.instructions.push(instruction);
   }
 
-  reset() {}
+  reset() {
+    this._steps = this.instructions[Symbol.iterator]();
+    this._log = "";
+  }
 
-  async step() {}
+  _steps: Iterator<IS | TestInstruction> | undefined;
+
+  get steps(): Iterator<IS | TestInstruction> {
+    if (this._steps === undefined) {
+      this.reset();
+    }
+    return this._steps as Iterator<IS | TestInstruction>;
+  }
+
+  async step() {
+    const step = this.steps.next();
+    if (!step.done) {
+      await step.value.do(this);
+      return true;
+    }
+    return false;
+  }
 
   async run() {
-    for (const instruction of this.instructions) {
-      await instruction.do(this);
-    }
+    while (await this.step());
   }
 
   echo(content: string) {}

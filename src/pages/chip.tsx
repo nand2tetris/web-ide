@@ -142,10 +142,10 @@ export const Chip = () => {
     </Panel>
   );
 
-  const partPanel = (
+  const pinsPanel = (
     <Panel className="_parts_panel no-shadow panel">
       {selectors}
-      <Accordian summary={<Trans>Input pins</Trans>}>
+      <Accordian summary={<Trans>Input pins</Trans>} open={true}>
         <Pinout
           pins={state.sim.inPins}
           toggle={(pin, i) => {
@@ -154,7 +154,7 @@ export const Chip = () => {
           allowIncrement={(pin) => pin.width > 1}
         />
       </Accordian>
-      <Accordian summary={<Trans>Output pins</Trans>}>
+      <Accordian summary={<Trans>Output pins</Trans>} open={true}>
         <Pinout pins={state.sim.outPins} />
       </Accordian>
       <Accordian summary={<Trans>Internal pins</Trans>}>
@@ -169,7 +169,7 @@ export const Chip = () => {
   );
   const testPanel = (
     <Panel className="_test_panel no-shadow panel">
-      <Accordian summary={<Trans>Test</Trans>}>
+      <Accordian summary={<Trans>Test</Trans>} open={true}>
         <Editor
           className="flex-2"
           value={tst}
@@ -187,7 +187,7 @@ export const Chip = () => {
           language={"cmp"}
         />
       </Accordian>
-      <Accordian summary={<Trans>Diff</Trans>}>
+      <Accordian summary={<Trans>Diff</Trans>} open={true}>
         <div style={{ paddingLeft: "var(--block-spacing-horizontal)" }}>
           <DiffTable className="flex-1" cmp={cmp} out={out} />
         </div>
@@ -198,7 +198,7 @@ export const Chip = () => {
   return (
     <div className="ChipPage flex-1 grid">
       {hdlPanel}
-      {partPanel}
+      {pinsPanel}
       {testPanel}
     </div>
   );

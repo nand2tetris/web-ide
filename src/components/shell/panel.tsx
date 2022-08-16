@@ -8,7 +8,9 @@ export const Panel = (props: {
   style?: CSSProperties;
 }) => {
   return (
-    <article className={props.className ?? ""}>
+    <article
+      className={["no-shadow", "panel", props.className ?? ""].join(" ")}
+    >
       {props.header && <header>{props.header}</header>}
       <main>{props.children}</main>
       {props.footer && <footer>{props.footer}</footer>}

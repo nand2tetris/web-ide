@@ -84,7 +84,7 @@ export const Chip = () => {
   );
   const hdlPanel = (
     <Panel
-      className="_hdl_panel no-shadow panel"
+      className="_hdl_panel"
       header={
         <>
           <div tabIndex={0}>HDL</div>
@@ -143,7 +143,7 @@ export const Chip = () => {
   );
 
   const pinsPanel = (
-    <Panel className="_parts_panel no-shadow panel">
+    <Panel className="_parts_panel">
       {selectors}
       <Accordian summary={<Trans>Input pins</Trans>} open={true}>
         <Pinout
@@ -168,7 +168,7 @@ export const Chip = () => {
     </Panel>
   );
   const testPanel = (
-    <Panel className="_test_panel no-shadow panel">
+    <Panel className="_test_panel">
       <Accordian summary={<Trans>Test</Trans>} open={true}>
         <Editor
           className="flex-2"

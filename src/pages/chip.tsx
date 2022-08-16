@@ -1,165 +1,66 @@
-import { useContext, useEffect, useState } from "react";
+import { Dispatch, useEffect, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
 
-import { Pinout, ImmPin } from "../components/pinout";
-import { ChipPageStore, PROJECTS, PROJECT_NAMES } from "./chip.store";
-import { StorageContext } from "../util/storage";
-import { Subscription } from "rxjs";
-import { Pins } from "../simulator/chip/chip";
-import { AppContext } from "../App.context";
+import { Pinout } from "../components/pinout";
+import { PROJECTS, PROJECT_NAMES, useChipPageStore } from "./chip.store";
 import { DiffTable } from "../components/difftable";
-import { Clock } from "../simulator/chip/clock";
 import { Editor } from "../components/editor";
 import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
 import { Clockface } from "../components/clockface";
 import { Visualizations } from "../components/chips/visualizations";
-import { REGISTRY } from "../simulator/chip/builtins";
 
-let store = new ChipPageStore();
-const clock = Clock.get();
-
-function reducePins(pins: Pins): ImmPin[] {
-  return [...pins.entries()].map((pin) => ({ pin }));
+function useReducerState<T>(init: T): [T, Dispatch<T>] {
+  const [state, setState] = useState<T>(init);
+  useEffect(() => {
+    setState(init);
+  }, [init]);
+  return [state, setState];
 }
 
 export const Chip = () => {
-  const fs = useContext(StorageContext);
-  const { setStatus } = useContext(AppContext);
+  const [state, _dispatch, actions] = useChipPageStore();
 
-  useEffect(() => {
-    store = new ChipPageStore(fs, localStorage, setStatus);
+  const [hdl, setHdl] = useReducerState(state.files.hdl);
+  const [tst, setTst] = useReducerState(state.files.tst);
+  const [cmp, setCmp] = useReducerState(state.files.cmp);
+  const [out] = useReducerState(state.files.out);
 
-    const subs: Subscription[] = [];
+  const saveChip = () => {
+    actions.saveChip(hdl);
+  };
 
-    subs.push(
-      store.selectors.chip.subscribe((chip) => {
-        setClocked(chip.clocked);
-        setParts(new Set(chip.parts));
-        setInPins(reducePins(chip.ins));
-        setOutPins(reducePins(chip.outs));
-        setInternalPins(reducePins(chip.pins));
-        setHasBuiltin(REGISTRY.has(chip.name ?? ""));
-      })
-    );
+  const compile = async () => {
+    actions.updateFiles({ hdl, tst, cmp });
+  };
 
-    subs.push(
-      store.selectors.project.subscribe((project) => {
-        setProject(project);
-        setChips(PROJECTS[project]);
-        setChip(PROJECTS[project][0]);
-      })
-    );
-    subs.push(
-      store.selectors.chipName.subscribe((chip) => {
-        setChip(chip);
-      })
-    );
-    subs.push(
-      store.selectors.files.subscribe(({ hdl, tst, cmp, out }) => {
-        setHdlText(hdl);
-        setTstText(tst);
-        setCmpText(cmp);
-        setOutText(out);
-        setHdlFile(hdl);
-        setTstFile(tst);
-        setCmpFile(cmp);
-      })
-    );
-    subs.push(
-      store.selectors.log.subscribe((out) => {
-        setOutText(out);
-      })
-    );
-
-    return () => {
-      for (const sub of subs) {
-        sub.unsubscribe();
-      }
-    };
-  }, [fs, setStatus]);
-
-  const [project, setProject] = useState(store.project);
-  const [chips, setChips] = useState<string[]>(PROJECTS[store.project]);
-  const [chip, setChip] = useState(store.chip.name ?? "");
-  const [clocked, setClocked] = useState(store.chip.clocked);
-  const [inPins, setInPins] = useState(reducePins(store.chip.ins));
-  const [outPins, setOutPins] = useState(reducePins(store.chip.outs));
-  const [internalPins, setInternalPins] = useState(reducePins(store.chip.pins));
-  const [parts, setParts] = useState(store.chip.parts);
-
-  const [cmpText, setCmpText] = useState(store.files.cmp);
-  const [hdlText, setHdlText] = useState(store.files.hdl);
-  const [outText, setOutText] = useState(store.files.out);
-  const [tstText, setTstText] = useState(store.files.tst);
-
-  const [cmpFile, setCmpFile] = useState(store.files.cmp);
-  const [hdlFile, setHdlFile] = useState(store.files.hdl);
-  const [tstFile, setTstFile] = useState(store.files.tst);
-
-  // const hasBuiltin = useMemo(() => REGISTRY.has(chip), [chip]);
-  const [hasBuiltin, setHasBuiltin] = useState(false);
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
     if (useBuiltin) {
-      await compile();
+      compile();
       setUseBuiltin(false);
     } else {
-      let builtin = store.useBuiltin();
-      setUseBuiltin(builtin);
+      actions.useBuiltin();
+      setUseBuiltin(true);
     }
   };
 
-  function clearOutput() {
-    setOutText("");
-  }
-
-  const onSaveChip = () => {
-    store.saveChip(hdlText);
-  };
-
-  async function setFiles() {
-    const hdl = hdlFile;
-    const tst = tstFile;
-    const cmp = cmpFile;
-    clearOutput();
-    await store.setFiles({ hdl, tst, cmp });
-  }
-
-  async function compile() {
-    await setFiles();
-    await store.compileChip();
-  }
-
-  async function execute() {
+  const execute = async () => {
     if (!useBuiltin) {
-      await setFiles();
-      await store.compileChip();
+      await compile();
     }
-    await store.runTest();
-  }
+    actions.runTest();
+  };
 
-  /* Layout:
-    [Project] [Chip]  +------+
-    +--------+--------+ Test +
-    |   HDL  | InPins |      |
-    |        +--------|      |
-    |        | OutPin |      |
-    +--------+--------+------+
-    |Internal|  Vis   |  Out |
-    |        |        +------+
-    |        |        | Diffs|
-    +--------+--------+------+
-  */
   const selectors = (
     <div className="_selectors flex row inline align-end">
       <select
-        value={project}
+        value={state.controls.project}
         onChange={({ target: { value } }) => {
-          store.setProject(value as keyof typeof PROJECTS);
+          actions.setProject(value as keyof typeof PROJECTS);
         }}
         data-testid="project-picker"
       >
@@ -173,11 +74,13 @@ export const Chip = () => {
         <Trans>Chips:</Trans>
       </h2>
       <select
-        value={chip}
-        onChange={({ target: { value } }) => store.setChip(value)}
+        value={state.controls.chipName}
+        onChange={({ target: { value } }) => {
+          actions.setChip(value);
+        }}
         data-testid="chip-picker"
       >
-        {chips.map((chip) => (
+        {state.controls.chips.map((chip) => (
           <option key={chip} value={chip}>
             {chip}
           </option>
@@ -190,7 +93,7 @@ export const Chip = () => {
       <header>
         <div tabIndex={0}>HDL</div>
         <fieldset>
-          {hasBuiltin && (
+          {state.controls.hasBuiltin && (
             <label>
               <input
                 type="checkbox"
@@ -206,26 +109,24 @@ export const Chip = () => {
           <button onClick={compile} onKeyDown={compile} disabled={useBuiltin}>
             <Trans>Eval</Trans>
           </button>
-          <button
-            onClick={onSaveChip}
-            onKeyDown={onSaveChip}
-            disabled={useBuiltin}
-          >
+          <button onClick={saveChip} disabled={useBuiltin}>
             <Trans>Save</Trans>
           </button>
           <button
             style={{ whiteSpace: "nowrap" }}
             onClick={() => {
-              clock.toggle();
+              actions.clock();
             }}
-            disabled={!clocked}
+            disabled={!state.sim.clocked}
             data-testid="clock"
           >
             <Clockface />
           </button>
           <button
-            onClick={() => store.reset()}
-            disabled={!clocked}
+            onClick={() => {
+              actions.reset();
+            }}
+            disabled={!state.sim.clocked}
             data-testid="clock-reset"
           >
             <Trans>Reset</Trans>
@@ -235,8 +136,8 @@ export const Chip = () => {
       <main className="flex">
         <Editor
           className="flex-1"
-          value={hdlText}
-          onChange={setHdlFile}
+          value={hdl}
+          onChange={setHdl}
           grammar={HDL.parser}
           language={"hdl"}
           disabled={useBuiltin}
@@ -250,8 +151,10 @@ export const Chip = () => {
         <Trans>Input pins</Trans>
       </header>
       <Pinout
-        pins={inPins}
-        toggle={(pin, i) => store.toggle(pin, i)}
+        pins={state.sim.inPins}
+        toggle={(pin, i) => {
+          actions.toggle(pin, i);
+        }}
         allowIncrement={(pin) => pin.width > 1}
       />
     </article>
@@ -261,7 +164,7 @@ export const Chip = () => {
       <header tabIndex={0}>
         <Trans>Output pins</Trans>
       </header>
-      <Pinout pins={outPins} />
+      <Pinout pins={state.sim.outPins} />
     </article>
   );
   const internalPanel = (
@@ -272,7 +175,7 @@ export const Chip = () => {
         </div>
         <fieldset role="group"></fieldset>
       </header>
-      <Pinout pins={internalPins} />
+      <Pinout pins={state.sim.internalPins} />
     </article>
   );
   const testPanel = (
@@ -290,19 +193,19 @@ export const Chip = () => {
       <main className="flex">
         <Editor
           className="flex-2"
-          value={tstText}
-          onChange={setTstFile}
+          value={tst}
+          onChange={setTst}
           grammar={TST.parser}
           language={"tst"}
         />
         <Editor
           className="flex-1"
-          value={cmpText}
-          onChange={setCmpFile}
+          value={cmp}
+          onChange={setCmp}
           grammar={CMP.parser}
           language={"cmp"}
         />
-        <DiffTable className="flex-1" cmp={cmpText} out={outText} />
+        <DiffTable className="flex-1" cmp={cmp} out={out} />
       </main>
     </article>
   );
@@ -312,7 +215,7 @@ export const Chip = () => {
         <Trans>Visualizations</Trans>
       </header>
       <main>
-        <Visualizations parts={parts} />
+        <Visualizations parts={state.sim.parts} />
       </main>
     </article>
   );

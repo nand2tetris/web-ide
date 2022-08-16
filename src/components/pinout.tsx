@@ -1,11 +1,25 @@
 import { Trans } from "@lingui/macro";
-import { Pin as ChipPin } from "../simulator/chip/chip";
+import { Pin as ChipPin, Pins, Voltage } from "../simulator/chip/chip";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 
 import "./pinout.scss";
 
 export interface ImmPin {
+  bits: [number, Voltage][];
   pin: ChipPin;
+}
+
+export function reducePin(pin: ChipPin) {
+  return {
+    pin,
+    bits: range(0, pin.width)
+      .map((i) => [i, pin.voltage(i)] as [number, Voltage])
+      .reverse(),
+  };
+}
+
+export function reducePins(pins: Pins): ImmPin[] {
+  return [...pins.entries()].map(reducePin);
 }
 
 export const Pinout = ({
@@ -33,11 +47,15 @@ export const Pinout = ({
         </tr>
       </thead>
       <tbody>
-        {[...pins].map(({ pin }) => (
-          <tr key={pin.name}>
-            <td>{pin.name}</td>
+        {[...pins].map((immPin) => (
+          <tr key={immPin.pin.name}>
+            <td>{immPin.pin.name}</td>
             <td>
-              <Pin pin={pin} toggle={toggle} allowIncrement={allowIncrement} />
+              <Pin
+                pin={immPin}
+                toggle={toggle}
+                allowIncrement={allowIncrement}
+              />
             </td>
           </tr>
         ))}
@@ -51,24 +69,22 @@ const Pin = ({
   toggle,
   allowIncrement,
 }: {
-  pin: ChipPin;
+  pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
   allowIncrement: (pin: ChipPin) => boolean;
 }) => {
   return (
     <fieldset className="button-group">
-      {range(0, pin.width)
-        .reverse()
-        .map((i) => (
-          <button
-            key={i}
-            onClick={() => toggle?.(pin, i)}
-            disabled={toggle === undefined}
-            data-testid={`pin-${i}`}
-          >
-            {pin.voltage(i)}
-          </button>
-        ))}
+      {pin.bits.map(([i, v]) => (
+        <button
+          key={i}
+          onClick={() => toggle?.(pin.pin, i)}
+          disabled={toggle === undefined}
+          data-testid={`pin-${i}`}
+        >
+          {v}
+        </button>
+      ))}
       {/* {allowIncrement(pin) ? (
         <button className="increment" onClick={() => toggle?.(pin)}>
           +1

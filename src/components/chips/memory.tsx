@@ -32,6 +32,7 @@ export const MemoryBlock = ({
   onChange?: (i: number, value: string, previous: number) => void;
 }) => (
   <VirtualScroll<[number, number], ReactNode>
+    className="panel-fill"
     settings={{ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }}
     get={(o, l) => memory.map<[number, number]>((i, v) => [i, v], o, o + l)}
     row={([i, v]) => (

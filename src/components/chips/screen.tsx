@@ -1,6 +1,8 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+import { Trans } from "@lingui/macro";
 import { useEffect, useRef } from "react";
 import { Memory, SCREEN } from "../../simulator/cpu/memory";
+import { Panel } from "../shell/panel";
 
 const WHITE = "white";
 const BLACK = "black";
@@ -42,8 +44,7 @@ export const Screen = ({ memory }: { memory: Memory }) => {
   }, [memory]);
 
   return (
-    <article className="no-shadow panel">
-      <header>Display</header>
+    <Panel className="fill" header={<Trans>Display</Trans>}>
       <figure
         style={{
           width: "100%",
@@ -62,6 +63,6 @@ export const Screen = ({ memory }: { memory: Memory }) => {
           height={256}
         ></canvas>
       </figure>
-    </article>
+    </Panel>
   );
 };

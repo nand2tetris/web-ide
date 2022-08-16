@@ -134,7 +134,7 @@ const scrollReducer =
   });
 
 export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
-  props: VirtualScrollProps<T, U>
+  props: VirtualScrollProps<T, U> & { className?: string }
 ) => {
   const settings = fillVirtualScrollSettings(props.settings ?? {});
 
@@ -164,6 +164,7 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
     <div
       ref={(ref) => (viewportRef.current = ref ?? undefined)}
       style={{ height: `${state.viewportHeight}px`, overflowY: "scroll" }}
+      className={props.className ?? ""}
       // @ts-ignore
       onScroll={doOnScroll}
     >

@@ -69,15 +69,19 @@ export const Keyboard = ({ keyboard }: { keyboard: KeyboardChip }) => {
   }, []);
 
   return (
-    <>
-      <RegisterComponent name="Keyboard" bits={bits} />
-      {showPicker ? (
-        <input ref={(e) => e?.focus()} type="text" onKeyDown={setKey} />
-      ) : (
-        <button onClick={changeKey}>
-          <Icon name="keyboard" />
-        </button>
-      )}
-    </>
+    <div className="flex row align-baseline">
+      <div className="flex-1">
+        <RegisterComponent name="Keyboard" bits={bits} />
+      </div>
+      <div className="flex-1">
+        {showPicker ? (
+          <input ref={(e) => e?.focus()} type="text" onKeyDown={setKey} />
+        ) : (
+          <button onClick={changeKey}>
+            <Icon name="keyboard" />
+          </button>
+        )}
+      </div>
+    </div>
   );
 };

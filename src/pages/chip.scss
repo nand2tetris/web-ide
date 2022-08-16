@@ -27,7 +27,7 @@
   }
 
   grid-template-areas:
-    "sel sel sel"
+    // "hdl sel tst"
     "hdl prt tst";
 
   ._selectors {
@@ -39,25 +39,8 @@
     min-height: calc(var(--line-height) * 10rem);
   }
 
-  ._input_panel {
-    grid-area: ins;
-  }
-
-  ._output_panel {
-    grid-area: ots;
-  }
-
-  ._internal_panel {
-    grid-area: int;
-  }
-
   ._test_panel {
     grid-area: tst;
-    min-height: calc(var(--line-height) * 10rem);
-  }
-
-  ._visualization_panel {
-    grid-area: vis;
   }
 
   ._parts_panel {
@@ -74,7 +57,8 @@
     grid-template-columns: 1fr var(--screen-size);
 
     grid-template-areas:
-      "sel sel"
+      // "hdl sel"
+
       "hdl prt"
       "tst tst";
   }
@@ -85,7 +69,8 @@
     grid-template-columns: 1fr;
 
     grid-template-areas:
-      "sel"
+      // "sel"
+
       "hdl"
       "prt"
       "tst";

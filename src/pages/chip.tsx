@@ -142,8 +142,9 @@ export const Chip = () => {
     </Panel>
   );
 
-  const pinsPanel = (
+  const partPanel = (
     <Panel className="_parts_panel no-shadow panel">
+      {selectors}
       <Accordian summary={<Trans>Input pins</Trans>}>
         <Pinout
           pins={state.sim.inPins}
@@ -196,9 +197,8 @@ export const Chip = () => {
 
   return (
     <div className="ChipPage flex-1 grid">
-      {selectors}
       {hdlPanel}
-      {pinsPanel}
+      {partPanel}
       {testPanel}
     </div>
   );

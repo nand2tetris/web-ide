@@ -12,6 +12,7 @@ import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
 import { Clockface } from "../components/clockface";
 import { Visualizations } from "../components/chips/visualizations";
+import { Accordian, Panel } from "../components/shell/panel";
 
 function useReducerState<T>(init: T): [T, Dispatch<T>] {
   const [state, setState] = useState<T>(init);
@@ -48,13 +49,6 @@ export const Chip = () => {
     }
   };
 
-  const execute = async () => {
-    if (!useBuiltin) {
-      await compile();
-    }
-    actions.runTest(tst);
-  };
-
   const selectors = (
     <div className="_selectors flex row inline align-end">
       <select
@@ -89,111 +83,92 @@ export const Chip = () => {
     </div>
   );
   const hdlPanel = (
-    <article className="_hdl_panel no-shadow panel">
-      <header>
-        <div tabIndex={0}>HDL</div>
-        <fieldset>
-          {state.controls.hasBuiltin && (
-            <label>
-              <input
-                type="checkbox"
-                role="switch"
-                checked={useBuiltin}
-                onChange={toggleUseBuiltin}
-              />
-              <Trans>Builtin</Trans>
-            </label>
-          )}
-        </fieldset>
-        <fieldset role="group">
-          <button onClick={compile} onKeyDown={compile} disabled={useBuiltin}>
-            <Trans>Eval</Trans>
-          </button>
-          <button onClick={saveChip} disabled={useBuiltin}>
-            <Trans>Save</Trans>
-          </button>
-          <button
-            style={{ whiteSpace: "nowrap" }}
-            onClick={() => {
-              actions.clock();
-            }}
-            disabled={!state.sim.clocked}
-            data-testid="clock"
-          >
-            <Clockface />
-          </button>
-          <button
-            onClick={() => {
-              actions.reset();
-            }}
-            disabled={!state.sim.clocked}
-            data-testid="clock-reset"
-          >
-            <Trans>Reset</Trans>
-          </button>
-        </fieldset>
-      </header>
-      <main className="flex">
-        <Editor
-          className="flex-1"
-          value={hdl}
-          onChange={setHdl}
-          grammar={HDL.parser}
-          language={"hdl"}
-          disabled={useBuiltin}
-        />
-      </main>
-    </article>
-  );
-  const inputPanel = (
-    <details className="_input_panel no-shadow panel">
-      <summary tabIndex={0}>
-        <div>
-          <Trans>Input pins</Trans>
-        </div>
-      </summary>
-      <Pinout
-        pins={state.sim.inPins}
-        toggle={(pin, i) => {
-          actions.toggle(pin, i);
-        }}
-        allowIncrement={(pin) => pin.width > 1}
-      />
-    </details>
-  );
-  const outputPanel = (
-    <details>
-      <summary>
-        <div>
-          <Trans>Output pins</Trans>
-        </div>
-      </summary>
-      <Pinout pins={state.sim.outPins} />
-    </details>
-  );
-  const internalPanel = (
-    <details>
-      <summary>
-        <div>
-          <Trans>Internal pins</Trans>
-        </div>
-      </summary>
-      <Pinout pins={state.sim.internalPins} />
-    </details>
-  );
-  const testPanel = (
-    <>
-      <details>
-        <summary>
-          <div>
-            <Trans>Test</Trans>
-          </div>
+    <Panel
+      className="_hdl_panel no-shadow panel"
+      header={
+        <>
+          <div tabIndex={0}>HDL</div>
+          <fieldset>
+            {state.controls.hasBuiltin && (
+              <label>
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={useBuiltin}
+                  onChange={toggleUseBuiltin}
+                />
+                <Trans>Builtin</Trans>
+              </label>
+            )}
+          </fieldset>
           <fieldset role="group">
-            <button onClick={execute}>
-              <Trans>Execute</Trans>
+            <button onClick={compile} onKeyDown={compile} disabled={useBuiltin}>
+              <Trans>Eval</Trans>
+            </button>
+            <button onClick={saveChip} disabled={useBuiltin}>
+              <Trans>Save</Trans>
+            </button>
+            <button
+              style={{ whiteSpace: "nowrap" }}
+              onClick={() => {
+                actions.clock();
+              }}
+              disabled={!state.sim.clocked}
+              data-testid="clock"
+            >
+              <Clockface />
+            </button>
+            <button
+              onClick={() => {
+                actions.reset();
+              }}
+              disabled={!state.sim.clocked}
+              data-testid="clock-reset"
+            >
+              <Trans>Reset</Trans>
             </button>
           </fieldset>
-        </summary>
+        </>
+      }
+    >
+      <Editor
+        className="flex-1"
+        value={hdl}
+        onChange={setHdl}
+        grammar={HDL.parser}
+        language={"hdl"}
+        disabled={useBuiltin}
+      />
+    </Panel>
+  );
+
+  const pinsPanel = (
+    <Panel className="_parts_panel no-shadow panel">
+      <Accordian summary={<Trans>Input pins</Trans>}>
+        <Pinout
+          pins={state.sim.inPins}
+          toggle={(pin, i) => {
+            actions.toggle(pin, i);
+          }}
+          allowIncrement={(pin) => pin.width > 1}
+        />
+      </Accordian>
+      <Accordian summary={<Trans>Output pins</Trans>}>
+        <Pinout pins={state.sim.outPins} />
+      </Accordian>
+      <Accordian summary={<Trans>Internal pins</Trans>}>
+        <Pinout pins={state.sim.internalPins} />
+      </Accordian>
+      <Accordian summary={<Trans>Visualizations</Trans>}>
+        <main>
+          <Visualizations parts={state.sim.parts} />
+        </main>
+      </Accordian>
+    </Panel>
+  );
+  const testPanel = (
+    <Panel className="_test_panel no-shadow panel">
+      <Accordian summary={<Trans>Test</Trans>}>
         <Editor
           className="flex-2"
           value={tst}
@@ -201,13 +176,8 @@ export const Chip = () => {
           grammar={TST.parser}
           language={"tst"}
         />
-      </details>
-      <details>
-        <summary>
-          <div>
-            <Trans>Comparison</Trans>
-          </div>
-        </summary>
+      </Accordian>
+      <Accordian summary={<Trans>Comparison</Trans>}>
         <Editor
           className="flex-1"
           value={cmp}
@@ -215,47 +185,21 @@ export const Chip = () => {
           grammar={CMP.parser}
           language={"cmp"}
         />
-      </details>
-      <details>
-        <summary>
-          <div>
-            <Trans>Diff</Trans>
-          </div>
-        </summary>
+      </Accordian>
+      <Accordian summary={<Trans>Diff</Trans>}>
         <div style={{ paddingLeft: "var(--block-spacing-horizontal)" }}>
           <DiffTable className="flex-1" cmp={cmp} out={out} />
         </div>
-      </details>
-    </>
-  );
-  const visualizationPanel = (
-    <details>
-      <summary>
-        <div>
-          <Trans>Visualizations</Trans>
-        </div>
-      </summary>
-      <main>
-        <Visualizations parts={state.sim.parts} />
-      </main>
-    </details>
+      </Accordian>
+    </Panel>
   );
 
   return (
     <div className="ChipPage flex-1 grid">
       {selectors}
       {hdlPanel}
-      <article className="_parts_panel no-shadow panel">
-        <main>
-          {inputPanel}
-          {outputPanel}
-          {internalPanel}
-          {visualizationPanel}
-        </main>
-      </article>
-      <article className="_test_panel no-shadow panel">
-        <main>{testPanel}</main>
-      </article>
+      {pinsPanel}
+      {testPanel}
     </div>
   );
 };

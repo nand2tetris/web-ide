@@ -146,10 +146,12 @@ export const Chip = () => {
     </article>
   );
   const inputPanel = (
-    <article className="_input_panel no-shadow panel">
-      <header tabIndex={0}>
-        <Trans>Input pins</Trans>
-      </header>
+    <details className="_input_panel no-shadow panel">
+      <summary tabIndex={0}>
+        <div>
+          <Trans>Input pins</Trans>
+        </div>
+      </summary>
       <Pinout
         pins={state.sim.inPins}
         toggle={(pin, i) => {
@@ -157,40 +159,41 @@ export const Chip = () => {
         }}
         allowIncrement={(pin) => pin.width > 1}
       />
-    </article>
+    </details>
   );
   const outputPanel = (
-    <article className="_output_panel no-shadow panel">
-      <header tabIndex={0}>
-        <Trans>Output pins</Trans>
-      </header>
+    <details>
+      <summary>
+        <div>
+          <Trans>Output pins</Trans>
+        </div>
+      </summary>
       <Pinout pins={state.sim.outPins} />
-    </article>
+    </details>
   );
   const internalPanel = (
-    <article className="_internal_panel no-shadow panel">
-      <header>
-        <div tabIndex={0}>
+    <details>
+      <summary>
+        <div>
           <Trans>Internal pins</Trans>
         </div>
-        <fieldset role="group"></fieldset>
-      </header>
+      </summary>
       <Pinout pins={state.sim.internalPins} />
-    </article>
+    </details>
   );
   const testPanel = (
-    <article className="_test_panel">
-      <header>
-        <div tabIndex={0}>
-          <Trans>Test</Trans>
-        </div>
-        <fieldset role="group">
-          <button onClick={execute}>
-            <Trans>Execute</Trans>
-          </button>
-        </fieldset>
-      </header>
-      <main className="flex">
+    <>
+      <details>
+        <summary>
+          <div>
+            <Trans>Test</Trans>
+          </div>
+          <fieldset role="group">
+            <button onClick={execute}>
+              <Trans>Execute</Trans>
+            </button>
+          </fieldset>
+        </summary>
         <Editor
           className="flex-2"
           value={tst}
@@ -198,6 +201,13 @@ export const Chip = () => {
           grammar={TST.parser}
           language={"tst"}
         />
+      </details>
+      <details>
+        <summary>
+          <div>
+            <Trans>Comparison</Trans>
+          </div>
+        </summary>
         <Editor
           className="flex-1"
           value={cmp}
@@ -205,30 +215,47 @@ export const Chip = () => {
           grammar={CMP.parser}
           language={"cmp"}
         />
-        <DiffTable className="flex-1" cmp={cmp} out={out} />
-      </main>
-    </article>
+      </details>
+      <details>
+        <summary>
+          <div>
+            <Trans>Diff</Trans>
+          </div>
+        </summary>
+        <div style={{ paddingLeft: "var(--block-spacing-horizontal)" }}>
+          <DiffTable className="flex-1" cmp={cmp} out={out} />
+        </div>
+      </details>
+    </>
   );
   const visualizationPanel = (
-    <article className="_visualization_panel no-shadow panel">
-      <header>
-        <Trans>Visualizations</Trans>
-      </header>
+    <details>
+      <summary>
+        <div>
+          <Trans>Visualizations</Trans>
+        </div>
+      </summary>
       <main>
         <Visualizations parts={state.sim.parts} />
       </main>
-    </article>
+    </details>
   );
 
   return (
     <div className="ChipPage flex-1 grid">
       {selectors}
       {hdlPanel}
-      {inputPanel}
-      {outputPanel}
-      {internalPanel}
-      {visualizationPanel}
-      {testPanel}
+      <article className="_parts_panel no-shadow panel">
+        <main>
+          {inputPanel}
+          {outputPanel}
+          {internalPanel}
+          {visualizationPanel}
+        </main>
+      </article>
+      <article className="_test_panel no-shadow panel">
+        <main>{testPanel}</main>
+      </article>
     </div>
   );
 };

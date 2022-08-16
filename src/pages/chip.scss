@@ -6,8 +6,9 @@
 
   grid-template-rows: min-content auto;
   grid-template-columns: 1fr var(--screen-size) 1fr;
-  justify-content: center;
-  margin: 0px var(--block-spacing-horizontal);
+  // justify-content: center;
+  margin: 0px;
+  gap: 0;
 
   > article {
     box-sizing: content-box;
@@ -26,11 +27,8 @@
   }
 
   grid-template-areas:
-    "sel sel tst"
-    "hdl ins tst"
-    "hdl ots tst"
-    "hdl int tst"
-    "hdl vis tst";
+    "sel sel sel"
+    "hdl prt tst";
 
   ._selectors {
     grid-area: sel;
@@ -62,6 +60,10 @@
     grid-area: vis;
   }
 
+  ._parts_panel {
+    grid-area: prt;
+  }
+
   h2 {
     margin: 0 var(--nav-element-spacing-horizontal);
   }
@@ -73,11 +75,8 @@
 
     grid-template-areas:
       "sel sel"
-      "hdl ins"
-      "hdl ots"
-      "hdl int"
-      "vis tst"
-      "vis tst";
+      "hdl prt"
+      "tst tst";
   }
 }
 
@@ -88,11 +87,7 @@
     grid-template-areas:
       "sel"
       "hdl"
-      "ins"
-      "ots"
-      "int"
-      "vis"
-      "tst"
+      "prt"
       "tst";
   }
 }

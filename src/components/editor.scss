@@ -1,6 +1,7 @@
 .Editor {
   display: flex;
   position: relative;
+  height: calc(var(--line-height) * 10rem);
 
   textarea {
     flex: 1;

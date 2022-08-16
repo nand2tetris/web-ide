@@ -14,6 +14,7 @@ import InlineEdit from "../pico/inline_edit";
 import VirtualScroll from "../pico/virtual_scroll";
 import { Icon } from "../pico/icon";
 import { AppContext } from "../../App.context";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 const ITEM_HEIGHT = 34;
 
@@ -106,13 +107,18 @@ export const Memory = ({
   memory: MemoryChip;
   format: Format;
 }) => {
+  const { setStatus } = useContext(AppContext);
   const [fmt, setFormat] = useState(format);
 
   const { fs } = useContext(AppContext);
 
   const doLoad = useCallback(async () => {
     // Show dialog
-    memory.load(fs, "/samples/Add.hack");
+    try {
+      await memory.load(fs, "/samples/Add.hack");
+    } catch (e) {
+      setStatus(display((e as Error).message));
+    }
   }, [fs, memory]);
 
   return (

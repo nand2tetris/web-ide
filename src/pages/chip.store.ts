@@ -1,29 +1,26 @@
-import { t } from "@lingui/macro";
-import { Subject, map } from "rxjs";
-
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
-import {
-  FileSystem,
-  ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
+import { t } from "@lingui/macro";
+import { useContext, useMemo, useReducer, useRef } from "react";
 
-import { TST } from "../languages/tst";
-import { Low, Pin, Chip as SimChip } from "../simulator/chip/chip";
-import * as make from "../simulator/chip/builder";
-import { getBuiltinChip } from "../simulator/chip/builtins/index";
-import { ChipTest } from "../simulator/tst";
-import { compare, Diff } from "../simulator/compare";
-import * as not from "../projects/project_01/01_not";
-import { Clock } from "../simulator/chip/clock";
 import { HDL } from "../languages/hdl";
-import { CMP } from "../languages/cmp";
+import { TST } from "../languages/tst";
+import { build as buildChip } from "../simulator/chip/builder";
+import { getBuiltinChip } from "../simulator/chip/builtins/index";
+import { Low, Pin, Chip as SimChip, Chip } from "../simulator/chip/chip";
+import { Clock } from "../simulator/chip/clock";
+import { ChipTest } from "../simulator/tst";
+import { StorageContext } from "../util/storage";
+import { AppContext } from "../App.context";
+import { ImmPin, reducePins } from "../components/pinout";
+import { REGISTRY } from "../simulator/chip/builtins";
+import produce from "immer";
 
 export const PROJECT_NAMES = [
-  ["01", "Project 1"],
-  ["02", "Project 2"],
-  ["03", "Project 3"],
-  ["05", "Project 5"],
+  ["01", t`Project 1`],
+  ["02", t`Project 2`],
+  ["03", t`Project 3`],
+  ["05", t`Project 5`],
 ];
 
 export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
@@ -49,271 +46,356 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "05": ["Memory", "CPU", "Computer"],
 };
 
+function dropdowns(storage: Record<string, string>) {
+  const project = (storage["/chip/project"] as keyof typeof PROJECTS) ?? "01";
+  const chips = PROJECTS[project];
+  const chipName = storage["/chip/chip"] ?? chips[0];
+  return { project, chips, chipName };
+}
+
 function makeHdl(name: string) {
   return `CHIP ${name} {
-    IN: in;
-    OUT: out;
+    IN in;
+    OUT out;
     PARTS:
   }`;
 }
 
 function makeTst() {
-  return `repeat {
-    tick,
-    tock;
-  }`;
+  return `repeat 10 {
+      tick,
+      tock;
+    }`;
 }
 
 function makeCmp() {
   return `| in|out|`;
 }
 
-export class ChipPageStore {
+interface ChipPageState {
+  files: Files;
+  // errors: Files;
+  sim: ChipSim;
+  controls: ControlsState;
+}
+
+interface ChipSim {
+  clocked: boolean;
+  inPins: ImmPin[];
+  outPins: ImmPin[];
+  internalPins: ImmPin[];
+  parts: Set<Chip>;
+}
+
+interface Files {
+  hdl: string;
+  cmp: string;
+  tst: string;
+  out: string;
+}
+
+interface ControlsState {
   project: keyof typeof PROJECTS;
   chips: string[];
   chipName: string;
-  chip: SimChip;
-  test?: ChipTest;
-  diffs: Diff[] = [];
-  files = {
-    hdl: "",
-    cmp: "",
-    tst: "",
-    out: "",
+  hasBuiltin: boolean;
+  runningTest: boolean;
+}
+
+function reduceChip(chip: SimChip): ChipSim {
+  return {
+    // test,
+    clocked: chip.clocked,
+    inPins: reducePins(chip.ins),
+    outPins: reducePins(chip.outs),
+    internalPins: reducePins(chip.pins),
+    parts: new Set(chip.parts),
   };
-  errors = {
-    hdl: "",
-    cmp: "",
-    tst: "",
-    out: "",
-  };
+}
 
-  readonly subject = new Subject<ChipPageStore>();
-  readonly $ = this.subject.asObservable();
-  readonly testLog = new Subject<string>();
+const clock = Clock.get();
 
-  private runningTest = false;
-  private initialized = false;
+export function useChipPageStore() {
+  const fs = useContext(StorageContext);
+  const { setStatus } = useContext(AppContext);
+  const storage: Record<string, string> = useMemo(() => localStorage, []);
 
-  next() {
-    if (this.initialized && !this.runningTest) this.subject.next(this);
-  }
+  const chip = useRef<SimChip>(new Low());
+  const test = useRef<ChipTest | undefined>(undefined);
 
-  readonly selectors = {
-    project: this.$.pipe(map((t) => t.project)),
-    chipName: this.$.pipe(map((t) => t.chipName)),
-    chips: this.$.pipe(map((t) => t.chips)),
-    chip: this.$.pipe(map((t) => t.chip)),
-    files: this.$.pipe(map((t) => t.files)),
-    errors: this.$.pipe(map((t) => t.errors)),
-    test: this.$.pipe(map((t) => t.test)),
-    diffs: this.$.pipe(map((t) => t.diffs)),
-    log: this.testLog.asObservable(),
-  };
+  const initialState: ChipPageState = useMemo(
+    () => {
+      const { project, chips, chipName } = dropdowns(storage);
+      const controls: ControlsState = {
+        project,
+        chips,
+        chipName,
+        hasBuiltin: REGISTRY.has(chipName),
+        runningTest: false,
+      };
 
-  constructor(
-    private readonly fs: FileSystem = new FileSystem(
-      new ObjectFileSystemAdapter({
-        "/projects/01/Not/Not.hdl": not.hdl,
-        "/projects/01/Not/Not.tst": not.tst,
-        "/projects/01/Not/Not.cmp": not.cmp,
-      })
-    ),
-    private readonly storage: Record<string, string> = {},
-    private readonly statusLine: (status: string) => void = () => {}
-  ) {
-    this.project =
-      (this.storage["/chip/project"] as keyof typeof PROJECTS) ?? "01";
-    this.chips = PROJECTS[this.project];
-    this.chipName = this.storage["chip/chip"] ?? "Not";
-    let maybeChip = getBuiltinChip(this.chipName);
-    if (isErr(maybeChip)) this.statusLine(display(Err(maybeChip)));
-    this.chip = isErr(maybeChip) ? new Low() : Ok(maybeChip);
-    this.setProject(this.project);
-    // Clock.get().update.subscribe(() => {
-    //   this.next();
-    // });
-  }
-
-  replaceChip(chip: Ok<SimChip>) {
-    // Store current inPins
-    const inPins = this.chip.ins;
-    this.chip = Ok(chip);
-    for (const [pin, { busVoltage }] of inPins) {
-      if (this.chip.ins.has(pin)) {
-        this.chip.ins.get(pin)!.busVoltage = busVoltage;
-      }
-    }
-    this.chip.eval();
-    this.next();
-    return true;
-  }
-
-  useBuiltin() {
-    const nextChip = getBuiltinChip(this.chipName);
-    if (isErr(nextChip)) {
-      this.statusLine(
-        `Failed to load builtin ${this.chipName}: ${display(Err(nextChip))}`
-      );
-      return false;
-    }
-    return this.replaceChip(nextChip);
-  }
-
-  reset() {
-    Clock.get().reset();
-    this.chip?.reset();
-  }
-
-  toggle(pin: Pin, i?: number) {
-    if (i !== undefined) {
-      pin.busVoltage = pin.busVoltage ^ (1 << i);
-    } else {
-      if (pin.width === 1) {
-        pin.toggle();
+      let maybeChip = getBuiltinChip(controls.chipName);
+      if (isErr(maybeChip)) {
+        setStatus(display(Err(maybeChip)));
       } else {
-        pin.busVoltage += 1;
+        chip.current = Ok(maybeChip);
       }
-    }
-    this.chip.eval();
-    this.next();
-  }
 
-  setFiles({
-    hdl,
-    tst,
-    cmp,
-    out = "",
-  }: {
-    hdl: string;
-    tst: string;
-    cmp: string;
-    out?: string;
-  }) {
-    this.files.hdl = hdl;
-    this.files.tst = tst;
-    this.files.cmp = cmp;
-    this.files.out = out;
-    this.errors.hdl = "";
-    this.errors.tst = "";
-    this.errors.cmp = "";
-    this.errors.out = "";
-  }
+      const sim = reduceChip(chip.current);
 
-  compileChip() {
-    this.chip?.remove();
-    const maybeParsed = HDL.parse(this.files.hdl);
-    if (isErr(maybeParsed)) {
-      this.errors.hdl = Err(maybeParsed).message;
-      this.statusLine("Failed to parse chip");
-      return;
-    }
-    const maybeChip = make.build(Ok(maybeParsed));
-    if (isErr(maybeChip)) {
-      this.statusLine(display(Err(maybeChip)));
-      return;
-    }
-    this.statusLine(t`Compiled ${this.chip.name}`);
-    this.replaceChip(maybeChip);
-  }
+      setTimeout(() => {
+        ChipPageActions.reloadChip();
+      });
 
-  async saveChip(text: string) {
-    this.files.hdl = text;
-    this.errors.hdl = "";
-    const name = this.chipName;
-    const path = `/projects/${this.project}/${name}/${name}.hdl`;
-    await this.fs.writeFile(path, text);
-    this.statusLine(`Saved ${path}`);
-    this.next();
-  }
+      return {
+        controls,
+        files: {
+          hdl: "",
+          cmp: "",
+          tst: "",
+          out: "",
+        },
+        sim,
+      };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
-  async setProject(proj: keyof typeof PROJECTS) {
-    this.storage["/chip/project"] = this.project = proj;
-    this.chips = PROJECTS[proj];
-    this.chipName =
-      this.chipName && this.chips.includes(this.chipName)
-        ? this.chipName
-        : this.chips[0];
-    await this.setChip(this.chipName);
-  }
+  const ChipPageReducers = useMemo(
+    () => ({
+      setFiles(
+        state: ChipPageState,
+        {
+          hdl = state.files.hdl,
+          tst = state.files.tst,
+          cmp = state.files.cmp,
+          out = "",
+        }: {
+          hdl?: string;
+          tst?: string;
+          cmp?: string;
+          out?: string;
+        }
+      ) {
+        state.files.hdl = hdl;
+        state.files.tst = tst;
+        state.files.cmp = cmp;
+        state.files.out = out;
+      },
 
-  async setChip(name: string) {
-    this.chipName = this.storage["chip/chip"] = name;
-    const fsName = (ext: string) =>
-      `/projects/${this.project}/${name}/${name}.${ext}`;
-    const hdl = await this.fs
-      .readFile(fsName("hdl"))
-      .catch(() => makeHdl(name));
-    const tst = await this.fs.readFile(fsName("tst")).catch(() => makeTst());
-    const cmp = await this.fs.readFile(fsName("cmp")).catch(() => makeCmp());
+      updateChip(state: ChipPageState) {
+        state.sim = reduceChip(chip.current);
+        state.controls.chips = PROJECTS[state.controls.project];
+        state.controls.chipName = chip.current.name ?? state.controls.chipName;
+        if (!state.controls.chips.includes(state.controls.chipName)) {
+          state.controls.chips.push(state.controls.chipName);
+        }
+      },
 
-    this.files.hdl = hdl;
-    this.files.tst = tst;
-    this.files.cmp = cmp;
-    this.files.out = "";
-    this.errors.hdl = "";
-    this.errors.tst = "";
-    this.errors.cmp = "";
-    this.errors.out = "";
+      setProject(state: ChipPageState, project: keyof typeof PROJECTS) {
+        const chips = PROJECTS[project];
+        const chipName =
+          state.controls.chipName && chips.includes(state.controls.chipName)
+            ? state.controls.chipName
+            : chips[0];
+        state.controls.project = project;
+        state.controls.chips = chips;
+        this.setChip(state, chipName);
+      },
 
-    try {
-      this.compileChip();
-      this.reset();
-    } catch (e) {
-      this.statusLine(display(e));
-    }
+      setChip(state: ChipPageState, chipName: string) {
+        state.controls.chipName = chipName;
+        state.controls.hasBuiltin = REGISTRY.has(chipName);
+      },
 
-    this.next();
-    this.initialized = true;
-  }
+      testRunning(state: ChipPageState) {
+        state.controls.runningTest = true;
+      },
+      testFinished(state: ChipPageState) {
+        state.controls.runningTest = false;
+      },
+      updateTestStep(state: ChipPageState) {
+        state.files.out = test.current?.log() ?? "";
+        this.updateChip(state);
+      },
+    }),
+    [chip, test]
+  );
 
-  async runTest() {
-    const tst = TST.parse(this.files.tst);
-
-    if (isErr(tst)) {
-      this.errors.tst = display(Err(tst).message);
-      this.statusLine(t`Failed to parse test`);
-      this.next();
-      return;
-    }
-    this.statusLine(t`Parsed tst`);
-
-    this.test = ChipTest.from(Ok(tst)).with(this.chip);
-    this.test.setFileSystem(this.fs);
-    this.fs.pushd("/samples");
-
-    const run = async () => {
-      try {
-        this.runningTest = true;
-        await this.test?.run();
-      } finally {
-        this.runningTest = false;
+  const [state, dispatch] = useReducer(
+    (
+      state: ChipPageState,
+      command: {
+        action: keyof typeof ChipPageReducers;
+        payload?: {};
       }
-    };
-    await run();
+    ) =>
+      produce(state, (draft: ChipPageState) => {
+        ChipPageReducers[command.action](draft, command.payload as any);
+      }),
+    initialState
+  );
 
-    this.fs.popd();
+  const ChipPageActions = useMemo(
+    () => ({
+      setProject(project: keyof typeof PROJECTS) {
+        storage["/chip/project"] = project;
+        dispatch({ action: "setProject", payload: project });
+        this.setChip(PROJECTS[project][0]);
+      },
 
-    this.files.out = this.test.log();
-    this.next();
+      setChip(chip: string, project = storage["/chip/project"]) {
+        storage["/chip/chip"] = chip;
+        dispatch({ action: "setChip", payload: chip });
+        this.loadChip(project, chip);
+      },
 
-    const cmp = CMP.parse(this.files.cmp);
-    const out = CMP.parse(this.files.out);
+      reset() {
+        Clock.get().reset();
+        chip.current.reset();
+        // test.current?.reset();
+        dispatch({ action: "updateChip" });
+      },
 
-    if (isErr(cmp)) {
-      this.errors.cmp = Err(cmp).message;
-      this.statusLine(t`Error parsing cmp`);
-      this.next();
-      return;
-    }
-    if (isErr(out)) {
-      this.errors.out = Err(out).message;
-      this.statusLine(t`Error parsing out`);
-      this.next();
-      return;
-    }
+      updateFiles({
+        hdl,
+        tst,
+        cmp,
+      }: {
+        hdl: string;
+        tst: string;
+        cmp: string;
+      }) {
+        dispatch({ action: "setFiles", payload: { hdl, tst, cmp } });
+        try {
+          this.compileChip(hdl);
+        } catch (e) {
+          setStatus(display(e));
+        }
+      },
 
-    this.diffs = compare(Ok(cmp), Ok(out));
-    this.next();
-  }
+      compileChip(hdl: string) {
+        chip.current.remove();
+        const maybeParsed = HDL.parse(hdl);
+        if (isErr(maybeParsed)) {
+          setStatus("Failed to parse chip");
+          dispatch({ action: "updateChip" });
+          return;
+        }
+        const maybeChip = buildChip(Ok(maybeParsed));
+        if (isErr(maybeChip)) {
+          setStatus(display(Err(maybeChip)));
+          dispatch({ action: "updateChip" });
+          return;
+        }
+        setStatus(t`Compiled ${state.controls.chipName}`);
+        this.replaceChip(Ok(maybeChip));
+      },
+
+      replaceChip(nextChip: SimChip) {
+        // Store current inPins
+        const inPins = chip.current.ins;
+        for (const [pin, { busVoltage }] of inPins) {
+          if (nextChip.ins.has(pin)) {
+            nextChip.ins.get(pin)!.busVoltage = busVoltage;
+          }
+        }
+        nextChip.eval();
+        chip.current = nextChip;
+        dispatch({ action: "updateChip" });
+      },
+
+      async loadChip(project: string, name: string) {
+        storage["/chip/chip"] = name;
+        const fsName = (ext: string) =>
+          `/projects/${project}/${name}/${name}.${ext}`;
+
+        const [hdl, tst, cmp] = await Promise.all([
+          fs.readFile(fsName("hdl")).catch(() => makeHdl(name)),
+          fs.readFile(fsName("tst")).catch(() => makeTst()),
+          fs.readFile(fsName("cmp")).catch(() => makeCmp()),
+        ]);
+
+        dispatch({ action: "setFiles", payload: { hdl, tst, cmp } });
+        this.compileChip(hdl);
+      },
+
+      async saveChip(
+        hdl: string,
+        project = state.controls.project,
+        name = state.controls.chipName
+      ) {
+        dispatch({ action: "setFiles", payload: { hdl } });
+        const path = `/projects/${project}/${name}/${name}.hdl`;
+        await fs.writeFile(path, hdl);
+        setStatus(`Saved ${path}`);
+      },
+
+      toggle(pin: Pin, i: number | undefined) {
+        if (i !== undefined) {
+          pin.busVoltage = pin.busVoltage ^ (1 << i);
+        } else {
+          if (pin.width === 1) {
+            pin.toggle();
+          } else {
+            pin.busVoltage += 1;
+          }
+        }
+        chip.current.eval();
+        dispatch({ action: "updateChip" });
+      },
+
+      clock() {
+        clock.toggle();
+        dispatch({ action: "updateChip" });
+      },
+
+      useBuiltin() {
+        const nextChip = getBuiltinChip(state.controls.chipName);
+        if (isErr(nextChip)) {
+          setStatus(
+            `Failed to load builtin ${state.controls.chipName}: ${display(
+              Err(nextChip)
+            )}`
+          );
+          return;
+        }
+        this.replaceChip(Ok(nextChip));
+      },
+
+      reloadChip() {
+        const { project, chipName } = state.controls;
+        this.loadChip(project, chipName);
+      },
+
+      async runTest() {
+        const tst = TST.parse(state.files.tst);
+
+        if (isErr(tst)) {
+          setStatus(t`Failed to parse test`);
+          return;
+        }
+        setStatus(t`Parsed tst`);
+
+        test.current = ChipTest.from(Ok(tst)).with(chip.current);
+        test.current.setFileSystem(fs);
+
+        dispatch({ action: "testRunning" });
+
+        fs.pushd("/samples");
+        await test.current.run();
+        fs.popd();
+
+        dispatch({ action: "updateTestStep" });
+      },
+    }),
+    [fs, storage, setStatus, chip, test, state, dispatch]
+  );
+
+  return [state, dispatch, ChipPageActions] as [
+    typeof state,
+    typeof dispatch,
+    typeof ChipPageActions
+  ];
 }

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { act } from "react-dom/test-utils";
 import { Bus, HIGH } from "../simulator/chip/chip";
-import { Pinout } from "./pinout";
+import { Pinout, reducePin } from "./pinout";
 import { render, screen } from "../testing";
 
 describe("<Pinout />", () => {
   it("renders pins", () => {
     const pin = new Bus("pin");
-    render(<Pinout pins={[{ pin }]} />);
+    render(<Pinout pins={[reducePin(pin)]} />);
 
     const pinOut = screen.getByText("0");
     expect(pinOut).toBeVisible();
@@ -16,11 +16,11 @@ describe("<Pinout />", () => {
   it("toggles bits", () => {
     const pin = new Bus("pin");
     const Wrapper = () => {
-      const [pins, setPins] = useState([{ pin }]);
+      const [pins, setPins] = useState([reducePin(pin)]);
 
       const toggle = () => {
         pin.toggle();
-        setPins([{ pin }]);
+        setPins([reducePin(pin)]);
       };
 
       return <Pinout pins={pins} toggle={toggle} />;
@@ -39,11 +39,11 @@ describe("<Pinout />", () => {
   it.skip("increments buses", () => {
     const pin = new Bus("pin", 3);
     const Wrapper = () => {
-      const [pins, setPins] = useState([{ pin }]);
+      const [pins, setPins] = useState([reducePin(pin)]);
 
       const toggle = () => {
         pin.busVoltage += 1;
-        setPins([{ pin }]);
+        setPins([reducePin(pin)]);
       };
 
       return <Pinout pins={pins} toggle={toggle} />;

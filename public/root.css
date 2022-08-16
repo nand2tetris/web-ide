@@ -84,12 +84,18 @@
     font-weight: bold;
   }
 
+  #root > main {
+    margin-bottom: 40px;
+  }
+
   #root > footer {
     border-top: 1px solid var(--card-border-color);
     background-color: var(--card-background-color);
     padding-top: calc(var(--block-spacing-vertical) / 2);
     padding-left: var(--block-spacing-horizontal);
     align-items: baseline;
+    position: fixed;
+    bottom: 0;
   }
 }
 

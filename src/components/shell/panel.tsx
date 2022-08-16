@@ -20,9 +20,10 @@ export const Accordian = (props: {
   children: ReactNode;
   summary: ReactNode;
   className?: string;
+  open?: boolean;
 }) => {
   return (
-    <details className={props.className ?? ""}>
+    <details className={props.className ?? ""} open={props.open}>
       <summary>
         <div>{props.summary}</div>
       </summary>

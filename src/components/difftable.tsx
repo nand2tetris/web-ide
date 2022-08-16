@@ -67,13 +67,7 @@ export const DiffTable = ({
   });
 
   return (
-    <div
-      className={className}
-      style={{
-        overflow: "auto",
-        maxHeight: "200px",
-      }}
-    >
+    <div className={className}>
       <p>
         <Trans>{failures} failures</Trans>
       </p>

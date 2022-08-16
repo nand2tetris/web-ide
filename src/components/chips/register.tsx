@@ -7,7 +7,7 @@ export const RegisterComponent = ({
   name: string;
   bits: number;
 }) => (
-  <span>
+  <div>
     {name}: {dec(bits)}
-  </span>
+  </div>
 );

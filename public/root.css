@@ -52,6 +52,16 @@
     font-size: var(--font-size-monospace);
   }
 
+  article > .panel-fill {
+    margin: calc(-1 * var(--block-spacing-vertical))
+      calc(-1 * var(--block-spacing-horizontal));
+  }
+
+  article.fill > main {
+    margin: calc(-1 * var(--block-spacing-vertical))
+      calc(-1 * var(--block-spacing-horizontal));
+  }
+
   details {
     margin-bottom: 0;
     padding-bottom: 0;
@@ -62,11 +72,16 @@
     background-color: var(--card-sectionning-background-color);
     padding: calc(var(--block-spacing-vertical) * 0.66)
       var(--block-spacing-horizontal);
+    font-weight: bold;
   }
 
   details > summary > *:first-child {
     flex: 1;
     padding: 0 var(--block-spacing-horizontal);
+  }
+
+  article > header {
+    font-weight: bold;
   }
 
   #root > footer {

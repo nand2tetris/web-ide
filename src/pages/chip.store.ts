@@ -82,7 +82,6 @@ function makeCmp() {
 
 interface ChipPageState {
   files: Files;
-  // errors: Files;
   sim: ChipSim;
   controls: ControlsState;
 }
@@ -112,7 +111,6 @@ interface ControlsState {
 
 function reduceChip(chip: SimChip): ChipSim {
   return {
-    // test,
     clocked: chip.clocked,
     inPins: reducePins(chip.ins),
     outPins: reducePins(chip.outs),

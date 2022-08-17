@@ -22,7 +22,7 @@ function useReducerState<T>(init: T): [T, Dispatch<T>] {
 }
 
 export const Chip = () => {
-  const [state, _dispatch, actions] = useChipPageStore();
+  const { state, actions } = useChipPageStore();
 
   const [hdl, setHdl] = useReducerState(state.files.hdl);
   const [tst, setTst] = useReducerState(state.files.tst);
@@ -52,7 +52,7 @@ export const Chip = () => {
     if (!useBuiltin) {
       await compile();
     }
-    actions.runTest();
+    actions.runTest(tst);
   };
 
   const selectors = (

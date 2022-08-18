@@ -377,7 +377,6 @@ export function makeChipStore(
 
     async tick() {
       await test.step();
-      dispatch.current({ action: "updateTestStep" });
     },
   };
 
@@ -387,17 +386,15 @@ export function makeChipStore(
     }
 
     finishFrame(): void {
-      dispatch.current({ action: "updateChip" });
+      dispatch.current({ action: "updateTestStep" });
     }
 
     tick(): void {
-      actions.tick().then(() => {
-        dispatch.current({ action: "updateChip" });
-      });
+      actions.tick();
     }
 
     toggle(): void {
-      dispatch.current({ action: "updateChip" });
+      dispatch.current({ action: "updateTestStep" });
     }
   })();
 

@@ -10,7 +10,6 @@
 # Set up
 git clone
 npm install
-npm run build
 
 # Run
 npm start

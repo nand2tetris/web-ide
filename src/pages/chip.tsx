@@ -51,37 +51,39 @@ export const Chip = () => {
   };
 
   const selectors = (
-    <div className="_selectors flex row inline align-end">
-      <select
-        value={state.controls.project}
-        onChange={({ target: { value } }) => {
-          actions.setProject(value as keyof typeof PROJECTS);
-        }}
-        data-testid="project-picker"
-      >
-        {PROJECT_NAMES.map(([number, label]) => (
-          <option key={number} value={number}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <h2 tabIndex={0}>
+    <>
+      <div>
         <Trans>Chips:</Trans>
-      </h2>
-      <select
-        value={state.controls.chipName}
-        onChange={({ target: { value } }) => {
-          actions.setChip(value);
-        }}
-        data-testid="chip-picker"
-      >
-        {state.controls.chips.map((chip) => (
-          <option key={chip} value={chip}>
-            {chip}
-          </option>
-        ))}
-      </select>
-    </div>
+      </div>
+      <fieldset role="group">
+        <select
+          value={state.controls.project}
+          onChange={({ target: { value } }) => {
+            actions.setProject(value as keyof typeof PROJECTS);
+          }}
+          data-testid="project-picker"
+        >
+          {PROJECT_NAMES.map(([number, label]) => (
+            <option key={number} value={number}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={state.controls.chipName}
+          onChange={({ target: { value } }) => {
+            actions.setChip(value);
+          }}
+          data-testid="chip-picker"
+        >
+          {state.controls.chips.map((chip) => (
+            <option key={chip} value={chip}>
+              {chip}
+            </option>
+          ))}
+        </select>
+      </fieldset>
+    </>
   );
   const hdlPanel = (
     <Panel
@@ -144,8 +146,7 @@ export const Chip = () => {
   );
 
   const pinsPanel = (
-    <Panel className="_parts_panel">
-      {selectors}
+    <Panel className="_parts_panel" header={selectors}>
       <Accordian summary={<Trans>Input pins</Trans>} open={true}>
         <Pinout
           pins={state.sim.inPins}
@@ -169,17 +170,26 @@ export const Chip = () => {
     </Panel>
   );
   const testPanel = (
-    <Panel className="_test_panel">
-      <Runbar runner={runner} />
-      <Accordian summary={<Trans>Test</Trans>} open={true}>
-        <Editor
-          className="flex-2"
-          value={tst}
-          onChange={setTst}
-          grammar={TST.parser}
-          language={"tst"}
-        />
-      </Accordian>
+    <Panel
+      className="_test_panel"
+      header={
+        <>
+          <div>
+            <Trans>Test</Trans>
+          </div>
+          <div className="flex-1">
+            <Runbar runner={runner} />
+          </div>
+        </>
+      }
+    >
+      <Editor
+        className="flex-2"
+        value={tst}
+        onChange={setTst}
+        grammar={TST.parser}
+        language={"tst"}
+      />
       <Accordian summary={<Trans>Comparison</Trans>}>
         <Editor
           className="flex-1"

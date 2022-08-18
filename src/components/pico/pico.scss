@@ -1,0 +1,132 @@
+@layer user {
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :root {
+    --line-height: 1.25; /* 1.5 */
+    --spacing: 0.25rem; /* 1rem */
+    --typography-spacing-vertical: 1.15rem; /* 1.5rem */
+    --grid-spacing-horizontal: var(--spacing);
+    --grid-spacing-vertical: var(--spacing);
+    --form-element-spacing-vertical: 0.15rem; /* .75rem */
+    --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+    --font-family: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen,
+      Ubuntu, Cantarell, "Noto Sans", sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-size-monospace: 16px;
+    --font-family-monospace: "JetBrains Mono", source-code-pro, Menlo, Monaco,
+      Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
+      "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --card-border-color: black;
+  }
+
+  @media only screen and (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --card-border-color: white;
+    }
+  }
+
+  [data-theme="dark"] {
+    --card-border-color: white;
+  }
+}
+
+@layer component {
+  code,
+  kbd,
+  .font-monospace {
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-monospace);
+  }
+
+  del {
+    text-decoration: none;
+  }
+
+  textarea {
+    overflow: scroll;
+    white-space: pre;
+    font-family: var(--font-family-monospace);
+    font-size: var(--font-size-monospace);
+  }
+
+  article.fill {
+    padding: 0;
+    margin: 0;
+  }
+
+  article.no-shadow {
+    box-shadow: none;
+  }
+
+  // Tighten up panel articles
+  article.panel {
+    border: solid var(--border-width) var(--card-border-color);
+    padding: 0;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+
+    > header {
+      padding: 0;
+      margin: 0;
+      font-weight: bold;
+      border-radius: 0;
+    }
+
+    > header > *:first-child {
+      padding: 0 var(--block-spacing-vertical);
+    }
+  }
+
+  // Tighten up accordian headers
+  details {
+    margin-bottom: 0;
+    padding-bottom: 0;
+
+    > summary {
+      display: flex;
+      background-color: var(--card-sectionning-background-color);
+      padding: calc(var(--block-spacing-vertical) * 0.66)
+        var(--block-spacing-horizontal);
+      font-weight: bold;
+    }
+
+    > summary > *:first-child {
+      flex: 1;
+      padding: 0 var(--block-spacing-horizontal);
+    }
+  }
+
+  #root > main {
+    margin-bottom: 40px;
+  }
+
+  #root > footer {
+    border-top: 1px solid var(--card-border-color);
+    background-color: var(--card-background-color);
+    padding-top: calc(var(--block-spacing-vertical) / 2);
+    padding-left: var(--block-spacing-horizontal);
+    align-items: baseline;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+  }
+
+  nav ol,
+  nav ul {
+    margin-right: 0;
+  }
+
+  #root > main {
+    padding: 0;
+  }
+
+  nav li {
+    padding: 0 var(--nav-link-spacing-horizontal);
+  }
+}

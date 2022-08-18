@@ -44,7 +44,6 @@
   "scripts": {
     "start": "react-scripts start",
     "test": "react-scripts test ",
-    "prebuild": "cp ./node_modules/@davidsouther/jiffies/build/pico.css public",
     "build": "react-scripts build",
     "format": "prettier --write public/ src/",
     "fix": "eslint --fix src/",

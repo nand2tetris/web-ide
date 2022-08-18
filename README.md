@@ -51,7 +51,7 @@ For evented asynchronous behavior, use RXJS observables and subscriptions.
 
 #### Pico
 
-Jiffies embeds a custom [`PicoCSS`](https://picocss.com) builder, allowing rapid iteration on custom components.
+Jiffies extends [`PicoCSS`](https://picocss.com), allowing rapid iteration on custom components.
 Some ideas have been moved upstream to Pico.
 Specific components in the forked Pico include [`inline-buttons`](https://github.com/picocss/pico/issues/182) and a [`property sheet`](https://github.com/picocss/pico/issues/195).
 

@@ -10,7 +10,7 @@ export const Runbar = ({
   runner: Timer;
   children?: ReactNode;
 }) => (
-  <div className="input-group">
+  <fieldset role="group">
     <button onClick={() => runner.frame()} data-tooltip={t`Next`}>
       <Icon name="skip_next"></Icon>
     </button>
@@ -18,7 +18,7 @@ export const Runbar = ({
       <Icon name="first_page"></Icon>
     </button>
     <button
-      onClick={() => (runner.running ? runner.stop() : runner.reset())}
+      onClick={() => (runner.running ? runner.stop() : runner.start())}
       data-tooltip={runner.running ? t`Stop` : t`Run`}
     >
       <Icon name={runner.running ? "pause" : "play_arrow"}></Icon>
@@ -62,5 +62,5 @@ export const Runbar = ({
       ))}
     </select>
     {children}
-  </div>
+  </fieldset>
 );

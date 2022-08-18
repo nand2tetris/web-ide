@@ -44,7 +44,7 @@ export const Screen = ({ memory }: { memory: Memory }) => {
   }, [memory]);
 
   return (
-    <Panel className="fill" header={<Trans>Display</Trans>}>
+    <Panel header={<Trans>Screen</Trans>}>
       <figure
         style={{
           width: "100%",

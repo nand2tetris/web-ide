@@ -74,7 +74,7 @@ const Pin = ({
   allowIncrement: (pin: ChipPin) => boolean;
 }) => {
   return (
-    <fieldset className="button-group">
+    <fieldset role="group">
       {pin.bits.map(([i, v]) => (
         <button
           key={i}

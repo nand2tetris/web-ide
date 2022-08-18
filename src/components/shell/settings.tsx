@@ -5,6 +5,7 @@ import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
 import "../pico/button-group.scss";
+import "../pico/property.scss";
 
 export const Settings = () => {
   const { settings, fs, monaco, theme, setTheme } = useContext(AppContext);

@@ -120,10 +120,10 @@ export const Memory = ({
     } catch (e) {
       setStatus(display((e as Error).message));
     }
-  }, [fs, memory]);
+  }, [fs, memory, setStatus]);
 
   return (
-    <article>
+    <article className="panel">
       <header>
         <fieldset role="group">
           <label>{name}</label>

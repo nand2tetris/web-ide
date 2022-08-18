@@ -5,7 +5,7 @@ import { Icon } from "../pico/icon";
 
 const Header = ({ urls }: { urls: typeof URLs }) => (
   <header>
-    <nav>
+    <nav style={{ width: "100%" }}>
       <ul>
         <li>
           <strong>

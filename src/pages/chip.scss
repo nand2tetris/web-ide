@@ -1,30 +1,18 @@
 @use "../components/pico/button-group.scss";
+@use "../components/pico/flex.scss";
 @use "../components/pico/page.scss";
 
 .ChipPage {
+  h2 {
+    margin: 0 var(--nav-element-spacing-horizontal);
+  }
+
   --screen-size: calc(512px + calc(var(--block-spacing-horizontal) * 2));
 
   grid-template-rows: min-content auto;
   grid-template-columns: 1fr var(--screen-size) 1fr;
-  // justify-content: center;
   margin: 0px;
   gap: 0;
-
-  > article {
-    box-sizing: content-box;
-    border: var(--border-width) solid var(--card-border-color);
-    border-radius: 0;
-    margin: 0;
-
-    > main {
-      margin: 0 calc(-1 * var(--block-spacing-horizontal));
-      margin-bottom: calc(-1 * var(--block-spacing-vertical));
-    }
-
-    &._test_panel > main .Editor {
-      border-bottom: var(--border-width) solid var(--card-border-color);
-    }
-  }
 
   grid-template-areas: "hdl prt tst";
 
@@ -39,10 +27,6 @@
 
   ._parts_panel {
     grid-area: prt;
-  }
-
-  h2 {
-    margin: 0 var(--nav-element-spacing-horizontal);
   }
 }
 

@@ -4,7 +4,9 @@
   flex-direction: row;
 
   button,
-  [role="button"] {
+  [role="button"],
+  input,
+  select {
     margin: 0;
 
     &:not(:first-child) {

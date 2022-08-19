@@ -17,7 +17,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-markdown": "^8.0.3",
-    "react-router-dom": "^6.3.0"
+    "react-router-dom": "^6.3.0",
+    "source-map-explorer": "^2.5.2"
   },
   "devDependencies": {
     "@lingui/cli": "^3.14.0",
@@ -42,6 +43,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "analyze": "source-map-explorer 'build/static/js/*.js' --only-mapped --html ./build/analyze.html",
     "start": "react-scripts start",
     "test": "react-scripts test ",
     "prebuild": "npm run lingui",

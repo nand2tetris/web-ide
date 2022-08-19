@@ -1,14 +1,14 @@
 import { Trans } from "@lingui/macro";
 import { useMemo, useContext, useEffect } from "react";
 import { i18n } from "@lingui/core";
-import * as projects from "../../projects";
 import { AppContext } from "../../App.context";
 
 import "../pico/button-group.scss";
 import "../pico/property.scss";
 
 export const Settings = () => {
-  const { settings, fs, monaco, theme, setTheme } = useContext(AppContext);
+  const { settings, fs, monaco, theme, setTheme, setStatus } =
+    useContext(AppContext);
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -57,16 +57,16 @@ export const Settings = () => {
                   localStorage.clear();
                   localStorage["/chip/project"] = "01";
                   localStorage["/chip/chip"] = "Not";
-                  await projects.resetFiles(fs);
-                  // statusLine.update("Reset files in local storage");
+                  await (await import("../../projects")).resetFiles(fs);
+                  setStatus("Reset files in local storage");
                 }}
               >
                 <Trans>Reset</Trans>
               </button>
               <button
-                onClick={() => {
-                  projects.loadSolutions(fs);
-                  // statusLine.update("Loaded sample solutions...");
+                onClick={async () => {
+                  await (await import("../../projects")).loadSolutions(fs);
+                  setStatus("Loaded sample solutions...");
                 }}
               >
                 <Trans>Solutions</Trans>

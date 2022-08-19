@@ -12,16 +12,21 @@ export const Projects = {
   "05": project_05,
 };
 
-export async function resetFiles(fs: FileSystem) {
+export const resetFiles = async (fs: FileSystem) => {
   await project_01.resetFiles(fs);
   await project_02.resetFiles(fs);
   await project_03.resetFiles(fs);
   await project_05.resetFiles(fs);
-}
+};
 
-export async function loadSolutions(fs: FileSystem) {
+export const loadSolutions = async (fs: FileSystem) => {
   await project_01.loadSolutions(fs);
   await project_02.loadSolutions(fs);
   await project_03.loadSolutions(fs);
   await project_05.loadSolutions(fs);
-}
+};
+
+export default {
+  resetFiles,
+  loadSolutions,
+};

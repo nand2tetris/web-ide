@@ -3,7 +3,7 @@ import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
 
-import { Pinout } from "../components/pinout";
+import { FullPinout } from "../components/pinout";
 import { PROJECTS, PROJECT_NAMES, useChipPageStore } from "./chip.store";
 import { DiffTable } from "../components/difftable";
 import { Editor } from "../components/editor";
@@ -167,7 +167,17 @@ export const Chip = () => {
 
   const pinsPanel = (
     <Panel className="_parts_panel" header={selectors}>
-      <Accordian summary={<Trans>Input pins</Trans>} open={true}>
+      <FullPinout
+        ins={{
+          pins: state.sim.inPins,
+          toggle: (pin, i) => {
+            actions.toggle(pin, i);
+          },
+        }}
+        outs={{ pins: state.sim.outPins }}
+        internal={{ pins: state.sim.internalPins }}
+      />
+      {/* <Accordian summary={<Trans>Input pins</Trans>} open={true}>
         <Pinout
           pins={state.sim.inPins}
           toggle={(pin, i) => {
@@ -181,7 +191,7 @@ export const Chip = () => {
       </Accordian>
       <Accordian summary={<Trans>Internal pins</Trans>}>
         <Pinout pins={state.sim.internalPins} />
-      </Accordian>
+      </Accordian> */}
       <Accordian summary={<Trans>Visualizations</Trans>}>
         <main>
           <Visualizations parts={state.sim.parts} />

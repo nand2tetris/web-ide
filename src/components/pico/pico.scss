@@ -35,6 +35,14 @@
 }
 
 @layer component {
+  .scroll-x {
+    overflow-x: scroll;
+  }
+
+  .scroll-y {
+    overflow-y: scroll;
+  }
+
   code,
   kbd,
   .font-monospace {
@@ -102,7 +110,7 @@
   }
 
   #root > main {
-    margin-bottom: 40px;
+    margin-bottom: calc(var(--line-height) * 1rem + 6 * var(--spacing));
   }
 
   #root > footer {

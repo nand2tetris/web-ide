@@ -67,13 +67,14 @@ export const DiffTable = ({
   });
 
   return (
-    <div className={className}>
+    <div className={"scroll-x " + className}>
       <p>
         <Trans>{failures} failures</Trans>
       </p>
       <table
         style={{
           fontFamily: "var(--font-family-monospace)",
+          marginBottom: "none",
         }}
       >
         <tbody>

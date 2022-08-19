@@ -40,3 +40,5 @@ export const Util = () => {
     </form>
   );
 };
+
+export default Util;

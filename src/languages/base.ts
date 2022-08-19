@@ -79,3 +79,8 @@ export function makeParser<ResultType>(
     }
   };
 }
+
+export interface Span {
+  start: number;
+  end: number;
+}

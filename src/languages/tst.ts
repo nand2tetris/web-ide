@@ -2,7 +2,7 @@
 
 import ohm from "ohm-js";
 import raw from "raw.macro";
-import { baseSemantics, grammars, makeParser } from "./base";
+import { baseSemantics, grammars, makeParser, Span } from "./base";
 
 export interface TstEchoOperation {
   op: "echo";
@@ -60,6 +60,7 @@ export type TstOperation =
 export interface TstLineStatement {
   ops: TstOperation[];
   break?: true;
+  span: Span;
 }
 
 export interface TstRepeat {
@@ -177,6 +178,10 @@ tstSemantics.addAttribute<TstStatement>("statement", {
         .children.map(
           ({ operation }: { operation: TstOperation }) => operation
         ),
+      span: {
+        start: this.source.startIdx,
+        end: this.source.endIdx,
+      },
     };
     if (end.sourceString === "!") {
       stmt.break = true;

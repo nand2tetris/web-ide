@@ -144,6 +144,10 @@ describe("Simulator Test", () => {
               { op: "tock" },
               { op: "output" },
             ],
+            span: {
+              start: 0,
+              end: 27,
+            },
           },
         ],
       };

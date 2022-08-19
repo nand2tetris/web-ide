@@ -23,7 +23,7 @@ import { ImmPin, reducePins } from "../components/pinout";
 import { REGISTRY } from "../simulator/chip/builtins";
 import produce from "immer";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { Timer } from "../simulator/timer";
+import { Span } from "../languages/base";
 
 export const PROJECT_NAMES = [
   ["01", t`Project 1`],
@@ -108,6 +108,7 @@ interface ControlsState {
   chipName: string;
   hasBuiltin: boolean;
   runningTest: boolean;
+  span?: Span;
 }
 
 function reduceChip(chip: SimChip): ChipSim {
@@ -225,6 +226,7 @@ export function makeChipStore(
     },
     updateTestStep(state: ChipPageState) {
       state.files.out = test?.log() ?? "";
+      state.controls.span = test?.currentStep?.span;
       this.updateChip(state);
     },
   };
@@ -254,6 +256,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       try {
         this.compileChip(hdl);
+        this.compileTest(tst);
       } catch (e) {
         setStatus(display(e));
       }
@@ -380,25 +383,7 @@ export function makeChipStore(
     },
   };
 
-  const runner = new (class ChipTimer extends Timer {
-    reset(): void {
-      actions.reset();
-    }
-
-    finishFrame(): void {
-      dispatch.current({ action: "updateTestStep" });
-    }
-
-    tick(): void {
-      actions.tick();
-    }
-
-    toggle(): void {
-      dispatch.current({ action: "updateTestStep" });
-    }
-  })();
-
-  return { initialState, reducers, actions, runner };
+  return { initialState, reducers, actions };
 }
 
 export function useChipPageStore() {
@@ -408,7 +393,7 @@ export function useChipPageStore() {
 
   const dispatch = useRef<ChipStoreDispatch>(() => {});
 
-  const { initialState, reducers, actions, runner } = useMemo(
+  const { initialState, reducers, actions } = useMemo(
     () => makeChipStore(fs, setStatus, storage, dispatch),
     [fs, setStatus, storage, dispatch]
   );
@@ -429,5 +414,5 @@ export function useChipPageStore() {
 
   dispatch.current = dispatcher;
 
-  return { state, dispatch, actions, runner };
+  return { state, dispatch, actions };
 }

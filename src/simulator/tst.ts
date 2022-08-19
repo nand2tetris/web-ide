@@ -1,5 +1,6 @@
 import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { Span } from "../languages/base";
 import {
   Tst,
   TstLineStatement,
@@ -37,19 +38,24 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this._log = "";
   }
 
-  _steps: Iterator<IS | TestInstruction> | undefined;
+  _steps: IterableIterator<IS | TestInstruction> | undefined;
+  _step: IteratorResult<IS | TestInstruction, IS | TestInstruction> | undefined;
 
   get steps(): Iterator<IS | TestInstruction> {
     if (this._steps === undefined) {
       this.reset();
     }
-    return this._steps as Iterator<IS | TestInstruction>;
+    return this._steps!;
+  }
+
+  get currentStep(): IS | TestInstruction | undefined {
+    return this._step?.value;
   }
 
   async step() {
-    const step = this.steps.next();
-    if (!step.done) {
-      await step.value.do(this);
+    this._step = this.steps.next();
+    if (!this._step.done) {
+      await this._step.value.do(this);
       return true;
     }
     return false;
@@ -118,6 +124,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   private static makeLineStatement(line: TstLineStatement) {
     const statement = new TestCompoundInstruction();
+    statement.span = line.span;
     for (const op of line.ops) {
       statement.addInstruction(ChipTest.makeInstruction(op));
     }
@@ -234,6 +241,7 @@ export class VMTest extends Test<VMTestInstruction> {
 }
 
 export interface TestInstruction {
+  span?: Span;
   do(test: Test): Promise<void> | void;
 }
 
@@ -286,6 +294,7 @@ export class TestOutputListInstruction implements TestInstruction {
 
 export class TestCompoundInstruction implements TestInstruction {
   protected readonly instructions: TestInstruction[] = [];
+  span?: Span;
 
   addInstruction(instruction: TestInstruction) {
     this.instructions.push(instruction);

@@ -22,14 +22,58 @@ export function reducePins(pins: Pins): ImmPin[] {
   return [...pins.entries()].map(reducePin);
 }
 
+export interface PinoutPins {
+  pins: ImmPin[];
+  toggle?: (pin: ChipPin, bit?: number) => void;
+}
+
+export const FullPinout = (props: {
+  ins: PinoutPins;
+  outs: PinoutPins;
+  internal: PinoutPins;
+}) => {
+  const inBlock = <PinoutBlock header="Input pins" {...props.ins} />;
+  const outBlock = <PinoutBlock header="Output pins" {...props.outs} />;
+  const internalBlock = (
+    <PinoutBlock header="Internal pins" {...props.internal} />
+  );
+  return (
+    <table className="pinout">
+      <tbody>
+        {inBlock}
+        {outBlock}
+        {internalBlock}
+      </tbody>
+    </table>
+  );
+};
+
+export const PinoutBlock = (props: PinoutPins & { header: string }) => {
+  return (
+    <>
+      {props.pins.length > 0 && (
+        <tr>
+          <th colSpan={2}>{props.header}</th>
+        </tr>
+      )}
+      {[...props.pins].map((immPin) => (
+        <tr key={immPin.pin.name}>
+          <td>{immPin.pin.name}</td>
+          <td>
+            <Pin pin={immPin} toggle={props.toggle} />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+};
+
 export const Pinout = ({
   pins,
   toggle,
-  allowIncrement = () => false,
 }: {
   pins: ImmPin[];
   toggle?: (pin: ChipPin, bit?: number) => void;
-  allowIncrement?: (pin: ChipPin) => boolean;
 }) => {
   if (pins.length === 0) {
     return <Trans>None</Trans>;
@@ -51,11 +95,7 @@ export const Pinout = ({
           <tr key={immPin.pin.name}>
             <td>{immPin.pin.name}</td>
             <td>
-              <Pin
-                pin={immPin}
-                toggle={toggle}
-                allowIncrement={allowIncrement}
-              />
+              <Pin pin={immPin} toggle={toggle} />
             </td>
           </tr>
         ))}
@@ -67,14 +107,12 @@ export const Pinout = ({
 const Pin = ({
   pin,
   toggle,
-  allowIncrement,
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
-  allowIncrement: (pin: ChipPin) => boolean;
 }) => {
   return (
-    <fieldset role="group">
+    <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
       {pin.bits.map(([i, v]) => (
         <button
           key={i}
@@ -85,13 +123,6 @@ const Pin = ({
           {v}
         </button>
       ))}
-      {/* {allowIncrement(pin) ? (
-        <button className="increment" onClick={() => toggle?.(pin)}>
-          +1
-        </button>
-      ) : (
-        <></>
-      )} */}
     </fieldset>
   );
 };

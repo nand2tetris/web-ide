@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Plural, Trans } from "@lingui/macro";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
@@ -69,7 +69,11 @@ export const DiffTable = ({
   return (
     <div className={"scroll-x " + className}>
       <p>
-        <Trans>{failures} failures</Trans>
+        <Plural
+          value={failures}
+          one={`${failures} failure`}
+          other={`${failures} failures`}
+        />
       </p>
       <table
         style={{

@@ -3,6 +3,10 @@
   position: relative;
   height: calc(var(--line-height) * 10rem);
 
+  .highlight {
+    background-color: var(--mark-background-color);
+  }
+
   textarea {
     flex: 1;
   }

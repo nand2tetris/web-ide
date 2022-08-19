@@ -14,6 +14,7 @@ import { Clockface } from "../components/clockface";
 import { Visualizations } from "../components/chips/visualizations";
 import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
+import { Timer } from "../simulator/timer";
 
 function useReducerState<T>(init: T): [T, Dispatch<T>] {
   const [state, setState] = useState<T>(init);
@@ -24,7 +25,26 @@ function useReducerState<T>(init: T): [T, Dispatch<T>] {
 }
 
 export const Chip = () => {
-  const { state, actions, runner } = useChipPageStore();
+  const { state, actions, dispatch } = useChipPageStore();
+
+  const runner = new (class ChipTimer extends Timer {
+    async reset(): Promise<void> {
+      await compile();
+      await actions.reset();
+    }
+
+    finishFrame(): void {
+      dispatch.current({ action: "updateTestStep" });
+    }
+
+    async tick(): Promise<void> {
+      actions.tick();
+    }
+
+    toggle(): void {
+      dispatch.current({ action: "updateTestStep" });
+    }
+  })();
 
   const [hdl, setHdl] = useReducerState(state.files.hdl);
   const [tst, setTst] = useReducerState(state.files.tst);
@@ -36,7 +56,7 @@ export const Chip = () => {
   };
 
   const compile = async () => {
-    actions.updateFiles({ hdl, tst, cmp });
+    await actions.updateFiles({ hdl, tst, cmp });
   };
 
   const [useBuiltin, setUseBuiltin] = useState(false);
@@ -189,6 +209,7 @@ export const Chip = () => {
         onChange={setTst}
         grammar={TST.parser}
         language={"tst"}
+        highlight={state.controls.span}
       />
       <Accordian summary={<Trans>Comparison</Trans>}>
         <Editor

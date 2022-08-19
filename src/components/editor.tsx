@@ -14,7 +14,7 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 
-import { UNKNOWN_PARSE_ERROR } from "../languages/base";
+import { Span, UNKNOWN_PARSE_ERROR } from "../languages/base";
 
 import "./editor.scss";
 
@@ -67,17 +67,43 @@ const Monaco = ({
   language,
   error,
   disabled = false,
+  highlight,
 }: {
   value: string;
   onChange: (value: string) => void;
   language: string;
   error?: ohm.MatchResult | undefined;
   disabled?: boolean;
+  highlight?: Span;
 }) => {
   const { theme } = useContext(AppContext);
   const monaco = useMonaco();
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
+  const decorations = useRef<string[]>([]);
+
+  // SET HIGHLIGHT
+  useEffect(() => {
+    if (!editor.current) return;
+    const model = editor.current.getModel();
+    const nextDecoration: monacoT.editor.IModelDeltaDecoration[] = [];
+    if (model && highlight) {
+      const start = model.getPositionAt(highlight.start);
+      const end = model.getPositionAt(highlight.end);
+      const range = monaco?.Range.fromPositions(start, end);
+      if (range) {
+        nextDecoration.push({
+          range,
+          options: { inlineClassName: "highlight" },
+        });
+        editor.current.revealRangeInCenter(range);
+      }
+    }
+    decorations.current = editor.current.deltaDecorations(
+      decorations.current,
+      nextDecoration
+    );
+  }, [editor, highlight, monaco]);
 
   const onMount: OnMount = useCallback((ed) => {
     editor.current = ed;
@@ -166,6 +192,7 @@ export const Editor = ({
   onChange,
   grammar,
   language,
+  highlight,
 }: {
   className?: string;
   disabled?: boolean;
@@ -173,6 +200,7 @@ export const Editor = ({
   onChange: (source: string) => void;
   grammar: ohm.Grammar;
   language: string;
+  highlight?: Span;
 }) => {
   const [error, setError] = useState<ohm.MatchResult>();
   const { monaco } = useContext(AppContext);
@@ -205,6 +233,7 @@ export const Editor = ({
           language={language}
           error={error}
           disabled={disabled}
+          highlight={highlight}
         />
       ) : (
         <>

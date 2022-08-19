@@ -145,7 +145,10 @@ describe("tst language", () => {
     let match = grammar.match("eval;\n\neval;\n\n");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
-      lines: [{ ops: [{ op: "eval" }] }, { ops: [{ op: "eval" }] }],
+      lines: [
+        { ops: [{ op: "eval" }], span: { start: 0, end: 5 } },
+        { ops: [{ op: "eval" }], span: { start: 7, end: 12 } },
+      ],
     });
   });
 
@@ -155,6 +158,10 @@ describe("tst language", () => {
     expect(TST.semantics(match).tst).toEqual({
       lines: [
         {
+          span: {
+            start: 1,
+            end: 34,
+          },
           ops: [
             {
               op: "output-list",
@@ -182,6 +189,10 @@ describe("tst language", () => {
           ],
         },
         {
+          span: {
+            end: 59,
+            start: 36,
+          },
           ops: [
             { op: "set", id: "in", value: 0 },
             { op: "eval" },
@@ -189,6 +200,10 @@ describe("tst language", () => {
           ],
         },
         {
+          span: {
+            start: 60,
+            end: 83,
+          },
           ops: [
             { op: "set", id: "in", value: 1 },
             { op: "eval" },
@@ -205,6 +220,10 @@ describe("tst language", () => {
     expect(TST.semantics(match).tst).toEqual({
       lines: [
         {
+          span: {
+            start: 1,
+            end: 58,
+          },
           ops: [
             {
               op: "output-list",
@@ -250,6 +269,10 @@ describe("tst language", () => {
           ],
         },
         {
+          span: {
+            start: 59,
+            end: 94,
+          },
           ops: [
             { op: "set", id: "in", value: 0 },
             { op: "set", id: "load", value: 0 },
@@ -258,9 +281,17 @@ describe("tst language", () => {
           ],
         },
         {
+          span: {
+            start: 95,
+            end: 108,
+          },
           ops: [{ op: "tock" }, { op: "output" }],
         },
         {
+          span: {
+            start: 109,
+            end: 144,
+          },
           ops: [
             { op: "set", id: "in", value: 0 },
             { op: "set", id: "load", value: 1 },
@@ -279,6 +310,10 @@ describe("tst language", () => {
       lines: [
         // output-list time%S1.2.1 in%B2.1.2;
         {
+          span: {
+            start: 1,
+            end: 35,
+          },
           ops: [
             {
               op: "output-list",
@@ -307,6 +342,10 @@ describe("tst language", () => {
         },
         // set in -32123, tick, output;
         {
+          span: {
+            start: 36,
+            end: 64,
+          },
           ops: [
             { op: "set", id: "in", value: 33413 /* unsigned */ },
             { op: "tick" },
@@ -324,7 +363,15 @@ describe("tst language", () => {
       lines: [
         {
           count: 14,
-          statements: [{ ops: [{ op: "eval" }, { op: "output" }] }],
+          statements: [
+            {
+              span: {
+                start: 15,
+                end: 28,
+              },
+              ops: [{ op: "eval" }, { op: "output" }],
+            },
+          ],
         },
       ],
     });
@@ -337,6 +384,10 @@ describe("tst language", () => {
     expect(TST.semantics(match).tst).toEqual({
       lines: [
         {
+          span: {
+            start: 0,
+            end: 21,
+          },
           ops: [{ op: "load", file: "Max.hack" }],
         },
       ],

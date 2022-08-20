@@ -3,7 +3,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 
 export type Theme = "light" | "dark" | "system";
 
-export function useSettings() {
+export function useDialog() {
   const [open, setOpen] = useState(false);
   return {
     isOpen: open,
@@ -46,7 +46,8 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     monaco: useMonaco(),
     status,
     setStatus,
-    settings: useSettings(),
+    settings: useDialog(),
+    filePicker: useDialog(),
     theme,
     setTheme,
   };
@@ -61,6 +62,11 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   },
   status: "",
   setStatus: () => {},
+  filePicker: {
+    close() {},
+    open() {},
+    isOpen: false,
+  },
   settings: {
     close() {},
     open() {},

@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { plural, Trans } from "@lingui/macro";
 import { Pin as ChipPin, Pins, Voltage } from "../simulator/chip/chip";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 
@@ -32,10 +32,32 @@ export const FullPinout = (props: {
   outs: PinoutPins;
   internal: PinoutPins;
 }) => {
-  const inBlock = <PinoutBlock header="Input pins" {...props.ins} />;
-  const outBlock = <PinoutBlock header="Output pins" {...props.outs} />;
+  const inBlock = (
+    <PinoutBlock
+      header={plural(props.ins.pins.length, {
+        one: "Input pin",
+        other: "Input pins",
+      })}
+      {...props.ins}
+    />
+  );
+  const outBlock = (
+    <PinoutBlock
+      header={plural(props.outs.pins.length, {
+        one: "Output pin",
+        other: "Output pins",
+      })}
+      {...props.outs}
+    />
+  );
   const internalBlock = (
-    <PinoutBlock header="Internal pins" {...props.internal} />
+    <PinoutBlock
+      header={plural(props.internal.pins.length, {
+        one: "Internal pin",
+        other: "Internal pins",
+      })}
+      {...props.internal}
+    />
   );
   return (
     <table className="pinout">

@@ -99,17 +99,16 @@ export const Settings = () => {
               <Trans>Editor</Trans>
             </dt>
             <dd>
-              <label htmlFor="monaco_editor_switch">
+              <label>
                 <input
                   type="checkbox"
-                  id="monaco_editor_switch"
                   name="switch"
                   role="switch"
                   checked={monaco.wants}
                   disabled={!monaco.canUse}
                   onChange={(e) => monaco.toggle(e.target.checked)}
                 />
-                Use Monaco Editor
+                <Trans>Use Monaco Editor</Trans>
               </label>
             </dd>
             <dt>

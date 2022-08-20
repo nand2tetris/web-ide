@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2022-07-09 19:51-0700\n"
+"POT-Creation-Date: 2022-08-20 12:24-0700\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -13,151 +13,234 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/runbar.tsx:51
+#: src/components/runbar.tsx:65
 msgid "1 Step"
 msgstr ""
 
-#: src/components/runbar.tsx:32
+#: src/components/runbar.tsx:45
 msgid "60FPS"
 msgstr ""
 
-#: src/pages/chip.tsx:139
-msgid "Chips:"
+#: src/pages/chip.tsx:123
+msgid "Builtin"
 msgstr ""
 
-#: src/pages/chip.store.ts:144
+#: src/pages/chip.tsx:76
+#: src/urls.tsx:11
+msgid "Chip"
+msgstr ""
+
+#: src/components/clockface.tsx:20
+msgid "Clock:"
+msgstr ""
+
+#: src/pages/chip.tsx:223
+msgid "Comparison"
+msgstr ""
+
+#: src/pages/chip.store.ts:279
 msgid "Compiled {0}"
 msgstr ""
 
-#: src/components/shell/settings.tsx:94
+#: src/urls.tsx:14
+msgid "Conv"
+msgstr ""
+
+#: src/components/shell/settings.tsx:137
+msgid "Dark"
+msgstr ""
+
+#: src/pages/chip.tsx:231
+msgid "Diff"
+msgstr ""
+
+#: src/components/shell/settings.tsx:99
+msgid "Editor"
+msgstr ""
+
+#: src/components/shell/settings.tsx:92
 msgid "English"
 msgstr ""
 
-#: src/pages/chip.store.ts:219
-msgid "Error parsing cmp file!"
-msgstr ""
-
-#: src/pages/chip.store.ts:223
-msgid "Error parsing out file!"
-msgstr ""
-
-#: src/pages/chip.tsx:157
+#: src/pages/chip.tsx:129
 msgid "Eval"
-msgstr ""
-
-#: src/pages/chip.tsx:203
-msgid "Execute"
 msgstr ""
 
 #: src/components/diff.tsx:19
 msgid "Expected <0>{a}</0>Actual <1>{b}</1><2>at {row}:{col}</2>"
 msgstr ""
 
+#: src/components/difftable.tsx:37
+msgid "Failed to parse compare"
+msgstr ""
+
+#: src/components/difftable.tsx:23
+msgid "Failed to parse output"
+msgstr ""
+
+#: src/pages/chip.store.ts:358
+msgid "Failed to parse test"
+msgstr ""
+
 #: src/components/diff.tsx:14
 msgid "Failed {0} assertions"
 msgstr ""
 
-#: src/components/runbar.tsx:33
+#: src/components/runbar.tsx:46
 msgid "Fast"
 msgstr ""
 
-#: src/components/shell/settings.tsx:55
+#: src/components/shell/settings.tsx:52
 msgid "Files"
 msgstr ""
 
-#: src/components/shell/settings.tsx:86
+#: src/components/shell/settings.tsx:84
 msgid "Github"
 msgstr ""
 
-#: src/components/pinout.tsx:88
-msgid "High"
+#: src/urls.tsx:15
+msgid "Guide"
 msgstr ""
 
-#: src/pages/chip.tsx:175
-msgid "Input pins"
+#: src/urls.tsx:10
+msgid "Home"
 msgstr ""
 
-#: src/pages/chip.tsx:185
-msgid "Internal Pins"
-msgstr ""
-
-#: src/components/shell/settings.tsx:90
+#: src/components/shell/settings.tsx:88
 msgid "Language"
 msgstr ""
 
-#: src/components/pinout.tsx:87
-msgid "Low"
+#: src/components/shell/settings.tsx:127
+msgid "Light"
 msgstr ""
 
-#: src/components/pinout.tsx:37
+#: src/components/pinout.tsx:108
 msgid "Name"
 msgstr ""
 
-#: src/components/runbar.tsx:34
+#: src/components/runbar.tsx:17
+msgid "Next"
+msgstr ""
+
+#: src/components/chips/visualizations.tsx:11
+#: src/components/pinout.tsx:101
+msgid "None"
+msgstr ""
+
+#: src/components/runbar.tsx:47
 msgid "Normal"
 msgstr ""
 
-#: src/pages/chip.tsx:191
-msgid "Output pins"
+#: src/components/editor.tsx:25
+msgid "Parse Error"
 msgstr ""
 
-#: src/pages/chip.store.ts:196
+#: src/pages/chip.store.ts:361
 msgid "Parsed tst"
 msgstr ""
 
-#: src/components/shell/settings.tsx:52
+#: src/components/shell/settings.tsx:49
 msgid "Project"
 msgstr ""
 
-#: src/components/shell/settings.tsx:97
+#: src/pages/chip.store.ts:29
+msgid "Project 1"
+msgstr ""
+
+#: src/pages/chip.store.ts:30
+msgid "Project 2"
+msgstr ""
+
+#: src/pages/chip.store.ts:31
+msgid "Project 3"
+msgstr ""
+
+#: src/pages/chip.store.ts:32
+msgid "Project 5"
+msgstr ""
+
+#: src/components/shell/settings.tsx:95
 msgid "Pseudolocale"
 msgstr ""
 
-#: src/components/shell/settings.tsx:78
+#: src/components/shell/settings.tsx:76
 msgid "References"
 msgstr ""
 
-#: src/components/pinout.tsx:54
-#: src/components/shell/settings.tsx:66
+#: src/components/runbar.tsx:24
+#: src/components/shell/settings.tsx:64
+#: src/pages/chip.tsx:151
 msgid "Reset"
 msgstr ""
 
-#: src/pages/chip.tsx:160
+#: src/components/runbar.tsx:31
+msgid "Run"
+msgstr ""
+
+#: src/pages/chip.tsx:132
 msgid "Save"
 msgstr ""
 
-#: src/components/shell/settings.tsx:35
+#: src/components/chips/screen.tsx:47
+msgid "Screen"
+msgstr ""
+
+#: src/components/shell/settings.tsx:32
 msgid "Settings"
 msgstr ""
 
-#: src/components/runbar.tsx:35
+#: src/components/runbar.tsx:48
 msgid "Slow"
 msgstr ""
 
-#: src/components/shell/settings.tsx:74
+#: src/components/shell/settings.tsx:72
 msgid "Solutions"
 msgstr ""
 
-#: src/pages/chip.tsx:199
+#: src/components/runbar.tsx:31
+msgid "Stop"
+msgstr ""
+
+#: src/components/shell/settings.tsx:147
+msgid "System"
+msgstr ""
+
+#: src/pages/chip.tsx:208
 msgid "Test"
 msgstr ""
 
-#: src/components/pinout.tsx:52
-msgid "Tick"
+#: src/components/shell/settings.tsx:115
+msgid "Theme"
 msgstr ""
 
-#: src/components/pinout.tsx:53
-msgid "Tock"
+#: src/languages/base.ts:7
+msgid "Unknown parse error"
 msgstr ""
 
-#: src/components/pinout.tsx:40
+#: src/components/shell/settings.tsx:111
+msgid "Use Monaco Editor"
+msgstr ""
+
+#: src/components/pinout.tsx:111
 msgid "Value"
 msgstr ""
 
-#: src/languages/hdl.ts:77
-msgid "could not make a pin from {toPin}"
+#: src/pages/chip.tsx:195
+msgid "Visualizations"
 msgstr ""
 
-#: src/languages/hdl.ts:106
-msgid "part has no identifier"
+#: src/components/pinout.tsx:37
+msgid "{0, plural, one {Input pin} other {Input pins}}"
+msgstr ""
+
+#: src/components/pinout.tsx:55
+msgid "{0, plural, one {Internal pin} other {Internal pins}}"
+msgstr ""
+
+#: src/components/pinout.tsx:46
+msgid "{0, plural, one {Output pin} other {Output pins}}"
+msgstr ""
+
+#: src/components/difftable.tsx:72
+msgid "{failures, plural, one {{failures} failure} other {{failures} failures}}"
 msgstr ""

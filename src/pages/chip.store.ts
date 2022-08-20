@@ -1,14 +1,7 @@
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { t } from "@lingui/macro";
-import {
-  Dispatch,
-  MutableRefObject,
-  useContext,
-  useMemo,
-  useReducer,
-  useRef,
-} from "react";
+import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 
 import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
@@ -21,9 +14,9 @@ import { StorageContext } from "../util/storage";
 import { AppContext } from "../App.context";
 import { ImmPin, reducePins } from "../components/pinout";
 import { REGISTRY } from "../simulator/chip/builtins";
-import produce from "immer";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { Span } from "../languages/base";
+import { useImmerReducer } from "../util/immer";
 
 export const PROJECT_NAMES = [
   ["01", t`Project 1`],
@@ -362,6 +355,7 @@ export function makeChipStore(
 
       test = ChipTest.from(Ok(tst)).with(chip);
       test.setFileSystem(fs);
+      dispatch.current({ action: "updateTestStep" });
       return true;
     },
 
@@ -398,20 +392,7 @@ export function useChipPageStore() {
     [fs, setStatus, storage, dispatch]
   );
 
-  const [state, dispatcher] = useReducer(
-    (
-      state: ChipPageState,
-      command: {
-        action: keyof typeof reducers;
-        payload?: {};
-      }
-    ) =>
-      produce(state, (draft: ChipPageState) => {
-        reducers[command.action](draft, command.payload as any);
-      }),
-    initialState
-  );
-
+  const [state, dispatcher] = useImmerReducer(reducers, initialState);
   dispatch.current = dispatcher;
 
   return { state, dispatch, actions };

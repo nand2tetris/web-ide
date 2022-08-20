@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useState } from "react";
+import { Dispatch, useEffect, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -27,25 +27,6 @@ function useReducerState<T>(init: T): [T, Dispatch<T>] {
 export const Chip = () => {
   const { state, actions, dispatch } = useChipPageStore();
 
-  const runner = new (class ChipTimer extends Timer {
-    async reset(): Promise<void> {
-      await compile();
-      await actions.reset();
-    }
-
-    finishFrame(): void {
-      dispatch.current({ action: "updateTestStep" });
-    }
-
-    async tick(): Promise<void> {
-      actions.tick();
-    }
-
-    toggle(): void {
-      dispatch.current({ action: "updateTestStep" });
-    }
-  })();
-
   const [hdl, setHdl] = useReducerState(state.files.hdl);
   const [tst, setTst] = useReducerState(state.files.tst);
   const [cmp, setCmp] = useReducerState(state.files.cmp);
@@ -55,14 +36,41 @@ export const Chip = () => {
     actions.saveChip(hdl);
   };
 
-  const compile = async () => {
+  const compile = useRef<() => void>();
+  compile.current = async () => {
     await actions.updateFiles({ hdl, tst, cmp });
   };
+
+  const runner = useRef<Timer>();
+  useEffect(() => {
+    runner.current = new (class ChipTimer extends Timer {
+      async reset(): Promise<void> {
+        await compile.current?.();
+        await actions.reset();
+      }
+
+      finishFrame(): void {
+        dispatch.current({ action: "updateTestStep" });
+      }
+
+      async tick(): Promise<void> {
+        actions.tick();
+      }
+
+      toggle(): void {
+        dispatch.current({ action: "updateTestStep" });
+      }
+    })();
+
+    return () => {
+      runner.current?.stop();
+    };
+  }, [compile, actions, dispatch]);
 
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
     if (useBuiltin) {
-      compile();
+      compile.current?.();
       setUseBuiltin(false);
     } else {
       actions.useBuiltin();
@@ -125,7 +133,11 @@ export const Chip = () => {
             )}
           </fieldset>
           <fieldset role="group">
-            <button onClick={compile} onKeyDown={compile} disabled={useBuiltin}>
+            <button
+              onClick={compile.current}
+              onKeyDown={compile.current}
+              disabled={useBuiltin}
+            >
               <Trans>Eval</Trans>
             </button>
             <button onClick={saveChip} disabled={useBuiltin}>
@@ -177,21 +189,6 @@ export const Chip = () => {
         outs={{ pins: state.sim.outPins }}
         internal={{ pins: state.sim.internalPins }}
       />
-      {/* <Accordian summary={<Trans>Input pins</Trans>} open={true}>
-        <Pinout
-          pins={state.sim.inPins}
-          toggle={(pin, i) => {
-            actions.toggle(pin, i);
-          }}
-          allowIncrement={(pin) => pin.width > 1}
-        />
-      </Accordian>
-      <Accordian summary={<Trans>Output pins</Trans>} open={true}>
-        <Pinout pins={state.sim.outPins} />
-      </Accordian>
-      <Accordian summary={<Trans>Internal pins</Trans>}>
-        <Pinout pins={state.sim.internalPins} />
-      </Accordian> */}
       <Accordian summary={<Trans>Visualizations</Trans>}>
         <main>
           <Visualizations parts={state.sim.parts} />
@@ -208,7 +205,7 @@ export const Chip = () => {
             <Trans>Test</Trans>
           </div>
           <div className="flex-2">
-            <Runbar runner={runner} />
+            {runner.current && <Runbar runner={runner.current} />}
           </div>
         </>
       }

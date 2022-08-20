@@ -82,7 +82,22 @@ const Monaco = ({
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
 
-  // SET HIGHLIGHT
+  // Set options when mounting
+  const onMount: OnMount = useCallback((ed) => {
+    editor.current = ed;
+    editor.current?.updateOptions({
+      fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
+      Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
+      "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji"`,
+      fontSize: 16,
+      minimap: {
+        enabled: false,
+      },
+    });
+  }, []);
+
+  // Mark and center highlighted spans
   useEffect(() => {
     if (!editor.current) return;
     const model = editor.current.getModel();
@@ -105,20 +120,7 @@ const Monaco = ({
     );
   }, [editor, highlight, monaco]);
 
-  const onMount: OnMount = useCallback((ed) => {
-    editor.current = ed;
-    editor.current?.updateOptions({
-      fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
-      Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
-      "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
-      "Segoe UI Symbol", "Noto Color Emoji"`,
-      fontSize: 16,
-      minimap: {
-        enabled: false,
-      },
-    });
-  }, []);
-
+  // Set themes
   useEffect(() => {
     const isDark =
       theme === "system"
@@ -129,11 +131,13 @@ const Monaco = ({
     });
   }, [editor, theme]);
 
+  // Prevent editing disabled editors
   useEffect(() => {
     if (editor.current === undefined) return;
     editor.current.updateOptions({ readOnly: disabled });
   }, [editor, disabled]);
 
+  // Add error markers on parse failure
   useEffect(() => {
     if (editor.current === undefined) return;
     if (monaco === null) return;

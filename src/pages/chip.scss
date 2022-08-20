@@ -7,9 +7,11 @@
     margin: 0 var(--nav-element-spacing-horizontal);
   }
 
-  --screen-size: calc(512px + calc(var(--block-spacing-horizontal) * 2));
+  --screen-size: calc(512px + calc(var(--block-spacing-horizontal) * 5));
 
-  grid-template-rows: min-content auto;
+  height: 100%;
+
+  grid-template-rows: 100%;
   grid-template-columns: 1fr var(--screen-size) 1fr;
   margin: 0px;
   gap: 0;
@@ -23,6 +25,16 @@
 
   ._test_panel {
     grid-area: tst;
+
+    main {
+      > .Editor {
+        max-height: 30%;
+      }
+
+      details[open] {
+        min-height: 30%;
+      }
+    }
   }
 
   ._parts_panel {

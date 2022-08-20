@@ -225,7 +225,7 @@ export const Editor = ({
   );
 
   return (
-    <div className={`Editor flex ${className}`}>
+    <div className={`Editor ${className}`}>
       {monaco.canUse && monaco.wants ? (
         <Monaco
           value={value}

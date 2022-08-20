@@ -37,10 +37,10 @@
   &.align-end {
     align-items: end;
   }
+}
 
-  @for $i from 1 through 4 {
-    & > .flex-#{$i} {
-      flex: $i;
-    }
+@for $i from 1 through 4 {
+  .flex-#{$i} {
+    flex: $i;
   }
 }

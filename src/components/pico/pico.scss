@@ -36,11 +36,11 @@
 
 @layer component {
   .scroll-x {
-    overflow-x: scroll;
+    overflow-x: auto;
   }
 
   .scroll-y {
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 
   code,
@@ -77,6 +77,9 @@
     margin: 0;
     border-radius: 0;
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
 
     > header {
       padding: 0;
@@ -87,6 +90,10 @@
 
     > header > *:first-child {
       padding: 0 var(--block-spacing-vertical);
+    }
+
+    main {
+      flex: 1;
     }
   }
 
@@ -109,29 +116,29 @@
     }
   }
 
-  #root > main {
-    margin-bottom: calc(var(--line-height) * 1rem + 6 * var(--spacing));
-  }
+  #root {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
 
-  #root > footer {
-    border-top: 1px solid var(--card-border-color);
-    background-color: var(--card-background-color);
-    padding-top: calc(var(--block-spacing-vertical) / 2);
-    padding-left: var(--block-spacing-horizontal);
-    align-items: baseline;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    > main {
+      overflow: hidden;
+      //   margin-bottom: calc(var(--line-height) * 1rem + 6 * var(--spacing));
+    }
+
+    > footer {
+      border-top: 1px solid var(--card-border-color);
+      background-color: var(--card-background-color);
+      padding-top: calc(var(--block-spacing-vertical) / 2);
+      padding-left: var(--block-spacing-horizontal);
+      align-items: baseline;
+    }
   }
 
   nav ol,
   nav ul {
     margin-right: 0;
-  }
-
-  #root > main {
-    padding: 0;
   }
 
   nav li {

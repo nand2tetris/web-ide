@@ -1,7 +1,11 @@
 .Editor {
-  display: flex;
-  position: relative;
-  height: calc(var(--line-height) * 10rem);
+  height: 100%;
+  width: 100%;
+
+  .monaco-editor {
+    // Magic
+    position: absolute;
+  }
 
   .highlight {
     background-color: var(--mark-background-color);

@@ -214,7 +214,6 @@ export const Chip = () => {
       }
     >
       <Editor
-        className="flex-2"
         value={tst}
         onChange={setTst}
         grammar={TST.parser}
@@ -223,7 +222,6 @@ export const Chip = () => {
       />
       <Accordian summary={<Trans>Comparison</Trans>}>
         <Editor
-          className="flex-1"
           value={cmp}
           onChange={setCmp}
           grammar={CMP.parser}
@@ -232,14 +230,14 @@ export const Chip = () => {
       </Accordian>
       <Accordian summary={<Trans>Diff</Trans>} open={true}>
         <div style={{ paddingLeft: "var(--block-spacing-horizontal)" }}>
-          <DiffTable className="flex-1" cmp={cmp} out={out} />
+          <DiffTable cmp={cmp} out={out} />
         </div>
       </Accordian>
     </Panel>
   );
 
   return (
-    <div className="ChipPage flex-1 grid">
+    <div className="ChipPage grid">
       {hdlPanel}
       {pinsPanel}
       {testPanel}

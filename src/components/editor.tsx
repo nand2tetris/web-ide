@@ -5,6 +5,7 @@ import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import { OnMount } from "@monaco-editor/react";
 import ohm from "ohm-js";
 import {
+  CSSProperties,
   useCallback,
   useContext,
   useEffect,
@@ -191,6 +192,7 @@ const Monaco = ({
 
 export const Editor = ({
   className = "",
+  style = {},
   disabled = false,
   value,
   onChange,
@@ -199,6 +201,7 @@ export const Editor = ({
   highlight,
 }: {
   className?: string;
+  style?: CSSProperties;
   disabled?: boolean;
   value: string;
   onChange: (source: string) => void;
@@ -229,7 +232,7 @@ export const Editor = ({
   );
 
   return (
-    <div className={`Editor ${className}`}>
+    <div className={`Editor ${className}`} style={style}>
       {monaco.canUse && monaco.wants ? (
         <Monaco
           value={value}

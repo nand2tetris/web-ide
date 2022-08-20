@@ -197,28 +197,41 @@ export const Chip = () => {
     </Panel>
   );
   const testPanel = (
-    <Panel
-      className="_test_panel"
-      header={
-        <>
-          <div className="flex-1">
-            <Trans>Test</Trans>
-          </div>
-          <div className="flex-2">
-            {runner.current && <Runbar runner={runner.current} />}
-          </div>
-        </>
-      }
-    >
-      <Editor
-        value={tst}
-        onChange={setTst}
-        grammar={TST.parser}
-        language={"tst"}
-        highlight={state.controls.span}
-      />
-      <Accordian summary={<Trans>Comparison</Trans>} open={true}>
+    <Panel className="_test_panel">
+      <Accordian
+        summary={
+          <>
+            <div className="flex-1">
+              <Trans>Test</Trans>
+            </div>
+            <div className="flex-2">
+              {runner.current && <Runbar runner={runner.current} />}
+            </div>
+          </>
+        }
+        style={{ position: "relative" }}
+      >
         <Editor
+          style={{
+            position: "absolute",
+            height: "calc(100% - var(--line-height) * var(--font-size) * 2)",
+          }}
+          value={tst}
+          onChange={setTst}
+          grammar={TST.parser}
+          language={"tst"}
+          highlight={state.controls.span}
+        />
+      </Accordian>
+      <Accordian
+        summary={<Trans>Comparison</Trans>}
+        style={{ position: "relative" }}
+      >
+        <Editor
+          style={{
+            position: "absolute",
+            height: "calc(100% - var(--line-height) * var(--font-size) * 2)",
+          }}
           value={cmp}
           onChange={setCmp}
           grammar={CMP.parser}

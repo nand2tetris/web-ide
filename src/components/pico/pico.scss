@@ -104,6 +104,8 @@
 
     > summary {
       display: flex;
+      flex-direction: row;
+      align-items: baseline;
       background-color: var(--card-sectionning-background-color);
       padding: calc(var(--block-spacing-vertical) * 0.66)
         var(--block-spacing-horizontal);
@@ -131,7 +133,6 @@
 
     > main {
       overflow: hidden;
-      //   margin-bottom: calc(var(--line-height) * 1rem + 6 * var(--spacing));
     }
 
     > footer {

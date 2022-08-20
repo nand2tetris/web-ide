@@ -20,12 +20,17 @@ export const Accordian = (props: {
   children: ReactNode;
   summary: ReactNode;
   className?: string;
+  style?: CSSProperties;
   open?: boolean;
 }) => {
   return (
-    <details className={props.className ?? ""} open={props.open}>
+    <details
+      className={props.className ?? ""}
+      open={props.open}
+      style={props.style}
+    >
       <summary>
-        <div>{props.summary}</div>
+        <div className="flex row align-baseline">{props.summary}</div>
       </summary>
       {props.children}
     </details>

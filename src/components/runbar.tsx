@@ -11,19 +11,29 @@ export const Runbar = ({
   children?: ReactNode;
 }) => (
   <fieldset role="group">
-    <button onClick={() => runner.frame()} data-tooltip={t`Next`}>
+    <button
+      className="flex-0"
+      onClick={() => runner.frame()}
+      data-tooltip={t`Next`}
+    >
       <Icon name="skip_next"></Icon>
     </button>
-    <button onClick={() => runner.reset()} data-tooltip={t`Reset`}>
+    <button
+      className="flex-0"
+      onClick={() => runner.reset()}
+      data-tooltip={t`Reset`}
+    >
       <Icon name="first_page"></Icon>
     </button>
     <button
+      className="flex-0"
       onClick={() => (runner.running ? runner.stop() : runner.start())}
       data-tooltip={runner.running ? t`Stop` : t`Run`}
     >
       <Icon name={runner.running ? "pause" : "play_arrow"}></Icon>
     </button>
     <select
+      className="flex-1"
       name="speed"
       value={runner.speed}
       onChange={(e) => {
@@ -43,6 +53,7 @@ export const Runbar = ({
       ))}
     </select>
     <select
+      className="flex-1"
       name="steps"
       value={runner.steps}
       onChange={(e) => {

@@ -73,7 +73,7 @@ export const Chip = () => {
   const selectors = (
     <>
       <div>
-        <Trans>Chips:</Trans>
+        <Trans>Chip</Trans>
       </div>
       <fieldset role="group">
         <select
@@ -194,10 +194,10 @@ export const Chip = () => {
       className="_test_panel"
       header={
         <>
-          <div>
+          <div className="flex-1">
             <Trans>Test</Trans>
           </div>
-          <div className="flex-1">
+          <div className="flex-2">
             <Runbar runner={runner} />
           </div>
         </>
@@ -210,7 +210,7 @@ export const Chip = () => {
         language={"tst"}
         highlight={state.controls.span}
       />
-      <Accordian summary={<Trans>Comparison</Trans>}>
+      <Accordian summary={<Trans>Comparison</Trans>} open={true}>
         <Editor
           value={cmp}
           onChange={setCmp}

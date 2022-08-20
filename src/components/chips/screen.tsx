@@ -51,6 +51,7 @@ export const Screen = ({ memory }: { memory: Memory }) => {
           maxWidth: "512px",
           boxSizing: "content-box",
           marginInline: "auto",
+          margin: "0",
           borderTop: "2px solid gray",
           borderLeft: "2px solid gray",
           borderBottom: "2px solid lightgray",

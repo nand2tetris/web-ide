@@ -122,6 +122,13 @@
     display: flex;
     flex-direction: column;
 
+    header {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
     > main {
       overflow: hidden;
       //   margin-bottom: calc(var(--line-height) * 1rem + 6 * var(--spacing));

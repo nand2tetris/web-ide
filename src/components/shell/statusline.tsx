@@ -3,7 +3,7 @@ import { AppContext } from "../../App.context";
 
 function StatusLine() {
   const { status } = useContext(AppContext);
-  return <div>{status || "&nbsp;"}</div>;
+  return <div>{status}</div>;
 }
 
 export default StatusLine;

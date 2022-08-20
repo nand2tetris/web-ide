@@ -22,6 +22,7 @@ import { Settings } from "./components/shell/settings";
 import { messages } from "./locales/en/messages";
 import { messages as plMessages } from "./locales/en-PL/messages";
 import { registerLanguages } from "./languages/loader";
+import { FilePicker } from "./components/shell/file_select";
 
 i18n.load("en", messages);
 i18n.load("en-PL", plMessages);
@@ -55,6 +56,7 @@ function App() {
     <I18nProvider i18n={i18n}>
       <AppContext.Provider value={appContext}>
         <Settings />
+        <FilePicker />
         <Router basename={process.env.PUBLIC_URL}>
           <Header urls={urls} />
           <main className="flex flex-1">

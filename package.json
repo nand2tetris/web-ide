@@ -7,7 +7,7 @@
   "license": "ISC",
   "homepage": "https://davidsouther.github.io/computron5k",
   "dependencies": {
-    "@davidsouther/jiffies": "^2.0.2",
+    "@davidsouther/jiffies": "^2.0.3",
     "@lingui/react": "^3.14.0",
     "@monaco-editor/react": "^4.4.5",
     "@types/error-cause": "^1.0.1",

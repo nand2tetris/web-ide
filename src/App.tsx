@@ -5,6 +5,9 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { en } from "make-plural/plurals";
 
+import "./components/pico/pico.scss";
+import "./components/pico/flex.scss";
+
 import {
   FileSystem,
   LocalStorageFileSystemAdapter,

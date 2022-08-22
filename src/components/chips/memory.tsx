@@ -33,7 +33,9 @@ export const MemoryBlock = ({
   <VirtualScroll<[number, number], ReactNode>
     className="panel-fill"
     settings={{ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }}
-    get={(o, l) => memory.map<[number, number]>((i, v) => [i, v], o, o + l)}
+    get={(offset, count) =>
+      memory.range(offset, offset + count).map((v, i) => [i, v])
+    }
     row={([i, v]) => (
       <MemoryCell
         index={i}
@@ -107,23 +109,13 @@ export const Memory = ({
   memory: MemoryChip;
   format: Format;
 }) => {
-  // const { setStatus } = useContext(AppContext);
   const [fmt, setFormat] = useState(format);
 
-  const { filePicker } = useContext(AppContext);
-  const doLoad = useCallback(() => {
-    filePicker.open();
-  }, [filePicker]);
-
-  // const { fs } = useContext(AppContext);
-  // const doLoad = useCallback(async () => {
-  //   // Show dialog
-  //   try {
-  //     await memory.load(fs, "/samples/Add.hack");
-  //   } catch (e) {
-  //     setStatus(display((e as Error).message));
-  //   }
-  // }, [fs, memory, setStatus]);
+  const { filePicker, fs } = useContext(AppContext);
+  const doLoad = useCallback(async () => {
+    const file = await filePicker.select();
+    memory.load(fs, file);
+  }, [fs, filePicker, memory]);
 
   return (
     <article className="panel">

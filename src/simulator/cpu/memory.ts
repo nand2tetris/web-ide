@@ -72,6 +72,10 @@ export class Memory {
     }
   }
 
+  range(start = 0, end = this.size): number[] {
+    return [...this.#memory.slice(start, end)];
+  }
+
   *map<T>(
     fn: (index: number, value: number) => T,
     start = 0,

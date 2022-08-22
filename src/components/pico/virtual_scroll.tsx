@@ -163,7 +163,11 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
   return (
     <div
       ref={(ref) => (viewportRef.current = ref ?? undefined)}
-      style={{ height: `${state.viewportHeight}px`, overflowY: "scroll" }}
+      style={{
+        height: `${state.viewportHeight}px`,
+        overflowY: "scroll",
+        overflowAnchor: "none",
+      }}
       className={props.className ?? ""}
       // @ts-ignore
       onScroll={doOnScroll}

@@ -30,9 +30,9 @@ export const sol = `CHIP Memory {
     PARTS:
     DMux(in=load, sel=address[14], a=writeram, b=writeio);
 
-    RAM16K(in=in, load=writeram, address=address[0..13], out=ram);
-    Screen(in=in, load=writeio, address=address[0..12], out=screen);
     Keyboard(out=kbd);
+    Screen(in=in, load=writeio, address=address[0..12], out=screen);
+    RAM16K(in=in, load=writeram, address=address[0..13], out=ram);
 
     Mux4Way16(a=ram, b=ram, c=screen, d=kbd, sel=address[13..14], out=out);
 }`;

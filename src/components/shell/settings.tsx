@@ -49,6 +49,29 @@ export const Settings = () => {
               <Trans>Project</Trans>
             </header>
             <dt>
+              <Trans>References</Trans>
+            </dt>
+            <dd>
+              <div>
+                <a
+                  href="https://nand2tetris.org"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  nand2tetris.org
+                </a>
+              </div>
+              <div>
+                <a
+                  href="https://github.com/davidsouther/computron5k"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  GitHub
+                </a>
+              </div>
+            </dd>
+            <dt>
               <Trans>Files</Trans>
             </dt>
             <dd>
@@ -71,18 +94,14 @@ export const Settings = () => {
               >
                 <Trans>Solutions</Trans>
               </button>
-            </dd>
-            <dt>
-              <Trans>References</Trans>
-            </dt>
-            <dd>
-              <a
-                href="https://github.com/davidsouther/computron5k"
-                target="_blank"
-                rel="noreferrer"
+              <button
+                onClick={async () => {
+                  await (await import("../../projects")).loadSamples(fs);
+                  setStatus("Loaded sample files...");
+                }}
               >
-                <Trans>Github</Trans>
-              </a>
+                <Trans>Samples</Trans>
+              </button>
             </dd>
             <dt>
               <Trans>Language</Trans>

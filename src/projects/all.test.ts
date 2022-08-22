@@ -12,7 +12,7 @@ import { build } from "../simulator/chip/builder";
 import { Chip } from "../simulator/chip/chip";
 import { compare } from "../simulator/compare";
 import { ChipTest } from "../simulator/tst";
-import { Max } from "./project_05/hack";
+import { Max } from "./samples/hack";
 
 const SKIP = new Set<string>([]);
 

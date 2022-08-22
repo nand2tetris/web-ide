@@ -1,8 +1,6 @@
 import { ReactNode, useCallback, useContext, useState } from "react";
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border";
 
-import "../pico/button-group.scss";
-
 import {
   Format,
   FORMATS,
@@ -31,21 +29,22 @@ export const MemoryBlock = ({
   onChange?: (i: number, value: string, previous: number) => void;
 }) => (
   <VirtualScroll<[number, number], ReactNode>
-    className="panel-fill"
     settings={{ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }}
-    get={(offset, count) =>
-      memory.range(offset, offset + count).map((v, i) => [i, v])
+    get={(offset: number, count: number) =>
+      memory
+        .range(offset, offset + count)
+        .map((v, i) => [i, v] as [number, number])
     }
-    row={([i, v]) => (
+    row={([i, v]: [number, number]) => (
       <MemoryCell
         index={i}
         value={format(v)}
         editable={editable}
         highlight={i === highlight}
         onChange={onChange}
-      ></MemoryCell>
+      />
     )}
-  ></VirtualScroll>
+  />
 );
 
 export const MemoryCell = ({
@@ -114,7 +113,7 @@ export const Memory = ({
   const { filePicker, fs } = useContext(AppContext);
   const doLoad = useCallback(async () => {
     const file = await filePicker.select();
-    memory.load(fs, file);
+    await memory.load(fs, file);
   }, [fs, filePicker, memory]);
 
   return (
@@ -153,10 +152,8 @@ export const Memory = ({
         memory={memory}
         highlight={highlight}
         editable={editable}
-        format={(v) => doFormat(fmt ?? "dec", v)}
-        onChange={(i, v) => {
-          memory.update(i, v, fmt ?? "dec");
-        }}
+        format={(v: number) => doFormat(fmt, v)}
+        onChange={(i: number, v: string) => memory.update(i, v, fmt ?? "dec")}
       />
     </article>
   );

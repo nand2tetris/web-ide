@@ -123,6 +123,11 @@ export const Memory = ({
   format: Format;
 }) => {
   const [fmt, setFormat] = useState(format);
+  const [jmp, setJmp] = useState("0");
+
+  const jumpTo = () => {
+    console.log(`Jumping to ${jmp}`);
+  };
 
   const { filePicker, fs, setStatus } = useContext(AppContext);
   const doLoad = useCallback(async () => {
@@ -140,13 +145,15 @@ export const Memory = ({
       <header>
         <div>{name}</div>
         <fieldset role="group">
-          <button onClick={doLoad}>
+          <button onClick={doLoad} className="flex-0">
             <Icon name="upload_file" />
           </button>
-          <button>
-            <Icon name="search" />
-          </button>
-          <button>
+          <input
+            className="flex-1"
+            placeholder="Jump..."
+            onChange={(e) => setJmp(e.target.value ?? "0")}
+          />
+          <button onClick={jumpTo} className="flex-0">
             <Icon name="move_down" />
           </button>
         </fieldset>

@@ -39,7 +39,11 @@
   }
 }
 
-@for $i from 0 through 4 {
+.flex-0 {
+  flex-basis: 0;
+}
+
+@for $i from 1 through 4 {
   .flex-#{$i} {
     flex: $i;
   }

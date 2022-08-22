@@ -89,7 +89,7 @@ export const FilePicker = () => {
 
   return (
     <dialog open={filePicker.isOpen}>
-      <article>
+      <article style={{ width: "350px" }}>
         <header>
           <p>
             <Trans>Choose file</Trans>
@@ -135,11 +135,11 @@ export const FilePicker = () => {
             />
           ))}
         </main>
-        {chosen && (
-          <footer>
-            <button onClick={confirm}>Select</button>
-          </footer>
-        )}
+        <footer>
+          <button disabled={!chosen} onClick={confirm}>
+            Select
+          </button>
+        </footer>
       </article>
     </dialog>
   );

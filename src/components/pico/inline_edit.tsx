@@ -9,6 +9,7 @@ export const InlineEdit = (props: {
   onChange: (value: string) => void;
 }) => {
   const [mode, setMode] = useState(props.mode ?? Mode.VIEW);
+  const [value, setValue] = useState(props.value);
 
   const render = () => {
     switch (mode) {
@@ -28,7 +29,7 @@ export const InlineEdit = (props: {
         setMode(Mode.EDIT);
       }}
     >
-      {props.value}
+      {value}
     </span>
   );
 
@@ -39,6 +40,7 @@ export const InlineEdit = (props: {
   const doChange = useCallback(
     (target: EventTarget & HTMLInputElement) => {
       setMode(Mode.VIEW);
+      setValue(target.value ?? "");
       props.onChange(target.value ?? "");
     },
     [props]
@@ -61,7 +63,7 @@ export const InlineEdit = (props: {
             }
           }}
           type="text"
-          defaultValue={props.value}
+          defaultValue={value}
         />
       </span>
     );

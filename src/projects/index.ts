@@ -4,6 +4,7 @@ import * as project_01 from "./project_01/index";
 import * as project_02 from "./project_02/index";
 import * as project_03 from "./project_03/index";
 import * as project_05 from "./project_05/index";
+import * as samples from "./samples/index";
 
 export const Projects = {
   "01": project_01,
@@ -26,7 +27,14 @@ export const loadSolutions = async (fs: FileSystem) => {
   await project_05.loadSolutions(fs);
 };
 
-export default {
+export const loadSamples = async (fs: FileSystem) => {
+  await samples.loadSamples(fs);
+};
+
+export const loaders = {
   resetFiles,
   loadSolutions,
+  loadSamples,
 };
+
+export default loaders;

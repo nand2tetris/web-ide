@@ -8,7 +8,7 @@ import { HDL, HdlParse } from "../../../languages/hdl";
 import { Tst, TST } from "../../../languages/tst";
 import { PROJECTS } from "../../../pages/chip.store";
 import { Projects } from "../../../projects";
-import { Max } from "../../../projects/project_05/hack";
+import { Max } from "../../../projects/samples/hack";
 import { compare } from "../../compare";
 import { ChipTest } from "../../tst";
 import { build } from "../builder";

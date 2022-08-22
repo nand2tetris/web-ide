@@ -2,7 +2,7 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
-import { Max } from "../../../../projects/project_05/hack";
+import { Max } from "../../../../projects/samples/hack";
 import { HIGH } from "../../chip";
 import { CPU, ROM32K } from "./computer";
 

@@ -73,9 +73,9 @@ export class Memory extends ClockedChip {
 
   constructor() {
     super(["in[16]", "load", "address[15])"], ["out[16]"], "Memory");
-    this.parts.add(this.ram);
-    this.parts.add(this.screen);
     this.parts.add(this.keyboard);
+    this.parts.add(this.screen);
+    this.parts.add(this.ram);
   }
 
   override tick() {

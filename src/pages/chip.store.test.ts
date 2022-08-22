@@ -60,6 +60,7 @@ describe("ChipStore", () => {
     it("increments registers", () => {});
     it("saves chips", () => {});
     it("loads projects and chips", () => {});
+    it("adds custom chips to the current project dropdown", () => {});
   });
 
   describe.skip("execution", () => {

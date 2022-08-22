@@ -191,7 +191,10 @@ export function makeChipStore(
       state.controls.chips = PROJECTS[state.controls.project];
       state.controls.chipName = chip.name ?? chipName;
       if (!state.controls.chips.includes(state.controls.chipName)) {
-        state.controls.chips.push(state.controls.chipName);
+        state.controls.chips = [
+          ...state.controls.chips,
+          state.controls.chipName,
+        ];
       }
     },
 

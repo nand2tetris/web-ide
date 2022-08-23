@@ -1,19 +1,31 @@
 import {
   MutableRefObject,
   ReactNode,
-  useCallback,
+  useEffect,
   useMemo,
   useReducer,
   useRef,
 } from "react";
 
 export interface VirtualScrollSettings {
+  /**Minimum offset into the adapter. Default is 0.  */
   minIndex: number;
+  /** Maximum offset into the adapter. Default is Number.MAX_SAFE_INTEGER.  */
   maxIndex: number;
+  /** Initial index to start rendering from. Default is minIndex.  */
   startIndex: number;
-  itemHeight: number; // In pixels
+  /**
+   * Number of items to render in visible area. Default is entire range from
+   * minIndex to maxIndex.
+   */
   count: number;
+  /**
+   * Maximum number of items to render on either side of the visible area.
+   * Default is `count`.
+   */
   tolerance: number;
+  /** Height of each item, in pixels. Default is 20px. */
+  itemHeight: number;
 }
 
 export interface VirtualScrollDataAdapter<T> {
@@ -133,10 +145,9 @@ interface VirtualScrollState<T> {
   data: T[];
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const scrollReducer =
   <T extends {}>(get: VirtualScrollDataAdapter<T>) =>
-  (state: VirtualScrollState<T>, { scrollTop }: { scrollTop: number }) => ({
+  (state: VirtualScrollState<T>, scrollTop: number) => ({
     ...state,
     ...doScroll(scrollTop, state, get),
   });
@@ -146,24 +157,20 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
 ) => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
-  const settings = useMemo(() => {
-    return fillVirtualScrollSettings(props.settings ?? {});
-  }, [props.settings]);
-
-  const reducer = useMemo(() => scrollReducer(props.get), [props.get]);
-
-  const startState = useMemo(() => {
-    return initialState<T>(settings, props.get, viewportRef);
-  }, [settings, props.get, viewportRef]);
+  const { settings, startState, reducer } = useMemo(() => {
+    const settings = fillVirtualScrollSettings(props.settings ?? {});
+    const startState = initialState<T>(settings, props.get, viewportRef);
+    const reducer = scrollReducer(props.get);
+    return { settings, reducer, startState };
+  }, [props.settings, props.get]);
 
   const [state, dispatchScroll] = useReducer(reducer, startState);
 
-  const doOnScroll = useCallback(
-    ({ target }: { target: { scrollTop: number } }) => {
-      dispatchScroll({ scrollTop: target?.scrollTop ?? 0 });
-    },
-    [dispatchScroll]
-  );
+  useEffect(() => {
+    if (viewportRef.current !== null) {
+      dispatchScroll(viewportRef.current.scrollTop);
+    }
+  }, [settings, props.row]);
 
   return (
     <div
@@ -174,8 +181,7 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
         overflowAnchor: "none",
       }}
       className={props.className ?? ""}
-      // @ts-ignore
-      onScroll={doOnScroll}
+      onScroll={(e) => dispatchScroll((e.target as HTMLDivElement).scrollTop)}
     >
       <div style={{ height: `${state.topPaddingHeight}px` }} />
       {state.data.map((d, i) => (

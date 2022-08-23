@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useContext, useState } from "react";
+import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border";
 
 import {
@@ -27,15 +27,20 @@ export const MemoryBlock = ({
   editable?: boolean;
   format?: (v: number) => string;
   onChange?: (i: number, value: string, previous: number) => void;
-}) => (
-  <VirtualScroll<[number, number], ReactNode>
-    settings={{ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }}
-    get={(offset: number, count: number) =>
+}) => {
+  const settings = useMemo(
+    () => ({ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }),
+    [memory.size]
+  );
+  const get = useCallback(
+    (offset: number, count: number) =>
       memory
         .range(offset, offset + count)
-        .map((v, i) => [i, v] as [number, number])
-    }
-    row={([i, v]: [number, number]) => (
+        .map((v, i) => [i, v] as [number, number]),
+    [memory]
+  );
+  const row = useCallback(
+    ([i, v]: [number, number]) => (
       <MemoryCell
         index={i}
         value={format(v)}
@@ -43,9 +48,18 @@ export const MemoryBlock = ({
         highlight={i === highlight}
         onChange={onChange}
       />
-    )}
-  />
-);
+    ),
+    [format, editable, highlight, onChange]
+  );
+
+  return (
+    <VirtualScroll<[number, number], ReactNode>
+      settings={settings}
+      get={get}
+      row={row}
+    />
+  );
+};
 
 export const MemoryCell = ({
   index,
@@ -110,11 +124,16 @@ export const Memory = ({
 }) => {
   const [fmt, setFormat] = useState(format);
 
-  const { filePicker, fs } = useContext(AppContext);
+  const { filePicker, fs, setStatus } = useContext(AppContext);
   const doLoad = useCallback(async () => {
-    const file = await filePicker.select();
-    await memory.load(fs, file);
-  }, [fs, filePicker, memory]);
+    try {
+      const file = await filePicker.select();
+      await memory.load(fs, file);
+    } catch (e) {
+      console.error(e);
+      setStatus(`Failed to load into memory`);
+    }
+  }, [fs, filePicker, memory, setStatus]);
 
   return (
     <article className="panel">

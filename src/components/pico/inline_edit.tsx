@@ -1,5 +1,6 @@
 import { width } from "@davidsouther/jiffies/lib/esm/dom/css/sizing";
 import { useCallback, useState } from "react";
+import { useStateInitializer } from "../../util/react";
 
 const Mode = { VIEW: 0, EDIT: 1 };
 
@@ -9,7 +10,7 @@ export const InlineEdit = (props: {
   onChange: (value: string) => void;
 }) => {
   const [mode, setMode] = useState(props.mode ?? Mode.VIEW);
-  const [value, setValue] = useState(props.value);
+  const [value, setValue] = useStateInitializer(props.value);
 
   const render = () => {
     switch (mode) {

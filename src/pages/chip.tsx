@@ -1,4 +1,4 @@
-import { Dispatch, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -15,22 +15,15 @@ import { Visualizations } from "../components/chips/visualizations";
 import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
 import { Timer } from "../simulator/timer";
-
-function useReducerState<T>(init: T): [T, Dispatch<T>] {
-  const [state, setState] = useState<T>(init);
-  useEffect(() => {
-    setState(init);
-  }, [init]);
-  return [state, setState];
-}
+import { useStateInitializer } from "../util/react";
 
 export const Chip = () => {
   const { state, actions, dispatch } = useChipPageStore();
 
-  const [hdl, setHdl] = useReducerState(state.files.hdl);
-  const [tst, setTst] = useReducerState(state.files.tst);
-  const [cmp, setCmp] = useReducerState(state.files.cmp);
-  const [out] = useReducerState(state.files.out);
+  const [hdl, setHdl] = useStateInitializer(state.files.hdl);
+  const [tst, setTst] = useStateInitializer(state.files.tst);
+  const [cmp, setCmp] = useStateInitializer(state.files.cmp);
+  const [out] = useStateInitializer(state.files.out);
 
   const saveChip = () => {
     actions.saveChip(hdl);

@@ -1,6 +1,7 @@
 import {
   MutableRefObject,
   ReactNode,
+  useCallback,
   useEffect,
   useMemo,
   useReducer,
@@ -76,7 +77,7 @@ export function initialState<T>(
   const bottomPaddingHeight = totalHeight - (topPaddingHeight + bufferHeight);
 
   const state: VirtualScrollState<T> = {
-    scrollTop: ref.current?.scrollTop ?? 0,
+    scrollTop: 0,
     settings,
     viewportHeight,
     totalHeight,
@@ -87,7 +88,10 @@ export function initialState<T>(
     data: [],
   };
 
-  return { ...state, ...doScroll(0, state, adapter) };
+  return {
+    ...state,
+    ...doScroll(topPaddingHeight + toleranceHeight, state, adapter),
+  };
 }
 
 export function getData<T>(
@@ -172,9 +176,21 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
     }
   }, [settings, props.row]);
 
+  const initialScroll = useCallback(
+    (div: HTMLDivElement | null) => {
+      if (div) {
+        div.scrollTop = viewportRef.current
+          ? viewportRef.current.scrollTop
+          : settings.startIndex * settings.itemHeight;
+      }
+      viewportRef.current = div;
+    },
+    [viewportRef, settings.startIndex, settings.itemHeight]
+  );
+
   return (
     <div
-      ref={viewportRef}
+      ref={initialScroll}
       style={{
         height: `${state.viewportHeight}px`,
         overflowY: "scroll",

@@ -9,34 +9,42 @@ import {
 import { asm } from "../../util/asm";
 import { bin, dec, hex } from "../../util/twos";
 import InlineEdit from "../pico/inline_edit";
-import VirtualScroll from "../pico/virtual_scroll";
+import VirtualScroll, { VirtualScrollSettings } from "../pico/virtual_scroll";
 import { Icon } from "../pico/icon";
 import { AppContext } from "../../App.context";
+import { t } from "@lingui/macro";
 
 const ITEM_HEIGHT = 34;
 
 export const MemoryBlock = ({
   memory,
+  jmp = { value: 0 },
   highlight = -1,
   editable = false,
   format = dec,
   onChange = () => {},
 }: {
+  jmp?: { value: number };
   memory: MemoryChip;
   highlight?: number;
   editable?: boolean;
   format?: (v: number) => string;
   onChange?: (i: number, value: string, previous: number) => void;
 }) => {
-  const settings = useMemo(
-    () => ({ count: 20, maxIndex: memory.size, itemHeight: ITEM_HEIGHT }),
-    [memory.size]
+  const settings = useMemo<Partial<VirtualScrollSettings>>(
+    () => ({
+      count: 20,
+      maxIndex: memory.size,
+      itemHeight: ITEM_HEIGHT,
+      startIndex: jmp.value,
+    }),
+    [memory.size, jmp]
   );
   const get = useCallback(
     (offset: number, count: number) =>
       memory
         .range(offset, offset + count)
-        .map((v, i) => [i, v] as [number, number]),
+        .map((v, i) => [i + offset, v] as [number, number]),
     [memory]
   );
   const row = useCallback(
@@ -124,9 +132,10 @@ export const Memory = ({
 }) => {
   const [fmt, setFormat] = useState(format);
   const [jmp, setJmp] = useState("0");
+  const [goto, setGoto] = useState({ value: 0 });
 
   const jumpTo = () => {
-    console.log(`Jumping to ${jmp}`);
+    setGoto({ value: Number(jmp) });
   };
 
   const { filePicker, fs, setStatus } = useContext(AppContext);
@@ -149,32 +158,35 @@ export const Memory = ({
             <Icon name="upload_file" />
           </button>
           <input
-            className="flex-1"
-            placeholder="Jump..."
-            onChange={(e) => setJmp(e.target.value ?? "0")}
+            style={{ width: "4em", height: "100%" }}
+            placeholder={t`Goto`}
+            onKeyDown={({ key }) => key === "Enter" && jumpTo()}
+            onChange={({ target: { value } }) => setJmp(value ?? "0")}
           />
           <button onClick={jumpTo} className="flex-0">
             <Icon name="move_down" />
           </button>
-        </fieldset>
-        <fieldset role="group">
-          {FORMATS.map((option) => {
-            return (
-              <label key={option} role="button" aria-current={option === fmt}>
-                <input
-                  type="radio"
-                  name={name}
-                  value={option}
-                  checked={option === fmt}
-                  onChange={() => setFormat(option)}
-                />
-                {option}
-              </label>
-            );
-          })}
+          {FORMATS.map((option) => (
+            <label
+              className="flex-0"
+              key={option}
+              role="button"
+              aria-current={option === fmt}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option}
+                checked={option === fmt}
+                onChange={() => setFormat(option)}
+              />
+              {option}
+            </label>
+          ))}
         </fieldset>
       </header>
       <MemoryBlock
+        jmp={goto}
         memory={memory}
         highlight={highlight}
         editable={editable}

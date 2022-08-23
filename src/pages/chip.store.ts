@@ -16,7 +16,7 @@ import { ImmPin, reducePins } from "../components/pinout";
 import { REGISTRY } from "../simulator/chip/builtins";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { Span } from "../languages/base";
-import { useImmerReducer } from "../util/immer";
+import { useImmerReducer } from "../util/react";
 
 export const PROJECT_NAMES = [
   ["01", t`Project 1`],

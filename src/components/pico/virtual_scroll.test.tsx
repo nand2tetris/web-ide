@@ -8,6 +8,7 @@ describe("<VirtualScroll />", () => {
         settings={{ maxIndex: 3 }}
         get={arrayAdapter([1, 2, 3])}
         row={(i) => <div>{i}</div>}
+        rowKey={(i) => i}
       />
     );
 

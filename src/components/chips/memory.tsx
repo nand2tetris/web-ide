@@ -65,6 +65,7 @@ export const MemoryBlock = ({
       settings={settings}
       get={get}
       row={row}
+      rowKey={([i]) => i}
     />
   );
 };

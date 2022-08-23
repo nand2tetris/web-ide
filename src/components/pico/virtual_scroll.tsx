@@ -1,4 +1,5 @@
 import {
+  Key,
   MutableRefObject,
   ReactNode,
   useCallback,
@@ -41,6 +42,7 @@ export interface VirtualScrollProps<T, U extends ReactNode> {
   settings?: Partial<VirtualScrollSettings>;
   get: VirtualScrollDataAdapter<T>;
   row: (t: T) => U;
+  rowKey: (t: T) => Key;
 }
 
 export function fillVirtualScrollSettings(
@@ -188,6 +190,12 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
     [viewportRef, settings.startIndex, settings.itemHeight]
   );
 
+  const rows = state.data.map((d) => (
+    <div key={props.rowKey(d)} style={{ height: `${settings.itemHeight}px` }}>
+      {props.row(d)}
+    </div>
+  ));
+
   return (
     <div
       ref={initialScroll}
@@ -200,11 +208,7 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
       onScroll={(e) => dispatchScroll((e.target as HTMLDivElement).scrollTop)}
     >
       <div style={{ height: `${state.topPaddingHeight}px` }} />
-      {state.data.map((d, i) => (
-        <div key={i} style={{ height: `${settings.itemHeight}px` }}>
-          {props.row(d)}
-        </div>
-      ))}
+      {rows}
       <div style={{ height: `${state.bottomPaddingHeight}px` }} />
     </div>
   );

@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/computron5k/static/css/main.53fddb05.css",
-    "main.js": "/computron5k/static/js/main.22166905.js",
+    "main.css": "/computron5k/static/css/main.9c5266cc.css",
+    "main.js": "/computron5k/static/js/main.c4be5576.js",
     "static/js/332.d8a15fd7.chunk.js": "/computron5k/static/js/332.d8a15fd7.chunk.js",
     "static/css/1.f2778d0f.chunk.css": "/computron5k/static/css/1.f2778d0f.chunk.css",
-    "static/js/1.4da14918.chunk.js": "/computron5k/static/js/1.4da14918.chunk.js",
+    "static/js/1.d38986ea.chunk.js": "/computron5k/static/js/1.d38986ea.chunk.js",
     "static/js/168.05aa13f1.chunk.js": "/computron5k/static/js/168.05aa13f1.chunk.js",
     "static/js/840.37fa0e7a.chunk.js": "/computron5k/static/js/840.37fa0e7a.chunk.js",
     "static/js/787.ef8b0fad.chunk.js": "/computron5k/static/js/787.ef8b0fad.chunk.js",
@@ -13,11 +13,11 @@
     "static/js/941.08eb192d.chunk.js": "/computron5k/static/js/941.08eb192d.chunk.js",
     "static/media/codicon.ttf": "/computron5k/static/media/codicon.ade705761eb7e702770d.ttf",
     "index.html": "/computron5k/index.html",
-    "main.53fddb05.css.map": "/computron5k/static/css/main.53fddb05.css.map",
-    "main.22166905.js.map": "/computron5k/static/js/main.22166905.js.map",
+    "main.9c5266cc.css.map": "/computron5k/static/css/main.9c5266cc.css.map",
+    "main.c4be5576.js.map": "/computron5k/static/js/main.c4be5576.js.map",
     "332.d8a15fd7.chunk.js.map": "/computron5k/static/js/332.d8a15fd7.chunk.js.map",
     "1.f2778d0f.chunk.css.map": "/computron5k/static/css/1.f2778d0f.chunk.css.map",
-    "1.4da14918.chunk.js.map": "/computron5k/static/js/1.4da14918.chunk.js.map",
+    "1.d38986ea.chunk.js.map": "/computron5k/static/js/1.d38986ea.chunk.js.map",
     "168.05aa13f1.chunk.js.map": "/computron5k/static/js/168.05aa13f1.chunk.js.map",
     "840.37fa0e7a.chunk.js.map": "/computron5k/static/js/840.37fa0e7a.chunk.js.map",
     "787.ef8b0fad.chunk.js.map": "/computron5k/static/js/787.ef8b0fad.chunk.js.map",
@@ -26,7 +26,7 @@
     "941.08eb192d.chunk.js.map": "/computron5k/static/js/941.08eb192d.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.53fddb05.css",
-    "static/js/main.22166905.js"
+    "static/css/main.9c5266cc.css",
+    "static/js/main.c4be5576.js"
   ]
 }

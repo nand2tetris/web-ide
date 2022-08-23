@@ -44,7 +44,7 @@ export const InlineEdit = (props: {
       setValue(target.value ?? "");
       props.onChange(target.value ?? "");
     },
-    [props]
+    [props, setMode, setValue]
   );
   const edit = () => {
     const edit = (

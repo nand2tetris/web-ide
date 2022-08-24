@@ -13,32 +13,36 @@ msgstr ""
 "Language-Team: \n"
 "Plural-Forms: \n"
 
-#: src/components/runbar.tsx:65
+#: src/components/runbar.tsx:69
 msgid "1 Step"
 msgstr ""
 
-#: src/components/runbar.tsx:45
+#: src/components/runbar.tsx:46
 msgid "60FPS"
 msgstr ""
 
-#: src/pages/chip.tsx:123
+#: src/pages/chip.tsx:124
 msgid "Builtin"
 msgstr ""
 
-#: src/pages/chip.tsx:76
+#: src/pages/chip.tsx:77
 #: src/urls.tsx:11
 msgid "Chip"
+msgstr ""
+
+#: src/components/shell/file_select.tsx:95
+msgid "Choose file"
 msgstr ""
 
 #: src/components/clockface.tsx:20
 msgid "Clock:"
 msgstr ""
 
-#: src/pages/chip.tsx:223
-msgid "Comparison"
+#: src/pages/chip.tsx:220
+msgid "Compare File"
 msgstr ""
 
-#: src/pages/chip.store.ts:279
+#: src/pages/chip.store.ts:275
 msgid "Compiled {0}"
 msgstr ""
 
@@ -46,23 +50,19 @@ msgstr ""
 msgid "Conv"
 msgstr ""
 
-#: src/components/shell/settings.tsx:137
+#: src/components/shell/settings.tsx:156
 msgid "Dark"
 msgstr ""
 
-#: src/pages/chip.tsx:231
-msgid "Diff"
-msgstr ""
-
-#: src/components/shell/settings.tsx:99
+#: src/components/shell/settings.tsx:118
 msgid "Editor"
 msgstr ""
 
-#: src/components/shell/settings.tsx:92
+#: src/components/shell/settings.tsx:111
 msgid "English"
 msgstr ""
 
-#: src/pages/chip.tsx:129
+#: src/pages/chip.tsx:134
 msgid "Eval"
 msgstr ""
 
@@ -78,7 +78,7 @@ msgstr ""
 msgid "Failed to parse output"
 msgstr ""
 
-#: src/pages/chip.store.ts:358
+#: src/pages/chip.store.ts:354
 msgid "Failed to parse test"
 msgstr ""
 
@@ -86,16 +86,16 @@ msgstr ""
 msgid "Failed {0} assertions"
 msgstr ""
 
-#: src/components/runbar.tsx:46
+#: src/components/runbar.tsx:47
 msgid "Fast"
 msgstr ""
 
-#: src/components/shell/settings.tsx:52
+#: src/components/shell/settings.tsx:75
 msgid "Files"
 msgstr ""
 
-#: src/components/shell/settings.tsx:84
-msgid "Github"
+#: src/components/chips/memory.tsx:163
+msgid "Goto"
 msgstr ""
 
 #: src/urls.tsx:15
@@ -106,11 +106,11 @@ msgstr ""
 msgid "Home"
 msgstr ""
 
-#: src/components/shell/settings.tsx:88
+#: src/components/shell/settings.tsx:107
 msgid "Language"
 msgstr ""
 
-#: src/components/shell/settings.tsx:127
+#: src/components/shell/settings.tsx:146
 msgid "Light"
 msgstr ""
 
@@ -118,7 +118,7 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: src/components/runbar.tsx:17
+#: src/components/runbar.tsx:13
 msgid "Next"
 msgstr ""
 
@@ -127,15 +127,19 @@ msgstr ""
 msgid "None"
 msgstr ""
 
-#: src/components/runbar.tsx:47
+#: src/components/runbar.tsx:48
 msgid "Normal"
 msgstr ""
 
-#: src/components/editor.tsx:25
+#: src/pages/chip.tsx:234
+msgid "Output File"
+msgstr ""
+
+#: src/components/editor.tsx:26
 msgid "Parse Error"
 msgstr ""
 
-#: src/pages/chip.store.ts:361
+#: src/pages/chip.store.ts:357
 msgid "Parsed tst"
 msgstr ""
 
@@ -143,41 +147,45 @@ msgstr ""
 msgid "Project"
 msgstr ""
 
-#: src/pages/chip.store.ts:29
+#: src/pages/chip.store.ts:22
 msgid "Project 1"
 msgstr ""
 
-#: src/pages/chip.store.ts:30
+#: src/pages/chip.store.ts:23
 msgid "Project 2"
 msgstr ""
 
-#: src/pages/chip.store.ts:31
+#: src/pages/chip.store.ts:24
 msgid "Project 3"
 msgstr ""
 
-#: src/pages/chip.store.ts:32
+#: src/pages/chip.store.ts:25
 msgid "Project 5"
 msgstr ""
 
-#: src/components/shell/settings.tsx:95
+#: src/components/shell/settings.tsx:114
 msgid "Pseudolocale"
 msgstr ""
 
-#: src/components/shell/settings.tsx:76
+#: src/components/shell/settings.tsx:52
 msgid "References"
 msgstr ""
 
-#: src/components/runbar.tsx:24
-#: src/components/shell/settings.tsx:64
-#: src/pages/chip.tsx:151
+#: src/components/runbar.tsx:20
+#: src/components/shell/settings.tsx:87
+#: src/pages/chip.tsx:156
 msgid "Reset"
 msgstr ""
 
-#: src/components/runbar.tsx:31
+#: src/components/runbar.tsx:29
 msgid "Run"
 msgstr ""
 
-#: src/pages/chip.tsx:132
+#: src/components/shell/settings.tsx:103
+msgid "Samples"
+msgstr ""
+
+#: src/pages/chip.tsx:137
 msgid "Save"
 msgstr ""
 
@@ -189,27 +197,27 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
-#: src/components/runbar.tsx:48
+#: src/components/runbar.tsx:49
 msgid "Slow"
 msgstr ""
 
-#: src/components/shell/settings.tsx:72
+#: src/components/shell/settings.tsx:95
 msgid "Solutions"
 msgstr ""
 
-#: src/components/runbar.tsx:31
+#: src/components/runbar.tsx:29
 msgid "Stop"
 msgstr ""
 
-#: src/components/shell/settings.tsx:147
+#: src/components/shell/settings.tsx:166
 msgid "System"
 msgstr ""
 
-#: src/pages/chip.tsx:208
+#: src/pages/chip.tsx:198
 msgid "Test"
 msgstr ""
 
-#: src/components/shell/settings.tsx:115
+#: src/components/shell/settings.tsx:134
 msgid "Theme"
 msgstr ""
 
@@ -217,7 +225,7 @@ msgstr ""
 msgid "Unknown parse error"
 msgstr ""
 
-#: src/components/shell/settings.tsx:111
+#: src/components/shell/settings.tsx:130
 msgid "Use Monaco Editor"
 msgstr ""
 
@@ -225,7 +233,7 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
-#: src/pages/chip.tsx:195
+#: src/pages/chip.tsx:185
 msgid "Visualizations"
 msgstr ""
 

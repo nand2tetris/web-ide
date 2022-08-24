@@ -182,7 +182,7 @@ export const Chip = () => {
         outs={{ pins: state.sim.outPins }}
         internal={{ pins: state.sim.internalPins }}
       />
-      <Accordian summary={<Trans>Visualizations</Trans>}>
+      <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
         <main>
           <Visualizations parts={state.sim.parts} />
         </main>
@@ -217,7 +217,7 @@ export const Chip = () => {
         />
       </Accordian>
       <Accordian
-        summary={<Trans>Comparison</Trans>}
+        summary={<Trans>Compare File</Trans>}
         style={{ position: "relative" }}
       >
         <Editor
@@ -231,7 +231,7 @@ export const Chip = () => {
           language={"cmp"}
         />
       </Accordian>
-      <Accordian summary={<Trans>Diff</Trans>} open={true}>
+      <Accordian summary={<Trans>Output File</Trans>} open={true}>
         <div style={{ paddingLeft: "var(--block-spacing-horizontal)" }}>
           <DiffTable cmp={cmp} out={out} />
         </div>

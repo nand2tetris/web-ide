@@ -87,6 +87,7 @@ export interface ChipSim {
   internalPins: ImmPin[];
   parts: Set<Chip>;
   pending: boolean;
+  invalid: boolean;
 }
 
 export interface Files {
@@ -105,7 +106,7 @@ export interface ControlsState {
   span?: Span;
 }
 
-function reduceChip(chip: SimChip, pending = false): ChipSim {
+function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
   return {
     clocked: chip.clocked,
     inPins: reducePins(chip.ins),
@@ -113,6 +114,7 @@ function reduceChip(chip: SimChip, pending = false): ChipSim {
     internalPins: reducePins(chip.pins),
     parts: new Set(chip.parts),
     pending,
+    invalid,
   };
 }
 
@@ -188,8 +190,11 @@ export function makeChipStore(
       state.files.out = out;
     },
 
-    updateChip(state: ChipPageState, payload?: { pending?: boolean }) {
-      state.sim = reduceChip(chip, payload?.pending);
+    updateChip(
+      state: ChipPageState,
+      payload?: { pending?: boolean; invalid?: boolean }
+    ) {
+      state.sim = reduceChip(chip, payload?.pending, payload?.invalid);
       state.controls.chips = PROJECTS[state.controls.project];
       state.controls.chipName = chip.name ?? chipName;
       if (!state.controls.chips.includes(state.controls.chipName)) {
@@ -225,7 +230,10 @@ export function makeChipStore(
     updateTestStep(state: ChipPageState) {
       state.files.out = test?.log() ?? "";
       state.controls.span = test?.currentStep?.span;
-      this.updateChip(state);
+      this.updateChip(state, {
+        pending: state.sim.pending,
+        invalid: state.sim.invalid,
+      });
     },
   };
 
@@ -265,13 +273,13 @@ export function makeChipStore(
       const maybeParsed = HDL.parse(hdl);
       if (isErr(maybeParsed)) {
         setStatus("Failed to parse chip");
-        dispatch.current({ action: "updateChip" });
+        dispatch.current({ action: "updateChip", payload: { invalid: true } });
         return;
       }
       const maybeChip = buildChip(Ok(maybeParsed));
       if (isErr(maybeChip)) {
         setStatus(display(Err(maybeChip)));
-        dispatch.current({ action: "updateChip" });
+        dispatch.current({ action: "updateChip", payload: { invalid: true } });
         return;
       }
       setStatus(t`Compiled ${chip.name}`);

@@ -4,7 +4,7 @@ import { Trans } from "@lingui/macro";
 import "./chip.scss";
 
 import { FullPinout } from "../components/pinout";
-import { PROJECTS, PROJECT_NAMES, useChipPageStore } from "./chip.store";
+import { Files, PROJECTS, PROJECT_NAMES, useChipPageStore } from "./chip.store";
 import { DiffTable } from "../components/difftable";
 import { Editor } from "../components/editor";
 import { HDL } from "../languages/hdl";
@@ -29,16 +29,20 @@ export const Chip = () => {
     actions.saveChip(hdl);
   };
 
-  const compile = useRef<() => void>();
-  compile.current = async () => {
-    await actions.updateFiles({ hdl, tst, cmp });
+  const compile = useRef<(files?: Partial<Files>) => void>(() => {});
+  compile.current = async (files: Partial<Files> = {}) => {
+    await actions.updateFiles({
+      hdl: files.hdl ?? hdl,
+      tst: files.tst ?? tst,
+      cmp: files.cmp ?? cmp,
+    });
   };
 
   const runner = useRef<Timer>();
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
       async reset(): Promise<void> {
-        await compile.current?.();
+        await compile.current();
         await actions.reset();
       }
 
@@ -63,7 +67,7 @@ export const Chip = () => {
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
     if (useBuiltin) {
-      compile.current?.();
+      compile.current();
       setUseBuiltin(false);
     } else {
       actions.useBuiltin();
@@ -164,7 +168,10 @@ export const Chip = () => {
       <Editor
         className="flex-1"
         value={hdl}
-        onChange={setHdl}
+        onChange={(source) => {
+          setHdl(source);
+          compile.current({ hdl: source });
+        }}
         grammar={HDL.parser}
         language={"hdl"}
         disabled={useBuiltin}
@@ -174,14 +181,21 @@ export const Chip = () => {
 
   const pinsPanel = (
     <Panel className="_parts_panel" header={selectors}>
-      <FullPinout sim={state.sim} toggle={actions.toggle} />
-      <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
-        <main>
-          <Visualizations parts={state.sim.parts} />
-        </main>
-      </Accordian>
+      {state.sim.invalid ? (
+        <Trans>Invalid Chip</Trans>
+      ) : (
+        <>
+          <FullPinout sim={state.sim} toggle={actions.toggle} />
+          <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
+            <main>
+              <Visualizations parts={state.sim.parts} />
+            </main>
+          </Accordian>
+        </>
+      )}
     </Panel>
   );
+
   const testPanel = (
     <Panel className="_test_panel">
       <Accordian

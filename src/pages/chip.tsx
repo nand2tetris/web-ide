@@ -104,6 +104,15 @@ export const Chip = () => {
           ))}
         </select>
       </fieldset>
+      <fieldset role="group">
+        <button
+          onClick={compile.current}
+          onKeyDown={compile.current}
+          disabled={useBuiltin}
+        >
+          <Trans>Eval</Trans>
+        </button>
+      </fieldset>
     </>
   );
   const hdlPanel = (
@@ -126,13 +135,6 @@ export const Chip = () => {
             )}
           </fieldset>
           <fieldset role="group">
-            <button
-              onClick={compile.current}
-              onKeyDown={compile.current}
-              disabled={useBuiltin}
-            >
-              <Trans>Eval</Trans>
-            </button>
             <button onClick={saveChip} disabled={useBuiltin}>
               <Trans>Save</Trans>
             </button>

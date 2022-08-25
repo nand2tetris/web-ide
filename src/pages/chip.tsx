@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -10,7 +10,6 @@ import { Editor } from "../components/editor";
 import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
-import { Clockface } from "../components/clockface";
 import { Visualizations } from "../components/chips/visualizations";
 import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
@@ -63,6 +62,18 @@ export const Chip = () => {
       runner.current?.stop();
     };
   }, [compile, actions, dispatch]);
+
+  const clockActions = useMemo(
+    () => ({
+      toggle() {
+        actions.clock();
+      },
+      reset() {
+        actions.reset();
+      },
+    }),
+    [actions]
+  );
 
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
@@ -142,25 +153,6 @@ export const Chip = () => {
             <button onClick={saveChip} disabled={useBuiltin}>
               <Trans>Save</Trans>
             </button>
-            <button
-              style={{ whiteSpace: "nowrap" }}
-              onClick={() => {
-                actions.clock();
-              }}
-              disabled={!state.sim.clocked}
-              data-testid="clock"
-            >
-              <Clockface />
-            </button>
-            <button
-              onClick={() => {
-                actions.reset();
-              }}
-              disabled={!state.sim.clocked}
-              data-testid="clock-reset"
-            >
-              <Trans>Reset</Trans>
-            </button>
           </fieldset>
         </>
       }
@@ -185,7 +177,11 @@ export const Chip = () => {
         <Trans>Invalid Chip</Trans>
       ) : (
         <>
-          <FullPinout sim={state.sim} toggle={actions.toggle} />
+          <FullPinout
+            sim={state.sim}
+            toggle={actions.toggle}
+            clockActions={clockActions}
+          />
           <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
             <main>
               <Visualizations parts={state.sim.parts} />

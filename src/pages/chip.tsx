@@ -106,9 +106,9 @@ export const Chip = () => {
       </fieldset>
       <fieldset role="group">
         <button
-          onClick={compile.current}
-          onKeyDown={compile.current}
-          disabled={useBuiltin}
+          onClick={actions.eval}
+          onKeyDown={actions.eval}
+          disabled={!state.sim.pending}
         >
           <Trans>Eval</Trans>
         </button>
@@ -174,16 +174,7 @@ export const Chip = () => {
 
   const pinsPanel = (
     <Panel className="_parts_panel" header={selectors}>
-      <FullPinout
-        ins={{
-          pins: state.sim.inPins,
-          toggle: (pin, i) => {
-            actions.toggle(pin, i);
-          },
-        }}
-        outs={{ pins: state.sim.outPins }}
-        internal={{ pins: state.sim.internalPins }}
-      />
+      <FullPinout sim={state.sim} toggle={actions.toggle} />
       <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
         <main>
           <Visualizations parts={state.sim.parts} />

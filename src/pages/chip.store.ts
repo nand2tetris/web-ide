@@ -74,28 +74,29 @@ function makeCmp() {
   return `| in|out|`;
 }
 
-interface ChipPageState {
+export interface ChipPageState {
   files: Files;
   sim: ChipSim;
   controls: ControlsState;
 }
 
-interface ChipSim {
+export interface ChipSim {
   clocked: boolean;
   inPins: ImmPin[];
   outPins: ImmPin[];
   internalPins: ImmPin[];
   parts: Set<Chip>;
+  pending: boolean;
 }
 
-interface Files {
+export interface Files {
   hdl: string;
   cmp: string;
   tst: string;
   out: string;
 }
 
-interface ControlsState {
+export interface ControlsState {
   project: keyof typeof PROJECTS;
   chips: string[];
   chipName: string;
@@ -104,13 +105,14 @@ interface ControlsState {
   span?: Span;
 }
 
-function reduceChip(chip: SimChip): ChipSim {
+function reduceChip(chip: SimChip, pending = false): ChipSim {
   return {
     clocked: chip.clocked,
     inPins: reducePins(chip.ins),
     outPins: reducePins(chip.outs),
     internalPins: reducePins(chip.pins),
     parts: new Set(chip.parts),
+    pending,
   };
 }
 
@@ -186,8 +188,8 @@ export function makeChipStore(
       state.files.out = out;
     },
 
-    updateChip(state: ChipPageState) {
-      state.sim = reduceChip(chip);
+    updateChip(state: ChipPageState, payload?: { pending?: boolean }) {
+      state.sim = reduceChip(chip, payload?.pending);
       state.controls.chips = PROJECTS[state.controls.project];
       state.controls.chipName = chip.name ?? chipName;
       if (!state.controls.chips.includes(state.controls.chipName)) {
@@ -322,6 +324,10 @@ export function makeChipStore(
           pin.busVoltage += 1;
         }
       }
+      dispatch.current({ action: "updateChip", payload: { pending: true } });
+    },
+
+    eval() {
       chip.eval();
       dispatch.current({ action: "updateChip" });
     },

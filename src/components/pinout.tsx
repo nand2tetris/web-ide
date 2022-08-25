@@ -3,6 +3,7 @@ import { Pin as ChipPin, Pins, Voltage } from "../simulator/chip/chip";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 
 import "./pinout.scss";
+import { ChipSim } from "../pages/chip.store";
 
 export interface ImmPin {
   bits: [number, Voltage][];
@@ -28,49 +29,45 @@ export interface PinoutPins {
 }
 
 export const FullPinout = (props: {
-  ins: PinoutPins;
-  outs: PinoutPins;
-  internal: PinoutPins;
+  sim: ChipSim;
+  toggle: (pin: ChipPin, i: number | undefined) => void;
 }) => {
-  const inBlock = (
-    <PinoutBlock
-      header={plural(props.ins.pins.length, {
-        one: "Input pin",
-        other: "Input pins",
-      })}
-      {...props.ins}
-    />
-  );
-  const outBlock = (
-    <PinoutBlock
-      header={plural(props.outs.pins.length, {
-        one: "Output pin",
-        other: "Output pins",
-      })}
-      {...props.outs}
-    />
-  );
-  const internalBlock = (
-    <PinoutBlock
-      header={plural(props.internal.pins.length, {
-        one: "Internal pin",
-        other: "Internal pins",
-      })}
-      {...props.internal}
-    />
-  );
+  const { inPins, outPins, internalPins } = props.sim;
   return (
     <table className="pinout">
       <tbody>
-        {inBlock}
-        {outBlock}
-        {internalBlock}
+        <PinoutBlock
+          pins={inPins}
+          header={plural(inPins.length, {
+            one: "Input pin",
+            other: "Input pins",
+          })}
+          toggle={props.toggle}
+        />
+        <PinoutBlock
+          pins={outPins}
+          header={plural(outPins.length, {
+            one: "Output pin",
+            other: "Output pins",
+          })}
+          disabled={props.sim.pending}
+        />
+        <PinoutBlock
+          pins={internalPins}
+          header={plural(internalPins.length, {
+            one: "Internal pin",
+            other: "Internal pins",
+          })}
+          disabled={props.sim.pending}
+        />
       </tbody>
     </table>
   );
 };
 
-export const PinoutBlock = (props: PinoutPins & { header: string }) => {
+export const PinoutBlock = (
+  props: PinoutPins & { header: string; disabled?: boolean }
+) => {
   return (
     <>
       {props.pins.length > 0 && (
@@ -82,7 +79,7 @@ export const PinoutBlock = (props: PinoutPins & { header: string }) => {
         <tr key={immPin.pin.name}>
           <td>{immPin.pin.name}</td>
           <td>
-            <Pin pin={immPin} toggle={props.toggle} />
+            <Pin pin={immPin} toggle={props.toggle} disabled={props.disabled} />
           </td>
         </tr>
       ))}
@@ -129,9 +126,11 @@ export const Pinout = ({
 const Pin = ({
   pin,
   toggle,
+  disabled = false,
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
+  disabled?: boolean;
 }) => {
   return (
     <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
@@ -139,7 +138,7 @@ const Pin = ({
         <button
           key={i}
           onClick={() => toggle?.(pin.pin, i)}
-          disabled={toggle === undefined}
+          disabled={disabled}
           data-testid={`pin-${i}`}
         >
           {v}

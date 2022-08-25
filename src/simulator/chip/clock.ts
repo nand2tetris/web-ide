@@ -1,6 +1,8 @@
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { HIGH, LOW, Voltage } from "./chip";
+import { useEffect, useMemo, useState } from "react";
+import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 interface Tick {
   readonly level: Voltage;
@@ -68,4 +70,43 @@ export class Clock {
   toString() {
     return `${this.ticks}${this.level === HIGH ? "+" : ""}`;
   }
+}
+
+export function useClock(actions: {
+  tick?: () => void;
+  toggle?: () => void;
+  reset?: () => void;
+}) {
+  const clock = useMemo(() => Clock.get(), []);
+
+  useEffect(() => {
+    const subscription = clock.$.subscribe(() => {
+      actions.tick?.();
+    });
+    return () => subscription.unsubscribe();
+  }, [actions, clock.$]);
+
+  return {
+    toggle() {
+      clock.tick();
+      actions.toggle?.();
+    },
+    reset() {
+      clock.reset();
+      actions.reset?.();
+    },
+  };
+}
+
+export function useClockface() {
+  const [clockface, setClockface] = useState(display(clock));
+
+  useEffect(() => {
+    const subscription = clock.$.subscribe(() => {
+      setClockface(display(clock));
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  return clockface;
 }

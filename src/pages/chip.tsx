@@ -15,6 +15,7 @@ import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
 import { Timer } from "../simulator/timer";
 import { useStateInitializer } from "../util/react";
+import { Clockface } from "../components/clockface";
 
 export const Chip = () => {
   const { state, actions, dispatch } = useChipPageStore();
@@ -88,9 +89,6 @@ export const Chip = () => {
 
   const selectors = (
     <>
-      <div>
-        <Trans>Chip</Trans>
-      </div>
       <fieldset role="group">
         <select
           value={state.controls.project}
@@ -118,14 +116,8 @@ export const Chip = () => {
             </option>
           ))}
         </select>
-      </fieldset>
-      <fieldset role="group">
-        <button
-          onClick={actions.eval}
-          onKeyDown={actions.eval}
-          disabled={!state.sim.pending}
-        >
-          <Trans>Eval</Trans>
+        <button className="flex-0" onClick={saveChip} disabled={useBuiltin}>
+          <Trans>Save</Trans>
         </button>
       </fieldset>
     </>
@@ -149,11 +141,7 @@ export const Chip = () => {
               </label>
             )}
           </fieldset>
-          <fieldset role="group">
-            <button onClick={saveChip} disabled={useBuiltin}>
-              <Trans>Save</Trans>
-            </button>
-          </fieldset>
+          {selectors}
         </>
       }
     >
@@ -171,17 +159,50 @@ export const Chip = () => {
     </Panel>
   );
 
+  const chipButtons = (
+    <fieldset role="group">
+      <button
+        onClick={actions.eval}
+        onKeyDown={actions.eval}
+        disabled={!state.sim.pending}
+      >
+        <Trans>Eval</Trans>
+      </button>
+      <button
+        onClick={clockActions.toggle}
+        style={{ maxWidth: "initial" }}
+        disabled={!state.sim.clocked}
+      >
+        <Trans>Clock</Trans>:{"\u00a0"}
+        <Clockface />
+      </button>
+      <button
+        onClick={clockActions.reset}
+        style={{ maxWidth: "initial" }}
+        disabled={!state.sim.clocked}
+      >
+        <Trans>Reset</Trans>
+      </button>
+    </fieldset>
+  );
+
   const pinsPanel = (
-    <Panel className="_parts_panel" header={selectors}>
+    <Panel
+      className="_parts_panel"
+      header={
+        <>
+          <div>
+            <Trans>Chip</Trans>
+          </div>
+          {chipButtons}
+        </>
+      }
+    >
       {state.sim.invalid ? (
         <Trans>Invalid Chip</Trans>
       ) : (
         <>
-          <FullPinout
-            sim={state.sim}
-            toggle={actions.toggle}
-            clockActions={clockActions}
-          />
+          <FullPinout sim={state.sim} toggle={actions.toggle} />
           <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
             <main>
               <Visualizations parts={state.sim.parts} />

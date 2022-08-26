@@ -4,7 +4,6 @@ import { range } from "@davidsouther/jiffies/lib/esm/range";
 
 import "./pinout.scss";
 import { ChipSim } from "../pages/chip.store";
-import { Clockface } from "./clockface";
 
 export interface ImmPin {
   bits: [number, Voltage][];
@@ -32,15 +31,11 @@ export interface PinoutPins {
 export const FullPinout = (props: {
   sim: ChipSim;
   toggle: (pin: ChipPin, i: number | undefined) => void;
-  clockActions: { toggle(): void; reset(): void };
 }) => {
   const { inPins, outPins, internalPins } = props.sim;
   return (
     <table className="pinout">
       <tbody>
-        {props.sim.clocked && (
-          <ClockPinoutBlock clockActions={props.clockActions} />
-        )}
         <PinoutBlock
           pins={inPins}
           header={plural(inPins.length, {
@@ -87,37 +82,6 @@ export const PinoutBlock = (
         </td>
       </tr>
     ))}
-  </>
-);
-
-export const ClockPinoutBlock = ({
-  clockActions,
-}: {
-  clockActions: { toggle(): void; reset(): void };
-}) => (
-  <>
-    <tr>
-      <th colSpan={2}>
-        <Trans>Clock Pin</Trans>
-      </th>
-    </tr>
-    <tr>
-      <td>
-        <Trans>Clock</Trans>
-      </td>
-      <td className="flex row justify-between">
-        <fieldset role="group">
-          <button onClick={clockActions.toggle} style={{ maxWidth: "initial" }}>
-            <Clockface />
-          </button>
-        </fieldset>
-        <fieldset role="group">
-          <button onClick={clockActions.reset} style={{ maxWidth: "initial" }}>
-            <Trans>Reset</Trans>
-          </button>
-        </fieldset>
-      </td>
-    </tr>
   </>
 );
 

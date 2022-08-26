@@ -294,6 +294,7 @@ export function makeChipStore(
           nextChip.ins.get(pin)!.busVoltage = busVoltage;
         }
       }
+      clock.reset();
       nextChip.eval();
       chip = nextChip;
       dispatch.current({ action: "updateChip" });

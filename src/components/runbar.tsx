@@ -3,6 +3,8 @@ import { t } from "@lingui/macro";
 import { Timer, useTimer } from "../simulator/timer";
 import { Icon } from "./pico/icon";
 
+import "./pico/tooltip.scss";
+
 export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
   const runner = useTimer(props.runner);
   return (
@@ -10,25 +12,28 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
       <button
         className="flex-0"
         onClick={() => runner.actions.frame()}
-        data-tooltip={t`Next`}
+        data-tooltip={t`Step`}
+        data-placement="bottom"
       >
-        <Icon name="skip_next"></Icon>
-      </button>
-      <button
-        className="flex-0"
-        onClick={() => runner.actions.reset()}
-        data-tooltip={t`Reset`}
-      >
-        <Icon name="first_page"></Icon>
+        <Icon name="play_arrow"></Icon>
       </button>
       <button
         className="flex-0"
         onClick={() =>
           runner.state.running ? runner.actions.stop() : runner.actions.start()
         }
-        data-tooltip={runner.state.running ? t`Stop` : t`Run`}
+        data-tooltip={runner.state.running ? t`Pause` : t`Play`}
+        data-placement="bottom"
       >
-        <Icon name={runner.state.running ? "pause" : "play_arrow"}></Icon>
+        <Icon name={runner.state.running ? "pause" : "fast_forward"}></Icon>
+      </button>
+      <button
+        className="flex-0"
+        onClick={() => runner.actions.reset()}
+        data-tooltip={t`Reset`}
+        data-placement="bottom"
+      >
+        <Icon name="fast_rewind"></Icon>
       </button>
       <select
         className="flex-1"

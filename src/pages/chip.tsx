@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -10,7 +10,6 @@ import { Editor } from "../components/editor";
 import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
 import { CMP } from "../languages/cmp";
-import { Visualizations } from "../components/chips/visualizations";
 import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
 import { Timer } from "../simulator/timer";
@@ -186,6 +185,13 @@ export const Chip = () => {
     </fieldset>
   );
 
+  // const visualizations = <Visualizations parts={state.sim.parts} />;
+
+  const visualizations: [string, ReactNode][] = [...state.sim.parts].flatMap(
+    (part) =>
+      part.render().map((v, i) => [`${part.id}_${i}`, v] as [string, ReactNode])
+  );
+
   const pinsPanel = (
     <Panel
       className="_parts_panel"
@@ -203,11 +209,15 @@ export const Chip = () => {
       ) : (
         <>
           <FullPinout sim={state.sim} toggle={actions.toggle} />
-          <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
-            <main>
-              <Visualizations parts={state.sim.parts} />
-            </main>
-          </Accordian>
+          {visualizations.length > 0 && (
+            <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
+              <main>
+                {visualizations.map(([p, v]) => (
+                  <div key={p}>{v}</div>
+                ))}
+              </main>
+            </Accordian>
+          )}
         </>
       )}
     </Panel>

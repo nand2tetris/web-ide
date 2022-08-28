@@ -1,10 +1,10 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 
-import "./components/pico/pico.scss";
+import "./app/components/pico/pico.scss";
 
-import App from "./App";
-import reportWebVitals from "./reportWebVitals";
+import App from "./app/App";
+import reportWebVitals from "./app/reportWebVitals";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement

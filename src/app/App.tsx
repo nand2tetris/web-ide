@@ -14,14 +14,14 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs";
 
 import urls from "./urls";
-import * as projects from "./projects";
+import * as projects from "../projects";
 import Header from "./components/shell/header";
 import Footer from "./components/shell/footer";
 import { AppContext, useAppContext } from "./App.context";
 import { Settings } from "./components/shell/settings";
 import { messages } from "./locales/en/messages";
 import { messages as plMessages } from "./locales/en-PL/messages";
-import { registerLanguages } from "./languages/loader";
+import { registerLanguages } from "../languages/loader";
 import { FilePicker } from "./components/shell/file_select";
 
 i18n.load("en", messages);

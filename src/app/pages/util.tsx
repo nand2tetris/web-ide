@@ -1,6 +1,6 @@
 import { ChangeEventHandler, useCallback, useState } from "react";
-import { asm, op } from "../util/asm";
-import { bin, dec, hex, int10, int16, int2, uns } from "../util/twos";
+import { asm, op } from "../../util/asm";
+import { bin, dec, hex, int10, int16, int2, uns } from "../../util/twos";
 
 export const Util = () => {
   const [value, setValue] = useState(0);

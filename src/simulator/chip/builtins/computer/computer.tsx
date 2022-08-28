@@ -1,6 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { Screen as ScreenComponent } from "../../../../components/chips/screen";
-import { Keyboard as KeyboardComponent } from "../../../../components/chips/keyboard";
+import { Screen as ScreenComponent } from "../../../../app/components/chips/screen";
+import { Keyboard as KeyboardComponent } from "../../../../app/components/chips/keyboard";
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip";
 import { RAM, RAM16K } from "../sequential/ram";
 import {
@@ -14,8 +14,8 @@ import {
 import { int10 } from "../../../../util/twos";
 import { loadHack } from "../../../fs";
 import { Flags } from "../../../cpu/alu";
-import { RegisterComponent } from "../../../../components/chips/register";
-import { ALUComponent } from "../../../../components/chips/alu";
+import { RegisterComponent } from "../../../../app/components/chips/register";
+import { ALUComponent } from "../../../../app/components/chips/alu";
 import { KEYBOARD, SCREEN } from "../../../cpu/memory";
 
 export class ROM32K extends RAM {

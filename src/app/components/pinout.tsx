@@ -1,5 +1,5 @@
 import { plural, Trans } from "@lingui/macro";
-import { Pin as ChipPin, Pins, Voltage } from "../simulator/chip/chip";
+import { Pin as ChipPin, Pins, Voltage } from "../../simulator/chip/chip";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
 
 import "./pinout.scss";

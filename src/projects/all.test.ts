@@ -3,11 +3,10 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { Projects } from ".";
+import { PROJECTS, Projects } from ".";
 import { Cmp, CMP } from "../languages/cmp";
 import { HDL, HdlParse } from "../languages/hdl";
 import { Tst, TST } from "../languages/tst";
-import { PROJECTS } from "../pages/chip.store";
 import { build } from "../simulator/chip/builder";
 import { Chip } from "../simulator/chip/chip";
 import { compare } from "../simulator/compare";

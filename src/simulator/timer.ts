@@ -1,5 +1,5 @@
 import { Dispatch, MutableRefObject, useMemo, useRef } from "react";
-import { useImmerReducer } from "../util/react";
+import { useImmerReducer } from "../app/util/react";
 
 export const MAX_STEPS = 1000;
 

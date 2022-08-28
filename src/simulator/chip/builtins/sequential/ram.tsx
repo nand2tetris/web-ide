@@ -1,6 +1,6 @@
 import { Bus, ClockedChip, Pin } from "../../chip";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
-import { Memory as MemoryComponent } from "../../../../components/chips/memory";
+import { Memory as MemoryComponent } from "../../../../app/components/chips/memory";
 import { Memory, Memory as MemoryChip } from "../../../cpu/memory";
 
 export class RAM extends ClockedChip {

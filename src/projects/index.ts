@@ -6,6 +6,30 @@ import * as project_03 from "./project_03/index";
 import * as project_05 from "./project_05/index";
 import * as samples from "./samples/index";
 
+export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
+  "01": [
+    "Not",
+    "And",
+    "Or",
+    "XOr",
+    "Mux",
+    "DMux",
+    "Not16",
+    "And16",
+    "Or16",
+    "Mux16",
+    "Mux4Way16",
+    "Mux8Way16",
+    "DMux4Way",
+    "DMux8Way",
+    "Or8Way",
+  ],
+  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
+  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
+  "05": ["Memory", "CPU", "Computer"],
+};
+
+
 export const Projects = {
   "01": project_01,
   "02": project_02,

@@ -1,5 +1,5 @@
 import { KeyboardEvent, useCallback, useState } from "react";
-import { Keyboard as KeyboardChip } from "../../simulator/chip/builtins/computer/computer";
+import { Keyboard as KeyboardChip } from "../../../simulator/chip/builtins/computer/computer";
 import { Icon } from "../pico/icon";
 import { RegisterComponent } from "./register";
 

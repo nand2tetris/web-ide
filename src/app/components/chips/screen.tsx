@@ -1,7 +1,7 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { Trans } from "@lingui/macro";
 import { useEffect, useRef } from "react";
-import { Memory, SCREEN } from "../../simulator/cpu/memory";
+import { Memory, SCREEN } from "../../../simulator/cpu/memory";
 import { Panel } from "../shell/panel";
 
 const WHITE = "white";

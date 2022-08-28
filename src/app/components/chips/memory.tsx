@@ -5,9 +5,9 @@ import {
   Format,
   FORMATS,
   Memory as MemoryChip,
-} from "../../simulator/cpu/memory";
-import { asm } from "../../util/asm";
-import { bin, dec, hex } from "../../util/twos";
+} from "../../../simulator/cpu/memory";
+import { asm } from "../../../util/asm";
+import { bin, dec, hex } from "../../../util/twos";
 import InlineEdit from "../pico/inline_edit";
 import VirtualScroll, { VirtualScrollSettings } from "../pico/virtual_scroll";
 import { Icon } from "../pico/icon";

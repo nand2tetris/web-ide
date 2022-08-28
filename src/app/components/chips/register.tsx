@@ -1,4 +1,4 @@
-import { dec } from "../../util/twos";
+import { dec } from "../../../util/twos";
 
 export const RegisterComponent = ({
   name,

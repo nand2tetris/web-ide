@@ -4,17 +4,18 @@ import { Trans } from "@lingui/macro";
 import "./chip.scss";
 
 import { FullPinout } from "../components/pinout";
-import { Files, PROJECTS, PROJECT_NAMES, useChipPageStore } from "./chip.store";
+import { Files, PROJECT_NAMES, useChipPageStore } from "./chip.store";
 import { DiffTable } from "../components/difftable";
 import { Editor } from "../components/editor";
-import { HDL } from "../languages/hdl";
-import { TST } from "../languages/tst";
-import { CMP } from "../languages/cmp";
+import { HDL } from "../../languages/hdl";
+import { TST } from "../../languages/tst";
+import { CMP } from "../../languages/cmp";
 import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
-import { Timer } from "../simulator/timer";
+import { Timer } from "../../simulator/timer";
 import { useStateInitializer } from "../util/react";
 import { Clockface } from "../components/clockface";
+import { PROJECTS } from "../../projects";
 
 export const Chip = () => {
   const { state, actions, dispatch } = useChipPageStore();

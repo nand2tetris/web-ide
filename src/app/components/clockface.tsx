@@ -1,4 +1,4 @@
-import { useClockface } from "../simulator/chip/clock";
+import { useClockface } from "../../simulator/chip/clock";
 
 export const Clockface = () => {
   const clockface = useClockface();

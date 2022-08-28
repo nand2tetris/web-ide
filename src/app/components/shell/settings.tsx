@@ -80,7 +80,7 @@ export const Settings = () => {
                   localStorage.clear();
                   localStorage["/chip/project"] = "01";
                   localStorage["/chip/chip"] = "Not";
-                  await (await import("../../projects")).resetFiles(fs);
+                  await (await import("../../../projects")).resetFiles(fs);
                   setStatus("Reset files in local storage");
                 }}
               >
@@ -88,7 +88,7 @@ export const Settings = () => {
               </button>
               <button
                 onClick={async () => {
-                  await (await import("../../projects")).loadSolutions(fs);
+                  await (await import("../../../projects")).loadSolutions(fs);
                   setStatus("Loaded sample solutions...");
                 }}
               >
@@ -96,7 +96,7 @@ export const Settings = () => {
               </button>
               <button
                 onClick={async () => {
-                  await (await import("../../projects")).loadSamples(fs);
+                  await (await import("../../../projects")).loadSamples(fs);
                   setStatus("Loaded sample files...");
                 }}
               >

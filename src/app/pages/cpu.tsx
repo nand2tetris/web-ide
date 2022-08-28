@@ -1,11 +1,11 @@
-import { CPU as CPUChip } from "../simulator/cpu/cpu";
+import { CPU as CPUChip } from "../../simulator/cpu/cpu";
 import MemoryComponent from "../components/chips/memory";
-import { Memory } from "../simulator/cpu/memory";
-import { HACK } from "../testing/mult";
+import { Memory } from "../../simulator/cpu/memory";
+import { HACK } from "../../testing/mult";
 import { Runbar } from "../components/runbar";
-import { Timer } from "../simulator/timer";
+import { Timer } from "../../simulator/timer";
 import { Screen } from "../components/chips/screen";
-import { TickScreen } from "../testing/fill";
+import { TickScreen } from "../../testing/fill";
 
 export const CPU = () => {
   const cpu = new CPUChip({ ROM: new Memory(HACK) });

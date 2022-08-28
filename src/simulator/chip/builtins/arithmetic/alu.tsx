@@ -1,4 +1,4 @@
-import { ALUComponent } from "../../../../components/chips/alu";
+import { ALUComponent } from "../../../../app/components/chips/alu";
 import { alu, COMMANDS_OP, Flags } from "../../../cpu/alu";
 import { Chip, HIGH, LOW } from "../../chip";
 

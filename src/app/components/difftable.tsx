@@ -2,7 +2,7 @@ import { Plural, Trans } from "@lingui/macro";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
-import { CMP } from "../languages/cmp";
+import { CMP } from "../../languages/cmp";
 
 export const DiffTable = ({
   className = "",

@@ -15,7 +15,7 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 
-import { Span, UNKNOWN_PARSE_ERROR } from "../languages/base";
+import { Span, UNKNOWN_PARSE_ERROR } from "../../languages/base";
 
 import "./editor.scss";
 

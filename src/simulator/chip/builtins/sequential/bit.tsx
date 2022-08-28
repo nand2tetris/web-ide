@@ -1,4 +1,4 @@
-import { RegisterComponent } from "../../../../components/chips/register";
+import { RegisterComponent } from "../../../../app/components/chips/register";
 import { ClockedChip, HIGH, LOW, Pin, Voltage } from "../../chip";
 
 export class Bit extends ClockedChip {

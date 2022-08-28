@@ -3,8 +3,8 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { MutableRefObject } from "react";
-import * as not from "../projects/project_01/01_not";
-import * as bit from "../projects/project_03/01_bit";
+import * as not from "../../projects/project_01/01_not";
+import * as bit from "../../projects/project_03/01_bit";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store";
 
 function testChipStore(

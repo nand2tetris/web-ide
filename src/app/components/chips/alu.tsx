@@ -1,5 +1,5 @@
-import { COMMANDS, COMMANDS_OP, Flags } from "../../simulator/cpu/alu";
-import { bin } from "../../util/twos";
+import { COMMANDS, COMMANDS_OP, Flags } from "../../../simulator/cpu/alu";
+import { bin } from "../../../util/twos";
 
 export const ALUComponent = ({
   A,

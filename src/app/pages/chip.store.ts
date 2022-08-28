@@ -3,19 +3,20 @@ import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { t } from "@lingui/macro";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 
-import { HDL } from "../languages/hdl";
-import { TST } from "../languages/tst";
-import { build as buildChip } from "../simulator/chip/builder";
-import { getBuiltinChip } from "../simulator/chip/builtins/index";
-import { Low, Pin, Chip as SimChip, Chip } from "../simulator/chip/chip";
-import { Clock } from "../simulator/chip/clock";
-import { ChipTest } from "../simulator/tst";
+import { HDL } from "../../languages/hdl";
+import { TST } from "../../languages/tst";
+import { build as buildChip } from "../../simulator/chip/builder";
+import { getBuiltinChip } from "../../simulator/chip/builtins/index";
+import { Low, Pin, Chip as SimChip, Chip } from "../../simulator/chip/chip";
+import { Clock } from "../../simulator/chip/clock";
+import { ChipTest } from "../../simulator/tst";
 import { StorageContext } from "../util/storage";
 import { AppContext } from "../App.context";
 import { ImmPin, reducePins } from "../components/pinout";
-import { REGISTRY } from "../simulator/chip/builtins";
+import { REGISTRY } from "../../simulator/chip/builtins";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { Span } from "../languages/base";
+import { Span } from "../../languages/base";
+import { PROJECTS } from "../../projects";
 import { useImmerReducer } from "../util/react";
 
 export const PROJECT_NAMES = [
@@ -24,29 +25,6 @@ export const PROJECT_NAMES = [
   ["03", t`Project 3`],
   ["05", t`Project 5`],
 ];
-
-export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
-  "01": [
-    "Not",
-    "And",
-    "Or",
-    "XOr",
-    "Mux",
-    "DMux",
-    "Not16",
-    "And16",
-    "Or16",
-    "Mux16",
-    "Mux4Way16",
-    "Mux8Way16",
-    "DMux4Way",
-    "DMux8Way",
-    "Or8Way",
-  ],
-  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
-  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
-  "05": ["Memory", "CPU", "Computer"],
-};
 
 function dropdowns(storage: Record<string, string>) {
   const project = (storage["/chip/project"] as keyof typeof PROJECTS) ?? "01";

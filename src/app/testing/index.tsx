@@ -7,7 +7,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { ReactElement } from "react";
 import { useAppContext } from "../App.context";
-import * as Not from "../projects/project_01/01_not";
+import * as Not from "../../projects/project_01/01_not";
 import ue from "@testing-library/user-event";
 export const userEvent = ue;
 export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";

@@ -19,8 +19,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _log = "";
   fs: FileSystem = new FileSystem();
 
-  setFileSystem(fs: FileSystem) {
+  setFileSystem(fs: FileSystem): this {
     this.fs = fs;
+    return this;
   }
 
   echo(_content: string) {

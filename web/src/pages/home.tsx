@@ -1,10 +1,9 @@
-import { isOk, Ok, Err } from "@davidsouther/jiffies/lib/esm/result";
-import { ChangeEventHandler, useCallback, useState } from "react";
-import { HDL } from "../languages/hdl";
-import { TST } from "../languages/tst";
-import { Assignments } from "../projects";
-import { build as buildChip } from "../simulator/chip/builder";
-import { ChipTest } from "../simulator/tst";
+import { Trans } from "@lingui/macro";
+import { ChangeEventHandler, useCallback, useContext, useState } from "react";
+import { AppContext } from "../App.context";
+import { DiffTable } from "../components/difftable";
+import { Assignments } from "../../projects";
+import { runTests } from "../../projects/runner";
 
 function splitFile(file: File) {
   const { name, ext } = file.name.match(
@@ -19,56 +18,80 @@ function hasTest({ name, ext }: { name: string; ext: string }) {
   );
 }
 
+const TestResult = (props: {
+  name: string;
+  pass: boolean;
+  hdl: string;
+  tst: string;
+  cmp: string;
+  out: string;
+}) => (
+  <details>
+    <summary>
+      {props.name} {props.pass ? <Trans>Passed</Trans> : <Trans>Failed</Trans>}
+    </summary>
+    <div className="flex row">
+      <pre>
+        <code>{props.hdl}</code>
+      </pre>
+      <pre>
+        <code>{props.tst}</code>
+      </pre>
+    </div>
+    <DiffTable cmp={props.cmp} out={props.out} />
+  </details>
+);
+
+async function loadAssignment(pfile: Promise<{ name: string; hdl: string }>) {
+  const file = await pfile;
+  const assignment = Assignments[file.name as keyof typeof Assignments];
+  const tst = assignment[
+    `${file.name}.tst` as keyof typeof assignment
+  ] as string;
+  const cmp = assignment[
+    `${file.name}.cmp` as keyof typeof assignment
+  ] as string;
+  return { ...file, tst, cmp };
+}
+
 const Home = () => {
-  const [tests, setTests] = useState([] as string[]);
+  const [tests, setTests] = useState(
+    [] as Array<Parameters<typeof TestResult>[0]>
+  );
+  const { fs } = useContext(AppContext);
 
   const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
-    async ({ target: { files } }) => {
-      const tests = [...(files ?? [])]
+    async ({ target }) => {
+      const files = [...(target.files ?? [])]
         .map((file) => ({ file, ...splitFile(file) }))
         .filter(hasTest)
         .map(async (file) => {
-          const assignment = Assignments[file.name as keyof typeof Assignments];
           const hdl = await file.file.text();
-          const tst = assignment[`${file.name}.tst` as keyof typeof assignment];
-          const cmp = assignment[`${file.name}.cmp` as keyof typeof assignment];
-          return { ...file, hdl, tst, cmp };
-        })
-        .map(async (pfile) => {
-          const file = await pfile;
-          const maybeParsedHDL = HDL.parse(file.hdl);
-          const maybeParsedTST = TST.parse(file.tst);
-          return { ...file, maybeParsedHDL, maybeParsedTST };
-        })
-        .map(async (pfile) => {
-          const file = await pfile;
-          const maybeChip = isOk(file.maybeParsedHDL)
-            ? buildChip(Ok(file.maybeParsedHDL))
-            : Err(new Error("HDL Was not parsed"));
-          const maybeTest = isOk(file.maybeParsedTST)
-            ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
-            : Err(new Error("TST Was not parsed"));
-          if (isOk(maybeChip) && isOk(maybeTest)) {
-            Ok(maybeTest).with(Ok(maybeChip));
-          }
-          return { ...file, maybeChip, maybeTest };
+          return { ...file, hdl };
         });
-      setTests((await Promise.all(tests)).map(({ name }) => `Found ${name}`));
+
+      const tests = runTests(files, loadAssignment, fs);
+
+      fs.pushd("/samples");
+      setTests(await Promise.all(tests));
+      fs.popd();
     },
-    [setTests]
+    [setTests, fs]
   );
 
   return (
     <>
       <h1>NAND2Tetris Web IDE</h1>
-      <input type="file" multiple onChange={onChange} />
-      {tests.length > 0 && (
-        <ol>
-          {tests.map((t, i) => (
-            <li key={i}>{t}</li>
-          ))}
-        </ol>
-      )}
+      <div>
+        <input type="file" multiple onChange={onChange} />
+      </div>
+      <figure>
+        {tests.length > 0 ? (
+          tests.map((t, i) => <TestResult key={t.name} {...t} />)
+        ) : (
+          <></>
+        )}
+      </figure>
     </>
   );
 };

@@ -1,4 +1,11 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  CSSProperties,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
@@ -186,8 +193,6 @@ export const Chip = () => {
     </fieldset>
   );
 
-  // const visualizations = <Visualizations parts={state.sim.parts} />;
-
   const visualizations: [string, ReactNode][] = [...state.sim.parts].flatMap(
     (part) =>
       part.render().map((v, i) => [`${part.id}_${i}`, v] as [string, ReactNode])
@@ -224,53 +229,113 @@ export const Chip = () => {
     </Panel>
   );
 
+  const [selectedTestTab, setSelectedTestTab] = useState<"tst" | "cmp" | "out">(
+    "tst"
+  );
+
   const testPanel = (
-    <Panel className="_test_panel">
-      <Accordian
-        summary={
-          <>
-            <div className="flex-1">
-              <Trans>Test</Trans>
-            </div>
-            <div className="flex-2">
-              {runner.current && <Runbar runner={runner.current} />}
-            </div>
-          </>
-        }
-        style={{ position: "relative" }}
-      >
-        <Editor
-          style={{
-            position: "absolute",
-            height: "calc(100% - var(--line-height) * var(--font-size) * 2)",
-          }}
-          value={tst}
-          onChange={setTst}
-          grammar={TST.parser}
-          language={"tst"}
-          highlight={state.controls.span}
-        />
-      </Accordian>
-      <Accordian
-        summary={<Trans>Compare File</Trans>}
-        style={{ position: "relative" }}
-      >
-        <Editor
-          style={{
-            position: "absolute",
-            height: "calc(100% - var(--line-height) * var(--font-size) * 2)",
-          }}
-          value={cmp}
-          onChange={setCmp}
-          grammar={CMP.parser}
-          language={"cmp"}
-        />
-      </Accordian>
-      <Accordian summary={<Trans>Output File</Trans>} open={true}>
-        <div style={{ paddingLeft: "var(--block-spacing-horizontal)" }}>
+    <Panel
+      className="_test_panel"
+      header={
+        <>
+          <div className="flex-1">
+            <Trans>Test</Trans>
+          </div>
+          <div className="flex-2">
+            {runner.current && <Runbar runner={runner.current} />}
+          </div>
+        </>
+      }
+    >
+      <div role="tablist" style={{ "--tab-count": "3" } as CSSProperties}>
+        <div
+          role="tab"
+          id="test-tab-tst"
+          aria-controls="test-tabpanel-tst"
+          aria-selected={selectedTestTab === "tst"}
+        >
+          <label>
+            <input
+              type="radio"
+              name="test-tabs"
+              aria-controls="test-tabpanel-tst"
+              value="tst"
+              checked={selectedTestTab === "tst"}
+              onChange={() => setSelectedTestTab("tst")}
+            />
+            Test Script
+          </label>
+        </div>
+        <div
+          role="tabpanel"
+          aria-labelledby="test-tab-tst"
+          id="test-tabpanel-tst"
+        >
+          <Editor
+            value={tst}
+            onChange={setTst}
+            grammar={TST.parser}
+            language={"tst"}
+            highlight={state.controls.span}
+          />
+        </div>
+        <div
+          role="tab"
+          id="test-tab-cmp"
+          aria-controls="test-tablpanel-cmp"
+          aria-selected={selectedTestTab === "cmp"}
+        >
+          <label>
+            <input
+              type="radio"
+              name="test-tabs"
+              aria-controls="test-tabpanel-cmp"
+              value="cmp"
+              checked={selectedTestTab === "cmp"}
+              onChange={() => setSelectedTestTab("cmp")}
+            />
+            Compare File
+          </label>
+        </div>
+        <div
+          role="tabpanel"
+          aria-labelledby="test-tab-cmp"
+          id="test-tabpanel-cmp"
+          style={{ position: "relative" }}
+        >
+          <Editor
+            value={cmp}
+            onChange={setCmp}
+            grammar={CMP.parser}
+            language={"cmp"}
+          />
+        </div>
+        <div
+          role="tab"
+          id="test-tab-out"
+          aria-controls="test-tabpanel-out"
+          aria-selected={selectedTestTab === "out"}
+        >
+          <label>
+            <input
+              type="radio"
+              name="test-tabs"
+              aria-controls="test-tabpanel-out"
+              value="out"
+              checked={selectedTestTab === "out"}
+              onChange={() => setSelectedTestTab("out")}
+            />
+            Output File
+          </label>
+        </div>
+        <div
+          role="tabpanel"
+          id="test-tabpanel-out"
+          aria-labelledby="test-tab-out"
+        >
           <DiffTable cmp={cmp} out={out} />
         </div>
-      </Accordian>
+      </div>
     </Panel>
   );
 

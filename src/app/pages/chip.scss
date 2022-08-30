@@ -1,4 +1,5 @@
 @use "../components/pico/button-group.scss";
+@use "../components/tab.scss";
 
 .ChipPage {
   h2 {
@@ -25,12 +26,8 @@
     grid-area: tst;
 
     main {
-      > .Editor {
-        max-height: 30%;
-      }
-
-      details[open] {
-        min-height: 30%;
+      [role=tab] {
+          white-space: nowrap;
       }
     }
   }

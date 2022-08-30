@@ -29,7 +29,6 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "05": ["Memory", "CPU", "Computer"],
 };
 
-
 export const Projects = {
   "01": project_01,
   "02": project_02,

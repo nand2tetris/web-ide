@@ -3,8 +3,10 @@
   --border: var(--border-width) var(--border-style) var(--card-border-color);
   --border-empty: var(--border-width) var(--border-style) var(--card-background-color);
   --tab-count: 5;
+  --spacing-tab-edge: calc(var(--block-spacing-horizontal) / 2);
   display: grid;
-  grid-template: min-content 1fr / repeat(calc(var(--tab-count, 5) + 1), min-content) 1fr;
+  grid-template: min-content 1fr /
+      var(--spacing-tab-edge) repeat(var(--tab-count), min-content) 1fr;
   height: 100%;
 }
 
@@ -13,7 +15,7 @@
   content: '';
   display: block;
   border-bottom: var(--border);
-  min-width: calc(var(--block-spacing-horizontal) / 2);
+  min-width: var(--spacing-tab-edge);
   grid-row: 1;
 }
 

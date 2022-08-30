@@ -26,8 +26,8 @@
     grid-area: tst;
 
     main {
-      [role=tab] {
-          white-space: nowrap;
+      [role="tab"] {
+        white-space: nowrap;
       }
     }
   }

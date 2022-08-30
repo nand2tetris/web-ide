@@ -13,7 +13,7 @@ import {
 import "@testing-library/jest-dom";
 import { i18n } from "@lingui/core";
 import { en } from "make-plural/plurals";
-import { messages } from "./locales/en/messages";
+import { messages } from "./app/locales/en/messages";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { Diff } from "./simulator/compare";
 

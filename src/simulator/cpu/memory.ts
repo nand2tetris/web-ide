@@ -1,5 +1,6 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { Subject } from "rxjs";
 import { op } from "../../util/asm";
 import { int10, int16, int2 } from "../../util/twos";
 import { load } from "../fs";
@@ -14,6 +15,7 @@ export const KEYBOARD = 0x6000;
 
 export class Memory {
   #memory: Int16Array;
+  updates = new Subject<void>();
 
   get size(): number {
     return this.#memory.length;
@@ -60,6 +62,7 @@ export class Memory {
 
     if (isFinite(current) && current <= 0xffff) {
       this.set(cell, current);
+      this.updates.next();
     }
   }
 

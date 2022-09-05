@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { HIGH, LOW, Voltage } from "./chip";
-import { useEffect, useMemo, useState } from "react";
+import { DependencyList, useEffect, useMemo, useState } from "react";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 interface Tick {
@@ -21,20 +21,28 @@ export class Clock {
     return clock;
   }
 
+  get isHigh(): boolean {
+    return this.level === HIGH;
+  }
+
+  get isLow(): boolean {
+    return this.level === LOW;
+  }
+
   private subject = new BehaviorSubject<Tick>({
     level: this.level,
     ticks: this.ticks,
   });
-  readonly $: Observable<Tick> = this.subject;
+  readonly frameSubject = new Subject<void>();
 
-  readonly update = new Subject<void>();
+  readonly $: Observable<Tick> = this.subject;
+  readonly frame$: Observable<void> = this.frameSubject;
 
   private next() {
     this.subject.next({
       level: this.level,
       ticks: this.ticks,
     });
-    this.update.next();
   }
 
   private constructor() {}
@@ -67,6 +75,10 @@ export class Clock {
     this.tock();
   }
 
+  frame() {
+    this.frameSubject.next();
+  }
+
   toString() {
     return `${this.ticks}${this.level === HIGH ? "+" : ""}`;
   }
@@ -91,11 +103,24 @@ export function useClock(actions: {
       clock.tick();
       actions.toggle?.();
     },
+
     reset() {
       clock.reset();
       actions.reset?.();
     },
   };
+}
+
+export function useClockFrame(
+  frameFinished: () => void,
+  deps: DependencyList = []
+) {
+  useEffect(() => {
+    const subscription = clock.frame$.subscribe(() => {
+      frameFinished();
+    });
+    return () => subscription.unsubscribe();
+  }, deps);
 }
 
 export function useClockface() {

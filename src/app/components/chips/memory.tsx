@@ -150,6 +150,13 @@ export const Memory = ({
     }
   }, [fs, filePicker, memory, setStatus]);
 
+  const doUpdate = useCallback(
+    (i: number, v: string) => {
+      memory.update(i, v, fmt ?? "dec");
+    },
+    [memory, fmt]
+  );
+
   return (
     <article className="panel">
       <header>
@@ -192,7 +199,7 @@ export const Memory = ({
         highlight={highlight}
         editable={editable}
         format={(v: number) => doFormat(fmt, v)}
-        onChange={(i: number, v: string) => memory.update(i, v, fmt ?? "dec")}
+        onChange={doUpdate}
       />
     </article>
   );

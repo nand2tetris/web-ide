@@ -1,15 +1,28 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { Trans } from "@lingui/macro";
-import { useEffect, useRef } from "react";
-import { Memory, SCREEN } from "../../../simulator/cpu/memory";
+import { useRef } from "react";
+import { useClockFrame } from "../../../simulator/chip/clock";
+import { Memory } from "../../../simulator/cpu/memory";
 import { Panel } from "../shell/panel";
 
 const WHITE = "white";
 const BLACK = "black";
 type COLOR = typeof WHITE | typeof BLACK;
 
-function get(mem: Memory, x: number, y: number): COLOR {
-  const byte = mem.get(SCREEN + 32 * y + ((x / 16) | 0));
+export interface ScreenMemory {
+  get(idx: number): number;
+}
+
+export function reduceScreen(memory: Memory, offset = 0): ScreenMemory {
+  return {
+    get(idx: number): number {
+      return memory.get(offset + idx);
+    },
+  };
+}
+
+function get(mem: ScreenMemory, x: number, y: number): COLOR {
+  const byte = mem.get(32 * y + ((x / 16) | 0));
   const bit = byte & (1 << x % 16);
   return bit === 0 ? WHITE : BLACK;
 }
@@ -23,23 +36,27 @@ function set(data: Uint8ClampedArray, x: number, y: number, value: COLOR) {
   data[pixel + 3] = 255;
 }
 
-export const Screen = ({ memory }: { memory: Memory }) => {
+function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
+  const image = assertExists(
+    ctx.getImageData(0, 0, 512, 256),
+    "Failed to create Context2d"
+  );
+  for (let col = 0; col < 512; col++) {
+    for (let row = 0; row < 256; row++) {
+      const color = get(memory, col, row);
+      set(image.data, col, row, color);
+    }
+  }
+  ctx.putImageData(image, 0, 0);
+}
+
+export const Screen = ({ memory }: { memory: ScreenMemory }) => {
   let canvas = useRef<HTMLCanvasElement>();
-  useEffect(() => {
+  useClockFrame(() => {
     const ctx = canvas.current?.getContext("2d") ?? undefined;
 
     if (ctx) {
-      const image = assertExists(
-        ctx.getImageData(0, 0, 512, 256),
-        "Failed to create Context2d"
-      );
-      for (let col = 0; col < 512; col++) {
-        for (let row = 0; row < 256; row++) {
-          const color = get(memory, col, row);
-          set(image.data, col, row, color);
-        }
-      }
-      ctx.putImageData(image, 0, 0);
+      drawImage(ctx, memory);
     }
   }, [memory]);
 

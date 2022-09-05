@@ -1,12 +1,16 @@
 import { Dispatch, MutableRefObject, useMemo, useRef } from "react";
 import { useImmerReducer } from "../app/util/react";
+import { Clock } from "./chip/clock";
 
 export const MAX_STEPS = 1000;
+
+const clock = Clock.get();
 
 export abstract class Timer {
   frame() {
     this.tick();
     this.finishFrame();
+    clock.frame();
   }
 
   abstract tick(): void;

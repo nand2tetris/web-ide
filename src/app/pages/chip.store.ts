@@ -321,6 +321,9 @@ export function makeChipStore(
 
     clock() {
       clock.toggle();
+      if (clock.isLow) {
+        clock.frame();
+      }
       dispatch.current({ action: "updateChip" });
     },
 

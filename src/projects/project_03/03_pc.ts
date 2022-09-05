@@ -7,23 +7,29 @@ export const hdl = `/**
  */
 
 CHIP PC {
-    IN in[16],load,inc,reset;
+    IN in[16], load, inc, reset;
     OUT out[16];
 
     PARTS:
 }`;
 export const sol = `CHIP PC {
-    IN in[16],load,inc,reset;
+    IN in[16], load, inc, reset;
     OUT out[16];
 
     PARTS:
-    Inc16(in=self, out=pc);
+    // The internal 'self' pin tracks the current state of the PC. The 'pc' pin
+    // tracks the next value of the PC. Based on 'inc', 'lost', and 'reset',
+    // one of 'self', 'pc', and 'false' will be put on 'next' and used as the
+    // input value of the Register, which will always load that value and write
+    // its current value to 'self'.
 
-    Mux16(a=self, b=pc, sel=inc, out=p0);
-    Mux16(a=p0, b=in, sel=load, out=p1);
-    Mux16(a=p1, b=false, sel=reset, out=cout);
+    Inc16 (in=self, out=pc);
 
-    Register(in=cout, load=true, out=out, out=self);
+    Mux16 (sel=inc,   a=self, b=pc,    out=pin0);
+    Mux16 (sel=load,  a=pin0, b=in,    out=pin1);
+    Mux16 (sel=reset, a=pin1, b=false, out=next);
+
+    Register (in=next, load=true, out=out, out=self);
 }`;
 export const tst = `output-list time%S1.4.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
 

@@ -14,8 +14,8 @@ export const sol = `CHIP HalfAdder {
         carry;  // Left bit of a + b
 
     PARTS:
-    Xor(a=a, b=b, out=sum);
-    And(a=a, b=b, out=carry);
+    Xor (a=a, b=b, out=sum);
+    And (a=a, b=b, out=carry);
 }`;
 export const cmp = `|   a   |   b   |  sum  | carry |
 |   0   |   0   |   0   |   0   |

@@ -20,36 +20,36 @@ export const sol = `CHIP RAM8 {
     DMux8Way(
         in=load,
         sel=address,
-        a=loada,
-        b=loadb,
-        c=loadc,
-        d=loadd,
-        e=loade,
-        f=loadf,
-        g=loadg,
-        h=loadh
+        a=load1,
+        b=load2,
+        c=load3,
+        d=load4,
+        e=load5,
+        f=load6,
+        g=load7,
+        h=load8
     );
 
     // The registers proper
-    Register(in=in, load=loada, out=rega);
-    Register(in=in, load=loadb, out=regb);
-    Register(in=in, load=loadc, out=regc);
-    Register(in=in, load=loadd, out=regd);
-    Register(in=in, load=loade, out=rege);
-    Register(in=in, load=loadf, out=regf);
-    Register(in=in, load=loadg, out=regg);
-    Register(in=in, load=loadh, out=regh);
+    Register (in=in, load=load1, out=reg1);
+    Register (in=in, load=load2, out=reg2);
+    Register (in=in, load=load3, out=reg3);
+    Register (in=in, load=load4, out=reg4);
+    Register (in=in, load=load5, out=reg5);
+    Register (in=in, load=load6, out=reg6);
+    Register (in=in, load=load7, out=reg7);
+    Register (in=in, load=load8, out=reg8);
 
     // The output logic is a simple muxer
     Mux8Way16(
-        a=rega,
-        b=regb,
-        c=regc,
-        d=regd,
-        e=rege,
-        f=regf,
-        g=regg,
-        h=regh,
+        a=reg1,
+        b=reg2,
+        c=reg3,
+        d=reg4,
+        e=reg5,
+        f=reg6,
+        g=reg7,
+        h=reg8,
         sel=address,
         out=out
     );

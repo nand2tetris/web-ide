@@ -49,12 +49,15 @@ export const sol = `CHIP CPU {
 
     PARTS:
 
-    // From figure 5.9
+    // See Figure 5.9 for a schematic of the CPU.
+
+    // From figure 5.9, set all control bits from incoming instruction. 
     Not(in=instruction[15], out=aInstruction);
     Mux16(
         b=false,
         a=instruction,
         sel=aInstruction,
+        out[15]=cInst,
         out[12]=a,
         out[11]=c1,
         out[10]=c2,
@@ -63,26 +66,36 @@ export const sol = `CHIP CPU {
         out[7]=c5,
         out[6]=c6,
         out[5]=d1,
-        out[4]=d2,
-        out[3]=d3,
+        out[4]=writeD,
+        out[3]=writeM,
         out[0..2]=jump
     );
 
-    // Register A will be filled from either the instruction line or the ALU
+    // Register A will be filled from either the instruction line or the ALU,
+    // based on the aInstruction bit (bit 15 of the instruction).
     Mux16(a=alu, b=instruction, sel=aInstruction, out=regA);
 
-    // Only read 15 bits of memory address in register A
+    // Only read 15 bits of memory address into register A.
     Or(a=aInstruction, b=d1, out=setA);
     ARegister(in=regA, in[15]=false, load=setA, out[0..14]=addressM, out=A);
 
-    // D register is loaded from the ALU when d2 is set
-    DRegister(in=alu, load=d2, out=D);
+    // D register is loaded from the ALU when d2 is set.
+    DRegister(in=alu, load=writeD, out=D);
 
+    // Fill the A bus line from either the A register or Memory, based on
+    // instruction bit a (12).
     Mux16(a=A, b=inM, sel=a, out=AM);
 
     // ALU control bits are mapped directly in C instructions when in c mode.
-    ALU(x=D, y=AM, zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6, out=alu, out=outM, zr=zr, ng=ng);
-    And(a=d3, b=true, out=writeM);
+    // If aInstruction is 0, c instructions are 0, and ALU will output 0.
+    ALU(
+        x=D,
+        y=AM,
+        zx=c1, nx=c2, zy=c3, ny=c4, f=c5, no=c6,
+        out=alu,
+        out=outM,
+        zr=zr, ng=ng
+    );
     
     // Jump
     Not(in=ng, out=nng);
@@ -97,15 +110,17 @@ export const sol = `CHIP CPU {
     And(a=jlt, b=jeq, out=jle);
     And(a=jgt, b=jlt, out=jne);
 
-    And(a=jump[2], b=jump[1], out=jumpu1);
-    And(a=jump[0], b=jumpu1, out=jumpu);
+    Or8Way(
+        in[0]=jgt,
+        in[1]=jeq,
+        in[2]=jge,
+        in[3]=jlt,
+        in[4]=jne,
+        in[5]=jle,
+        out=jmpi,
+    );
 
-    Or(a=jgt, b=jeq, out=j1);
-    Or(a=jge, b=j1, out=j2);
-    Or(a=jlt, b=j2, out=j3);
-    Or(a=jne, b=j3, out=j4);
-    Or(a=jle, b=j4, out=j5);
-    Or(a=jumpu, b=j5, out=jmp);
+    And(a=jmpi, b=cInst, out=jmp);
 
     PC(in=A, load=jmp, reset=reset, inc=true, out[0..14]=pc);
 }`;

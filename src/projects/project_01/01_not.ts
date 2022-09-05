@@ -16,7 +16,7 @@ CHIP Not {
     OUT out;
 
     PARTS:
-    Nand(a=in, b=in, out=out);
+    Nand (a=in, b=in, out=out);
 }`;
 export const tst = `output-list in%B3.1.3 out%B3.1.3;
 

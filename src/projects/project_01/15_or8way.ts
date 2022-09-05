@@ -19,13 +19,13 @@ export const sol = `CHIP Or8Way {
     OUT out;
 
     PARTS:
-    Or(a=in[0], b=in[1], out=or1);
-    Or(a=in[2], b=in[3], out=or2);
-    Or(a=in[4], b=in[5], out=or3);
-    Or(a=in[6], b=in[7], out=or4);
-    Or(a=or1, b=or2, out=or5);
-    Or(a=or3, b=or4, out=or6);
-    Or(a=or5, b=or6, out=out);
+    Or (a=in[0], b=in[1], out=or01);
+    Or (a=in[2], b=in[3], out=or23);
+    Or (a=in[4], b=in[5], out=or45);
+    Or (a=in[6], b=in[7], out=or67);
+    Or (a=or01, b=or23, out=or0123);
+    Or (a=or45, b=or67, out=or4567);
+    Or (a=or0123, b=or4567, out=out);
 }`;
 export const tst = `output-list in%B2.8.2 out%B2.1.2;
 

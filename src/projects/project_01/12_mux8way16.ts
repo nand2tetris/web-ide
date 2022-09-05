@@ -38,9 +38,29 @@ export const sol = `CHIP Mux8Way16 {
     OUT out[16];
 
     PARTS:
-    Mux4Way16(a=a, b=b, c=c, d=d, sel=sel[0..1], out=out1);
-    Mux4Way16(a=e, b=f, c=g, d=h, sel=sel[0..1], out=out2);
-    Mux16(a=out1, b=out2, sel=sel[2], out=out);
+    // Binary tree of 2-way multiplexors
+    Mux16 (a=a,    b=b,    sel=sel[0], out=ab);
+    Mux16 (a=c,    b=d,    sel=sel[0], out=cd);
+    Mux16 (a=e,    b=f,    sel=sel[0], out=ef);
+    Mux16 (a=g,    b=h,    sel=sel[0], out=gh);
+    Mux16 (a=ab,   b=cd,   sel=sel[1], out=abcd);
+    Mux16 (a=ef,   b=gh,   sel=sel[1], out=efgh);
+    Mux16 (a=abcd, b=efgh, sel=sel[2], out=out);
+
+
+// Alternate implementation
+//
+// This implementation replaces the upper two layers of the
+// tree with 4-way multiplexors.
+/*
+    Mux4Way16 (a=a, b=b, c=c, d=d, sel=sel[0..1], out=abcd);
+    Mux4Way16 (a=e, b=f, c=g, d=h, sel=sel[0..1], out=efgh);
+    Mux16     (a=abcd, b=efgh, sel=sel[2], out=out);
+*/
+
+// Alternate implementation
+//
+// Some students make a Mux8Way chip and apply it 16 times as in Not16.
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
 

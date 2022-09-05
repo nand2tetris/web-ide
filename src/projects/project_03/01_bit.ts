@@ -16,8 +16,8 @@ export const sol = `CHIP Bit {
 
     PARTS:
     
-    Mux(sel=load, a=dffout, b=in, out=dffin);
-    DFF(in=dffin, out=dffout, out=out);
+    Mux (a=dffOut, b=in, sel=load, out=muxOut);
+    DFF (in=muxOut, out=dffOut, out=out);
 }`;
 export const tst = `output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
 set in 0, set load 0, tick, output; tock, output;

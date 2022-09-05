@@ -19,9 +19,29 @@ export const sol = `CHIP Computer {
     IN reset;
 
     PARTS:
-    CPU(reset=reset, inM=outM, instruction=instruction, outM=inM, writeM=writeM, addressM=addressM, pc=pc);
-    ROM32K(address=pc, out=instruction);
-    Memory(in=inM, load=writeM, address=addressM, out=outM);
+    CPU(
+        reset=reset,
+        inM=outM,
+        instruction=instruction,
+        outM=inM,
+        writeM=writeM,
+        addressM=addressM,
+        pc=pc
+    );
+
+    // ROM
+    ROM32K(
+        address=pc,
+        out=instruction
+    );
+
+    // RAM
+    Memory(
+        in=inM,
+        load=writeM,
+        address=addressM,
+        out=outM
+    );
 }`;
 export const tst = `output-list time%S1.4.1 reset%B2.1.2 ARegister[]%D1.7.1 DRegister[]%D1.7.1 PC[]%D0.4.0 RAM16K[0]%D1.7.1 RAM16K[1]%D1.7.1 RAM16K[2]%D1.7.1;
 

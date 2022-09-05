@@ -26,9 +26,13 @@ export const sol = `CHIP Mux4Way16 {
     OUT out[16];
 
     PARTS:
-    Mux16(a=a, b=b, sel=sel[0], out=out1);
-    Mux16(a=c, b=d, sel=sel[0], out=out2);
-    Mux16(a=out1, b=out2, sel=sel[1], out=out);
+    Mux16(a=a,  b=b,  sel=sel[0], out=ab);
+    Mux16(a=c,  b=d,  sel=sel[0], out=cd);
+    Mux16(a=ab, b=cd, sel=sel[1], out=out);
+
+// Alternate implementation
+//
+// Some students make a Mux4Way chip and apply it 16 times as in Not16.
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
 

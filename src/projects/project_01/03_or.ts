@@ -18,9 +18,9 @@ export const sol = `CHIP Or {
     OUT out;
 
     PARTS:
-    Not(in=a, out=nota);
-    Not(in=b, out=notb);
-    Nand(a=nota, b=notb, out=out);
+    Not  (in=a, out=nota);
+    Not  (in=b, out=notb);
+    Nand (a=nota, b=notb, out=out);
 }`;
 export const tst = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 

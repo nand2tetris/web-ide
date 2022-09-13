@@ -95,6 +95,7 @@ const Monaco = ({
       minimap: {
         enabled: false,
       },
+      scrollBeyondLastLine: false,
     });
   }, []);
 

@@ -2,7 +2,7 @@ Tst <: Base {
   Root := Tst
   Tst = (TstStatement | TstRepeat)+
 
-  TstRepeat = Repeat Number OpenBrace TstStatement+ CloseBrace
+  TstRepeat = Repeat Number? OpenBrace TstStatement+ CloseBrace
   TstStatement = List<TstOperation, ","> (Semi | Bang)
 
   TstOperation =

@@ -165,10 +165,10 @@ tstSemantics.addAttribute<TstOperation>("operation", {
 });
 
 tstSemantics.addAttribute<TstStatement>("statement", {
-  TstRepeat(op, { value: count }, _o, statements, _c) {
+  TstRepeat(op, count, _o, statements, _c) {
     return {
       statements: statements.children.map(({ statement }) => statement),
-      count,
+      count: count.child(0)?.value ?? -1,
     };
   },
   TstStatement(list, end) {

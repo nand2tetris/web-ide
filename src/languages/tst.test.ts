@@ -23,6 +23,12 @@ repeat 14 {
 }
 `;
 
+const INDEF_REPEAT = `
+repeat {
+  eval, output;
+}
+`;
+
 describe("tst language", () => {
   it("parses an output format", () => {
     let match = grammar.match("a%B3.1.3", "OutputFormat");
@@ -368,6 +374,27 @@ describe("tst language", () => {
               span: {
                 start: 15,
                 end: 28,
+              },
+              ops: [{ op: "eval" }, { op: "output" }],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("repeats indefinitely", () => {
+    let match = grammar.match(INDEF_REPEAT);
+    expect(match).toHaveSucceeded();
+    expect(TST.semantics(match).tst).toEqual({
+      lines: [
+        {
+          count: -1,
+          statements: [
+            {
+              span: {
+                start: 12,
+                end: 25,
               },
               ops: [{ op: "eval" }, { op: "output" }],
             },

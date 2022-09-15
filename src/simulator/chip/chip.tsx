@@ -294,6 +294,9 @@ export class Chip {
     for (const [_, pin] of this.ins) {
       pin.busVoltage = 0;
     }
+    for (const part of this.parts) {
+      part.reset();
+    }
     this.eval();
   }
 

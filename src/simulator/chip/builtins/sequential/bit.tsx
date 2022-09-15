@@ -17,6 +17,10 @@ export class Bit extends ClockedChip {
   override tock() {
     this.out().pull(this.bit ?? 0);
   }
+
+  override reset() {
+    this.bit = LOW;
+  }
 }
 
 export class Register extends ClockedChip {
@@ -38,6 +42,10 @@ export class Register extends ClockedChip {
 
   override get(name: string, offset?: number): Pin | undefined {
     return name === this.name ? this.out() : super.get(name, offset);
+  }
+
+  override reset() {
+    this.bits = 0x00;
   }
 }
 
@@ -79,5 +87,9 @@ export class PC extends ClockedChip {
 
   override get(name: string, offset?: number): Pin | undefined {
     return name === this.name ? this.out() : super.get(name, offset);
+  }
+
+  override reset() {
+    this.bits = 0x00;
   }
 }

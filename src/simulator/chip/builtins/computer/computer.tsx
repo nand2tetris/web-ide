@@ -215,6 +215,11 @@ export class CPU extends ClockedChip {
       />,
     ];
   }
+
+  override reset() {
+    this.state = emptyState();
+    super.reset();
+  }
 }
 
 export class Computer extends Chip {

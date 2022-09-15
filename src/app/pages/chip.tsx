@@ -1,6 +1,8 @@
 import {
   CSSProperties,
   ReactNode,
+  useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -23,8 +25,11 @@ import { Timer } from "../../simulator/timer";
 import { useStateInitializer } from "../util/react";
 import { Clockface } from "../components/clockface";
 import { PROJECTS } from "../../projects";
+import { Icon } from "../components/pico/icon";
+import { AppContext } from "../App.context";
 
 export const Chip = () => {
+  const { filePicker, fs, setStatus } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
@@ -44,6 +49,17 @@ export const Chip = () => {
       cmp: files.cmp ?? cmp,
     });
   };
+
+  const loadTest = useCallback(async () => {
+    try {
+      const path = await filePicker.select();
+      const tst = await fs.readFile(path);
+      await compile.current({ tst });
+    } catch (e) {
+      console.error(e);
+      setStatus(`Failed to load into memory`);
+    }
+  }, [filePicker, setStatus, fs, compile]);
 
   const runner = useRef<Timer>();
   useEffect(() => {
@@ -243,6 +259,11 @@ export const Chip = () => {
           </div>
           <div className="flex-2">
             {runner.current && <Runbar runner={runner.current} />}
+          </div>
+          <div>
+            <button onClick={loadTest}>
+              <Icon name="upload_file" />{" "}
+            </button>
           </div>
         </>
       }

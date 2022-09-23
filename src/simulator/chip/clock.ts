@@ -111,16 +111,13 @@ export function useClock(actions: {
   };
 }
 
-export function useClockFrame(
-  frameFinished: () => void,
-  deps: DependencyList = []
-) {
+export function useClockFrame(frameFinished: () => void) {
   useEffect(() => {
     const subscription = clock.frame$.subscribe(() => {
       frameFinished();
     });
     return () => subscription.unsubscribe();
-  }, deps);
+  }, [frameFinished]);
 }
 
 export function useClockface() {

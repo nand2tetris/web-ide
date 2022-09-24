@@ -39,7 +39,7 @@ export const InlineEdit = (props: {
     []
   );
   const doChange = useCallback(
-    (target: EventTarget & HTMLInputElement) => {
+    (target: HTMLInputElement) => {
       setMode(Mode.VIEW);
       setValue(target.value ?? "");
       props.onChange(target.value ?? "");
@@ -60,7 +60,7 @@ export const InlineEdit = (props: {
           onBlur={({ target }) => doChange(target)}
           onKeyPress={({ key, target }) => {
             if (key === "Enter") {
-              doChange(target);
+              doChange(target as HTMLInputElement);
             }
           }}
           type="text"

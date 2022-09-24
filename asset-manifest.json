@@ -1,32 +1,32 @@
 {
   "files": {
     "main.css": "/computron5k/static/css/main.9c5266cc.css",
-    "main.js": "/computron5k/static/js/main.5b0b2320.js",
+    "main.js": "/computron5k/static/js/main.08123c39.js",
     "static/js/70.40e87115.chunk.js": "/computron5k/static/js/70.40e87115.chunk.js",
     "static/css/708.88ace6fd.chunk.css": "/computron5k/static/css/708.88ace6fd.chunk.css",
-    "static/js/708.48cb6358.chunk.js": "/computron5k/static/js/708.48cb6358.chunk.js",
-    "static/js/635.7fccc414.chunk.js": "/computron5k/static/js/635.7fccc414.chunk.js",
+    "static/js/708.8da086d4.chunk.js": "/computron5k/static/js/708.8da086d4.chunk.js",
+    "static/js/635.5a05024c.chunk.js": "/computron5k/static/js/635.5a05024c.chunk.js",
     "static/js/750.d8a779a2.chunk.js": "/computron5k/static/js/750.d8a779a2.chunk.js",
     "static/js/787.ef8b0fad.chunk.js": "/computron5k/static/js/787.ef8b0fad.chunk.js",
-    "static/css/847.9612ceb3.chunk.css": "/computron5k/static/css/847.9612ceb3.chunk.css",
-    "static/js/847.53d464d2.chunk.js": "/computron5k/static/js/847.53d464d2.chunk.js",
-    "static/js/941.08eb192d.chunk.js": "/computron5k/static/js/941.08eb192d.chunk.js",
-    "static/media/codicon.ttf": "/computron5k/static/media/codicon.ade705761eb7e702770d.ttf",
+    "static/css/186.51ba4202.chunk.css": "/computron5k/static/css/186.51ba4202.chunk.css",
+    "static/js/186.89ec147d.chunk.js": "/computron5k/static/js/186.89ec147d.chunk.js",
+    "static/js/941.c7a3cc32.chunk.js": "/computron5k/static/js/941.c7a3cc32.chunk.js",
+    "static/media/codicon.ttf": "/computron5k/static/media/codicon.b797181c93b3755f4fa1.ttf",
     "index.html": "/computron5k/index.html",
     "main.9c5266cc.css.map": "/computron5k/static/css/main.9c5266cc.css.map",
-    "main.5b0b2320.js.map": "/computron5k/static/js/main.5b0b2320.js.map",
+    "main.08123c39.js.map": "/computron5k/static/js/main.08123c39.js.map",
     "70.40e87115.chunk.js.map": "/computron5k/static/js/70.40e87115.chunk.js.map",
     "708.88ace6fd.chunk.css.map": "/computron5k/static/css/708.88ace6fd.chunk.css.map",
-    "708.48cb6358.chunk.js.map": "/computron5k/static/js/708.48cb6358.chunk.js.map",
-    "635.7fccc414.chunk.js.map": "/computron5k/static/js/635.7fccc414.chunk.js.map",
+    "708.8da086d4.chunk.js.map": "/computron5k/static/js/708.8da086d4.chunk.js.map",
+    "635.5a05024c.chunk.js.map": "/computron5k/static/js/635.5a05024c.chunk.js.map",
     "750.d8a779a2.chunk.js.map": "/computron5k/static/js/750.d8a779a2.chunk.js.map",
     "787.ef8b0fad.chunk.js.map": "/computron5k/static/js/787.ef8b0fad.chunk.js.map",
-    "847.9612ceb3.chunk.css.map": "/computron5k/static/css/847.9612ceb3.chunk.css.map",
-    "847.53d464d2.chunk.js.map": "/computron5k/static/js/847.53d464d2.chunk.js.map",
-    "941.08eb192d.chunk.js.map": "/computron5k/static/js/941.08eb192d.chunk.js.map"
+    "186.51ba4202.chunk.css.map": "/computron5k/static/css/186.51ba4202.chunk.css.map",
+    "186.89ec147d.chunk.js.map": "/computron5k/static/js/186.89ec147d.chunk.js.map",
+    "941.c7a3cc32.chunk.js.map": "/computron5k/static/js/941.c7a3cc32.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.9c5266cc.css",
-    "static/js/main.5b0b2320.js"
+    "static/js/main.08123c39.js"
   ]
 }

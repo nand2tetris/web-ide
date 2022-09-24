@@ -39,7 +39,7 @@
 
 @media (max-width: 1616px) {
   .ChipPage {
-    grid-template-rows: 1fr 1fr;
+    grid-template-rows: 3fr 2fr;
     grid-template-columns: 1fr var(--screen-size);
 
     grid-template-areas:

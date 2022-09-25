@@ -1,5 +1,5 @@
 Base {
-  Root = (Name | Number)*
+  Root = Value*
 
   At = at
   Bang = bang
@@ -41,6 +41,9 @@ Base {
   semi = ";"
   underscore = "_"
 
+  Value = identifier | number | boolean
+
+  boolean = true | false
   True = true
   False = false
   true = "true"
@@ -49,7 +52,8 @@ Base {
   Name = identifier
   identifier = (letter|underscore) (alnum|underscore)*
 
-  Number = hexNumber | decNumber | binNumber
+  Number = number
+  number = hexNumber | decNumber | binNumber
   binNumber = ("%B") ("0"|"1")+
   hexNumber = ("%X") hexDigit+
   decNumber = ("%D")? (wholeDec | realDec)

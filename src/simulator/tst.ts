@@ -7,6 +7,7 @@ import {
   TstOperation,
   TstOutputSpec,
   TstStatement,
+  TstWhileStatement,
 } from "../languages/tst";
 import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip";
 import { Clock } from "./chip/clock";
@@ -64,9 +65,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this._step = this.steps.next();
     if (!this._step.done) {
       await this._step.value.do(this);
-      return true;
+      return false;
     }
-    return false;
+    return true;
   }
 
   async run() {
@@ -104,6 +105,10 @@ function isTstLineStatment(line: TstStatement): line is TstLineStatement {
   return (line as TstLineStatement).ops !== undefined;
 }
 
+function isTstWhileStatement(line: TstStatement): line is TstWhileStatement {
+  return (line as TstWhileStatement).condition !== undefined;
+}
+
 export class ChipTest extends Test<ChipTestInstruction> {
   private chip: Chip = new Low();
   private clock = Clock.get();
@@ -115,7 +120,15 @@ export class ChipTest extends Test<ChipTestInstruction> {
       if (isTstLineStatment(line)) {
         test.addInstruction(ChipTest.makeLineStatement(line));
       } else {
-        const repeat = new TestRepeatInstruction(line.count);
+        let repeat = isTstWhileStatement(line)
+          ? new TestWhileInstruction(
+              new Condition(
+                line.condition.left,
+                line.condition.right,
+                line.condition.op
+              )
+            )
+          : new TestRepeatInstruction(line.count);
         repeat.span = line.span;
         test.addInstruction(repeat);
         for (const statement of line.statements) {
@@ -173,10 +186,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
     }
     variable = `${variable}`;
     // Look up built-in chip state variables
-    return (
-      this.chip.in(variable) !== undefined ||
-      this.chip.out(variable) !== undefined
-    );
+    return this.chip.hasIn(variable) || this.chip.hasOut(variable);
   }
 
   getVar(variable: string | number, offset?: number): number | string {
@@ -401,6 +411,7 @@ export class TestWhileInstruction extends TestCompoundInstruction {
 
   override *steps(test: Test) {
     while (this.condition.check(test)) {
+      yield this;
       for (const instruction of this.instructions) {
         yield* instruction.steps(test);
       }

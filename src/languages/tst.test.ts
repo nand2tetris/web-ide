@@ -29,6 +29,10 @@ repeat {
 }
 `;
 
+const COND_WHILE = `while out <> 89 {
+  eval;
+}`;
+
 describe("tst language", () => {
   it("parses an output format", () => {
     let match = grammar.match("a%B3.1.3", "OutputFormat");
@@ -405,6 +409,35 @@ describe("tst language", () => {
                 end: 25,
               },
               ops: [{ op: "eval" }, { op: "output" }],
+            },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("loops with a condition", () => {
+    let match = grammar.match(COND_WHILE);
+    expect(match).toHaveSucceeded();
+    expect(TST.semantics(match).tst).toEqual({
+      lines: [
+        {
+          span: {
+            start: 0,
+            end: 15,
+          },
+          condition: {
+            op: "<>",
+            left: "out",
+            right: 89,
+          },
+          statements: [
+            {
+              span: {
+                start: 20,
+                end: 25,
+              },
+              ops: [{ op: "eval" }],
             },
           ],
         },

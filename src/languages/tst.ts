@@ -69,7 +69,19 @@ export interface TstRepeat {
   span: Span;
 }
 
-export type TstStatement = TstLineStatement | TstRepeat;
+export interface TstWhileCondition {
+  op: "<" | "<=" | "=" | ">=" | ">" | "<>";
+  left: string | number;
+  right: string | number;
+}
+
+export interface TstWhileStatement {
+  statements: TstLineStatement[];
+  condition: TstWhileCondition;
+  span: Span;
+}
+
+export type TstStatement = TstLineStatement | TstRepeat | TstWhileStatement;
 
 export interface Tst {
   lines: TstStatement[];
@@ -165,7 +177,27 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   },
 });
 
+tstSemantics.addAttribute<TstWhileCondition>("condition", {
+  Condition({ value: left }, { sourceString: op }, { value: right }) {
+    return {
+      left,
+      right,
+      op: op as "<" | "<=" | "=" | ">=" | ">" | "<>",
+    };
+  },
+});
+
 tstSemantics.addAttribute<TstStatement>("statement", {
+  TstWhile(op, cond, _o, statements, _c) {
+    return {
+      statements: statements.children.map(({ statement }) => statement),
+      condition: cond.condition,
+      span: {
+        start: op.source.startIdx,
+        end: cond.source.endIdx,
+      },
+    };
+  },
   TstRepeat(op, count, _o, statements, _c) {
     return {
       statements: statements.children.map(({ statement }) => statement),

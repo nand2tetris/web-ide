@@ -183,13 +183,14 @@ set address %X5FCF, eval, output;
 
 
 set load 0, set address 24576,
-echo "Make sure you see ONLY two horizontal lines in the middle of the screen. Change Keyboard to 'Y' (uppercase) to continue ...",
+echo "Make sure you see ONLY two horizontal lines in the middle of the screen. Change Keyboard to 'Y' (uppercase) to continue ...";
 
+/*
 while out <> 89 {
     eval;
 }
-clear-echo, output;
-output;`;
+*/
+clear-echo;`;
 export const cmp = `|   in   |load |     address     |  out   |
 |     -1 |  1  | 000000000000000 |      0 |
 |     -1 |  1  | 000000000000000 |     -1 |

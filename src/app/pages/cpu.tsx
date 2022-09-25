@@ -19,11 +19,11 @@ export const CPU = () => {
   const runner = new (class CPURunner extends Timer {
     override tick() {
       cpu.tick();
-      tickScreen();
+      return false;
     }
 
     override finishFrame() {
-      // setState();
+      tickScreen();
     }
 
     override reset() {

@@ -73,8 +73,8 @@ export const Chip = () => {
         dispatch.current({ action: "updateTestStep" });
       }
 
-      async tick(): Promise<void> {
-        actions.tick();
+      async tick(): Promise<boolean> {
+        return actions.tick();
       }
 
       toggle(): void {

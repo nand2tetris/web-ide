@@ -13,7 +13,7 @@ export abstract class Timer {
     clock.frame();
   }
 
-  abstract tick(): void;
+  abstract tick(): Promise<boolean> | boolean;
 
   abstract finishFrame(): void;
 
@@ -30,7 +30,7 @@ export abstract class Timer {
   #running = false;
   #sinceLastFrame = 0;
   #lastUpdate = 0;
-  #run = () => {
+  #run = async () => {
     if (!this.#running) {
       return;
     }
@@ -39,10 +39,14 @@ export abstract class Timer {
     this.#lastUpdate = now;
     this.#sinceLastFrame += delta;
     if (this.#sinceLastFrame > this.speed) {
-      for (let i = 0; i < Math.min(this.steps, MAX_STEPS); i++) {
-        this.tick();
+      let done = false;
+      for (let i = 0; i < Math.min(this.steps, MAX_STEPS) && !done; i++) {
+        done = await this.tick();
       }
       this.finishFrame();
+      if (done) {
+        this.stop();
+      }
       this.#sinceLastFrame -= this.speed;
     }
     requestAnimationFrame(this.#run);

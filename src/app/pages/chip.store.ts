@@ -378,8 +378,9 @@ export function makeChipStore(
     },
 
     async tick() {
-      await test.step();
+      const done = await test.step();
       dispatch.current({ action: "updateTestStep" });
+      return done;
     },
   };
 

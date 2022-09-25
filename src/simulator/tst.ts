@@ -70,7 +70,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   async run() {
-    while (await this.step());
+    while (!(await this.step()));
   }
 
   protected readonly breakpoints: Map<string, number> = new Map();

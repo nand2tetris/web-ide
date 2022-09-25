@@ -46,9 +46,11 @@ describe("All Projects", () => {
       expect(chip).toBeOk();
       const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(Ok(chip as Ok<Chip>));
 
-      if (chipName === "Computer") {
+      if (project === "05") {
         test.setFileSystem(
-          new FileSystem(new ObjectFileSystemAdapter({ "/Max.hack": Max }))
+          new FileSystem(
+            new ObjectFileSystemAdapter({ "/samples/Max.hack": Max })
+          )
         );
       }
 

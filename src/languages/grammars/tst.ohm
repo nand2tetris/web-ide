@@ -1,8 +1,9 @@
 Tst <: Base {
   Root := Tst
-  Tst = (TstStatement | TstRepeat)+
+  Tst = (TstStatement | TstRepeat | TstWhile)+
 
   TstRepeat = Repeat Number? OpenBrace TstStatement+ CloseBrace
+  TstWhile = While Condition OpenBrace TstStatement+ CloseBrace
   TstStatement = List<TstOperation, ","> (Semi | Bang)
 
   TstOperation =
@@ -19,6 +20,7 @@ Tst <: Base {
   OutputFormat = Name Index? percent FormatStyle wholeDec dot wholeDec dot wholeDec
   TstSetOperation = Set Name Index? Number
   Index = OpenSquare wholeDec? CloseSquare
+  Condition = Value CompareOp Value
   TstEvalOperation = Eval | Tick | Tock
   TstOutputOperation = Output
   TstEchoOperation = Echo String
@@ -38,4 +40,7 @@ Tst <: Base {
   FormatStyle = "B"|"D"|"S"|"X"
   ROM32K = "ROM32K"
   Load = "load"
+  While = "while"
+
+  CompareOp = "<>" | "<=" | ">=" | "=" | "<" | ">"
 }

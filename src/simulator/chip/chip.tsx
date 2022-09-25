@@ -301,13 +301,21 @@ export class Chip {
   }
 
   in(pin = "in"): Pin {
-    assert(this.ins.has(pin), `No pin ${pin}`);
+    assert(this.hasIn(pin), `No in pin ${pin}`);
     return this.ins.get(pin)!;
   }
 
   out(pin = "out"): Pin {
-    assert(this.outs.has(pin));
+    assert(this.hasOut(pin), `No in pin ${pin}`);
     return this.outs.get(pin)!;
+  }
+
+  hasIn(pin: string): boolean {
+    return this.ins.has(pin);
+  }
+
+  hasOut(pin: string): boolean {
+    return this.outs.has(pin);
   }
 
   pin(name: string): Pin {

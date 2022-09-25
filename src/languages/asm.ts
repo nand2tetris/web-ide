@@ -76,13 +76,14 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
     try {
       return {
         type: "A",
-        value: val.value,
+        label: val.name,
       };
     } catch (e) {}
+
     try {
       return {
         type: "A",
-        label: val.name,
+        value: val.value,
       };
     } catch (e) {}
 

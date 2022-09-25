@@ -6,8 +6,6 @@ import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result";
 
 export const UNKNOWN_PARSE_ERROR = t`Unknown parse error`;
 
-// Reload .....
-
 const baseGrammar = raw("./grammars/base.ohm");
 export const grammars = {
   Base: ohm.grammar(baseGrammar),
@@ -34,8 +32,14 @@ baseSemantics.addAttribute("value", {
   hexNumber(_, digits) {
     return int16(digits.sourceString);
   },
-  Number: (num) => {
+  Number(num) {
     return num.value;
+  },
+  Name(ident) {
+    return ident.name;
+  },
+  identifier(_, __): string {
+    return this.sourceString;
   },
 });
 

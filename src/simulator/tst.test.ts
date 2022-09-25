@@ -150,6 +150,10 @@ describe("Simulator Test", () => {
             },
           },
         ],
+        span: {
+          start: 0,
+          end: 27,
+        },
       };
 
       const test = ChipTest.from({ lines: [repeat] });

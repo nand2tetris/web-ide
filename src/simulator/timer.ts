@@ -100,9 +100,11 @@ const makeTimerStore = (
     },
     setSteps(state: TimerStoreState, steps: number) {
       state.steps = steps;
+      timer.steps = steps;
     },
     setSpeed(state: TimerStoreState, speed: number) {
       state.speed = speed;
+      timer.speed = speed;
     },
   };
 

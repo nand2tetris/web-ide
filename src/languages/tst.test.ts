@@ -378,6 +378,10 @@ describe("tst language", () => {
               ops: [{ op: "eval" }, { op: "output" }],
             },
           ],
+          span: {
+            start: 1,
+            end: 10,
+          },
         },
       ],
     });
@@ -390,6 +394,10 @@ describe("tst language", () => {
       lines: [
         {
           count: -1,
+          span: {
+            start: 1,
+            end: 7,
+          },
           statements: [
             {
               span: {

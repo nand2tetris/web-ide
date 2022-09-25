@@ -22,9 +22,12 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this.fs = fs;
   }
 
-  async load(filename: string) {}
-  async compareTo(filename: string) {}
-  outputFile(filename: string): void {}
+  echo(_content: string) {}
+  clearEcho() {}
+
+  async load(_filename: string) {}
+  async compareTo(_filename: string) {}
+  outputFile(_filename: string): void {}
   outputList(outputs: Output[]): void {
     this._outputList = outputs;
   }
@@ -34,7 +37,12 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   reset() {
-    this._steps = this.instructions[Symbol.iterator]();
+    const test = this;
+    this._steps = (function* () {
+      for (const instruction of test.instructions) {
+        yield* instruction.steps(test);
+      }
+    })();
     this._log = "";
   }
 
@@ -64,10 +72,6 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   async run() {
     while (await this.step());
   }
-
-  echo(content: string) {}
-
-  clearEcho() {}
 
   protected readonly breakpoints: Map<string, number> = new Map();
   addBreakpoint(variable: string, value: number) {
@@ -243,9 +247,8 @@ export class VMTest extends Test<VMTestInstruction> {
 
 export interface TestInstruction {
   span?: Span;
-  do(
-    test: Test
-  ): Generator<void, void, void> | AsyncGenerator<void, void, void>;
+  do(test: Test): void;
+  steps(test: Test): IterableIterator<TestInstruction>;
 }
 
 export class TestSetInstruction implements TestInstruction {
@@ -255,15 +258,22 @@ export class TestSetInstruction implements TestInstruction {
     private index?: number | undefined
   ) {}
 
-  *do(test: Test) {
+  do(test: Test) {
     test.setVar(this.variable, this.value, this.index);
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestOutputInstruction implements TestInstruction {
-  *do(test: Test) {
-    yield test.output();
+  do(test: Test) {
+    test.output();
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
@@ -290,10 +300,13 @@ export class TestOutputListInstruction implements TestInstruction {
     );
   }
 
-  *do(test: Test) {
+  do(test: Test) {
     test.outputList(this.outputs);
     test.header();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
@@ -305,10 +318,14 @@ export class TestCompoundInstruction implements TestInstruction {
     this.instructions.push(instruction);
   }
 
-  async *do(test: Test) {
+  do(test: Test<TestInstruction>): void {
     for (const instruction of this.instructions) {
-      yield* await instruction.do(test);
+      instruction.do(test);
     }
+  }
+
+  *steps(_test: Test): Generator<TestInstruction> {
+    yield this;
   }
 }
 
@@ -317,9 +334,24 @@ export class TestRepeatInstruction extends TestCompoundInstruction {
     super();
   }
 
-  override async *do(test: Test) {
-    for (let i = 0; i < this.repeat; i++) {
-      yield* await super.do(test);
+  override do() {}
+
+  private *innerSteps(test: Test) {
+    yield this;
+    for (const instruction of this.instructions) {
+      yield* instruction.steps(test);
+    }
+  }
+
+  override *steps(test: Test) {
+    if (this.repeat === -1) {
+      while (true) {
+        yield* this.innerSteps(test);
+      }
+    } else {
+      for (let i = 0; i < this.repeat; i++) {
+        yield* this.innerSteps(test);
+      }
     }
   }
 }
@@ -367,10 +399,10 @@ export class TestWhileInstruction extends TestCompoundInstruction {
     super();
   }
 
-  override async *do(test: Test) {
+  override *steps(test: Test) {
     while (this.condition.check(test)) {
       for (const instruction of this.instructions) {
-        yield* await instruction.do(test);
+        yield* instruction.steps(test);
       }
     }
   }
@@ -378,99 +410,126 @@ export class TestWhileInstruction extends TestCompoundInstruction {
 
 export class TestEchoInstruction implements TestInstruction {
   constructor(public readonly content: string) {}
-  *do(test: Test) {
+  do(test: Test) {
     test.echo(this.content);
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestClearEchoInstruction implements TestInstruction {
-  *do(test: Test) {
+  do(test: Test) {
     test.clearEcho();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestLoadROMInstruction implements TestInstruction {
   constructor(readonly file: string) {}
-  async *do(test: Test) {
-    yield await test.load(this.file);
+  async do(test: Test) {
+    test.fs.pushd("/samples");
+    await test.load(this.file);
+    test.fs.popd();
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestBreakpointInstruction implements TestInstruction {
   constructor(readonly variable: string, readonly value: number) {}
 
-  *do(test: Test) {
+  do(test: Test) {
     test.addBreakpoint(this.variable, this.value);
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestClearBreakpointsInstruction implements TestInstruction {
-  *do(test: Test) {
+  do(test: Test) {
     test.clearBreakpoints();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export interface ChipTestInstruction extends TestInstruction {
   _chipTestInstruction_: true;
-  do(
-    test: ChipTest
-  ): Generator<void, void, void> | AsyncGenerator<void, void, void>;
+  do(test: ChipTest): void | Promise<void>;
 }
 
 export class TestEvalInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  *do(test: ChipTest) {
+  do(test: ChipTest) {
     test.eval();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestTickInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  *do(test: ChipTest) {
+  do(test: ChipTest) {
     test.tick();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export class TestTockInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  *do(test: ChipTest) {
+  do(test: ChipTest) {
     test.tock();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export interface CPUTestInstruction extends TestInstruction {
   _cpuTestInstruction_: true;
-  do(
-    test: CPUTest
-  ): Generator<void, void, void> | AsyncGenerator<void, void, void>;
+  do(test: CPUTest): void | Promise<void>;
 }
 
 export class TestTickTockInstruction implements CPUTestInstruction {
   readonly _cpuTestInstruction_ = true;
-  *do(test: CPUTest) {
+  do(test: CPUTest) {
     test.ticktock();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }
 
 export interface VMTestInstruction extends TestInstruction {
   _vmTestInstruction_: true;
-  do(
-    test: VMTest
-  ): Generator<void, void, void> | AsyncGenerator<void, void, void>;
+  do(test: VMTest): void | Promise<void>;
 }
 
 export class TestVMStepInstruction implements VMTestInstruction {
   readonly _vmTestInstruction_ = true;
-  *do(test: VMTest) {
+  do(test: VMTest) {
     test.vmstep();
-    yield;
+  }
+
+  *steps() {
+    yield this;
   }
 }

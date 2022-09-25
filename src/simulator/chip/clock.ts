@@ -1,7 +1,7 @@
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert";
 import { HIGH, LOW, Voltage } from "./chip";
-import { DependencyList, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 
 interface Tick {

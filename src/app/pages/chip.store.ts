@@ -16,7 +16,7 @@ import { ImmPin, reducePins } from "../components/pinout";
 import { REGISTRY } from "../../simulator/chip/builtins";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { Span } from "../../languages/base";
-import { PROJECTS } from "../../projects";
+import { Projects, PROJECTS } from "../../projects";
 import { useImmerReducer } from "../util/react";
 
 export const PROJECT_NAMES = [
@@ -35,17 +35,17 @@ function dropdowns(storage: Record<string, string>) {
 
 function makeHdl(name: string) {
   return `CHIP ${name} {
-    IN in;
-    OUT out;
-    PARTS:
-  }`;
+  IN in;
+  OUT out;
+  PARTS:
+}`;
 }
 
 function makeTst() {
   return `repeat 10 {
-      tick,
-      tock;
-    }`;
+  tick,
+  tock;
+}`;
 }
 
 function makeCmp() {
@@ -222,7 +222,10 @@ export function makeChipStore(
       this.setChip(PROJECTS[project][0]);
     },
 
-    setChip(chip: string, project = storage["/chip/project"]) {
+    setChip(
+      chip: string,
+      project = storage["/chip/project"] ?? Projects["01"]
+    ) {
       chipName = storage["/chip/chip"] = chip;
       dispatch.current({ action: "setChip", payload: chipName });
       this.loadChip(project, chipName);
@@ -285,7 +288,10 @@ export function makeChipStore(
 
       const [hdl, tst, cmp] = await Promise.all([
         fs.readFile(fsName("hdl")).catch(() => makeHdl(name)),
-        fs.readFile(fsName("tst")).catch(() => makeTst()),
+        fs.readFile(fsName("tst")).catch((e) => {
+          console.log(e);
+          return makeTst();
+        }),
         fs.readFile(fsName("cmp")).catch(() => makeCmp()),
       ]);
 
@@ -373,6 +379,7 @@ export function makeChipStore(
 
     async tick() {
       await test.step();
+      dispatch.current({ action: "updateTestStep" });
     },
   };
 

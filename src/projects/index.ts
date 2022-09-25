@@ -1,4 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { asyncUsing, Enter, Exit } from "@davidsouther/jiffies/lib/esm/context";
 
 import * as project_01 from "./project_01/index";
 import * as project_02 from "./project_02/index";
@@ -36,18 +37,35 @@ export const Projects = {
   "05": project_05,
 };
 
+let reset = false;
 export const resetFiles = async (fs: FileSystem) => {
+  if (reset) return; // React will double-render a call to resetFiles in useEffect.
+  reset = true;
   await project_01.resetFiles(fs);
   await project_02.resetFiles(fs);
   await project_03.resetFiles(fs);
   await project_05.resetFiles(fs);
+  reset = false;
 };
 
 export const loadSolutions = async (fs: FileSystem) => {
-  await project_01.loadSolutions(fs);
-  await project_02.loadSolutions(fs);
-  await project_03.loadSolutions(fs);
-  await project_05.loadSolutions(fs);
+  if (reset) return; // React will double-render a call to resetFiles in useEffect.
+  asyncUsing(
+    {
+      [Enter]() {
+        reset = true;
+      },
+      [Exit]() {
+        reset = false;
+      },
+    },
+    async () => {
+      await project_01.loadSolutions(fs);
+      await project_02.loadSolutions(fs);
+      await project_03.loadSolutions(fs);
+      await project_05.loadSolutions(fs);
+    }
+  );
 };
 
 export const loadSamples = async (fs: FileSystem) => {

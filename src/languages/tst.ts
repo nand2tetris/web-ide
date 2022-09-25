@@ -66,6 +66,7 @@ export interface TstLineStatement {
 export interface TstRepeat {
   statements: TstLineStatement[];
   count: number;
+  span: Span;
 }
 
 export type TstStatement = TstLineStatement | TstRepeat;
@@ -169,6 +170,10 @@ tstSemantics.addAttribute<TstStatement>("statement", {
     return {
       statements: statements.children.map(({ statement }) => statement),
       count: count.child(0)?.value ?? -1,
+      span: {
+        start: op.source.startIdx,
+        end: count.source.endIdx,
+      },
     };
   },
   TstStatement(list, end) {

@@ -112,6 +112,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
         test.addInstruction(ChipTest.makeLineStatement(line));
       } else {
         const repeat = new TestRepeatInstruction(line.count);
+        repeat.span = line.span;
         test.addInstruction(repeat);
         for (const statement of line.statements) {
           repeat.addInstruction(ChipTest.makeLineStatement(statement));

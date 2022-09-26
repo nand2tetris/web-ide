@@ -63,6 +63,7 @@ const Home = () => {
   const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
     async ({ target }) => {
       const files = [...(target.files ?? [])]
+        .filter((file) => file.name.endsWith(".hdl"))
         .map((file) => ({ file, ...splitFile(file) }))
         .filter(hasTest)
         .map(async (file) => {

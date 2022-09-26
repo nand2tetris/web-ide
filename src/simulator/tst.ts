@@ -347,7 +347,6 @@ export class TestRepeatInstruction extends TestCompoundInstruction {
   override do() {}
 
   private *innerSteps(test: Test) {
-    yield this;
     for (const instruction of this.instructions) {
       yield* instruction.steps(test);
     }
@@ -355,11 +354,13 @@ export class TestRepeatInstruction extends TestCompoundInstruction {
 
   override *steps(test: Test) {
     if (this.repeat === -1) {
+      yield this;
       while (true) {
         yield* this.innerSteps(test);
       }
     } else {
       for (let i = 0; i < this.repeat; i++) {
+        yield this;
         yield* this.innerSteps(test);
       }
     }

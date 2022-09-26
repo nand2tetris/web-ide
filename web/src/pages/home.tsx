@@ -1,9 +1,9 @@
+import { Assignments } from "@computron5k/simulator/projects/index.js";
+import { runTests } from "@computron5k/simulator/projects/runner.js";
 import { Trans } from "@lingui/macro";
 import { ChangeEventHandler, useCallback, useContext, useState } from "react";
 import { AppContext } from "../App.context";
 import { DiffTable } from "../components/difftable";
-import { Assignments } from "../../projects";
-import { runTests } from "../../projects/runner";
 
 function splitFile(file: File) {
   const { name, ext } = file.name.match(

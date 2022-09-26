@@ -1,0 +1,13 @@
+{
+  "name": "@computon5k/cli",
+  "version": "0.1.0",
+  "description": "NAND2Tetris Command Line tools",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@computron5k/simulator": "*",
+    "@davidsouther/jiffies": "file:../../jiffies"
+  }
+}

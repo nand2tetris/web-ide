@@ -41,7 +41,12 @@ export class RAM extends ClockedChip {
 
   override render() {
     return [
-      <MemoryComponent name={this.name} memory={this.memory} format="dec" />,
+      <MemoryComponent
+        name={this.name}
+        memory={this.memory}
+        format="dec"
+        highlight={this.address}
+      />,
     ];
   }
 }

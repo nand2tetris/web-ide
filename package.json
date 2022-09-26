@@ -1,8 +1,8 @@
 {
   "name": "computron5k",
   "version": "0.0.0",
+  "private": true,
   "description": "A Javascript reimplementation of nand2tetris.org.",
-  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/davidsouther/computron5k.git"

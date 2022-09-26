@@ -49,7 +49,7 @@ declare global {
 }
 
 expect.extend({
-  toBeErr<R, T = {}>(result: Result<R>, expected?: Err<T>) {
+  toBeErr<R>(result: Result<R>, expected?: Err<R>) {
     if (isOk(result)) {
       return {
         pass: false,
@@ -58,7 +58,7 @@ expect.extend({
       };
     } else {
       if (expected) {
-        expect(Err(result)).toMatchObject(Err(expected));
+        expect(Err(result)).toMatchObject(Err(expected) as Error);
       }
     }
     return {
@@ -66,7 +66,7 @@ expect.extend({
       message: () => `Err(${display(Err(result))}) is expected`,
     };
   },
-  toBeOk<R, T = {}>(result: Result<R>, expected?: Ok<T>) {
+  toBeOk<R>(result: Result<R>, expected?: Ok<R>) {
     if (isErr(result)) {
       return {
         pass: false,
@@ -75,7 +75,7 @@ expect.extend({
       };
     } else {
       if (expected) {
-        expect(Ok(result)).toMatchObject(Ok(expected));
+        expect<R>(Ok(result)).toMatchObject(Ok(expected) as {});
       }
     }
     return {

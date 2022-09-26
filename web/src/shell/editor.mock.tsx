@@ -14,3 +14,5 @@ jest.mock("@monaco-editor/react", () => {
   console.log("mocked fake editor");
   return FakeEditor;
 });
+
+export {};

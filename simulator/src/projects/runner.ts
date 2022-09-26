@@ -1,9 +1,16 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { isOk, Ok, Err, isErr } from "@davidsouther/jiffies/lib/esm/result";
+import { Assignments } from ".";
 import { HDL } from "../languages/hdl";
 import { TST } from "../languages/tst";
 import { build as buildChip } from "../chip/builder";
 import { ChipTest } from "../tst";
+
+export function hasTest({ name, ext }: { name: string; ext: string }) {
+  return (
+    Assignments[name as keyof typeof Assignments] !== undefined && ext === "hdl"
+  );
+}
 
 export function runTests(
   files: Array<Promise<{ name: string; hdl: string }>>,

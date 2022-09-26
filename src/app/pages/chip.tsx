@@ -69,7 +69,8 @@ export const Chip = () => {
         await actions.reset();
       }
 
-      finishFrame(): void {
+      override finishFrame(): void {
+        super.finishFrame();
         dispatch.current({ action: "updateTestStep" });
       }
 

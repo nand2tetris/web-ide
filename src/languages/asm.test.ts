@@ -50,6 +50,17 @@ describe("asm language", () => {
     });
   });
 
+  it("parses a C instruction with operation", () => {
+    const match = grammar.match("M=M+1", "CInstruction");
+    expect(match).toHaveSucceeded();
+    expect(asmSemantics(match).instruction).toEqual({
+      type: "C",
+      op: COMMANDS.asm["A+1"],
+      store: ASSIGN.asm["M"],
+      isM: true,
+    });
+  });
+
   it("parses a C instruction with jump", () => {
     const match = grammar.match("D;JEQ", "CInstruction");
     expect(match).toHaveSucceeded();

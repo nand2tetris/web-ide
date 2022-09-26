@@ -50,7 +50,7 @@ Base {
   false = "false"
 
   Name = identifier
-  identifier = (letter|underscore) (alnum|underscore)*
+  identifier = (letter|underscore) (alnum|underscore|"."|"$")*
 
   Number = number
   number = hexNumber | decNumber | binNumber

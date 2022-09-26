@@ -10,12 +10,13 @@ export abstract class Timer {
   frame() {
     this.tick();
     this.finishFrame();
-    clock.frame();
   }
 
   abstract tick(): Promise<boolean> | boolean;
 
-  abstract finishFrame(): void;
+  finishFrame() {
+    clock.frame();
+  }
 
   abstract reset(): void;
 

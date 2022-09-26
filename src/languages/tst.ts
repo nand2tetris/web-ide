@@ -98,8 +98,8 @@ tstSemantics.extendAttribute<number>("value", {
 });
 
 tstSemantics.extendAttribute<string>("name", {
-  FileName(name, _dot, ext) {
-    return `${name.name}.${ext.name}`;
+  FileName({ name }) {
+    return name;
   },
 });
 

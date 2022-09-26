@@ -5,9 +5,10 @@ import * as project_01 from "./project_01/index";
 import * as project_02 from "./project_02/index";
 import * as project_03 from "./project_03/index";
 import * as project_05 from "./project_05/index";
+import * as project_06 from "./project_06/index";
 import * as samples from "./samples/index";
 
-export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
+export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
     "Not",
     "And",
@@ -30,11 +31,19 @@ export const PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "05": ["Memory", "CPU", "Computer"],
 };
 
-export const Projects = {
+export const ChipProjects = {
   "01": project_01,
   "02": project_02,
   "03": project_03,
   "05": project_05,
+};
+
+export const ASM_PROJECTS: Record<"06", string[]> = {
+  "06": ["Add", "Max", "Rectangle", "Pong"],
+};
+
+export const AsmProjects = {
+  "06": project_06,
 };
 
 let reset = false;

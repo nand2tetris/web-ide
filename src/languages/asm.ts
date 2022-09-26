@@ -61,6 +61,12 @@ export interface AsmLabelInstruction {
   label: string;
 }
 
+asmSemantics.addAttribute<Asm>("root", {
+  Root(_) {
+    return this.asm;
+  },
+});
+
 asmSemantics.addAttribute<Asm>("asm", {
   Root(asm) {
     return {
@@ -113,6 +119,7 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
 });
 
 export function fillLabel(asm: Asm) {
+  let nextLabel = 16;
   const symbols = new Map<string, number>([
     ["R0", 0],
     ["R1", 1],
@@ -139,8 +146,16 @@ export function fillLabel(asm: Asm) {
     ["KBD", KEYBOARD],
   ]);
 
+  function getLabelValue(label: string) {
+    if (!symbols.has(label)) {
+      symbols.set(label, nextLabel);
+      nextLabel += 1;
+    }
+    return assertExists(symbols.get(label), `Label not in symbols: ${label}`);
+  }
+
   function transmuteAInstruction(instruction: AsmALabelInstruction) {
-    const value = assertExists(symbols.get(instruction.label));
+    const value = getLabelValue(instruction.label);
     (instruction as unknown as AsmAValueInstruction).value = value;
     delete (instruction as unknown as { label: undefined }).label;
   }

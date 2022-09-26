@@ -24,7 +24,7 @@ import { Runbar } from "../components/runbar";
 import { Timer } from "../../simulator/timer";
 import { useStateInitializer } from "../util/react";
 import { Clockface } from "../components/clockface";
-import { PROJECTS } from "../../projects";
+import { CHIP_PROJECTS } from "../../projects";
 import { Icon } from "../components/pico/icon";
 import { AppContext } from "../App.context";
 
@@ -116,7 +116,7 @@ export const Chip = () => {
         <select
           value={state.controls.project}
           onChange={({ target: { value } }) => {
-            actions.setProject(value as keyof typeof PROJECTS);
+            actions.setProject(value as keyof typeof CHIP_PROJECTS);
           }}
           data-testid="project-picker"
         >

@@ -6,7 +6,7 @@ import { Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { Cmp, CMP } from "../../../languages/cmp";
 import { HDL, HdlParse } from "../../../languages/hdl";
 import { Tst, TST } from "../../../languages/tst";
-import { PROJECTS, Projects } from "../../../projects";
+import { CHIP_PROJECTS, ChipProjects } from "../../../projects";
 import { Max } from "../../../projects/samples/hack";
 import { compare } from "../../compare";
 import { ChipTest } from "../../tst";
@@ -16,19 +16,21 @@ import { Chip } from "../chip";
 const SKIP = new Set<string>(["Computer"]);
 
 describe("All Projects", () => {
-  describe.each(Object.keys(PROJECTS))("project %s", (project) => {
+  describe.each(Object.keys(CHIP_PROJECTS))("project %s", (project) => {
     it.each(
-      PROJECTS[project as keyof typeof PROJECTS].filter((k) => !SKIP.has(k))
+      CHIP_PROJECTS[project as keyof typeof CHIP_PROJECTS].filter(
+        (k) => !SKIP.has(k)
+      )
     )("Builtin %s", async (chipName) => {
       let hdlFile: string =
         // @ts-ignore
-        Projects[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
+        ChipProjects[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
       const tstFile: string =
         // @ts-ignore
-        Projects[project]?.CHIPS[chipName]?.[`${chipName}.tst`];
+        ChipProjects[project]?.CHIPS[chipName]?.[`${chipName}.tst`];
       const cmpFile: string =
         // @ts-ignore
-        Projects[project]?.CHIPS[chipName]?.[`${chipName}.cmp`];
+        ChipProjects[project]?.CHIPS[chipName]?.[`${chipName}.cmp`];
 
       expect(hdlFile).toBeDefined();
       expect(tstFile).toBeDefined();

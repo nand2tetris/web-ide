@@ -5,6 +5,7 @@ import { AppContext } from "../../App.context";
 
 import "../pico/button-group.scss";
 import "../pico/property.scss";
+import loaders from "../../../projects/lazy";
 
 export const Settings = () => {
   const { settings, fs, monaco, theme, setTheme, setStatus } =
@@ -80,7 +81,7 @@ export const Settings = () => {
                   localStorage.clear();
                   localStorage["/chip/project"] = "01";
                   localStorage["/chip/chip"] = "Not";
-                  await (await import("../../../projects")).resetFiles(fs);
+                  await loaders.resetFiles(fs);
                   setStatus("Reset files in local storage");
                 }}
               >
@@ -88,7 +89,7 @@ export const Settings = () => {
               </button>
               <button
                 onClick={async () => {
-                  await (await import("../../../projects")).loadSolutions(fs);
+                  await loaders.loadSolutions(fs);
                   setStatus("Loaded sample solutions...");
                 }}
               >
@@ -96,7 +97,7 @@ export const Settings = () => {
               </button>
               <button
                 onClick={async () => {
-                  await (await import("../../../projects")).loadSamples(fs);
+                  await loaders.loadSamples(fs);
                   setStatus("Loaded sample files...");
                 }}
               >

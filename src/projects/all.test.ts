@@ -75,7 +75,6 @@ describe("ASM Projects", () => {
       const asm = Ok(parsed as Ok<Asm>);
       ASM.passes.fillLabel(asm);
       const filled = ASM.passes.emit(asm);
-      console.log(filled);
       expect(filled).toEqual(ASM_SOLS[file_name as keyof typeof ASM_FILES]);
     });
   });

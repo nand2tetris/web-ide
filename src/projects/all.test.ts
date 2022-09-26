@@ -3,7 +3,8 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { Ok } from "@davidsouther/jiffies/lib/esm/result";
-import { PROJECTS, Projects } from ".";
+import { CHIP_PROJECTS, ChipProjects, ASM_PROJECTS } from ".";
+import { Asm, ASM } from "../languages/asm";
 import { Cmp, CMP } from "../languages/cmp";
 import { HDL, HdlParse } from "../languages/hdl";
 import { Tst, TST } from "../languages/tst";
@@ -11,21 +12,23 @@ import { build } from "../simulator/chip/builder";
 import { Chip } from "../simulator/chip/chip";
 import { compare } from "../simulator/compare";
 import { ChipTest } from "../simulator/tst";
+import { ASM_SOLS, FILES as ASM_FILES } from "./project_06";
 import { Max } from "./samples/hack";
 
 const SKIP = new Set<string>([]);
 
-describe("All Projects", () => {
-  describe.each(Object.keys(PROJECTS))("project %s", (project) => {
+describe("Chip Projects", () => {
+  describe.each(Object.keys(CHIP_PROJECTS))("project %s", (project) => {
     it.each(
-      PROJECTS[project as keyof typeof PROJECTS].filter((k) => !SKIP.has(k))
+      CHIP_PROJECTS[project as keyof typeof CHIP_PROJECTS].filter(
+        (k) => !SKIP.has(k)
+      )
     )("Chip %s", async (chipName) => {
       // @ts-ignore
-      const hdlFile = Projects[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
-      // @ts-ignore
-      const tstFile = Projects[project]?.CHIPS[chipName]?.[`${chipName}.tst`];
-      // @ts-ignore
-      const cmpFile = Projects[project]?.CHIPS[chipName]?.[`${chipName}.cmp`];
+      const chipproject = ChipProjects[project]!;
+      const hdlFile = chipproject.SOLS[chipName]?.[`${chipName}.hdl`];
+      const tstFile = chipproject.CHIPS[chipName]?.[`${chipName}.tst`];
+      const cmpFile = chipproject.CHIPS[chipName]?.[`${chipName}.cmp`];
 
       expect(hdlFile).toBeDefined();
       expect(tstFile).toBeDefined();
@@ -59,6 +62,21 @@ describe("All Projects", () => {
 
       const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));
       expect(diffs).toHaveNoDiff();
+    });
+  });
+});
+
+describe("ASM Projects", () => {
+  describe.each(Object.keys(ASM_PROJECTS))("project %s", (project) => {
+    it.each(Object.keys(ASM_FILES))("%s", (file_name) => {
+      const source = ASM_FILES[file_name as keyof typeof ASM_FILES];
+      const parsed = ASM.parse(source);
+      expect(parsed).toBeOk();
+      const asm = Ok(parsed as Ok<Asm>);
+      ASM.passes.fillLabel(asm);
+      const filled = ASM.passes.emit(asm);
+      console.log(filled);
+      expect(filled).toEqual(ASM_SOLS[file_name as keyof typeof ASM_FILES]);
     });
   });
 });

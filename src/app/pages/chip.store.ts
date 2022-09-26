@@ -16,7 +16,7 @@ import { ImmPin, reducePins } from "../components/pinout";
 import { REGISTRY } from "../../simulator/chip/builtins";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { Span } from "../../languages/base";
-import { Projects, PROJECTS } from "../../projects";
+import { ChipProjects, CHIP_PROJECTS } from "../../projects";
 import { useImmerReducer } from "../util/react";
 
 export const PROJECT_NAMES = [
@@ -27,8 +27,9 @@ export const PROJECT_NAMES = [
 ];
 
 function dropdowns(storage: Record<string, string>) {
-  const project = (storage["/chip/project"] as keyof typeof PROJECTS) ?? "01";
-  const chips = PROJECTS[project];
+  const project =
+    (storage["/chip/project"] as keyof typeof CHIP_PROJECTS) ?? "01";
+  const chips = CHIP_PROJECTS[project];
   const chipName = storage["/chip/chip"] ?? chips[0];
   return { project, chips, chipName };
 }
@@ -76,7 +77,7 @@ export interface Files {
 }
 
 export interface ControlsState {
-  project: keyof typeof PROJECTS;
+  project: keyof typeof CHIP_PROJECTS;
   chips: string[];
   chipName: string;
   hasBuiltin: boolean;
@@ -173,7 +174,7 @@ export function makeChipStore(
       payload?: { pending?: boolean; invalid?: boolean }
     ) {
       state.sim = reduceChip(chip, payload?.pending, payload?.invalid);
-      state.controls.chips = PROJECTS[state.controls.project];
+      state.controls.chips = CHIP_PROJECTS[state.controls.project];
       state.controls.chipName = chip.name ?? chipName;
       if (!state.controls.chips.includes(state.controls.chipName)) {
         state.controls.chips = [
@@ -183,8 +184,8 @@ export function makeChipStore(
       }
     },
 
-    setProject(state: ChipPageState, project: keyof typeof PROJECTS) {
-      const chips = PROJECTS[project];
+    setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
+      const chips = CHIP_PROJECTS[project];
       const chipName =
         state.controls.chipName && chips.includes(state.controls.chipName)
           ? state.controls.chipName
@@ -216,15 +217,15 @@ export function makeChipStore(
   };
 
   const actions = {
-    setProject(p: keyof typeof PROJECTS) {
+    setProject(p: keyof typeof CHIP_PROJECTS) {
       project = storage["/chip/project"] = p;
       dispatch.current({ action: "setProject", payload: project });
-      this.setChip(PROJECTS[project][0]);
+      this.setChip(CHIP_PROJECTS[project][0]);
     },
 
     setChip(
       chip: string,
-      project = storage["/chip/project"] ?? Projects["01"]
+      project = storage["/chip/project"] ?? ChipProjects["01"]
     ) {
       chipName = storage["/chip/chip"] = chip;
       dispatch.current({ action: "setChip", payload: chipName });

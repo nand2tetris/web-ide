@@ -62,6 +62,9 @@ const Textarea = ({
   );
 };
 
+const MONACO_LIGHT_THEME = "vs";
+const MONACO_DARK_THEME = "vs-dark";
+
 const Monaco = ({
   value,
   onChange,
@@ -83,21 +86,33 @@ const Monaco = ({
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
 
+  const codeTheme = useCallback(() => {
+    const isDark =
+      theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        : theme === "dark";
+    return isDark ? MONACO_DARK_THEME : MONACO_LIGHT_THEME;
+  }, [theme]);
+
   // Set options when mounting
-  const onMount: OnMount = useCallback((ed) => {
-    editor.current = ed;
-    editor.current?.updateOptions({
-      fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
+  const onMount: OnMount = useCallback(
+    (ed) => {
+      editor.current = ed;
+      editor.current?.updateOptions({
+        fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
       Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
       "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
       "Segoe UI Symbol", "Noto Color Emoji"`,
-      fontSize: 16,
-      minimap: {
-        enabled: false,
-      },
-      scrollBeyondLastLine: false,
-    });
-  }, []);
+        fontSize: 16,
+        minimap: {
+          enabled: false,
+        },
+        theme: codeTheme(),
+        scrollBeyondLastLine: false,
+      });
+    },
+    [codeTheme]
+  );
 
   // Mark and center highlighted spans
   useEffect(() => {
@@ -124,14 +139,9 @@ const Monaco = ({
 
   // Set themes
   useEffect(() => {
-    const isDark =
-      theme === "system"
-        ? window.matchMedia("prefers-color-scheme: dark").matches
-        : theme === "dark";
-    editor.current?.updateOptions({
-      theme: isDark ? "vs-dark" : "vs",
-    });
-  }, [editor, theme]);
+    if (editor.current === undefined) return;
+    editor.current.updateOptions({ theme: codeTheme() });
+  }, [editor, codeTheme]);
 
   // Prevent editing disabled editors
   useEffect(() => {

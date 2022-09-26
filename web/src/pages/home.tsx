@@ -83,9 +83,12 @@ const Home = () => {
   return (
     <>
       <h1>NAND2Tetris Web IDE</h1>
-      <div>
-        <input type="file" multiple onChange={onChange} />
-      </div>
+      <form>
+        <fieldset>
+          <legend>Files for grading:</legend>
+          <input type="file" multiple onChange={onChange} />
+        </fieldset>
+      </form>
       <figure>
         {tests.length > 0 ? (
           tests.map((t, i) => <TestResult key={t.name} {...t} />)

@@ -12,7 +12,7 @@ import {
   emptyState,
 } from "../../../cpu/cpu";
 import { int10 } from "../../../../util/twos";
-import { loadHack } from "../../../fs";
+import { load } from "../../../fs";
 import { Flags } from "../../../cpu/alu";
 import { RegisterComponent } from "../../../../app/components/chips/register";
 import { ALUComponent } from "../../../../app/components/chips/alu";
@@ -25,7 +25,7 @@ export class ROM32K extends RAM {
 
   override async load(fs: FileSystem, path: string) {
     try {
-      (await loadHack(fs, path)).map((v, i) => (this.at(i).busVoltage = v));
+      (await load(fs, path)).map((v, i) => (this.at(i).busVoltage = v));
     } catch (cause) {
       // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
       throw new Error(`ROM32K Failed to load file ${path}`);

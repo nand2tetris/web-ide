@@ -54,6 +54,14 @@ async function loadAssignment(pfile: Promise<{ name: string; hdl: string }>) {
   return { ...file, tst, cmp };
 }
 
+declare module "react" {
+  interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+    // extends React's HTMLAttributes
+    directory?: string;
+    webkitdirectory?: string;
+  }
+}
+
 const Home = () => {
   const [tests, setTests] = useState(
     [] as Array<Parameters<typeof TestResult>[0]>
@@ -63,6 +71,10 @@ const Home = () => {
   const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
     async ({ target }) => {
       const files = [...(target.files ?? [])]
+        .map((file) => {
+          console.log(file.webkitRelativePath);
+          return file;
+        })
         .filter((file) => file.name.endsWith(".hdl"))
         .map((file) => ({ file, ...splitFile(file) }))
         .filter(hasTest)
@@ -86,7 +98,13 @@ const Home = () => {
       <form>
         <fieldset>
           <legend>Files for grading:</legend>
-          <input type="file" multiple onChange={onChange} />
+          <input
+            type="file"
+            multiple
+            webkitdirectory=""
+            directory=""
+            onChange={onChange}
+          />
         </fieldset>
       </form>
       <figure>

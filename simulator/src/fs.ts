@@ -1,5 +1,5 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { ASM } from "./languages/asm.js";
 import { int2 } from "./util/twos.js";
 
@@ -17,12 +17,7 @@ export async function load(fs: FileSystem, path: string): Promise<number[]> {
 
 export async function loadAsm(fs: FileSystem, path: string): Promise<number[]> {
   const source = await fs.readFile(path);
-  const parsed = ASM.parse(source);
-  if (isErr(parsed)) {
-    throw Err(parsed);
-  }
-
-  const asm = Ok(parsed);
+  const asm = unwrap(ASM.parse(source));
   ASM.passes.fillLabel(asm);
   return ASM.passes.emit(asm);
 }

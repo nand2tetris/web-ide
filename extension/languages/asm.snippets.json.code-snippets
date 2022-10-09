@@ -1,0 +1,57 @@
+{
+    "If-then Statement": {
+        "prefix": [
+            "if",
+            "then",
+            "condition"
+        ],
+        "body": [
+            "\t${1:$LINE_COMMENT D = condition}",
+            "\t@${2:IF_END}",
+            "\tD;JEQ",
+            "\t${0:$LINE_COMMENT code}",
+            "(${2:IF_END})"
+        ],
+        "description": "An if-then statement."
+    },
+    "If-then-else Statement": {
+        "prefix": [
+            "if",
+            "then",
+            "else",
+            "elif",
+            "condition"
+        ],
+        "body": [
+            "\t${1:$LINE_COMMENT D = condition}",
+            "\t@${2:IF_ELSE}",
+            "\tD;JEQ",
+            "\t${4:$LINE_COMMENT code}",
+            "\t@${3:IF_END}",
+            "\t0;JMP",
+            "(${2:IF_ELSE})",
+            "\t${0:$LINE_COMMENT code}",
+            "(${3:IF_END})"
+        ],
+        "description": "An if-then-else statement."
+    },
+    "While Loop": {
+        "prefix": [
+            "repeat",
+            "loop",
+            "for",
+            "while"
+        ],
+        "body": [
+            "(${1:LOOP})",
+            "\t${2:$LINE_COMMENT D = condition}",
+            "\t@${3:LOOP_END}",
+            "\tD;JEQ",
+            "\t${0:$LINE_COMMENT code}",
+            "\t@${1:LOOP}",
+            "\t0;JMP",
+            "(${3:LOOP_END})"
+        ],
+        "description": "A while loop."
+    }
+}

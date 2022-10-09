@@ -1,118 +1,37 @@
 {
   "name": "computron5k",
-  "version": "1.0.0",
-  "private": true,
-  "description": "",
+  "version": "0.0.0",
+  "description": "A Javascript reimplementation of nand2tetris.org.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidsouther/computron5k.git"
+  },
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
-  "homepage": "https://davidsouther.github.io/computron5k",
-  "dependencies": {
-    "@davidsouther/jiffies": "^2.0.3",
-    "@lingui/react": "^3.14.0",
-    "@monaco-editor/react": "^4.4.5",
-    "@types/error-cause": "^1.0.1",
-    "immer": "^9.0.15",
-    "make-plural": "^7.1.0",
-    "ohm-js": "^16.3.4",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-markdown": "^8.0.3",
-    "react-router-dom": "^6.3.0",
-    "source-map-explorer": "^2.5.2"
+  "bugs": {
+    "url": "https://github.com/davidsouther/computron5k/issues"
   },
-  "devDependencies": {
-    "@lingui/cli": "^3.14.0",
-    "@lingui/macro": "^3.14.0",
-    "@rollup/plugin-node-resolve": "^13.2.1",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.3.0",
-    "@testing-library/user-event": "^14.2.6",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.11.41",
-    "@types/react": "^18.0.14",
-    "@types/react-dom": "^18.0.5",
-    "gh-pages": "^4.0.0",
-    "prettier": "^2.6.2",
-    "raw-loader": "^4.0.2",
-    "raw.macro": "^0.5.0",
-    "react-scripts": "5.0.1",
-    "remark-gfm": "^3.0.1",
-    "rxjs": "^7.5.5",
-    "sass": "^1.53.0",
-    "typescript": "^4.7.4",
-    "web-vitals": "^2.1.4"
-  },
+  "homepage": "https://github.com/davidsouther/computron5k#readme",
   "scripts": {
-    "analyze": "source-map-explorer 'build/static/js/*.js' --only-mapped --html ./build/analyze.html",
-    "start": "react-scripts start",
-    "test": "react-scripts test ",
-    "prebuild": "npm run lingui",
-    "build": "react-scripts build",
-    "format": "prettier --write public/ src/",
-    "fix": "eslint --fix src/",
-    "extract": "lingui extract",
-    "lingui": "lingui compile",
+    "compile": "tsc",
     "ci": "CI=true npm run check && CI=true npm run test",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
+    "check:format": "prettier --check {extension,simulator,web}/{public,src}",
+    "check:lint": "eslint {extension,simulator,web}/{public,src}",
     "check:types": "tsc --noEmit",
-    "check:format": "prettier --check public/ src/",
-    "check:lint": "eslint src/",
-    "predeploy": "npm run build ; ./scripts/predeploy.sh",
-    "deploy": "gh-pages -d build"
+    "format": "prettier --write {extension,simulator,web}/{public,src}",
+    "fix": "eslint --fix {extension,simulator,web}/{public,src}",
+    "test": "CI=true npm test -w simulator && CI=true npm test -w web"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ],
-    "rules": {
-      "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          "args": "none",
-          "destructuredArrayIgnorePattern": "^_"
-        }
-      ]
-    }
+  "devDependencies": {
+    "eslint": "^8.25.0",
+    "prettier": "^2.7.1",
+    "typescript": "^4.8.4"
   },
-  "jest": {
-    "transformIgnorePatterns": [
-      "node_modules/(?!remark-markdown)/"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
-  },
-  "prettier": {},
-  "lingui": {
-    "locales": [
-      "en",
-      "en-PL"
-    ],
-    "sourceLocale": "en",
-    "pseudoLocale": "en-PL",
-    "fallbackLocales": {
-      "en-PL": "en"
-    },
-    "catalogs": [
-      {
-        "path": "src/locales/{locale}/messages",
-        "include": [
-          "src",
-          "public"
-        ]
-      }
-    ],
-    "format": "po"
-  }
+  "workspaces": [
+    "extension",
+    "simulator",
+    "web"
+  ]
 }

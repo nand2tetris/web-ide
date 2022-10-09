@@ -1,0 +1,16 @@
+{
+    "Repeat Loop": {
+        "prefix": [
+            "repeat",
+            "loop",
+            "while",
+            "for"
+        ],
+        "body": [
+            "repeat ${1:iterations} {",
+            "\t${0:$LINE_COMMENT code",
+            "}"
+        ],
+        "description": "A repeat loop."
+    }
+}

@@ -1,0 +1,42 @@
+{
+  "iconDefinitions": {
+    "_hdl": {
+      "iconPath": "./images/hdl.svg"
+    },
+    "_tst": {
+      "iconPath": "./images/tst.svg"
+    },
+    "_cmp-out": {
+      "iconPath": "./images/cmp-out.svg"
+    },
+    "_hack": {
+      "iconPath": "./images/hack.svg"
+    },
+    "_vm": {
+      "iconPath": "./images/vm.svg"
+    },
+    "_jack": {
+      "iconPath": "./images/jack.svg"
+    }
+  },
+  "fileExtensions": {
+    "hdl": "_hdl",
+    "tst": "_tst",
+    "cmp": "_cmp-out",
+    "out": "_cmp-out",
+    "asm": "_asm",
+    "hack": "_hack",
+    "vm": "_vm",
+    "jack": "_jack"
+  },
+  "languageIds": {
+    "hdl": "_hdl",
+    "tst": "_tst",
+    "cmp": "_cmp-out",
+    "out": "_cmp-out",
+    "asm": "_asm",
+    "hack": "_hack",
+    "vm": "_vm",
+    "jack": "_jack"
+  }
+}

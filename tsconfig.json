@@ -1,37 +1,7 @@
 {
-  "compilerOptions": {
-    // Assume browser environment & esm
-    "lib": ["es2021", "DOM", "DOM.Iterable"],
-    "target": "es2022",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "allowJs": true,
-    "checkJs": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "sourceMap": true,
-
-    // Checks and strictness
-    "strict": true,
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    // "exactOptionalPropertyTypes": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true
-    // "noPropertyAccessFromIndexSignature": true,
-    // "noUncheckedIndexedAccess": true,
-    // "noUnusedLocals": true,
-    // "noUnusedParameters": true,
-
-    // "incremental": true,
-    // "outDir": "build",
-    // "declaration": true
-  },
-  "include": ["src"]
+  "references": [
+    // { "path": "./extension/tsconfig.json" },
+    { "path": "./simulator/tsconfig.json" }
+    // { "path": "./web/tsconfig.json" }
+  ]
 }

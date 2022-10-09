@@ -1,0 +1,547 @@
+import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { Span } from "./languages/base.js";
+import {
+  Tst,
+  TstLineStatement,
+  TstOperation,
+  TstOutputSpec,
+  TstStatement,
+  TstWhileStatement,
+} from "./languages/tst.js";
+import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip.js";
+import { Clock } from "./chip/clock.js";
+import { Output } from "./output.js";
+
+export abstract class Test<IS extends TestInstruction = TestInstruction> {
+  protected readonly instructions: (IS | TestInstruction)[] = [];
+  protected _outputList: Output[] = [];
+  protected _log: string = "";
+  fs: FileSystem = new FileSystem();
+
+  setFileSystem(fs: FileSystem) {
+    this.fs = fs;
+  }
+
+  echo(_content: string) {}
+  clearEcho() {}
+
+  async load(_filename: string) {}
+  async compareTo(_filename: string) {}
+  outputFile(_filename: string): void {}
+  outputList(outputs: Output[]): void {
+    this._outputList = outputs;
+  }
+
+  addInstruction(instruction: IS | TestInstruction) {
+    this.instructions.push(instruction);
+  }
+
+  reset() {
+    const test = this;
+    this._steps = (function* () {
+      for (const instruction of test.instructions) {
+        yield* instruction.steps(test);
+      }
+    })();
+    this._log = "";
+  }
+
+  _steps: IterableIterator<IS | TestInstruction> | undefined;
+  _step: IteratorResult<IS | TestInstruction, IS | TestInstruction> | undefined;
+
+  get steps(): Iterator<IS | TestInstruction> {
+    if (this._steps === undefined) {
+      this.reset();
+    }
+    return this._steps!;
+  }
+
+  get currentStep(): IS | TestInstruction | undefined {
+    return this._step?.value;
+  }
+
+  async step() {
+    this._step = this.steps.next();
+    if (!this._step.done) {
+      await this._step.value.do(this);
+      return false;
+    }
+    return true;
+  }
+
+  async run() {
+    while (!(await this.step()));
+  }
+
+  protected readonly breakpoints: Map<string, number> = new Map();
+  addBreakpoint(variable: string, value: number) {
+    this.breakpoints.set(variable, value);
+  }
+  clearBreakpoints() {
+    this.breakpoints.clear();
+  }
+
+  output() {
+    const values = this._outputList.map((output) => output.print(this));
+    this._log += `|${values.join("|")}|\n`;
+  }
+
+  header() {
+    const values = this._outputList.map((output) => output.header(this));
+    this._log += `|${values.join("|")}|\n`;
+  }
+
+  log() {
+    return this._log;
+  }
+
+  abstract hasVar(variable: string | number): boolean;
+  abstract getVar(variable: string | number, offset?: number): number | string;
+  abstract setVar(variable: string, value: number, offset?: number): void;
+}
+
+function isTstLineStatment(line: TstStatement): line is TstLineStatement {
+  return (line as TstLineStatement).ops !== undefined;
+}
+
+function isTstWhileStatement(line: TstStatement): line is TstWhileStatement {
+  return (line as TstWhileStatement).condition !== undefined;
+}
+
+export class ChipTest extends Test<ChipTestInstruction> {
+  private chip: Chip = new Low();
+  private clock = Clock.get();
+
+  static from(tst: Tst): ChipTest {
+    const test = new ChipTest();
+
+    for (const line of tst.lines) {
+      if (isTstLineStatment(line)) {
+        test.addInstruction(ChipTest.makeLineStatement(line));
+      } else {
+        let repeat = isTstWhileStatement(line)
+          ? new TestWhileInstruction(
+              new Condition(
+                line.condition.left,
+                line.condition.right,
+                line.condition.op
+              )
+            )
+          : new TestRepeatInstruction(line.count);
+        repeat.span = line.span;
+        test.addInstruction(repeat);
+        for (const statement of line.statements) {
+          repeat.addInstruction(ChipTest.makeLineStatement(statement));
+        }
+      }
+    }
+
+    return test;
+  }
+
+  private static makeLineStatement(line: TstLineStatement) {
+    const statement = new TestCompoundInstruction();
+    statement.span = line.span;
+    for (const op of line.ops) {
+      statement.addInstruction(ChipTest.makeInstruction(op));
+    }
+    return statement;
+  }
+
+  private static makeInstruction(inst: TstOperation) {
+    const { op } = inst;
+    switch (op) {
+      case "tick":
+        return new TestTickInstruction();
+      case "tock":
+        return new TestTockInstruction();
+      case "eval":
+        return new TestEvalInstruction();
+      case "output":
+        return new TestOutputInstruction();
+      case "set":
+        return new TestSetInstruction(inst.id, inst.value, inst.index);
+      case "output-list":
+        return new TestOutputListInstruction(inst.spec);
+      case "echo":
+        return new TestEchoInstruction(inst.message);
+      case "clear-echo":
+        return new TestClearEchoInstruction();
+      case "load":
+        return new TestLoadROMInstruction(inst.file);
+      default:
+        checkExhaustive(op, `Unknown tst operation ${op}`);
+    }
+  }
+
+  with(chip: Chip): this {
+    this.chip = chip;
+    return this;
+  }
+
+  hasVar(variable: string | number): boolean {
+    if (variable === "time") {
+      return true;
+    }
+    variable = `${variable}`;
+    // Look up built-in chip state variables
+    return this.chip.hasIn(variable) || this.chip.hasOut(variable);
+  }
+
+  getVar(variable: string | number, offset?: number): number | string {
+    variable = `${variable}`;
+    if (variable === "time") {
+      return this.clock.toString();
+    }
+    const pin = this.chip.get(variable, offset);
+    if (!pin) return 0;
+    return pin instanceof Bus ? pin.busVoltage : pin.voltage();
+  }
+
+  setVar(variable: string, value: number, offset?: number): void {
+    // Look up built-in chip state variables
+    const pinOrBus = this.chip.get(variable, offset);
+    if (pinOrBus instanceof Bus) {
+      pinOrBus.busVoltage = value;
+    } else {
+      pinOrBus?.pull(value === 0 ? LOW : HIGH);
+    }
+  }
+
+  eval(): void {
+    this.chip.eval();
+  }
+
+  tick(): void {
+    this.chip.eval();
+    this.clock.tick();
+  }
+
+  tock(): void {
+    this.chip.eval();
+    this.clock.tock();
+  }
+
+  override async load(filename: string) {
+    await this.chip.load(this.fs, filename);
+  }
+
+  override async run() {
+    this.clock.reset();
+    await super.run();
+  }
+}
+
+export class CPUTest extends Test<CPUTestInstruction> {
+  hasVar(_variable: string | number): boolean {
+    return false;
+  }
+  getVar(_variable: string | number): number {
+    return 0;
+  }
+  setVar(_variable: string, _value: number): void {}
+  ticktock(): void {}
+}
+
+export class VMTest extends Test<VMTestInstruction> {
+  hasVar(_variable: string | number): boolean {
+    return false;
+  }
+  getVar(_variable: string | number): number {
+    return 0;
+  }
+  setVar(_variable: string, _value: number): void {}
+  vmstep(): void {}
+}
+
+export interface TestInstruction {
+  span?: Span;
+  do(test: Test): void;
+  steps(test: Test): IterableIterator<TestInstruction>;
+}
+
+export class TestSetInstruction implements TestInstruction {
+  constructor(
+    private variable: string,
+    private value: number,
+    private index?: number | undefined
+  ) {}
+
+  do(test: Test) {
+    test.setVar(this.variable, this.value, this.index);
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestOutputInstruction implements TestInstruction {
+  do(test: Test) {
+    test.output();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestOutputListInstruction implements TestInstruction {
+  private outputs: Output[] = [];
+
+  constructor(specs: TstOutputSpec[] = []) {
+    for (const spec of specs) {
+      this.addOutput(spec);
+    }
+  }
+
+  addOutput(inst: TstOutputSpec) {
+    this.outputs.push(
+      new Output(
+        inst.id,
+        inst.style,
+        inst.width,
+        inst.lpad,
+        inst.rpad,
+        inst.builtin,
+        inst.address
+      )
+    );
+  }
+
+  do(test: Test) {
+    test.outputList(this.outputs);
+    test.header();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestCompoundInstruction implements TestInstruction {
+  protected readonly instructions: TestInstruction[] = [];
+  span?: Span;
+
+  addInstruction(instruction: TestInstruction) {
+    this.instructions.push(instruction);
+  }
+
+  do(test: Test<TestInstruction>): void {
+    for (const instruction of this.instructions) {
+      instruction.do(test);
+    }
+  }
+
+  *steps(_test: Test): Generator<TestInstruction> {
+    yield this;
+  }
+}
+
+export class TestRepeatInstruction extends TestCompoundInstruction {
+  constructor(public readonly repeat: number) {
+    super();
+  }
+
+  override do() {}
+
+  private *innerSteps(test: Test) {
+    for (const instruction of this.instructions) {
+      yield* instruction.steps(test);
+    }
+  }
+
+  override *steps(test: Test) {
+    if (this.repeat === -1) {
+      yield this;
+      while (true) {
+        yield* this.innerSteps(test);
+      }
+    } else {
+      for (let i = 0; i < this.repeat; i++) {
+        yield this;
+        yield* this.innerSteps(test);
+      }
+    }
+  }
+}
+
+export class Condition {
+  constructor(
+    public readonly x: string | number,
+    public readonly y: string | number,
+    public readonly op: "<" | "<=" | "=" | ">=" | ">" | "<>"
+  ) {}
+
+  check(test: Test): boolean {
+    const x = test.hasVar(this.x) ? test.getVar(this.x) : this.x;
+    const y = test.hasVar(this.y) ? test.getVar(this.y) : this.y;
+
+    if (typeof x === "string" || typeof y === "string") {
+      switch (this.op) {
+        case "=":
+          return `${x}` === `${y}`;
+        case "<>":
+          return `${x}` !== `${y}`;
+      }
+    } else {
+      switch (this.op) {
+        case "<":
+          return x < y;
+        case "<=":
+          return x <= y;
+        case ">":
+          return x > y;
+        case ">=":
+          return x >= y;
+        case "=":
+          return x === y;
+        case "<>":
+          return x !== y;
+      }
+    }
+    return false;
+  }
+}
+
+export class TestWhileInstruction extends TestCompoundInstruction {
+  constructor(public readonly condition: Condition) {
+    super();
+  }
+
+  override *steps(test: Test) {
+    while (this.condition.check(test)) {
+      yield this;
+      for (const instruction of this.instructions) {
+        yield* instruction.steps(test);
+      }
+    }
+  }
+}
+
+export class TestEchoInstruction implements TestInstruction {
+  constructor(public readonly content: string) {}
+  do(test: Test) {
+    test.echo(this.content);
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestClearEchoInstruction implements TestInstruction {
+  do(test: Test) {
+    test.clearEcho();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestLoadROMInstruction implements TestInstruction {
+  constructor(readonly file: string) {}
+  async do(test: Test) {
+    test.fs.pushd("/samples");
+    await test.load(this.file);
+    test.fs.popd();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestBreakpointInstruction implements TestInstruction {
+  constructor(readonly variable: string, readonly value: number) {}
+
+  do(test: Test) {
+    test.addBreakpoint(this.variable, this.value);
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestClearBreakpointsInstruction implements TestInstruction {
+  do(test: Test) {
+    test.clearBreakpoints();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export interface ChipTestInstruction extends TestInstruction {
+  _chipTestInstruction_: true;
+  do(test: ChipTest): void | Promise<void>;
+}
+
+export class TestEvalInstruction implements ChipTestInstruction {
+  readonly _chipTestInstruction_ = true;
+  do(test: ChipTest) {
+    test.eval();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestTickInstruction implements ChipTestInstruction {
+  readonly _chipTestInstruction_ = true;
+  do(test: ChipTest) {
+    test.tick();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestTockInstruction implements ChipTestInstruction {
+  readonly _chipTestInstruction_ = true;
+  do(test: ChipTest) {
+    test.tock();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export interface CPUTestInstruction extends TestInstruction {
+  _cpuTestInstruction_: true;
+  do(test: CPUTest): void | Promise<void>;
+}
+
+export class TestTickTockInstruction implements CPUTestInstruction {
+  readonly _cpuTestInstruction_ = true;
+  do(test: CPUTest) {
+    test.ticktock();
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export interface VMTestInstruction extends TestInstruction {
+  _vmTestInstruction_: true;
+  do(test: VMTest): void | Promise<void>;
+}
+
+export class TestVMStepInstruction implements VMTestInstruction {
+  readonly _vmTestInstruction_ = true;
+  do(test: VMTest) {
+    test.vmstep();
+  }
+
+  *steps() {
+    yield this;
+  }
+}

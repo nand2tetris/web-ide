@@ -1,0 +1,122 @@
+{
+    "fileTypes": [
+        "jack"
+    ],
+    "name": "Jack Language",
+    "patterns": [
+        {
+            "include": "#keyword"
+        },
+        {
+            "include": "#constant"
+        },
+        {
+            "include": "#declaration"
+        },
+        {
+            "include": "#comment"
+        }
+    ],
+    "repository": {
+        "keyword": {
+            "patterns": [
+                {
+                    "comment": "Keyword related to flow control",
+                    "match": "\\b(if|else|while|do|return)\\b",
+                    "name": "keyword.control"
+                },
+                {
+                    "comment": "Miscellaneous keyword",
+                    "match": "\\blet\\b",
+                    "name": "keyword.other"
+                }
+            ]
+        },
+        "constant": {
+            "patterns": [
+                {
+                    "comment": "Numeric constant",
+                    "name": "constant.numeric",
+                    "match": "\\b[0-9]+\\b"
+                },
+                {
+                    "comment": "String literal",
+                    "begin": "\\\"",
+                    "end": "\\\"",
+                    "name": "string.quoted.double",
+                    "patterns": [
+                        {
+                            "comment": "Escape characters",
+                            "match": "\\\\.",
+                            "name": "constant.character.escape"
+                        }
+                    ]
+                },
+                {
+                    "comment": "Language constant",
+                    "name": "constant.language",
+                    "match": "\\b(true|false|null|this)\\b"
+                }
+            ]
+        },
+        "declaration": {
+            "patterns": [
+                {
+                    "comment": "Class declaration",
+                    "match": "\\bclass\\b",
+                    "name": "storage.type"
+                },
+                {
+                    "comment": "Variable declaration",
+                    "name": "storage.type",
+                    "match": "\\b(field|static|var)\\s+(\\w+)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.modifier"
+                        },
+                        "2": {
+                            "name": "storage.type"
+                        }
+                    }
+                },
+                {
+                    "comment": "Function declaration",
+                    "begin": "\\b(constructor|function|method)\\s+([A-Za-z_][A-Za-z_0-9]*)\\s+([A-Za-z_][A-Za-z_0-9]*)\\s*\\(",
+                    "end": "\\)",
+                    "match": "meta.function",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "storage.modifier"
+                        },
+                        "2": {
+                            "name": "storage.type"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "match": "\\s*([A-Za-z_][A-Za-z_0-9]*)\\s+(?=[A-Za-z_][A-Za-z_0-9]*)\\b",
+                            "name": "storage.type"
+                        }
+                    ]
+                }
+            ]
+        },
+        "comment": {
+            "patterns": [
+                {
+                    "comment": "Inline comment",
+                    "begin": "\\/\\/",
+                    "end": "\\n",
+                    "name": "comment.line.double-slash"
+                },
+                {
+                    "comment": "Multiline comment",
+                    "begin": "\\/\\*",
+                    "end": "\\*\\/",
+                    "name": "comment.block"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.jack"
+}

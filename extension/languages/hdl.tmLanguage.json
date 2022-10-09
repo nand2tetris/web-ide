@@ -1,0 +1,75 @@
+{
+    "fileTypes": [
+        "hdl"
+    ],
+    "name": "HDL",
+    "patterns": [
+        {
+            "comment": "Block comment",
+            "begin": "\\/\\*",
+            "end": "\\*\\/",
+            "name": "comment.block.hdl"
+        },
+        {
+            "comment": "Line comment",
+            "begin": "\\/\\/",
+            "end": "\\n",
+            "name": "comment.line.hdl"
+        },
+        {
+            "comment": "keywords",
+            "name": "keyword.hdl",
+            "match": "IN|OUT|PARTS|BUILTIN"
+        },
+        {
+            "comment": "true, false",
+            "name": "constant.language.hdl",
+            "match": "true|false"
+        },
+        {
+            "comment": "bus index",
+            "captures": {
+                "1": {
+                    "name": "constant.numeric.hdl"
+                }
+            },
+            "match": "\\[([\\d]+)\\]"
+        },
+        {
+            "comment": ".. in bus slicing",
+            "captures": {
+                "1": {
+                    "name": "constant.numeric.hdl"
+                }
+            },
+            "match": "\\[(\\d+\\.{2}\\d+)\\]"
+        },
+        {
+            "comment": "chip name",
+            "name": "storage.type.hdl",
+            "match": "CHIP"
+        },
+        {
+            "comment": "inner chip",
+            "captures": {
+                "1": {
+                    "name": "entity.name.function.hdl"
+                }
+            },
+            "match": "([\\w\\d\\_]+)\\s*\\("
+        },
+        {
+            "comment": "inner chip inputs and outputs",
+            "captures": {
+                "1": {
+                    "name": "variable.parameter.hdl"
+                },
+                "2": {
+                    "name": "constant.numeric.hdl"
+                }
+            },
+            "match": "([\\w\\d\\_]+)\\s*(\\[.+\\])*="
+        }
+    ],
+    "scopeName": "source.hdl"
+}

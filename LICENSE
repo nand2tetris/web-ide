@@ -1,4 +1,9 @@
+MIT License
+
 Copyright 2022 David Souther et al
+
+This software is based on Stefano Volpe's 'Nand2Tetris Tools'. Please check [here](https://github.com/foxyseta/nand-ide/blob/master/LICENSE) for further information.
+This software is based on Aviv Yaish's 'NAND IDE'. Please check [here](https://github.com/AvivYaish/nand-ide/blob/master/LICENSE) for further information.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

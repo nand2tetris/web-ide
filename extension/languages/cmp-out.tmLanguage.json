@@ -1,0 +1,60 @@
+{
+    "fileTypes": [
+        "cmp",
+        "out"
+    ],
+    "name": "CMP/OUT",
+    "patterns": [
+        {
+            "include": "#border"
+        },
+        {
+            "include": "#variable"
+        },
+        {
+            "include": "#value"
+        },
+        {
+            "include": "#placeholder"
+        }
+    ],
+    "repository": {
+        "border": {
+            "patterns": [
+                {
+                    "comment": "Vertical table border",
+                    "name": "keyword.operator",
+                    "match": "\\|"
+                }
+            ]
+        },
+        "variable": {
+            "patterns": [
+                {
+                    "comment": "The variable identifier (table header)",
+                    "name": "support.variable",
+                    "match": "[a-zA-Z]+"
+                }
+            ]
+        },
+        "value": {
+            "patterns": [
+                {
+                    "comment": "The value of a certain variable at a given time",
+                    "name": "constant.numeric",
+                    "match": "-*\\d+\\+*"
+                }
+            ]
+        },
+        "placeholder": {
+            "patterns": [
+                {
+                    "comment": "List of wildcard characters",
+                    "name": "constant.language",
+                    "match": "\\*+"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.cmp"
+}

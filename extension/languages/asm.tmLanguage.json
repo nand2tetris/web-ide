@@ -1,0 +1,111 @@
+{
+    "fileTypes": [
+        "asm"
+    ],
+    "name": "Hack Assembly Language",
+    "patterns": [
+        {
+            "include": "#declaration"
+        },
+        {
+            "include": "#A-instruction"
+        },
+        {
+            "include": "#destination"
+        },
+        {
+            "include": "#boolean"
+        },
+        {
+            "include": "#jump"
+        },
+        {
+            "include": "#comment"
+        }
+    ],
+    "repository": {
+        "declaration": {
+            "patterns": [
+                {
+                    "comment": "Label declaration",
+                    "match": "\\(([^ \\/]*)\\)",
+                    "name": "storage.type",
+                    "captures": {
+                        "1": {
+                            "patterns": [
+                                {
+                                    "comment": "Label",
+                                    "match": "[a-zA-Z\\_\\.\\$\\:]+[a-zA-Z\\_\\.\\$\\:\\d]*",
+                                    "name": "variable.other"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "A-instruction": {
+            "patterns": [
+                {
+                    "comment": "@XXX instruction",
+                    "match": "\\@([^ \\/]*)",
+                    "name": "keyword.operator",
+                    "captures": {
+                        "1": {
+                            "patterns": [
+                                {
+                                    "match": "R10|R11|R12|R13|R14|R15|R0|R1|R2|R3|R4|R5|R6|R7|R8|R9|SP|LCL|ARG|THIS|THAT|SCREEN|KBD",
+                                    "name": "variable.language"
+                                },
+                                {
+                                    "comment": "A-instruction string argument",
+                                    "match": "[a-zA-Z\\_\\.\\$\\:]+[a-zA-Z\\_\\.\\$\\:\\d]*",
+                                    "name": "variable.other"
+                                },
+                                {
+                                    "match": "\\d+",
+                                    "name": "constant.numeric"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        "destination": {
+            "patterns": [
+                {
+                    "comment": "Left-hand side",
+                    "match": "null|M|D|A|MD|AM|AD|AMD",
+                    "name": "variable.language"
+                }
+            ]
+        },
+        "jump": {
+            "patterns": [
+                {
+                    "comment": "Jump type",
+                    "match": "JGT|JLE|JEQ|JLT|JNE|JMP|JGE",
+                    "name": "keyword.control"
+                }
+            ]
+        },
+        "comment": {
+            "patterns": [
+                {
+                    "comment": "Inline comment",
+                    "begin": "\\/\\/",
+                    "end": "\\n",
+                    "name": "comment.line.double-slash"
+                },
+                {
+                    "comment": "Multiline comment",
+                    "begin": "\\/\\*",
+                    "end": "\\*\\/",
+                    "name": "comment.block"
+                }
+            ]
+        }
+    },
+    "scopeName": "source.asm"
+}

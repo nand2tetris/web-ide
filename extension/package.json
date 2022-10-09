@@ -1,0 +1,223 @@
+{
+  "name": "@computron5k/extension",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "author": "David Souther <davidsouther@gmail.com>",
+  "license": "ISC",
+  "homepage": "https://davidsouther.github.io/computron5k",
+  "engines": {
+    "vscode": "^1.61.0"
+  },
+  "main": "./build/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "computron5k.run",
+        "title": "Nand2Tetris: run code",
+        "icon": "./images/button.png"
+      },
+      {
+        "command": "computron5k.stop",
+        "title": "Nand2Tetris: stop running"
+      },
+      {
+        "command": "computron5k.hardware",
+        "title": "Nand2Tetris: open Hardware Simulator"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Nand2Tetris IDE",
+      "properties": {
+        "computron5k.showRunIconInEditorTitleMenu": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to show 'Run Code' icon in editor title menu.",
+          "scope": "resource"
+        },
+        "computron5k.showTranslateIconInEditorTitleMenu": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether to show 'Translate Code' icon in editor title menu.",
+          "scope": "resource"
+        }
+      }
+    },
+    "languages": [
+      {
+        "id": "hdl",
+        "aliases": [
+          "HDL"
+        ],
+        "extensions": [
+          ".hdl"
+        ]
+      },
+      {
+        "id": "tst",
+        "aliases": [
+          "TST",
+          "TEST",
+          "Test",
+          "test"
+        ],
+        "extensions": [
+          ".tst"
+        ]
+      },
+      {
+        "id": "cmp",
+        "aliases": [
+          "CMP",
+          "cmp"
+        ],
+        "extensions": [
+          ".cmp"
+        ]
+      },
+      {
+        "id": "out",
+        "aliases": [
+          "OUT",
+          "out"
+        ],
+        "extensions": [
+          ".out"
+        ]
+      },
+      {
+        "id": "asm",
+        "aliases": [
+          "ASM",
+          "asm"
+        ],
+        "extensions": [
+          ".asm"
+        ]
+      },
+      {
+        "id": "hack",
+        "aliases": [
+          "HACK",
+          "hack"
+        ],
+        "extensions": [
+          ".hack"
+        ]
+      },
+      {
+        "id": "vm",
+        "aliases": [
+          "VM",
+          "vm"
+        ],
+        "extensions": [
+          ".vm"
+        ]
+      },
+      {
+        "id": "jack",
+        "aliases": [
+          "JACK",
+          "jack"
+        ],
+        "extensions": [
+          ".jack"
+        ]
+      }
+    ],
+    "grammars": [
+      {
+        "language": "hdl",
+        "scopeName": "source.hdl",
+        "path": "./languages/hdl.tmLanguage.json"
+      },
+      {
+        "language": "tst",
+        "scopeName": "source.tst",
+        "path": "./languages/tst.tmLanguage.json"
+      },
+      {
+        "language": "cmp",
+        "scopeName": "source.cmp",
+        "path": "./languages/cmp-out.tmLanguage.json"
+      },
+      {
+        "language": "out",
+        "scopeName": "source.out",
+        "path": "./languages/cmp-out.tmLanguage.json"
+      },
+      {
+        "language": "asm",
+        "scopeName": "source.asm",
+        "path": "./languages/asm.tmLanguage.json"
+      },
+      {
+        "language": "hack",
+        "scopeName": "source.hack",
+        "path": "./languages/hack.tmLanguage.json"
+      },
+      {
+        "language": "vm",
+        "scopeName": "source.vm",
+        "path": "./languages/vm.tmLanguage.json"
+      },
+      {
+        "language": "jack",
+        "scopeName": "source.jack",
+        "path": "./languages/jack.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "hdl",
+        "path": "./languages/hdl.snippets.json.code-snippets"
+      },
+      {
+        "language": "tst",
+        "path": "./languages/tst.snippets.json.code-snippets"
+      },
+      {
+        "language": "asm",
+        "path": "./languages/asm.snippets.json.code-snippets"
+      },
+      {
+        "language": "vm",
+        "path": "./languages/vm.snippets.json.code-snippets"
+      },
+      {
+        "language": "jack",
+        "path": "./languages/jack.snippets.json.code-snippets"
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "nand-ide",
+        "label": "Nand2Tetris IDE Icon Theme",
+        "path": "./fileicons/icon-theme.json"
+      }
+    ]
+  },
+  "activationEvents": [
+    "onCommand:computron5k.run",
+    "onCommand:computron5k.stop",
+    "onCommand:computron5k.translate",
+    "onCommand:computron5k.hardware",
+    "onCommand:computron5k.cpu",
+    "onCommand:computron5k.vm",
+    "onCommand:computron5k.assembler",
+    "onCommand:computron5k.compiler",
+    "onCommand:computron5k.zip"
+  ],
+  "dependencies": {
+    "@computron5k/simulator": "*"
+  },
+  "devDependencies": {
+    "@davidsouther/jiffies": "^2.0.3",
+    "@types/error-cause": "^1.0.1",
+    "@types/node": "^16.11.41",
+    "@types/vscode": "^1.72.0",
+    "typescript": "^4.8.1"
+  }
+}

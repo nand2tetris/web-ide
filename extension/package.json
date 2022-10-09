@@ -208,7 +208,8 @@
     "onCommand:computron5k.vm",
     "onCommand:computron5k.assembler",
     "onCommand:computron5k.compiler",
-    "onCommand:computron5k.zip"
+    "onCommand:computron5k.zip",
+    "onLanguage:hdl"
   ],
   "dependencies": {
     "@computron5k/simulator": "*"

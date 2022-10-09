@@ -1,55 +1,10 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-     viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
-<g>
-    <g>
-        <path style="fill:#777777;" d="M70,123c-5.52,0-10,4.48-10,10c0,5.52,4.48,10,10,10s10-4.48,10-10S75.52,123,70,123z"/>
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <g style="transform: translate(20%, 10%) scale(80%)">
+        <g style="stroke: #777; fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 25px">
+            <path d="M12.5,12.5 h240 v120 h-120 v120 h-120 z m0,120 h20 m40,0 h0 m35,0 h25 v-120 " />
+            <path d="M380,132.5 h120  M255,253 h245  M12.5,376 h486 M12.5,499 h486" />
+            <path d="M12.5,380 v115 M132.5,380 v115 M253,255 v240 M376,132.5 v365 M500,132.5 v365 " />
+        </g>
     </g>
-</g>
-<g>
-    <g>
-        <path style="fill:#777777;" d="M502,123H379c-5.522,0-10,4.477-10,10v113H253c-5.522,0-10,4.477-10,10v113H130H10c-5.523,0-10,4.477-10,10v123
-            c0,5.523,4.477,10,10,10h120h123h126h123c5.522,0,10-4.477,10-10V379V256V133C512,127.477,507.522,123,502,123z M120,492H20V389
-            h100V492z M243,492H140V389h103V492z M369,492H263V389h106V492z M369,369H263V266h106V369z M492,492H389V389h103V492z M492,369
-            H389V266h103V369z M492,246H389V143h103V246z"/>
-    </g>
-</g>
-<g>
-    <g>
-        <path style="fill:#777777;" d="M253,0H130H10C4.477,0,0,4.477,0,10v123v123c0,5.523,4.477,10,10,10h120c5.523,0,10-4.477,10-10V143h113
-            c5.522,0,10-4.477,10-10V10C263,4.477,258.522,0,253,0z M120,123h-13.02c-5.523,0-10,4.477-10,10s4.477,10,10,10H120v103H20V143
-            h12.63c5.523,0,10-4.477,10-10s-4.477-10-10-10H20V20h100V123z M243,123H140V20h103V123z"/>
-    </g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
-<g>
-</g>
 </svg>

@@ -1,29 +1,8 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Generator: Adobe Illustrator 19.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
-    <g>
-        <g>
-            <path style="fill:#777777;" d="M489.739,0H22.261C9.984,0,0,9.984,0,22.261v467.478C0,502.016,9.984,512,22.25,512h467.489
-            c12.277,0,22.261-9.984,22.261-22.261V22.261C512,9.984,502.016,0,489.739,0z M178.087,356.174V244.87h155.826v111.304H178.087z
-             M333.913,378.435v111.304H178.087V378.435H333.913z M333.913,111.304v111.304H178.087V111.304H333.913z M489.739,111.304v111.304
-            H356.174V111.304H489.739z M155.826,222.609H22.261V111.304h133.565V222.609z M22.261,244.87h133.565v111.304H22.261V244.87z
-             M356.174,244.87h133.565v111.304H356.174V244.87z M489.739,22.261v66.783H22.261V22.261H489.739z M22.261,378.435h133.565
-            v111.304H22.261V378.435z M356.174,489.739V378.435h133.565v111.304H356.174z" />
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <g style="transform: translate(20%, 10%) scale(80%)">
+        <g style="stroke: #777; fill:none; stroke-width: 20px; stroke-linejoin: round; stroke-linecap: round">
+            <path d="M10,10 H500 V500 H10 z M10,120 H500 M10,240 H500 M10,370 H500 M170,120 V500 M340,120 V500" />
         </g>
     </g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
-    <g></g>
 </svg>

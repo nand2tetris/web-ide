@@ -10,10 +10,11 @@ The user guide is available [here](./src/pages/USER_GUIDE.md) and can also be ac
 
 ## Architecture
 
-Computron5k is a stand-alone single-page app with separate sections for Hack Hardware, CPU, and VM emulators.
-It has a unified file system using browser local storage to save users' solutions to project work.
-Emulators share simulator code, especially to handle executing tests as well as converting between Javascript 64-bit floating point numbers and Hack 16-bit integers.
-A parser combinator based on [nom](https://docs.rs/nom/5.0.0/nom/) powers the various languages.
+Computron5k NAND2Tetris kit is a monorepo with four projects.
+`simulator` is the core NAND2Tetris code.
+`web` is a standalone web IDE.
+`extension` is a VSCode extension with editor support.
+`cli` is a command line NodeJS program (runnable with `npx`) to grade one or more project folders.
 
 ### Simulator
 
@@ -21,18 +22,17 @@ Simulator has code to handle running the various emulators, regardless of interf
 Simulator objects are also independant of language, and serve equally well to running tests as to binding to the DOM or printing to a CLI.
 `chip`, `cpu`, and `vm` cover the primary hack languages, with `compare`, `output`, and `tst` handling the common project tooling.
 
-### Languages
+#### Languages
 
-Languages includes `parser`, a parser combinator, as well as parsers for each individual language.
-The individual languages do _not_ compile to `simulator` objects, but rather to interfaces that meet the output needs of the various combinators.
-Later pases perform the final parsing of the tree of tokens to the simulator objects.
-`parser` implements [nom's](https://docs.rs/nom/5.0.0/nom/) API, with appropriate TypeScript modifications.
-Results are returned using a `Result` type from [`jiffies`](https://github.com/jefri/jiffies/blob/main/src/result.ts).
-Input is constrained to a special subset of the TypeScript `string` interface, `StringLike`.
-This allows handing `string` objects for quick testing, but also a unique `Span` object which tracks where within a given string the combinator matches.
-Using `Span` both communicates positional information about the match, as well as limits copying of string content within the program.
+Languages are parsed using [Ohm](https://ohmjs.org/), a parser combinator library.
+Ohm works well for simple cases, but does not handle error recovery well.
+Replacing or augmenting this to handle a number of errors, rather than only the first, w
 
-### Pages
+### Web
+
+Computron5k Web IDE is a stand-alone single-page app with separate sections for Hack Hardware, CPU, and VM emulators.
+It has a unified file system using browser local storage to save users' solutions to project work.
+Emulators share simulator code, especially to handle executing tests as well as converting between Javascript 64-bit floating point numbers and Hack 16-bit integers.
 
 The interface code is in the `pages` and `components` folders.
 Generally, a page creates a simulator at the top, some dynamic components in the middle, and a layout of HTML at the bottom.
@@ -54,6 +54,10 @@ For evented asynchronous behavior, use RXJS observables and subscriptions.
 Jiffies extends [`PicoCSS`](https://picocss.com), allowing rapid iteration on custom components.
 Some ideas have been moved upstream to Pico.
 Specific components in the forked Pico include [`inline-buttons`](https://github.com/picocss/pico/issues/182) and a [`property sheet`](https://github.com/picocss/pico/issues/195).
+
+### Extension
+
+A VSCode extension with language definitions and editor support.
 
 ### Jiffies
 

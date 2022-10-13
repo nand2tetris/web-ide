@@ -1,7 +1,7 @@
 {
   "references": [
-    // { "path": "./extension/tsconfig.json" },
-    { "path": "./simulator/tsconfig.json" }
-    // { "path": "./web/tsconfig.json" }
+    { "path": "./extension/tsconfig.json" },
+    { "path": "./simulator/tsconfig.json" },
+    { "path": "./web/tsconfig.json" }
   ]
 }

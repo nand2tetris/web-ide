@@ -1,7 +1,7 @@
 import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
 import { Trans } from "@lingui/macro";
 import MonacoEditor, { useMonaco } from "@monaco-editor/react";
-import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
+import type * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import { OnMount } from "@monaco-editor/react";
 import ohm from "ohm-js";
 import {
@@ -186,7 +186,7 @@ const Monaco = ({
         startLineNumber,
         endColumn,
         endLineNumber,
-        severity: monacoT.MarkerSeverity.Error,
+        severity: 8, // monacoT.MarkerSeverity.Error,
       },
     ]);
   }, [error, editor, monaco, language]);

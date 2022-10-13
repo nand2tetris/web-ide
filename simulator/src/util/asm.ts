@@ -24,9 +24,9 @@ export function asm(op: number): string {
 function cInstruction(op: number): string {
   op = op & 0xffff; // Clear high order bits
   const mop = (op & 0x1000) >> 12;
-  let cop: CommandOps = ((op & 0b0000111111000000) >> 6) as CommandOps;
-  let sop: StoreOps = ((op & 0b0000000000111000) >> 3) as StoreOps;
-  let jop: JumpOps = (op & 0b0000000000000111) as JumpOps;
+  const cop: CommandOps = ((op & 0b0000111111000000) >> 6) as CommandOps;
+  const sop: StoreOps = ((op & 0b0000000000111000) >> 3) as StoreOps;
+  const jop: JumpOps = (op & 0b0000000000000111) as JumpOps;
 
   if (COMMANDS.op[cop] === undefined) {
     // Invalid commend
@@ -69,7 +69,7 @@ function aop(asm: string): number {
 }
 
 function cop(asm: string): number {
-  let parts = asm.match(
+  const parts = asm.match(
     /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
   );
   const { assign, operation, jump } = parts?.groups ?? {};

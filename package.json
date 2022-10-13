@@ -16,15 +16,18 @@
   "scripts": {
     "compile": "tsc",
     "ci": "CI=true npm run check && CI=true npm run test",
+    "precheck": "npm -w web run extract && npm -w web run lingui",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
-    "check:format": "prettier --check {extension,simulator,web}/{public,src}",
-    "check:lint": "eslint {extension,simulator,web}/{public,src}",
-    "check:types": "tsc --noEmit",
-    "format": "prettier --write {extension,simulator,web}/{public,src}",
-    "fix": "eslint --fix {extension,simulator,web}/{public,src}",
+    "check:format": "prettier --ignore-unknown --check extension/src simulator/src web/src web/public",
+    "check:lint": "eslint --no-error-on-unmatched-pattern extension/src simulator/src web/src web/public",
+    "check:types": "tsc --build tsconfig.json",
+    "format": "prettier --write extension/src simulator/src web/src web/public",
+    "fix": "eslint --fix extension/src simulator/src web/src web/public",
     "test": "CI=true npm test -w simulator && CI=true npm test -w web"
   },
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "@typescript-eslint/parser": "^5.40.0",
     "eslint": "^8.25.0",
     "prettier": "^2.7.1",
     "typescript": "^4.8.4"

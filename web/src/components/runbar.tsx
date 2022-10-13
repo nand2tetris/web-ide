@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { t } from "@lingui/macro";
-import { Timer } from "@computron5k/simulator/timer";
+import { Timer } from "@computron5k/simulator/timer.js";
 import { useTimer } from "./timer";
 import { Icon } from "./pico/icon";
 

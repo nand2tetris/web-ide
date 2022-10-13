@@ -15,7 +15,7 @@ export function useFilePicker() {
 
   const select = useCallback(async (): Promise<string> => {
     dialog.open();
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       selected.current = resolve;
     });
   }, [dialog, selected]);

@@ -1,4 +1,4 @@
-import { Timer } from "@computron5k/simulator/timer";
+import { Timer } from "@computron5k/simulator/timer.js";
 import { useImmerReducer } from "../util/react";
 
 export interface TimerStoreState {
@@ -10,7 +10,7 @@ export interface TimerStoreState {
 import { Dispatch, MutableRefObject, useMemo, useRef } from "react";
 export type TimerStoreDispatch = Dispatch<{
   action: keyof ReturnType<typeof makeTimerStore>["reducers"];
-  payload?: {};
+  payload?: unknown;
 }>;
 
 const makeTimerStore = (
@@ -67,7 +67,7 @@ const makeTimerStore = (
 };
 
 export function useTimer(timer: Timer) {
-  const dispatch = useRef<TimerStoreDispatch>(() => {});
+  const dispatch = useRef<TimerStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
     () => makeTimerStore(timer, dispatch),

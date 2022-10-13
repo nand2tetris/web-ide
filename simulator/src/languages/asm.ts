@@ -84,14 +84,18 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
         type: "A",
         label: val.name,
       };
-    } catch (e) {}
+    } catch (e) {
+      // Pass
+    }
 
     try {
       return {
         type: "A",
         value: val.value,
       };
-    } catch (e) {}
+    } catch (e) {
+      // pass
+    }
 
     throw new Error(`AsmAInstruction must have either a name or a value`);
   },
@@ -160,7 +164,7 @@ export function fillLabel(asm: Asm) {
     delete (instruction as unknown as { label: undefined }).label;
   }
 
-  let unfilled: AsmALabelInstruction[] = [];
+  const unfilled: AsmALabelInstruction[] = [];
   let line = 0;
   for (const instruction of asm.instructions) {
     if (instruction.type === "L") {

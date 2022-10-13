@@ -15,7 +15,7 @@ export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
 export * from "@testing-library/react";
 export { i18nRender as render };
 
-const I18nWrapper = ({ children }: any) => (
+const I18nWrapper = ({ children }: { children: ReactElement }) => (
   <I18nProvider i18n={i18n}>{children}</I18nProvider>
 );
 

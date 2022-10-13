@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { act } from "react-dom/test-utils";
-import { Bus, HIGH } from "@computron5k/simulator/chip/chip";
+import { Bus, HIGH } from "@computron5k/simulator/chip/chip.js";
 import { Pinout, reducePin } from "./pinout";
 import { render, screen } from "../testing";
 

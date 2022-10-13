@@ -47,23 +47,35 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   monaco: {
     canUse: true,
     wants: true,
-    toggle() {},
+    toggle() {
+      return undefined;
+    },
   },
   status: "",
-  setStatus: () => {},
+  setStatus: () => undefined,
   filePicker: {
-    close() {},
-    open() {},
+    close() {
+      return undefined;
+    },
+    open() {
+      return undefined;
+    },
     select() {
       return Promise.reject("");
     },
     isOpen: false,
   } as ReturnType<typeof useFilePicker>,
   settings: {
-    close() {},
-    open() {},
+    close() {
+      return undefined;
+    },
+    open() {
+      return undefined;
+    },
     isOpen: false,
   },
   theme: "system",
-  setTheme() {},
+  setTheme() {
+    return undefined;
+  },
 });

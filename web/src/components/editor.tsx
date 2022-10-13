@@ -18,7 +18,7 @@ import { AppContext } from "../App.context";
 import {
   Span,
   UNKNOWN_PARSE_ERROR,
-} from "@computron5k/simulator/languages/base";
+} from "@computron5k/simulator/languages/base.js";
 
 import "./editor.scss";
 
@@ -227,7 +227,7 @@ export const Editor = ({
   const { monaco } = useContext(AppContext);
 
   const parse = useCallback(
-    (text: string = "") => {
+    (text = "") => {
       const parsed = grammar.match(text);
       setError(parsed.failed() ? parsed : undefined);
     },
@@ -238,7 +238,7 @@ export const Editor = ({
   const doParse = useMemo(() => debounce(parse, 500), [parse]);
 
   const onChangeCB = useCallback(
-    (text: string = "") => {
+    (text = "") => {
       onChange(text);
       doParse(text);
     },

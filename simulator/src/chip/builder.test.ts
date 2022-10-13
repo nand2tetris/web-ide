@@ -35,6 +35,7 @@ describe("Chip Builder", () => {
           }`
         )
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(display(e.message ?? e.shortMessage ?? e));
     }
@@ -63,6 +64,7 @@ describe("Chip Builder", () => {
         }
       `)
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(display(e.message ?? e.shortMessage ?? e));
     }
@@ -92,6 +94,7 @@ describe("Chip Builder", () => {
           }`
         )
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       throw new Error(display(e.message ?? e.shortMessage ?? e));
     }

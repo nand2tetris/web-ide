@@ -5,9 +5,9 @@ import {
   Format,
   FORMATS,
   Memory as MemoryChip,
-} from "@computron5k/simulator/cpu/memory";
-import { asm } from "@computron5k/simulator/util/asm";
-import { bin, dec, hex } from "@computron5k/simulator/util/twos";
+} from "@computron5k/simulator/cpu/memory.js";
+import { asm } from "@computron5k/simulator/util/asm.js";
+import { bin, dec, hex } from "@computron5k/simulator/util/twos.js";
 import InlineEdit from "../pico/inline_edit";
 import VirtualScroll, { VirtualScrollSettings } from "../pico/virtual_scroll";
 import { Icon } from "../pico/icon";
@@ -22,7 +22,7 @@ export const MemoryBlock = ({
   highlight = -1,
   editable = false,
   format = dec,
-  onChange = () => {},
+  onChange = () => undefined,
 }: {
   jmp?: { value: number };
   memory: MemoryChip;
@@ -75,7 +75,7 @@ export const MemoryCell = ({
   value,
   highlight = false,
   editable = false,
-  onChange = () => {},
+  onChange = () => undefined,
 }: {
   index: number;
   value: string;

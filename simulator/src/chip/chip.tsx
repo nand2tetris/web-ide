@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
@@ -151,8 +152,12 @@ export class ConstantBus extends Bus {
     super(name, 16 /* TODO: get high bit index */);
   }
 
-  pullHigh(_ = 0) {}
-  pullLow(_ = 0) {}
+  pullHigh(_ = 0) {
+    return undefined;
+  }
+  pullLow(_ = 0) {
+    return undefined;
+  }
   override voltage(_ = 0): Voltage {
     return (this.busVoltage & 0x1) as Voltage;
   }
@@ -202,7 +207,7 @@ export class Pins {
   private readonly map = new Map<string, Pin>();
 
   insert(pin: Pin) {
-    let { name } = pin;
+    const { name } = pin;
     assert(!this.map.has(name), `Pins already has ${name}!`);
     this.map.set(name, pin);
   }
@@ -379,7 +384,7 @@ export class Chip {
   }
 
   private wireOutPin(part: Chip, to: PinSide, from: PinSide) {
-    let partPin = assertExists(
+    const partPin = assertExists(
       part.outs.get(to.name),
       () => `Cannot wire to missing pin ${to.name}`
     );
@@ -461,7 +466,7 @@ export class Chip {
   }
 
   // For the ROM32K builtin to load from a file system
-  async load(fs: FileSystem, path: string) {
+  async load(fs: FileSystem, path: string): Promise<void> {
     for (const part of this.parts) {
       if (part.name === "ROM32K") {
         await part.load(fs, path);

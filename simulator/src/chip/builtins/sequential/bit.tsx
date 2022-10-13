@@ -23,7 +23,7 @@ export class Bit extends ClockedChip {
 }
 
 export class Register extends ClockedChip {
-  bits: number = 0x00;
+  bits = 0x00;
 
   constructor(name?: string) {
     super(["in[16]", "load"], ["out[16]"], name);
@@ -51,7 +51,7 @@ export class Register extends ClockedChip {
 export class VRegister extends Register {}
 
 export class PC extends ClockedChip {
-  bits: number = 0x00;
+  bits = 0x00;
 
   constructor(name?: string) {
     super(["in[16]", "load", "inc", "reset"], ["out[16]"], name);

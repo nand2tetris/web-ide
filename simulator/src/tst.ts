@@ -16,28 +16,40 @@ import { Output } from "./output.js";
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
   protected _outputList: Output[] = [];
-  protected _log: string = "";
+  protected _log = "";
   fs: FileSystem = new FileSystem();
 
   setFileSystem(fs: FileSystem) {
     this.fs = fs;
   }
 
-  echo(_content: string) {}
-  clearEcho() {}
+  echo(_content: string) {
+    return undefined;
+  }
+  clearEcho() {
+    return undefined;
+  }
 
-  async load(_filename: string) {}
-  async compareTo(_filename: string) {}
-  outputFile(_filename: string): void {}
+  async load(_filename: string): Promise<void> {
+    return undefined;
+  }
+  async compareTo(_filename: string): Promise<void> {
+    return undefined;
+  }
+  outputFile(_filename: string): void {
+    return undefined;
+  }
   outputList(outputs: Output[]): void {
     this._outputList = outputs;
   }
 
-  addInstruction(instruction: IS | TestInstruction) {
+  addInstruction(instruction: IS | TestInstruction): void {
     this.instructions.push(instruction);
   }
 
-  reset() {
+  reset(): void {
+    // No generator arrow functions
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const test = this;
     this._steps = (function* () {
       for (const instruction of test.instructions) {
@@ -54,7 +66,10 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     if (this._steps === undefined) {
       this.reset();
     }
-    return this._steps!;
+    if (this._steps === undefined) {
+      throw new Error("Reset did not initialize steps");
+    }
+    return this._steps;
   }
 
   get currentStep(): IS | TestInstruction | undefined {
@@ -120,7 +135,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
       if (isTstLineStatment(line)) {
         test.addInstruction(ChipTest.makeLineStatement(line));
       } else {
-        let repeat = isTstWhileStatement(line)
+        const repeat = isTstWhileStatement(line)
           ? new TestWhileInstruction(
               new Condition(
                 line.condition.left,
@@ -240,8 +255,12 @@ export class CPUTest extends Test<CPUTestInstruction> {
   getVar(_variable: string | number): number {
     return 0;
   }
-  setVar(_variable: string, _value: number): void {}
-  ticktock(): void {}
+  setVar(_variable: string, _value: number): void {
+    return undefined;
+  }
+  ticktock(): void {
+    return undefined;
+  }
 }
 
 export class VMTest extends Test<VMTestInstruction> {
@@ -251,8 +270,12 @@ export class VMTest extends Test<VMTestInstruction> {
   getVar(_variable: string | number): number {
     return 0;
   }
-  setVar(_variable: string, _value: number): void {}
-  vmstep(): void {}
+  setVar(_variable: string, _value: number): void {
+    return undefined;
+  }
+  vmstep(): void {
+    return undefined;
+  }
 }
 
 export interface TestInstruction {
@@ -344,7 +367,9 @@ export class TestRepeatInstruction extends TestCompoundInstruction {
     super();
   }
 
-  override do() {}
+  override do() {
+    return undefined;
+  }
 
   private *innerSteps(test: Test) {
     for (const instruction of this.instructions) {

@@ -60,7 +60,7 @@ hdlSemantics.addAttribute<PinParts>("WireSide", {
 
 hdlSemantics.addAttribute<Wire>("Wire", {
   Wire(left, _, right) {
-    let rhs: PinParts = right.isTerminal()
+    const rhs: PinParts = right.isTerminal()
       ? { pin: right.sourceString }
       : right.WireSide;
     return { lhs: left.WireSide as PinParts, rhs };

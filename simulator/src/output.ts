@@ -70,7 +70,7 @@ export class Output {
     }
 
     const fmt = { B: bin, D: dec, X: hex }[this.fmt];
-    let value = fmt(val as number);
+    const value = fmt(val as number);
     if (this.fmt === "D") {
       return this.padRight(value);
     } else {

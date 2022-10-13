@@ -5,7 +5,7 @@ import { AppContext } from "../../App.context";
 
 import "../pico/button-group.scss";
 import "../pico/property.scss";
-import loaders from "@computron5k/simulator/projects/lazy";
+import loaders from "@computron5k/simulator/projects/lazy.js";
 
 export const Settings = () => {
   const { settings, fs, monaco, theme, setTheme, setStatus } =

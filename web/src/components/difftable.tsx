@@ -1,5 +1,5 @@
 import { Plural, Trans } from "@lingui/macro";
-import { CMP } from "@computron5k/simulator/languages/cmp";
+import { CMP } from "@computron5k/simulator/languages/cmp.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { range } from "@davidsouther/jiffies/lib/esm/range";

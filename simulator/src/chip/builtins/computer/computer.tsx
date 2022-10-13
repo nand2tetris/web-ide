@@ -11,7 +11,6 @@ import {
   CPUState,
   cpuTick,
   cpuTock,
-  decode,
   emptyState,
 } from "../../../cpu/cpu.js";
 import { int10 } from "../../../util/twos.js";

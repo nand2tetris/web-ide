@@ -1,5 +1,9 @@
-import { COMMANDS, COMMANDS_OP, Flags } from "@computron5k/simulator/cpu/alu";
-import { bin } from "@computron5k/simulator/util/twos";
+import {
+  COMMANDS,
+  COMMANDS_OP,
+  Flags,
+} from "@computron5k/simulator/cpu/alu.js";
+import { bin } from "@computron5k/simulator/util/twos.js";
 
 export const ALUComponent = ({
   A,

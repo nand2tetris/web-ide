@@ -24,9 +24,14 @@ interface CmpMatchers<R = unknown> {
 }
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
-    interface Expect extends CustomMatchers {}
-    interface Matchers<R, T = {}>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    type Expect = CustomMatchers;
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    interface Matchers<R, T = unknown>
       extends CustomMatchers<R, T>,
         OhmMatchers<R>,
         CmpMatchers<R> {}
@@ -61,7 +66,7 @@ expect.extend({
       };
     } else {
       if (expected) {
-        expect<R>(Ok(result)).toMatchObject(Ok(expected) as {});
+        expect<R>(Ok(result)).toMatchObject(Ok(expected) as object);
       }
     }
     return {

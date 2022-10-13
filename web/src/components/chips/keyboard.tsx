@@ -1,5 +1,5 @@
 import { KeyboardEvent, useCallback, useState } from "react";
-import { Keyboard as KeyboardChip } from "@computron5k/simulator/chip/builtins/computer/computer";
+import { Keyboard as KeyboardChip } from "@computron5k/simulator/chip/builtins/computer/computer.js";
 import { Icon } from "../pico/icon";
 import { RegisterComponent } from "./register";
 
@@ -33,8 +33,9 @@ const KeyMap: Record<string, number | undefined> = {
 };
 
 function keyPressToHackCharacter(keypress: KeyboardEvent): number {
-  if (KeyMap[keypress.key]) {
-    return KeyMap[keypress.key]!;
+  const mapping = KeyMap[keypress.key];
+  if (mapping !== undefined) {
+    return mapping;
   }
   if (keypress.key.length === 1) {
     const code = keypress.key.charCodeAt(0);

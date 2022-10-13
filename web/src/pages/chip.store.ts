@@ -4,27 +4,27 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { t } from "@lingui/macro";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 
-import { HDL } from "@computron5k/simulator/languages/hdl";
-import { TST } from "@computron5k/simulator/languages/tst";
-import { build as buildChip } from "@computron5k/simulator/chip/builder";
-import { getBuiltinChip } from "@computron5k/simulator/chip/builtins/index";
+import { HDL } from "@computron5k/simulator/languages/hdl.js";
+import { TST } from "@computron5k/simulator/languages/tst.js";
+import { build as buildChip } from "@computron5k/simulator/chip/builder.js";
+import { getBuiltinChip } from "@computron5k/simulator/chip/builtins/index.js";
 import {
   Low,
   Pin,
   Chip as SimChip,
   Chip,
-} from "@computron5k/simulator/chip/chip";
-import { Clock } from "@computron5k/simulator/chip/clock";
-import { ChipTest } from "@computron5k/simulator/tst";
+} from "@computron5k/simulator/chip/chip.js";
+import { Clock } from "@computron5k/simulator/chip/clock.js";
+import { ChipTest } from "@computron5k/simulator/tst.js";
 import { StorageContext } from "../util/storage";
 import { AppContext } from "../App.context";
 import { ImmPin, reducePins } from "../components/pinout";
-import { REGISTRY } from "@computron5k/simulator/chip/builtins/index";
-import { Span } from "@computron5k/simulator/languages/base";
+import { REGISTRY } from "@computron5k/simulator/chip/builtins/index.js";
+import { Span } from "@computron5k/simulator/languages/base.js";
 import {
   ChipProjects,
   CHIP_PROJECTS,
-} from "@computron5k/simulator/projects/index";
+} from "@computron5k/simulator/projects/index.js";
 import { useImmerReducer } from "../util/react";
 
 export const PROJECT_NAMES = [
@@ -34,7 +34,7 @@ export const PROJECT_NAMES = [
   ["05", t`Project 5`],
 ];
 
-function dropdowns(storage: Record<string, string>) {
+function findDropdowns(storage: Record<string, string>) {
   const project =
     (storage["/chip/project"] as keyof typeof CHIP_PROJECTS) ?? "01";
   const chips = CHIP_PROJECTS[project];
@@ -109,7 +109,7 @@ const clock = Clock.get();
 
 export type ChipStoreDispatch = Dispatch<{
   action: keyof ReturnType<typeof makeChipStore>["reducers"];
-  payload?: {};
+  payload?: unknown;
 }>;
 
 export function makeChipStore(
@@ -118,7 +118,9 @@ export function makeChipStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>
 ) {
-  let { project, chips, chipName } = dropdowns(storage);
+  const dropdowns = findDropdowns(storage);
+  let { project, chipName } = dropdowns;
+  const { chips } = dropdowns;
   let chip = new Low();
   let test = new ChipTest();
 
@@ -131,7 +133,7 @@ export function makeChipStore(
       runningTest: false,
     };
 
-    let maybeChip = getBuiltinChip(controls.chipName);
+    const maybeChip = getBuiltinChip(controls.chipName);
     if (isErr(maybeChip)) {
       setStatus(display(Err(maybeChip)));
     } else {
@@ -280,8 +282,9 @@ export function makeChipStore(
       // Store current inPins
       const inPins = chip.ins;
       for (const [pin, { busVoltage }] of inPins) {
-        if (nextChip.ins.has(pin)) {
-          nextChip.ins.get(pin)!.busVoltage = busVoltage;
+        const nextPin = nextChip.ins.get(pin);
+        if (nextPin) {
+          nextPin.busVoltage = busVoltage;
         }
       }
       clock.reset();
@@ -401,14 +404,20 @@ export function useChipPageStore() {
   const { setStatus } = useContext(AppContext);
   const storage: Record<string, string> = useMemo(() => localStorage, []);
 
-  const dispatch = useRef<ChipStoreDispatch>(() => {});
+  const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
     () => makeChipStore(fs, setStatus, storage, dispatch),
     [fs, setStatus, storage, dispatch]
   );
 
-  const [state, dispatcher] = useImmerReducer(reducers, initialState);
+  const [state, dispatcher] = useImmerReducer(
+    reducers as unknown as Record<
+      string,
+      (state: ChipPageState, action?: unknown) => ChipPageState
+    >,
+    initialState
+  );
   dispatch.current = dispatcher;
 
   return { state, dispatch, actions };

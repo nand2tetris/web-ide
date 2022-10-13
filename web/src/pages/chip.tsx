@@ -16,15 +16,15 @@ import { FullPinout } from "../components/pinout";
 import { Files, PROJECT_NAMES, useChipPageStore } from "./chip.store";
 import { DiffTable } from "../components/difftable";
 import { Editor } from "../components/editor";
-import { HDL } from "@computron5k/simulator/languages/hdl";
-import { TST } from "@computron5k/simulator/languages/tst";
-import { CMP } from "@computron5k/simulator/languages/cmp";
+import { HDL } from "@computron5k/simulator/languages/hdl.js";
+import { TST } from "@computron5k/simulator/languages/tst.js";
+import { CMP } from "@computron5k/simulator/languages/cmp.js";
 import { Accordian, Panel } from "../components/shell/panel";
 import { Runbar } from "../components/runbar";
-import { Timer } from "@computron5k/simulator/timer";
+import { Timer } from "@computron5k/simulator/timer.js";
 import { useStateInitializer } from "../util/react";
 import { Clockface } from "../components/clockface";
-import { CHIP_PROJECTS } from "@computron5k/simulator/projects/index";
+import { CHIP_PROJECTS } from "@computron5k/simulator/projects/index.js";
 import { Icon } from "../components/pico/icon";
 import { AppContext } from "../App.context";
 import { makeVisualizationsWithId } from "../components/chips/visualizations";
@@ -42,7 +42,7 @@ export const Chip = () => {
     actions.saveChip(hdl);
   };
 
-  const compile = useRef<(files?: Partial<Files>) => void>(() => {});
+  const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
     await actions.updateFiles({
       hdl: files.hdl ?? hdl,

@@ -43,7 +43,9 @@ export class Clock {
     });
   }
 
-  private constructor() {}
+  private constructor() {
+    // private
+  }
 
   reset() {
     this.level = LOW;

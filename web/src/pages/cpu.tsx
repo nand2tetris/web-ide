@@ -1,8 +1,8 @@
-import { CPU as CPUChip } from "@computron5k/simulator/cpu/cpu";
-import { Memory } from "@computron5k/simulator/cpu/memory";
-import { HACK } from "@computron5k/simulator/testing/mult";
-import { TickScreen } from "@computron5k/simulator/testing/fill";
-import { Timer } from "@computron5k/simulator/timer";
+import { CPU as CPUChip } from "@computron5k/simulator/cpu/cpu.js";
+import { Memory } from "@computron5k/simulator/cpu/memory.js";
+import { HACK } from "@computron5k/simulator/testing/mult.js";
+import { TickScreen } from "@computron5k/simulator/testing/fill.js";
+import { Timer } from "@computron5k/simulator/timer.js";
 
 import MemoryComponent from "../components/chips/memory";
 import { Screen } from "../components/chips/screen";

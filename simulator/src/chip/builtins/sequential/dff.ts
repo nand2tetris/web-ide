@@ -7,13 +7,13 @@ export class DFF extends ClockedChip {
 
   override tick() {
     // Read in into t
-    let t = this.in().voltage();
+    const t = this.in().voltage();
     this.pin("t").pull(t);
   }
 
   override tock() {
     // write t into out
-    let t = this.pin("t").voltage();
+    const t = this.pin("t").voltage();
     this.out().pull(t);
   }
 }

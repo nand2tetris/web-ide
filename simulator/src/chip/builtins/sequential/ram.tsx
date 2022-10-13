@@ -4,8 +4,8 @@ import { Memory, Memory as MemoryChip } from "../../../cpu/memory.js";
 
 export class RAM extends ClockedChip {
   protected _memory: MemoryChip;
-  private _nextData: number = 0;
-  private _address: number = 0;
+  private _nextData = 0;
+  private _address = 0;
 
   get memory() {
     return this._memory;

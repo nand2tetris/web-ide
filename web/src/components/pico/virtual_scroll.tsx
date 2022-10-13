@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import {
   Key,
-  MutableRefObject,
   ReactNode,
   useCallback,
   useEffect,
@@ -62,8 +62,7 @@ export function fillVirtualScrollSettings(
 
 export function initialState<T>(
   settings: VirtualScrollSettings,
-  adapter: VirtualScrollDataAdapter<T>,
-  ref: MutableRefObject<HTMLDivElement | null>
+  adapter: VirtualScrollDataAdapter<T>
 ): VirtualScrollState<T> {
   // From Denis Hilt, https://blog.logrocket.com/virtual-scrolling-core-principles-and-basic-implementation-in-react/
   const { minIndex, maxIndex, startIndex, itemHeight, count, tolerance } =
@@ -165,7 +164,7 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
 
   const { settings, startState, reducer } = useMemo(() => {
     const settings = fillVirtualScrollSettings(props.settings ?? {});
-    const startState = initialState<T>(settings, props.get, viewportRef);
+    const startState = initialState<T>(settings, props.get);
     const reducer = scrollReducer(props.get);
     return { settings, reducer, startState };
   }, [props.settings, props.get]);

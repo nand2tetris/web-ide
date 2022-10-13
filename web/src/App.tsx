@@ -14,7 +14,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs";
 
 import urls from "./urls";
-import { loaders } from "@computron5k/simulator/projects/index";
+import { loaders } from "@computron5k/simulator/projects/index.js";
 import Header from "./components/shell/header";
 import Footer from "./components/shell/footer";
 import { AppContext, useAppContext } from "./App.context";

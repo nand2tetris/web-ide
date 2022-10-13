@@ -7,11 +7,9 @@ const publicImages = (href: string) => {
 };
 
 const Markdown = ({ children }: { children: string }) => (
-  <ReactMarkdown
-    remarkPlugins={[remarkGfm]}
-    children={children}
-    transformImageUri={publicImages}
-  />
+  <ReactMarkdown remarkPlugins={[remarkGfm]} transformImageUri={publicImages}>
+    {children}
+  </ReactMarkdown>
 );
 
 export default Markdown;

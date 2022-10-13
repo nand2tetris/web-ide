@@ -35,7 +35,7 @@ const COND_WHILE = `while out <> 89 {
 
 describe("tst language", () => {
   it("parses an output format", () => {
-    let match = grammar.match("a%B3.1.3", "OutputFormat");
+    const match = grammar.match("a%B3.1.3", "OutputFormat");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).format).toStrictEqual({
       id: "a",
@@ -49,7 +49,7 @@ describe("tst language", () => {
   });
 
   it("parses an output list", () => {
-    let match = grammar.match(
+    const match = grammar.match(
       "output-list a%B1.1.1 out%X2.3.4",
       "TstOutputListOperation"
     );
@@ -80,7 +80,7 @@ describe("tst language", () => {
   });
 
   it("parses an output list with junk", () => {
-    let match = grammar.match(
+    const match = grammar.match(
       "\n/// A list\noutput-list a%B1.1.1 /* the output */ out%X2.3.4",
       "TstOutputListOperation"
     );
@@ -111,7 +111,7 @@ describe("tst language", () => {
   });
 
   it("parses an output list with builtins", () => {
-    let match = grammar.match(
+    const match = grammar.match(
       "output-list PC[]%D0.4.0 RAM16K[0]%D1.7.1",
       "TstOutputListOperation"
     );
@@ -142,7 +142,7 @@ describe("tst language", () => {
   });
 
   it("parses a single set", () => {
-    let match = grammar.match("set a 0", "TstSetOperation");
+    const match = grammar.match("set a 0", "TstSetOperation");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).operation).toEqual({
       op: "set",
@@ -152,7 +152,7 @@ describe("tst language", () => {
   });
 
   it("parses simple multiline", () => {
-    let match = grammar.match("eval;\n\neval;\n\n");
+    const match = grammar.match("eval;\n\neval;\n\n");
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -163,7 +163,7 @@ describe("tst language", () => {
   });
 
   it("parses a test file", () => {
-    let match = grammar.match(NOT_TST);
+    const match = grammar.match(NOT_TST);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -225,7 +225,7 @@ describe("tst language", () => {
   });
 
   it("parses a clocked test file", () => {
-    let match = grammar.match(BIT_TST);
+    const match = grammar.match(BIT_TST);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -314,7 +314,7 @@ describe("tst language", () => {
   });
 
   it("parses a test file with negative integers", () => {
-    let match = grammar.match(MEM_TST);
+    const match = grammar.match(MEM_TST);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -367,7 +367,7 @@ describe("tst language", () => {
   });
 
   it("repeats blocks", () => {
-    let match = grammar.match(MEM_REPEAT);
+    const match = grammar.match(MEM_REPEAT);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -392,7 +392,7 @@ describe("tst language", () => {
   });
 
   it("repeats indefinitely", () => {
-    let match = grammar.match(INDEF_REPEAT);
+    const match = grammar.match(INDEF_REPEAT);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -417,7 +417,7 @@ describe("tst language", () => {
   });
 
   it("loops with a condition", () => {
-    let match = grammar.match(COND_WHILE);
+    const match = grammar.match(COND_WHILE);
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
@@ -446,7 +446,7 @@ describe("tst language", () => {
   });
 
   it("loads ROMs", () => {
-    let match = grammar.match(`ROM32K load Max.hack;`);
+    const match = grammar.match(`ROM32K load Max.hack;`);
 
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({

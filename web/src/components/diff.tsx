@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/macro";
-import { Diff } from "@computron5k/simulator/compare";
+import { Diff } from "@computron5k/simulator/compare.js";
 
 export const DiffPanel = ({
   diffs = [],

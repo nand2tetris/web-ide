@@ -2,7 +2,7 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
 import { Trans } from "@lingui/macro";
 import { useCallback, useRef } from "react";
 import { useClockFrame } from "../clockface";
-import { Memory } from "@computron5k/simulator/cpu/memory";
+import { Memory } from "@computron5k/simulator/cpu/memory.js";
 import { Panel } from "../shell/panel";
 
 const WHITE = "white";
@@ -51,7 +51,7 @@ function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
 }
 
 export const Screen = ({ memory }: { memory: ScreenMemory }) => {
-  let canvas = useRef<HTMLCanvasElement>();
+  const canvas = useRef<HTMLCanvasElement>();
   useClockFrame(
     useCallback(() => {
       const ctx = canvas.current?.getContext("2d") ?? undefined;

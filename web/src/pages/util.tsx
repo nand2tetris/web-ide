@@ -1,5 +1,5 @@
 import { ChangeEvent, useCallback, useState } from "react";
-import { asm, op } from "@computron5k/simulator/util/asm";
+import { asm, op } from "@computron5k/simulator/util/asm.js";
 import {
   bin,
   dec,
@@ -8,7 +8,7 @@ import {
   int16,
   int2,
   uns,
-} from "@computron5k/simulator/util/twos";
+} from "@computron5k/simulator/util/twos.js";
 
 export const Util = () => {
   const [value, setValue] = useState(0);

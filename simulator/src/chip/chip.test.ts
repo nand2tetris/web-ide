@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   Bus,
   Chip,
@@ -179,7 +180,7 @@ describe("Chip", () => {
       });
     });
 
-    describe("and16", () => {});
+    describe("and16", () => undefined);
   });
 
   describe("SubBus", () => {

@@ -1,20 +1,22 @@
 import produce from "immer";
 import { Dispatch, useEffect, useReducer, useState } from "react";
 
-export function useImmerReducer<T, Reducers extends Record<string, Function>>(
-  reducers: Reducers,
-  initialState: T
-) {
+export function useImmerReducer<
+  T,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Reducers extends Record<string, (state: T, action?: any) => T | void>
+>(reducers: Reducers, initialState: T) {
   return useReducer(
     (
       state: T,
       command: {
         action: keyof Reducers;
-        payload?: {};
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        payload?: any;
       }
-    ) =>
+    ): T =>
       produce(state, (draft: T) => {
-        reducers[command.action](draft, command.payload as any);
+        reducers[command.action](draft, command.payload);
       }),
     initialState
   );

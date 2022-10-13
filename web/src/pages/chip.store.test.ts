@@ -3,19 +3,19 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
 import { MutableRefObject } from "react";
-import * as not from "@computron5k/simulator/projects/project_01/01_not";
-import * as bit from "@computron5k/simulator/projects/project_03/01_bit";
+import * as not from "@computron5k/simulator/projects/project_01/01_not.js";
+import * as bit from "@computron5k/simulator/projects/project_03/01_bit.js";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store";
 
 function testChipStore(
   fs: Record<string, string> = {},
   storage: Record<string, string> = {}
 ) {
-  let dispatch: MutableRefObject<ChipStoreDispatch> = {
+  const dispatch: MutableRefObject<ChipStoreDispatch> = {
     current: jest.fn(),
   };
 
-  let setStatus = jest.fn();
+  const setStatus = jest.fn();
 
   const { initialState, actions, reducers } = makeChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
@@ -56,15 +56,15 @@ describe("ChipStore", () => {
   });
 
   describe.skip("behavior", () => {
-    it("toggles bits", () => {});
-    it("increments registers", () => {});
-    it("saves chips", () => {});
-    it("loads projects and chips", () => {});
-    it("adds custom chips to the current project dropdown", () => {});
+    it("toggles bits", () => undefined);
+    it("increments registers", () => undefined);
+    it("saves chips", () => undefined);
+    it("loads projects and chips", () => undefined);
+    it("adds custom chips to the current project dropdown", () => undefined);
   });
 
   describe.skip("execution", () => {
-    it("compiles chips", () => {});
-    it("runs tests", () => {});
+    it("compiles chips", () => undefined);
+    it("runs tests", () => undefined);
   });
 });

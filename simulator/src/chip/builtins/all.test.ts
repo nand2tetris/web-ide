@@ -23,12 +23,15 @@ describe("All Projects", () => {
       )
     )("Builtin %s", async (chipName) => {
       let hdlFile: string =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         ChipProjects[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
       const tstFile: string =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         ChipProjects[project]?.CHIPS[chipName]?.[`${chipName}.tst`];
       const cmpFile: string =
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         ChipProjects[project]?.CHIPS[chipName]?.[`${chipName}.cmp`];
 

@@ -1,16 +1,19 @@
 import {
   Keyboard,
   Screen,
-} from "@computron5k/simulator/chip/builtins/computer/computer";
-import { ALU } from "@computron5k/simulator/chip/builtins/index";
+} from "@computron5k/simulator/chip/builtins/computer/computer.js";
+import { ALU } from "@computron5k/simulator/chip/builtins/index.js";
 import {
   PC,
   VRegister,
-} from "@computron5k/simulator/chip/builtins/sequential/bit";
-import { RAM, RAM8 } from "@computron5k/simulator/chip/builtins/sequential/ram";
-import { Chip, HIGH } from "@computron5k/simulator/chip/chip";
-import { Flags } from "@computron5k/simulator/cpu/alu";
-import { CPU, decode } from "@computron5k/simulator/cpu/cpu";
+} from "@computron5k/simulator/chip/builtins/sequential/bit.js";
+import {
+  RAM,
+  RAM8,
+} from "@computron5k/simulator/chip/builtins/sequential/ram.js";
+import { Chip, HIGH } from "@computron5k/simulator/chip/chip.js";
+import { Flags } from "@computron5k/simulator/cpu/alu.js";
+import { CPU, decode } from "@computron5k/simulator/cpu/cpu.js";
 import { ReactElement } from "react";
 import { ALUComponent } from "./alu";
 import { Keyboard as KeyboardComponent } from "./keyboard";

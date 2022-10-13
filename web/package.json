@@ -6,7 +6,6 @@
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "homepage": "https://davidsouther.github.io/computron5k",
-  "dependencies": {},
   "devDependencies": {
     "@computron5k/simulator": "*",
     "@davidsouther/jiffies": "^2.0.3",
@@ -49,7 +48,9 @@
     "test": "react-scripts test",
     "prebuild": "npm run extract && npm run lingui",
     "extract": "lingui extract",
-    "lingui": "lingui compile"
+    "lingui": "lingui compile",
+    "predeploy": "npm run build ; ./scripts/predeploy.sh",
+    "deploy": "gh-pages -d build"
   },
   "browserslist": {
     "production": [
@@ -85,9 +86,9 @@
     "format": "po"
   },
   "jest": {
-    "moduleDirectories": [
-      "<rootDir>/../node_modules"
-    ],
+    "moduleNameMapper": {
+      "^@computron5k/([^/]+)/(.*)": "<rootDir>/../node_modules/@computron5k/$1/build/$2"
+    },
     "transformIgnorePatterns": [
       "node_modules/(?!@davidsouther)"
     ]

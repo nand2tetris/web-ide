@@ -1,5 +1,5 @@
+import { Memory as MemoryChip } from "@computron5k/simulator/cpu/memory.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
-import { Memory as MemoryChip } from "@computron5k/simulator/cpu/memory";
 import { render, screen } from "../../testing";
 import { MemoryBlock, MemoryCell } from "./memory";
 

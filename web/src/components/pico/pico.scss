@@ -5,13 +5,18 @@
   }
 
   :root {
-    --line-height: 1.25; /* 1.5 */
-    --spacing: 0.25rem; /* 1rem */
-    --typography-spacing-vertical: 1.15rem; /* 1.5rem */
+    --line-height: 1.25;
+    /* 1.5 */
+    --spacing: 0.25rem;
+    /* 1rem */
+    --typography-spacing-vertical: 1.15rem;
+    /* 1.5rem */
     --grid-spacing-horizontal: var(--spacing);
     --grid-spacing-vertical: var(--spacing);
-    --form-element-spacing-vertical: 0.15rem; /* .75rem */
-    --form-element-spacing-horizontal: 0.25rem; /* 1rem */
+    --form-element-spacing-vertical: 0.15rem;
+    /* .75rem */
+    --form-element-spacing-horizontal: 0.25rem;
+    /* 1rem */
     --font-family: Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Oxygen,
       Ubuntu, Cantarell, "Noto Sans", sans-serif, "Apple Color Emoji",
       "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
@@ -151,5 +156,9 @@
 
   nav li {
     padding: 0 var(--nav-link-spacing-horizontal);
+  }
+
+  td {
+    vertical-align: top;
   }
 }

@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkcomputron5k=self.webpackChunkcomputron5k||[]).push([[70],{8070:function(e,n,r){r.r(n);var t=r(184);n.default=function(){return(0,t.jsx)(t.Fragment,{children:(0,t.jsx)("h1",{children:"NAND2Tetris Web IDE"})})}}}]);
-//# sourceMappingURL=70.40e87115.chunk.js.map

@@ -47,7 +47,7 @@ export const DiffTable = ({
   const cmpData = Ok(compare);
   const outData = Ok(output);
   let failures = 0;
-  const table = range(0, Math.max(cmpData.length, outData.length)).map((i) => {
+  const table = range(0, Math.min(cmpData.length, outData.length)).map((i) => {
     const cmpI = cmpData[i] ?? [];
     const outI = outData[i] ?? [];
     return range(0, Math.max(cmpI.length, outI.length))
@@ -69,11 +69,14 @@ export const DiffTable = ({
   return (
     <div className={"scroll-x " + className}>
       <p>
-        <Plural
-          value={failures}
-          one={`${failures} failure`}
-          other={`${failures} failures`}
-        />
+        {failures > 0 && (
+          <Plural
+            value={failures}
+            zero={""}
+            one={`${failures} failure`}
+            other={`${failures} failures`}
+          />
+        )}
       </p>
       <table
         style={{
@@ -107,14 +110,12 @@ const DiffCell = ({
   return pass ? (
     <>
       <td>{cmp}</td>
-      <td></td>
     </>
   ) : (
     <>
       <td>
         <ins>{cmp}</ins>
-      </td>
-      <td>
+        <br />
         <del>{out}</del>
       </td>
     </>

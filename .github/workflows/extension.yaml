@@ -3,9 +3,12 @@ name: Build vscode extension
 on:
   push:
     branches: [main]
+    paths:
+      - simulator
+      - extension
 
 jobs:
-  all:
+  package:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +33,7 @@ jobs:
 
       - name: CD
         run: |
-          npm run compile
+          npm run -w simulator build
           npm run -w extension package
 
       - name: Upload extension

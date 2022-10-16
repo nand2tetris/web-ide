@@ -1,21 +1,21 @@
 {
   "files": {
-    "main.css": "/computron5k/static/css/main.9c5266cc.css",
-    "main.js": "/computron5k/static/js/main.a2b5746e.js",
+    "main.css": "/computron5k/static/css/main.eee9734a.css",
+    "main.js": "/computron5k/static/js/main.8ef2135c.js",
     "static/js/243.07674aa9.chunk.js": "/computron5k/static/js/243.07674aa9.chunk.js",
     "static/css/498.1b04b715.chunk.css": "/computron5k/static/css/498.1b04b715.chunk.css",
-    "static/js/498.888f47f7.chunk.js": "/computron5k/static/js/498.888f47f7.chunk.js",
+    "static/js/498.c59134e6.chunk.js": "/computron5k/static/js/498.c59134e6.chunk.js",
     "static/js/506.8145d024.chunk.js": "/computron5k/static/js/506.8145d024.chunk.js",
     "static/js/429.9066f328.chunk.js": "/computron5k/static/js/429.9066f328.chunk.js",
     "static/js/512.36bb9c2b.chunk.js": "/computron5k/static/js/512.36bb9c2b.chunk.js",
     "static/js/120.580d219f.chunk.js": "/computron5k/static/js/120.580d219f.chunk.js",
     "static/js/258.1f6a0cd0.chunk.js": "/computron5k/static/js/258.1f6a0cd0.chunk.js",
     "index.html": "/computron5k/index.html",
-    "main.9c5266cc.css.map": "/computron5k/static/css/main.9c5266cc.css.map",
-    "main.a2b5746e.js.map": "/computron5k/static/js/main.a2b5746e.js.map",
+    "main.eee9734a.css.map": "/computron5k/static/css/main.eee9734a.css.map",
+    "main.8ef2135c.js.map": "/computron5k/static/js/main.8ef2135c.js.map",
     "243.07674aa9.chunk.js.map": "/computron5k/static/js/243.07674aa9.chunk.js.map",
     "498.1b04b715.chunk.css.map": "/computron5k/static/css/498.1b04b715.chunk.css.map",
-    "498.888f47f7.chunk.js.map": "/computron5k/static/js/498.888f47f7.chunk.js.map",
+    "498.c59134e6.chunk.js.map": "/computron5k/static/js/498.c59134e6.chunk.js.map",
     "506.8145d024.chunk.js.map": "/computron5k/static/js/506.8145d024.chunk.js.map",
     "429.9066f328.chunk.js.map": "/computron5k/static/js/429.9066f328.chunk.js.map",
     "512.36bb9c2b.chunk.js.map": "/computron5k/static/js/512.36bb9c2b.chunk.js.map",
@@ -23,7 +23,7 @@
     "258.1f6a0cd0.chunk.js.map": "/computron5k/static/js/258.1f6a0cd0.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.9c5266cc.css",
-    "static/js/main.a2b5746e.js"
+    "static/css/main.eee9734a.css",
+    "static/js/main.8ef2135c.js"
   ]
 }

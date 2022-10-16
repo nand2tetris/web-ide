@@ -21,7 +21,27 @@ import { RegisterComponent } from "./register";
 import { Memory as MemoryComponent } from "./memory";
 import { Screen as ScreenComponent } from "./screen";
 
-export function makeVisualizations(chip: Chip): ReactElement {
+export function getBuiltinVisualization(part: Chip): ReactElement | undefined {
+  switch (part.name) {
+    case "Register":
+    case "ARegister":
+    case "DRegister":
+    case "PC":
+    case "KEYBOARD":
+    case "RAM8":
+    case "RAM64":
+    case "RAM512":
+    case "RAM4K":
+    case "RAM16K":
+    case "ROM32K":
+    case "Screen":
+    case "Memory":
+    default:
+      return undefined;
+  }
+}
+
+export function makeVisualization(chip: Chip): ReactElement | undefined {
   if (chip instanceof ALU) {
     return (
       <ALUComponent
@@ -87,14 +107,19 @@ export function makeVisualizations(chip: Chip): ReactElement {
     );
   }
 
-  return <>{[...chip.parts].map(makeVisualizations)}</>;
+  const vis = [...chip.parts]
+    .map(makeVisualization)
+    .filter((v) => v !== undefined);
+  return vis.length > 0 ? <>{vis}</> : undefined;
 }
 
 export function makeVisualizationsWithId(chip: {
   parts: Chip[];
 }): [string, ReactElement][] {
-  return [...chip.parts].map((part, i): [string, ReactElement] => [
-    `${part.id}_${i}`,
-    makeVisualizations(part),
-  ]);
+  return [...chip.parts]
+    .map((part, i): [string, ReactElement | undefined] => [
+      `${part.id}_${i}`,
+      makeVisualization(part),
+    ])
+    .filter(([_, v]) => v !== undefined) as [string, ReactElement][];
 }

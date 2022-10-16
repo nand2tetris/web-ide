@@ -12,6 +12,7 @@
   "homepage": "https://davidsouther.github.io/computron5k",
   "scripts": {
     "build": "npx esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
+    "watch": "npm run build -- --watch",
     "vscode:prepublish": "npm run build",
     "package": "vsce package"
   },
@@ -211,31 +212,40 @@
         "label": "Nand2Tetris IDE Icon Theme",
         "path": "./fileicons/icon-theme.json"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "nand2tetris",
+          "icon": "./fileicons/logo.svg",
+          "title": "NAND2Tetris"
+        }
+      ]
+    },
+    "views": {
+      "nand2tetris": [
+        {
+          "type": "webview",
+          "id": "computron5k.hdlView",
+          "name": "HDL Chip"
+        }
+      ]
+    }
   },
   "activationEvents": [
-    "onCommand:computron5k.run",
-    "onCommand:computron5k.stop",
-    "onCommand:computron5k.translate",
     "onCommand:computron5k.hardware",
-    "onCommand:computron5k.cpu",
-    "onCommand:computron5k.vm",
-    "onCommand:computron5k.assembler",
-    "onCommand:computron5k.compiler",
-    "onCommand:computron5k.zip",
     "onLanguage:cmp",
     "onLanguage:hdl",
     "onLanguage:out",
     "onLanguage:tst"
   ],
-  "dependencies": {
-    "@computron5k/simulator": "*"
-  },
   "devDependencies": {
+    "@computron5k/simulator": "*",
     "@davidsouther/jiffies": "^2.0.3",
     "@types/error-cause": "^1.0.1",
     "@types/node": "^16.11.41",
     "@types/vscode": "^1.61.0",
+    "@vscode/webview-ui-toolkit": "^1.1.0",
     "esbuild": "^0.15.11",
     "ohm-js": "^16.4.0",
     "typescript": "^4.8.1",

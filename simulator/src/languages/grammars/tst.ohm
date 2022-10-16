@@ -7,6 +7,7 @@ Tst <: Base {
   TstStatement = List<TstOperation, ","> (Semi | Bang)
 
   TstOperation =
+    | TstFileOperation
     | TstOutputListOperation
     | TstEvalOperation
     | TstSetOperation
@@ -16,6 +17,7 @@ Tst <: Base {
     | TstLoadROMOperation
 
   TstLoadROMOperation = ROM32K Load FileName
+  TstFileOperation = FileOperation FileName
   TstOutputListOperation = "output-list" OutputFormat+
   OutputFormat = Name Index? percent FormatStyle wholeDec dot wholeDec dot wholeDec
   TstSetOperation = Set Name Index? Number
@@ -27,6 +29,7 @@ Tst <: Base {
   TstClearEchoOperation = ClearEcho
 
   FileName = Name
+  FileOperation = "load" | "output-file" | "compare-to"
 
   Set = "set"
   Eval = "eval"

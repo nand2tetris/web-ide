@@ -20,7 +20,7 @@
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/extension"
       ],
-      "outFiles": ["${workspaceFolder}/extension/out/**/*.js"],
+      "outFiles": ["${workspaceFolder}/extension/build/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
     },
     {
@@ -30,9 +30,9 @@
       "args": [
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/extension",
-        "--extensionTestsPath=${workspaceFolder}/extension/out/test/suite/index"
+        "--extensionTestsPath=${workspaceFolder}/extension/build/test/suite/index"
       ],
-      "outFiles": ["${workspaceFolder}/extension/out/test/**/*.js"],
+      "outFiles": ["${workspaceFolder}/extension/build/test/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
     }
   ]

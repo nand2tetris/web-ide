@@ -1,11 +1,20 @@
 {
-  "name": "@computron5k/extension",
-  "version": "1.0.0",
+  "name": "nand2tetris-vscode",
+  "version": "0.1.0",
   "private": true,
-  "description": "",
+  "description": "NAND2Tetris IDE features for VSCode",
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidsouther/computron5k.git"
+  },
   "homepage": "https://davidsouther.github.io/computron5k",
+  "scripts": {
+    "build": "npx tsc --build ..",
+    "vscode:prepublish": "npx tsc --build ..",
+    "package": "vsce package"
+  },
   "engines": {
     "vscode": "^1.61.0"
   },
@@ -52,7 +61,8 @@
         ],
         "extensions": [
           ".hdl"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       },
       {
         "id": "tst",
@@ -64,7 +74,8 @@
         ],
         "extensions": [
           ".tst"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       },
       {
         "id": "cmp",
@@ -94,7 +105,8 @@
         ],
         "extensions": [
           ".asm"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       },
       {
         "id": "hack",
@@ -114,7 +126,8 @@
         ],
         "extensions": [
           ".vm"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       },
       {
         "id": "jack",
@@ -124,7 +137,8 @@
         ],
         "extensions": [
           ".jack"
-        ]
+        ],
+        "configuration": "./language-configuration.json"
       }
     ],
     "grammars": [
@@ -209,7 +223,10 @@
     "onCommand:computron5k.assembler",
     "onCommand:computron5k.compiler",
     "onCommand:computron5k.zip",
-    "onLanguage:hdl"
+    "onLanguage:cmp",
+    "onLanguage:hdl",
+    "onLanguage:out",
+    "onLanguage:tst"
   ],
   "dependencies": {
     "@computron5k/simulator": "*"
@@ -218,7 +235,10 @@
     "@davidsouther/jiffies": "^2.0.3",
     "@types/error-cause": "^1.0.1",
     "@types/node": "^16.11.41",
-    "@types/vscode": "^1.72.0",
-    "typescript": "^4.8.1"
+    "@types/vscode": "^1.61.0",
+    "esbuild": "^0.15.11",
+    "ohm-js": "^16.4.0",
+    "typescript": "^4.8.1",
+    "vsce": "^2.11.0"
   }
 }

@@ -1,31 +1,15 @@
-console.log("Loading extension.js");
-
+console.log("Initializing extension");
 import * as vscode from "vscode";
-import { hardware } from "./commands/hardware";
-import { getDiagnostics } from "./languages/hdl.js";
+import { makeCommands } from "./commands.js";
+import { makeDiagnostics } from "./diagnostics.js";
 
-let diagnosticCollection: vscode.DiagnosticCollection;
 export function activate(context: vscode.ExtensionContext) {
   console.log("Activating extension");
-  const hardwareCommand = vscode.commands.registerCommand(
-    "computron5k.hardware",
-    async (fileUri) => {
-      await hardware(fileUri);
-    }
+  makeCommands().forEach(([name, callback]) =>
+    context.subscriptions.push(vscode.commands.registerCommand(name, callback))
   );
-  context.subscriptions.push(hardwareCommand);
 
-  diagnosticCollection = vscode.languages.createDiagnosticCollection();
-  vscode.workspace.onDidChangeTextDocument(async (event) => {
-    if (event.document.languageId === "hdl") {
-      diagnosticCollection.clear();
-      const allDiagnostics = await getDiagnostics(event.document);
-      for (const [file, diagnostics] of allDiagnostics) {
-        diagnosticCollection.set(file, diagnostics);
-      }
-    }
-  });
-  context.subscriptions.push(diagnosticCollection);
+  context.subscriptions.push(makeDiagnostics());
 }
 
 export function deactivate() {

@@ -6,7 +6,7 @@ import * as base from "./base.js";
 let tst: typeof TST | undefined = undefined;
 async function getTst(): Promise<typeof TST> {
   if (tst) return Promise.resolve(tst);
-  tst = (await eval('import("@computron5k/simulator/languages/tst.js")'))
+  tst = (await import("@computron5k/simulator/languages/tst.js"))
     .TST as typeof TST;
   return tst;
 }

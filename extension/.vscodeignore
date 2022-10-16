@@ -1,6 +1,8 @@
 ..
+build
+src
 tsconfig*
-!build
+!out
 !fileicons
 !languages
 !LICENSE

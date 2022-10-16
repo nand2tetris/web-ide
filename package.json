@@ -14,7 +14,6 @@
   },
   "homepage": "https://github.com/davidsouther/computron5k#readme",
   "scripts": {
-    "compile": "tsc",
     "ci": "CI=true npm run check && CI=true npm run test",
     "precheck": "npm -w web run extract && npm -w web run lingui",
     "check": "npm run check:format && npm run check:types && npm run check:lint",

@@ -1,4 +1,4 @@
-name: Build extension
+name: Build vscode extension
 
 on:
   push:
@@ -30,6 +30,7 @@ jobs:
 
       - name: CD
         run: |
+          npm run compile
           npm run -w extension package
 
       - name: Upload extension

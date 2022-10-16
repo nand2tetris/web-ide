@@ -1,4 +1,4 @@
-name: Run Javascript Tests
+name: Run Workspace Tests
 
 on:
   pull_request:

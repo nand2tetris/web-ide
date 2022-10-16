@@ -11,14 +11,13 @@
   },
   "homepage": "https://davidsouther.github.io/computron5k",
   "scripts": {
-    "build": "npx tsc --build ..",
-    "vscode:prepublish": "npx tsc --build ..",
+    "vscode:prepublish": "npx esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",
     "package": "vsce package"
   },
   "engines": {
     "vscode": "^1.61.0"
   },
-  "main": "./build/extension.js",
+  "main": "./out/main.js",
   "contributes": {
     "commands": [
       {

@@ -6,7 +6,7 @@ import * as base from "./base.js";
 let hdl: typeof HDL | undefined = undefined;
 async function getHdl(): Promise<typeof HDL> {
   if (hdl) return Promise.resolve(hdl);
-  hdl = (await eval('import("@computron5k/simulator/languages/hdl.js")'))
+  hdl = (await import("@computron5k/simulator/languages/hdl.js"))
     .HDL as typeof HDL;
   return hdl;
 }

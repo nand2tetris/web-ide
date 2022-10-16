@@ -42,4 +42,4 @@ jobs:
         with:
           name: nand2tetris-vscode
           path: |
-            nand2tetris-vscode-*.vsix
+            extension/nand2tetris-vscode-*.vsix

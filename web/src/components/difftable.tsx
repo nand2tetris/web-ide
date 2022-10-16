@@ -3,6 +3,7 @@ import { CMP } from "@computron5k/simulator/languages/cmp.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result";
 import { display } from "@davidsouther/jiffies/lib/esm/display";
 import { range } from "@davidsouther/jiffies/lib/esm/range";
+import { Icon } from "./pico/icon";
 
 export const DiffTable = ({
   className = "",
@@ -68,32 +69,39 @@ export const DiffTable = ({
 
   return (
     <div className={"scroll-x " + className}>
-      <p>
-        {failures > 0 && (
+      {failures > 0 && (
+        <p>
           <Plural
             value={failures}
             zero={""}
             one={`${failures} failure`}
             other={`${failures} failures`}
           />
-        )}
-      </p>
-      <table
-        style={{
-          fontFamily: "var(--font-family-monospace)",
-          marginBottom: "none",
-        }}
-      >
-        <tbody>
-          {table.map((row, i) => (
-            <tr key={i}>
-              {row.map(({ cmp, out, pass }, i) => (
-                <DiffCell cmp={cmp} out={out} pass={pass} key={i} />
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        </p>
+      )}
+      {table.length > 0 ? (
+        <table
+          style={{
+            fontFamily: "var(--font-family-monospace)",
+            marginBottom: "none",
+          }}
+        >
+          <tbody>
+            {table.map((row, i) => (
+              <tr key={i}>
+                {row.map(({ cmp, out, pass }, i) => (
+                  <DiffCell cmp={cmp} out={out} pass={pass} key={i} />
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <p>
+          Execute test script with <Icon name="play_arrow" /> or{" "}
+          <Icon name="fast_forward" /> to compare output.
+        </p>
+      )}
     </div>
   );
 };

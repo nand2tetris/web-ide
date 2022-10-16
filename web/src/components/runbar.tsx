@@ -16,7 +16,7 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         data-tooltip={t`Step`}
         data-placement="bottom"
       >
-        <Icon name="play_arrow"></Icon>
+        <Icon name="play_arrow" />
       </button>
       <button
         className="flex-0"
@@ -26,7 +26,7 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         data-tooltip={runner.state.running ? t`Pause` : t`Play`}
         data-placement="bottom"
       >
-        <Icon name={runner.state.running ? "pause" : "fast_forward"}></Icon>
+        <Icon name={runner.state.running ? "pause" : "fast_forward"} />
       </button>
       <button
         className="flex-0"
@@ -34,7 +34,7 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         data-tooltip={t`Reset`}
         data-placement="bottom"
       >
-        <Icon name="fast_rewind"></Icon>
+        <Icon name="fast_rewind" />
       </button>
       <select
         className="flex-1"

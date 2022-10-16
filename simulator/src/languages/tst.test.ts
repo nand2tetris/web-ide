@@ -141,6 +141,13 @@ describe("tst language", () => {
     });
   });
 
+  it("parses file ops", () => {
+    const match = grammar.match(
+      "load A.hdl, output-file A.out, compare-to A.cmp, output-list a%B1.1.1;"
+    );
+    expect(match).toHaveSucceeded();
+  });
+
   it("parses a single set", () => {
     const match = grammar.match("set a 0", "TstSetOperation");
     expect(match).toHaveSucceeded();

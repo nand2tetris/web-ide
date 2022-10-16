@@ -10,6 +10,7 @@ Base {
   CloseParen = closeParen
   CloseSquare = closeSquare
   Comma = comma
+  Dollar = dollar
   Dot = dot
   DoubleQuote = doubleQuote
   Equal = equal
@@ -29,6 +30,7 @@ Base {
   closeParen = ")"
   closeSquare = "]"
   comma = ","
+  dollar = "$"
   dot = "."
   doubleQuote = "\\""
   equal = "="
@@ -51,7 +53,7 @@ Base {
   false = "false"
 
   Name = identifier
-  identifier = (letter|underscore) (alnum|underscore|"."|"$")*
+  identifier = (letter|underscore) (alnum|underscore|dot|dollar)*
 
   Number = number
   number = hexNumber | decNumber | binNumber

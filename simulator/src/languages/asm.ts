@@ -20,8 +20,6 @@ import asmGrammar from "./grammars/asm.ohm.js";
 export const grammar = ohm.grammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
-// reload ...
-
 export interface Asm {
   instructions: AsmInstruction[];
 }

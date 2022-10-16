@@ -212,7 +212,7 @@ export const Chip = () => {
   );
 
   const visualizations: [string, ReactNode][] = makeVisualizationsWithId({
-    parts: [...state.sim.parts],
+    parts: state.sim.chip,
   });
 
   const pinsPanel = (
@@ -232,15 +232,15 @@ export const Chip = () => {
       ) : (
         <>
           <FullPinout sim={state.sim} toggle={actions.toggle} />
-          {visualizations.length > 0 && (
-            <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
-              <main>
-                {visualizations.map(([p, v]) => (
-                  <div key={p}>{v}</div>
-                ))}
-              </main>
-            </Accordian>
-          )}
+          <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
+            <main>
+              {visualizations.length > 0 ? (
+                visualizations.map(([p, v]) => <div key={p}>{v}</div>)
+              ) : (
+                <p>None</p>
+              )}
+            </main>
+          </Accordian>
         </>
       )}
     </Panel>

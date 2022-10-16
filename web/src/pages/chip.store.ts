@@ -72,7 +72,7 @@ export interface ChipSim {
   inPins: ImmPin[];
   outPins: ImmPin[];
   internalPins: ImmPin[];
-  parts: Set<Chip>;
+  chip: [Chip];
   pending: boolean;
   invalid: boolean;
 }
@@ -99,7 +99,7 @@ function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
     inPins: reducePins(chip.ins),
     outPins: reducePins(chip.outs),
     internalPins: reducePins(chip.pins),
-    parts: new Set(chip.parts),
+    chip: [chip],
     pending,
     invalid,
   };

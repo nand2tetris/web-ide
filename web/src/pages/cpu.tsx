@@ -4,9 +4,9 @@ import { HACK } from "@computron5k/simulator/testing/mult.js";
 import { TickScreen } from "@computron5k/simulator/testing/fill.js";
 import { Timer } from "@computron5k/simulator/timer.js";
 
-import MemoryComponent from "../components/chips/memory";
-import { Screen } from "../components/chips/screen";
-import { Runbar } from "../components/runbar";
+import MemoryComponent from "@computron5k/components/chips/memory.js";
+import { Screen } from "@computron5k/components/chips/screen.js";
+import { Runbar } from "@computron5k/components/runbar.js";
 
 export const CPU = () => {
   const cpu = new CPUChip({ ROM: new Memory(HACK) });

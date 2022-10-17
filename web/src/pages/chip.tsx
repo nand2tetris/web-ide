@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/macro";
 import {
   CSSProperties,
   ReactNode,
@@ -8,29 +9,34 @@ import {
   useRef,
   useState,
 } from "react";
-import { Trans } from "@lingui/macro";
 
 import "./chip.scss";
 
-import { FullPinout } from "../components/pinout";
-import { Files, PROJECT_NAMES, useChipPageStore } from "./chip.store";
-import { DiffTable } from "../components/difftable";
-import { Editor } from "../components/editor";
+import { makeVisualizationsWithId } from "@computron5k/components/chips/visualizations.js";
+import { Clockface } from "@computron5k/components/clockface.js";
+import { DiffTable } from "@computron5k/components/difftable.js";
+import { FullPinout } from "@computron5k/components/pinout.js";
+import { useStateInitializer } from "@computron5k/components/react.js";
+import { Runbar } from "@computron5k/components/runbar.js";
+import { CMP } from "@computron5k/simulator/languages/cmp.js";
 import { HDL } from "@computron5k/simulator/languages/hdl.js";
 import { TST } from "@computron5k/simulator/languages/tst.js";
-import { CMP } from "@computron5k/simulator/languages/cmp.js";
-import { Accordian, Panel } from "../components/shell/panel";
-import { Runbar } from "../components/runbar";
-import { Timer } from "@computron5k/simulator/timer.js";
-import { useStateInitializer } from "../util/react";
-import { Clockface } from "../components/clockface";
 import { CHIP_PROJECTS } from "@computron5k/simulator/projects/index.js";
-import { Icon } from "../components/pico/icon";
+import { Timer } from "@computron5k/simulator/timer.js";
 import { AppContext } from "../App.context";
-import { makeVisualizationsWithId } from "../components/chips/visualizations";
+import { Icon } from "../pico/icon";
+import { Editor } from "../shell/editor";
+import { Accordian, Panel } from "../shell/panel";
+import {
+  Files,
+  PROJECT_NAMES,
+  useChipPageStore,
+} from "@computron5k/components/stores/chip.store.js";
+import { BaseContext } from "@computron5k/components/stores/base.context.js";
 
 export const Chip = () => {
-  const { filePicker, fs, setStatus } = useContext(AppContext);
+  const { fs, setStatus } = useContext(BaseContext);
+  const { filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);

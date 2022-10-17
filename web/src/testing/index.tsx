@@ -1,14 +1,18 @@
+import {
+  BaseContext,
+  useBaseContext,
+} from "@computron5k/components/stores/base.context.js";
 import * as Not from "@computron5k/simulator/projects/project_01/01_not.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs";
+} from "@davidsouther/jiffies/lib/esm/fs.js";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { render, RenderOptions } from "@testing-library/react";
 import ue from "@testing-library/user-event";
 import { ReactElement } from "react";
-import { useAppContext } from "../App.context";
+import { AppContext, useAppContext } from "../App.context";
 
 export const userEvent = ue;
 export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
@@ -22,8 +26,8 @@ const I18nWrapper = ({ children }: { children: ReactElement }) => (
 const i18nRender = (ui: ReactElement, options: RenderOptions = {}) =>
   render(ui, { wrapper: I18nWrapper, ...options });
 
-export const useTestingAppContext = () =>
-  useAppContext(
+export const useTestingAppContext = () => ({
+  base: useBaseContext(
     new FileSystem(
       new ObjectFileSystemAdapter({
         "/chip/project": "01",
@@ -33,4 +37,6 @@ export const useTestingAppContext = () =>
         "/projects/01/Not/Not.cmp": Not.cmp,
       })
     )
-  );
+  ),
+  app: useAppContext(),
+});

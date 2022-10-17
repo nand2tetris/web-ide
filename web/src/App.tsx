@@ -1,28 +1,29 @@
 import { Suspense, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { en } from "make-plural/plurals";
-
-import "./components/pico/pico.scss";
-import "./components/pico/flex.scss";
-
 import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
-
 import urls from "./urls";
 import { loaders } from "@computron5k/simulator/projects/index.js";
-import Header from "./components/shell/header";
-import Footer from "./components/shell/footer";
+import {
+  BaseContext,
+  useBaseContext,
+} from "@computron5k/components/stores/base.context.js";
+import Header from "./shell/header";
+import Footer from "./shell/footer";
 import { AppContext, useAppContext } from "./App.context";
-import { Settings } from "./components/shell/settings";
+import { Settings } from "./shell/settings";
 import { messages } from "./locales/en/messages";
 import { messages as plMessages } from "./locales/en-PL/messages";
 import { registerLanguages } from "./languages/loader";
-import { FilePicker } from "./components/shell/file_select";
+import { FilePicker } from "./shell/file_select";
+
+import "./pico/flex.scss";
+import "./pico/pico.scss";
 
 i18n.load("en", messages);
 i18n.load("en-PL", plMessages);
@@ -35,17 +36,18 @@ i18n.activate(navigator.language);
 const fs = new FileSystem(new LocalStorageFileSystemAdapter());
 
 function App() {
-  const appContext = useAppContext(fs);
+  const baseContext = useBaseContext(fs);
+  const appContext = useAppContext();
 
   useEffect(() => {
     registerLanguages();
   }, []);
 
   useEffect(() => {
-    appContext.fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
-      await loaders.resetFiles(appContext.fs);
+    fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
+      await loaders.resetFiles(fs);
     });
-  }, [appContext.fs]);
+  }, [fs]);
 
   useEffect(() => {
     (document.children[0] as HTMLHtmlElement).dataset.theme =
@@ -54,23 +56,25 @@ function App() {
 
   return (
     <I18nProvider i18n={i18n}>
-      <AppContext.Provider value={appContext}>
-        <Settings />
-        <FilePicker />
-        <Router basename={process.env.PUBLIC_URL}>
-          <Header urls={urls} />
-          <main className="flex flex-1">
-            <Suspense fallback={<div>Loading...</div>}>
-              <Routes>
-                {urls.map(({ href, target }) => (
-                  <Route key={href} path={href} element={target} />
-                ))}
-              </Routes>
-            </Suspense>
-          </main>
-          <Footer />
-        </Router>
-      </AppContext.Provider>
+      <BaseContext.Provider value={baseContext}>
+        <AppContext.Provider value={appContext}>
+          <Settings />
+          <FilePicker />
+          <Router basename={process.env.PUBLIC_URL}>
+            <Header urls={urls} />
+            <main className="flex flex-1">
+              <Suspense fallback={<div>Loading...</div>}>
+                <Routes>
+                  {urls.map(({ href, target }) => (
+                    <Route key={href} path={href} element={target} />
+                  ))}
+                </Routes>
+              </Suspense>
+            </main>
+            <Footer />
+          </Router>
+        </AppContext.Provider>
+      </BaseContext.Provider>
     </I18nProvider>
   );
 }

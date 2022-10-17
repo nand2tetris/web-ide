@@ -1,5 +1,5 @@
 import raw from "raw.macro";
-import Markdown from "../components/shell/markdown";
+import Markdown from "../shell/markdown";
 
 const UserGuide = () => (
   <>

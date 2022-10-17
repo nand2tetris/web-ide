@@ -22,7 +22,7 @@
     "check:types": "tsc --build tsconfig.json",
     "format": "prettier --write extension/src simulator/src web/src web/public",
     "fix": "eslint --fix extension/src simulator/src web/src web/public",
-    "test": "CI=true npm test -w simulator && CI=true npm test -w web"
+    "test": "CI=true npm test -w simulator && CI=true npm test -w components && CI=true npm test -w web"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.40.0",
@@ -33,6 +33,7 @@
     "typescript": "^4.8.4"
   },
   "workspaces": [
+    "components",
     "extension",
     "simulator",
     "web"

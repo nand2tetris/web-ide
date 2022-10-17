@@ -1,7 +1,7 @@
 import { createContext, useCallback, useState } from "react";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { useDialog } from "./components/shell/dialog";
-import { useFilePicker } from "./components/shell/file_select";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { useDialog } from "./shell/dialog";
+import { useFilePicker } from "./shell/file_select";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -27,14 +27,10 @@ export function useMonaco() {
 }
 
 export function useAppContext(fs: FileSystem = new FileSystem()) {
-  const [status, setStatus] = useState("");
   const [theme, setTheme] = useState<Theme>("system");
 
   return {
-    fs,
     monaco: useMonaco(),
-    status,
-    setStatus,
     settings: useDialog(),
     filePicker: useFilePicker(),
     theme,
@@ -43,7 +39,6 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
 }
 
 export const AppContext = createContext<ReturnType<typeof useAppContext>>({
-  fs: new FileSystem(),
   monaco: {
     canUse: true,
     wants: true,
@@ -51,8 +46,6 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       return undefined;
     },
   },
-  status: "",
-  setStatus: () => undefined,
   filePicker: {
     close() {
       return undefined;

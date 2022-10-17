@@ -2,6 +2,7 @@
 build
 src
 tsconfig*
+views
 !out
 !fileicons
 !languages

@@ -1,3 +1,4 @@
+import { BaseContext } from "@computron5k/components/stores/base.context.js";
 import { AppContext } from "../App.context";
 import {
   render,
@@ -6,7 +7,7 @@ import {
   userEvent,
   useTestingAppContext,
 } from "../testing";
-import "../components/editor.mock";
+import "../shell/editor.mock";
 import Chip from "./chip";
 
 describe.skip("chip page", () => {
@@ -18,9 +19,11 @@ describe.skip("chip page", () => {
   it("tracks the clock", async () => {
     const events = userEvent.setup();
     await render(
-      <AppContext.Provider value={state.context}>
-        <Chip />
-      </AppContext.Provider>
+      <BaseContext.Provider value={state.context.base}>
+        <AppContext.Provider value={state.context.app}>
+          <Chip />
+        </AppContext.Provider>
+      </BaseContext.Provider>
     );
 
     await events.type(

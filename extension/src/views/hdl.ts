@@ -11,7 +11,7 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
 
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(private readonly extensionUri: vscode.Uri) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -24,7 +24,7 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
       // Allow scripts in the webview
       enableScripts: true,
 
-      localResourceRoots: [this._extensionUri],
+      localResourceRoots: [this.extensionUri],
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
@@ -35,16 +35,31 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-				<meta name="viewport" content="width=device-width, initial-scale=1.0">
-				<title>HDL Panel</title>
-			</head>
-			<body>
-        HDL Panel
-			</body>
-			</html>`;
+    const stylesUri = this.getUri(webview, ["hdl", "main.css"]);
+    const scriptUri = this.getUri(webview, ["hdl", "main.js"]);
+
+    return /*html*/ `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+          <meta name="theme-color" content="#000000">
+          <!--<link rel="stylesheet" type="text/css" href="${stylesUri}">-->
+          <title>HDL - NAND2Tetris</title>
+        </head>
+        <body>
+          <noscript>You need to enable JavaScript to run this app.</noscript>
+          <div id="root"></div>
+          <script src="${scriptUri}"></script>
+        </body>
+      </html>
+    `;
+  }
+
+  private getUri(webview: vscode.Webview, pathList: string[]) {
+    return webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, "out", "views", ...pathList)
+    );
   }
 }

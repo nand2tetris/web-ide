@@ -51,5 +51,8 @@
     "transformIgnorePatterns": [
       "node_modules/(?!@davidsouther)"
     ]
+  },
+  "dependencies": {
+    "@vscode/webview-ui-toolkit": "^1.1.0"
   }
 }

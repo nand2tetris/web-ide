@@ -63,7 +63,7 @@
         "extensions": [
           ".hdl"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./languages/language-configuration.json"
       },
       {
         "id": "tst",
@@ -76,7 +76,7 @@
         "extensions": [
           ".tst"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./languages/language-configuration.json"
       },
       {
         "id": "cmp",
@@ -107,7 +107,7 @@
         "extensions": [
           ".asm"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./languages/language-configuration.json"
       },
       {
         "id": "hack",
@@ -128,7 +128,7 @@
         "extensions": [
           ".vm"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./languages/language-configuration.json"
       },
       {
         "id": "jack",
@@ -139,7 +139,7 @@
         "extensions": [
           ".jack"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./languages/language-configuration.json"
       }
     ],
     "grammars": [

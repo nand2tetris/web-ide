@@ -1,8 +1,8 @@
 {
   "references": [
     { "path": "./simulator/tsconfig.json" },
-    { "path": "./extension/tsconfig.json" },
     { "path": "./components/tsconfig.json" },
+    { "path": "./extension/tsconfig.json" },
     { "path": "./web/tsconfig.json" }
   ],
   "files": []

@@ -32,10 +32,26 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage((data) => {
       console.log(data);
     });
+
+    if (vscode.window.activeTextEditor?.document.languageId === "hdl") {
+      this.updateHdl(vscode.window.activeTextEditor.document.getText());
+    }
+
+    vscode.window.onDidChangeActiveTextEditor((e) => {
+      if (e === undefined) return;
+
+      if (e.document.languageId === "hdl") {
+        this.updateHdl(e.document.getText());
+      }
+    });
+  }
+
+  updateHdl(hdl: string) {
+    this._view?.webview.postMessage({ nand2tetris: true, hdl });
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {
-    const stylesUri = this.getUri(webview, ["hdl", "main.css"]);
+    const stylesUri = this.getUri(webview, ["hdl", "styles.css"]);
     const scriptUri = this.getUri(webview, ["hdl", "main.js"]);
 
     return /*html*/ `
@@ -45,7 +61,7 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
           <meta name="theme-color" content="#000000">
-          <!--<link rel="stylesheet" type="text/css" href="${stylesUri}">-->
+          <link rel="stylesheet" type="text/css" href="${stylesUri}">
           <title>HDL - NAND2Tetris</title>
         </head>
         <body>

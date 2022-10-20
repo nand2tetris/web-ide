@@ -27,7 +27,6 @@ import { ChipTest } from "@computron5k/simulator/tst.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
-import { StorageContext } from "../storage.js";
 import { BaseContext } from "./base.context.js";
 
 export const PROJECT_NAMES = [
@@ -403,9 +402,7 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const fs = useContext(StorageContext);
-  const { setStatus } = useContext(BaseContext);
-  const storage: Record<string, string> = useMemo(() => localStorage, []);
+  const { fs, setStatus, storage } = useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 

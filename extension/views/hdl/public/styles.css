@@ -1,0 +1,37 @@
+:root {
+  --font-family-monospace: var(--vscode-editor-font-family);
+}
+
+button {
+  font-family: var(--vscode-editor-font-family);
+  font-weight: var(--vscode-editor-font-weight);
+  font-size: var(--vscode-editor-font-size);
+  color: var(--vscode-button-foreground);
+  background-color: var(--vscode-button-background);
+  border: 0;
+  width: 1.3rem;
+}
+
+button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+button[disabled] {
+  opacity: var(--disabled-opacity);
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+fieldset[role="group"] {
+  border: 0;
+  padding: 0;
+}
+
+fieldset[role="group"] button:first-of-type {
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+fieldset[role="group"] button:last-of-type {
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}

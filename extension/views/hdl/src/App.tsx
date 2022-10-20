@@ -1,5 +1,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
+import * as Not from "@computron5k/simulator/projects/project_01/01_not.js";
 import { makeVisualizationsWithId } from "@computron5k/components/chips/visualizations.js";
 import { Clockface } from "@computron5k/components/clockface.js";
 import { FullPinout } from "@computron5k/components/pinout.js";
@@ -8,19 +9,20 @@ import { useChipPageStore } from "@computron5k/components/stores/chip.store.js";
 function App() {
   const { state, actions } = useChipPageStore();
 
-  const [hdl, setHdl] = useState("");
+  const [hdl, setHdl] = useState(Not.sol);
 
   const compile = useCallback(
     async (hdl: string) => {
       setHdl(hdl);
-      await actions.updateFiles({ hdl, tst: "", cmp: "" });
+      await actions.updateFiles({ hdl, tst: "// No test", cmp: "" });
     },
     [setHdl, actions]
   );
 
   const onMessage = useCallback(
-    (event: MessageEvent<unknown>) => {
-      compile(event.data as string);
+    (event: MessageEvent<Partial<{ nand2tetris: boolean; hdl: string }>>) => {
+      if (event.data?.nand2tetris && event.data.hdl)
+        compile(event.data.hdl ?? "");
     },
     [compile]
   );
@@ -56,31 +58,33 @@ function App() {
   );
 
   const chipButtons = (
-    <fieldset role="group">
+    <>
       <VSCodeCheckbox onChange={toggleUseBuiltin}>Use Builtin</VSCodeCheckbox>
-      <VSCodeButton
-        onClick={actions.eval}
-        onKeyDown={actions.eval}
-        disabled={!state.sim.pending}
-      >
-        Eval
-      </VSCodeButton>
-      <VSCodeButton
-        onClick={clockActions.toggle}
-        style={{ maxWidth: "initial" }}
-        disabled={!state.sim.clocked}
-      >
-        Clock:{"\u00a0"}
-        <Clockface />
-      </VSCodeButton>
-      <VSCodeButton
-        onClick={clockActions.reset}
-        style={{ maxWidth: "initial" }}
-        disabled={!state.sim.clocked}
-      >
-        Reset
-      </VSCodeButton>
-    </fieldset>
+      <fieldset role="group">
+        <VSCodeButton
+          onClick={actions.eval}
+          onKeyDown={actions.eval}
+          disabled={!state.sim.pending}
+        >
+          Eval
+        </VSCodeButton>
+        <VSCodeButton
+          onClick={clockActions.toggle}
+          style={{ maxWidth: "initial" }}
+          disabled={!state.sim.clocked}
+        >
+          Clock:{"\u00a0"}
+          <Clockface />
+        </VSCodeButton>
+        <VSCodeButton
+          onClick={clockActions.reset}
+          style={{ maxWidth: "initial" }}
+          disabled={!state.sim.clocked}
+        >
+          Reset
+        </VSCodeButton>
+      </fieldset>
+    </>
   );
 
   const visualizations: [string, ReactNode][] = makeVisualizationsWithId({
@@ -88,26 +92,25 @@ function App() {
   });
 
   const pinsPanel = (
-    <article>
-      <header>
-        <div>Chip {state.controls.chipName}</div>
-        {chipButtons}
-      </header>
+    <>
+      <h3>Chip {state.controls.chipName}</h3>
+      {chipButtons}
       {state.sim.invalid ? (
-        <>Invalid Chip</>
+        <p>Invalid Chip</p>
       ) : (
         <>
           <FullPinout sim={state.sim} toggle={actions.toggle} />
-          <main>
-            {visualizations.length > 0 ? (
-              visualizations.map(([p, v]) => <div key={p}>{v}</div>)
-            ) : (
-              <p>None</p>
-            )}
-          </main>
+          <h4>Visualizations</h4>
+          {visualizations.length > 0 ? (
+            visualizations.map(([p, v]) => <div key={p}>{v}</div>)
+          ) : (
+            <p>None</p>
+          )}
         </>
       )}
-    </article>
+      {/* DEBUG  */}
+      <textarea>{hdl}</textarea>
+    </>
   );
 
   return pinsPanel;

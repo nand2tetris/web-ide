@@ -11,6 +11,7 @@
   },
   "homepage": "https://davidsouther.github.io/computron5k",
   "scripts": {
+    "prebuild": "mkdir -p out/views/hdl",
     "build": "npx esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node --sourcemap",
     "postbuild": "cd .. && npm run -w extension/views/hdl build",
     "watch": "npm run build -- --watch",

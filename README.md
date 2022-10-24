@@ -69,10 +69,12 @@ Syntax errors are highlighted, with in-editor error diagnostics on the failing t
 Syntax hilighting rules activate for `HDL`, `TST`, `CMP`, `OUT`, `ASM`, `VM`, and `Jack` files.
 Snippets are available for `HDL`, `ASM`, `VM`, `Jack`, and `TST` files.
 
-#### Commands
+#### Views
 
-- `computron5k.hardware` "Nand2Tetris: open hardware simulator" loads the current HDL file into an HDL view.
-  If no HDL view exists, it first creates one in column 2 (unless the file is open in column 2, in which case it opens it in column 1).
+The extension adds an activity bar container, `NAND2Tetris`.
+`NAND2TETRIS: HDL CHIP` opens in the container, and shows a chip panel when the user has opened an HDL file.
+The panel attemps to update whenever changing HDL files, or when saving the file.
+It does not update if the new HDL does not parse.
 
 ### Jiffies
 

@@ -59,6 +59,21 @@ Specific components in the forked Pico include [`inline-buttons`](https://github
 
 A VSCode extension with language definitions and editor support.
 
+- `npm run -w extension package` builds the extension & related views into a stand-along `.vsix` file.
+- `Run Extension` launch configuration starts a new VSCode extension host to debug the extension.
+
+#### Languages
+
+Language support for `.hdl` & `.tst` uses the language libraries in `simulator`.
+Syntax errors are highlighted, with in-editor error diagnostics on the failing token.
+Syntax hilighting rules activate for `HDL`, `TST`, `CMP`, `OUT`, `ASM`, `VM`, and `Jack` files.
+Snippets are available for `HDL`, `ASM`, `VM`, `Jack`, and `TST` files.
+
+#### Commands
+
+- `computron5k.hardware` "Nand2Tetris: open hardware simulator" loads the current HDL file into an HDL view.
+  If no HDL view exists, it first creates one in column 2 (unless the file is open in column 2, in which case it opens it in column 1).
+
 ### Jiffies
 
 Jiffies contains a few utility functions & types.

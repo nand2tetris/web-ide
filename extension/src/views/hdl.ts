@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
+import { hdl } from "../languages/index.js";
 
 export function activateHdlView(context: vscode.ExtensionContext) {
-  console.log("Registering HDL View");
   const provider = new HdlViewProvider(context.extensionUri);
   vscode.window.registerWebviewViewProvider(HdlViewProvider.viewType, provider);
 }
@@ -9,6 +9,7 @@ export function activateHdlView(context: vscode.ExtensionContext) {
 class HdlViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "computron5k.hdlView";
 
+  private _hdl = "";
   private _view?: vscode.WebviewView;
 
   constructor(private readonly extensionUri: vscode.Uri) {}
@@ -23,31 +24,75 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.options = {
       // Allow scripts in the webview
       enableScripts: true,
-
       localResourceRoots: [this.extensionUri],
     };
 
     webviewView.webview.html = this._getHtmlForWebview(webviewView.webview);
 
-    webviewView.webview.onDidReceiveMessage((data) => {
-      console.log(data);
+    webviewView.webview.onDidReceiveMessage(
+      (message: { nand2tetris: boolean; ready: boolean }) => {
+        if (
+          message.nand2tetris &&
+          message.ready &&
+          vscode.window.activeTextEditor?.document.languageId === "hdl"
+        ) {
+          this.updateHdl(vscode.window.activeTextEditor.document.getText());
+        }
+      }
+    );
+
+    webviewView.onDidChangeVisibility(() => {
+      switch (this._view?.visible) {
+        case false:
+          this.updateHdl("");
+          break;
+        case true:
+          break;
+        // if (vscode.window.activeTextEditor?.document.languageId === "hdl") {
+        //   this.updateHdl(vscode.window.activeTextEditor.document.getText());
+        // }
+      }
     });
 
-    if (vscode.window.activeTextEditor?.document.languageId === "hdl") {
-      this.updateHdl(vscode.window.activeTextEditor.document.getText());
-    }
+    // vscode.window.onDidChangeWindowState((e) => {
+    //   if (
+    //     e.focused &&
+    //     vscode.window.activeTextEditor?.document.languageId === "hdl"
+    //   ) {
+    //     this.updateHdl(vscode.window.activeTextEditor.document.getText());
+    //   }
+    // });
 
     vscode.window.onDidChangeActiveTextEditor((e) => {
-      if (e === undefined) return;
+      if (e === undefined) {
+        this.updateHdl("");
+        return;
+      }
 
       if (e.document.languageId === "hdl") {
         this.updateHdl(e.document.getText());
       }
     });
+
+    vscode.workspace.onDidSaveTextDocument(async (document) => {
+      if (
+        vscode.window.activeTextEditor?.document === document &&
+        document.languageId === "hdl"
+      ) {
+        const diagnostics = await hdl.getDiagnostics(document);
+        if ((diagnostics[0] ?? ["", []])[1].length === 0) {
+          this.updateHdl(document.getText());
+        }
+      }
+    });
   }
 
   updateHdl(hdl: string) {
+    if (this._hdl === hdl) {
+      return;
+    }
     this._view?.webview.postMessage({ nand2tetris: true, hdl });
+    this._hdl = hdl;
   }
 
   private _getHtmlForWebview(webview: vscode.Webview) {

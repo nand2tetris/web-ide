@@ -9,7 +9,8 @@ button {
   color: var(--vscode-button-foreground);
   background-color: var(--vscode-button-background);
   border: 0;
-  width: 1.3rem;
+  padding: 0;
+  width: 1rem;
 }
 
 button:hover {

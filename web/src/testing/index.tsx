@@ -1,7 +1,4 @@
-import {
-  BaseContext,
-  useBaseContext,
-} from "@computron5k/components/stores/base.context.js";
+import { useBaseContext } from "@computron5k/components/stores/base.context.js";
 import * as Not from "@computron5k/simulator/projects/project_01/01_not.js";
 import {
   FileSystem,
@@ -12,7 +9,7 @@ import { I18nProvider } from "@lingui/react";
 import { render, RenderOptions } from "@testing-library/react";
 import ue from "@testing-library/user-event";
 import { ReactElement } from "react";
-import { AppContext, useAppContext } from "../App.context";
+import { useAppContext } from "../App.context";
 
 export const userEvent = ue;
 export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";

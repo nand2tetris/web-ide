@@ -10,6 +10,7 @@ function App() {
   const { state, actions } = useChipPageStore();
 
   const [hdl, setHdl] = useState(Not.sol);
+  const [loaded, setLoaded] = useState(false);
 
   const compile = useCallback(
     async (hdl: string) => {
@@ -21,8 +22,9 @@ function App() {
 
   const onMessage = useCallback(
     (event: MessageEvent<Partial<{ nand2tetris: boolean; hdl: string }>>) => {
-      if (event.data?.nand2tetris && event.data.hdl)
-        compile(event.data.hdl ?? "");
+      if (!event.data?.nand2tetris) return;
+      if (event.data.hdl) compile(event.data.hdl ?? "");
+      setLoaded(true);
     },
     [compile]
   );
@@ -33,6 +35,10 @@ function App() {
       window.removeEventListener("message", onMessage);
     };
   }, [onMessage]);
+
+  useEffect(() => {
+    acquireVsCodeApi().postMessage({ nand2tetris: true, ready: true });
+  }, []);
 
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
@@ -113,7 +119,14 @@ function App() {
     </>
   );
 
-  return pinsPanel;
+  return loaded ? (
+    pinsPanel
+  ) : (
+    <>
+      <h3>HDL</h3>
+      <p>Open an HDL chip to begin</p>
+    </>
+  );
 }
 
 export default App;

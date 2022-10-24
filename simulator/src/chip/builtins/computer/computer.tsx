@@ -77,7 +77,9 @@ export class Memory extends ClockedChip {
       if (this.address >= Keyboard.OFFSET) {
         // Keyboard, do nothing
       } else if (this.address >= Screen.OFFSET) {
+        // Update both Screen and RAM
         this.screen.at(this.address - Screen.OFFSET).busVoltage = inn;
+        this.ram.at(this.address).busVoltage = inn;
       } else {
         this.ram.at(this.address).busVoltage = inn;
       }
@@ -96,7 +98,7 @@ export class Memory extends ClockedChip {
       // Keyboard, do nothing
       out = this.keyboard?.out().busVoltage ?? 0;
     } else if (this.address >= Screen.OFFSET) {
-      out = this.screen?.at(this.address - Screen.OFFSET).busVoltage ?? 0;
+      out = this.ram?.at(this.address).busVoltage ?? 0;
     } else {
       out = this.ram?.at(this.address).busVoltage ?? 0;
     }
@@ -135,11 +137,7 @@ export class Memory extends ClockedChip {
     if (offset >= Keyboard.OFFSET) {
       return this.keyboard.out();
     }
-    if (offset >= Screen.OFFSET) {
-      return this.screen.at(offset - Screen.OFFSET);
-    } else {
-      return this.ram.at(offset);
-    }
+    return this.ram.at(offset);
   }
 }
 

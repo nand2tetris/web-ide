@@ -24,6 +24,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "node ./scripts/build-react-no-split.js",
+    "postbuild": "cp ./build/styles.css ./build/static/js/main.js ./build/static/js/main.js.map ./build/static/js/main.js.LICENSE.txt ../../out/views/hdl",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

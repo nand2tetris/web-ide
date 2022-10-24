@@ -1,57 +1,59 @@
 {
-    "fileTypes": [
-        "hack"
-    ],
-    "name": "Hack Machine Language",
-    "patterns": [
-        {
-            "include": "#a"
-        },
-        {
-            "include": "#c"
-        }
-    ],
-    "repository": {
-        "a": {
-            "patterns": [
-                {
-                    "comment": "0-value",
-                    "begin": "\\b0",
-                    "end": "\\b",
-                    "name": "keyword.other",
-                    "patterns": [
-                        {
-                            "comment": "value",
-                            "match": "[01]{15}\\b",
-                            "name": "constant.numeric"
-                        }
-                    ]
-                }
-            ]
-        },
-        "c": {
-            "patterns": [
-                {
-                    "comment": "1-??-a-comp-dest-jump",
-                    "match": "\\b1[01]{2}([01]{1})([01]{6})([01]{3})([01]{3})\\b",
-                    "name": "keyword.other",
-                    "captures": {
-                        "1": {
-                            "comment": "comp",
-                            "name": "string.unquoted"
-                        },
-                        "2": {
-                            "comment": "dest",
-                            "name": "variable.language"
-                        },
-                        "3": {
-                            "comment": "jump",
-                            "name": "keyword.control"
-                        }
-                    }
-                }
-            ]
-        }
+  "fileTypes": ["hack"],
+  "name": "Hack Machine Language",
+  "patterns": [
+    {
+      "include": "#a"
     },
-    "scopeName": "source.hack"
+    {
+      "include": "#c"
+    }
+  ],
+  "repository": {
+    "a": {
+      "patterns": [
+        {
+          "comment": "0-value",
+          "begin": "\\b0",
+          "end": "\\b",
+          "name": "comment",
+          "patterns": [
+            {
+              "comment": "value",
+              "match": "[01]{15}\\b",
+              "name": "constant.numeric"
+            }
+          ]
+        }
+      ]
+    },
+    "c": {
+      "patterns": [
+        {
+          "comment": "1-??-a-comp-dest-jump",
+          "match": "\\b1[01]{2}([01]{1})([01]{6})([01]{3})([01]{3})\\b",
+          "name": "comment",
+          "captures": {
+            "1": {
+              "comment": "control",
+              "name": "keyword.control"
+            },
+            "2": {
+              "comment": "op",
+              "name": "keyword.operarator"
+            },
+            "3": {
+              "comment": "dest",
+              "name": "variable.language"
+            },
+            "4": {
+              "comment": "jump",
+              "name": "keyword.control"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "scopeName": "source.hack"
 }

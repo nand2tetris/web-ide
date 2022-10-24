@@ -35,6 +35,7 @@ jobs:
       - name: CD
         run: |
           npm run -w simulator build
+          npm run -w components build
           npm run -w extension package
 
       - name: Upload extension

@@ -46,7 +46,8 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@computron5k/([^/]+)/(.*)": "<rootDir>/../node_modules/@computron5k/$1/build/$2"
+      "^@computron5k/([^/]+)/(.*)": "<rootDir>/../node_modules/@computron5k/$1/build/$2",
+      "(.*)\\.js$": "$1"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!@davidsouther)"

@@ -348,10 +348,11 @@ export function makeChipStore(
     },
 
     useBuiltin() {
-      const nextChip = getBuiltinChip(chipName);
+      const builtinName = chip.name ?? chipName;
+      const nextChip = getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
         setStatus(
-          `Failed to load builtin ${chipName}: ${display(Err(nextChip))}`
+          `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`
         );
         return;
       }

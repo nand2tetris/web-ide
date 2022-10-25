@@ -1,6 +1,6 @@
 {
   "name": "nand2tetris-vscode",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "NAND2Tetris IDE features for VSCode",
   "author": "David Souther <davidsouther@gmail.com>",

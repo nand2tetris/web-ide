@@ -1,13 +1,22 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
 import * as Not from "@computron5k/simulator/projects/project_01/01_not.js";
 import { makeVisualizationsWithId } from "@computron5k/components/chips/visualizations.js";
 import { Clockface } from "@computron5k/components/clockface.js";
 import { FullPinout } from "@computron5k/components/pinout.js";
 import { useChipPageStore } from "@computron5k/components/stores/chip.store.js";
+import { VSCodeContext } from "./vscode";
 
 function App() {
   const { state, actions } = useChipPageStore();
+  const { api } = useContext(VSCodeContext);
 
   const [hdl, setHdl] = useState(Not.sol);
   const [loaded, setLoaded] = useState(false);
@@ -37,8 +46,8 @@ function App() {
   }, [onMessage]);
 
   useEffect(() => {
-    acquireVsCodeApi().postMessage({ nand2tetris: true, ready: true });
-  }, []);
+    api.postMessage({ nand2tetris: true, ready: true });
+  }, [api]);
 
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {

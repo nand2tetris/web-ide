@@ -21,7 +21,7 @@
         "--extensionDevelopmentPath=${workspaceFolder}/extension"
       ],
       "outFiles": ["${workspaceFolder}/extension/build/**/*.js"],
-      "preLaunchTask": "npm run -w extension build"
+      "preLaunchTask": "${defaultBuildTask}"
     },
     {
       "name": "Extension Tests",

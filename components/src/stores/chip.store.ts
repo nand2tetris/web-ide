@@ -18,10 +18,7 @@ import { Clock } from "@computron5k/simulator/chip/clock.js";
 import { Span } from "@computron5k/simulator/languages/base.js";
 import { HDL } from "@computron5k/simulator/languages/hdl.js";
 import { TST } from "@computron5k/simulator/languages/tst.js";
-import {
-  ChipProjects,
-  CHIP_PROJECTS,
-} from "@computron5k/simulator/projects/index.js";
+import { ChipProjects, CHIP_PROJECTS } from "@computron5k/projects/index.js";
 import { ChipTest } from "@computron5k/simulator/tst.js";
 
 import { ImmPin, reducePins } from "../pinout.js";

@@ -14,14 +14,16 @@
   },
   "homepage": "https://github.com/davidsouther/computron5k#readme",
   "scripts": {
+    "clean": "rm -rf extension/build simulator/build web/build projects/build components/build",
     "ci": "CI=true npm run check && CI=true npm run test",
     "precheck": "npm -w web run extract && npm -w web run lingui",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
-    "check:format": "prettier --ignore-unknown --check extension/src simulator/src web/src web/public",
-    "check:lint": "eslint --no-error-on-unmatched-pattern extension/src simulator/src web/src web/public",
+    "check:format": "prettier --ignore-unknown --check extension/src simulator/src web/src web/public projects/src components/src",
+    "check:lint": "eslint --no-error-on-unmatched-pattern extension/src simulator/src web/src web/public projects/src components/src",
     "check:types": "tsc --build tsconfig.json",
-    "format": "prettier --write extension/src simulator/src web/src web/public",
-    "fix": "eslint --fix extension/src simulator/src web/src web/public",
+    "build": "CI=true npm run build -w projects && CI=true npm run build -w simulator && CI=true npm run build -w components && CI=true npm run build -w web",
+    "format": "prettier --write extension/src simulator/src web/src web/public projects/src components/src",
+    "fix": "eslint --fix extension/src simulator/src web/src web/public projects/src components/src",
     "test": "CI=true npm test -w simulator && CI=true npm test -w components && CI=true npm test -w web"
   },
   "devDependencies": {
@@ -36,6 +38,7 @@
     "components",
     "extension/views/hdl",
     "extension",
+    "projects",
     "simulator",
     "web"
   ]

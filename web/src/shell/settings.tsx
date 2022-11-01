@@ -1,4 +1,4 @@
-import loaders from "@computron5k/simulator/projects/lazy.js";
+import loaders from "@computron5k/projects/loader.js";
 import { i18n } from "@lingui/core";
 import { Trans } from "@lingui/macro";
 import { useContext, useEffect, useMemo } from "react";
@@ -88,14 +88,14 @@ export const Settings = () => {
               >
                 <Trans>Reset</Trans>
               </button>
-              <button
+              {/* <button
                 onClick={async () => {
                   await loaders.loadSolutions(fs);
                   setStatus("Loaded sample solutions...");
                 }}
               >
                 <Trans>Solutions</Trans>
-              </button>
+              </button> */}
               <button
                 onClick={async () => {
                   await loaders.loadSamples(fs);

@@ -7,7 +7,7 @@ import {
   useState,
 } from "react";
 import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
-import * as Not from "@computron5k/simulator/projects/project_01/01_not.js";
+import * as Not from "@computron5k/projects/project_01/01_not.js";
 import { makeVisualizationsWithId } from "@computron5k/components/chips/visualizations.js";
 import { Clockface } from "@computron5k/components/clockface.js";
 import { FullPinout } from "@computron5k/components/pinout.js";
@@ -18,7 +18,7 @@ function App() {
   const { state, actions } = useChipPageStore();
   const { api } = useContext(VSCodeContext);
 
-  const [hdl, setHdl] = useState(Not.sol);
+  const [hdl, setHdl] = useState(Not.hdl);
   const [loaded, setLoaded] = useState(false);
 
   const compile = useCallback(

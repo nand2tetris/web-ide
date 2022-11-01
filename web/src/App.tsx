@@ -8,7 +8,7 @@ import {
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
 import urls from "./urls";
-import { loaders } from "@computron5k/simulator/projects/index.js";
+import { loaders } from "@computron5k/projects/loader.js";
 import {
   BaseContext,
   useBaseContext,

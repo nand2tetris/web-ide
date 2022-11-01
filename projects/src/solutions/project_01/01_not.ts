@@ -1,0 +1,9 @@
+export const sol = `// Not gate: out = not in
+
+CHIP Not {
+    IN in;
+    OUT out;
+
+    PARTS:
+    Nand (a=in, b=in, out=out);
+}`;

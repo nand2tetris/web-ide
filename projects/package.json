@@ -1,0 +1,29 @@
+{
+  "name": "@computron5k/projects",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "author": "David Souther <davidsouther@gmail.com>",
+  "license": "ISC",
+  "homepage": "https://davidsouther.github.io/computron5k",
+  "type": "module",
+  "exports": {
+    "./*": "./build/*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "build/*"
+      ]
+    }
+  },
+  "dependencies": {
+    "@davidsouther/jiffies": "^2.0.3"
+  },
+  "devDependencies": {
+    "typescript": "^4.7.4"
+  },
+  "scripts": {
+    "build": "tsc"
+  }
+}

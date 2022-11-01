@@ -21,7 +21,7 @@ import { Runbar } from "@computron5k/components/runbar.js";
 import { CMP } from "@computron5k/simulator/languages/cmp.js";
 import { HDL } from "@computron5k/simulator/languages/hdl.js";
 import { TST } from "@computron5k/simulator/languages/tst.js";
-import { CHIP_PROJECTS } from "@computron5k/simulator/projects/index.js";
+import { CHIP_PROJECTS } from "@computron5k/projects/index.js";
 import { Timer } from "@computron5k/simulator/timer.js";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";

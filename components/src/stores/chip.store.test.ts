@@ -1,5 +1,5 @@
-import * as not from "@computron5k/simulator/projects/project_01/01_not.js";
-import * as bit from "@computron5k/simulator/projects/project_03/01_bit.js";
+import * as not from "@computron5k/projects/project_01/01_not.js";
+import * as bit from "@computron5k/projects/project_03/01_bit.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,

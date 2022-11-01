@@ -11,9 +11,17 @@ import { Cmp, CMP } from "../languages/cmp.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
 import { ChipTest } from "../tst.js";
-import { ASM_PROJECTS, ChipProjects, CHIP_PROJECTS } from "./index.js";
-import { ASM_SOLS, FILES as ASM_FILES } from "./project_06/index.js";
-import { Max } from "./samples/hack.js";
+import {
+  ChipProjects,
+  ASM_PROJECTS,
+  CHIP_PROJECTS,
+} from "@computron5k/projects/index.js";
+import { ChipProjects as ChipProjectsSols } from "@computron5k/projects/solutions/index.js";
+import {
+  ASM_SOLS,
+  FILES as ASM_FILES,
+} from "@computron5k/projects/samples/project_06/index.js";
+import { Max } from "@computron5k/projects/samples/hack.js";
 
 const SKIP = new Set<string>([]);
 
@@ -24,10 +32,16 @@ describe("Chip Projects", () => {
         (k) => !SKIP.has(k)
       )
     )("Chip %s", async (chipName) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const chipProject = ChipProjects[project]!;
+      const chipProject = {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ...ChipProjects[project]!,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        ...ChipProjectsSols[project]!,
+      };
       const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
       const tstFile = chipProject.CHIPS[chipName]?.[`${chipName}.tst`];
       const cmpFile = chipProject.CHIPS[chipName]?.[`${chipName}.cmp`];

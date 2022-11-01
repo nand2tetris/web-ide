@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { BaseContext } from "@computron5k/components/stores/base.context.js";
-import * as Not from "@computron5k/simulator/projects/project_01/01_not.js";
+import * as Not from "@computron5k/projects/project_01/01_not.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,

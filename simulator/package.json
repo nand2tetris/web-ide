@@ -18,6 +18,7 @@
     }
   },
   "dependencies": {
+    "@computron5k/projects": "*",
     "@davidsouther/jiffies": "^2.0.3",
     "ohm-js": "^16.3.4",
     "rxjs": "^7.5.7"

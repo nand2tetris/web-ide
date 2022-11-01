@@ -1,5 +1,6 @@
 {
   "references": [
+    { "path": "./projects/tsconfig.json" },
     { "path": "./simulator/tsconfig.json" },
     { "path": "./components/tsconfig.json" },
     { "path": "./extension/tsconfig.json" },

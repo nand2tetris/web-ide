@@ -6,8 +6,9 @@ import { Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Cmp, CMP } from "../../languages/cmp.js";
 import { HDL, HdlParse } from "../../languages/hdl.js";
 import { Tst, TST } from "../../languages/tst.js";
-import { CHIP_PROJECTS, ChipProjects } from "../../projects/index.js";
-import { Max } from "../../projects/samples/hack.js";
+import { ChipProjects, CHIP_PROJECTS } from "@computron5k/projects/index.js";
+import { ChipProjects as ChipProjectsSols } from "@computron5k/projects/solutions/index.js";
+import { Max } from "@computron5k/projects/samples/hack.js";
 import { compare } from "../../compare.js";
 import { ChipTest } from "../../tst.js";
 import { build } from "../builder.js";
@@ -25,7 +26,7 @@ describe("All Projects", () => {
       let hdlFile: string =
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        ChipProjects[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
+        ChipProjectsSols[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
       const tstFile: string =
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore

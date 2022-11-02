@@ -47,10 +47,10 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         disabled={runner.state.running}
       >
         {[
-          [16, `60FPS`],
-          [500, `Fast`],
+          // [2000, `Slow`], // For debugging, basically the same as clicking through
           [1000, `Normal`],
-          [2000, `Slow`],
+          [500, `Fast`],
+          [16, `Faster`],
         ].map(([speed, label]) => (
           <option key={speed} value={speed}>
             {label}

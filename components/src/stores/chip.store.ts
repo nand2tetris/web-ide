@@ -212,9 +212,17 @@ export function makeChipStore(
     testRunning(state: ChipPageState) {
       state.controls.runningTest = true;
     },
+
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
+      const passed = state.files.out.trim() === state.files.cmp.trim();
+      setStatus(
+        passed
+          ? `Simulation successful: The output file is identical to the compare file`
+          : `Simulation error: The output file differs from the compare file`
+      );
     },
+
     updateTestStep(state: ChipPageState) {
       state.files.out = test?.log() ?? "";
       state.controls.span = test?.currentStep?.span;
@@ -387,11 +395,15 @@ export function makeChipStore(
       fs.popd();
 
       dispatch.current({ action: "updateTestStep" });
+      dispatch.current({ action: "testFinished" });
     },
 
     async tick() {
       const done = await test.step();
       dispatch.current({ action: "updateTestStep" });
+      if (done) {
+        dispatch.current({ action: "testFinished" });
+      }
       return done;
     },
   };

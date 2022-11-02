@@ -4,7 +4,6 @@
             --outline: black;
             --block: red;
             --gate: cyan;
-            --font: Poppins;
         }
 
         @media (prefers-color-scheme: dark) {
@@ -47,6 +46,6 @@
 
     <path class="gate" d="M2.5,1.5 h5 a 5 5 0 0 1 0,10 h-5 v-10"></path>
     <circle class="gate" cx="14.5" cy="6.5" r="2"></circle>
-    
+
     <path class="letter" d="M26,10 h-6 v-1 l5,-4 v-1 l-1,-1 h-2.5 l-.5,1 h-1 v-1 l1,-1 h4 l1,1 v2 l-5,4 h5 v1"></path>
 </svg>

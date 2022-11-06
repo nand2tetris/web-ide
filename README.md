@@ -12,6 +12,8 @@ The user guide is available [here](./src/pages/USER_GUIDE.md) and can also be ac
 
 Computron5k NAND2Tetris kit is a monorepo with four projects.
 `simulator` is the core NAND2Tetris code.
+`projects` has copies of project base and test files.
+`components` are reusable React UI pieces suitable for both web and extension.
 `web` is a standalone web IDE.
 `extension` is a VSCode extension with editor support.
 `cli` is a command line NodeJS program (runnable with `npx`) to grade one or more project folders.

@@ -243,7 +243,7 @@
   ],
   "devDependencies": {
     "@computron5k/simulator": "*",
-    "@davidsouther/jiffies": "^2.0.3",
+    "@davidsouther/jiffies": "^2.0.5",
     "@types/error-cause": "^1.0.1",
     "@types/node": "^16.11.41",
     "@types/vscode": "^1.61.0",

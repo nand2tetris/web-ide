@@ -20,7 +20,7 @@
   "devDependencies": {
     "@computron5k/projects": "*",
     "@computron5k/simulator": "*",
-    "@davidsouther/jiffies": "^2.0.3",
+    "@davidsouther/jiffies": "^2.0.5",
     "@monaco-editor/react": "^4.4.5",
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",

@@ -2,12 +2,19 @@
   "name": "@computon5k/cli",
   "version": "0.1.0",
   "description": "NAND2Tetris Command Line tools",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "type": "module",
   "scripts": {
+    "build": "tsc",
     "test": "jest"
   },
   "devDependencies": {
     "@computron5k/simulator": "*",
-    "@davidsouther/jiffies": "file:../../jiffies"
+    "@davidsouther/jiffies": "^2.0.5"
+  },
+  "dependencies": {
+    "@types/node": "^18.11.9",
+    "@types/yargs": "^17.0.13",
+    "yargs": "^17.6.2"
   }
 }

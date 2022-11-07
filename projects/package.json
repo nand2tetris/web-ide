@@ -18,7 +18,7 @@
     }
   },
   "dependencies": {
-    "@davidsouther/jiffies": "^2.0.3"
+    "@davidsouther/jiffies": "^2.0.5"
   },
   "devDependencies": {
     "typescript": "^4.7.4"

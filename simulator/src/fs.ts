@@ -1,5 +1,5 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { ASM } from "./languages/asm.js";
 import { int2 } from "./util/twos.js";
 

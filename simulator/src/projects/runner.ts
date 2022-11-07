@@ -1,56 +1,105 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { isOk, Ok, Err, isErr } from "@davidsouther/jiffies/lib/esm/result";
-import { Assignments } from ".";
-import { HDL } from "../languages/hdl";
-import { TST } from "../languages/tst";
-import { build as buildChip } from "../chip/builder";
-import { ChipTest } from "../tst";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import {
+  isOk,
+  Ok,
+  Err,
+  isErr,
+  Result,
+} from "@davidsouther/jiffies/lib/esm/result.js";
+import { Assignments } from "@computron5k/projects/index.js";
+import { HDL, HdlParse } from "../languages/hdl.js";
+import { Tst, TST } from "../languages/tst.js";
+import { build as buildChip } from "../chip/builder.js";
+import { ChipTest } from "../tst.js";
+import { ParseError } from "../languages/base.js";
+import { Chip } from "../chip/chip.js";
 
-export function hasTest({ name, ext }: { name: string; ext: string }) {
-  return (
-    Assignments[name as keyof typeof Assignments] !== undefined && ext === "hdl"
-  );
+export interface Assignment {
+  name: string;
+  hdl: string;
+  tst: string;
+  cmp: string;
 }
 
+export interface AssignmentParse extends Assignment {
+  maybeParsedHDL: Result<HdlParse, ParseError>;
+  maybeParsedTST: Result<Tst, ParseError>;
+}
+
+export interface AssignmentBuild extends AssignmentParse {
+  maybeChip: Result<Chip, Error>;
+  maybeTest: Result<ChipTest, Error>;
+}
+
+export interface AssignmentRun extends AssignmentBuild {
+  pass: boolean;
+  out: string;
+}
+
+export const hasTest = ({
+  name,
+  ext,
+}: {
+  name: string;
+  ext: string;
+}): boolean =>
+  Assignments[name as keyof typeof Assignments] !== undefined && ext === "hdl";
+
+export const maybeParse = (file: Assignment): AssignmentParse => {
+  const maybeParsedHDL = HDL.parse(file.hdl);
+  const maybeParsedTST = TST.parse(file.tst);
+  return { ...file, maybeParsedHDL, maybeParsedTST };
+};
+
+export const maybeBuild = (file: AssignmentParse): AssignmentBuild => {
+  const maybeChip = isOk(file.maybeParsedHDL)
+    ? buildChip(Ok(file.maybeParsedHDL))
+    : Err(new Error("HDL Was not parsed"));
+  const maybeTest = isOk(file.maybeParsedTST)
+    ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
+    : Err(new Error("TST Was not parsed"));
+  return { ...file, maybeChip, maybeTest };
+};
+
+export const tryRun =
+  (fs: FileSystem) =>
+  async (assignment: AssignmentBuild): Promise<AssignmentRun> => {
+    if (isErr(assignment.maybeChip)) {
+      return {
+        ...assignment,
+        pass: false,
+        out: Err(assignment.maybeChip).message,
+      };
+    }
+    if (isErr(assignment.maybeTest)) {
+      return {
+        ...assignment,
+        pass: false,
+        out: Err(assignment.maybeTest).message,
+      };
+    }
+    const test = Ok(assignment.maybeTest)
+      .with(Ok(assignment.maybeChip))
+      .setFileSystem(fs);
+    await test.run();
+    const out = test.log();
+    const pass = out.trim() === assignment.cmp.trim();
+    return { ...assignment, out, pass };
+  };
+
+export const runner = (fs: FileSystem) => {
+  const tryRunWithFs = tryRun(fs);
+  return async (assignment: Assignment): Promise<AssignmentRun> =>
+    tryRunWithFs(await maybeBuild(await maybeParse(assignment)));
+};
+
 export function runTests(
-  files: Array<Promise<{ name: string; hdl: string }>>,
-  loadAssignment: (
-    pfile: Promise<{ name: string; hdl: string }>
-  ) => Promise<{ name: string; hdl: string; tst: string; cmp: string }>,
+  files: Array<{ name: string; hdl: string }>,
+  loadAssignment: (file: { name: string; hdl: string }) => Promise<Assignment>,
   fs: FileSystem
-) {
-  return files
-    .map(loadAssignment)
-    .map(async (pfile) => {
-      const file = await pfile;
-      const maybeParsedHDL = HDL.parse(file.hdl);
-      const maybeParsedTST = TST.parse(file.tst);
-      return { ...file, maybeParsedHDL, maybeParsedTST };
-    })
-    .map(async (pfile) => {
-      const file = await pfile;
-      const maybeChip = isOk(file.maybeParsedHDL)
-        ? buildChip(Ok(file.maybeParsedHDL))
-        : Err(new Error("HDL Was not parsed"));
-      const maybeTest = isOk(file.maybeParsedTST)
-        ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
-        : Err(new Error("TST Was not parsed"));
-      return { ...file, maybeChip, maybeTest };
-    })
-    .map(async (pfile) => {
-      const file = await pfile;
-      if (isErr(file.maybeChip)) {
-        return { ...file, pass: false, out: Err(file.maybeChip).message };
-      }
-      if (isErr(file.maybeTest)) {
-        return { ...file, pass: false, out: Err(file.maybeTest).message };
-      }
-      const test = Ok(file.maybeTest)
-        .with(Ok(file.maybeChip))
-        .setFileSystem(fs);
-      await test.run();
-      const out = test.log();
-      const pass = out.trim() === file.cmp.trim();
-      return { ...file, out, pass };
-    });
+): Promise<AssignmentRun[]> {
+  const run = runner(fs);
+  return Promise.all(
+    files.map(loadAssignment).map(async (assignment) => run(await assignment))
+  );
 }

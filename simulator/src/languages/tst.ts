@@ -43,11 +43,17 @@ export interface TstOutputListOperation {
 }
 
 export interface TstLoadROMOperation {
-  op: "load";
+  op: "loadRom";
+  file: string;
+}
+
+export interface TstFileOperation {
+  op: "load" | "output-file" | "compare-to";
   file: string;
 }
 
 export type TstOperation =
+  | TstFileOperation
   | TstEvalOperation
   | TstEchoOperation
   | TstClearEchoOperation
@@ -170,8 +176,14 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   },
   TstLoadROMOperation(_r, _l, { name }) {
     return {
-      op: "load",
+      op: "loadRom",
       file: name,
+    };
+  },
+  TstFileOperation(op, file) {
+    return {
+      op: op.sourceString as TstFileOperation["op"],
+      file: file.sourceString,
     };
   },
 });

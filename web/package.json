@@ -10,7 +10,7 @@
     "@computron5k/components": "*",
     "@computron5k/projects": "*",
     "@computron5k/simulator": "*",
-    "@davidsouther/jiffies": "^2.0.3",
+    "@davidsouther/jiffies": "^2.0.5",
     "@lingui/cli": "^3.14.0",
     "@lingui/macro": "^3.14.0",
     "@lingui/react": "^3.14.0",

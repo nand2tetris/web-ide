@@ -49,3 +49,10 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
 export const ASM_PROJECTS: Record<"06", string[]> = {
   "06": ["Add", "Max", "Rectangle", "Pong"],
 };
+
+export const Assignments = {
+  ...project_01.CHIPS,
+  ...project_02.CHIPS,
+  ...project_03.CHIPS,
+  ...project_05.CHIPS,
+};

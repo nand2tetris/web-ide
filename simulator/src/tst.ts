@@ -160,7 +160,8 @@ export class ChipTest extends Test<ChipTestInstruction> {
     const statement = new TestCompoundInstruction();
     statement.span = line.span;
     for (const op of line.ops) {
-      statement.addInstruction(ChipTest.makeInstruction(op));
+      const inst = ChipTest.makeInstruction(op);
+      if (inst !== undefined) statement.addInstruction(inst);
     }
     return statement;
   }
@@ -184,8 +185,12 @@ export class ChipTest extends Test<ChipTestInstruction> {
         return new TestEchoInstruction(inst.message);
       case "clear-echo":
         return new TestClearEchoInstruction();
-      case "load":
+      case "loadRom":
         return new TestLoadROMInstruction(inst.file);
+      case "load":
+      case "output-file":
+      case "compare-to":
+        return undefined;
       default:
         checkExhaustive(op, `Unknown tst operation ${op}`);
     }

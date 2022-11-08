@@ -31,3 +31,10 @@ export async function testRunner(root: string, name: string) {
   const run = await tryRun(assignment);
   console.log(run);
 }
+
+export async function testDebugger(root: string, name: string, port: number) {
+  const fs = new FileSystem(new NodeFileSystemAdapter());
+  fs.cd(root);
+  const file = { name, hdl: await fs.readFile(`${name}.hdl`) };
+  const assignment = await loadAssignment(fs, file);
+}

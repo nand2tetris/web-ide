@@ -4,6 +4,9 @@
   "description": "NAND2Tetris Command Line tools",
   "main": "dist/index.js",
   "type": "module",
+  "bin": {
+    "nand2tetris": "dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest"

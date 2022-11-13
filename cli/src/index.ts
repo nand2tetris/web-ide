@@ -1,9 +1,8 @@
 #!/usr/bin/env node
-import { dirname, resolve } from "path";
+import { dirname, parse, resolve } from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { main } from "./grading.js";
-import { splitFile } from "./node_file_system_adapter.js";
 import { testRunner } from "./testrunner.js";
 
 yargs(hideBin(process.argv))
@@ -12,14 +11,21 @@ yargs(hideBin(process.argv))
     "grade [directory]",
     "Grade all NAND2Tetris projects in a directory tree.",
     (yargs) =>
-      yargs.positional("directory", {
-        type: "string",
-        default: process.cwd(),
-        describe: "Path to a folder to grade for nand2tetris projects.",
-      }),
+      yargs
+        .positional("directory", {
+          type: "string",
+          default: process.cwd(),
+          describe: "Path to a folder to grade for nand2tetris projects.",
+        })
+        .option("java_ide", {
+          type: "string",
+          default: process.env.NAND2TETRIS_PATH,
+          describe:
+            "When set, look for the java IDE jars in this path and compare both runs.",
+        }),
     (argv) => {
       console.log("grade", argv.directory, "nand2tetris grader!");
-      main(argv.directory);
+      main(argv.directory, argv.java_ide);
     }
   )
   .command(
@@ -40,17 +46,22 @@ yargs(hideBin(process.argv))
           type: "number",
           default: 6163,
           describe: "Port for the debugger protocol to listen on.",
+        })
+        .option("java_ide", {
+          type: "string",
+          describe:
+            "When set, look for the java IDE jars in this path and compare both runs.",
         }),
     (argv) => {
       console.log("nand2tetris command run", argv);
-      const { name, ext } = splitFile(argv.file ?? "");
+      const { name, ext } = parse(argv.file ?? "");
       switch (ext) {
         case "":
-        case "tst":
+        case ".tst":
           console.log("tst");
           testRunner(dirname(resolve(argv.file ?? process.cwd())), name);
           break;
-        case "hdl":
+        case ".hdl":
           console.log("hdl");
           break;
         default:

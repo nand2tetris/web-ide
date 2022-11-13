@@ -1,13 +1,12 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "./node_file_system_adapter.js";
 import { runner } from "@computron5k/simulator/projects/runner.js";
-import { Assignments } from "@computron5k/projects/index.js";
+import { Assignment, Assignments } from "@computron5k/projects/index.js";
+import { parse } from "path";
 
-async function loadAssignment(
-  fs: FileSystem,
-  file: { name: string; hdl: string }
-) {
+async function loadAssignment(fs: FileSystem, file: Assignment) {
   const assignment = Assignments[file.name as keyof typeof Assignments];
+  const hdl = await fs.readFile(`${file.name}.hdl`);
   const tst = await fs
     .readFile(`${file.name}.tst`)
     .catch(
@@ -19,22 +18,16 @@ async function loadAssignment(
       () => assignment[`${file.name}.cmp` as keyof typeof assignment] as string
     );
 
-  return { ...file, tst, cmp };
+  return { ...file, hdl, tst, cmp };
 }
 
-export async function testRunner(root: string, name: string) {
+export async function testRunner(dir: string, file: string) {
   const fs = new FileSystem(new NodeFileSystemAdapter());
-  fs.cd(root);
+  fs.cd(dir);
+  const assignment = await loadAssignment(fs, parse(file));
   const tryRun = runner(fs);
-  const file = { name, hdl: await fs.readFile(`${name}.hdl`) };
-  const assignment = await loadAssignment(fs, file);
   const run = await tryRun(assignment);
   console.log(run);
 }
 
-export async function testDebugger(root: string, name: string, port: number) {
-  const fs = new FileSystem(new NodeFileSystemAdapter());
-  fs.cd(root);
-  const file = { name, hdl: await fs.readFile(`${name}.hdl`) };
-  const assignment = await loadAssignment(fs, file);
-}
+// export async function testDebugger(root: string, name: string, port: number) {}

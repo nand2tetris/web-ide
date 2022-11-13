@@ -5,6 +5,10 @@ import * as project_02 from "./project_02/index.js";
 import * as project_03 from "./project_03/index.js";
 import * as project_05 from "./project_05/index.js";
 
+import type { ParsedPath } from "node:path";
+
+export type Assignment = ParsedPath;
+
 export const ChipProjects = {
   "01": project_01,
   "02": project_02,

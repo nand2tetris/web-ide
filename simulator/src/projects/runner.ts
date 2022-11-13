@@ -6,7 +6,8 @@ import {
   isErr,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Assignments } from "@computron5k/projects/index.js";
+import { Assignments, Assignment } from "@computron5k/projects/index.js";
+import { Runner, RunResult } from "@computron5k/runner/index.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
 import { build as buildChip } from "../chip/builder.js";
@@ -14,14 +15,13 @@ import { ChipTest } from "../tst.js";
 import { ParseError } from "../languages/base.js";
 import { Chip } from "../chip/chip.js";
 
-export interface Assignment {
-  name: string;
+export interface AssignmentFiles extends Assignment {
   hdl: string;
   tst: string;
   cmp: string;
 }
 
-export interface AssignmentParse extends Assignment {
+export interface AssignmentParse extends AssignmentFiles {
   maybeParsedHDL: Result<HdlParse, ParseError>;
   maybeParsedTST: Result<Tst, ParseError>;
 }
@@ -34,6 +34,7 @@ export interface AssignmentBuild extends AssignmentParse {
 export interface AssignmentRun extends AssignmentBuild {
   pass: boolean;
   out: string;
+  shadow?: RunResult;
 }
 
 export const hasTest = ({
@@ -43,9 +44,10 @@ export const hasTest = ({
   name: string;
   ext: string;
 }): boolean =>
-  Assignments[name as keyof typeof Assignments] !== undefined && ext === "hdl";
+  Assignments[name as keyof typeof Assignments] !== undefined &&
+  [".hdl", ".tst"].includes(ext);
 
-export const maybeParse = (file: Assignment): AssignmentParse => {
+export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
   const maybeParsedHDL = HDL.parse(file.hdl);
   const maybeParsedTST = TST.parse(file.tst);
   return { ...file, maybeParsedHDL, maybeParsedTST };
@@ -87,18 +89,26 @@ export const tryRun =
     return { ...assignment, out, pass };
   };
 
-export const runner = (fs: FileSystem) => {
+export const runner = (fs: FileSystem, ideRunner?: Runner) => {
   const tryRunWithFs = tryRun(fs);
-  return async (assignment: Assignment): Promise<AssignmentRun> =>
-    tryRunWithFs(await maybeBuild(await maybeParse(assignment)));
+  return async (assignment: AssignmentFiles): Promise<AssignmentRun> => {
+    const jsRunner = async () =>
+      tryRunWithFs(await maybeBuild(await maybeParse(assignment)));
+    const javaRunner = async () => ideRunner?.hdl(assignment);
+
+    const [jsRun, shadow] = await Promise.all([jsRunner(), javaRunner()]);
+    return { ...jsRun, shadow };
+  };
 };
 
-export function runTests(
-  files: Array<{ name: string; hdl: string }>,
-  loadAssignment: (file: { name: string; hdl: string }) => Promise<Assignment>,
-  fs: FileSystem
+export async function runTests(
+  files: Array<Assignment>,
+  loadAssignment: (file: Assignment) => Promise<AssignmentFiles>,
+  fs: FileSystem,
+  n2tInstallPath: string
 ): Promise<AssignmentRun[]> {
-  const run = runner(fs);
+  const ideRunner = await Runner.try_init(n2tInstallPath);
+  const run = runner(fs, ideRunner);
   return Promise.all(
     files.map(loadAssignment).map(async (assignment) => run(await assignment))
   );

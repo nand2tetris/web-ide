@@ -32,6 +32,7 @@ Start the debugger:
 Computron5k NAND2Tetris kit is a monorepo with four projects.
 `simulator` is the core NAND2Tetris code.
 `projects` has copies of project base and test files.
+`runner` is a utility to execute chips against a Java ide install, looking for nand2tetris.jar in $NAND2TETRIS_PATH.
 `components` are reusable React UI pieces suitable for both web and extension.
 `web` is a standalone web IDE.
 `extension` is a VSCode extension with editor support.

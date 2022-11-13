@@ -12,6 +12,7 @@
     "test": "jest"
   },
   "devDependencies": {
+    "@computron5k/runner": "*",
     "@computron5k/simulator": "*",
     "@davidsouther/jiffies": "^2.0.5"
   },

@@ -40,9 +40,3 @@ export class NodeFileSystemAdapter implements FileSystemAdapter {
     return rm(path);
   }
 }
-
-export function splitFile(file: string) {
-  const { name, ext } = file.match(/(.*\/)?(?<name>[^/]+)\.(?<ext>[^./]+)$/)
-    ?.groups as { name: string; ext: string };
-  return { name, ext };
-}

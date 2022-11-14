@@ -22,10 +22,10 @@ Run the CLI:
     nand2tetris grade
     nand2tetris run DMux4Way.tst
 
-Start the debugger:
+Run the CLI with a nand2tetris Java install:
 
     cd nand2tetris/project/01
-    nand2tetris run DMux4Way.tst --debug
+    nand2tetris grade --java_ide=${HOME}/nand2tetris
 
 ## Architecture
 

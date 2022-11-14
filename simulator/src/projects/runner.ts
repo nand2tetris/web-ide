@@ -47,12 +47,14 @@ export const hasTest = ({
   Assignments[name as keyof typeof Assignments] !== undefined &&
   [".hdl", ".tst"].includes(ext);
 
+/** Try parsing the loaded files. */
 export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
   const maybeParsedHDL = HDL.parse(file.hdl);
   const maybeParsedTST = TST.parse(file.tst);
   return { ...file, maybeParsedHDL, maybeParsedTST };
 };
 
+/** After parsing the assignment, compile the Chip and Tst. */
 export const maybeBuild = (file: AssignmentParse): AssignmentBuild => {
   const maybeChip = isOk(file.maybeParsedHDL)
     ? buildChip(Ok(file.maybeParsedHDL))
@@ -63,6 +65,7 @@ export const maybeBuild = (file: AssignmentParse): AssignmentBuild => {
   return { ...file, maybeChip, maybeTest };
 };
 
+/** If the assignment parsed, run it! */
 export const tryRun =
   (fs: FileSystem) =>
   async (assignment: AssignmentBuild): Promise<AssignmentRun> => {
@@ -89,6 +92,7 @@ export const tryRun =
     return { ...assignment, out, pass };
   };
 
+/** Parse & execute a Nand2tetris assignment, possibly also including the Java output in shadow mode. */
 export const runner = (fs: FileSystem, ideRunner?: Runner) => {
   const tryRunWithFs = tryRun(fs);
   return async (assignment: AssignmentFiles): Promise<AssignmentRun> => {
@@ -101,6 +105,7 @@ export const runner = (fs: FileSystem, ideRunner?: Runner) => {
   };
 };
 
+/** Run all tests for a given Nand2Tetris project. */
 export async function runTests(
   files: Array<Assignment>,
   loadAssignment: (file: Assignment) => Promise<AssignmentFiles>,

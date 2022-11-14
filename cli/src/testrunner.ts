@@ -4,6 +4,10 @@ import { runner } from "@computron5k/simulator/projects/runner.js";
 import { Assignment, Assignments } from "@computron5k/projects/index.js";
 import { parse } from "path";
 
+/**
+ * Load an assignment from the local folder.
+ * Uses built in assignments when the local tests are missing.
+ */
 async function loadAssignment(fs: FileSystem, file: Assignment) {
   const assignment = Assignments[file.name as keyof typeof Assignments];
   const hdl = await fs.readFile(`${file.name}.hdl`);
@@ -21,6 +25,9 @@ async function loadAssignment(fs: FileSystem, file: Assignment) {
   return { ...file, hdl, tst, cmp };
 }
 
+/**
+ * Run a nand2tetris.tst file.
+ */
 export async function testRunner(dir: string, file: string) {
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(dir);

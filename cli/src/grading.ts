@@ -9,6 +9,10 @@ import { join, parse } from "path";
 
 import { NodeFileSystemAdapter } from "./node_file_system_adapter.js";
 
+/**
+ * Given a FileSystem wrapper, curry a function that loads the necessary files for running an HDL test.
+ * For grading, tests come from the built-in assignment master test list.
+ */
 const loadAssignment = (fs: FileSystem) =>
   async function (file: Assignment): Promise<AssignmentFiles> {
     const assignment = Assignments[file.name as keyof typeof Assignments];
@@ -22,6 +26,11 @@ const loadAssignment = (fs: FileSystem) =>
     return { ...file, hdl, tst, cmp };
   };
 
+/**
+ * Run the grader using a NodeJS file system.
+ *
+ * Report results using a simple `{Name} passed/failed`, and if given a java_id, the same for shadow mode results.
+ */
 export async function main(folder = process.cwd(), java_ide = "") {
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(folder);
@@ -35,6 +44,7 @@ export async function main(folder = process.cwd(), java_ide = "") {
     .filter(hasTest);
 
   const tests = await runTests(files, loadAssignment(fs), fs, java_ide);
+
   for (const test of tests) {
     console.log(
       `Test ${test.name}: ${test.pass ? `Passed` : `Failed (${test.out})`}`

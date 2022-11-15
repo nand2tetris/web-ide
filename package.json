@@ -19,7 +19,7 @@
     "ci": "CI=true npm run check && CI=true npm run test",
     "precheck": "npm -w web run extract && npm -w web run lingui",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
-    "clean": "rm -rf cli/build components/build extension/build projects/build runner/build simulator/build web",
+    "clean": "rm -rf cli/build components/build extension/build projects/build runner/build simulator/build web/build",
     "format": "prettier --write cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "fix": "eslint --fix cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "check:format": "prettier --ignore-unknown --check cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
@@ -36,6 +36,7 @@
     "@typescript-eslint/parser": "^5.40.0",
     "esbuild": "^0.15.11",
     "eslint": "^8.25.0",
+    "eslint-plugin-react": "^7.31.10",
     "prettier": "^2.7.1",
     "typescript": "^4.8.4"
   },

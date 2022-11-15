@@ -463,7 +463,7 @@ describe("tst language", () => {
             start: 0,
             end: 21,
           },
-          ops: [{ op: "load", file: "Max.hack" }],
+          ops: [{ op: "loadRom", file: "Max.hack" }],
         },
       ],
     });

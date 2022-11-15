@@ -1,20 +1,15 @@
-import { Assignments } from "@computron5k/simulator/projects/index.js";
+import { useBaseContext } from "@computron5k/components/stores/base.context";
+import { DiffTable } from "@computron5k/components/difftable";
+import { Assignments } from "@computron5k/projects/index.js";
 import { runTests } from "@computron5k/simulator/projects/runner.js";
 import { Trans } from "@lingui/macro";
-import { ChangeEventHandler, useCallback, useContext, useState } from "react";
-import { AppContext } from "../App.context";
-import { DiffTable } from "../components/difftable";
-
-function splitFile(file: File) {
-  const { name, ext } = file.name.match(
-    /(.*\/)?(?<name>[^/]+)\.(?<ext>[^./]+)$/
-  )?.groups as { name: string; ext: string };
-  return { name, ext };
-}
+import { ChangeEventHandler, useCallback, useState } from "react";
+import { parse, ParsedPath } from "node:path";
 
 function hasTest({ name, ext }: { name: string; ext: string }) {
   return (
-    Assignments[name as keyof typeof Assignments] !== undefined && ext === "hdl"
+    Assignments[name as keyof typeof Assignments] !== undefined &&
+    ext === ".hdl"
   );
 }
 
@@ -42,20 +37,21 @@ const TestResult = (props: {
   </details>
 );
 
-async function loadAssignment(pfile: Promise<{ name: string; hdl: string }>) {
-  const file = await pfile;
+async function loadAssignment(file: ParsedPath & { file?: File }) {
   const assignment = Assignments[file.name as keyof typeof Assignments];
+  const hdl = (await file.file?.text()) ?? "";
   const tst = assignment[
     `${file.name}.tst` as keyof typeof assignment
   ] as string;
   const cmp = assignment[
     `${file.name}.cmp` as keyof typeof assignment
   ] as string;
-  return { ...file, tst, cmp };
+  return { ...file, hdl, tst, cmp };
 }
 
 declare module "react" {
-  interface HTMLAttributes<T> extends AriaAttributes, DOMAttributes<T> {
+  // eslint-disable-next-line
+  interface HTMLAttributes<T> {
     // extends React's HTMLAttributes
     directory?: string;
     webkitdirectory?: string;
@@ -66,27 +62,29 @@ const Home = () => {
   const [tests, setTests] = useState(
     [] as Array<Parameters<typeof TestResult>[0]>
   );
-  const { fs } = useContext(AppContext);
+  const { fs } = useBaseContext();
 
   const onChange = useCallback<ChangeEventHandler<HTMLInputElement>>(
     async ({ target }) => {
-      const files = [...(target.files ?? [])]
-        .map((file) => {
-          console.log(file.webkitRelativePath);
-          return file;
-        })
-        .filter((file) => file.name.endsWith(".hdl"))
-        .map((file) => ({ file, ...splitFile(file) }))
-        .filter(hasTest)
-        .map(async (file) => {
-          const hdl = await file.file.text();
-          return { ...file, hdl };
-        });
+      const files = await Promise.all(
+        [...(target.files ?? [])]
+          .map((file) => {
+            console.log(file.webkitRelativePath);
+            return file;
+          })
+          .filter((file) => file.name.endsWith(".hdl"))
+          .map((file) => ({ ...parse(file.name), file }))
+          .filter(hasTest)
+          .map(async (file) => {
+            const hdl = await file.file.text();
+            return { ...file, hdl };
+          })
+      );
 
-      const tests = runTests(files, loadAssignment, fs);
+      const tests = await runTests(files, loadAssignment, fs, "");
 
       fs.pushd("/samples");
-      setTests(await Promise.all(tests));
+      setTests(tests);
       fs.popd();
     },
     [setTests, fs]
@@ -101,8 +99,8 @@ const Home = () => {
           <input
             type="file"
             multiple
-            webkitdirectory=""
             directory=""
+            webkitdirectory=""
             onChange={onChange}
           />
         </fieldset>

@@ -12,8 +12,8 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@computron5k/runner": "*",
-    "@computron5k/simulator": "*",
+    "@nand2tetris/runner": "*",
+    "@nand2tetris/simulator": "*",
     "@davidsouther/jiffies": "^2.0.5"
   },
   "dependencies": {

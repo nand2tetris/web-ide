@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { BaseContext } from "@computron5k/components/stores/base.context.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 
 function StatusLine() {
   const { status } = useContext(BaseContext);

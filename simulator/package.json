@@ -1,11 +1,11 @@
 {
-  "name": "@computron5k/simulator",
+  "name": "@nand2tetris/simulator",
   "version": "1.0.0",
   "private": true,
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
-  "homepage": "https://davidsouther.github.io/computron5k",
+  "homepage": "https://davidsouther.github.io/nand2tetris",
   "type": "module",
   "exports": {
     "./*": "./build/*"
@@ -18,8 +18,8 @@
     }
   },
   "dependencies": {
-    "@computron5k/projects": "*",
-    "@computron5k/runner": "*",
+    "@nand2tetris/projects": "*",
+    "@nand2tetris/runner": "*",
     "@davidsouther/jiffies": "^2.0.5",
     "ohm-js": "^16.3.4",
     "rxjs": "^7.5.7"

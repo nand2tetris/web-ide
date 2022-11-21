@@ -1,9 +1,9 @@
-import { Assignment, Assignments } from "@computron5k/projects/index.js";
+import { Assignment, Assignments } from "@nand2tetris/projects/index.js";
 import {
   AssignmentFiles,
   hasTest,
   runTests,
-} from "@computron5k/simulator/projects/runner.js";
+} from "@nand2tetris/simulator/projects/runner.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { join, parse } from "path";
 

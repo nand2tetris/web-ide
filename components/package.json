@@ -1,11 +1,11 @@
 {
-  "name": "@computron5k/components",
+  "name": "@nand2tetris/components",
   "version": "1.0.0",
   "private": true,
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
-  "homepage": "https://davidsouther.github.io/computron5k",
+  "homepage": "https://davidsouther.github.io/nand2tetris",
   "type": "module",
   "exports": {
     "./*": "./build/*"
@@ -18,8 +18,8 @@
     }
   },
   "devDependencies": {
-    "@computron5k/projects": "*",
-    "@computron5k/simulator": "*",
+    "@nand2tetris/projects": "*",
+    "@nand2tetris/simulator": "*",
     "@davidsouther/jiffies": "^2.0.5",
     "@monaco-editor/react": "^4.4.5",
     "@testing-library/jest-dom": "^5.16.4",
@@ -47,7 +47,7 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@computron5k/([^/]+)/(.*)": "<rootDir>/../node_modules/@computron5k/$1/build/$2",
+      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2",
       "(.*)\\.js$": "$1"
     },
     "transformIgnorePatterns": [

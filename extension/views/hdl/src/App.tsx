@@ -7,11 +7,11 @@ import {
   useState,
 } from "react";
 import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
-import * as Not from "@computron5k/projects/project_01/01_not.js";
-import { makeVisualizationsWithId } from "@computron5k/components/chips/visualizations.js";
-import { Clockface } from "@computron5k/components/clockface.js";
-import { FullPinout } from "@computron5k/components/pinout.js";
-import { useChipPageStore } from "@computron5k/components/stores/chip.store.js";
+import * as Not from "@nand2tetris/projects/project_01/01_not.js";
+import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
+import { Clockface } from "@nand2tetris/components/clockface.js";
+import { FullPinout } from "@nand2tetris/components/pinout.js";
+import { useChipPageStore } from "@nand2tetris/components/stores/chip.store.js";
 import { VSCodeContext } from "./vscode";
 
 function App() {

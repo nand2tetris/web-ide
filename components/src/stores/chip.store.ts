@@ -3,23 +3,23 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 
-import { build as buildChip } from "@computron5k/simulator/chip/builder.js";
+import { build as buildChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,
-} from "@computron5k/simulator/chip/builtins/index.js";
+} from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   Chip,
   Chip as SimChip,
   Low,
   Pin,
-} from "@computron5k/simulator/chip/chip.js";
-import { Clock } from "@computron5k/simulator/chip/clock.js";
-import { Span } from "@computron5k/simulator/languages/base.js";
-import { HDL } from "@computron5k/simulator/languages/hdl.js";
-import { TST } from "@computron5k/simulator/languages/tst.js";
-import { ChipProjects, CHIP_PROJECTS } from "@computron5k/projects/index.js";
-import { ChipTest } from "@computron5k/simulator/tst.js";
+} from "@nand2tetris/simulator/chip/chip.js";
+import { Clock } from "@nand2tetris/simulator/chip/clock.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
+import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { ChipProjects, CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
+import { ChipTest } from "@nand2tetris/simulator/tst.js";
 
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";

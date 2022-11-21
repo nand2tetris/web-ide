@@ -1,19 +1,19 @@
 import {
   Keyboard,
   Screen,
-} from "@computron5k/simulator/chip/builtins/computer/computer.js";
-import { ALU } from "@computron5k/simulator/chip/builtins/index.js";
+} from "@nand2tetris/simulator/chip/builtins/computer/computer.js";
+import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   PC,
   VRegister,
-} from "@computron5k/simulator/chip/builtins/sequential/bit.js";
+} from "@nand2tetris/simulator/chip/builtins/sequential/bit.js";
 import {
   RAM,
   RAM8,
-} from "@computron5k/simulator/chip/builtins/sequential/ram.js";
-import { Chip, HIGH } from "@computron5k/simulator/chip/chip.js";
-import { Flags } from "@computron5k/simulator/cpu/alu.js";
-import { CPU, decode } from "@computron5k/simulator/cpu/cpu.js";
+} from "@nand2tetris/simulator/chip/builtins/sequential/ram.js";
+import { Chip, HIGH } from "@nand2tetris/simulator/chip/chip.js";
+import { Flags } from "@nand2tetris/simulator/cpu/alu.js";
+import { CPU, decode } from "@nand2tetris/simulator/cpu/cpu.js";
 import { ReactElement } from "react";
 import { ALUComponent } from "./alu.js";
 import { Keyboard as KeyboardComponent } from "./keyboard.js";

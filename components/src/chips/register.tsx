@@ -1,4 +1,4 @@
-import { dec } from "@computron5k/simulator/util/twos.js";
+import { dec } from "@nand2tetris/simulator/util/twos.js";
 
 export const RegisterComponent = ({
   name,

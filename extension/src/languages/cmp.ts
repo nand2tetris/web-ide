@@ -1,13 +1,13 @@
 import { Diagnostic, TextDocument, Uri } from "vscode";
 
-import type { CMP } from "@computron5k/simulator/languages/cmp";
+import type { CMP } from "@nand2tetris/simulator/languages/cmp";
 import * as base from "./base.js";
 // import { load } from "../loader.js";
 
 let cmp: typeof CMP | undefined = undefined;
 async function getCmp(): Promise<typeof CMP> {
   if (cmp) return Promise.resolve(cmp);
-  cmp = (await import("@computron5k/simulator/languages/cmp.js"))
+  cmp = (await import("@nand2tetris/simulator/languages/cmp.js"))
     .CMP as typeof CMP;
   return cmp;
 }

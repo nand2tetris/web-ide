@@ -1,4 +1,4 @@
-import { Bus, HIGH } from "@computron5k/simulator/chip/chip.js";
+import { Bus, HIGH } from "@nand2tetris/simulator/chip/chip.js";
 import { render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { act } from "react-dom/test-utils";

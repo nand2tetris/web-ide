@@ -2,7 +2,7 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Max } from "@computron5k/projects/samples/hack.js";
+import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { HIGH } from "../../chip.js";
 import { CPU, ROM32K } from "./computer.js";
 

@@ -1,8 +1,8 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import { BaseContext } from "@computron5k/components/stores/base.context.js";
-import * as Not from "@computron5k/projects/project_01/01_not.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,

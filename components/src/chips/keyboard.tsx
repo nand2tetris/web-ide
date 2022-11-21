@@ -1,4 +1,4 @@
-import { Keyboard as KeyboardChip } from "@computron5k/simulator/chip/builtins/computer/computer.js";
+import { Keyboard as KeyboardChip } from "@nand2tetris/simulator/chip/builtins/computer/computer.js";
 import { KeyboardEvent, useCallback, useState } from "react";
 import { RegisterComponent } from "./register.js";
 

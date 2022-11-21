@@ -5,9 +5,9 @@ import {
   Format,
   FORMATS,
   Memory as MemoryChip,
-} from "@computron5k/simulator/cpu/memory.js";
-import { asm } from "@computron5k/simulator/util/asm.js";
-import { bin, dec, hex } from "@computron5k/simulator/util/twos.js";
+} from "@nand2tetris/simulator/cpu/memory.js";
+import { asm } from "@nand2tetris/simulator/util/asm.js";
+import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
 import InlineEdit from "../inline_edit.js";
 import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 

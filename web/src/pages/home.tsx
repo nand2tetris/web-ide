@@ -1,7 +1,7 @@
-import { useBaseContext } from "@computron5k/components/stores/base.context";
-import { DiffTable } from "@computron5k/components/difftable";
-import { Assignments } from "@computron5k/projects/index.js";
-import { runTests } from "@computron5k/simulator/projects/runner.js";
+import { useBaseContext } from "@nand2tetris/components/stores/base.context";
+import { DiffTable } from "@nand2tetris/components/difftable";
+import { Assignments } from "@nand2tetris/projects/index.js";
+import { runTests } from "@nand2tetris/simulator/projects/runner.js";
 import { Trans } from "@lingui/macro";
 import { ChangeEventHandler, useCallback, useState } from "react";
 import { parse, ParsedPath } from "node:path";

@@ -3,7 +3,7 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
-// import "@computron5k/simulator/setupTests.js";
+// import "@nand2tetris/simulator/setupTests.js";
 import { i18n } from "@lingui/core";
 import { en } from "make-plural/plurals";
 import { messages } from "./locales/en/messages";

@@ -1,4 +1,4 @@
-import { Timer } from "@computron5k/simulator/timer.js";
+import { Timer } from "@nand2tetris/simulator/timer.js";
 import { useImmerReducer } from "./react.js";
 
 export interface TimerStoreState {

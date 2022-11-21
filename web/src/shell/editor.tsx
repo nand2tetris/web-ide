@@ -18,7 +18,7 @@ import { AppContext } from "../App.context";
 import {
   Span,
   UNKNOWN_PARSE_ERROR,
-} from "@computron5k/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
 

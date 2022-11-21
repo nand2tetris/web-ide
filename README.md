@@ -6,7 +6,7 @@ Project files from "The Elements of Computing Systems" by Nisan and Schocken, MI
 
 ## User Guide
 
-The user guide for the web IDE is available [here](./src/pages/USER_GUIDE.md) and can also be accessed by clicking "Guide" at the top right of the [published project](https://davidsouther.github.io/computron5k).
+The user guide for the web IDE is available [here](./src/pages/USER_GUIDE.md) and can also be accessed by clicking "Guide" at the top right of the [published project](https://davidsouther.github.io/nand2tetris).
 
 The user guide for the extension is coming.
 
@@ -29,7 +29,7 @@ Run the CLI with a nand2tetris Java install:
 
 ## Architecture
 
-Computron5k NAND2Tetris kit is a monorepo with four projects.
+NAND2Tetris kit is a monorepo with several projects.
 `simulator` is the core NAND2Tetris code.
 `projects` has copies of project base and test files.
 `runner` is a utility to execute chips against a Java ide install, looking for nand2tetris.jar in $NAND2TETRIS_PATH.
@@ -52,7 +52,7 @@ Replacing or augmenting this to handle a number of errors, rather than only the 
 
 ### Web
 
-Computron5k Web IDE is a stand-alone single-page app with separate sections for Hack Hardware, CPU, and VM emulators.
+NAND2Tetris Web IDE is a stand-alone single-page app with separate sections for Hack Hardware, CPU, and VM emulators.
 It has a unified file system using browser local storage to save users' solutions to project work.
 Emulators share simulator code, especially to handle executing tests as well as converting between Javascript 64-bit floating point numbers and Hack 16-bit integers.
 

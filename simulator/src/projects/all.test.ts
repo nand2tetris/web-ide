@@ -15,13 +15,13 @@ import {
   ChipProjects,
   ASM_PROJECTS,
   CHIP_PROJECTS,
-} from "@computron5k/projects/index.js";
-import { ChipProjects as ChipProjectsSols } from "@computron5k/projects/solutions/index.js";
+} from "@nand2tetris/projects/index.js";
+import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/solutions/index.js";
 import {
   ASM_SOLS,
   FILES as ASM_FILES,
-} from "@computron5k/projects/samples/project_06/index.js";
-import { Max } from "@computron5k/projects/samples/hack.js";
+} from "@nand2tetris/projects/samples/project_06/index.js";
+import { Max } from "@nand2tetris/projects/samples/hack.js";
 
 const SKIP = new Set<string>([]);
 

@@ -1,4 +1,4 @@
-import { BaseContext } from "@computron5k/components/stores/base.context.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { AppContext } from "../App.context";
 import {
   render,

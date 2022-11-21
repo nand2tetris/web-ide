@@ -1,4 +1,4 @@
-import { CMP } from "@computron5k/simulator/languages/cmp.js";
+import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";

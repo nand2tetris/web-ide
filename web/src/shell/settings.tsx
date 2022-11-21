@@ -1,8 +1,8 @@
-import loaders from "@computron5k/projects/loader.js";
+import loaders from "@nand2tetris/projects/loader.js";
 import { i18n } from "@lingui/core";
 import { Trans } from "@lingui/macro";
 import { useContext, useEffect, useMemo } from "react";
-import { BaseContext } from "@computron5k/components/stores/base.context.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { AppContext } from "../App.context";
 
 import "../pico/button-group.scss";
@@ -65,7 +65,7 @@ export const Settings = () => {
               </div>
               <div>
                 <a
-                  href="https://github.com/davidsouther/computron5k"
+                  href="https://github.com/davidsouther/nand2tetris"
                   target="_blank"
                   rel="noreferrer"
                 >

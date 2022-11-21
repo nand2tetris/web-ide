@@ -1,5 +1,5 @@
 {
-  "name": "@computon5k/cli",
+  "name": "@nand2tetris/cli",
   "version": "0.1.0",
   "description": "NAND2Tetris Command Line tools",
   "main": "dist/index.js",

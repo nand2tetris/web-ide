@@ -1,18 +1,17 @@
 {
-  "name": "nand2tetris",
+  "name": "@nand2tetris/web-ide",
   "version": "0.0.0",
-  "private": true,
   "description": "A Javascript reimplementation of nand2tetris.org.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/davidsouther/nand2tetris.git"
+    "url": "git+https://github.com/nand2tetris/web-ide.git"
   },
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/davidsouther/nand2tetris/issues"
+    "url": "https://github.com/nand2tetris/web-ide/issues"
   },
-  "homepage": "https://github.com/davidsouther/nand2tetris#readme",
+  "homepage": "https://github.com/nand2tetris/web-ide",
   "scripts": {
     "precli": "npm run build -w cli",
     "cli": "node cli",

@@ -7,7 +7,7 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Assignments, Assignment } from "@nand2tetris/projects/index.js";
-import { Runner, RunResult } from "@nand2tetris/runner/index.js";
+import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
 import { build as buildChip } from "../chip/builder.js";
@@ -110,9 +110,8 @@ export async function runTests(
   files: Array<Assignment>,
   loadAssignment: (file: Assignment) => Promise<AssignmentFiles>,
   fs: FileSystem,
-  n2tInstallPath: string
+  ideRunner?: Runner
 ): Promise<AssignmentRun[]> {
-  const ideRunner = await Runner.try_init(n2tInstallPath);
   const run = runner(fs, ideRunner);
   return Promise.all(
     files.map(loadAssignment).map(async (assignment) => run(await assignment))

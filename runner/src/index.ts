@@ -1,6 +1,7 @@
 import { exec, ExecOptions, ExecException } from "node:child_process";
 import { dirname, join, parse } from "node:path";
 import type { Assignment } from "@nand2tetris/projects/index.js";
+import { Runner, RunResult } from "./types";
 
 // Wrapper around `exec`, providing nand2tetris specific options and wrapping the result in a Promise. */
 export function run(cmd: string, options: ExecOptions = {}) {
@@ -19,19 +20,13 @@ const NAND2TetrisPackage = "org.nand2tetris.hack.main";
 type NAND2TetrisMain = "HardwareSimulatorMain";
 const __dirname = dirname(new URL(import.meta.url).pathname);
 
-export interface RunResult {
-  code: number;
-  stdout: string;
-  stderr: string;
-}
-
 /**
  * Runner to manage calling the provided nand2tetris.jar with appropriate args and mains.
  */
-export class Runner {
+export class JavaRunner implements Runner {
   /** When creating a runner, run the HDL test against the data file to ensure everything works. */
   static async try_init(installPath: string): Promise<Runner | undefined> {
-    const runner = new Runner(installPath);
+    const runner = new JavaRunner(installPath);
     const file = join(__dirname, "..", "..", "data", "Not.hdl");
     const { code } = await runner.hdl(parse(file));
     return code === 0 ? runner : undefined;

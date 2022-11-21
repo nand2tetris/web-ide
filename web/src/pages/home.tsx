@@ -1,10 +1,10 @@
 import { useBaseContext } from "@nand2tetris/components/stores/base.context";
 import { DiffTable } from "@nand2tetris/components/difftable";
-import { Assignments } from "@nand2tetris/projects/index.js";
+import { Assignments, ParsedPath } from "@nand2tetris/projects/index.js";
 import { runTests } from "@nand2tetris/simulator/projects/runner.js";
 import { Trans } from "@lingui/macro";
 import { ChangeEventHandler, useCallback, useState } from "react";
-import { parse, ParsedPath } from "node:path";
+// import { parse, ParsedPath } from "node:path";
 
 function hasTest({ name, ext }: { name: string; ext: string }) {
   return (
@@ -68,12 +68,17 @@ const Home = () => {
     async ({ target }) => {
       const files = await Promise.all(
         [...(target.files ?? [])]
-          .map((file) => {
-            console.log(file.webkitRelativePath);
-            return file;
-          })
           .filter((file) => file.name.endsWith(".hdl"))
-          .map((file) => ({ ...parse(file.name), file }))
+          .map((file) => {
+            const { name, base, ext } =
+              file.name.match(/^(?<base>(?<name>.*)(?<ext>\.[^.]*))?$/)
+                ?.groups ?? {};
+
+            const root = "/";
+            const dir = root + file.webkitRelativePath?.replace(base, "") ?? "";
+
+            return { name, base, ext, dir, root, file };
+          })
           .filter(hasTest)
           .map(async (file) => {
             const hdl = await file.file.text();
@@ -81,7 +86,7 @@ const Home = () => {
           })
       );
 
-      const tests = await runTests(files, loadAssignment, fs, "");
+      const tests = await runTests(files, loadAssignment, fs);
 
       fs.pushd("/samples");
       setTests(tests);

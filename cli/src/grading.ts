@@ -1,4 +1,5 @@
 import { Assignment, Assignments } from "@nand2tetris/projects/index.js";
+import { JavaRunner } from "@nand2tetris/runner/index.js";
 import {
   AssignmentFiles,
   hasTest,
@@ -43,7 +44,8 @@ export async function main(folder = process.cwd(), java_ide = "") {
     .map(parse)
     .filter(hasTest);
 
-  const tests = await runTests(files, loadAssignment(fs), fs, java_ide);
+  const ideRunner = await JavaRunner.try_init(java_ide);
+  const tests = await runTests(files, loadAssignment(fs), fs, ideRunner);
 
   for (const test of tests) {
     console.log(

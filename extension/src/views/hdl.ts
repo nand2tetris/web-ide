@@ -7,7 +7,7 @@ export function activateHdlView(context: vscode.ExtensionContext) {
 }
 
 class HdlViewProvider implements vscode.WebviewViewProvider {
-  public static readonly viewType = "computron5k.hdlView";
+  public static readonly viewType = "nand2tetris.hdlView";
 
   private _hdl = "";
   private _view?: vscode.WebviewView;

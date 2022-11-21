@@ -1,5 +1,5 @@
 import { Stats } from "@davidsouther/jiffies/lib/esm/fs";
-import { BaseContext } from "@computron5k/components/stores/base.context.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { Trans } from "@lingui/macro";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";

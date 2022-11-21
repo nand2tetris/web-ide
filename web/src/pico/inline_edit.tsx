@@ -1,6 +1,6 @@
 import { width } from "@davidsouther/jiffies/lib/esm/dom/css/sizing";
 import { useCallback, useState } from "react";
-import { useStateInitializer } from "@computron5k/components/react.js";
+import { useStateInitializer } from "@nand2tetris/components/react.js";
 
 const Mode = { VIEW: 0, EDIT: 1 };
 

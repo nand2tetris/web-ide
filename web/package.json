@@ -1,15 +1,15 @@
 {
-  "name": "@computron5k/web",
+  "name": "@nand2tetris/web",
   "version": "1.0.0",
   "private": true,
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
-  "homepage": "https://davidsouther.github.io/computron5k",
+  "homepage": "https://nand2tetris.github.io/web-ide",
   "devDependencies": {
-    "@computron5k/components": "*",
-    "@computron5k/projects": "*",
-    "@computron5k/simulator": "*",
+    "@nand2tetris/components": "*",
+    "@nand2tetris/projects": "*",
+    "@nand2tetris/simulator": "*",
     "@davidsouther/jiffies": "^2.0.5",
     "@lingui/cli": "^3.14.0",
     "@lingui/macro": "^3.14.0",
@@ -90,7 +90,7 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@computron5k/([^/]+)/(.*)": "<rootDir>/../node_modules/@computron5k/$1/build/$2"
+      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!@davidsouther)"

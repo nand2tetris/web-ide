@@ -8,11 +8,11 @@ import {
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
 import urls from "./urls";
-import { loaders } from "@computron5k/projects/loader.js";
+import { loaders } from "@nand2tetris/projects/loader.js";
 import {
   BaseContext,
   useBaseContext,
-} from "@computron5k/components/stores/base.context.js";
+} from "@nand2tetris/components/stores/base.context.js";
 import Header from "./shell/header";
 import Footer from "./shell/footer";
 import { AppContext, useAppContext } from "./App.context";

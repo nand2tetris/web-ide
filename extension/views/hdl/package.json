@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@computron5k/components": "^1.0.0",
-    "@computron5k/simulator": "^1.0.0",
+    "@nand2tetris/components": "^1.0.0",
+    "@nand2tetris/simulator": "^1.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rewire": "^6.0.0"

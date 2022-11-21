@@ -1,18 +1,18 @@
 {
-  "name": "computron5k",
+  "name": "nand2tetris",
   "version": "0.0.0",
   "private": true,
   "description": "A Javascript reimplementation of nand2tetris.org.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/davidsouther/computron5k.git"
+    "url": "git+https://github.com/davidsouther/nand2tetris.git"
   },
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/davidsouther/computron5k/issues"
+    "url": "https://github.com/davidsouther/nand2tetris/issues"
   },
-  "homepage": "https://github.com/davidsouther/computron5k#readme",
+  "homepage": "https://github.com/davidsouther/nand2tetris#readme",
   "scripts": {
     "precli": "npm run build -w cli",
     "cli": "node cli",

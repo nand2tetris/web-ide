@@ -1,12 +1,12 @@
-import { CPU as CPUChip } from "@computron5k/simulator/cpu/cpu.js";
-import { Memory } from "@computron5k/simulator/cpu/memory.js";
-import { HACK } from "@computron5k/simulator/testing/mult.js";
-import { TickScreen } from "@computron5k/simulator/testing/fill.js";
-import { Timer } from "@computron5k/simulator/timer.js";
+import { CPU as CPUChip } from "@nand2tetris/simulator/cpu/cpu.js";
+import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
+import { HACK } from "@nand2tetris/simulator/testing/mult.js";
+import { TickScreen } from "@nand2tetris/simulator/testing/fill.js";
+import { Timer } from "@nand2tetris/simulator/timer.js";
 
-import MemoryComponent from "@computron5k/components/chips/memory.js";
-import { Screen } from "@computron5k/components/chips/screen.js";
-import { Runbar } from "@computron5k/components/runbar.js";
+import MemoryComponent from "@nand2tetris/components/chips/memory.js";
+import { Screen } from "@nand2tetris/components/chips/screen.js";
+import { Runbar } from "@nand2tetris/components/runbar.js";
 
 export const CPU = () => {
   const cpu = new CPUChip({ ROM: new Memory(HACK) });

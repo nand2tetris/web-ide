@@ -1,8 +1,8 @@
 # Computron 5k Contributions
 
-- [Deployed Online](https://davidsouther.github.io/computron5k)
-- [Source](https://github.com/davidsouther/computron5k)
-- [Issues](https://github.com/davidsouther/computron5k/issues)
+- [Deployed Online](https://nand2tetris.github.io/web-ide)
+- [Source](https://github.com/nand2tetris/web-ide)
+- [Issues](https://github.com/nand2tetris/web-ide/issues)
 
 ## Set up and Run
 

@@ -12,17 +12,17 @@ import {
 
 import "./chip.scss";
 
-import { makeVisualizationsWithId } from "@computron5k/components/chips/visualizations.js";
-import { Clockface } from "@computron5k/components/clockface.js";
-import { DiffTable } from "@computron5k/components/difftable.js";
-import { FullPinout } from "@computron5k/components/pinout.js";
-import { useStateInitializer } from "@computron5k/components/react.js";
-import { Runbar } from "@computron5k/components/runbar.js";
-import { CMP } from "@computron5k/simulator/languages/cmp.js";
-import { HDL } from "@computron5k/simulator/languages/hdl.js";
-import { TST } from "@computron5k/simulator/languages/tst.js";
-import { CHIP_PROJECTS } from "@computron5k/projects/index.js";
-import { Timer } from "@computron5k/simulator/timer.js";
+import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
+import { Clockface } from "@nand2tetris/components/clockface.js";
+import { DiffTable } from "@nand2tetris/components/difftable.js";
+import { FullPinout } from "@nand2tetris/components/pinout.js";
+import { useStateInitializer } from "@nand2tetris/components/react.js";
+import { Runbar } from "@nand2tetris/components/runbar.js";
+import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
+import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
+import { Timer } from "@nand2tetris/simulator/timer.js";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
 import { Editor } from "../shell/editor";
@@ -31,8 +31,8 @@ import {
   Files,
   PROJECT_NAMES,
   useChipPageStore,
-} from "@computron5k/components/stores/chip.store.js";
-import { BaseContext } from "@computron5k/components/stores/base.context.js";
+} from "@nand2tetris/components/stores/chip.store.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 
 export const Chip = () => {
   const { fs, setStatus } = useContext(BaseContext);

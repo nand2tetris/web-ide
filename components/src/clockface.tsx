@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
-import { Clock } from "@computron5k/simulator/chip/clock.js";
+import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 
 export function useClock(actions: {
   tick?: () => void;

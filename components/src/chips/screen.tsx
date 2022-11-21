@@ -1,4 +1,4 @@
-import { Memory } from "@computron5k/simulator/cpu/memory.js";
+import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { useCallback, useRef } from "react";
 import { useClockFrame } from "../clockface.js";

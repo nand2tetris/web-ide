@@ -3,7 +3,7 @@ import {
   Pin as ChipPin,
   Pins,
   Voltage,
-} from "@computron5k/simulator/chip/chip.js";
+} from "@nand2tetris/simulator/chip/chip.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import { ChipSim } from "./stores/chip.store.js";
 

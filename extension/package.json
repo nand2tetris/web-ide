@@ -7,9 +7,9 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/davidsouther/computron5k.git"
+    "url": "git+https://github.com/davidsouther/nand2tetris.git"
   },
-  "homepage": "https://davidsouther.github.io/computron5k",
+  "homepage": "https://davidsouther.github.io/nand2tetris",
   "scripts": {
     "prebuild": "mkdir -p out/views/hdl",
     "build": "npx esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node --sourcemap",
@@ -25,16 +25,16 @@
   "contributes": {
     "commands": [
       {
-        "command": "computron5k.run",
+        "command": "nand2tetris.run",
         "title": "Nand2Tetris: run code",
         "icon": "./images/button.png"
       },
       {
-        "command": "computron5k.stop",
+        "command": "nand2tetris.stop",
         "title": "Nand2Tetris: stop running"
       },
       {
-        "command": "computron5k.hardware",
+        "command": "nand2tetris.hardware",
         "title": "Nand2Tetris: open hardware Simulator"
       }
     ],
@@ -42,13 +42,13 @@
       "type": "object",
       "title": "Nand2Tetris IDE",
       "properties": {
-        "computron5k.showRunIconInEditorTitleMenu": {
+        "nand2tetris.showRunIconInEditorTitleMenu": {
           "type": "boolean",
           "default": true,
           "description": "Whether to show 'Run Code' icon in editor title menu.",
           "scope": "resource"
         },
-        "computron5k.showTranslateIconInEditorTitleMenu": {
+        "nand2tetris.showTranslateIconInEditorTitleMenu": {
           "type": "boolean",
           "default": true,
           "description": "Whether to show 'Translate Code' icon in editor title menu.",
@@ -228,21 +228,21 @@
       "nand2tetris": [
         {
           "type": "webview",
-          "id": "computron5k.hdlView",
+          "id": "nand2tetris.hdlView",
           "name": "HDL Chip"
         }
       ]
     }
   },
   "activationEvents": [
-    "onCommand:computron5k.hardware",
+    "onCommand:nand2tetris.hardware",
     "onLanguage:cmp",
     "onLanguage:hdl",
     "onLanguage:out",
     "onLanguage:tst"
   ],
   "devDependencies": {
-    "@computron5k/simulator": "*",
+    "@nand2tetris/simulator": "*",
     "@davidsouther/jiffies": "^2.0.5",
     "@types/error-cause": "^1.0.1",
     "@types/node": "^16.11.41",

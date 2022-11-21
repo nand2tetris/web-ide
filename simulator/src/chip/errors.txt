@@ -1,13 +1,13 @@
 These are the errors from the current builder.
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L212
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L212
         try {
             result = getSubBus(pinName);
         } catch (Exception e) {
             input.HDLError(pinName + " has an invalid sub bus specification");
         }
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L217
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L217
         if (result != null) {
             if (result[0] < 0 || result[1] < 0)
                 input.HDLError(pinName + ": negative bit numbers are illegal");
@@ -17,35 +17,35 @@ https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d48
                 input.HDLError(pinName + ": the specified sub bus is not in the bus range");
         }
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L274
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L274
         // find left pin info. If doesn't exist - error.
         byte leftType = partGateClass.getPinType(leftName);
         if (leftType == UNKNOWN_PIN_TYPE)
             input.HDLError(leftName + " is not a pin in " + partName);
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L310
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L310
             if ((rightType == UNKNOWN_PIN_TYPE || rightType == INTERNAL_PIN_TYPE) &&
                 !fullRightName.equals(rightName))
                     input.HDLError(fullRightName + ": sub bus of an internal node may not be used");
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L333
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L333
         if (selfFittingWidth) {
             if(!rightName.equals(fullRightName))
                 input.HDLError(rightName + " may not be subscripted");
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L346
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L346
         // check that right & left has the same width
         if (leftWidth != rightWidth)
             input.HDLError(leftName + "(" + leftWidth + ") and " + rightName + "(" + rightWidth +
                            ") have different bus widths");
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L352
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L352
         // make sure that an internal pin is only fed once by a part's output pin
         if ((rightType == INTERNAL_PIN_TYPE) && (leftType == OUTPUT_PIN_TYPE)) {
             if (rightPinInfo.isInitialized(rightSubBus))
                 input.HDLError("An internal pin may only be fed once by a part's output pin");
 
-https://github.com/DavidSouther/computron5k/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L377
+https://github.com/DavidSouther/nand2tetris/blob/8adbbd3d23c1a1bc746946891bd6d489da08594a/nand2tetris/org/nand2tetris/hack/simulators/gates/CompositeGateClass.java#L377
         // find connection type
         switch (leftType) {
             case INPUT_PIN_TYPE:

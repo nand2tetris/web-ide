@@ -1,5 +1,5 @@
-import { ALU } from "@computron5k/simulator/chip/builtins/index.js";
-import { Chip } from "@computron5k/simulator/chip/chip.js";
+import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
+import { Chip } from "@nand2tetris/simulator/chip/chip.js";
 import { render, screen } from "@testing-library/react";
 import { makeVisualization, makeVisualizationsWithId } from "./visualizations";
 

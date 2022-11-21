@@ -6,8 +6,8 @@ import {
   isErr,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Assignments, Assignment } from "@computron5k/projects/index.js";
-import { Runner, RunResult } from "@computron5k/runner/index.js";
+import { Assignments, Assignment } from "@nand2tetris/projects/index.js";
+import { Runner, RunResult } from "@nand2tetris/runner/index.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
 import { build as buildChip } from "../chip/builder.js";

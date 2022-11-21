@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Timer } from "@computron5k/simulator/timer.js";
+import { Timer } from "@nand2tetris/simulator/timer.js";
 import { useTimer } from "./timer.js";
 
 export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {

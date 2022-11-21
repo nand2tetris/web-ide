@@ -1,6 +1,6 @@
 import { exec, ExecOptions, ExecException } from "node:child_process";
 import { dirname, join, parse } from "node:path";
-import type { Assignment } from "@computron5k/projects/index.js";
+import type { Assignment } from "@nand2tetris/projects/index.js";
 
 // Wrapper around `exec`, providing nand2tetris specific options and wrapping the result in a Promise. */
 export function run(cmd: string, options: ExecOptions = {}) {

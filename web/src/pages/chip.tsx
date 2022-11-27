@@ -241,7 +241,7 @@ export const Chip = () => {
           <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
             <main>
               {visualizations.length > 0 ? (
-                visualizations.map(([p, v]) => <div key={p}>{v}</div>)
+                visualizations.map(([_, v]) => v)
               ) : (
                 <p>None</p>
               )}

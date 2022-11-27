@@ -50,35 +50,45 @@ function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
 
 export const Screen = ({ memory }: { memory: ScreenMemory }) => {
   const canvas = useRef<HTMLCanvasElement>();
-  useClockFrame(
-    useCallback(() => {
-      const ctx = canvas.current?.getContext("2d") ?? undefined;
 
-      if (ctx) {
-        drawImage(ctx, memory);
-      }
-    }, [memory])
+  const draw = useCallback(() => {
+    const ctx = canvas.current?.getContext("2d") ?? undefined;
+
+    if (ctx) {
+      drawImage(ctx, memory);
+    }
+  }, [memory]);
+
+  const ctxRef = useCallback(
+    (ref: HTMLCanvasElement | null) => {
+      canvas.current = ref ?? undefined;
+      draw();
+    },
+    [canvas, draw]
   );
 
+  useClockFrame(draw);
+
   return (
-    <figure
-      style={{
-        width: "100%",
-        maxWidth: "512px",
-        boxSizing: "content-box",
-        marginInline: "auto",
-        margin: "0",
-        borderTop: "2px solid gray",
-        borderLeft: "2px solid gray",
-        borderBottom: "2px solid lightgray",
-        borderRight: "2px solid lightgray",
-      }}
-    >
-      <canvas
-        ref={(ref) => (canvas.current = ref ?? undefined)}
-        width={512}
-        height={256}
-      ></canvas>
-    </figure>
+    <article className="panel">
+      <header>Screen</header>
+      <main>
+        <figure
+          style={{
+            width: "100%",
+            maxWidth: "512px",
+            boxSizing: "content-box",
+            marginInline: "auto",
+            margin: "0",
+            borderTop: "2px solid gray",
+            borderLeft: "2px solid gray",
+            borderBottom: "2px solid lightgray",
+            borderRight: "2px solid lightgray",
+          }}
+        >
+          <canvas ref={ctxRef} width={512} height={256}></canvas>
+        </figure>
+      </main>
+    </article>
   );
 };

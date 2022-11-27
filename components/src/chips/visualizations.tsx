@@ -70,6 +70,12 @@ export function makeVisualization(chip: Chip): ReactElement | undefined {
   if (chip instanceof PC) {
     return <RegisterComponent name="PC" bits={chip.bits} />;
   }
+  if (chip instanceof Keyboard) {
+    return <KeyboardComponent keyboard={chip} />;
+  }
+  if (chip instanceof Screen) {
+    return <ScreenComponent memory={chip.memory} />;
+  }
   if (chip instanceof RAM) {
     return (
       <MemoryComponent
@@ -82,12 +88,6 @@ export function makeVisualization(chip: Chip): ReactElement | undefined {
   }
   if (chip instanceof RAM8) {
     return <span>RAM {chip.width}</span>;
-  }
-  if (chip instanceof Keyboard) {
-    return <KeyboardComponent keyboard={chip} />;
-  }
-  if (chip instanceof Screen) {
-    return <ScreenComponent memory={chip.memory} />;
   }
   if (chip instanceof CPU) {
     const bits = decode(chip.in("instruction").busVoltage);

@@ -15,8 +15,7 @@ const baseContext: BaseContext = {
   storage: {},
   status: "",
   setStatus: (status: string): void => {
-    // @ts-ignore Need vscode window types
-    window?.showInformationMessage?.(status);
+    // api.postMessage({ nand2tetris: true, showMessage: status });
     console.log(status);
   },
 };

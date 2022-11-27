@@ -1,3 +1,4 @@
+import { parse } from "path";
 import * as vscode from "vscode";
 import { hdl as HDL } from "../languages/index.js";
 
@@ -66,7 +67,8 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
     }
     const diagnostics = await HDL.getDiagnostics(document);
     if ((diagnostics[0] ?? ["", []])[1].length === 0) {
-      this._view?.webview.postMessage({ nand2tetris: true, hdl });
+      const chipName = parse(document.fileName).name;
+      this._view?.webview.postMessage({ nand2tetris: true, hdl, chipName });
       this._hdl = hdl;
     }
   }

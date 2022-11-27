@@ -11,9 +11,8 @@
   },
   "homepage": "https://davidsouther.github.io/nand2tetris",
   "scripts": {
-    "prebuild": "mkdir -p out/views/hdl",
+    "prebuild": "mkdir -p out/views/hdl ; cd .. ; npm run build -w extension/views/hdl",
     "build": "npx esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node --sourcemap",
-    "postbuild": "cd .. && npm run -w extension/views/hdl build",
     "watch": "npm run build -- --watch",
     "vscode:prepublish": "npm run build",
     "package": "vsce package"

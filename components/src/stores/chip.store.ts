@@ -90,6 +90,7 @@ export interface ControlsState {
   hasBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
+  error: string;
 }
 
 function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
@@ -130,11 +131,13 @@ export function makeChipStore(
       chipName,
       hasBuiltin: REGISTRY.has(chipName),
       runningTest: false,
+      error: "",
     };
 
     const maybeChip = getBuiltinChip(controls.chipName);
     if (isErr(maybeChip)) {
       setStatus(display(Err(maybeChip)));
+      chip = new Low();
     } else {
       chip = Ok(maybeChip);
     }
@@ -180,11 +183,25 @@ export function makeChipStore(
 
     updateChip(
       state: ChipPageState,
-      payload?: { pending?: boolean; invalid?: boolean }
+      payload?: {
+        pending?: boolean;
+        invalid?: boolean;
+        chipName?: string;
+        error?: string;
+      }
     ) {
-      state.sim = reduceChip(chip, payload?.pending, payload?.invalid);
+      state.sim = reduceChip(
+        chip,
+        payload?.pending ?? state.sim.pending,
+        payload?.invalid ?? state.sim.invalid
+      );
+      state.controls.error = state.sim.invalid
+        ? payload?.error ?? state.controls.error
+        : "";
       state.controls.chips = CHIP_PROJECTS[state.controls.project];
-      state.controls.chipName = chip.name ?? chipName;
+      state.controls.chipName = state.sim.invalid
+        ? payload?.chipName ?? chipName
+        : chip.name ?? payload?.chipName ?? chipName;
       if (!state.controls.chips.includes(state.controls.chipName)) {
         state.controls.chips = [
           ...state.controls.chips,
@@ -272,13 +289,20 @@ export function makeChipStore(
       const maybeParsed = HDL.parse(hdl);
       if (isErr(maybeParsed)) {
         setStatus("Failed to parse chip");
-        dispatch.current({ action: "updateChip", payload: { invalid: true } });
+        dispatch.current({
+          action: "updateChip",
+          payload: { invalid: true, error: display(Err(maybeParsed)) },
+        });
         return;
       }
       const maybeChip = buildChip(Ok(maybeParsed));
       if (isErr(maybeChip)) {
-        setStatus(display(Err(maybeChip)));
-        dispatch.current({ action: "updateChip", payload: { invalid: true } });
+        const error = display(Err(maybeChip));
+        setStatus(error);
+        dispatch.current({
+          action: "updateChip",
+          payload: { invalid: true, error },
+        });
         return;
       }
       setStatus(`Compiled ${chip.name}`);
@@ -297,7 +321,7 @@ export function makeChipStore(
       clock.reset();
       nextChip.eval();
       chip = nextChip;
-      dispatch.current({ action: "updateChip" });
+      dispatch.current({ action: "updateChip", payload: { invalid: false } });
     },
 
     async loadChip(project: string, name: string) {

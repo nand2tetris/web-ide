@@ -15,7 +15,7 @@ import { useChipPageStore } from "@nand2tetris/components/stores/chip.store.js";
 import { VSCodeContext } from "./vscode";
 
 function App() {
-  const { state, actions } = useChipPageStore();
+  const { state, actions, dispatch } = useChipPageStore();
   const { api } = useContext(VSCodeContext);
 
   const [hdl, setHdl] = useState(Not.hdl);
@@ -30,12 +30,23 @@ function App() {
   );
 
   const onMessage = useCallback(
-    (event: MessageEvent<Partial<{ nand2tetris: boolean; hdl: string }>>) => {
+    (
+      event: MessageEvent<
+        Partial<{ nand2tetris: boolean; hdl: string; chipName: string }>
+      >
+    ) => {
       if (!event.data?.nand2tetris) return;
       if (event.data.hdl) compile(event.data.hdl ?? "");
+      if (event.data.chipName)
+        dispatch.current({
+          action: "updateChip",
+          payload: {
+            chipName: event.data.chipName,
+          },
+        });
       setLoaded(true);
     },
-    [compile]
+    [compile, dispatch]
   );
 
   useEffect(() => {
@@ -72,7 +83,9 @@ function App() {
     [actions]
   );
 
-  const chipButtons = (
+  const chipButtons = state.controls.error ? (
+    <p>{state.controls.error}</p>
+  ) : (
     <>
       <VSCodeCheckbox onChange={toggleUseBuiltin}>Use Builtin</VSCodeCheckbox>
       <fieldset role="group">

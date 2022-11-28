@@ -1,14 +1,18 @@
-# Nand 2 Tetris - Browser
+# Nand2Tetris Software Suite
 
-A Javascript reimplementation of nand2tetris.org.
+A Javascript reimplementation of the software suite described in www.nand2tetris.org and in "The Elements of Computing Systems" by Nisan and Schocken, MIT Press (2nd edition, 2021). The repo also includes the project files described in the website and in the book.
 
-Project files from "The Elements of Computing Systems" by Nisan and Schocken, MIT Press.
+Presently the implementation focuses on the Hardware Simulator (projects 1, 2, 3, 5). The CPU and the VM Emulators will be next. The goal is to allow students complete the projects using modern, web-based tools, without having to download code to their computers.
+
+Users can work with the tools via a web IDE, or via a VS Code extension. Both are decsribed below.   
 
 ## User Guide
 
 The user guide for the web IDE is available [here](./src/pages/USER_GUIDE.md) and can also be accessed by clicking "Guide" at the top right of the [published project](https://davidsouther.github.io/nand2tetris).
 
 The user guide for the extension is coming.
+
+The parts of the user guide that describe the UI may be out of sync with the code since we keep experimenting with differtent UI's.
 
 ### CLI
 

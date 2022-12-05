@@ -2,6 +2,16 @@
   "name": "@nand2tetris/cli",
   "version": "0.1.0",
   "description": "NAND2Tetris Command Line tools",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nand2tetris/web-ide.git"
+  },
+  "author": "David Souther <davidsouther@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nand2tetris/web-ide/issues"
+  },
+  "homepage": "https://github.com/nand2tetris/web-ide",
   "main": "dist/index.js",
   "type": "module",
   "bin": {

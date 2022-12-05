@@ -1,0 +1,31 @@
+[role="group"] {
+  display: flex;
+  align-items: baseline;
+}
+
+[role="group"] > label:has(input[type="radio"]) {
+  color: var(--vscode-button-foreground);
+  background-color: var(--vscode-button-background);
+  align-self: stretch;
+  padding: 2px 1px;
+}
+
+[role="group"] > label:has(input[type="radio"]):first-of-type {
+  padding-left: 2px;
+  border-top-left-radius: 2px;
+  border-bottom-left-radius: 2px;
+}
+
+[role="group"] > label:has(input[type="radio"]):larst-of-type {
+  padding-right: 2px;
+  border-top-right-radius: 2px;
+  border-bottom-right-radius: 2px;
+}
+
+[role="group"] > label[aria-current="true"]:has(input[type="radio"]) {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+[role="group"] > label > input[type="radio"] {
+  display: none;
+}

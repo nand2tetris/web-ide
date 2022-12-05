@@ -25,14 +25,39 @@ button[disabled] {
 fieldset[role="group"] {
   border: 0;
   padding: 0;
+  display: flex;
+  align-items: baseline;
 }
 
-fieldset[role="group"] button:first-of-type {
+fieldset[role="group"] > label[role="button"] {
+  /* fieldset[role="group"] > label:has(input[type="radio"]) { */
+  color: var(--vscode-button-foreground);
+  background-color: var(--vscode-button-background);
+  align-self: stretch;
+  padding: 2px 1px;
+}
+
+fieldset[role="group"] button:first-of-type,
+fieldset[role="group"] > label[role="button"]:first-of-type {
+  /* fieldset[role="group"] > label:has(input[type="radio"]):first-of-type { */
+  padding-left: 2px;
   border-top-left-radius: 2px;
   border-bottom-left-radius: 2px;
 }
 
-fieldset[role="group"] button:last-of-type {
+fieldset[role="group"] button:last-of-type,
+fieldset[role="group"] > label[role="button"]:last-of-type {
+  /* fieldset[role="group"] > label:has(input[type="radio"]):last-of-type { */
+  padding-right: 2px;
   border-top-right-radius: 2px;
   border-bottom-right-radius: 2px;
+}
+
+fieldset[role="group"] > label[role="button"][aria-current="true"] {
+  /* fieldset[role="group"] > label[aria-current="true"]:has(input[type="radio"]) { */
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+fieldset[role="group"] > label > input[type="radio"] {
+  display: none;
 }

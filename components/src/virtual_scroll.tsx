@@ -53,7 +53,7 @@ export function fillVirtualScrollSettings(
     maxIndex = Number.MAX_SAFE_INTEGER,
     startIndex = 0,
     itemHeight = 20,
-    count = maxIndex - minIndex + 1,
+    count = Math.max(maxIndex - minIndex, 1),
     tolerance = count,
   } = settings;
 
@@ -71,7 +71,7 @@ export function initialState<T>(
   const itemsAbove = Math.max(0, startIndex - tolerance - minIndex);
 
   const viewportHeight = count * itemHeight;
-  const totalHeight = (maxIndex - minIndex + 1) * itemHeight;
+  const totalHeight = Math.min(maxIndex - minIndex, 1) * itemHeight;
   const toleranceHeight = tolerance * itemHeight;
   const bufferHeight = viewportHeight + 2 * toleranceHeight;
   const topPaddingHeight = itemsAbove * itemHeight;

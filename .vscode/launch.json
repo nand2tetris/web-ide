@@ -20,8 +20,8 @@
         "--disable-extensions",
         "--extensionDevelopmentPath=${workspaceFolder}/extension"
       ],
-      "outFiles": ["${workspaceFolder}/extension/build/**/*.js"],
-      "preLaunchTask": "${defaultBuildTask}"
+      "outFiles": ["${workspaceFolder}/extension/build/**/*.js"]
+      // "preLaunchTask": "${defaultBuildTask}"
     },
     {
       "name": "Extension Tests",

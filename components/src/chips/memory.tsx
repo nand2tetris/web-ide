@@ -30,7 +30,7 @@ export const MemoryBlock = ({
 }) => {
   const settings = useMemo<Partial<VirtualScrollSettings>>(
     () => ({
-      count: 20,
+      count: Math.min(memory.size, 20),
       maxIndex: memory.size,
       itemHeight: ITEM_HEIGHT,
       startIndex: jmp.value,

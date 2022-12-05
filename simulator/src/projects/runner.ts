@@ -55,15 +55,17 @@ export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
 };
 
 /** After parsing the assignment, compile the Chip and Tst. */
-export const maybeBuild = (file: AssignmentParse): AssignmentBuild => {
-  const maybeChip = isOk(file.maybeParsedHDL)
-    ? buildChip(Ok(file.maybeParsedHDL))
-    : Err(new Error("HDL Was not parsed"));
-  const maybeTest = isOk(file.maybeParsedTST)
-    ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
-    : Err(new Error("TST Was not parsed"));
-  return { ...file, maybeChip, maybeTest };
-};
+export const maybeBuild =
+  (fs: FileSystem) =>
+  async (file: AssignmentParse): Promise<AssignmentBuild> => {
+    const maybeChip = isOk(file.maybeParsedHDL)
+      ? await buildChip(Ok(file.maybeParsedHDL), fs)
+      : Err(new Error("HDL Was not parsed"));
+    const maybeTest = isOk(file.maybeParsedTST)
+      ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
+      : Err(new Error("TST Was not parsed"));
+    return { ...file, maybeChip, maybeTest };
+  };
 
 /** If the assignment parsed, run it! */
 export const tryRun =
@@ -95,9 +97,10 @@ export const tryRun =
 /** Parse & execute a Nand2tetris assignment, possibly also including the Java output in shadow mode. */
 export const runner = (fs: FileSystem, ideRunner?: Runner) => {
   const tryRunWithFs = tryRun(fs);
+  const maybeBuildWithFs = maybeBuild(fs);
   return async (assignment: AssignmentFiles): Promise<AssignmentRun> => {
     const jsRunner = async () =>
-      tryRunWithFs(await maybeBuild(await maybeParse(assignment)));
+      tryRunWithFs(await maybeBuildWithFs(await maybeParse(assignment)));
     const javaRunner = async () => ideRunner?.hdl(assignment);
 
     const [jsRun, shadow] = await Promise.all([jsRunner(), javaRunner()]);

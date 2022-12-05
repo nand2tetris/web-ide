@@ -120,6 +120,10 @@ export const REGISTRY = new Map<string, () => Chip>(
   ])
 );
 
+export function hasBuiltinChip(name: string): boolean {
+  return REGISTRY.has(name);
+}
+
 export function getBuiltinChip(name: string): Result<Chip> {
   const chip = REGISTRY.get(name);
   return chip

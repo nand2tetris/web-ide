@@ -284,7 +284,7 @@ export function makeChipStore(
       }
     },
 
-    compileChip(hdl: string) {
+    async compileChip(hdl: string) {
       chip.remove();
       const maybeParsed = HDL.parse(hdl);
       if (isErr(maybeParsed)) {
@@ -295,7 +295,7 @@ export function makeChipStore(
         });
         return;
       }
-      const maybeChip = buildChip(Ok(maybeParsed));
+      const maybeChip = await buildChip(Ok(maybeParsed));
       if (isErr(maybeChip)) {
         const error = display(Err(maybeChip));
         setStatus(error);

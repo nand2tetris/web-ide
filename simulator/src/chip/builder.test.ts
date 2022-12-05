@@ -1,13 +1,20 @@
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
+import {
+  FileSystem,
+  ObjectFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs.js";
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { HDL } from "../languages/hdl.js";
 import { bin } from "../util/twos.js";
-import { parse } from "./builder.js";
+import { build, parse } from "./builder.js";
 import { Chip, HIGH, LOW } from "./chip.js";
 
 describe("Chip Builder", () => {
-  it("builds a chip from a string", () => {
+  it("builds a chip from a string", async () => {
     const nand = unwrap(
-      parse(`CHIP Not { IN in; OUT out; PARTS: Nand(a=in, b=in, out=out); }`)
+      await parse(
+        `CHIP Not { IN in; OUT out; PARTS: Nand(a=in, b=in, out=out); }`
+      )
     );
 
     nand.in().pull(LOW);
@@ -19,11 +26,11 @@ describe("Chip Builder", () => {
     expect(nand.out().voltage()).toBe(LOW);
   });
 
-  it("builds and evals a chip with subbus components", () => {
+  it("builds and evals a chip with subbus components", async () => {
     let foo: Chip;
     try {
       foo = unwrap(
-        parse(
+        await parse(
           `CHIP Foo {
           IN six[3];
           OUT out;
@@ -50,11 +57,11 @@ describe("Chip Builder", () => {
     // expect(outVoltage).toBe(0b11001);
   });
 
-  it("builds and evals a chip with subpins", () => {
+  it("builds and evals a chip with subpins", async () => {
     let foo: Chip;
     try {
       foo = unwrap(
-        parse(`
+        await parse(`
         CHIP Not2 {
           IN in[2];
           OUT out[2];
@@ -78,11 +85,11 @@ describe("Chip Builder", () => {
     expect(foo.out().busVoltage).toBe(0b00);
   });
 
-  it("builds and evals a chip with subbus components on the right", () => {
+  it("builds and evals a chip with subbus components on the right", async () => {
     let foo: Chip;
     try {
       foo = unwrap(
-        parse(
+        await parse(
           `CHIP Foo {
           IN in[16];
           OUT out[5];
@@ -106,4 +113,39 @@ describe("Chip Builder", () => {
     expect(bin(inVoltage)).toBe(bin(0b11000011));
     expect(bin(outVoltage)).toBe(bin(0b01110));
   });
+
+  it("looks up unknown chips in fs", async () => {
+    const fs = new FileSystem(
+      new ObjectFileSystemAdapter({ "/Copy.hdl": COPY_HDL })
+    );
+
+    let foo: Chip;
+
+    try {
+      const chip = unwrap(await HDL.parse(USE_COPY_HDL));
+      foo = unwrap(await build(chip, fs));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    }
+
+    foo.in("a").pull(HIGH);
+    foo.eval();
+    expect(foo.out("b").busVoltage).toBe(1);
+
+    foo.in("a").pull(LOW);
+    foo.eval();
+    expect(foo.out("b").busVoltage).toBe(0);
+  });
 });
+
+const USE_COPY_HDL = `CHIP UseCopy {
+  IN a; OUT b;
+  PARTS: Copy(in=a, out=b);
+}`;
+
+const COPY_HDL = `CHIP Copy { 
+    IN in; OUT out;
+    PARTS: Or(a=in, b=in, out=out);
+}`;

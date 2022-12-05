@@ -22,7 +22,7 @@
     "format": "prettier --write cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "fix": "eslint --fix cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "check:format": "prettier --ignore-unknown --check cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
-    "check:lint": "eslint --no-error-on-unmatched-pattern cli/src components/src extension/src projects/src runner/src simulator/src web web/public",
+    "check:lint": "eslint --no-error-on-unmatched-pattern cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "check:types": "tsc --build tsconfig.json",
     "build": "CI=true npm run build -w projects && CI=true npm run build -w runner && CI=true npm run build -w simulator && CI=true npm run build -w cli && CI=true npm run build -w components && CI=true npm run build -w web && CI=true npm run build -w extension",
     "test": "CI=true npm test -w simulator && CI=true npm test -w components && CI=true npm test -w web",

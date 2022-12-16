@@ -6,6 +6,7 @@ import * as Add16 from "./03_add16.js";
 import * as Inc16 from "./04_inc16.js";
 import * as Alu from "./05_alu_no_stat.js";
 import * as AluStatus from "./06_alu.js";
+import * as AluAll from "./06_alu_all.js";
 
 export const CHIPS = {
   HalfAdder: {
@@ -37,6 +38,11 @@ export const CHIPS = {
     "ALU.hdl": AluStatus.hdl,
     "ALU.tst": AluStatus.tst,
     "ALU.cmp": AluStatus.cmp,
+  },
+  ALUAll: {
+    "ALUAll.hdl": AluAll.hdl,
+    "ALUAll.tst": AluAll.tst,
+    "ALUAll.cmp": AluAll.cmp,
   },
 };
 

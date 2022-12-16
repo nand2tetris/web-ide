@@ -60,7 +60,15 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "DMux8Way",
     "Or8Way",
   ],
-  "02": ["HalfAdder", "FullAdder", "Add16", "Inc16", "AluNoStat", "ALU"],
+  "02": [
+    "HalfAdder",
+    "FullAdder",
+    "Add16",
+    "Inc16",
+    "AluNoStat",
+    "ALU",
+    // "ALUAll", // Special secret undocumented ALU tests
+  ],
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
   "05": ["Memory", "CPU", "Computer"],
 };

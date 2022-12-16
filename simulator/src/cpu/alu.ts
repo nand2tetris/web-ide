@@ -234,3 +234,17 @@ export function alu(op: number, d: number, a: number): [number, number] {
     o === 0 ? Flags.Zero : o & 0x8000 ? Flags.Negative : Flags.Positive;
   return [o, flags];
 }
+
+export function alua(op: number, d: number, a: number): [number, number] {
+  if (op & 0b100000) d = 0;
+  if (op & 0b010000) d = ~d & 0xffff;
+  if (op & 0b001000) a = 0;
+  if (op & 0b000100) a = ~a & 0xffff;
+
+  let o = (op & 0b000010 ? d + a : d & a) & 0xffff;
+  if (op & 0b000001) o = ~o & 0xffff;
+
+  const flags =
+    o === 0 ? Flags.Zero : o & 0x8000 ? Flags.Negative : Flags.Positive;
+  return [o, flags];
+}

@@ -5,7 +5,7 @@ import { Flags } from "./alu.js";
 
 describe("CPU", () => {
   describe("cpu step function", () => {
-    it("@A: sets A for @ instuructions", () => {
+    test("@A: sets A for @ instuructions", () => {
       const input: CPUInput = { inM: 0, reset: false, instruction: 0x0002 };
       const state: CPUState = {
         A: 0,
@@ -27,7 +27,7 @@ describe("CPU", () => {
       });
     });
 
-    it("M=1: writes to memory", () => {
+    test("M=1: writes to memory", () => {
       const input: CPUInput = { inM: 0, reset: false, instruction: 0xffc8 };
       const inState: CPUState = {
         A: 2,
@@ -49,7 +49,7 @@ describe("CPU", () => {
       });
     });
 
-    it("D=M: reads from memory", () => {
+    test("D=M: reads from memory", () => {
       const input: CPUInput = {
         inM: 0x1234,
         reset: false,
@@ -69,7 +69,7 @@ describe("CPU", () => {
       });
     });
 
-    it("D;JEQ: jumps when D is 0", () => {
+    test("D;JEQ: jumps when D is 0", () => {
       const input: CPUInput = {
         inM: 0x0,
         reset: false,
@@ -95,7 +95,7 @@ describe("CPU", () => {
       });
     });
 
-    it("D;JEQ: does not jump when D is not 0", () => {
+    test("D;JEQ: does not jump when D is not 0", () => {
       const input: CPUInput = {
         inM: 0x0,
         reset: false,
@@ -121,7 +121,7 @@ describe("CPU", () => {
       });
     });
 
-    it("D=D+M: adds memory with register", () => {
+    test("D=D+M: adds memory with register", () => {
       const input: CPUInput = {
         inM: 5,
         reset: false,
@@ -138,6 +138,32 @@ describe("CPU", () => {
         PC: 1,
         ALU: 13, // ALU adds at every eval
         flag: Flags.Positive,
+      });
+    });
+
+    test("@15 A=-1;JMP", () => {
+      const input: CPUInput = {
+        inM: 0,
+        reset: false,
+        instruction: 0xeea7,
+      };
+      const inState: CPUState = {
+        A: 15,
+        D: 0,
+        PC: 0,
+        ALU: 0,
+        flag: Flags.Zero,
+      };
+
+      const [output, outState] = cpu(input, inState);
+
+      expect(output).toEqual({ outM: 0xffff, writeM: false, addressM: 0xffff });
+      expect(outState).toEqual({
+        A: 0xffff,
+        D: 0,
+        PC: 15, // Jumped to old address
+        ALU: 0xffff,
+        flag: Flags.Negative,
       });
     });
   });

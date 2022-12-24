@@ -24,7 +24,7 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         data-placement="bottom"
       >
         {/* <Icon name={runner.state.running ? "pause" : "fast_forward"} /> */}
-        {runner.state.running ? "⏸" : "▶️"}
+        {runner.state.running ? "⏸" : "️⏩"}
       </button>
       <button
         className="flex-0"
@@ -47,8 +47,8 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         disabled={runner.state.running}
       >
         {[
-          // [2000, `Slow`], // For debugging, basically the same as clicking through
-          [1000, `Normal`],
+          // [2000, `Debug`], // For debugging, basically the same as clicking through
+          [1000, `Slow`],
           [500, `Fast`],
           [16, `Faster`],
         ].map(([speed, label]) => (

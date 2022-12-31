@@ -242,7 +242,17 @@ export function makeChipStore(
 
     updateTestStep(state: ChipPageState) {
       state.files.out = test?.log() ?? "";
-      state.controls.span = test?.currentStep?.span;
+      if (test?.currentStep?.span) {
+        state.controls.span = test.currentStep.span;
+      } else {
+        if (test.done) {
+          const end = state.files.tst.length;
+          state.controls.span = {
+            start: end - 1,
+            end,
+          };
+        }
+      }
       this.updateChip(state, {
         pending: state.sim.pending,
         invalid: state.sim.invalid,
@@ -365,7 +375,7 @@ export function makeChipStore(
 
     eval() {
       chip.eval();
-      dispatch.current({ action: "updateChip" });
+      dispatch.current({ action: "updateChip", payload: { pending: false } });
     },
 
     clock() {
@@ -402,7 +412,7 @@ export function makeChipStore(
       }
       setStatus(`Parsed tst`);
 
-      test = ChipTest.from(Ok(tst)).with(chip);
+      test = ChipTest.from(Ok(tst)).with(chip).reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
       return true;

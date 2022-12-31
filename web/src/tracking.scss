@@ -1,0 +1,18 @@
+.trackingBanner {
+  background-color: ghostwhite;
+  border-top: 1px solid black;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  button {
+    .accept {
+      background-color: lightgreen;
+    }
+
+    .reject {
+      background-color: lightpink;
+    }
+  }
+}

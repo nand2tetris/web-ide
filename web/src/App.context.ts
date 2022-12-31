@@ -2,6 +2,7 @@ import { createContext, useCallback, useState } from "react";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
+import { useTracking } from "./tracking";
 
 export type Theme = "light" | "dark" | "system";
 
@@ -33,6 +34,7 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     monaco: useMonaco(),
     settings: useDialog(),
     filePicker: useFilePicker(),
+    tracking: useTracking(),
     theme,
     setTheme,
   };
@@ -66,6 +68,16 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       return undefined;
     },
     isOpen: false,
+  },
+  tracking: {
+    canTrack: false,
+    haveAsked: false,
+    accept() {
+      return undefined;
+    },
+    reject() {
+      return undefined;
+    },
   },
   theme: "system",
   setTheme() {

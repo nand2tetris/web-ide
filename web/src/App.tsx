@@ -24,6 +24,7 @@ import { FilePicker } from "./shell/file_select";
 
 import "./pico/flex.scss";
 import "./pico/pico.scss";
+import { TrackingBanner } from "./tracking";
 
 i18n.load("en", messages);
 i18n.load("en-PL", plMessages);
@@ -72,6 +73,7 @@ function App() {
               </Suspense>
             </main>
             <Footer />
+            <TrackingBanner />
           </Router>
         </AppContext.Provider>
       </BaseContext.Provider>

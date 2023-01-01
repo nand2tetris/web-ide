@@ -1,17 +1,20 @@
-.trackingBanner {
+#trackingBanner {
   background-color: ghostwhite;
   border-top: 1px solid black;
   position: absolute;
+  padding: var(--spacing);
   bottom: 0;
   left: 0;
   right: 0;
 
-  button {
-    .accept {
+  [role="button"] {
+    &.accept {
+      color: black;
       background-color: lightgreen;
     }
 
-    .reject {
+    &.reject {
+      color: black;
       background-color: lightpink;
     }
   }

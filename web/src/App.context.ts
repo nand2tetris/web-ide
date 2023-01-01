@@ -78,6 +78,12 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     reject() {
       return undefined;
     },
+    trackEvent() {
+      return undefined;
+    },
+    trackPage() {
+      return undefined;
+    },
   },
   theme: "system",
   setTheme() {

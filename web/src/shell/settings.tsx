@@ -7,10 +7,12 @@ import { AppContext } from "../App.context";
 
 import "../pico/button-group.scss";
 import "../pico/property.scss";
+import { TrackingDisclosure } from "src/tracking";
 
 export const Settings = () => {
   const { fs, setStatus } = useContext(BaseContext);
-  const { settings, monaco, theme, setTheme } = useContext(AppContext);
+  const { settings, monaco, theme, setTheme, tracking } =
+    useContext(AppContext);
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -168,6 +170,28 @@ export const Settings = () => {
                   <Trans>System</Trans>
                 </label>
               </fieldset>
+            </dd>
+            <dt>
+              <Trans>Tracking</Trans>
+            </dt>
+            <dd>
+              <label>
+                <input
+                  type="checkbox"
+                  name="switch"
+                  role="switch"
+                  checked={tracking.canTrack}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      tracking.accept();
+                    } else {
+                      tracking.reject();
+                    }
+                  }}
+                />
+                <Trans>Allow anonymous interaction tracking</Trans>
+                <TrackingDisclosure />
+              </label>
             </dd>
           </dl>
         </main>

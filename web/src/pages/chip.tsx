@@ -36,7 +36,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 
 export const Chip = () => {
   const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker } = useContext(AppContext);
+  const { filePicker, tracking } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
@@ -44,9 +44,39 @@ export const Chip = () => {
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
   const [out] = useStateInitializer(state.files.out);
 
+  useEffect(() => {
+    tracking.trackPage("/chip");
+  }, [tracking]);
+
   const saveChip = () => {
     actions.saveChip(hdl);
   };
+
+  useEffect(() => {
+    tracking.trackEvent("action", "setProject", state.controls.project);
+    tracking.trackEvent("action", "setChip", state.controls.chipName);
+  }, []);
+
+  const setProject = useCallback(
+    (project: keyof typeof CHIP_PROJECTS) => {
+      actions.setProject(project);
+      tracking.trackEvent("action", "setProject", project);
+    },
+    [actions, tracking]
+  );
+
+  const setChip = useCallback(
+    (chip: string) => {
+      actions.setChip(chip);
+      tracking.trackEvent("action", "setChip", chip);
+    },
+    [actions, tracking]
+  );
+
+  const doEval = useCallback(() => {
+    actions.eval();
+    tracking.trackEvent("action", "eval");
+  }, [actions, tracking]);
 
   const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
@@ -99,8 +129,10 @@ export const Chip = () => {
     () => ({
       toggle() {
         actions.clock();
+        tracking.trackEvent("action", "toggleClock");
       },
       reset() {
+        tracking.trackEvent("action", "resetClock");
         actions.reset();
       },
     }),
@@ -124,7 +156,7 @@ export const Chip = () => {
         <select
           value={state.controls.project}
           onChange={({ target: { value } }) => {
-            actions.setProject(value as keyof typeof CHIP_PROJECTS);
+            setProject(value as keyof typeof CHIP_PROJECTS);
           }}
           data-testid="project-picker"
         >
@@ -137,7 +169,7 @@ export const Chip = () => {
         <select
           value={state.controls.chipName}
           onChange={({ target: { value } }) => {
-            actions.setChip(value);
+            setChip(value);
           }}
           data-testid="chip-picker"
         >
@@ -192,11 +224,7 @@ export const Chip = () => {
 
   const chipButtons = (
     <fieldset role="group">
-      <button
-        onClick={actions.eval}
-        onKeyDown={actions.eval}
-        disabled={!state.sim.pending}
-      >
+      <button onClick={doEval} onKeyDown={doEval} disabled={!state.sim.pending}>
         <Trans>Eval</Trans>
       </button>
       <button
@@ -252,8 +280,16 @@ export const Chip = () => {
     </Panel>
   );
 
-  const [selectedTestTab, setSelectedTestTab] = useState<"tst" | "cmp" | "out">(
-    "tst"
+  const [selectedTestTab, doSetSelectedTestTab] = useState<
+    "tst" | "cmp" | "out"
+  >("tst");
+
+  const setSelectedTestTab = useCallback(
+    (tab: typeof selectedTestTab) => {
+      doSetSelectedTestTab(tab);
+      tracking.trackEvent("tab", "change", tab);
+    },
+    [tracking]
   );
 
   const testPanel = (

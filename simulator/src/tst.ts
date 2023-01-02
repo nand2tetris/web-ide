@@ -1,4 +1,7 @@
-import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert.js";
+import {
+  assertExists,
+  checkExhaustive,
+} from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Span } from "./languages/base.js";
 import {
@@ -48,27 +51,26 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     this.instructions.push(instruction);
   }
 
-  reset(): void {
-    // No generator arrow functions
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const test = this;
-    this._steps = (function* () {
+  reset(): this {
+    this._steps = (function* (test) {
       for (const instruction of test.instructions) {
         yield* instruction.steps(test);
       }
-    })();
+    })(this);
+    this._step = this._steps.next();
+    this._step; //?
     this._log = "";
+    return this;
   }
 
-  _steps: IterableIterator<IS | TestInstruction> | undefined;
-  _step: IteratorResult<IS | TestInstruction, IS | TestInstruction> | undefined;
+  private _steps!: IterableIterator<IS | TestInstruction>;
+  private _step!: IteratorResult<IS | TestInstruction, IS | TestInstruction>;
 
   get steps(): Iterator<IS | TestInstruction> {
     if (this._steps === undefined) {
       this.reset();
-    }
-    if (this._steps === undefined) {
-      throw new Error("Reset did not initialize steps");
+      this._steps = assertExists(this._steps, "Reset did not initialize steps");
+      this._step = assertExists(this._step, "Reset did not find first step");
     }
     return this._steps;
   }
@@ -77,16 +79,21 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     return this._step?.value;
   }
 
+  get done(): boolean {
+    return this._step?.done ?? false;
+  }
+
   async step() {
-    this._step = this.steps.next();
     if (!this._step.done) {
       await this._step.value.do(this);
+      this._step = this.steps.next();
       return false;
     }
     return true;
   }
 
   async run() {
+    this.reset();
     while (!(await this.step()));
   }
 
@@ -152,6 +159,8 @@ export class ChipTest extends Test<ChipTestInstruction> {
         }
       }
     }
+
+    test.reset();
 
     return test;
   }

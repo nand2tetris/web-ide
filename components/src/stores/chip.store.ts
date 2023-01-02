@@ -124,42 +124,6 @@ export function makeChipStore(
   let chip = new Low();
   let test = new ChipTest();
 
-  const initialState: ChipPageState = (() => {
-    const controls: ControlsState = {
-      project,
-      chips,
-      chipName,
-      hasBuiltin: REGISTRY.has(chipName),
-      runningTest: false,
-      error: "",
-    };
-
-    const maybeChip = getBuiltinChip(controls.chipName);
-    if (isErr(maybeChip)) {
-      setStatus(display(Err(maybeChip)));
-      chip = new Low();
-    } else {
-      chip = Ok(maybeChip);
-    }
-
-    const sim = reduceChip(chip);
-
-    setTimeout(() => {
-      actions.reloadChip();
-    });
-
-    return {
-      controls,
-      files: {
-        hdl: "",
-        cmp: "",
-        tst: "",
-        out: "",
-      },
-      sim,
-    };
-  })();
-
   const reducers = {
     setFiles(
       state: ChipPageState,
@@ -242,7 +206,17 @@ export function makeChipStore(
 
     updateTestStep(state: ChipPageState) {
       state.files.out = test?.log() ?? "";
-      state.controls.span = test?.currentStep?.span;
+      if (test?.currentStep?.span) {
+        state.controls.span = test.currentStep.span;
+      } else {
+        if (test.done) {
+          const end = state.files.tst.length;
+          state.controls.span = {
+            start: end - 1,
+            end,
+          };
+        }
+      }
       this.updateChip(state, {
         pending: state.sim.pending,
         invalid: state.sim.invalid,
@@ -365,7 +339,7 @@ export function makeChipStore(
 
     eval() {
       chip.eval();
-      dispatch.current({ action: "updateChip" });
+      dispatch.current({ action: "updateChip", payload: { pending: false } });
     },
 
     clock() {
@@ -388,8 +362,8 @@ export function makeChipStore(
       this.replaceChip(Ok(nextChip));
     },
 
-    reloadChip() {
-      this.loadChip(project, chipName);
+    async reloadChip() {
+      await this.loadChip(project, chipName);
     },
 
     compileTest(file: string) {
@@ -402,7 +376,7 @@ export function makeChipStore(
       }
       setStatus(`Parsed tst`);
 
-      test = ChipTest.from(Ok(tst)).with(chip);
+      test = ChipTest.from(Ok(tst)).with(chip).reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
       return true;
@@ -431,6 +405,38 @@ export function makeChipStore(
       return done;
     },
   };
+
+  const initialState: ChipPageState = (() => {
+    const controls: ControlsState = {
+      project,
+      chips,
+      chipName,
+      hasBuiltin: REGISTRY.has(chipName),
+      runningTest: false,
+      error: "",
+    };
+
+    const maybeChip = getBuiltinChip(controls.chipName);
+    if (isErr(maybeChip)) {
+      setStatus(display(Err(maybeChip)));
+      chip = new Low();
+    } else {
+      chip = Ok(maybeChip);
+    }
+
+    const sim = reduceChip(chip);
+
+    return {
+      controls,
+      files: {
+        hdl: "",
+        cmp: "",
+        tst: "",
+        out: "",
+      },
+      sim,
+    };
+  })();
 
   return { initialState, reducers, actions };
 }

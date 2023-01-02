@@ -14,12 +14,12 @@ import {
 
 describe("Simulator Test", () => {
   describe("Builtins", () => {
-    it("can set Memory", () => {
+    it("can set Memory", async () => {
       const computer = new Computer();
       const test = new ChipTest().with(computer);
 
       test.addInstruction(new TestSetInstruction("RAM16K", 0x1234, 2));
-      test.run();
+      await test.run();
 
       expect(computer.get("RAM16K", 2)?.busVoltage).toBe(0x1234);
     });
@@ -167,5 +167,15 @@ describe("Simulator Test", () => {
         )
       );
     });
+  });
+
+  it("has a first step", () => {
+    const test = new ChipTest(); //.with(new DFF());
+    const statement = new TestSetInstruction("a", 1);
+    test.addInstruction(statement);
+
+    test.reset();
+
+    expect(test.currentStep).toBeDefined();
   });
 });

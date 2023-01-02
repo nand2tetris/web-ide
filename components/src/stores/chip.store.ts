@@ -362,8 +362,8 @@ export function makeChipStore(
       this.replaceChip(Ok(nextChip));
     },
 
-    reloadChip() {
-      this.loadChip(project, chipName);
+    async reloadChip() {
+      await this.loadChip(project, chipName);
     },
 
     compileTest(file: string) {

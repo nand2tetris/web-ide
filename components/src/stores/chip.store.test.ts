@@ -45,15 +45,32 @@ function testChipStore(
 
 describe("ChipStore", () => {
   describe("initialization", () => {
-    it("starts on project 01 not", () => {
+    it("starts on project 01 not", async () => {
       const { state } = testChipStore({});
 
       expect(state.controls.project).toBe("01");
       expect(state.controls.chipName).toBe("Not");
-      expect(state.files.hdl).toBe(not.hdl);
-      expect(state.files.tst).toBe(not.tst);
-      expect(state.files.cmp).toBe(not.cmp);
+      expect(state.files.hdl).toBe("");
+      expect(state.files.tst).toBe("");
+      expect(state.files.cmp).toBe("");
       expect(state.files.out).toBe("");
+    });
+
+    it("reloads initial chip not", async () => {
+      const store = testChipStore({
+        "/projects/01/Not/Not.hdl": not.hdl,
+        "/projects/01/Not/Not.tst": not.tst,
+        "/projects/01/Not/Not.cmp": not.cmp,
+      });
+
+      await store.actions.reloadChip();
+
+      expect(store.state.controls.project).toBe("01");
+      expect(store.state.controls.chipName).toBe("Not");
+      expect(store.state.files.hdl).toBe(not.hdl);
+      expect(store.state.files.tst).toBe(not.tst);
+      expect(store.state.files.cmp).toBe(not.cmp);
+      expect(store.state.files.out).toBe("");
     });
 
     it("loads saved state", () => {

@@ -18,28 +18,28 @@
     }
   },
   "devDependencies": {
-    "@nand2tetris/projects": "*",
-    "@nand2tetris/simulator": "*",
     "@davidsouther/jiffies": "^2.0.5",
-    "@monaco-editor/react": "^4.4.5",
-    "@testing-library/jest-dom": "^5.16.4",
-    "@testing-library/react": "^13.3.0",
+    "@monaco-editor/react": "^4.4.6",
+    "@nand2tetris/projects": "^1.0.0",
+    "@nand2tetris/simulator": "^1.0.0",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
     "@types/error-cause": "^1.0.1",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.11.41",
-    "@types/react": "^18.0.14",
-    "@types/react-dom": "^18.0.5",
-    "@types/vscode": "^1.72.0",
-    "immer": "^9.0.15",
-    "make-plural": "^7.1.0",
+    "@types/react": "^18.0.26",
+    "@types/react-dom": "^18.0.10",
+    "@types/vscode": "^1.74.0",
+    "immer": "^9.0.16",
+    "make-plural": "^7.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.3.0",
+    "react-router-dom": "^6.6.1",
     "react-scripts": "5.0.1",
-    "rxjs": "^7.5.5",
-    "sass": "^1.53.0",
-    "source-map-explorer": "^2.5.2",
-    "typescript": "^4.9"
+    "rxjs": "^7.8.0",
+    "sass": "^1.57.1",
+    "source-map-explorer": "^2.5.3",
+    "typescript": "^4.9.4"
   },
   "scripts": {
     "build": "tsc",
@@ -55,6 +55,6 @@
     ]
   },
   "dependencies": {
-    "@vscode/webview-ui-toolkit": "^1.1.0"
+    "@vscode/webview-ui-toolkit": "^1.2.1"
   }
 }

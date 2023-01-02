@@ -69,7 +69,7 @@ hdlSemantics.addAttribute<Wire>("Wire", {
 
 hdlSemantics.addAttribute<Wire[]>("Wires", {
   Wires(list) {
-    return list.asIteration().children.map(({ Wire }: { Wire: Wire }) => Wire);
+    return list.asIteration().children.map((node) => node.Wire as Wire);
   },
 });
 
@@ -119,7 +119,7 @@ hdlSemantics.addAttribute<PinDeclaration[]>("PinList", {
   PinList(list) {
     return list
       .asIteration()
-      .children.map(({ PinDecl }: { PinDecl: PinDeclaration }) => PinDecl);
+      .children.map((node) => node.PinDecl as PinDeclaration);
   },
 });
 

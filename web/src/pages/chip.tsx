@@ -45,6 +45,10 @@ export const Chip = () => {
   const [out] = useStateInitializer(state.files.out);
 
   useEffect(() => {
+    actions.reloadChip();
+  }, []);
+
+  useEffect(() => {
     tracking.trackPage("/chip");
   }, [tracking]);
 

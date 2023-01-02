@@ -18,6 +18,10 @@ function App() {
   const { state, actions, dispatch } = useChipPageStore();
   const { api } = useContext(VSCodeContext);
 
+  useEffect(() => {
+    actions.reloadChip();
+  }, []);
+
   const [hdl, setHdl] = useState(Not.hdl);
   const [loaded, setLoaded] = useState(false);
 

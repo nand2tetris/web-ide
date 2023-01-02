@@ -124,42 +124,6 @@ export function makeChipStore(
   let chip = new Low();
   let test = new ChipTest();
 
-  const initialState: ChipPageState = (() => {
-    const controls: ControlsState = {
-      project,
-      chips,
-      chipName,
-      hasBuiltin: REGISTRY.has(chipName),
-      runningTest: false,
-      error: "",
-    };
-
-    const maybeChip = getBuiltinChip(controls.chipName);
-    if (isErr(maybeChip)) {
-      setStatus(display(Err(maybeChip)));
-      chip = new Low();
-    } else {
-      chip = Ok(maybeChip);
-    }
-
-    const sim = reduceChip(chip);
-
-    setTimeout(() => {
-      actions.reloadChip();
-    });
-
-    return {
-      controls,
-      files: {
-        hdl: "",
-        cmp: "",
-        tst: "",
-        out: "",
-      },
-      sim,
-    };
-  })();
-
   const reducers = {
     setFiles(
       state: ChipPageState,
@@ -441,6 +405,38 @@ export function makeChipStore(
       return done;
     },
   };
+
+  const initialState: ChipPageState = (() => {
+    const controls: ControlsState = {
+      project,
+      chips,
+      chipName,
+      hasBuiltin: REGISTRY.has(chipName),
+      runningTest: false,
+      error: "",
+    };
+
+    const maybeChip = getBuiltinChip(controls.chipName);
+    if (isErr(maybeChip)) {
+      setStatus(display(Err(maybeChip)));
+      chip = new Low();
+    } else {
+      chip = Ok(maybeChip);
+    }
+
+    const sim = reduceChip(chip);
+
+    return {
+      controls,
+      files: {
+        hdl: "",
+        cmp: "",
+        tst: "",
+        out: "",
+      },
+      sim,
+    };
+  })();
 
   return { initialState, reducers, actions };
 }

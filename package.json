@@ -32,13 +32,13 @@
     "install-cli": "npm i -g cli"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.40.0",
-    "@typescript-eslint/parser": "^5.40.0",
-    "esbuild": "^0.15.11",
-    "eslint": "^8.25.0",
-    "eslint-plugin-react": "^7.31.10",
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.4"
+    "@typescript-eslint/eslint-plugin": "^5.47.1",
+    "@typescript-eslint/parser": "^5.47.1",
+    "esbuild": "^0.15.18",
+    "eslint": "^8.31.0",
+    "eslint-plugin-react": "^7.31.11",
+    "prettier": "^2.8.1",
+    "typescript": "^4.9.4"
   },
   "workspaces": [
     "cli",

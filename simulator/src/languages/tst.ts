@@ -223,9 +223,7 @@ tstSemantics.addAttribute<TstStatement>("statement", {
     const stmt: TstStatement = {
       ops: list
         .asIteration()
-        .children.map(
-          ({ operation }: { operation: TstOperation }) => operation
-        ),
+        .children.map((node) => node.operation as TstOperation),
       span: {
         start: this.source.startIdx,
         end: this.source.endIdx,

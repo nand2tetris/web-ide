@@ -8,6 +8,7 @@ import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import { MutableRefObject } from "react";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
 import produce from "immer";
+import { ImmPin } from "src/pinout.js";
 
 function testChipStore(
   fs: Record<string, string> = {
@@ -63,7 +64,7 @@ describe("ChipStore", () => {
         "/projects/01/Not/Not.cmp": not.cmp,
       });
 
-      await store.actions.reloadChip();
+      await store.actions.initialize();
 
       expect(store.state.controls.project).toBe("01");
       expect(store.state.controls.chipName).toBe("Not");
@@ -99,36 +100,81 @@ describe("ChipStore", () => {
     it.todo("loads projects and chips");
 
     it("toggles bits", () => {
-      const { store } = state;
-      expect(store.state.sim.chip[0].out().busVoltage).toBe(1);
-      store.actions.toggle(store.state.sim.chip[0].in(), 0);
-      expect(store.state.sim.chip[0].in().busVoltage).toBe(1);
-      expect(store.dispatch.current).toHaveBeenCalledWith({
+      expect(state.store.state.sim.chip[0].out().busVoltage).toBe(1);
+
+      state.store.actions.toggle(state.store.state.sim.chip[0].in(), 0);
+      expect(state.store.state.sim.chip[0].in().busVoltage).toBe(1);
+      expect(state.store.dispatch.current).toHaveBeenCalledWith({
         action: "updateChip",
         payload: { pending: true },
       });
-      expect(store.state.sim.pending).toBe(true);
-      store.actions.eval();
-      expect(store.dispatch.current).toHaveBeenCalledWith({
+      expect(state.store.state.sim.pending).toBe(true);
+
+      state.store.actions.eval();
+      expect(state.store.dispatch.current).toHaveBeenCalledWith({
         action: "updateChip",
         payload: { pending: false },
       });
-      expect(store.state.sim.pending).toBe(false);
-      expect(store.state.sim.chip[0].out().busVoltage).toBe(0);
+      expect(state.store.state.sim.pending).toBe(false);
+      expect(state.store.state.sim.chip[0].out().busVoltage).toBe(0);
     });
   });
 
   describe("execution", () => {
-    const state = cleanState(() => ({ store: testChipStore() }), beforeEach);
+    const state = cleanState(async () => {
+      const store = testChipStore({
+        "/projects/01/Not/Not.hdl": not.hdl,
+        "/projects/01/Not/Not.tst": not.tst,
+        "/projects/01/Not/Not.cmp": not.cmp,
+      });
+      await store.actions.initialize();
+      return { store };
+    }, beforeEach);
 
     it.todo("compiles chips");
-    it.todo("steps tests");
 
-    it("starts the cursor on the first instruction", () => {
-      state.store.state.files.tst; //?
-      expect(state.store.state.files.tst);
+    it("steps tests", async () => {
+      const bits = (pins: ImmPin[]) =>
+        pins.map((pin) => pin.bits.map((bit) => bit[1]));
+
+      expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
+      expect(bits(state.store.state.sim.outPins)).toEqual([[0]]);
+
+      await state.store.actions.useBuiltin();
+
+      expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
+      expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
+
+      await state.store.actions.stepTest(); // Output List
+
+      await state.store.actions.stepTest(); // Set in 0
+      expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
+      expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
+
+      await state.store.actions.stepTest(); // Set in 1
+      expect(bits(state.store.state.sim.inPins)).toEqual([[1]]);
+      expect(bits(state.store.state.sim.outPins)).toEqual([[0]]);
+
+      await state.store.actions.stepTest(); // No change (afte end)
+      expect(bits(state.store.state.sim.inPins)).toEqual([[1]]);
+      expect(bits(state.store.state.sim.outPins)).toEqual([[0]]);
     });
 
-    it.todo("leaves the cursor on the final character ");
+    it("starts the cursor on the first instruction", () => {
+      expect(state.store.state.files.tst).toBe(not.tst);
+      expect(state.store.state.controls.span).toEqual({ start: 0, end: 33 });
+    });
+
+    it("leaves the cursor on the final character", async () => {
+      // Not.tst has 3 commands
+      await state.store.actions.stepTest();
+      await state.store.actions.stepTest();
+      await state.store.actions.stepTest();
+
+      // Past the end of the test
+      await state.store.actions.stepTest();
+
+      expect(state.store.state.controls.span).toEqual({ start: 81, end: 82 });
+    });
   });
 });

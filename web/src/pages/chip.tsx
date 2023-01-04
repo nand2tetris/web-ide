@@ -45,8 +45,8 @@ export const Chip = () => {
   const [out] = useStateInitializer(state.files.out);
 
   useEffect(() => {
-    actions.reloadChip();
-  }, []);
+    actions.initialize();
+  }, [actions]);
 
   useEffect(() => {
     tracking.trackPage("/chip");
@@ -116,7 +116,7 @@ export const Chip = () => {
       }
 
       async tick(): Promise<boolean> {
-        return actions.tick();
+        return actions.stepTest();
       }
 
       toggle(): void {

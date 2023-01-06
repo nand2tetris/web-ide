@@ -68,6 +68,29 @@ const Textarea = ({
 const MONACO_LIGHT_THEME = "vs";
 const MONACO_DARK_THEME = "vs-dark";
 
+const makeHighlight = (
+  monaco: typeof monacoT | null,
+  editor: monacoT.editor.IStandaloneCodeEditor | undefined,
+  highlight: Span | undefined,
+  decorations: string[]
+): string[] => {
+  if (!(editor && highlight)) return decorations;
+  const model = editor.getModel();
+  if (!model) return decorations;
+  const start = model.getPositionAt(highlight.start);
+  const end = model.getPositionAt(highlight.end);
+  const range = monaco?.Range.fromPositions(start, end);
+  const nextDecoration: monacoT.editor.IModelDeltaDecoration[] = [];
+  if (range) {
+    nextDecoration.push({
+      range,
+      options: { inlineClassName: "highlight" },
+    });
+    editor.revealRangeInCenter(range);
+  }
+  return editor.deltaDecorations(decorations, nextDecoration);
+};
+
 const Monaco = ({
   value,
   onChange,
@@ -98,29 +121,25 @@ const Monaco = ({
     return isDark ? MONACO_DARK_THEME : MONACO_LIGHT_THEME;
   }, [theme]);
 
-  const doHighlight = useCallback(
-    (highlight: Span = { start: 0, end: 1 }) => {
-      if (!editor.current) return;
-      const model = editor.current.getModel();
-      if (!model) return;
-      const start = model.getPositionAt(highlight.start);
-      const end = model.getPositionAt(highlight.end);
-      const range = monaco?.Range.fromPositions(start, end);
-      const nextDecoration: monacoT.editor.IModelDeltaDecoration[] = [];
-      if (range) {
-        nextDecoration.push({
-          range,
-          options: { inlineClassName: "highlight" },
-        });
-        editor.current.revealRangeInCenter(range);
-      }
-      decorations.current = editor.current.deltaDecorations(
-        decorations.current,
-        nextDecoration
-      );
-    },
-    [editor, decorations, monaco]
-  );
+  const doHighlight = useCallback(() => {
+    decorations.current = makeHighlight(
+      monaco,
+      editor.current,
+      // I'm not sure why this makes things work, but it is load bearing.
+      // Removing the empty span will cause the initial first-statement
+      // highlight in the test view to not show. Setting it to [0, 1] will
+      // cause a 1-character highlight in the editor view, so don't do that
+      // either.
+      highlight.current ?? { start: 0, end: 0 },
+      decorations.current
+    );
+  }, [decorations, monaco, editor, highlight]);
+
+  // Mark and center highlighted spans
+  useEffect(() => {
+    highlight.current = currentHighlight;
+    doHighlight();
+  }, [currentHighlight]);
 
   // Set options when mounting
   const onMount: OnMount = useCallback(
@@ -138,16 +157,10 @@ const Monaco = ({
         theme: codeTheme(),
         scrollBeyondLastLine: false,
       });
-      doHighlight(highlight.current);
+      doHighlight();
     },
-    [codeTheme, doHighlight]
+    [codeTheme]
   );
-
-  // Mark and center highlighted spans
-  useEffect(() => {
-    highlight.current = currentHighlight;
-    doHighlight(currentHighlight);
-  }, [doHighlight, currentHighlight]);
 
   // Set themes
   useEffect(() => {

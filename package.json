@@ -49,6 +49,7 @@
     "projects",
     "runner",
     "simulator",
+    "integration",
     "web"
   ],
   "engines": {

@@ -18,7 +18,7 @@
     }
   },
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.0.5",
+    "@davidsouther/jiffies": "^2.0.6",
     "@monaco-editor/react": "^4.4.6",
     "@nand2tetris/projects": "^1.0.0",
     "@nand2tetris/simulator": "^1.0.0",

@@ -74,7 +74,7 @@ const Monaco = ({
   language,
   error,
   disabled = false,
-  highlight,
+  highlight: currentHighlight,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -88,6 +88,7 @@ const Monaco = ({
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
+  const highlight = useRef<Span | undefined>(undefined);
 
   const codeTheme = useCallback(() => {
     const isDark =
@@ -96,6 +97,30 @@ const Monaco = ({
         : theme === "dark";
     return isDark ? MONACO_DARK_THEME : MONACO_LIGHT_THEME;
   }, [theme]);
+
+  const doHighlight = useCallback(
+    (highlight: Span = { start: 0, end: 1 }) => {
+      if (!editor.current) return;
+      const model = editor.current.getModel();
+      if (!model) return;
+      const start = model.getPositionAt(highlight.start);
+      const end = model.getPositionAt(highlight.end);
+      const range = monaco?.Range.fromPositions(start, end);
+      const nextDecoration: monacoT.editor.IModelDeltaDecoration[] = [];
+      if (range) {
+        nextDecoration.push({
+          range,
+          options: { inlineClassName: "highlight" },
+        });
+        editor.current.revealRangeInCenter(range);
+      }
+      decorations.current = editor.current.deltaDecorations(
+        decorations.current,
+        nextDecoration
+      );
+    },
+    [editor, decorations, monaco]
+  );
 
   // Set options when mounting
   const onMount: OnMount = useCallback(
@@ -113,32 +138,16 @@ const Monaco = ({
         theme: codeTheme(),
         scrollBeyondLastLine: false,
       });
+      doHighlight(highlight.current);
     },
-    [codeTheme]
+    [codeTheme, doHighlight]
   );
 
   // Mark and center highlighted spans
   useEffect(() => {
-    if (!editor.current) return;
-    const model = editor.current.getModel();
-    const nextDecoration: monacoT.editor.IModelDeltaDecoration[] = [];
-    if (model && highlight) {
-      const start = model.getPositionAt(highlight.start);
-      const end = model.getPositionAt(highlight.end);
-      const range = monaco?.Range.fromPositions(start, end);
-      if (range) {
-        nextDecoration.push({
-          range,
-          options: { inlineClassName: "highlight" },
-        });
-        editor.current.revealRangeInCenter(range);
-      }
-    }
-    decorations.current = editor.current.deltaDecorations(
-      decorations.current,
-      nextDecoration
-    );
-  }, [editor, highlight, monaco]);
+    highlight.current = currentHighlight;
+    doHighlight(currentHighlight);
+  }, [doHighlight, currentHighlight]);
 
   // Set themes
   useEffect(() => {

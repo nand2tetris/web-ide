@@ -18,7 +18,7 @@
     }
   },
   "dependencies": {
-    "@davidsouther/jiffies": "^2.0.5",
+    "@davidsouther/jiffies": "^2.0.6",
     "@nand2tetris/projects": "^1.0.0",
     "@nand2tetris/runner": "^1.0.0",
     "ohm-js": "^16.6.0",

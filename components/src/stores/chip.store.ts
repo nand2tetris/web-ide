@@ -25,6 +25,7 @@ import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
 import { BaseContext } from "./base.context.js";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 export const PROJECT_NAMES = [
   ["01", `Project 1`],
@@ -295,6 +296,7 @@ export function makeChipStore(
       clock.reset();
       nextChip.eval();
       chip = nextChip;
+      test = test.with(chip);
       dispatch.current({ action: "updateChip", payload: { invalid: false } });
     },
 
@@ -362,7 +364,7 @@ export function makeChipStore(
       this.replaceChip(Ok(nextChip));
     },
 
-    async reloadChip() {
+    async initialize() {
       await this.loadChip(project, chipName);
     },
 
@@ -396,7 +398,12 @@ export function makeChipStore(
       dispatch.current({ action: "testFinished" });
     },
 
-    async tick() {
+    tick(): Promise<boolean> {
+      return this.stepTest();
+    },
+
+    async stepTest(): Promise<boolean> {
+      assert(test.chipId === chip.id, "Test and chip out of sync");
       const done = await test.step();
       dispatch.current({ action: "updateTestStep" });
       if (done) {

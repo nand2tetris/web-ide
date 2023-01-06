@@ -7,7 +7,7 @@
   "license": "ISC",
   "homepage": "https://nand2tetris.github.io/web-ide",
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.0.5",
+    "@davidsouther/jiffies": "^2.0.6",
     "@lingui/cli": "^3.15.0",
     "@lingui/macro": "^3.15.0",
     "@lingui/react": "^3.15.0",

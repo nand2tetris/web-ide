@@ -134,6 +134,10 @@ function isTstWhileStatement(line: TstStatement): line is TstWhileStatement {
 
 export class ChipTest extends Test<ChipTestInstruction> {
   private chip: Chip = new Low();
+  get chipId(): number {
+    return this.chip.id;
+  }
+
   private clock = Clock.get();
 
   static from(tst: Tst): ChipTest {

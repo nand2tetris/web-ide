@@ -6,7 +6,7 @@ function acceptCookies() {
 
 describe("template spec", () => {
   beforeEach(() => {
-    cy.visit("/web-ide/chip/");
+    cy.visit("/web-ide/chip/?monaco=false");
     acceptCookies();
   });
 

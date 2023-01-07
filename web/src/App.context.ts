@@ -9,7 +9,12 @@ import { useTracking } from "./tracking";
 export type Theme = "light" | "dark" | "system";
 
 export function useMonaco() {
-  const canUseMonaco = true;
+  const canUseMonaco =
+    new URLSearchParams(document.location.search)
+      .get("monaco")
+      ?.toLowerCase() === "false"
+      ? false
+      : true;
   const [wantsMonaco, setWantsMonaco] = useState(canUseMonaco);
   const toggleMonaco = useCallback(
     (pleaseUseMonaco: boolean) => {

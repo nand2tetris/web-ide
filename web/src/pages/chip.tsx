@@ -146,6 +146,7 @@ export const Chip = () => {
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = async () => {
     if (useBuiltin) {
+      actions.useBuiltin(false);
       compile.current();
       setUseBuiltin(false);
     } else {

@@ -124,6 +124,7 @@ export function makeChipStore(
   const { chips } = dropdowns;
   let chip = new Low();
   let test = new ChipTest();
+  let usingBuiltin = false;
 
   const reducers = {
     setFiles(
@@ -238,7 +239,11 @@ export function makeChipStore(
     ) {
       chipName = storage["/chip/chip"] = chip;
       dispatch.current({ action: "setChip", payload: chipName });
-      this.loadChip(project, chipName);
+      if (usingBuiltin) {
+        this.useBuiltin();
+      } else {
+        this.loadChip(project, chipName);
+      }
     },
 
     reset() {
@@ -296,8 +301,9 @@ export function makeChipStore(
       clock.reset();
       nextChip.eval();
       chip = nextChip;
-      test = test.with(chip);
+      test = test.with(chip).reset();
       dispatch.current({ action: "updateChip", payload: { invalid: false } });
+      dispatch.current({ action: "updateTestStep" });
     },
 
     async loadChip(project: string, name: string) {
@@ -352,7 +358,12 @@ export function makeChipStore(
       dispatch.current({ action: "updateChip" });
     },
 
-    useBuiltin() {
+    useBuiltin(doUseBuiltin = true) {
+      if (!doUseBuiltin) {
+        usingBuiltin = false;
+        return;
+      }
+      usingBuiltin = true;
       const builtinName = chip.name ?? chipName;
       const nextChip = getBuiltinChip(builtinName);
       if (isErr(nextChip)) {

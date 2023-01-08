@@ -6,6 +6,7 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
+import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import { Runbar } from "@nand2tetris/components/runbar.js";
 
 export const CPU = () => {
@@ -40,14 +41,14 @@ export const CPU = () => {
 
   return (
     <div>
-      <Runbar runner={runner}>
-        <label>
-          <span>{cpu.PC}</span>
-          <span>{cpu.A}</span>
-          <span>{cpu.D}</span>
-        </label>
-      </Runbar>
-      <div className="grid">
+      <Runbar runner={runner}></Runbar>
+      <div
+        className="grid"
+        style={{
+          gridAutoFlow: "column",
+          gridTemplateColumns: "1fr 514px",
+        }}
+      >
         <div
           className="grid"
           style={{
@@ -55,7 +56,6 @@ export const CPU = () => {
             gridTemplateColumns: "repeat(2, 1fr)",
           }}
         >
-          <MemoryComponent name="RAM" memory={cpu.RAM} format="hex" />
           <MemoryComponent
             name="ROM"
             memory={cpu.ROM}
@@ -63,9 +63,21 @@ export const CPU = () => {
             format="asm"
             editable={false}
           />
+          <MemoryComponent name="RAM" memory={cpu.RAM} format="hex" />
         </div>
         <div>
-          <Screen memory={cpu.RAM}></Screen>;
+          <div>
+            <dl>
+              <dt>PC</dt>
+              <dd>{cpu.PC}</dd>
+              <dt>A</dt>
+              <dd>{cpu.A}</dd>
+              <dt>D</dt>
+              <dd>{cpu.D}</dd>
+            </dl>
+          </div>
+          <Screen memory={cpu.Screen}></Screen>
+          <Keyboard keyboard={cpu.Keyboard} />
         </div>
       </div>
     </div>

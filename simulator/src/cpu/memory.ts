@@ -14,18 +14,17 @@ export const SCREEN_COLS = 256;
 export const KEYBOARD = 0x6000;
 
 export class Memory {
-  #memory: Int16Array;
-  updates = new Subject<void>();
+  private memory: Int16Array;
 
   get size(): number {
-    return this.#memory.length;
+    return this.memory.length;
   }
 
   constructor(memory: ArrayBuffer | number) {
     if (typeof memory === "number") {
-      this.#memory = new Int16Array(memory);
+      this.memory = new Int16Array(memory);
     } else {
-      this.#memory = new Int16Array(memory);
+      this.memory = new Int16Array(memory);
     }
   }
 
@@ -33,12 +32,12 @@ export class Memory {
     if (index < 0 || index >= this.size) {
       return 0xffff;
     }
-    return this.#memory[index] ?? 0;
+    return this.memory[index] ?? 0;
   }
 
   set(index: number, value: number): void {
     if (index >= 0 && index < this.size) {
-      this.#memory[index] = value & 0xffff;
+      this.memory[index] = value & 0xffff;
     }
   }
 
@@ -66,7 +65,6 @@ export class Memory {
 
     if (isFinite(current) && current <= 0xffff) {
       this.set(cell, current);
-      this.updates.next();
     }
   }
 
@@ -80,7 +78,7 @@ export class Memory {
   }
 
   range(start = 0, end = this.size): number[] {
-    return [...this.#memory.slice(start, end)];
+    return [...this.memory.slice(start, end)];
   }
 
   *map<T>(
@@ -92,5 +90,47 @@ export class Memory {
     for (let i = start; i < end; i++) {
       yield fn(i, this.get(i));
     }
+  }
+}
+
+export class SubMemory implements Omit<Memory, "#memory" | "updates"> {
+  constructor(
+    private readonly parent: Memory,
+    readonly size: number,
+    private readonly offset: number
+  ) {}
+
+  get(index: number): number {
+    if (index < 0 || index >= this.size) {
+      return 0xffff;
+    }
+    return this.parent.get(this.offset + index);
+  }
+
+  set(index: number, value: number): void {
+    if (index >= 0 && index < this.size) {
+      this.parent.set(index + this.offset, value);
+    }
+  }
+
+  update(index: number, value: string, format: string): void {
+    if (index >= 0 && index < this.size) {
+      this.parent.update(index + this.offset, value, format);
+    }
+  }
+
+  load(fs: FileSystem, path: string): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  range(start?: number, end?: number): number[] {
+    throw new Error("Method not implemented.");
+  }
+  map<T>(
+    fn: (index: number, value: number) => T,
+    start?: number,
+    end?: number
+  ): Iterable<T> {
+    throw new Error("Method not implemented.");
   }
 }

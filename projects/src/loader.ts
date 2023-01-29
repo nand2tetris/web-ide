@@ -9,7 +9,7 @@ export async function loadSamples(fs: FileSystem) {
 }
 
 export async function loadSolutions(fs: FileSystem) {
-  (await import("./solutions/index.js")).loadSolutions(fs);
+  (await import("./testing/index.js")).loadSolutions(fs);
 }
 
 export const loaders = {

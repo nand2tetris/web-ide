@@ -7,7 +7,6 @@ import { Cmp, CMP } from "../../languages/cmp.js";
 import { HDL, HdlParse } from "../../languages/hdl.js";
 import { Tst, TST } from "../../languages/tst.js";
 import { ChipProjects, CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
-import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/solutions/index.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { compare } from "../../compare.js";
 import { ChipTest } from "../../tst.js";
@@ -23,18 +22,12 @@ describe("All Projects", () => {
         (k) => !SKIP.has(k)
       )
     )("Builtin %s", async (chipName) => {
-      let hdlFile: string =
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        ChipProjectsSols[project]?.SOLS[chipName]?.[`${chipName}.hdl`];
-      const tstFile: string =
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        ChipProjects[project]?.CHIPS[chipName]?.[`${chipName}.tst`];
-      const cmpFile: string =
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        ChipProjects[project]?.CHIPS[chipName]?.[`${chipName}.cmp`];
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const ChipProject = ChipProjects[project]?.CHIPS[chipName];
+      let hdlFile: string = ChipProject?.[`${chipName}.hdl`];
+      const tstFile: string = ChipProject?.[`${chipName}.tst`];
+      const cmpFile: string = ChipProject?.[`${chipName}.cmp`];
 
       expect(hdlFile).toBeDefined();
       expect(tstFile).toBeDefined();

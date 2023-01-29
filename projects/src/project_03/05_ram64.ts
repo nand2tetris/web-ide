@@ -8,6 +8,8 @@ export const hdl = `/**
 CHIP RAM64 {
     IN in[16], load, address[6];
     OUT out[16];
+    
+    PARTS:
 }`;
 export const tst = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.3.2 out%D1.6.1;
 

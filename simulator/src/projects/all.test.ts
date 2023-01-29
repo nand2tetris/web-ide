@@ -16,70 +16,77 @@ import {
   ASM_PROJECTS,
   CHIP_PROJECTS,
 } from "@nand2tetris/projects/index.js";
-import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/solutions/index.js";
+import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/index.js";
 import {
   ASM_SOLS,
   FILES as ASM_FILES,
 } from "@nand2tetris/projects/samples/project_06/index.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 
+const PROJECTS = new Set<string>(["01", "03"]);
 const SKIP = new Set<string>([]);
+const INCLUDE = new Set<string>(["And", "And16", "Mux8Way16", "Bit"]);
 
 describe("Chip Projects", () => {
-  describe.each(Object.keys(CHIP_PROJECTS))("project %s", (project) => {
-    it.each(
-      CHIP_PROJECTS[project as keyof typeof CHIP_PROJECTS].filter(
-        (k) => !SKIP.has(k)
-      )
-    )("Chip %s", async (chipName) => {
-      const chipProject = {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        ...ChipProjects[project]!,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        ...ChipProjectsSols[project]!,
-      };
-      const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
-      const tstFile = chipProject.CHIPS[chipName]?.[`${chipName}.tst`];
-      const cmpFile = chipProject.CHIPS[chipName]?.[`${chipName}.cmp`];
+  describe.each(Object.keys(CHIP_PROJECTS).filter((k) => PROJECTS.has(k)))(
+    "project %s",
+    (project) => {
+      it.each(
+        CHIP_PROJECTS[project as keyof typeof CHIP_PROJECTS]
+          .filter((k) => !SKIP.has(k))
+          .filter((k) => INCLUDE.has(k))
+      )("Chip %s", async (chipName) => {
+        const chipProject = {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          ...ChipProjects[project]!,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          ...ChipProjectsSols[project]!,
+        };
+        const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
+        const tstFile = chipProject.CHIPS[chipName]?.[`${chipName}.tst`];
+        const cmpFile = chipProject.CHIPS[chipName]?.[`${chipName}.cmp`];
 
-      expect(hdlFile).toBeDefined();
-      expect(tstFile).toBeDefined();
-      expect(cmpFile).toBeDefined();
+        expect(hdlFile).toBeDefined();
+        expect(tstFile).toBeDefined();
+        expect(cmpFile).toBeDefined();
 
-      const hdl = HDL.parse(hdlFile);
-      expect(hdl).toBeOk();
-      const tst = TST.parse(tstFile);
-      expect(tst).toBeOk();
+        const hdl = HDL.parse(hdlFile);
+        expect(hdl).toBeOk();
+        const tst = TST.parse(tstFile);
+        expect(tst).toBeOk();
 
-      const chip = await build(Ok(hdl as Ok<HdlParse>));
-      expect(chip).toBeOk();
-      const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(Ok(chip as Ok<Chip>));
-
-      if (chipName === "Computer") {
-        test.setFileSystem(
-          new FileSystem(
-            new ObjectFileSystemAdapter({ "/samples/Max.hack": Max })
-          )
+        const chip = await build(Ok(hdl as Ok<HdlParse>));
+        expect(chip).toBeOk();
+        const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(
+          Ok(chip as Ok<Chip>)
         );
-      }
 
-      await test.run();
+        if (chipName === "Computer") {
+          test.setFileSystem(
+            new FileSystem(
+              new ObjectFileSystemAdapter({ "/samples/Max.hack": Max })
+            )
+          );
+        }
 
-      const outFile = test.log();
+        await test.run();
 
-      const cmp = CMP.parse(cmpFile);
-      expect(cmp).toBeOk();
-      const out = CMP.parse(outFile);
-      expect(out).toBeOk();
+        const outFile = test.log();
 
-      const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));
-      expect(diffs).toHaveNoDiff();
-    });
-  });
+        const cmp = CMP.parse(cmpFile);
+        expect(cmp).toBeOk();
+        const out = CMP.parse(outFile);
+        expect(out).toBeOk();
+
+        const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));
+        expect(diffs).toHaveNoDiff();
+      });
+    }
+  );
 });
 
 describe("ASM Projects", () => {

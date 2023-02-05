@@ -239,10 +239,9 @@ export function makeChipStore(
     ) {
       chipName = storage["/chip/chip"] = chip;
       dispatch.current({ action: "setChip", payload: chipName });
+      this.loadChip(project, chipName);
       if (usingBuiltin) {
         this.useBuiltin();
-      } else {
-        this.loadChip(project, chipName);
       }
     },
 

@@ -233,16 +233,15 @@ export function makeChipStore(
       this.setChip(CHIP_PROJECTS[project][0]);
     },
 
-    setChip(
+    async setChip(
       chip: string,
       project = storage["/chip/project"] ?? ChipProjects["01"]
     ) {
       chipName = storage["/chip/chip"] = chip;
       dispatch.current({ action: "setChip", payload: chipName });
+      await this.loadChip(project, chipName);
       if (usingBuiltin) {
         this.useBuiltin();
-      } else {
-        this.loadChip(project, chipName);
       }
     },
 

@@ -1,5 +1,5 @@
 import { alu, COMMANDS_OP, Flags } from "./alu.js";
-import { Memory, SubMemory } from "./memory.js";
+import { Memory, MemoryAdapter, MemoryKeyboard, SubMemory } from "./memory.js";
 
 export interface CPUInput {
   inM: number;
@@ -125,8 +125,8 @@ export function cpu(input: CPUInput, state: CPUState): [CPUOutput, CPUState] {
 export class CPU {
   readonly RAM: Memory;
   readonly ROM: Memory;
-  readonly Screen: Omit<Memory, "memory">;
-  readonly Keyboard: Omit<Memory, "memory">;
+  readonly Screen: MemoryAdapter;
+  readonly Keyboard: MemoryKeyboard;
 
   #pc = 0;
   #a = 0;
@@ -167,7 +167,7 @@ export class CPU {
     this.ROM = ROM;
 
     this.Screen = new SubMemory(this.RAM, 0x2000, 0x4000);
-    this.Keyboard = new SubMemory(this.RAM, 1, 0x6000);
+    this.Keyboard = new MemoryKeyboard(this.RAM);
   }
 
   reset() {

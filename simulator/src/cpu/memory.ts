@@ -1,6 +1,5 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Subject } from "rxjs";
 import { op } from "../util/asm.js";
 import { int10, int16, int2 } from "../util/twos.js";
 import { load } from "../fs.js";
@@ -12,6 +11,26 @@ export const SCREEN = 0x4000;
 export const SCREEN_ROWS = 512;
 export const SCREEN_COLS = 256;
 export const KEYBOARD = 0x6000;
+
+export interface MemoryAdapter {
+  size: number;
+  get(index: number): number;
+  set(index: number, value: number): void;
+  update(cell: number, value: string, format: Format): void;
+  load(fs: FileSystem, path: string): Promise<void>;
+  range(start: number, end: number): number[];
+  map<T>(
+    fn: (index: number, value: number) => T,
+    start: number,
+    end: number
+  ): Iterable<T>;
+}
+
+export interface KeyboardAdapter {
+  getKey(): number;
+  setKey(key: number): void;
+  clearKey(): void;
+}
 
 export class Memory {
   private memory: Int16Array;
@@ -93,9 +112,9 @@ export class Memory {
   }
 }
 
-export class SubMemory implements Omit<Memory, "#memory" | "updates"> {
+export class SubMemory implements MemoryAdapter {
   constructor(
-    private readonly parent: Memory,
+    private readonly parent: MemoryAdapter,
     readonly size: number,
     private readonly offset: number
   ) {}
@@ -132,5 +151,23 @@ export class SubMemory implements Omit<Memory, "#memory" | "updates"> {
     end?: number
   ): Iterable<T> {
     throw new Error("Method not implemented.");
+  }
+}
+
+export class MemoryKeyboard extends SubMemory implements KeyboardAdapter {
+  constructor(memory: MemoryAdapter) {
+    super(memory, 1, 0x6000);
+  }
+
+  getKey(): number {
+    return this.get(0);
+  }
+
+  setKey(key: number): void {
+    this.set(0, key & 0xffff);
+  }
+
+  clearKey(): void {
+    this.set(0, 0);
   }
 }

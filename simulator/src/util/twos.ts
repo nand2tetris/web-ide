@@ -77,6 +77,13 @@ export function int2(i: string): number {
   return int(i, 2);
 }
 
+export function parseTwosInt(i: string): number {
+  if (i.toUpperCase().includes("X")) {
+    return int16(i);
+  }
+  return int10(i);
+}
+
 export function hex(i: number): string {
   const hu = chars((i & 0xf000) >> 12);
   const hl = chars((i & 0x0f00) >> 8);

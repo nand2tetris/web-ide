@@ -1,5 +1,13 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   Format,
@@ -8,9 +16,12 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
+import { loadBlob, loadAsm, loadHack } from "@nand2tetris/simulator/loader.js";
+
 import InlineEdit from "../inline_edit.js";
 import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 import { useClockReset } from "../clockface.js";
+import { BaseContext } from "../stores/base.context.js";
 
 const ITEM_HEIGHT = 34;
 
@@ -139,17 +150,29 @@ export const Memory = ({
     });
   };
 
-  // const { filePicker, fs } = useContext(AppContext);
-  // const doLoad = useCallback(async () => {
-  //   try {
-  //     const file = await filePicker.select();
-  //     await memory.load(fs, file);
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // }, [fs, filePicker, memory]);
+  const fileUploadRef = useRef<HTMLInputElement>(null);
+  const doLoad = useCallback(() => {
+    fileUploadRef.current?.click();
+  }, [fileUploadRef]);
 
-  const doLoad = () => undefined;
+  const { setStatus } = useContext(BaseContext);
+  const upload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) {
+      setStatus("No file selected");
+      return;
+    }
+    const file = event.target.files[0];
+    const source = await file.text();
+    const loader = file.name.endsWith("hack")
+      ? loadHack
+      : file.name.endsWith("asm")
+      ? loadAsm
+      : loadBlob;
+    const bytes = await loader(source);
+    memory.loadBytes(bytes);
+    event.target.value = ""; // Clear the input out
+    setGoto(goto);
+  }, []);
 
   const doUpdate = useCallback(
     (i: number, v: string) => {
@@ -168,6 +191,12 @@ export const Memory = ({
       <header>
         <div>{name}</div>
         <fieldset role="group">
+          <input
+            type="file"
+            style={{ display: "none" }}
+            ref={fileUploadRef}
+            onChange={upload}
+          />
           <button onClick={doLoad} className="flex-0">
             {/* <Icon name="upload_file" /> */}
             📂

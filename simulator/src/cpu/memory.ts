@@ -18,6 +18,7 @@ export interface MemoryAdapter {
   set(index: number, value: number): void;
   update(cell: number, value: string, format: Format): void;
   load(fs: FileSystem, path: string): Promise<void>;
+  loadBytes(bytes: number[]): void;
   range(start?: number, end?: number): number[];
   map<T>(
     fn: (index: number, value: number) => T,
@@ -32,7 +33,7 @@ export interface KeyboardAdapter {
   clearKey(): void;
 }
 
-export class Memory {
+export class Memory implements MemoryAdapter {
   private memory: Int16Array;
 
   get size(): number {
@@ -89,11 +90,15 @@ export class Memory {
 
   async load(fs: FileSystem, path: string) {
     try {
-      (await load(fs, path)).map((v, i) => this.set(i, v));
+      this.loadBytes(await load(fs, path));
     } catch (cause) {
       // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
       throw new Error(`Memory Failed to load file ${path}`);
     }
+  }
+
+  loadBytes(bytes: number[]): void {
+    bytes.map((v, i) => this.set(i, v));
   }
 
   range(start = 0, end = this.size): number[] {
@@ -140,6 +145,10 @@ export class SubMemory implements MemoryAdapter {
 
   load(fs: FileSystem, path: string): Promise<void> {
     return this.parent.load(fs, path);
+  }
+
+  loadBytes(bytes: number[]): void {
+    return this.parent.loadBytes(bytes);
   }
 
   range(start?: number, end?: number): number[] {

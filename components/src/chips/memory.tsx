@@ -4,7 +4,7 @@ import { ReactNode, useCallback, useMemo, useState } from "react";
 import {
   Format,
   FORMATS,
-  Memory as MemoryChip,
+  MemoryAdapter,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
@@ -23,7 +23,7 @@ export const MemoryBlock = ({
   onChange = () => undefined,
 }: {
   jmp?: { value: number };
-  memory: MemoryChip;
+  memory: MemoryAdapter;
   highlight?: number;
   editable?: boolean;
   format?: (v: number) => string;
@@ -126,7 +126,7 @@ export const Memory = ({
   name?: string;
   editable?: boolean;
   highlight?: number;
-  memory: MemoryChip;
+  memory: MemoryAdapter;
   format: Format;
 }) => {
   const [fmt, setFormat] = useState(format);

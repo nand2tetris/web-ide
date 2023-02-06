@@ -18,11 +18,11 @@ export interface MemoryAdapter {
   set(index: number, value: number): void;
   update(cell: number, value: string, format: Format): void;
   load(fs: FileSystem, path: string): Promise<void>;
-  range(start: number, end: number): number[];
+  range(start?: number, end?: number): number[];
   map<T>(
     fn: (index: number, value: number) => T,
-    start: number,
-    end: number
+    start?: number,
+    end?: number
   ): Iterable<T>;
 }
 
@@ -139,18 +139,18 @@ export class SubMemory implements MemoryAdapter {
   }
 
   load(fs: FileSystem, path: string): Promise<void> {
-    throw new Error("Method not implemented.");
+    return this.parent.load(fs, path);
   }
 
   range(start?: number, end?: number): number[] {
-    throw new Error("Method not implemented.");
+    return this.parent.range(start, end);
   }
   map<T>(
     fn: (index: number, value: number) => T,
     start?: number,
     end?: number
   ): Iterable<T> {
-    throw new Error("Method not implemented.");
+    return this.parent.map(fn, start, end);
   }
 }
 

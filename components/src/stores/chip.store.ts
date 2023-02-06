@@ -534,39 +534,6 @@ export function makeChipStore(
   return { initialState, reducers, actions };
 }
 
-// export function makePageStore<StoreState, StoreDispatch>(
-//   makeStore: (
-//     fs: FileSystem,
-//     setStatus: (status: string) => void,
-//     storage: Record<string, string>,
-//     dispatch: Dispatch<StoreDispatch>
-//   ) => { initialState: StoreState; reducers: {}; actions: {} }
-// ) {
-//   return function usePageStore() {
-//     const { fs, setStatus, storage } = useContext(BaseContext);
-
-//     const dispatch = useRef<StoreDispatch>(() => undefined);
-
-//     const { initialState, reducers, actions } = useMemo(
-//       () => makeChipStore(fs, setStatus, storage, dispatch),
-//       [fs, setStatus, storage, dispatch]
-//     );
-
-//     const [state, dispatcher] = useImmerReducer(
-//       reducers as unknown as Record<
-//         string,
-//         (state: StoreState, action?: unknown) => StoreState
-//       >,
-//       initialState
-//     );
-//     dispatch.current = dispatcher;
-
-//     return { state, dispatch, actions };
-//   };
-// }
-
-// export const useChipPageStore = makePageStore(makeChipStore);
-
 export function useChipPageStore() {
   const { fs, setStatus, storage } = useContext(BaseContext);
 
@@ -577,13 +544,7 @@ export function useChipPageStore() {
     [fs, setStatus, storage, dispatch]
   );
 
-  const [state, dispatcher] = useImmerReducer(
-    reducers as unknown as Record<
-      string,
-      (state: ChipPageState, action?: unknown) => void
-    >,
-    initialState
-  );
+  const [state, dispatcher] = useImmerReducer(reducers, initialState);
   dispatch.current = dispatcher;
 
   return { state, dispatch, actions };

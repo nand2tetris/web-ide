@@ -40,7 +40,8 @@ export const Fill = `// Runs an infinite loop that listens to the keyboard input
 	@i
 	M=M+1		// i++
 	@LOOP
-	0;JMP`;
+	0;JMP
+        `;
 
 export const FillAlt1 = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"

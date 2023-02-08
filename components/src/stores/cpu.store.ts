@@ -2,9 +2,9 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { CPU } from "@nand2tetris/simulator/cpu/cpu.js";
 import {
   KeyboardAdapter,
-  Memory,
   MemoryAdapter,
   MemoryKeyboard,
+  ROM,
   SubMemory,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { HACK } from "@nand2tetris/simulator/testing/mult.js";
@@ -76,7 +76,7 @@ export function makeCpuStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
-  const cpu = new CPU({ ROM: new Memory(HACK) });
+  const cpu = new CPU({ ROM: new ROM(HACK) });
 
   const reducers = {
     update(state: CpuPageState) {

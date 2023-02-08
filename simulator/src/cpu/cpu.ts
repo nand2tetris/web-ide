@@ -1,5 +1,13 @@
 import { alu, COMMANDS_OP, Flags } from "./alu.js";
-import { Memory, MemoryAdapter, MemoryKeyboard, SubMemory } from "./memory.js";
+import {
+  Memory,
+  MemoryAdapter,
+  MemoryKeyboard,
+  SubMemory,
+  RAM as RAMMem,
+  SCREEN_OFFSET,
+  SCREEN_SIZE,
+} from "./memory.js";
 
 export interface CPUInput {
   inM: number;
@@ -156,17 +164,12 @@ export class CPU {
     return this.#d;
   }
 
-  constructor({
-    RAM = new Memory(0x8000),
-    ROM,
-  }: {
-    RAM?: Memory;
-    ROM: Memory;
-  }) {
+  constructor({ RAM = new RAMMem(), ROM }: { RAM?: Memory; ROM: Memory }) {
     this.RAM = RAM;
     this.ROM = ROM;
 
-    this.Screen = new SubMemory(this.RAM, 0x2000, 0x4000);
+    // "Device Map"
+    this.Screen = new SubMemory(this.RAM, SCREEN_SIZE, SCREEN_OFFSET);
     this.Keyboard = new MemoryKeyboard(this.RAM);
   }
 

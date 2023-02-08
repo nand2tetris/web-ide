@@ -7,10 +7,11 @@ import { load } from "../fs.js";
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];
 
-export const SCREEN = 0x4000;
+export const SCREEN_OFFSET = 0x4000;
 export const SCREEN_ROWS = 512;
 export const SCREEN_COLS = 256;
-export const KEYBOARD = 0x6000;
+export const SCREEN_SIZE = SCREEN_ROWS * SCREEN_COLS;
+export const KEYBOARD_OFFSET = 0x6000;
 
 export interface MemoryAdapter {
   size: number;
@@ -98,7 +99,8 @@ export class Memory implements MemoryAdapter {
   }
 
   loadBytes(bytes: number[]): void {
-    bytes.map((v, i) => this.set(i, v));
+    this.memory.set(new Int16Array(bytes));
+    this.memory.fill(0, bytes.length, this.size);
   }
 
   range(start = 0, end = this.size): number[] {
@@ -178,5 +180,23 @@ export class MemoryKeyboard extends SubMemory implements KeyboardAdapter {
 
   clearKey(): void {
     this.set(0, 0);
+  }
+}
+
+export class ROM extends Memory {
+  static readonly SIZE = 0x8000;
+  constructor(program: Int16Array) {
+    const arr = new Int16Array(ROM.SIZE);
+    arr.set(program);
+    super(arr);
+  }
+}
+
+export class RAM extends Memory {
+  // 4k main memory, 2k screen memory, 1 keyboard
+  // static readonly SIZE = 0x4000 + 0x2000 + 0x0001;
+  static readonly SIZE = 0x8000;
+  constructor() {
+    super(RAM.SIZE);
   }
 }

@@ -10,7 +10,12 @@ import {
 } from "../../../cpu/cpu.js";
 import { int10 } from "../../../util/twos.js";
 import { load } from "../../../fs.js";
-import { KEYBOARD, KeyboardAdapter, SCREEN } from "../../../cpu/memory.js";
+import {
+  KEYBOARD_OFFSET,
+  KeyboardAdapter,
+  SCREEN_OFFSET,
+  SCREEN_SIZE,
+} from "../../../cpu/memory.js";
 
 export class ROM32K extends RAM {
   constructor() {
@@ -28,7 +33,8 @@ export class ROM32K extends RAM {
 }
 
 export class Screen extends RAM {
-  static readonly OFFSET = SCREEN;
+  static readonly SIZE = SCREEN_SIZE;
+  static readonly OFFSET = SCREEN_OFFSET;
 
   constructor() {
     super(13, "Screen");
@@ -36,7 +42,7 @@ export class Screen extends RAM {
 }
 
 export class Keyboard extends Chip implements KeyboardAdapter {
-  static readonly OFFSET = KEYBOARD;
+  static readonly OFFSET = KEYBOARD_OFFSET;
 
   constructor() {
     super([], ["out[16]"], "Keyboard");

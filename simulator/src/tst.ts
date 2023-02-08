@@ -83,9 +83,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     return this._step?.done ?? false;
   }
 
-  async step() {
+  step() {
     if (!this._step.done) {
-      await this._step.value.do(this);
+      this._step.value.do(this);
       this._step = this.steps.next();
       return false;
     }

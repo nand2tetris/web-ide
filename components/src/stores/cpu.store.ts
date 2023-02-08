@@ -34,11 +34,6 @@ class ImmMemory extends SubMemory {
     super(parent, parent.size, 0);
   }
 
-  override set(index: number, value: number): void {
-    super.set(index, value);
-    this.dispatch.current({ action: "update" });
-  }
-
   override async load(fs: FileSystem, path: string): Promise<void> {
     await super.load(fs, path);
     this.dispatch.current({ action: "update" });
@@ -87,7 +82,6 @@ export function makeCpuStore(
   const actions = {
     tick() {
       cpu.tick();
-      dispatch.current({ action: "update" });
     },
 
     resetRAM() {

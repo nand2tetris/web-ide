@@ -5,28 +5,36 @@ import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import { Runbar } from "@nand2tetris/components/runbar.js";
 import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
+import { useEffect, useRef } from "react";
 
 export const CPU = () => {
-  const { state, actions } = useCpuPageStore();
+  const { state, actions, dispatch } = useCpuPageStore();
 
-  const runner = new (class CPURunner extends Timer {
-    override tick() {
-      actions.tick();
-      return true;
-    }
+  const runner = useRef<Timer>();
+  useEffect(() => {
+    runner.current = new (class ChipTimer extends Timer {
+      override tick() {
+        actions.tick();
+        return false;
+      }
 
-    override finishFrame() {
-      // TODO
-    }
+      override finishFrame() {
+        dispatch.current({ action: "update" });
+      }
 
-    override reset() {
-      actions.reset();
-    }
+      override reset() {
+        actions.reset();
+      }
 
-    override toggle() {
-      // TODO
-    }
-  })();
+      override toggle() {
+        dispatch.current({ action: "update" });
+      }
+    })();
+
+    return () => {
+      runner.current?.stop();
+    };
+  }, [actions, dispatch]);
 
   return (
     <div>
@@ -54,7 +62,9 @@ export const CPU = () => {
           <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
         </div>
         <div>
-          <Runbar runner={runner}></Runbar>
+          {runner.current && <Runbar runner={runner.current} />}
+          <Screen memory={state.sim.Screen}></Screen>
+          <Keyboard keyboard={state.sim.Keyboard} />
           <div>
             <dl>
               <dt>PC</dt>
@@ -65,8 +75,6 @@ export const CPU = () => {
               <dd>{state.sim.D}</dd>
             </dl>
           </div>
-          <Screen memory={state.sim.Screen}></Screen>
-          <Keyboard keyboard={state.sim.Keyboard} />
         </div>
       </div>
     </div>

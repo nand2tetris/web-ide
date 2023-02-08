@@ -10,8 +10,10 @@ export abstract class Timer {
     this.finishFrame();
   }
 
-  abstract tick(): Promise<boolean> | boolean;
+  /// Update the simulation state, but DO NOT perform any UI changes.
+  abstract tick(): boolean;
 
+  /// UI Updates are allowed in finishFrame.
   finishFrame() {
     clock.frame();
   }
@@ -39,9 +41,15 @@ export abstract class Timer {
     this.#sinceLastFrame += delta;
     if (this.#sinceLastFrame > this.speed) {
       let done = false;
-      for (let i = 0; i < Math.min(this.steps, MAX_STEPS) && !done; i++) {
-        done = await this.tick();
+      // let steps = Math.min(this.steps, MAX_STEPS);
+      let steps = this.steps;
+      const timingLabel = `Timing ${steps} steps`;
+      console.time(timingLabel);
+      while (!done && steps--) {
+        // done = await this.tick();
+        done = this.tick();
       }
+      console.timeEnd(timingLabel);
       this.finishFrame();
       if (done) {
         this.stop();

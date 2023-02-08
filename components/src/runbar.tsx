@@ -50,7 +50,7 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
           // [2000, `Debug`], // For debugging, basically the same as clicking through
           [1000, `Slow`],
           [500, `Fast`],
-          [16, `Faster`],
+          [16, `Faster`], // 16ms, or 60fps
         ].map(([speed, label]) => (
           <option key={speed} value={speed}>
             {label}
@@ -70,10 +70,20 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         disabled={runner.state.running}
       >
         {[
-          [1, `1 Step`],
-          [500, "500"],
-          [1000, "1000"],
-          [2000, "2000"],
+          ...[
+            [1, `1 Step`],
+            [500, "500"],
+            [1000, "1000"],
+            [2000, "2000"],
+            [8000, "8000"],
+          ],
+          ...(runner.state.speed === 16
+            ? [
+                // 60fps
+                [16666, "1MHz"],
+                [16666 * 30, "30MHz"],
+              ]
+            : []),
         ].map(([steps, label]) => (
           <option key={steps} value={steps}>
             {label}

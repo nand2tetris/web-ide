@@ -42,7 +42,7 @@ export const MemoryBlock = ({
 }) => {
   const settings = useMemo<Partial<VirtualScrollSettings>>(
     () => ({
-      count: Math.min(memory.size, 20),
+      count: Math.min(memory.size, 25),
       maxIndex: memory.size,
       itemHeight: ITEM_HEIGHT,
       startIndex: jmp.value,
@@ -183,7 +183,7 @@ export const Memory = ({
   });
 
   return (
-    <article className="panel">
+    <article className={`panel memory ${name}`}>
       <header>
         <div>{name}</div>
         <fieldset role="group">
@@ -199,7 +199,7 @@ export const Memory = ({
           </button>
           <input
             style={{ width: "4em", height: "100%" }}
-            placeholder="Goto"
+            placeholder="Jump"
             value={jmp}
             onKeyDown={({ key }) => key === "Enter" && jumpTo()}
             onChange={({ target: { value } }) => setJmp(value)}

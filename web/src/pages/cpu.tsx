@@ -3,12 +3,19 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
-import { Runbar } from "@nand2tetris/components/runbar.js";
 import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+
+import "./cpu.scss";
+import { TestPanel } from "src/shell/test_panel";
+import { Panel } from "src/shell/panel";
 
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
+
+  const [tst, setTst] = useState("repeat {\n\tticktock;\n}");
+  const [out, setOut] = useState("");
+  const [cmp, setCmp] = useState("");
 
   const runner = useRef<Timer>();
   useEffect(() => {
@@ -37,46 +44,35 @@ export const CPU = () => {
   }, [actions, dispatch]);
 
   return (
-    <div>
-      <div
-        className="grid"
-        style={{
-          gridAutoFlow: "column",
-          gridTemplateColumns: "1fr 514px",
-        }}
-      >
-        <div
-          className="grid"
-          style={{
-            gridAutoFlow: "column",
-            gridTemplateColumns: "repeat(2, 1fr)",
-          }}
-        >
-          <MemoryComponent
-            name="ROM"
-            memory={state.sim.ROM}
-            highlight={state.sim.PC}
-            format="asm"
-            editable={false}
-          />
-          <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
-        </div>
+    <div className="CpuPage grid">
+      <MemoryComponent
+        name="ROM"
+        memory={state.sim.ROM}
+        highlight={state.sim.PC}
+        format="asm"
+        editable={false}
+      />
+      <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
+      <Panel className="IO">
+        <Screen memory={state.sim.Screen}></Screen>
+        <Keyboard keyboard={state.sim.Keyboard} />
         <div>
-          {runner.current && <Runbar runner={runner.current} />}
-          <Screen memory={state.sim.Screen}></Screen>
-          <Keyboard keyboard={state.sim.Keyboard} />
-          <div>
-            <dl>
-              <dt>PC</dt>
-              <dd>{state.sim.PC}</dd>
-              <dt>A</dt>
-              <dd>{state.sim.A}</dd>
-              <dt>D</dt>
-              <dd>{state.sim.D}</dd>
-            </dl>
-          </div>
+          <dl>
+            <dt>PC</dt>
+            <dd>{state.sim.PC}</dd>
+            <dt>A</dt>
+            <dd>{state.sim.A}</dd>
+            <dt>D</dt>
+            <dd>{state.sim.D}</dd>
+          </dl>
         </div>
-      </div>
+      </Panel>
+      <TestPanel
+        runner={runner}
+        tst={[tst, setTst, undefined]}
+        out={[out, setOut]}
+        cmp={[cmp, setCmp]}
+      />
     </div>
   );
 };

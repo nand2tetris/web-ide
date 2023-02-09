@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/macro";
 import {
-  CSSProperties,
   ReactNode,
   useCallback,
   useContext,
@@ -40,14 +39,13 @@ import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 
 export const Chip = () => {
-  const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker, tracking } = useContext(AppContext);
+  const { tracking } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
-  const [out] = useStateInitializer(state.files.out);
+  const [out, setOut] = useStateInitializer(state.files.out);
 
   useEffect(() => {
     actions.initialize();
@@ -74,6 +72,14 @@ export const Chip = () => {
     [actions, tracking]
   );
 
+  const tstSetter = useCallback(
+    (tst: string) => {
+      setTst(tst);
+      actions.compileTest(tst);
+    },
+    [setTst]
+  );
+
   const setChip = useCallback(
     (chip: string) => {
       actions.setChip(chip);
@@ -96,17 +102,6 @@ export const Chip = () => {
       cmp: files.cmp ?? cmp,
     });
   };
-
-  const loadTest = useCallback(async () => {
-    try {
-      const path = await filePicker.select();
-      const tst = await fs.readFile(path);
-      await compile.current({ tst });
-    } catch (e) {
-      console.error(e);
-      setStatus(`Failed to load into memory`);
-    }
-  }, [filePicker, setStatus, fs, compile]);
 
   const runner = useRef<Timer>();
   useEffect(() => {
@@ -311,18 +306,6 @@ export const Chip = () => {
         </>
       )}
     </Panel>
-  );
-
-  const [selectedTestTab, doSetSelectedTestTab] = useState<
-    "tst" | "cmp" | "out"
-  >("tst");
-
-  const setSelectedTestTab = useCallback(
-    (tab: typeof selectedTestTab) => {
-      doSetSelectedTestTab(tab);
-      tracking.trackEvent("tab", "change", tab);
-    },
-    [tracking]
   );
 
   const testPanel = (

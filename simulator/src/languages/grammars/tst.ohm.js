@@ -24,7 +24,7 @@ Tst <: Base {
   TstSetOperation = Set Name Index? Number
   Index = OpenSquare wholeDec? CloseSquare
   Condition = Value CompareOp Value
-  TstEvalOperation = Eval | Tick | Tock
+  TstEvalOperation = Eval | Tick | Tock | TickTock
   TstOutputOperation = Output
   TstEchoOperation = Echo String
   TstClearEchoOperation = ClearEcho
@@ -36,6 +36,7 @@ Tst <: Base {
   Eval = "eval"
   Tick = "tick"
   Tock = "tock"
+  TickTock = "ticktock"
   Echo = "echo"
   Repeat = "repeat"
   ClearEcho = "clear-echo"

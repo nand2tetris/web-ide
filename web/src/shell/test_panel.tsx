@@ -14,7 +14,6 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { AppContext } from "../App.context";
-import { Icon } from "../pico/icon";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
 import { Span } from "@nand2tetris/simulator/languages/base";
@@ -62,16 +61,16 @@ export const TestPanel = ({
       className="_test_panel"
       header={
         <>
-          <div className="flex-1">
+          <div className="flex-0">
             <Trans>Test</Trans>
           </div>
-          <div className="flex-2">
+          <div className="flex-1">
             {runner.current && <Runbar runner={runner.current} />}
           </div>
           <div>
-            <button onClick={loadTest}>
-              <Icon name="upload_file" />{" "}
-            </button>
+            <fieldset role="group">
+              <button onClick={loadTest}>📂</button>
+            </fieldset>
           </div>
         </>
       }

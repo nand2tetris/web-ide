@@ -164,6 +164,18 @@ export class CPU {
     return this.#d;
   }
 
+  setA(value: number) {
+    this.#a = value;
+  }
+
+  setD(value: number) {
+    this.#d = value;
+  }
+
+  setPC(value: number) {
+    this.#pc = value;
+  }
+
   constructor({ RAM = new RAMMem(), ROM }: { RAM?: Memory; ROM: Memory }) {
     this.RAM = RAM;
     this.ROM = ROM;

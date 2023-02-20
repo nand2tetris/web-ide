@@ -77,14 +77,14 @@ export const Screen = ({ memory }: { memory: ScreenMemory }) => {
   return (
     <article className="panel">
       <header>Screen</header>
-      <main>
+      <main style={{ backgroundColor: "var(--code-background-color)" }}>
         <figure
           style={{
             width: "100%",
             maxWidth: "512px",
             boxSizing: "content-box",
             marginInline: "auto",
-            margin: "0",
+            margin: "auto",
             borderTop: "2px solid gray",
             borderLeft: "2px solid gray",
             borderBottom: "2px solid lightgray",

@@ -3,20 +3,31 @@
 
 .CpuPage {
   --screen-size: calc(
-    calc(512px + calc(var(--block-spacing-horizontal) * 5)) / 2
+    512px + calc(calc(var(--block-spacing-horizontal) * 5)) / 2
   );
 
   height: 100%;
 
-  grid-template-rows: 1fr;
-  // grid-template-columns: repeat(var(--screen-size), 2) 1fr;
-  grid-template-columns: 300px 300px 512px 1fr;
   margin: 0px;
   gap: 0;
 
-  grid-template-areas: "ROM RAM IO test";
-  // "IO IO test"
-  // "ROM RAM test";
+  grid-template-areas: "ROM RAM" "IO IO" "test test";
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+
+  @media screen and (min-width: 1024px) {
+    grid-template-areas: "ROM RAM IO" "test test test";
+    grid-template-columns: 1fr 1fr var(--screen-size);
+    grid-template-rows: 1fr 1fr;
+  }
+
+  @media screen and (min-width: 1500px) {
+    grid-template-areas: "ROM RAM IO test";
+    grid-template-columns: 300px 300px var(--screen-size) auto;
+    grid-template-rows: 1fr;
+    // "IO IO test"
+    // "ROM RAM test";
+  }
 
   .memory.ROM {
     grid-area: ROM;
@@ -30,7 +41,7 @@
     grid-area: IO;
   }
 
-  .test {
+  ._test_panel {
     grid-area: test;
   }
 }

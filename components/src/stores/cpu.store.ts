@@ -1,5 +1,4 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { CPU } from "@nand2tetris/simulator/cpu/cpu.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
@@ -8,6 +7,7 @@ import {
   SubMemory,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { HACK } from "@nand2tetris/simulator/testing/mult.js";
+import { CPUTest } from "@nand2tetris/simulator/tst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
@@ -40,19 +40,19 @@ class ImmMemory extends SubMemory {
   }
 }
 
-function reduceCPU(
-  cpu: CPU,
+function reduceCPUTest(
+  cpuTest: CPUTest,
   dispatch: MutableRefObject<CpuStoreDispatch>
 ): CpuSim {
-  const RAM = new ImmMemory(cpu.RAM, dispatch);
-  const ROM = new ImmMemory(cpu.ROM, dispatch);
-  const Screen = new ImmMemory(cpu.Screen, dispatch);
-  const Keyboard = new MemoryKeyboard(new ImmMemory(cpu.RAM, dispatch));
+  const RAM = new ImmMemory(cpuTest.cpu.RAM, dispatch);
+  const ROM = new ImmMemory(cpuTest.cpu.ROM, dispatch);
+  const Screen = new ImmMemory(cpuTest.cpu.Screen, dispatch);
+  const Keyboard = new MemoryKeyboard(new ImmMemory(cpuTest.cpu.RAM, dispatch));
 
   return {
-    A: cpu.A,
-    D: cpu.D,
-    PC: cpu.PC,
+    A: cpuTest.cpu.A,
+    D: cpuTest.cpu.D,
+    PC: cpuTest.cpu.PC,
     RAM,
     ROM,
     Screen,
@@ -71,28 +71,28 @@ export function makeCpuStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
-  const cpu = new CPU({ ROM: new ROM(HACK) });
+  const test = new CPUTest(new ROM(HACK));
 
   const reducers = {
     update(state: CpuPageState) {
-      state.sim = reduceCPU(cpu, dispatch);
+      state.sim = reduceCPUTest(test, dispatch);
     },
   };
 
   const actions = {
     tick() {
-      cpu.tick();
+      test.cpu.tick();
     },
 
     resetRAM() {
-      cpu.RAM.set(0, 3);
-      cpu.RAM.set(1, 2);
+      test.cpu.RAM.set(0, 3);
+      test.cpu.RAM.set(1, 2);
       dispatch.current({ action: "update" });
       setStatus("Reset RAM");
     },
 
     resetCPU() {
-      cpu.reset();
+      test.reset();
       dispatch.current({ action: "update" });
       setStatus("Reset CPU");
     },
@@ -105,7 +105,7 @@ export function makeCpuStore(
   };
 
   const initialState = {
-    sim: reduceCPU(cpu, dispatch),
+    sim: reduceCPUTest(test, dispatch),
   };
 
   return { initialState, reducers, actions };

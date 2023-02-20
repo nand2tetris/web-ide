@@ -15,6 +15,8 @@ import {
 import { Bus, Chip, HIGH, Low, LOW } from "./chip/chip.js";
 import { Clock } from "./chip/clock.js";
 import { Output } from "./output.js";
+import { ROM } from "./cpu/memory.js";
+import { CPU } from "./cpu/cpu.js";
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
@@ -132,6 +134,73 @@ function isTstWhileStatement(line: TstStatement): line is TstWhileStatement {
   return (line as TstWhileStatement).condition !== undefined;
 }
 
+function makeLineStatement(line: TstLineStatement) {
+  const statement = new TestCompoundInstruction();
+  statement.span = line.span;
+  for (const op of line.ops) {
+    const inst = makeInstruction(op);
+    if (inst !== undefined) statement.addInstruction(inst);
+  }
+  return statement;
+}
+
+function makeInstruction(inst: TstOperation) {
+  const { op } = inst;
+  switch (op) {
+    case "tick":
+      return new TestTickInstruction();
+    case "tock":
+      return new TestTockInstruction();
+    case "eval":
+      return new TestEvalInstruction();
+    case "output":
+      return new TestOutputInstruction();
+    case "set":
+      return new TestSetInstruction(inst.id, inst.value, inst.index);
+    case "output-list":
+      return new TestOutputListInstruction(inst.spec);
+    case "echo":
+      return new TestEchoInstruction(inst.message);
+    case "clear-echo":
+      return new TestClearEchoInstruction();
+    case "loadRom":
+      return new TestLoadROMInstruction(inst.file);
+    case "load":
+    case "output-file":
+    case "compare-to":
+      return undefined;
+    default:
+      checkExhaustive(op, `Unknown tst operation ${op}`);
+  }
+}
+
+function fill<T extends Test>(test: T, tst: Tst): T {
+  for (const line of tst.lines) {
+    if (isTstLineStatment(line)) {
+      test.addInstruction(makeLineStatement(line));
+    } else {
+      const repeat = isTstWhileStatement(line)
+        ? new TestWhileInstruction(
+            new Condition(
+              line.condition.left,
+              line.condition.right,
+              line.condition.op
+            )
+          )
+        : new TestRepeatInstruction(line.count);
+      repeat.span = line.span;
+      test.addInstruction(repeat);
+      for (const statement of line.statements) {
+        repeat.addInstruction(makeLineStatement(statement));
+      }
+    }
+  }
+
+  test.reset();
+
+  return test;
+}
+
 export class ChipTest extends Test<ChipTestInstruction> {
   private chip: Chip = new Low();
   get chipId(): number {
@@ -142,71 +211,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   static from(tst: Tst): ChipTest {
     const test = new ChipTest();
-
-    for (const line of tst.lines) {
-      if (isTstLineStatment(line)) {
-        test.addInstruction(ChipTest.makeLineStatement(line));
-      } else {
-        const repeat = isTstWhileStatement(line)
-          ? new TestWhileInstruction(
-              new Condition(
-                line.condition.left,
-                line.condition.right,
-                line.condition.op
-              )
-            )
-          : new TestRepeatInstruction(line.count);
-        repeat.span = line.span;
-        test.addInstruction(repeat);
-        for (const statement of line.statements) {
-          repeat.addInstruction(ChipTest.makeLineStatement(statement));
-        }
-      }
-    }
-
-    test.reset();
-
-    return test;
-  }
-
-  private static makeLineStatement(line: TstLineStatement) {
-    const statement = new TestCompoundInstruction();
-    statement.span = line.span;
-    for (const op of line.ops) {
-      const inst = ChipTest.makeInstruction(op);
-      if (inst !== undefined) statement.addInstruction(inst);
-    }
-    return statement;
-  }
-
-  private static makeInstruction(inst: TstOperation) {
-    const { op } = inst;
-    switch (op) {
-      case "tick":
-        return new TestTickInstruction();
-      case "tock":
-        return new TestTockInstruction();
-      case "eval":
-        return new TestEvalInstruction();
-      case "output":
-        return new TestOutputInstruction();
-      case "set":
-        return new TestSetInstruction(inst.id, inst.value, inst.index);
-      case "output-list":
-        return new TestOutputListInstruction(inst.spec);
-      case "echo":
-        return new TestEchoInstruction(inst.message);
-      case "clear-echo":
-        return new TestClearEchoInstruction();
-      case "loadRom":
-        return new TestLoadROMInstruction(inst.file);
-      case "load":
-      case "output-file":
-      case "compare-to":
-        return undefined;
-      default:
-        checkExhaustive(op, `Unknown tst operation ${op}`);
-    }
+    return fill(test, tst);
   }
 
   with(chip: Chip): this {
@@ -268,17 +273,94 @@ export class ChipTest extends Test<ChipTestInstruction> {
 }
 
 export class CPUTest extends Test<CPUTestInstruction> {
-  hasVar(_variable: string | number): boolean {
+  readonly cpu: CPU;
+  private ticks = 0;
+
+  static from(tst: Tst): CPUTest {
+    const test = new CPUTest();
+    return fill(test, tst);
+  }
+
+  constructor(rom: ROM = new ROM(new Int16Array())) {
+    super();
+    this.cpu = new CPU({ ROM: rom });
+  }
+
+  override reset(): this {
+    this.cpu.reset();
+    this.ticks = 0;
+    return this;
+  }
+
+  hasVar(variable: string | number): boolean {
+    if (typeof variable === "number") {
+      return false;
+    }
+    // A: Current value of the address register (unsigned 15-bit);
+    // D: Current value of the data register (16-bit);
+    // PC: Current value of the Program Counter (unsigned 15-bit);
+    // RAM[i]: Current value of RAM location i (16-bit);
+    // time: Number of time units (also called clock cycles, or ticktocks) that elapsed since the simulation started (a read-only system variable).
+    if (
+      variable === "A" ||
+      variable === "D" ||
+      variable === "PC" ||
+      variable === "time" ||
+      variable.startsWith("RAM")
+    ) {
+      return true;
+    }
     return false;
   }
-  getVar(_variable: string | number): number {
+
+  getVar(variable: string | number): number {
+    switch (variable) {
+      case "A":
+        return this.cpu.A;
+      case "D":
+        return this.cpu.D;
+      case "PC":
+        return this.cpu.PC;
+      case "time":
+        return this.ticks;
+    }
+    if (typeof variable === "number") return 0;
+    if (variable.startsWith("RAM")) {
+      const num = Number(variable.substring(4, variable.length - 1));
+      return this.cpu.RAM.get(num);
+    }
     return 0;
   }
-  setVar(_variable: string, _value: number): void {
-    return undefined;
+
+  setVar(variable: string, value: number, index?: number): void {
+    // A: Current value of the address register (unsigned 15-bit);
+    // D: Current value of the data register (16-bit);
+    // PC: Current value of the Program Counter (unsigned 15-bit);
+    // RAM[i]: Current value of RAM location i (16-bit);
+    switch (variable) {
+      case "A":
+        this.cpu.setA(value);
+        break;
+      case "D":
+        this.cpu.setD(value);
+        break;
+      case "PC":
+        this.cpu.setPC(value);
+        break;
+      case "RAM":
+        this.cpu.RAM.set(index ?? 0, value);
+        break;
+    }
+    return;
   }
+
   ticktock(): void {
-    return undefined;
+    this.ticks += 1;
+    this.cpu.tick();
+  }
+
+  override async load(filename: string): Promise<void> {
+    await this.cpu.ROM.load(this.fs, filename);
   }
 }
 

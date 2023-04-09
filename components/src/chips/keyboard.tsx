@@ -1,5 +1,5 @@
 import { Keyboard as KeyboardChip } from "@nand2tetris/simulator/chip/builtins/computer/computer.js";
-import { KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, useState } from "react";
 import { RegisterComponent } from "./register.js";
 
 const KeyMap: Record<string, number | undefined> = {
@@ -84,16 +84,20 @@ export const Keyboard = ({
     // setShowPicker(false);
   };
 
-  const changeKey = useCallback(() => {
+  const clear = () => {
+    setKey(0);
+  };
+
+  const changeKey = () => {
     setShowPicker(true);
-  }, []);
+  };
 
   return (
     <div className="flex row align-baseline">
       <div className="flex-1">
         <RegisterComponent name="Keyboard" bits={bits} />
       </div>
-      <div className="flex-1">
+      <div className={showPicker ? "flex-1" : "flex-0"}>
         {showPicker ? (
           <input
             ref={(e) => e?.focus()}
@@ -102,10 +106,13 @@ export const Keyboard = ({
             onKeyUp={onKeyUp}
           />
         ) : (
-          <button onClick={changeKey}>
-            {/* <Icon name="keyboard" /> */}
-            ⌨️
-          </button>
+          <fieldset role="group">
+            <button onClick={changeKey}>
+              {/* <Icon name="keyboard" /> */}
+              ⌨️
+            </button>
+            <button onClick={clear}>🆑</button>
+          </fieldset>
         )}
       </div>
     </div>

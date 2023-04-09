@@ -6,6 +6,7 @@ import {
   ROM,
   SubMemory,
 } from "@nand2tetris/simulator/cpu/memory.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { CPUTest } from "@nand2tetris/simulator/tst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -22,8 +23,14 @@ export interface CpuSim {
   Keyboard: KeyboardAdapter;
 }
 
+export interface CPUTestSim {
+  useTest: boolean;
+  highlight: Span | undefined;
+}
+
 export interface CpuPageState {
   sim: CpuSim;
+  test: CPUTestSim;
 }
 
 class ImmMemory extends SubMemory {
@@ -72,23 +79,36 @@ export function makeCpuStore(
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
   const test = new CPUTest(new ROM(HACK));
+  let useTest = false;
 
   const reducers = {
     update(state: CpuPageState) {
       state.sim = reduceCPUTest(test, dispatch);
+      state.test.useTest = useTest;
+      state.test.highlight = test.currentStep?.span;
     },
   };
 
   const actions = {
     tick() {
-      test.cpu.tick();
+      if (useTest) {
+        test.step();
+      } else {
+        test.cpu.tick();
+      }
     },
 
     resetRAM() {
-      test.cpu.RAM.set(0, 3);
-      test.cpu.RAM.set(1, 2);
+      // test.cpu.RAM.set(0, 3);
+      // test.cpu.RAM.set(1, 2);
+      test.cpu.RAM.loadBytes([]);
       dispatch.current({ action: "update" });
       setStatus("Reset RAM");
+    },
+
+    toggleUseTest() {
+      useTest = !useTest;
+      dispatch.current({ action: "update" });
     },
 
     resetCPU() {
@@ -106,6 +126,10 @@ export function makeCpuStore(
 
   const initialState = {
     sim: reduceCPUTest(test, dispatch),
+    test: {
+      useTest,
+      highlight: test.currentStep?.span,
+    },
   };
 
   return { initialState, reducers, actions };

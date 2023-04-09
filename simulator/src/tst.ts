@@ -284,6 +284,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
   constructor(rom: ROM = new ROM(new Int16Array())) {
     super();
     this.cpu = new CPU({ ROM: rom });
+    this.reset();
   }
 
   override reset(): this {

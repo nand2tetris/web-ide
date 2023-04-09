@@ -23,11 +23,13 @@ export const TestPanel = ({
   tst: [tst, setTst, tstHighlight],
   cmp: [cmp, setCmp],
   out: [out],
+  disabled = false,
 }: {
   runner: RefObject<Timer | undefined>;
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
+  disabled?: boolean;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
@@ -105,6 +107,7 @@ export const TestPanel = ({
             grammar={TST.parser}
             language={"tst"}
             highlight={tstHighlight}
+            disabled={disabled}
           />
         </div>
         <div
@@ -136,6 +139,7 @@ export const TestPanel = ({
             onChange={setCmp}
             grammar={CMP.parser}
             language={"cmp"}
+            disabled={disabled}
           />
         </div>
         <div

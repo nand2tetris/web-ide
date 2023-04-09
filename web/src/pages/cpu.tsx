@@ -54,6 +54,17 @@ export const CPU = () => {
       />
       <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
       <Panel className="IO">
+        <div>
+          <label>
+            <input
+              type="checkbox"
+              onChange={actions.toggleUseTest}
+              checked={state.test.useTest}
+              role="switch"
+            />
+            Use Test Script
+          </label>
+        </div>
         <Screen memory={state.sim.Screen}></Screen>
         <Keyboard keyboard={state.sim.Keyboard} />
         <div>
@@ -68,8 +79,9 @@ export const CPU = () => {
         </div>
       </Panel>
       <TestPanel
+        disabled={!state.test.useTest}
         runner={runner}
-        tst={[tst, setTst, undefined]}
+        tst={[tst, setTst, state.test.highlight]}
         out={[out, setOut]}
         cmp={[cmp, setCmp]}
       />

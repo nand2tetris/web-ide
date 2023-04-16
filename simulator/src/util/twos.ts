@@ -61,7 +61,7 @@ export function bits(i: number): string {
 }
 
 export function int(n: string, radix: number): number {
-  const i = parseInt(n.replace(/[^\d+-.xa-fA-F]/g, ""), radix);
+  const i = parseInt(n.replace(/[^\d a-f A-F +-.]/g, ""), radix);
   return i & 0xffff;
 }
 

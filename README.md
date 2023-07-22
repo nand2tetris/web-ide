@@ -4,7 +4,7 @@ A Javascript reimplementation of the software suite described in www.nand2tetris
 
 Presently the implementation focuses on the Hardware Simulator (projects 1, 2, 3, 5). The CPU and the VM Emulators will be next. The goal is to allow students complete the projects using modern, web-based tools, without having to download code to their computers.
 
-Users can work with the tools via a web IDE, or via a VS Code extension. Both are decsribed below.   
+Users can work with the tools via a web IDE, or via a VS Code extension. Both are decsribed below.
 
 ## User Guide
 
@@ -92,14 +92,14 @@ A VSCode extension with language definitions and editor support.
 
 Language support for `.hdl` & `.tst` uses the language libraries in `simulator`.
 Syntax errors are highlighted, with in-editor error diagnostics on the failing token.
-Syntax hilighting rules activate for `HDL`, `TST`, `CMP`, `OUT`, `ASM`, `VM`, and `Jack` files.
+Syntax highlighting rules activate for `HDL`, `TST`, `CMP`, `OUT`, `ASM`, `VM`, and `Jack` files.
 Snippets are available for `HDL`, `ASM`, `VM`, `Jack`, and `TST` files.
 
 #### Views
 
 The extension adds an activity bar container, `NAND2Tetris`.
 `NAND2TETRIS: HDL CHIP` opens in the container, and shows a chip panel when the user has opened an HDL file.
-The panel attemps to update whenever changing HDL files, or when saving the file.
+The panel attempts to update whenever changing HDL files, or when saving the file.
 It does not update if the new HDL does not parse.
 
 ### Jiffies
@@ -112,4 +112,4 @@ Jiffies contains a few utility functions & types.
 
 ## Code of Conduct
 
-This project is goverened by its [Code of Conduct](./CODE_OF_CONDUCT.md).
+This project is governed by its [Code of Conduct](./CODE_OF_CONDUCT.md).

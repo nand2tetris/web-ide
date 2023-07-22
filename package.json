@@ -28,6 +28,7 @@
     "build:extension": "CI=true npm run build -w extension",
     "test": "CI=true npm test -w simulator && CI=true npm test -w components && CI=true npm test -w web",
     "web": "npm run start -w web",
+    "start": "npm run web",
     "preinstall-cli": "npm run build -w projects && npm run build -w runner && npm run build -w simulator && npm run build -w cli",
     "install-cli": "npm i -g cli"
   },

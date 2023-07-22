@@ -12,6 +12,7 @@ git clone
 npm install
 
 # Run
+npm run build
 npm start
 ```
 

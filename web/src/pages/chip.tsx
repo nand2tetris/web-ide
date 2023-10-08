@@ -71,9 +71,9 @@ export const Chip = () => {
 
   const setChip = useCallback(
     (chip: string) => {
-      actions.setChip(chip);
-      tracking.trackEvent("action", "setChip", chip);
-    },
+              actions.setChip(chip);
+        tracking.trackEvent("action", "setChip", chip);
+      },
     [actions, tracking]
   );
 
@@ -218,7 +218,9 @@ export const Chip = () => {
         value={hdl}
         onChange={(source) => {
           setHdl(source);
-          compile.current({ hdl: source });
+          if (!useBuiltin) {
+            compile.current({ hdl: source });
+          }
         }}
         grammar={HDL.parser}
         language={"hdl"}

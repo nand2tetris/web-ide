@@ -72,6 +72,7 @@ export const Chip = () => {
   const setChip = useCallback(
     (chip: string) => {
       actions.setChip(chip);
+      actions.reset();
       tracking.trackEvent("action", "setChip", chip);
     },
     [actions, tracking]
@@ -153,6 +154,7 @@ export const Chip = () => {
       actions.useBuiltin();
       setUseBuiltin(true);
     }
+    actions.reset();
   };
 
   const selectors = (

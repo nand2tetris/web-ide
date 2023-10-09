@@ -312,6 +312,7 @@ export function makeChipStore(
       clock.reset();
       nextChip.eval();
       chip = nextChip;
+      chip.reset();
       test = test.with(chip).reset();
       dispatch.current({ action: "updateChip", payload: { invalid: false } });
       dispatch.current({ action: "updateTestStep" });

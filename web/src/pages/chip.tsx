@@ -72,7 +72,6 @@ export const Chip = () => {
   const setChip = useCallback(
     (chip: string) => {
       actions.setChip(chip);
-      actions.reset();
       tracking.trackEvent("action", "setChip", chip);
     },
     [actions, tracking]
@@ -145,15 +144,14 @@ export const Chip = () => {
   );
 
   const [useBuiltin, setUseBuiltin] = useState(false);
-  const toggleUseBuiltin = async () => {
+  const toggleUseBuiltin = () => {
     if (useBuiltin) {
       setUseBuiltin(false);
-      await actions.useBuiltin(false);
+      actions.useBuiltin(false);
     } else {
       setUseBuiltin(true);
-      await actions.useBuiltin(true, hdl);
+      actions.useBuiltin(true, hdl);
     }
-    actions.reset();
   };
 
   const selectors = (

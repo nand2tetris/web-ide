@@ -273,15 +273,11 @@ export const Chip = () => {
       ) : (
         <>
           <FullPinout sim={state.sim} toggle={actions.toggle} />
-          <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
-            <main>
-              {visualizations.length > 0 ? (
-                visualizations.map(([_, v]) => v)
-              ) : (
-                <p>None</p>
-              )}
-            </main>
-          </Accordian>
+          {visualizations.length > 0 && (
+            <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
+              <main>{visualizations.map(([_, v]) => v)}</main>
+            </Accordian>
+          )}
         </>
       )}
     </Panel>

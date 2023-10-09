@@ -10,10 +10,10 @@ import {
 } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   Chip,
-  Chip as SimChip,
+Chip as SimChip,
   Low,
   Pin,
-} from "@nand2tetris/simulator/chip/chip.js";
+  } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
@@ -253,11 +253,15 @@ export function makeChipStore(
       dispatch.current({ action: "updateChip" });
     },
 
-    updateFiles({ hdl, tst, cmp }: { hdl: string; tst: string; cmp: string }) {
+    updateFiles({ hdl, tst, cmp }: { hdl?: string; tst?: string; cmp: string }) {
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       try {
-        this.compileChip(hdl);
-        this.compileTest(tst);
+        if (hdl) {
+          this.compileChip(hdl);
+        }
+        if (tst) {
+          this.compileTest(tst);
+        }
       } catch (e) {
         setStatus(display(e));
       }

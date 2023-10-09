@@ -71,9 +71,9 @@ export const Chip = () => {
 
   const setChip = useCallback(
     (chip: string) => {
-              actions.setChip(chip);
-        tracking.trackEvent("action", "setChip", chip);
-      },
+      actions.setChip(chip);
+      tracking.trackEvent("action", "setChip", chip);
+    },
     [actions, tracking]
   );
 
@@ -85,7 +85,7 @@ export const Chip = () => {
   const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
     await actions.updateFiles({
-      hdl: files.hdl ?? hdl,
+      hdl: files.hdl,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
     });
@@ -147,7 +147,7 @@ export const Chip = () => {
   const toggleUseBuiltin = async () => {
     if (useBuiltin) {
       actions.useBuiltin(false);
-      compile.current();
+      compile.current({ hdl });
       setUseBuiltin(false);
     } else {
       actions.useBuiltin();
@@ -218,9 +218,7 @@ export const Chip = () => {
         value={hdl}
         onChange={(source) => {
           setHdl(source);
-          if (!useBuiltin) {
-            compile.current({ hdl: source });
-          }
+          compile.current(useBuiltin ? {} : { hdl: source });
         }}
         grammar={HDL.parser}
         language={"hdl"}

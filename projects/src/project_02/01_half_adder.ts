@@ -1,12 +1,11 @@
 export const hdl = `// Computes the sum of two bits.
 
 CHIP HalfAdder {
-   IN a, b;    // 1-bit inputs
-   OUT sum,    // Right bit of a + b 
-       carry;  // Left bit of a + b
+    IN a, b;    // 1-bit inputs
+    OUT sum,    // Right bit of a + b 
+        carry;  // Left bit of a + b
 
-   PARTS:
-   // Put you code here:
+    PARTS:
 }`;
 export const cmp = `|   a   |   b   |  sum  | carry |
 |   0   |   0   |   0   |   0   |

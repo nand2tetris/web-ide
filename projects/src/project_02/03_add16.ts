@@ -4,10 +4,10 @@ export const hdl = `/**
 */
 
 CHIP Add16 {
-   IN a[16], b[16];
-   OUT out[16];
+    IN a[16], b[16];
+    OUT out[16];
 
-   PARTS:
+    PARTS:
 }`;
 export const cmp = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |

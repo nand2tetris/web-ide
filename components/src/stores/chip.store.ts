@@ -253,11 +253,11 @@ export function makeChipStore(
       dispatch.current({ action: "updateChip" });
     },
 
-    updateFiles({ hdl, tst, cmp }: { hdl?: string; tst?: string; cmp: string }) {
+    async updateFiles({ hdl, tst, cmp }: { hdl?: string; tst?: string; cmp: string }) {
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       try {
         if (hdl) {
-          this.compileChip(hdl);
+          await this.compileChip(hdl);
         }
         if (tst) {
           this.compileTest(tst);
@@ -268,7 +268,7 @@ export function makeChipStore(
     },
 
     async compileChip(hdl: string) {
-      chip.remove();
+            chip.remove();
       const maybeParsed = HDL.parse(hdl);
       if (isErr(maybeParsed)) {
         setStatus("Failed to parse chip");
@@ -304,13 +304,13 @@ export function makeChipStore(
       clock.reset();
       nextChip.eval();
       chip = nextChip;
-      test = test.with(chip).reset();
+            test = test.with(chip).reset();
       dispatch.current({ action: "updateChip", payload: { invalid: false } });
       dispatch.current({ action: "updateTestStep" });
     },
 
     async loadChip(project: string, name: string) {
-      storage["/chip/chip"] = name;
+            storage["/chip/chip"] = name;
       const fsName = (ext: string) =>
         `/projects/${project}/${name}/${name}.${ext}`;
 
@@ -324,7 +324,7 @@ export function makeChipStore(
       ]);
 
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
-      this.compileChip(hdl);
+      await this.compileChip(hdl);
       this.compileTest(tst);
     },
 
@@ -366,7 +366,7 @@ export function makeChipStore(
         usingBuiltin = false;
         return;
       }
-      usingBuiltin = true;
+            usingBuiltin = true;
       const builtinName = chip.name ?? chipName;
       const nextChip = getBuiltinChip(builtinName);
       if (isErr(nextChip)) {

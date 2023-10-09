@@ -369,9 +369,10 @@ export function makeChipStore(
       dispatch.current({ action: "updateChip" });
     },
 
-    useBuiltin(doUseBuiltin = true) {
+    async useBuiltin(doUseBuiltin = true, hdl?: string) {
       if (!doUseBuiltin) {
         usingBuiltin = false;
+        await this.loadChip(project, chipName);
         return;
       }
       usingBuiltin = true;
@@ -383,6 +384,20 @@ export function makeChipStore(
         );
         return;
       }
+
+      // Save hdl code that will be overwritten by the switch
+      if (hdl) {
+        await this.saveChip(hdl, project, chipName);
+      }
+
+      const template = (ChipProjects[project].CHIPS as any)[builtinName][
+        `${builtinName}.hdl`
+      ] as string;
+      const builtinCode = template.replace(
+        "PARTS:",
+        `PARTS:\n    BUILTIN ${builtinName}`
+      );
+      dispatch.current({ action: "setFiles", payload: { hdl: builtinCode } });
       this.replaceChip(Ok(nextChip));
     },
 

@@ -221,7 +221,6 @@ const Monaco = ({
         language={language}
         onMount={onMount}
       />
-      {disabled && <div className="overlay" />}
     </>
   );
 };

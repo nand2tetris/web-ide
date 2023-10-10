@@ -15,7 +15,11 @@ import "./chip.scss";
 import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
 import { Clockface } from "@nand2tetris/components/clockface.js";
 import { DiffTable } from "@nand2tetris/components/difftable.js";
-import { FullPinout } from "@nand2tetris/components/pinout.js";
+import {
+  FullPinout,
+  PinContext,
+  PinResetDispatcher,
+} from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { Runbar } from "@nand2tetris/components/runbar.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
@@ -72,6 +76,7 @@ export const Chip = () => {
   const setChip = useCallback(
     (chip: string) => {
       actions.setChip(chip);
+      pinResetDispatcher.reset();
       tracking.trackEvent("action", "setChip", chip);
     },
     [actions, tracking]
@@ -152,6 +157,7 @@ export const Chip = () => {
       setUseBuiltin(true);
       actions.useBuiltin(true, hdl);
     }
+    pinResetDispatcher.reset();
   };
 
   const selectors = (
@@ -253,6 +259,8 @@ export const Chip = () => {
     parts: state.sim.chip,
   });
 
+  const pinResetDispatcher = new PinResetDispatcher();
+
   const pinsPanel = (
     <Panel
       className="_parts_panel"
@@ -269,7 +277,9 @@ export const Chip = () => {
         <Trans>Invalid Chip</Trans>
       ) : (
         <>
-          <FullPinout sim={state.sim} toggle={actions.toggle} />
+          <PinContext.Provider value={pinResetDispatcher}>
+            <FullPinout sim={state.sim} toggle={actions.toggle} />
+          </PinContext.Provider>
           {visualizations.length > 0 && (
             <Accordian summary={<Trans>Visualization</Trans>} open={true}>
               <main>{visualizations.map(([_, v]) => v)}</main>

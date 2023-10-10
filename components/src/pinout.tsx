@@ -6,6 +6,9 @@ import {
 } from "@nand2tetris/simulator/chip/chip.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import { ChipSim } from "./stores/chip.store.js";
+import { createContext, useContext, useEffect, useState } from "react";
+
+export const PinContext = createContext({});
 
 export interface ImmPin {
   bits: [number, Voltage][];
@@ -67,11 +70,13 @@ export const FullPinout = (props: {
             pins={outPins}
             header="Output pins"
             disabled={props.sim.pending}
+            enableEdit={false}
           />
           <PinoutBlock
             pins={internalPins}
             header="Internal pins"
             disabled={props.sim.pending}
+            enableEdit={false}
           />
         </tbody>
       </table>
@@ -80,7 +85,11 @@ export const FullPinout = (props: {
 };
 
 export const PinoutBlock = (
-  props: PinoutPins & { header: string; disabled?: boolean }
+  props: PinoutPins & {
+    header: string;
+    disabled?: boolean;
+    enableEdit?: boolean;
+  }
 ) => (
   <>
     {props.pins.length > 0 && (
@@ -92,7 +101,12 @@ export const PinoutBlock = (
       <tr key={immPin.pin.name}>
         <td>{immPin.pin.name}</td>
         <td>
-          <Pin pin={immPin} toggle={props.toggle} disabled={props.disabled} />
+          <Pin
+            pin={immPin}
+            toggle={props.toggle}
+            disabled={props.disabled}
+            enableEdit={props.enableEdit}
+          />
         </td>
       </tr>
     ))}
@@ -135,23 +149,99 @@ const Pin = ({
   pin,
   toggle,
   disabled = false,
+  enableEdit = true,
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
   disabled?: boolean;
+  enableEdit?: boolean;
 }) => {
+  const [isBin, setIsBin] = useState(true);
+  const [decimal, setDecimal] = useState(0);
+
+  const toggleBin = () => {
+    setIsBin(!isBin);
+  };
+
+  const resetDispatcher = useContext(PinContext) as PinResetDispatcher;
+  resetDispatcher.registerCallback(() => {
+    setIsBin(true);
+    setDecimal(0);
+  });
+
+  useEffect(() => {
+    if (!isBin) {
+      let value = 0;
+      for (const [i, v] of pin.bits) {
+        value += v ? 2 ** i : 0;
+      }
+      setDecimal(value);
+    }
+  }, [pin, isBin]);
+
+  const handleDecimalChange = (n: number) => {
+    setDecimal(n);
+
+    for (let i = 0; i < pin.bits.length; i++) {
+      if (pin.bits[pin.bits.length - i - 1][1] !== ((n >> i) & 1)) {
+        toggle?.(pin.pin, i);
+      }
+    }
+  };
+
   return (
-    <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
-      {pin.bits.map(([i, v]) => (
-        <button
-          key={i}
-          onClick={() => toggle?.(pin.pin, i)}
-          disabled={disabled}
-          data-testid={`pin-${i}`}
-        >
-          {v}
-        </button>
-      ))}
-    </fieldset>
+    <div
+      style={{ display: "flex", flexDirection: "row", alignItems: "center" }}
+    >
+      <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
+        {isBin ? (
+          pin.bits.map(([i, v]) => (
+            <button
+              key={i}
+              onClick={() => toggle?.(pin.pin, i)}
+              disabled={disabled}
+              data-testid={`pin-${i}`}
+            >
+              {v}
+            </button>
+          ))
+        ) : (
+          <input
+            type="number"
+            className="colored"
+            value={decimal}
+            onChange={(e) => {
+              handleDecimalChange(parseInt(e.target.value));
+            }}
+            disabled={!enableEdit}
+          />
+        )}
+      </fieldset>
+      {pin.bits.length > 1 && (
+        <>
+          <div style={{ width: "1em" }} />
+          <button
+            style={{ maxWidth: "3em", margin: 0 }}
+            onClick={() => toggleBin()}
+          >
+            {isBin ? "dec" : "bin"}
+          </button>
+        </>
+      )}
+    </div>
   );
 };
+
+export class PinResetDispatcher {
+  private callbacks: (() => void)[] = [];
+
+  registerCallback(callback: () => void) {
+    this.callbacks.push(callback);
+  }
+
+  reset() {
+    for (const callback of this.callbacks) {
+      callback();
+    }
+  }
+}

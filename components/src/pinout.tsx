@@ -157,7 +157,7 @@ const Pin = ({
   enableEdit?: boolean;
 }) => {
   const [isBin, setIsBin] = useState(true);
-  const [decimal, setDecimal] = useState(0);
+  const [decimal, setDecimal] = useState("");
 
   const toggleBin = () => {
     setIsBin(!isBin);
@@ -166,22 +166,42 @@ const Pin = ({
   const resetDispatcher = useContext(PinContext) as PinResetDispatcher;
   resetDispatcher.registerCallback(() => {
     setIsBin(true);
-    setDecimal(0);
   });
 
   useEffect(() => {
     if (!isBin) {
       let value = 0;
-      for (const [i, v] of pin.bits) {
-        value += v ? 2 ** i : 0;
+      if (pin.bits[0][1]) {
+        // negative
+        for (const [i, v] of pin.bits) {
+          if (i < pin.bits.length - 1 && !v) {
+            value += 2 ** i;
+          }
+        }
+        value = -value - 1;
+      } else {
+        // positive
+        for (const [i, v] of pin.bits) {
+          if (i < pin.bits.length - 1 && v) {
+            value += 2 ** i;
+          }
+        }
       }
-      setDecimal(value);
+      setDecimal(value.toString());
     }
   }, [pin, isBin]);
 
-  const handleDecimalChange = (n: number) => {
-    setDecimal(n);
+  const handleDecimalChange = (value: string) => {
+    const positive = value.replace(/[^\d]/g, "");
+    const numeric = value[0] === "-" ? `-${positive}` : positive;
 
+    setDecimal(numeric);
+    if (!isNaN(parseInt(numeric))) {
+      updatePins(parseInt(numeric));
+    }
+  };
+
+  const updatePins = (n: number) => {
     for (let i = 0; i < pin.bits.length; i++) {
       if (pin.bits[pin.bits.length - i - 1][1] !== ((n >> i) & 1)) {
         toggle?.(pin.pin, i);
@@ -207,11 +227,10 @@ const Pin = ({
           ))
         ) : (
           <input
-            type="number"
             className="colored"
             value={decimal}
             onChange={(e) => {
-              handleDecimalChange(parseInt(e.target.value));
+              handleDecimalChange(e.target.value);
             }}
             disabled={!enableEdit}
           />

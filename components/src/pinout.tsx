@@ -36,6 +36,7 @@ export interface PinoutPins {
 export const FullPinout = (props: {
   sim: ChipSim;
   toggle: (pin: ChipPin, i: number | undefined) => void;
+  setInputValid: (pending: boolean) => void;
 }) => {
   const { inPins, outPins, internalPins } = props.sim;
   return (
@@ -65,6 +66,7 @@ export const FullPinout = (props: {
             pins={inPins}
             header="Input pins"
             toggle={props.toggle}
+            setInputValid={props.setInputValid}
           />
           <PinoutBlock
             pins={outPins}
@@ -89,6 +91,7 @@ export const PinoutBlock = (
     header: string;
     disabled?: boolean;
     enableEdit?: boolean;
+    setInputValid?: (valid: boolean) => void;
   }
 ) => (
   <>
@@ -106,6 +109,7 @@ export const PinoutBlock = (
             toggle={props.toggle}
             disabled={props.disabled}
             enableEdit={props.enableEdit}
+            setInputValid={props.setInputValid}
           />
         </td>
       </tr>
@@ -150,11 +154,13 @@ const Pin = ({
   toggle,
   disabled = false,
   enableEdit = true,
+  setInputValid,
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
   disabled?: boolean;
   enableEdit?: boolean;
+  setInputValid?: (valid: boolean) => void;
 }) => {
   const [isBin, setIsBin] = useState(true);
   const [decimal, setDecimal] = useState("");
@@ -196,8 +202,11 @@ const Pin = ({
     const numeric = value[0] === "-" ? `-${positive}` : positive;
 
     setDecimal(numeric);
-    if (!isNaN(parseInt(numeric))) {
+    if (isNaN(parseInt(numeric))) {
+      setInputValid?.(false);
+    } else {
       updatePins(parseInt(numeric));
+      setInputValid?.(true);
     }
   };
 

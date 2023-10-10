@@ -232,9 +232,15 @@ export const Chip = () => {
     </Panel>
   );
 
+  const [inputValid, setInputValid] = useState(true);
+
   const chipButtons = (
     <fieldset role="group">
-      <button onClick={doEval} onKeyDown={doEval} disabled={!state.sim.pending}>
+      <button
+        onClick={doEval}
+        onKeyDown={doEval}
+        disabled={!state.sim.pending || !inputValid}
+      >
         <Trans>Eval</Trans>
       </button>
       <button
@@ -278,7 +284,11 @@ export const Chip = () => {
       ) : (
         <>
           <PinContext.Provider value={pinResetDispatcher}>
-            <FullPinout sim={state.sim} toggle={actions.toggle} />
+            <FullPinout
+              sim={state.sim}
+              toggle={actions.toggle}
+              setInputValid={setInputValid}
+            />
           </PinContext.Provider>
           {visualizations.length > 0 && (
             <Accordian summary={<Trans>Visualization</Trans>} open={true}>

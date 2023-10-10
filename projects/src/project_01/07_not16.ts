@@ -1,10 +1,10 @@
 export const hdl = `// 16-bit Not gate: for i=0..15: out[i] = not in[i]
 
 CHIP Not16 {
-   IN in[16];
-   OUT out[16];
+    IN in[16];
+    OUT out[16];
 
-   PARTS:
+    PARTS:
 }`;
 export const tst = `output-list in%B1.16.1 out%B1.16.1;
 set in %B0000000000000000, eval, output;

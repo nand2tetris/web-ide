@@ -76,8 +76,8 @@ export const Chip = () => {
   const setChip = useCallback(
     (chip: string) => {
       actions.setChip(chip);
-      pinResetDispatcher.reset();
       tracking.trackEvent("action", "setChip", chip);
+      pinResetDispatcher.reset();
     },
     [actions, tracking]
   );

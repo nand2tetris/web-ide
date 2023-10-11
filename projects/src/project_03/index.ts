@@ -40,15 +40,15 @@ export const CHIPS = {
     "RAM512.tst": RAM512.tst,
     "RAM512.cmp": RAM512.cmp,
   },
-  RAM4k: {
-    "RAM4k.hdl": RAM4k.hdl,
-    "RAM4k.tst": RAM4k.tst,
-    "RAM4k.cmp": RAM4k.cmp,
+  RAM4K: {
+    "RAM4K.hdl": RAM4k.hdl,
+    "RAM4K.tst": RAM4k.tst,
+    "RAM4K.cmp": RAM4k.cmp,
   },
-  RAM16k: {
-    "RAM16k.hdl": RAM16k.hdl,
-    "RAM16k.tst": RAM16k.tst,
-    "RAM16k.cmp": RAM16k.cmp,
+  RAM16K: {
+    "RAM16K.hdl": RAM16k.hdl,
+    "RAM16K.tst": RAM16k.tst,
+    "RAM16K.cmp": RAM16k.cmp,
   },
 };
 

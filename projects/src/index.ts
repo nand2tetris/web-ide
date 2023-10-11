@@ -65,11 +65,11 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "FullAdder",
     "Add16",
     "Inc16",
-    "AluNoStat",
+    "ALUNoStat",
     "ALU",
     // "ALUAll", // Special secret undocumented ALU tests
   ],
-  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
+  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K"],
   "05": ["Memory", "CPU", "Computer"],
 };
 

@@ -65,7 +65,6 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "FullAdder",
     "Add16",
     "Inc16",
-    "ALUNoStat",
     "ALU",
     // "ALUAll", // Special secret undocumented ALU tests
   ],

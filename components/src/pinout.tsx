@@ -7,6 +7,7 @@ import {
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import { ChipSim } from "./stores/chip.store.js";
 import { createContext, useContext, useEffect, useState } from "react";
+import { ChipDisplayInfo, getDisplayInfo } from "./pin_display.js";
 
 export const PinContext = createContext({});
 
@@ -39,6 +40,7 @@ export const FullPinout = (props: {
   setInputValid: (pending: boolean) => void;
 }) => {
   const { inPins, outPins, internalPins } = props.sim;
+  const displayInfo = getDisplayInfo(props.sim.chip[0].name ?? "");
   return (
     <>
       <style>{`
@@ -67,18 +69,21 @@ export const FullPinout = (props: {
             header="Input pins"
             toggle={props.toggle}
             setInputValid={props.setInputValid}
+            displayInfo={displayInfo}
           />
           <PinoutBlock
             pins={outPins}
             header="Output pins"
             disabled={props.sim.pending}
             enableEdit={false}
+            displayInfo={displayInfo}
           />
           <PinoutBlock
             pins={internalPins}
             header="Internal pins"
             disabled={props.sim.pending}
             enableEdit={false}
+            displayInfo={displayInfo}
           />
         </tbody>
       </table>
@@ -92,6 +97,7 @@ export const PinoutBlock = (
     disabled?: boolean;
     enableEdit?: boolean;
     setInputValid?: (valid: boolean) => void;
+    displayInfo: ChipDisplayInfo;
   }
 ) => (
   <>
@@ -109,6 +115,7 @@ export const PinoutBlock = (
             toggle={props.toggle}
             disabled={props.disabled}
             enableEdit={props.enableEdit}
+            signed={props.displayInfo.isSigned(immPin.pin.name)}
             setInputValid={props.setInputValid}
           />
         </td>
@@ -154,12 +161,14 @@ const Pin = ({
   toggle,
   disabled = false,
   enableEdit = true,
+  signed = true,
   setInputValid,
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
   disabled?: boolean;
   enableEdit?: boolean;
+  signed?: boolean;
   setInputValid?: (valid: boolean) => void;
 }) => {
   const [isBin, setIsBin] = useState(true);
@@ -177,7 +186,7 @@ const Pin = ({
   useEffect(() => {
     if (!isBin) {
       let value = 0;
-      if (pin.bits[0][1]) {
+      if (signed && pin.bits[0][1]) {
         // negative
         for (const [i, v] of pin.bits) {
           if (i < pin.bits.length - 1 && !v) {
@@ -187,8 +196,9 @@ const Pin = ({
         value = -value - 1;
       } else {
         // positive
+        const limit = signed ? pin.bits.length - 1 : pin.bits.length;
         for (const [i, v] of pin.bits) {
-          if (i < pin.bits.length - 1 && v) {
+          if (i < limit && v) {
             value += 2 ** i;
           }
         }
@@ -199,7 +209,7 @@ const Pin = ({
 
   const handleDecimalChange = (value: string) => {
     const positive = value.replace(/[^\d]/g, "");
-    const numeric = value[0] === "-" ? `-${positive}` : positive;
+    const numeric = signed && value[0] === "-" ? `-${positive}` : positive;
 
     setDecimal(numeric);
     if (isNaN(parseInt(numeric))) {

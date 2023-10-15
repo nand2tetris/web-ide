@@ -393,7 +393,7 @@ export function makeChipStore(
       ] as string;
       const builtinCode = template.replace(
         "PARTS:",
-        `PARTS:\n    BUILTIN ${builtinName}`
+        `PARTS:\n    BUILTIN ${builtinName};`
       );
       dispatch.current({ action: "setFiles", payload: { hdl: builtinCode } });
       this.replaceChip(Ok(nextChip));

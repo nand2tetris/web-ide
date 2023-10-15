@@ -280,7 +280,7 @@ export const Chip = () => {
       }
     >
       {state.sim.invalid ? (
-        <Trans>Invalid Chip</Trans>
+        <Trans>Syntax errors in the HDL code</Trans>
       ) : (
         <>
           <PinContext.Provider value={pinResetDispatcher}>

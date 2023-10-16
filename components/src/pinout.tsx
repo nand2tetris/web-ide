@@ -172,6 +172,7 @@ const Pin = ({
   setInputValid?: (valid: boolean) => void;
 }) => {
   const [isBin, setIsBin] = useState(true);
+  let inputValid = true;
   const [decimal, setDecimal] = useState("");
 
   const toggleBin = () => {
@@ -183,8 +184,44 @@ const Pin = ({
     setIsBin(true);
   });
 
+  const setInputValidity = (valid: boolean) => { 
+    inputValid = valid;
+    setInputValid?.(valid);
+  }
+
+  const handleDecimalChange = (value: string) => {
+    const positive = value.replace(/[^\d]/g, "");
+    const numeric = signed && value[0] === "-" ? `-${positive}` : positive;
+
+    setDecimal(numeric);
+    if (isNaN(parseInt(numeric))) {
+      setInputValidity(false);
+    } else {
+      const newValue = parseInt(numeric);
+      if (
+        (!signed && newValue >= Math.pow(2, pin.bits.length)) ||
+        (signed &&
+          (newValue >= Math.pow(2, pin.bits.length - 1) ||
+            newValue < -Math.pow(2, pin.bits.length - 1)))
+      ) {
+        setInputValidity(false)
+      } else {
+        updatePins(newValue);
+        setInputValidity(true);
+      }
+    }
+  };
+
+  const updatePins = (n: number) => {
+    for (let i = 0; i < pin.bits.length; i++) {
+      if (pin.bits[pin.bits.length - i - 1][1] !== ((n >> i) & 1)) {
+        toggle?.(pin.pin, i);
+      }
+    }
+  };
+
   useEffect(() => {
-    if (!isBin) {
+    if (!isBin && inputValid) {
       let value = 0;
       if (signed && pin.bits[0][1]) {
         // negative
@@ -206,27 +243,6 @@ const Pin = ({
       setDecimal(value.toString());
     }
   }, [pin, isBin]);
-
-  const handleDecimalChange = (value: string) => {
-    const positive = value.replace(/[^\d]/g, "");
-    const numeric = signed && value[0] === "-" ? `-${positive}` : positive;
-
-    setDecimal(numeric);
-    if (isNaN(parseInt(numeric))) {
-      setInputValid?.(false);
-    } else {
-      updatePins(parseInt(numeric));
-      setInputValid?.(true);
-    }
-  };
-
-  const updatePins = (n: number) => {
-    for (let i = 0; i < pin.bits.length; i++) {
-      if (pin.bits[pin.bits.length - i - 1][1] !== ((n >> i) & 1)) {
-        toggle?.(pin.pin, i);
-      }
-    }
-  };
 
   return (
     <div

@@ -38,6 +38,7 @@ export const FullPinout = (props: {
   sim: ChipSim;
   toggle: (pin: ChipPin, i: number | undefined) => void;
   setInputValid: (pending: boolean) => void;
+  hideInternal?: boolean;
 }) => {
   const { inPins, outPins, internalPins } = props.sim;
   const displayInfo = getDisplayInfo(props.sim.chip[0].name ?? "");
@@ -78,13 +79,15 @@ export const FullPinout = (props: {
             enableEdit={false}
             displayInfo={displayInfo}
           />
-          <PinoutBlock
-            pins={internalPins}
-            header="Internal pins"
-            disabled={props.sim.pending}
-            enableEdit={false}
-            displayInfo={displayInfo}
-          />
+          {!props.hideInternal && (
+            <PinoutBlock
+              pins={internalPins}
+              header="Internal pins"
+              disabled={props.sim.pending}
+              enableEdit={false}
+              displayInfo={displayInfo}
+            />
+          )}
         </tbody>
       </table>
     </>

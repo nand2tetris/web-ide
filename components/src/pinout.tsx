@@ -184,10 +184,10 @@ const Pin = ({
     setIsBin(true);
   });
 
-  const setInputValidity = (valid: boolean) => { 
+  const setInputValidity = (valid: boolean) => {
     inputValid = valid;
     setInputValid?.(valid);
-  }
+  };
 
   const handleDecimalChange = (value: string) => {
     const positive = value.replace(/[^\d]/g, "");
@@ -204,7 +204,7 @@ const Pin = ({
           (newValue >= Math.pow(2, pin.bits.length - 1) ||
             newValue < -Math.pow(2, pin.bits.length - 1)))
       ) {
-        setInputValidity(false)
+        setInputValidity(false);
       } else {
         updatePins(newValue);
         setInputValidity(true);

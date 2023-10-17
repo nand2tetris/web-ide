@@ -5,7 +5,7 @@ import {
 import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   PC,
-  VRegister,
+  Register,
 } from "@nand2tetris/simulator/chip/builtins/sequential/bit.js";
 import {
   RAM,
@@ -59,7 +59,7 @@ export function makeVisualization(chip: Chip): ReactElement | undefined {
       />
     );
   }
-  if (chip instanceof VRegister) {
+  if (chip instanceof Register) {
     return (
       <RegisterComponent
         name={chip.name ?? `Chip ${chip.id}`}

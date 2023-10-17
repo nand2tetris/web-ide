@@ -23,6 +23,8 @@ export const CHIPS = {
   },
 };
 
+export const BUILTIN_CHIPS = {};
+
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/05");
   await reset(fs, CHIPS);

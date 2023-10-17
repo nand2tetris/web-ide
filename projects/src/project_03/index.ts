@@ -1,5 +1,6 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
+import * as DFF from "./00_dff.js";
 import * as Bit from "./01_bit.js";
 import * as Register from "./02_register.js";
 import * as PC from "./03_pc.js";
@@ -50,6 +51,10 @@ export const CHIPS = {
     "RAM16K.tst": RAM16k.tst,
     "RAM16K.cmp": RAM16k.cmp,
   },
+};
+
+export const BUILTIN_CHIPS = {
+  DFF: DFF.hdl,
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {

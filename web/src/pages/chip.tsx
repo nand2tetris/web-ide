@@ -202,7 +202,7 @@ export const Chip = () => {
         <>
           <div tabIndex={0}>HDL</div>
           <fieldset>
-            {state.controls.hasBuiltin && (
+            {state.controls.hasBuiltin && !state.controls.builtinOnly && (
               <label>
                 <input
                   type="checkbox"
@@ -223,11 +223,13 @@ export const Chip = () => {
         value={hdl}
         onChange={(source) => {
           setHdl(source);
-          compile.current(useBuiltin ? {} : { hdl: source });
+          compile.current(
+            useBuiltin || state.controls.builtinOnly ? {} : { hdl: source }
+          );
         }}
         grammar={HDL.parser}
         language={"hdl"}
-        disabled={useBuiltin}
+        disabled={useBuiltin || state.controls.builtinOnly}
       />
     </Panel>
   );
@@ -361,6 +363,7 @@ export const Chip = () => {
             grammar={TST.parser}
             language={"tst"}
             highlight={state.controls.span}
+            disabled={state.controls.builtinOnly}
           />
         </div>
         <div
@@ -392,6 +395,7 @@ export const Chip = () => {
             onChange={setCmp}
             grammar={CMP.parser}
             language={"cmp"}
+            disabled={state.controls.builtinOnly}
           />
         </div>
         <div

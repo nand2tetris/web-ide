@@ -156,6 +156,7 @@ const Monaco = ({
         },
         theme: codeTheme(),
         scrollBeyondLastLine: false,
+        readOnly: disabled,
       });
       doHighlight();
     },

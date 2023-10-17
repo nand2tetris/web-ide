@@ -42,6 +42,16 @@ export const resetFiles = async (fs: FileSystem) => {
   reset = false;
 };
 
+export const BUILTIN_CHIP_PROJECTS: Record<
+  "01" | "02" | "03" | "05",
+  string[]
+> = {
+  "01": ["Nand"],
+  "02": [],
+  "03": ["DFF"],
+  "05": [],
+};
+
 export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
     "Not",

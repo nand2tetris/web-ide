@@ -18,7 +18,11 @@ import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
-import { ChipProjects, CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
+import {
+  BUILTIN_CHIP_PROJECTS,
+  CHIP_PROJECTS,
+  ChipProjects,
+} from "@nand2tetris/projects/index.js";
 import { ChipTest } from "@nand2tetris/simulator/tst.js";
 
 import { ImmPin, reducePins } from "../pinout.js";
@@ -34,11 +38,15 @@ export const PROJECT_NAMES = [
   ["05", `Project 5`],
 ];
 
+function getChips(project: keyof typeof CHIP_PROJECTS) {
+  return BUILTIN_CHIP_PROJECTS[project].concat(CHIP_PROJECTS[project]);
+}
+
 function findDropdowns(storage: Record<string, string>) {
   const project =
     (storage["/chip/project"] as keyof typeof CHIP_PROJECTS) ?? "01";
-  const chips = CHIP_PROJECTS[project];
-  const chipName = storage["/chip/chip"] ?? chips[0];
+  const chips = getChips(project);
+  const chipName = storage["/chip/chip"] ?? CHIP_PROJECTS[project][0];
   return { project, chips, chipName };
 }
 
@@ -59,6 +67,29 @@ function makeTst() {
 
 function makeCmp() {
   return `| in|out|`;
+}
+
+function isBuiltinOnly(chipName: string) {
+  return Object.values(BUILTIN_CHIP_PROJECTS).flat().includes(chipName);
+}
+
+function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
+  if (isBuiltinOnly(chipName)) {
+    return (ChipProjects[project].BUILTIN_CHIPS as any)[chipName];
+  }
+
+  return (ChipProjects[project].CHIPS as any)[chipName][
+    `${chipName}.hdl`
+  ] as string;
+}
+
+function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
+  const template = getTemplate(project, chipName);
+  const builtinCode = template.replace(
+    "PARTS:",
+    `PARTS:\n    BUILTIN ${chipName};`
+  );
+  return builtinCode;
 }
 
 export interface ChipPageState {
@@ -89,6 +120,7 @@ export interface ControlsState {
   chips: string[];
   chipName: string;
   hasBuiltin: boolean;
+  builtinOnly: boolean;
   runningTest: boolean;
   span?: Span;
   error: string;
@@ -125,6 +157,7 @@ export function makeChipStore(
   let chip = new Low();
   let test = new ChipTest();
   let usingBuiltin = false;
+  let builtinOnly = false;
 
   const reducers = {
     setFiles(
@@ -164,7 +197,7 @@ export function makeChipStore(
       state.controls.error = state.sim.invalid
         ? payload?.error ?? state.controls.error
         : "";
-      state.controls.chips = CHIP_PROJECTS[state.controls.project];
+      state.controls.chips = getChips(state.controls.project);
       state.controls.chipName = state.sim.invalid
         ? payload?.chipName ?? chipName
         : chip.name ?? payload?.chipName ?? chipName;
@@ -177,7 +210,7 @@ export function makeChipStore(
     },
 
     setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
-      const chips = CHIP_PROJECTS[project];
+      const chips = getChips(project);
       const chipName =
         state.controls.chipName && chips.includes(state.controls.chipName)
           ? state.controls.chipName
@@ -190,6 +223,7 @@ export function makeChipStore(
     setChip(state: ChipPageState, chipName: string) {
       state.controls.chipName = chipName;
       state.controls.hasBuiltin = REGISTRY.has(chipName);
+      state.controls.builtinOnly = isBuiltinOnly(chipName);
     },
 
     testRunning(state: ChipPageState) {
@@ -236,6 +270,16 @@ export function makeChipStore(
     async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
       chipName = storage["/chip/chip"] = chip;
       dispatch.current({ action: "setChip", payload: chipName });
+      builtinOnly = isBuiltinOnly(chipName);
+
+      if (builtinOnly) {
+        dispatch.current({
+          action: "setFiles",
+          payload: { hdl: "", tst: "", cmp: "" },
+        });
+        this.useBuiltin();
+        return;
+      }
       await this.loadChip(project, chipName);
       if (usingBuiltin) {
         this.useBuiltin();
@@ -367,14 +411,18 @@ export function makeChipStore(
       dispatch.current({ action: "updateChip" });
     },
 
-    async useBuiltin(doUseBuiltin = true, hdl?: string) {
+    async useBuiltin(doUseBuiltin = true, oldHdl?: string) {
       if (!doUseBuiltin) {
-        usingBuiltin = false;
+        if (!builtinOnly) {
+          usingBuiltin = false;
+        }
         await this.loadChip(project, chipName);
         return;
       }
-      usingBuiltin = true;
-      const builtinName = chip.name ?? chipName;
+      if (!builtinOnly) {
+        usingBuiltin = true;
+      }
+      const builtinName = chipName;
       const nextChip = getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
         setStatus(
@@ -384,23 +432,17 @@ export function makeChipStore(
       }
 
       // Save hdl code that will be overwritten by the switch
-      if (hdl) {
-        await this.saveChip(hdl, project, chipName);
+      if (oldHdl) {
+        await this.saveChip(oldHdl, project, chipName);
       }
 
-      const template = (ChipProjects[project].CHIPS as any)[builtinName][
-        `${builtinName}.hdl`
-      ] as string;
-      const builtinCode = template.replace(
-        "PARTS:",
-        `PARTS:\n    BUILTIN ${builtinName};`
-      );
-      dispatch.current({ action: "setFiles", payload: { hdl: builtinCode } });
+      const hdl = getBuiltinCode(project, builtinName);
+      dispatch.current({ action: "setFiles", payload: { hdl } });
       this.replaceChip(Ok(nextChip));
     },
 
     async initialize() {
-      await this.loadChip(project, chipName);
+      await this.setChip(chipName, project);
     },
 
     compileTest(file: string) {
@@ -454,6 +496,7 @@ export function makeChipStore(
       chips,
       chipName,
       hasBuiltin: REGISTRY.has(chipName),
+      builtinOnly: isBuiltinOnly(chipName),
       runningTest: false,
       error: "",
     };

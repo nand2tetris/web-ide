@@ -3,7 +3,7 @@ export const hdl = `/**
  */
 
 CHIP DFF {
-    IN in, load;
+    IN in;
     OUT out;
 
     PARTS:

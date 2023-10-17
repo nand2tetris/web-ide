@@ -289,8 +289,8 @@ export const Chip = () => {
             <FullPinout
               sim={state.sim}
               toggle={actions.toggle}
-                setInputValid={setInputValid}
-                hideInternal={state.controls.builtinOnly}
+              setInputValid={setInputValid}
+              hideInternal={state.controls.builtinOnly}
             />
           </PinContext.Provider>
           {visualizations.length > 0 && (

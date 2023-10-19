@@ -40,6 +40,7 @@ const UNSIGNED_PINS = new Map<string, string[]>([
   ["RAM512", ["address"]],
   ["RAM4K", ["address"]],
   ["RAM16K", ["address"]],
+  ["Screen", ["address"]],
   ["Memory", ["address"]],
   ["CPU", ["addressM", "pc"]],
 ]);

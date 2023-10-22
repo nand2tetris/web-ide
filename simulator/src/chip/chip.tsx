@@ -61,7 +61,7 @@ export class Bus implements Pin {
     for (const i of range(0, this.width)) {
       this.state[i] = ((voltage & (1 << i)) >> i) as Voltage;
     }
-    this.next.forEach((n) => (n.busVoltage = this.busVoltage));
+        this.next.forEach((n) => (n.busVoltage = this.busVoltage));
   }
 
   get busVoltage(): number {
@@ -446,6 +446,8 @@ export class Chip {
     for (const chip of this.parts) {
       // TODO topological sort
       // eval chip input busses
+      TRUE_BUS.next.forEach((pin) => pin.busVoltage = TRUE_BUS.busVoltage);
+      FALSE_BUS.next.forEach((pin) => pin.busVoltage = FALSE_BUS.busVoltage);
       chip.eval();
       // eval output busses
     }

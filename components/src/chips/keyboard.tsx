@@ -46,23 +46,45 @@ function keyPressToHackCharacter(keypress: KeyboardEvent): number {
   return 0;
 }
 
-export const Keyboard = ({ keyboard }: { keyboard: KeyboardChip }) => {
+export const Keyboard = ({
+  keyboard,
+  update,
+}: {
+  keyboard: KeyboardChip;
+  update?: () => void;
+}) => {
   const [showPicker, setShowPicker] = useState(false);
   const [bits, setBits] = useState(keyboard.out().busVoltage);
+  let currentKey = 0;
 
-  const setKey = useCallback(
-    (event: KeyboardEvent<HTMLInputElement>) => {
-      const key = keyPressToHackCharacter(event);
-      if (key === 0) {
-        return;
-      }
-      event.preventDefault();
-      keyboard.setKey(key);
-      setBits(keyboard.out().busVoltage);
-      setShowPicker(false);
-    },
-    [keyboard, setShowPicker, setBits]
-  );
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    event.preventDefault();
+    const key = keyPressToHackCharacter(event);
+    console.log("key down", key);
+    if (key === currentKey) {
+      return;
+    }
+    setKey(key);
+    update?.();
+  };
+
+  const onKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
+    console.log("key up");
+    currentKey = 0;
+    keyboard.clearKey();
+    update?.();
+    setBits(keyboard.out().busVoltage);
+  };
+
+  const setKey = (key: number) => {
+    if (key === 0) {
+      return;
+    }
+    keyboard.setKey(key);
+    setBits(keyboard.out().busVoltage);
+    currentKey = key;
+    // setShowPicker(false);
+  };
 
   const changeKey = useCallback(() => {
     setShowPicker(true);
@@ -75,7 +97,12 @@ export const Keyboard = ({ keyboard }: { keyboard: KeyboardChip }) => {
       </div>
       <div className="flex-1">
         {showPicker ? (
-          <input ref={(e) => e?.focus()} type="text" onKeyDown={setKey} />
+          <input
+            ref={(e) => e?.focus()}
+            type="text"
+            onKeyDown={onKeyDown}
+            onKeyUp={onKeyUp}
+          />
         ) : (
           <button onClick={changeKey}>
             {/* <Icon name="keyboard" /> */}

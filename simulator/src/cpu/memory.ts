@@ -42,6 +42,10 @@ export class Memory {
     }
   }
 
+  reset(): void {
+    this.#memory.fill(0);
+  }
+
   update(cell: number, value: string, format: Format) {
     let current: number;
     switch (format) {

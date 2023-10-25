@@ -5,7 +5,7 @@ import {
 import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   PC,
-  VRegister,
+  Register,
 } from "@nand2tetris/simulator/chip/builtins/sequential/bit.js";
 import {
   RAM,
@@ -41,7 +41,7 @@ export function getBuiltinVisualization(part: Chip): ReactElement | undefined {
   }
 }
 
-export function makeVisualization(chip: Chip): ReactElement | undefined {
+export function makeVisualization(chip: Chip, updateAction? : () => void): ReactElement | undefined {
   if (chip instanceof ALU) {
     return (
       <ALUComponent
@@ -59,7 +59,7 @@ export function makeVisualization(chip: Chip): ReactElement | undefined {
       />
     );
   }
-  if (chip instanceof VRegister) {
+  if (chip instanceof Register) {
     return (
       <RegisterComponent
         name={chip.name ?? `Chip ${chip.id}`}
@@ -71,7 +71,7 @@ export function makeVisualization(chip: Chip): ReactElement | undefined {
     return <RegisterComponent name="PC" bits={chip.bits} />;
   }
   if (chip instanceof Keyboard) {
-    return <KeyboardComponent keyboard={chip} />;
+    return <KeyboardComponent keyboard={chip} update={updateAction} />;
   }
   if (chip instanceof Screen) {
     return <ScreenComponent memory={chip.memory} />;
@@ -108,18 +108,18 @@ export function makeVisualization(chip: Chip): ReactElement | undefined {
   }
 
   const vis = [...chip.parts]
-    .map(makeVisualization)
+    .map((chip) => makeVisualization(chip, updateAction))
     .filter((v) => v !== undefined);
   return vis.length > 0 ? <>{vis}</> : undefined;
 }
 
 export function makeVisualizationsWithId(chip: {
   parts: Chip[];
-}): [string, ReactElement][] {
+}, updateAction? : () => void): [string, ReactElement][] {
   return [...chip.parts]
     .map((part, i): [string, ReactElement | undefined] => [
       `${part.id}_${i}`,
-      makeVisualization(part),
+      makeVisualization(part, updateAction),
     ])
     .filter(([_, v]) => v !== undefined) as [string, ReactElement][];
 }

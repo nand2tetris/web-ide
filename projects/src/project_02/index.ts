@@ -29,10 +29,10 @@ export const CHIPS = {
     "Inc16.tst": Inc16.tst,
     "Inc16.cmp": Inc16.cmp,
   },
-  AluNoStat: {
-    "AluNoStat.hdl": Alu.hdl,
-    "AluNoStat.tst": Alu.tst,
-    "AluNoStat.cmp": Alu.cmp,
+  ALUNoStat: {
+    "ALUNoStat.hdl": Alu.hdl,
+    "ALUNoStat.tst": Alu.tst,
+    "ALUNoStat.cmp": Alu.cmp,
   },
   ALU: {
     "ALU.hdl": AluStatus.hdl,
@@ -45,6 +45,8 @@ export const CHIPS = {
     "ALUAll.cmp": AluAll.cmp,
   },
 };
+
+export const BUILTIN_CHIPS = {};
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/02");

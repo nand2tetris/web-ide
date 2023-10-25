@@ -156,6 +156,7 @@ const Monaco = ({
         },
         theme: codeTheme(),
         scrollBeyondLastLine: false,
+        readOnly: disabled,
       });
       doHighlight();
     },
@@ -221,7 +222,6 @@ const Monaco = ({
         language={language}
         onMount={onMount}
       />
-      {disabled && <div className="overlay" />}
     </>
   );
 };

@@ -42,6 +42,16 @@ export const resetFiles = async (fs: FileSystem) => {
   reset = false;
 };
 
+export const BUILTIN_CHIP_PROJECTS: Record<
+  "01" | "02" | "03" | "05",
+  string[]
+> = {
+  "01": ["Nand"],
+  "02": [],
+  "03": ["DFF"],
+  "05": ["Screen", "Keyboard"],
+};
+
 export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "01": [
     "Not",
@@ -65,11 +75,10 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "FullAdder",
     "Add16",
     "Inc16",
-    "AluNoStat",
     "ALU",
     // "ALUAll", // Special secret undocumented ALU tests
   ],
-  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4k", "RAM16k"],
+  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K"],
   "05": ["Memory", "CPU", "Computer"],
 };
 

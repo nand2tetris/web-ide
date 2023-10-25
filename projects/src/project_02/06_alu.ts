@@ -37,7 +37,6 @@ CHIP ALU {
         ng; // 1 if (out < 0),  0 otherwise
 
     PARTS:
-   // Put you code here:
 }`;
 export const cmp = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |zr |ng |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 | 1 | 0 |

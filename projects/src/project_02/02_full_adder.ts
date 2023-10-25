@@ -1,12 +1,11 @@
 export const hdl = `// Computes the sum of three bits.
 
 CHIP FullAdder {
-   IN a, b, c;  // 1-bit inputs
-   OUT sum,     // Right bit of a + b + c
-       carry;   // Left bit of a + b + c
+    IN a, b, c;  // 1-bit inputs
+    OUT sum,     // Right bit of a + b + c
+        carry;   // Left bit of a + b + c
 
-   PARTS:
-   // Put you code here:
+    PARTS:
 }`;
 export const cmp = `|   a   |   b   |   c   |  sum  | carry |
 |   0   |   0   |   0   |   0   |   0   |

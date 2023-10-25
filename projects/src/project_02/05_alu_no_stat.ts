@@ -35,7 +35,6 @@ CHIP ALU {
         out[16]; // 16-bit output
 
     PARTS:
-   // Put you code here:
 }`;
 export const cmp = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |
 | 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 |

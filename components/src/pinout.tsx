@@ -6,6 +6,10 @@ import {
 } from "@nand2tetris/simulator/chip/chip.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import { ChipSim } from "./stores/chip.store.js";
+import { createContext, useContext, useEffect, useState } from "react";
+import { ChipDisplayInfo, getDisplayInfo } from "./pin_display.js";
+
+export const PinContext = createContext({});
 
 export interface ImmPin {
   bits: [number, Voltage][];
@@ -33,8 +37,11 @@ export interface PinoutPins {
 export const FullPinout = (props: {
   sim: ChipSim;
   toggle: (pin: ChipPin, i: number | undefined) => void;
+  setInputValid: (pending: boolean) => void;
+  hideInternal?: boolean;
 }) => {
   const { inPins, outPins, internalPins } = props.sim;
+  const displayInfo = getDisplayInfo(props.sim.chip[0].name ?? "");
   return (
     <>
       <style>{`
@@ -62,17 +69,25 @@ export const FullPinout = (props: {
             pins={inPins}
             header="Input pins"
             toggle={props.toggle}
+            setInputValid={props.setInputValid}
+            displayInfo={displayInfo}
           />
           <PinoutBlock
             pins={outPins}
             header="Output pins"
             disabled={props.sim.pending}
+            enableEdit={false}
+            displayInfo={displayInfo}
           />
-          <PinoutBlock
-            pins={internalPins}
-            header="Internal pins"
-            disabled={props.sim.pending}
-          />
+          {!props.hideInternal && (
+            <PinoutBlock
+              pins={internalPins}
+              header="Internal pins"
+              disabled={props.sim.pending}
+              enableEdit={false}
+              displayInfo={displayInfo}
+            />
+          )}
         </tbody>
       </table>
     </>
@@ -80,7 +95,13 @@ export const FullPinout = (props: {
 };
 
 export const PinoutBlock = (
-  props: PinoutPins & { header: string; disabled?: boolean }
+  props: PinoutPins & {
+    header: string;
+    disabled?: boolean;
+    enableEdit?: boolean;
+    setInputValid?: (valid: boolean) => void;
+    displayInfo: ChipDisplayInfo;
+  }
 ) => (
   <>
     {props.pins.length > 0 && (
@@ -92,7 +113,15 @@ export const PinoutBlock = (
       <tr key={immPin.pin.name}>
         <td>{immPin.pin.name}</td>
         <td>
-          <Pin pin={immPin} toggle={props.toggle} disabled={props.disabled} internal={props.header === "Internal pins" ? true : false } />
+          <Pin
+            pin={immPin}
+            toggle={props.toggle}
+            disabled={props.disabled}
+            enableEdit={props.enableEdit}
+            signed={props.displayInfo.isSigned(immPin.pin.name)}
+            setInputValid={props.setInputValid}
+            internal={props.header === "Internal pins" ? true : false }
+          />
         </td>
       </tr>
     ))}
@@ -135,26 +164,145 @@ const Pin = ({
   pin,
   toggle,
   disabled = false,
+  enableEdit = true,
+  signed = true,
+  setInputValid,
   internal = false
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
   disabled?: boolean;
+  enableEdit?: boolean;
+  signed?: boolean;
+  setInputValid?: (valid: boolean) => void;
   internal: boolean;
 }) => {
+  const [isBin, setIsBin] = useState(true);
+  let inputValid = true;
+  const [decimal, setDecimal] = useState("");
+
+  const toggleBin = () => {
+    setIsBin(!isBin);
+  };
+
+  const resetDispatcher = useContext(PinContext) as PinResetDispatcher;
+  resetDispatcher.registerCallback(() => {
+    setIsBin(true);
+  });
+
+  const setInputValidity = (valid: boolean) => {
+    inputValid = valid;
+    setInputValid?.(valid);
+  };
+
+  const handleDecimalChange = (value: string) => {
+    const positive = value.replace(/[^\d]/g, "");
+    const numeric = signed && value[0] === "-" ? `-${positive}` : positive;
+
+    setDecimal(numeric);
+    if (isNaN(parseInt(numeric))) {
+      setInputValidity(false);
+    } else {
+      const newValue = parseInt(numeric);
+      if (
+        (!signed && newValue >= Math.pow(2, pin.bits.length)) ||
+        (signed &&
+          (newValue >= Math.pow(2, pin.bits.length - 1) ||
+            newValue < -Math.pow(2, pin.bits.length - 1)))
+      ) {
+        setInputValidity(false);
+      } else {
+        updatePins(newValue);
+        setInputValidity(true);
+      }
+    }
+  };
+
+  const updatePins = (n: number) => {
+    for (let i = 0; i < pin.bits.length; i++) {
+      if (pin.bits[pin.bits.length - i - 1][1] !== ((n >> i) & 1)) {
+        toggle?.(pin.pin, i);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!isBin && inputValid) {
+      let value = 0;
+      if (signed && pin.bits[0][1]) {
+        // negative
+        for (const [i, v] of pin.bits) {
+          if (i < pin.bits.length - 1 && !v) {
+            value += 2 ** i;
+          }
+        }
+        value = -value - 1;
+      } else {
+        // positive
+        const limit = signed ? pin.bits.length - 1 : pin.bits.length;
+        for (const [i, v] of pin.bits) {
+          if (i < limit && v) {
+            value += 2 ** i;
+          }
+        }
+      }
+      setDecimal(value.toString());
+    }
+  }, [pin, isBin]);
+
   return (
-    <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
-      {pin.bits.map(([i, v]) => (
-        <button
-          key={i}
-          onClick={() => toggle?.(pin.pin, i)}
-          disabled={disabled}
-          data-testid={`pin-${i}`}
-          style={internal ? {backgroundColor: "grey"} : {}}
-        >
-          {v}
-        </button>
-      ))}
-    </fieldset>
+    <div
+      style={{ display: "flex", flexDirection: "row", alignItems: "center" }}
+    >
+      <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
+        {isBin ? (
+          pin.bits.map(([i, v]) => (
+            <button
+              key={i}
+              disabled={disabled}
+              style={internal ? {backgroundColor: "grey"} : {}}
+              onClick={() => toggle?.(pin.pin, i)}
+              data-testid={`pin-${i}`}
+            >
+              {v}
+            </button>
+          ))
+        ) : (
+          <input
+            className="colored"
+            value={decimal}
+            onChange={(e) => {
+              handleDecimalChange(e.target.value);
+            }}
+            disabled={!enableEdit}
+          />
+        )}
+      </fieldset>
+      {pin.bits.length > 1 && (
+        <>
+          <div style={{ width: "1em" }} />
+          <button
+            style={{ maxWidth: "3em", margin: 0 }}
+            onClick={() => toggleBin()}
+          >
+            {isBin ? "dec" : "bin"}
+          </button>
+        </>
+      )}
+    </div>
   );
 };
+
+export class PinResetDispatcher {
+  private callbacks: (() => void)[] = [];
+
+  registerCallback(callback: () => void) {
+    this.callbacks.push(callback);
+  }
+
+  reset() {
+    for (const callback of this.callbacks) {
+      callback();
+    }
+  }
+}

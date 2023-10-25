@@ -15,7 +15,11 @@ import "./chip.scss";
 import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
 import { Clockface } from "@nand2tetris/components/clockface.js";
 import { DiffTable } from "@nand2tetris/components/difftable.js";
-import { FullPinout } from "@nand2tetris/components/pinout.js";
+import {
+  FullPinout,
+  PinContext,
+  PinResetDispatcher,
+} from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { Runbar } from "@nand2tetris/components/runbar.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
@@ -73,6 +77,7 @@ export const Chip = () => {
     (chip: string) => {
       actions.setChip(chip);
       tracking.trackEvent("action", "setChip", chip);
+      pinResetDispatcher.reset();
     },
     [actions, tracking]
   );
@@ -85,7 +90,7 @@ export const Chip = () => {
   const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
     await actions.updateFiles({
-      hdl: files.hdl ?? hdl,
+      hdl: files.hdl,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
     });
@@ -144,15 +149,15 @@ export const Chip = () => {
   );
 
   const [useBuiltin, setUseBuiltin] = useState(false);
-  const toggleUseBuiltin = async () => {
+  const toggleUseBuiltin = () => {
     if (useBuiltin) {
-      actions.useBuiltin(false);
-      compile.current();
       setUseBuiltin(false);
+      actions.useBuiltin(false);
     } else {
-      actions.useBuiltin();
       setUseBuiltin(true);
+      actions.useBuiltin(true, hdl);
     }
+    pinResetDispatcher.reset();
   };
 
   const selectors = (
@@ -197,7 +202,7 @@ export const Chip = () => {
         <>
           <div tabIndex={0}>HDL</div>
           <fieldset>
-            {state.controls.hasBuiltin && (
+            {state.controls.hasBuiltin && !state.controls.builtinOnly && (
               <label>
                 <input
                   type="checkbox"
@@ -218,18 +223,26 @@ export const Chip = () => {
         value={hdl}
         onChange={(source) => {
           setHdl(source);
-          compile.current({ hdl: source });
+          compile.current(
+            useBuiltin || state.controls.builtinOnly ? {} : { hdl: source }
+          );
         }}
         grammar={HDL.parser}
         language={"hdl"}
-        disabled={useBuiltin}
+        disabled={useBuiltin || state.controls.builtinOnly}
       />
     </Panel>
   );
 
+  const [inputValid, setInputValid] = useState(true);
+
   const chipButtons = (
     <fieldset role="group">
-      <button onClick={doEval} onKeyDown={doEval} disabled={!state.sim.pending}>
+      <button
+        onClick={doEval}
+        onKeyDown={doEval}
+        disabled={!state.sim.pending || !inputValid}
+      >
         <Trans>Eval</Trans>
       </button>
       <button
@@ -252,7 +265,11 @@ export const Chip = () => {
 
   const visualizations: [string, ReactNode][] = makeVisualizationsWithId({
     parts: state.sim.chip,
+  }, () => {
+    dispatch.current({ action: "updateChip" });
   });
+
+  const pinResetDispatcher = new PinResetDispatcher();
 
   const pinsPanel = (
     <Panel
@@ -267,19 +284,22 @@ export const Chip = () => {
       }
     >
       {state.sim.invalid ? (
-        <Trans>Invalid Chip</Trans>
+        <Trans>Syntax errors in the HDL code</Trans>
       ) : (
         <>
-          <FullPinout sim={state.sim} toggle={actions.toggle} />
-          <Accordian summary={<Trans>Visualizations</Trans>} open={true}>
-            <main>
-              {visualizations.length > 0 ? (
-                visualizations.map(([_, v]) => v)
-              ) : (
-                <p>None</p>
-              )}
-            </main>
-          </Accordian>
+          <PinContext.Provider value={pinResetDispatcher}>
+            <FullPinout
+              sim={state.sim}
+              toggle={actions.toggle}
+              setInputValid={setInputValid}
+              hideInternal={state.controls.builtinOnly}
+            />
+          </PinContext.Provider>
+          {visualizations.length > 0 && (
+            <Accordian summary={<Trans>Visualization</Trans>} open={true}>
+              <main>{visualizations.map(([_, v]) => v)}</main>
+            </Accordian>
+          )}
         </>
       )}
     </Panel>
@@ -346,6 +366,7 @@ export const Chip = () => {
             grammar={TST.parser}
             language={"tst"}
             highlight={state.controls.span}
+            disabled={state.controls.builtinOnly}
           />
         </div>
         <div
@@ -377,6 +398,7 @@ export const Chip = () => {
             onChange={setCmp}
             grammar={CMP.parser}
             language={"cmp"}
+            disabled={state.controls.builtinOnly}
           />
         </div>
         <div

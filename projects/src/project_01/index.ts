@@ -1,5 +1,6 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
+import * as Nand from "./00_nand.js";
 import * as Not from "./01_not.js";
 import * as And from "./02_and.js";
 import * as Or from "./03_or.js";
@@ -92,6 +93,10 @@ export const CHIPS = {
     "Or8Way.tst": Or8Way.tst,
     "Or8Way.cmp": Or8Way.cmp,
   },
+};
+
+export const BUILTIN_CHIPS = {
+  Nand: Nand.hdl,
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {

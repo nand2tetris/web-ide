@@ -44,6 +44,12 @@ export class RAM extends ClockedChip {
     );
     return new RamBus(`${this.name}[${idx}]`, idx, this._memory);
   }
+
+  override reset(): void {
+    console.log("ram reset");
+    super.reset();
+    this._memory.reset();
+  }
 }
 
 export class RamBus extends Bus {

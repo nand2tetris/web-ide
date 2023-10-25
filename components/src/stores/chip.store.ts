@@ -367,7 +367,6 @@ export function makeChipStore(
       const [hdl, tst, cmp] = await Promise.all([
         fs.readFile(fsName("hdl")).catch(() => makeHdl(name)),
         fs.readFile(fsName("tst")).catch((e) => {
-          console.log(e);
           return makeTst();
         }),
         fs.readFile(fsName("cmp")).catch(() => makeCmp()),

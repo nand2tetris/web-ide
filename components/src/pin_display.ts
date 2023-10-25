@@ -1,4 +1,4 @@
-import { Err, Ok, isErr, isOk } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Ok, isOk } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   REGISTRY as BUILTIN_REGISTRY,
   getBuiltinChip,
@@ -10,7 +10,6 @@ export class ChipDisplayInfo {
   public constructor(chipName: string, unsigned?: string[]) {
     if (BUILTIN_REGISTRY.has(chipName)) {
       const chip = getBuiltinChip(chipName);
-      console.log(isErr(chip) ? Err(chip) : Ok(chip));
       if (isOk(chip)) {
         const pins = Array.from(Ok(chip).ins.entries()).concat(
           Array.from(Ok(chip).outs.entries())

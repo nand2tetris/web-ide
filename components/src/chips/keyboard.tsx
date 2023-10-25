@@ -60,7 +60,6 @@ export const Keyboard = ({
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     event.preventDefault();
     const key = keyPressToHackCharacter(event);
-    console.log("key down", key);
     if (key === currentKey) {
       return;
     }
@@ -69,7 +68,6 @@ export const Keyboard = ({
   };
 
   const onKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
-    console.log("key up");
     currentKey = 0;
     keyboard.clearKey();
     update?.();

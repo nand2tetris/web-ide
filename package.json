@@ -50,5 +50,9 @@
     "runner",
     "simulator",
     "web"
-  ]
+  ],
+  "engines": {
+    "node": ">=16",
+    "npm": ">=7"
+  }
 }

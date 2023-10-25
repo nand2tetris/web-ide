@@ -92,7 +92,7 @@ export const PinoutBlock = (
       <tr key={immPin.pin.name}>
         <td>{immPin.pin.name}</td>
         <td>
-          <Pin pin={immPin} toggle={props.toggle} disabled={props.disabled} />
+          <Pin pin={immPin} toggle={props.toggle} disabled={props.disabled} internal={props.header === "Internal pins" ? true : false } />
         </td>
       </tr>
     ))}
@@ -122,7 +122,7 @@ export const Pinout = ({
           <tr key={immPin.pin.name}>
             <td>{immPin.pin.name}</td>
             <td>
-              <Pin pin={immPin} toggle={toggle} />
+            <Pin pin={immPin} toggle={toggle} internal/>
             </td>
           </tr>
         ))}
@@ -135,10 +135,12 @@ const Pin = ({
   pin,
   toggle,
   disabled = false,
+  internal = false
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
   disabled?: boolean;
+  internal: boolean;
 }) => {
   return (
     <fieldset role="group" style={{ width: `${pin.bits.length}rem` }}>
@@ -148,6 +150,7 @@ const Pin = ({
           onClick={() => toggle?.(pin.pin, i)}
           disabled={disabled}
           data-testid={`pin-${i}`}
+          style={internal ? {backgroundColor: "grey"} : {}}
         >
           {v}
         </button>

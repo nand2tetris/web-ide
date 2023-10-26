@@ -7,13 +7,20 @@ export const cmp = `|        a         |        b         | sel |       out     
 | 1001100001110110 | 0000000000000000 |  1  | 0000000000000000 |
 | 1010101010101010 | 0101010101010101 |  0  | 1010101010101010 |
 | 1010101010101010 | 0101010101010101 |  1  | 0101010101010101 |`;
-export const hdl = `// 16 bit multiplexor. If sel==1 then out=b else out=a.
-
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux16.hdl
+/**
+ * 16-bit multiplexor: 
+ * out[i] = ((sel == 0), a[i], b[i]) for i = 0..15
+ */
 CHIP Mux16 {
     IN a[16], b[16], sel;
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 sel%D2.1.2 out%B1.16.1;
 

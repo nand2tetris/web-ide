@@ -1,5 +1,6 @@
 export const hdl = `/**
-* Nand gate: out = 1 if {a==0 or b==0}, 0 otherwise
+* Nand gate:
+* out = (((a == 0) && (b == 0))), 1, 0) 
 */
 
 CHIP Nand {

@@ -1,11 +1,17 @@
-export const hdl = `// Computes the sum of three bits.
-
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/FullAdder.hdl
+/**
+ * Computes the sum of three bits.
+ */
 CHIP FullAdder {
     IN a, b, c;  // 1-bit inputs
     OUT sum,     // Right bit of a + b + c
         carry;   // Left bit of a + b + c
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const cmp = `|   a   |   b   |   c   |  sum  | carry |
 |   0   |   0   |   0   |   0   |   0   |

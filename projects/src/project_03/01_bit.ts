@@ -1,14 +1,19 @@
-export const hdl = `/**
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/Bit.hdl
+/**
  * 1-bit register:
- * If load[t] == 1 then out[t+1] = in[t]
- *                 else out does not change (out[t+1] = out[t])
+ * If load is asserted, the register's value is set to in;
+ * Otherwise, the register maintains its current value.
+ * out(t+1) = (load(t), in(t), out(t))
  */
-
 CHIP Bit {
     IN in, load;
     OUT out;
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list time%S1.4.1 in%B2.1.2 load%B2.1.2 out%B2.1.2;
 set in 0, set load 0, tick, output; tock, output;

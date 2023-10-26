@@ -1,13 +1,17 @@
-export const hdl = `/**
-* Adds two 16-bit values.
-* The most significant carry bit is ignored.
-*/
-
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/02/Adder16.hdl
+/**
+ * 16-bit adder: Adds two 16-bit two's complement values.
+ * The most significant carry bit is ignored.
+ */
 CHIP Add16 {
     IN a[16], b[16];
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const cmp = `|        a         |        b         |       out        |
 | 0000000000000000 | 0000000000000000 | 0000000000000000 |

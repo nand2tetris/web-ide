@@ -1,27 +1,25 @@
-export const hdl = `/**
- * The complete address space of the Hack computer's memory,
- * including RAM and memory-mapped I/O. 
- * The chip facilitates read and write operations, as follows:
- *     Read:  out(t) = Memory[address(t)](t)
- *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
- * In words: the chip always outputs the value stored at the memory 
- * location specified by address. If load==1, the in value is loaded 
- * into the memory location specified by address. This value becomes 
- * available through the out output from the next time step onward.
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Memory.hdl
+/** 
+ * The Memory chip implements the complete address space of the Hack data memory,
+ * including the RAM and memory mapped I/O.
+ * Outputs the value of the memory location specified by the address input.
+ * If (load == 1), sets the memory location specified by the address input
+ * to the value of the in input.
  * Address space rules:
- * Only the upper 16K+8K+1 words of the Memory chip are used. 
- * Access to address>0x6000 is invalid. Access to any address in 
- * the range 0x4000-0x5FFF results in accessing the screen memory 
- * map. Access to address 0x6000 results in accessing the keyboard 
- * memory map. The behavior in these addresses is described in the 
- * Screen and Keyboard chip specifications given in the book.
- */
-
+ * Only the upper 16K + 8K + 1 words of the memory are used.
+ * Access to address 0 to 16383 results in accessing the RAM;
+ * Access to address 16384 to 24575 results in accessing the Screen memory map;
+ * Access to address 24576 results in accessing the Keyboard memory map.
+ */ 
 CHIP Memory {
     IN in[16], load, address[15];
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 

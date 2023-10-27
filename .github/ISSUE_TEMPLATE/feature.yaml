@@ -38,10 +38,10 @@ body:
   - type: textarea
     id: what-happened
     attributes:
-      label: What happened?
-      description: Also tell us, what did you expect to happen?
+      label: What feature are you proposing?
+      description: Let us know
       placeholder: Tell us what you see!
-      value: "A bug happened!"
+      value: "Feature description"
     validations:
       required: true
   - type: textarea

@@ -85,10 +85,11 @@ function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
 
 function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   const template = getTemplate(project, chipName);
-  const builtinCode = template.replace(
-    "//// Replace this comment with your code.",
-    `BUILTIN ${chipName};`
-  );
+  const bodyComment = "//// Replace this comment with your code.";
+  const builtinLine = `BUILTIN ${chipName};`;
+  const builtinCode = template.includes(bodyComment)
+    ? template.replace(bodyComment, builtinLine)
+    : template.replace("PARTS:", `PARTS:\n    ${builtinLine}`);
   return builtinCode;
 }
 

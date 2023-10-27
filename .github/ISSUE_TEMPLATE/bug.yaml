@@ -38,10 +38,10 @@ body:
   - type: textarea
     id: what-happened
     attributes:
-      label: What would you like?
-      description: In as much detail as possible, what would you like to have or see in the program?
-      placeholder: Tell us what you want!
-      value: "I want this!"
+      label: What happened?
+      description: Also tell us, what did you expect to happen?
+      placeholder: Tell us what you see!
+      value: "A bug happened!"
     validations:
       required: true
   - type: textarea

@@ -55,10 +55,10 @@ body:
   - type: checkboxes
     id: self-fix
     attributes:
-      label: Do you want to try to fix this bug?
-      description: The IDE is written in Javascript, and includes React components. Do you want to try to fix the bug yourself (optional question)? If so, you can fork the repo, try to make the fix, and submit a PR.
+      label: Do you want to try to add this feature?
+      description: The IDE is written in TypeScript, and includes React components. Do you want to try to implement this feature yourself? If so, you can fork the repo, try to make the fix, and submit a PR.
       options:
-        - label: I want to try to fix this bug
+        - label: I want to try to add this feature!
           required: false
   - type: checkboxes
     id: terms

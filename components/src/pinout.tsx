@@ -120,7 +120,7 @@ export const PinoutBlock = (
             enableEdit={props.enableEdit}
             signed={props.displayInfo.isSigned(immPin.pin.name)}
             setInputValid={props.setInputValid}
-            internal={props.header === "Internal pins" ? true : false }
+            internal={props.header === "Internal pins" ? true : false}
           />
         </td>
       </tr>
@@ -151,7 +151,7 @@ export const Pinout = ({
           <tr key={immPin.pin.name}>
             <td>{immPin.pin.name}</td>
             <td>
-            <Pin pin={immPin} toggle={toggle} internal/>
+              <Pin pin={immPin} toggle={toggle} internal />
             </td>
           </tr>
         ))}
@@ -167,7 +167,7 @@ const Pin = ({
   enableEdit = true,
   signed = true,
   setInputValid,
-  internal = false
+  internal = false,
 }: {
   pin: ImmPin;
   toggle: ((pin: ChipPin, bit?: number) => void) | undefined;
@@ -260,7 +260,7 @@ const Pin = ({
             <button
               key={i}
               disabled={disabled}
-              style={internal ? {backgroundColor: "grey"} : {}}
+              style={internal ? { backgroundColor: "grey" } : {}}
               onClick={() => toggle?.(pin.pin, i)}
               data-testid={`pin-${i}`}
             >

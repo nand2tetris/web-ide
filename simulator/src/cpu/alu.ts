@@ -47,7 +47,7 @@ export type COMMANDS_OP =
   | 0b010101;
 
 //Usefull for the visualization of the ALU
-export type COMMANDS_ALU = 
+export type COMMANDS_ALU =
   | "0"
   | "1"
   | "-1"
@@ -68,7 +68,7 @@ export type COMMANDS_ALU =
   | "x|y";
 
 export const COMMANDS_ALU: {
-  op: Record<COMMANDS_OP, COMMANDS_ALU>
+  op: Record<COMMANDS_OP, COMMANDS_ALU>;
 } = {
   op: {
     0x2a: "0",
@@ -89,8 +89,8 @@ export const COMMANDS_ALU: {
     0x07: "y-x",
     0x00: "x&y",
     0x15: "x|y",
-  }
-}
+  },
+};
 
 export const COMMANDS: {
   asm: Record<COMMANDS_ASM, COMMANDS_OP>;

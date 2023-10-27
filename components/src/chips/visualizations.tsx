@@ -41,7 +41,10 @@ export function getBuiltinVisualization(part: Chip): ReactElement | undefined {
   }
 }
 
-export function makeVisualization(chip: Chip, updateAction? : () => void): ReactElement | undefined {
+export function makeVisualization(
+  chip: Chip,
+  updateAction?: () => void
+): ReactElement | undefined {
   if (chip instanceof ALU) {
     return (
       <ALUComponent
@@ -113,9 +116,12 @@ export function makeVisualization(chip: Chip, updateAction? : () => void): React
   return vis.length > 0 ? <>{vis}</> : undefined;
 }
 
-export function makeVisualizationsWithId(chip: {
-  parts: Chip[];
-}, updateAction? : () => void): [string, ReactElement][] {
+export function makeVisualizationsWithId(
+  chip: {
+    parts: Chip[];
+  },
+  updateAction?: () => void
+): [string, ReactElement][] {
   return [...chip.parts]
     .map((part, i): [string, ReactElement | undefined] => [
       `${part.id}_${i}`,

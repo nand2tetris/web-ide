@@ -1,0 +1,70 @@
+name: Feature Request
+description: Request to add or improve a feature
+title: "[feature]: "
+labels: ["feature", "triage"]
+assignees:
+  - davidsouther
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out a feature request on the NAND2Tetris Web IDE or VSCode Extension
+  - type: dropdown
+    id: program
+    attributes:
+      label: Program
+      description: Which NAND2Tetris program were you using?
+      options:
+        - Hardware Simulator
+        - CPU Emulator (coming soon)
+        - Assembler (coming soon)
+        - VM Emulator (coming soon)
+  - type: dropdown
+    id: interface
+    attributes:
+      label: Interface
+      description: Which NAND2Tetris interface were you using?
+      options:
+        - Website (https://nand2tetris.github.io/web-ide)
+        - VSCode Extension (coming soon, or manually installed)
+  - type: input
+    id: contact
+    attributes:
+      label: Contact Details
+      description: How can we get in touch with you if we need more info?
+      placeholder: ex. email@example.com
+    validations:
+      required: false
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What feature are you proposing?
+      description: Let us know
+      placeholder: Tell us what you see!
+      value: "Feature description"
+    validations:
+      required: true
+  - type: textarea
+    id: additional-comments
+    attributes:
+      label: Additional Comments
+      description: What else, if anything, would you like to share with us?
+      placeholder: Tell us anything!
+    validations:
+      required: false
+  - type: checkboxes
+    id: self-fix
+    attributes:
+      label: Do you want to try to add this feature?
+      description: The IDE is written in TypeScript, and includes React components. Do you want to try to implement this feature yourself? If so, you can fork the repo, try to make the fix, and submit a PR.
+      options:
+        - label: I want to try to add this feature!
+          required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/nand2tetris/web-ide/blob/main/CODE_OF_CONDUCT.md)
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true

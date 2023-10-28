@@ -263,11 +263,14 @@ export const Chip = () => {
     </fieldset>
   );
 
-  const visualizations: [string, ReactNode][] = makeVisualizationsWithId({
-    parts: state.sim.chip,
-  }, () => {
-    dispatch.current({ action: "updateChip" });
-  });
+  const visualizations: [string, ReactNode][] = makeVisualizationsWithId(
+    {
+      parts: state.sim.chip,
+    },
+    () => {
+      dispatch.current({ action: "updateChip" });
+    }
+  );
 
   const pinResetDispatcher = new PinResetDispatcher();
 

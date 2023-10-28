@@ -75,12 +75,14 @@ function isBuiltinOnly(chipName: string) {
 
 function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   if (isBuiltinOnly(chipName)) {
-    return (ChipProjects[project].BUILTIN_CHIPS as any)[chipName];
+    return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
+      chipName
+    ];
   }
 
-  return (ChipProjects[project].CHIPS as any)[chipName][
-    `${chipName}.hdl`
-  ] as string;
+  return (
+    ChipProjects[project].CHIPS as Record<string, Record<string, string>>
+  )[chipName][`${chipName}.hdl`] as string;
 }
 
 function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {

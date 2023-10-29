@@ -22,21 +22,22 @@ import {
 } from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { Runbar } from "@nand2tetris/components/runbar.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import {
+  Files,
+  PROJECT_NAMES,
+  isBuiltinOnly,
+  useChipPageStore,
+} from "@nand2tetris/components/stores/chip.store.js";
+import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
-import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
-import {
-  Files,
-  PROJECT_NAMES,
-  useChipPageStore,
-} from "@nand2tetris/components/stores/chip.store.js";
-import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 
 export const Chip = () => {
   const { fs, setStatus } = useContext(BaseContext);
@@ -184,8 +185,12 @@ export const Chip = () => {
           data-testid="chip-picker"
         >
           {state.controls.chips.map((chip) => (
-            <option key={chip} value={chip}>
-              {chip}
+            <option
+              key={chip}
+              value={chip}
+              style={isBuiltinOnly(chip) ? { color: "rgb(170, 170, 170)" } : {}}
+            >
+              {`${chip} ${isBuiltinOnly(chip) ? "(given)" : ""}`}
             </option>
           ))}
         </select>

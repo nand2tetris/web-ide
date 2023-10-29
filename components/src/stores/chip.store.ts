@@ -20,6 +20,7 @@ import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import {
   BUILTIN_CHIP_PROJECTS,
+  CHIP_ORDER,
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
@@ -39,7 +40,9 @@ export const PROJECT_NAMES = [
 ];
 
 function getChips(project: keyof typeof CHIP_PROJECTS) {
-  return BUILTIN_CHIP_PROJECTS[project].concat(CHIP_PROJECTS[project]);
+  return project in CHIP_ORDER
+    ? (CHIP_ORDER as Record<typeof project, string[]>)[project]
+    : BUILTIN_CHIP_PROJECTS[project].concat(CHIP_PROJECTS[project]);
 }
 
 function findDropdowns(storage: Record<string, string>) {
@@ -69,7 +72,7 @@ function makeCmp() {
   return `| in|out|`;
 }
 
-function isBuiltinOnly(chipName: string) {
+export function isBuiltinOnly(chipName: string) {
   return Object.values(BUILTIN_CHIP_PROJECTS).flat().includes(chipName);
 }
 

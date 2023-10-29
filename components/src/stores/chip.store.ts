@@ -90,6 +90,9 @@ function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
 
 function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   const template = getTemplate(project, chipName);
+  if (isBuiltinOnly(chipName)) {
+    return template;
+  }
   const bodyComment = "//// Replace this comment with your code.";
   const builtinLine = `BUILTIN ${chipName};`;
   const builtinCode = template.includes(bodyComment)

@@ -32,9 +32,11 @@ export class Clock {
     ticks: this.ticks,
   });
   readonly frameSubject = new Subject<void>();
+  readonly resetSubject = new Subject<void>();
 
   readonly $: Observable<Tick> = this.subject;
   readonly frame$: Observable<void> = this.frameSubject;
+  readonly reset$: Observable<void> = this.resetSubject;
 
   private next() {
     this.subject.next({
@@ -51,6 +53,7 @@ export class Clock {
     this.level = LOW;
     this.ticks = 0;
     this.next();
+    this.resetSubject.next();
   }
 
   tick() {

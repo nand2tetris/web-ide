@@ -1,7 +1,7 @@
 import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { useCallback, useRef } from "react";
-import { useClockFrame } from "../clockface.js";
+import { useClockFrame, useClockReset } from "../clockface.js";
 
 const WHITE = "white";
 const BLACK = "black";
@@ -68,6 +68,11 @@ export const Screen = ({ memory }: { memory: ScreenMemory }) => {
   );
 
   useClockFrame(draw);
+  useClockReset(() => {
+    canvas.current
+      ?.getContext("2d")
+      ?.clearRect(0, 0, canvas.current.width, canvas.current.height);
+  });
 
   return (
     <article className="panel">

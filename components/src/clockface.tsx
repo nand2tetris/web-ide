@@ -39,6 +39,15 @@ export function useClockFrame(frameFinished: () => void) {
   }, [frameFinished]);
 }
 
+export function useClockReset(reset: () => void) {
+  useEffect(() => {
+    const subscription = Clock.get().reset$.subscribe(() => {
+      reset();
+    });
+    return () => subscription.unsubscribe();
+  }, [reset]);
+}
+
 export function displayClock() {
   return display(Clock.get());
 }

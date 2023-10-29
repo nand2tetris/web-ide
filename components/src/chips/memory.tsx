@@ -160,7 +160,7 @@ export const Memory = ({
 
   useClockReset(() => {
     setJmp("");
-    setGoto({value: 0})
+    setGoto({ value: 0 });
   });
 
   return (

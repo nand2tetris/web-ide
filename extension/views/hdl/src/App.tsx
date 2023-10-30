@@ -131,7 +131,13 @@ function App() {
         <p>Invalid Chip</p>
       ) : (
         <>
-          <FullPinout sim={state.sim} toggle={actions.toggle} />
+          <FullPinout
+            sim={state.sim}
+            toggle={actions.toggle}
+            setInputValid={() => {
+              console.log("TODO: Handle Input Valid");
+            }}
+          />
           <h4>Visualizations</h4>
           {visualizations.length > 0 ? (
             visualizations.map(([p, v]) => <div key={p}>{v}</div>)

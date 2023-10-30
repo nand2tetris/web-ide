@@ -1,19 +1,23 @@
-export const hdl = `/**
- * The HACK computer, including CPU, ROM and RAM.
- * When reset is 0, the program stored in the computer's ROM executes.
- * When reset is 1, the execution of the program restarts. 
- * Thus, to start a program's execution, reset must be pushed "up" (1)
- * and "down" (0). From this point onward the user is at the mercy of 
- * the software. In particular, depending on the program's code, the 
- * screen may show some output and the user may be able to interact 
- * with the computer via the keyboard.
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/05/Computer.hdl
+/**
+ * The HACK computer, consisting of CPU, ROM and RAM.
+ * When reset is 0, the program stored in the ROM executes.
+ * When reset is 1, the program's execution restarts. 
+ * Thus, to start running the currently loaded program,
+ * set reset to 1, and then set it to 0. 
+ * From this point onwards, the user is at the mercy of the software:
+ * Depending on the program's code, and whether the code is correct,
+ * the screen may show some output, the user may be expected to enter
+ * some input using the keyboard, or the program may do some procerssing. 
  */
-
 CHIP Computer {
-
     IN reset;
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list time%S1.4.1 reset%B2.1.2 ARegister[]%D1.7.1 DRegister[]%D1.7.1 PC[]%D0.4.0 RAM16K[0]%D1.7.1 RAM16K[1]%D1.7.1 RAM16K[2]%D1.7.1;
 

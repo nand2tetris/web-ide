@@ -19,6 +19,7 @@ export class Bit extends ClockedChip {
 
   override reset() {
     this.bit = LOW;
+    super.reset();
   }
 }
 
@@ -45,6 +46,7 @@ export class Register extends ClockedChip {
 
   override reset() {
     this.bits = 0x00;
+    super.reset();
   }
 }
 
@@ -77,5 +79,6 @@ export class PC extends ClockedChip {
 
   override reset() {
     this.bits = 0x00;
+    super.reset();
   }
 }

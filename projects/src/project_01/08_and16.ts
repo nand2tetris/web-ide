@@ -1,10 +1,17 @@
-export const hdl = `// 16-bit-wise and gate: for i = 0..15: out[i] = a[i] and b[i]
-
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/And16.hdl
+/**
+ * 16-bit bitwise And gate:
+ * out[i] = And(a[i],b[i]) for i = 0..15 
+ */
 CHIP And16 {
     IN a[16], b[16];
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 

@@ -15,14 +15,17 @@ export const cmp = `|        a         |        b         |        c         |  
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  101  | 0110011110001001 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  110  | 0111100010011010 |
 | 0001001000110100 | 0010001101000101 | 0011010001010110 | 0100010101100111 | 0101011001111000 | 0110011110001001 | 0111100010011010 | 1000100110101011 |  111  | 1000100110101011 |`;
-export const hdl = `/**
- * 8-way 16-bit multiplexor.
- * out = a if sel==000
- *       b if sel==001
- *       etc.
- *       h if sel==111
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Mux8Way16.hdl
+/**
+ * 8-way 16-bit multiplexor:
+ * out = a if sel == 000
+ *       b if sel == 001
+ *       ...
+ *       h if sel == 111
  */
-
 CHIP Mux8Way16 {
     IN a[16], b[16], c[16], d[16],
        e[16], f[16], g[16], h[16],
@@ -30,6 +33,7 @@ CHIP Mux8Way16 {
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 e%B1.16.1 f%B1.16.1 g%B1.16.1 h%B1.16.1 sel%B2.3.2 out%B1.16.1;
 

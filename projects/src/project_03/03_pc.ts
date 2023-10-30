@@ -1,9 +1,13 @@
-export const hdl = `/**
- * A 16-bit counter with load and reset control bits.
- * if      (reset[t] == 1) out[t+1] = 0
- * else if (load[t] == 1)  out[t+1] = in[t]
- * else if (inc[t] == 1)   out[t+1] = out[t] + 1  (integer addition)
- * else                    out[t+1] = out[t]
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/a/PC.hdl
+/**
+ * A 16-bit counter with reset, load, and inc control bits.
+ * if      (reset(t) == 1) out(t+1) = 0
+ * else if (load(t) == 1)  out(t+1) = in(t)
+ * else if (inc(t) == 1)   out(t+1) = out(t) + 1
+ * else                    out(t+1) = out(t)
  */
 
 CHIP PC {
@@ -11,6 +15,7 @@ CHIP PC {
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list time%S1.4.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
 

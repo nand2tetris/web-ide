@@ -1,9 +1,19 @@
-export const hdl = `
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/03/b/RAM16K.hdl
+/**
+ * Memory of 16K 16-bit registers.
+ * If load is asserted, the value of the register selected by
+ * address is set to in; Otherwise, the value does not change.
+ * The value of the selected register is emitted by out.
+ */
 CHIP RAM16K {
     IN in[16], load, address[14];
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list time%S1.4.1 in%D1.6.1 load%B2.1.2 address%D2.5.2 out%D1.6.1;
 

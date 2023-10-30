@@ -5,13 +5,20 @@ export const cmp = `|        a         |        b         |       out        |
 | 1010101010101010 | 0101010101010101 | 1111111111111111 |
 | 0011110011000011 | 0000111111110000 | 0011111111110011 |
 | 0001001000110100 | 1001100001110110 | 1001101001110110 |`;
-export const hdl = `// 16-bit bitwise Or gate: for i=0..15 out[i] = a[i] or b[i].
-
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Or16.hdl
+/**
+ * 16-bit bitwise Or gate:
+ * out[i] = (a[i] Or b[i]) for i = 0..15 
+ */
 CHIP Or16 {
     IN a[16], b[16];
     OUT out[16];
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 set a %B0000000000000000, set b %B0000000000000000, eval, output;

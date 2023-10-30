@@ -3,7 +3,6 @@ import {
   COMMANDS_OP,
   Flags,
 } from "@nand2tetris/simulator/cpu/alu.js";
-import { bin } from "@nand2tetris/simulator/util/twos.js";
 
 export const ALUComponent = ({
   A,
@@ -32,10 +31,10 @@ export const ALUComponent = ({
         />
         <text
           xmlSpace="preserve"
-          text-anchor="middle"
-          font-family="Noto Sans JP"
-          font-size="14"
-          stroke-width="0"
+          textAnchor="middle"
+          fontFamily="Noto Sans JP"
+          fontSize="14"
+          strokeWidth="0"
           id="svg_9"
           y="63"
           x="35"
@@ -46,13 +45,13 @@ export const ALUComponent = ({
         </text>
         <text
           xmlSpace="preserve"
-          text-anchor="middle"
-          font-family="Noto Sans JP"
-          font-size="14"
+          textAnchor="middle"
+          fontFamily="Noto Sans JP"
+          fontSize="14"
           id="svg_10"
           y="188"
           x="35"
-          stroke-width="0"
+          strokeWidth="0"
           stroke="white"
           fill="#ffffff"
         >
@@ -60,13 +59,13 @@ export const ALUComponent = ({
         </text>
         <text
           xmlSpace="preserve"
-          text-anchor="middle"
-          font-family="Noto Sans JP"
-          font-size="14"
+          textAnchor="middle"
+          fontFamily="Noto Sans JP"
+          fontSize="14"
           id="svg_11"
           y="125"
           x="215"
-          stroke-width="0"
+          strokeWidth="0"
           stroke="white"
           fill="#ffffff"
         >
@@ -74,13 +73,13 @@ export const ALUComponent = ({
         </text>
         <text
           xmlSpace="preserve"
-          text-anchor="middle"
-          font-family="Noto Sans JP"
-          font-size="14"
+          textAnchor="middle"
+          fontFamily="Noto Sans JP"
+          fontSize="14"
           id="svg_13"
           y="125"
           x="135"
-          stroke-width="0"
+          strokeWidth="0"
           stroke="white"
           fill="#ffffff"
         >

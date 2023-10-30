@@ -47,8 +47,8 @@ export class RAM extends ClockedChip {
 
   override reset(): void {
     console.log("ram reset");
-    super.reset();
     this._memory.reset();
+    super.reset();
   }
 }
 

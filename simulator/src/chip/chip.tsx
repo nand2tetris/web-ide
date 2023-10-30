@@ -508,6 +508,12 @@ export class ClockedChip extends Chip {
     this.#subscription.unsubscribe();
     super.remove();
   }
+
+  override reset(): void {
+    super.reset();
+    this.tick();
+    this.tock();
+  }
 }
 
 export interface PinSide {

@@ -3,15 +3,20 @@ export const cmp = `|   a   |   b   |  out  |
 |   0   |   1   |   1   |
 |   1   |   0   |   1   |
 |   1   |   1   |   1   |`;
-export const hdl = `/**
- * Or gate: out = 1 if {a==1 or b==1}, 0 otherwise
+export const hdl = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/01/Or.hdl
+/**
+ * Or gate:
+ * out = (((a == 1) || (b == 1))), 1, 0) 
  */
-
 CHIP Or {
     IN a, b;
     OUT out;
 
     PARTS:
+    //// Replace this comment with your code.
 }`;
 export const tst = `output-list a%B3.1.3 b%B3.1.3 out%B3.1.3;
 

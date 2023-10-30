@@ -141,6 +141,13 @@ export class Memory extends ClockedChip {
       return this.ram.at(offset);
     }
   }
+
+  override reset(): void {
+    this.address = 0;
+    this.ram.reset();
+    this.screen.reset();
+    super.reset();
+  }
 }
 
 export class CPU extends ClockedChip {

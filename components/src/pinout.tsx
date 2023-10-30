@@ -185,10 +185,12 @@ const Pin = ({
     setIsBin(!isBin);
   };
 
-  const resetDispatcher = useContext(PinContext) as PinResetDispatcher;
-  resetDispatcher.registerCallback(() => {
-    setIsBin(true);
-  });
+  const resetDispatcher = useContext(PinContext);
+  if (resetDispatcher instanceof PinResetDispatcher) {
+    resetDispatcher.registerCallback(() => {
+      setIsBin(true);
+    });
+  }
 
   const setInputValidity = (valid: boolean) => {
     inputValid = valid;

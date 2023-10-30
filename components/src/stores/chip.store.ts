@@ -20,6 +20,7 @@ import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import {
   BUILTIN_CHIP_PROJECTS,
+  CHIP_ORDER,
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
@@ -39,7 +40,9 @@ export const PROJECT_NAMES = [
 ];
 
 function getChips(project: keyof typeof CHIP_PROJECTS) {
-  return BUILTIN_CHIP_PROJECTS[project].concat(CHIP_PROJECTS[project]);
+  return project in CHIP_ORDER
+    ? (CHIP_ORDER as Record<typeof project, string[]>)[project]
+    : BUILTIN_CHIP_PROJECTS[project].concat(CHIP_PROJECTS[project]);
 }
 
 function findDropdowns(storage: Record<string, string>) {
@@ -69,26 +72,32 @@ function makeCmp() {
   return `| in|out|`;
 }
 
-function isBuiltinOnly(chipName: string) {
+export function isBuiltinOnly(chipName: string) {
   return Object.values(BUILTIN_CHIP_PROJECTS).flat().includes(chipName);
 }
 
 function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   if (isBuiltinOnly(chipName)) {
-    return (ChipProjects[project].BUILTIN_CHIPS as any)[chipName];
+    return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
+      chipName
+    ];
   }
 
-  return (ChipProjects[project].CHIPS as any)[chipName][
-    `${chipName}.hdl`
-  ] as string;
+  return (
+    ChipProjects[project].CHIPS as Record<string, Record<string, string>>
+  )[chipName][`${chipName}.hdl`] as string;
 }
 
 function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   const template = getTemplate(project, chipName);
-  const builtinCode = template.replace(
-    "PARTS:",
-    `PARTS:\n    BUILTIN ${chipName};`
-  );
+  if (isBuiltinOnly(chipName)) {
+    return template;
+  }
+  const bodyComment = "//// Replace this comment with your code.";
+  const builtinLine = `BUILTIN ${chipName};`;
+  const builtinCode = template.includes(bodyComment)
+    ? template.replace(bodyComment, builtinLine)
+    : template.replace("PARTS:", `PARTS:\n    ${builtinLine}`);
   return builtinCode;
 }
 

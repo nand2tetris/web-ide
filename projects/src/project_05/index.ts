@@ -5,6 +5,9 @@ import * as CPU from "./02_cpu.js";
 import * as Computer from "./03_computer.js";
 import * as Screen from "./04_screen.js";
 import * as Keyboard from "./05_keyboard.js";
+import * as DRegister from "./06_d_register.js";
+import * as ARegister from "./07_a_register.js";
+import * as ROM32K from "./08_rom32k.js";
 
 export const CHIPS = {
   Memory: {
@@ -28,6 +31,9 @@ export const CHIPS = {
 export const BUILTIN_CHIPS = {
   Screen: Screen.hdl,
   Keyboard: Keyboard.hdl,
+  DRegister: DRegister.hdl,
+  ARegister: ARegister.hdl,
+  ROM32K: ROM32K.hdl,
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {

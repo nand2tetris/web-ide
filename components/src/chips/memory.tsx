@@ -10,6 +10,7 @@ import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
 import InlineEdit from "../inline_edit.js";
 import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
+import { useClockReset } from "../clockface.js";
 
 const ITEM_HEIGHT = 34;
 
@@ -129,11 +130,13 @@ export const Memory = ({
   format: Format;
 }) => {
   const [fmt, setFormat] = useState(format);
-  const [jmp, setJmp] = useState("0");
+  const [jmp, setJmp] = useState("");
   const [goto, setGoto] = useState({ value: 0 });
 
   const jumpTo = () => {
-    setGoto({ value: Number(jmp) });
+    setGoto({
+      value: !isNaN(parseInt(jmp)) && isFinite(parseInt(jmp)) ? Number(jmp) : 0,
+    });
   };
 
   // const { filePicker, fs } = useContext(AppContext);
@@ -155,6 +158,11 @@ export const Memory = ({
     [memory, fmt]
   );
 
+  useClockReset(() => {
+    setJmp("");
+    setGoto({ value: 0 });
+  });
+
   return (
     <article className="panel">
       <header>
@@ -167,8 +175,9 @@ export const Memory = ({
           <input
             style={{ width: "4em", height: "100%" }}
             placeholder="Goto"
+            value={jmp}
             onKeyDown={({ key }) => key === "Enter" && jumpTo()}
-            onChange={({ target: { value } }) => setJmp(value ?? "0")}
+            onChange={({ target: { value } }) => setJmp(value)}
           />
           <button onClick={jumpTo} className="flex-0">
             {/* <Icon name="move_down" /> */}

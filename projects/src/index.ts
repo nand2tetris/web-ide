@@ -49,7 +49,7 @@ export const BUILTIN_CHIP_PROJECTS: Record<
   "01": ["Nand"],
   "02": [],
   "03": ["DFF"],
-  "05": ["Screen", "Keyboard"],
+  "05": ["Screen", "Keyboard", "DRegister", "ARegister", "ROM32K"],
 };
 
 export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
@@ -81,6 +81,20 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
   "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K"],
   "05": ["Memory", "CPU", "Computer"],
 };
+
+export const CHIP_ORDER: Partial<Record<"01" | "02" | "03" | "05", string[]>> =
+  {
+    "05": [
+      "Memory",
+      "CPU",
+      "Computer",
+      "Screen",
+      "Keyboard",
+      "DRegister",
+      "ARegister",
+      "ROM32K",
+    ],
+  };
 
 export const ASM_PROJECTS: Record<"06", string[]> = {
   "06": ["Add", "Max", "Rectangle", "Pong"],

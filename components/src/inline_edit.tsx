@@ -7,7 +7,9 @@ const Mode = { VIEW: 0, EDIT: 1 };
 export const InlineEdit = (props: {
   mode?: keyof typeof Mode;
   value: string;
+  highlight: boolean;
   onChange: (value: string) => void;
+  onFocus?: () => void;
 }) => {
   const [mode, setMode] = useState(props.mode ?? Mode.VIEW);
   const [value, setValue] = useStateInitializer(props.value);
@@ -57,6 +59,7 @@ export const InlineEdit = (props: {
             left: "0",
             marginTop: "-0.375rem",
           }}
+          onFocus={props.onFocus}
           onBlur={({ target }) => doChange(target)}
           onKeyPress={({ key, target }) => {
             if (key === "Enter") {

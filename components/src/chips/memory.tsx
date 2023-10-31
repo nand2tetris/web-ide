@@ -32,6 +32,7 @@ export const MemoryBlock = ({
   editable = false,
   format = dec,
   onChange = () => undefined,
+  onFocus = () => undefined,
 }: {
   jmp?: { value: number };
   memory: MemoryAdapter;
@@ -39,6 +40,7 @@ export const MemoryBlock = ({
   editable?: boolean;
   format?: (v: number) => string;
   onChange?: (i: number, value: string, previous: number) => void;
+  onFocus?: (i: number) => void;
 }) => {
   const settings = useMemo<Partial<VirtualScrollSettings>>(
     () => ({
@@ -64,6 +66,7 @@ export const MemoryBlock = ({
         editable={editable}
         highlight={i === highlight}
         onChange={onChange}
+        onFocus={onFocus}
       />
     ),
     [format, editable, highlight, onChange]
@@ -85,12 +88,14 @@ export const MemoryCell = ({
   highlight = false,
   editable = false,
   onChange = () => undefined,
+  onFocus = () => undefined,
 }: {
   index: number;
   value: string;
   highlight?: boolean;
   editable?: boolean;
   onChange?: (i: number, value: string, previous: number) => void;
+  onFocus?: (i: number) => void;
 }) => (
   <div style={{ display: "flex", height: "100%" }}>
     <code
@@ -112,9 +117,11 @@ export const MemoryCell = ({
       {editable ? (
         <InlineEdit
           value={value}
+          highlight={highlight}
           onChange={(newValue: string) =>
             onChange(index, newValue, Number(value))
           }
+          onFocus={() => onFocus(index)}
         />
       ) : (
         <span>{value}</span>
@@ -139,10 +146,14 @@ export const Memory = ({
   const [fmt, setFormat] = useState(format);
   const [jmp, setJmp] = useState("");
   const [goto, setGoto] = useState({ value: 0 });
+  const [highlighted, setHighlighted] = useState(0);
 
   const jumpTo = () => {
+    const value =
+      !isNaN(parseInt(jmp)) && isFinite(parseInt(jmp)) ? Number(jmp) : 0;
+    setHighlighted(value);
     setGoto({
-      value: !isNaN(parseInt(jmp)) && isFinite(parseInt(jmp)) ? Number(jmp) : 0,
+      value: value,
     });
   };
 
@@ -218,10 +229,11 @@ export const Memory = ({
       <MemoryBlock
         jmp={goto}
         memory={memory}
-        highlight={highlight}
+        highlight={highlighted}
         editable={editable}
         format={(v: number) => doFormat(fmt, v)}
         onChange={doUpdate}
+        onFocus={(i) => setHighlighted(i)}
       />
     </article>
   );

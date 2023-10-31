@@ -285,7 +285,7 @@ export const Chip = () => {
       header={
         <>
           <div>
-            <Trans>Chip</Trans>
+            <Trans>Chip</Trans> {state.controls.chipName}
           </div>
           {chipButtons}
         </>

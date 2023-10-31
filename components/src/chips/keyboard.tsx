@@ -53,12 +53,23 @@ export const Keyboard = ({
   keyboard: KeyboardAdapter;
   update?: () => void;
 }) => {
-  const [showPicker, setShowPicker] = useState(false);
+  // const [showPicker, setShowPicker] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [character, setCharacter] = useState("");
   const [bits, setBits] = useState(keyboard.getKey());
   let currentKey = 0;
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+  const toggleEnabled = () => {
+    setEnabled(!enabled);
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    if (!enabled) {
+      return;
+    }
+
+    setCharacter(event.key);
     const key = keyPressToHackCharacter(event);
     if (key === currentKey) {
       return;
@@ -67,11 +78,16 @@ export const Keyboard = ({
     update?.();
   };
 
-  const onKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyUp = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (!enabled) {
+      return;
+    }
+
     currentKey = 0;
     keyboard.clearKey();
     update?.();
     setBits(keyboard.getKey());
+    setCharacter("");
   };
 
   const setKey = (key: number) => {
@@ -81,15 +97,6 @@ export const Keyboard = ({
     keyboard.setKey(key);
     setBits(keyboard.getKey());
     currentKey = key;
-    // setShowPicker(false);
-  };
-
-  const clear = () => {
-    setKey(0);
-  };
-
-  const changeKey = () => {
-    setShowPicker(true);
   };
 
   return (
@@ -97,23 +104,12 @@ export const Keyboard = ({
       <div className="flex-1">
         <RegisterComponent name="Keyboard" bits={bits} />
       </div>
-      <div className={showPicker ? "flex-1" : "flex-0"}>
-        {showPicker ? (
-          <input
-            ref={(e) => e?.focus()}
-            type="text"
-            onKeyDown={onKeyDown}
-            onKeyUp={onKeyUp}
-          />
-        ) : (
-          <fieldset role="group">
-            <button onClick={changeKey}>
-              {/* <Icon name="keyboard" /> */}
-              ⌨️
-            </button>
-            <button onClick={clear}>🆑</button>
-          </fieldset>
-        )}
+      <div className="flex-1">{`Character: ${character}`}</div>
+      <div className="flex-1">
+        <button onClick={toggleEnabled} onKeyDown={onKeyDown} onKeyUp={onKeyUp}>
+          {/* <Icon name="keyboard" /> */}
+          {enabled ? "Disable   " : "Enable   "}⌨️
+        </button>
       </div>
     </div>
   );

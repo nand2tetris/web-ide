@@ -63,7 +63,7 @@ export class Memory implements MemoryAdapter {
   }
 
   reset(): void {
-    this.#memory.fill(0);
+    this.memory.fill(0);
   }
 
   update(cell: number, value: string, format: Format) {

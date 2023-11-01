@@ -17,8 +17,7 @@ import Header from "./shell/header";
 import Footer from "./shell/footer";
 import { AppContext, useAppContext } from "./App.context";
 import { Settings } from "./shell/settings";
-import { messages } from "./locales/en/messages";
-import { messages as plMessages } from "./locales/en-PL/messages";
+import { messages, plMessages } from "./locales";
 import { registerLanguages } from "./languages/loader";
 import { FilePicker } from "./shell/file_select";
 
@@ -26,8 +25,8 @@ import "./pico/flex.scss";
 import "./pico/pico.scss";
 import { TrackingBanner } from "./tracking";
 
-i18n.load("en", messages);
-i18n.load("en-PL", plMessages);
+i18n.load("en", messages.messages);
+i18n.load("en-PL", plMessages.messages);
 i18n.loadLocaleData({
   en: { plurals: en },
   "en-US": { plurals: en },

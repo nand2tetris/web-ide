@@ -74,7 +74,7 @@ export function int10(i: string): number {
 }
 
 export function int2(i: string): number {
-  return int(i, 2);
+  return int(i.replaceAll(" ", ""), 2);
 }
 
 export function parseTwosInt(i: string): number {

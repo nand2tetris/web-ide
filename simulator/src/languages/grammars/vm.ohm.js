@@ -1,0 +1,54 @@
+const vm = `
+Vm <: Base {
+  Root := Vm
+
+  Vm = VmInstruction+
+
+  VmInstruction =
+    | StackInstruction
+    | OpInstruction
+    | FunctionInstruction
+    | CallInstruction
+    | ReturnInstruction
+    | GotoInstruction
+    | LabelInstruction
+  
+  StackInstruction = (Push | Pop) MemorySegment Number
+  OpInstruction = Add | Sub | Neg | Lt | Gt | Eq | And | Or | Not
+  FunctionInstruction = Function Name Number 
+  CallInstruction =  Call Name Number
+  ReturnInstruction = Return
+  LabelInstruction = Label Name
+  GotoInstruction = (Goto | IfGoto) Name
+
+  MemorySegment = Argument | Local | Static | Constant | This | That | Pointer | Temp
+
+  Push = "push"
+  Pop = "pop"
+  Function = "function"
+  Call = "call"
+  Return = "return"
+  Goto = "goto"
+  IfGoto = "if-goto"
+  Label = "label"
+
+  Argument = "argument"
+  Local = "local"
+  Static = "static"
+  Constant = "constant"
+  This = "this"
+  That = "that"
+  Pointer = "pointer"
+  Temp = "temp"
+
+  Add = "add" 
+  Sub = "sub" 
+  Neg = "neg" 
+  Eq = "eq"
+  Lt = "lt" 
+  Gt = "gt" 
+  And = "and" 
+  Or = "or" 
+  Not = "not"
+}`;
+export default vm;

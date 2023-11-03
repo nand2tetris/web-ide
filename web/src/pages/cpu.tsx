@@ -1,73 +1,90 @@
-import { CPU as CPUChip } from "@nand2tetris/simulator/cpu/cpu.js";
-import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
-import { HACK } from "@nand2tetris/simulator/testing/mult.js";
-import { TickScreen } from "@nand2tetris/simulator/testing/fill.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
-import { Runbar } from "@nand2tetris/components/runbar.js";
+import { Keyboard } from "@nand2tetris/components/chips/keyboard";
+import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
+import { useEffect, useRef, useState } from "react";
+
+import "./cpu.scss";
+import { TestPanel } from "src/shell/test_panel";
+import { Panel } from "src/shell/panel";
 
 export const CPU = () => {
-  const cpu = new CPUChip({ ROM: new Memory(HACK) });
-  const resetRAM = () => {
-    cpu.RAM.set(0, 3);
-    cpu.RAM.set(1, 2);
-  };
+  const { state, actions, dispatch } = useCpuPageStore();
 
-  const tickScreen = TickScreen(cpu);
+  const [tst, setTst] = useState("repeat {\n\tticktock;\n}");
+  const [out, setOut] = useState("");
+  const [cmp, setCmp] = useState("");
 
-  const runner = new (class CPURunner extends Timer {
-    override tick() {
-      cpu.tick();
-      return false;
-    }
+  const runner = useRef<Timer>();
+  useEffect(() => {
+    runner.current = new (class ChipTimer extends Timer {
+      override tick() {
+        actions.tick();
+        return false;
+      }
 
-    override finishFrame() {
-      tickScreen();
-    }
+      override finishFrame() {
+        dispatch.current({ action: "update" });
+      }
 
-    override reset() {
-      resetRAM();
-      cpu.reset();
-      // setState();
-    }
+      override reset() {
+        actions.reset();
+      }
 
-    override toggle() {
-      // runbar.update();
-    }
-  })();
+      override toggle() {
+        dispatch.current({ action: "update" });
+      }
+    })();
+
+    return () => {
+      runner.current?.stop();
+    };
+  }, [actions, dispatch]);
 
   return (
-    <div>
-      <Runbar runner={runner}>
-        <label>
-          <span>{cpu.PC}</span>
-          <span>{cpu.A}</span>
-          <span>{cpu.D}</span>
-        </label>
-      </Runbar>
-      <div className="grid">
-        <div
-          className="grid"
-          style={{
-            gridAutoFlow: "column",
-            gridTemplateColumns: "repeat(2, 1fr)",
-          }}
-        >
-          <MemoryComponent name="RAM" memory={cpu.RAM} format="hex" />
-          <MemoryComponent
-            name="ROM"
-            memory={cpu.ROM}
-            highlight={cpu.PC}
-            format="asm"
-            editable={false}
-          />
-        </div>
+    <div className="CpuPage grid">
+      <MemoryComponent
+        name="ROM"
+        memory={state.sim.ROM}
+        highlight={state.sim.PC}
+        format="asm"
+        editable={false}
+      />
+      <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
+      <Panel className="IO">
         <div>
-          <Screen memory={cpu.RAM}></Screen>;
+          <label>
+            <input
+              type="checkbox"
+              onChange={actions.toggleUseTest}
+              checked={state.test.useTest}
+              role="switch"
+            />
+            Use Test Script
+          </label>
         </div>
-      </div>
+        <Screen memory={state.sim.Screen}></Screen>
+        <Keyboard keyboard={state.sim.Keyboard} />
+        <div>
+          <dl>
+            <dt>PC</dt>
+            <dd>{state.sim.PC}</dd>
+            <dt>A</dt>
+            <dd>{state.sim.A}</dd>
+            <dt>D</dt>
+            <dd>{state.sim.D}</dd>
+          </dl>
+        </div>
+      </Panel>
+      <TestPanel
+        disabled={!state.test.useTest}
+        runner={runner}
+        tst={[tst, setTst, state.test.highlight]}
+        out={[out, setOut]}
+        cmp={[cmp, setCmp]}
+      />
     </div>
   );
 };

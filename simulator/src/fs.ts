@@ -1,7 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
-import { ASM } from "./languages/asm.js";
-import { int2 } from "./util/twos.js";
+import * as loader from "./loader.js";
 
 export async function load(fs: FileSystem, path: string): Promise<number[]> {
   if (path.endsWith(".hack")) {
@@ -16,18 +14,12 @@ export async function load(fs: FileSystem, path: string): Promise<number[]> {
 }
 
 export async function loadAsm(fs: FileSystem, path: string): Promise<number[]> {
-  const source = await fs.readFile(path);
-  const asm = unwrap(ASM.parse(source));
-  ASM.passes.fillLabel(asm);
-  return ASM.passes.emit(asm);
+  return loader.loadAsm(await fs.readFile(path));
 }
 
 export async function loadHack(
   fs: FileSystem,
   path: string
 ): Promise<number[]> {
-  return (await fs.readFile(path))
-    .split("\n")
-    .filter((line) => line.trim() !== "")
-    .map(int2);
+  return loader.loadHack(await fs.readFile(path));
 }

@@ -483,13 +483,13 @@ export function makeChipStore(
       dispatch.current({ action: "testFinished" });
     },
 
-    tick(): Promise<boolean> {
+    tick(): boolean {
       return this.stepTest();
     },
 
-    async stepTest(): Promise<boolean> {
+    stepTest(): boolean {
       assert(test.chipId === chip.id, "Test and chip out of sync");
-      const done = await test.step();
+      const done = test.step();
       dispatch.current({ action: "updateTestStep" });
       if (done) {
         dispatch.current({ action: "testFinished" });
@@ -544,13 +544,7 @@ export function useChipPageStore() {
     [fs, setStatus, storage, dispatch]
   );
 
-  const [state, dispatcher] = useImmerReducer(
-    reducers as unknown as Record<
-      string,
-      (state: ChipPageState, action?: unknown) => ChipPageState
-    >,
-    initialState
-  );
+  const [state, dispatcher] = useImmerReducer(reducers, initialState);
   dispatch.current = dispatcher;
 
   return { state, dispatch, actions };

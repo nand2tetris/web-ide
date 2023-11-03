@@ -24,12 +24,6 @@
 
   ._test_panel {
     grid-area: tst;
-
-    main {
-      [role="tab"] {
-        white-space: nowrap;
-      }
-    }
   }
 
   ._parts_panel {

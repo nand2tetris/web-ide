@@ -71,7 +71,7 @@ export function initialState<T>(
   const itemsAbove = Math.max(0, startIndex - tolerance - minIndex);
 
   const viewportHeight = count * itemHeight;
-  const totalHeight = (maxIndex - minIndex) * itemHeight;
+  const totalHeight = Math.max(maxIndex - minIndex, 1) * itemHeight;
   const toleranceHeight = tolerance * itemHeight;
   const bufferHeight = viewportHeight + 2 * toleranceHeight;
   const topPaddingHeight = itemsAbove * itemHeight;

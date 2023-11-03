@@ -11,7 +11,7 @@ import {
   JUMP_ASM,
   JUMP_OP,
 } from "../cpu/alu.js";
-import { KEYBOARD, SCREEN } from "../cpu/memory.js";
+import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import { grammars, makeParser, baseSemantics } from "./base.js";
 
@@ -144,8 +144,8 @@ export function fillLabel(asm: Asm) {
     ["ARG", 2],
     ["THIS", 3],
     ["THAT", 4],
-    ["SCREEN", SCREEN],
-    ["KBD", KEYBOARD],
+    ["SCREEN", SCREEN_OFFSET],
+    ["KBD", KEYBOARD_OFFSET],
   ]);
 
   function getLabelValue(label: string) {

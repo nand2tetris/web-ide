@@ -1,4 +1,4 @@
-import { ChangeEvent, useCallback, useState } from "react";
+import { ChangeEvent, useState } from "react";
 import { asm, op } from "@nand2tetris/simulator/util/asm.js";
 import {
   bin,
@@ -10,78 +10,96 @@ import {
   uns,
 } from "@nand2tetris/simulator/util/twos.js";
 
+import "./util.scss";
+
 export const Util = () => {
   const [value, setValue] = useState(0);
   const [asmValue, setAsmValue] = useState("@0");
 
-  const binValue = useCallback(() => bin(value), [value]);
-  const decValue = useCallback(() => dec(value), [value]);
-  const unsValue = useCallback(() => uns(value), [value]);
-  const hexValue = useCallback(() => hex(value), [value]);
-  // const asmValue = useCallback(() => asm(value), [value]);
+  const doSetValue =
+    (conv: (arg: string) => number) =>
+    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+      value = value === "-" ? "-1" : value;
+      const iValue = conv(value);
+      setValue(iValue);
+      setAsmValue(asm(iValue));
+    };
 
-  const setBin = useCallback(
-    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      const ivalue = int2(value);
-      setValue(ivalue);
-      setAsmValue(asm(ivalue));
-    },
-    [setValue, setAsmValue]
-  );
-  const setInt = useCallback(
-    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      const ivalue = int10(value);
-      setValue(ivalue);
-      setAsmValue(asm(ivalue));
-    },
-    [setValue, setAsmValue]
-  );
-  const setUns = useCallback(
-    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      const ivalue = int10(value);
-      setValue(ivalue);
-      setAsmValue(asm(ivalue));
-    },
-    [setValue, setAsmValue]
-  );
-  const setHex = useCallback(
-    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      const ivalue = int16(value);
-      setValue(ivalue);
-      setAsmValue(asm(ivalue));
-    },
-    [setValue, setAsmValue]
-  );
-  const setAsm = useCallback(
-    ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
-      setAsmValue(value);
-      setValue(op(value));
-    },
-    [setValue, setAsmValue]
-  );
+  const setBin = doSetValue(int2);
+  const setInt = doSetValue(int10);
+  const setUns = doSetValue(int10);
+  const setHex = doSetValue(int16);
+
+  const setAsm = ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+    setAsmValue(value);
+    setValue(op(value));
+  };
 
   return (
-    <form>
-      <div className="grid">
-        <label>
-          Binary <input type="text" value={binValue()} onChange={setBin} />
-        </label>
-        <label>
-          Decimal <input type="text" value={decValue()} onChange={setInt} />
-        </label>
-        <label>
-          Unsigned
-          <input type="text" value={unsValue()} onChange={setUns} />
-        </label>
-        <label>
-          Hex <input type="text" value={hexValue()} onChange={setHex} />
-        </label>
-        <label>
-          HACK ASM
-          <input type="text" value={asmValue} onChange={setAsm} />
-        </label>
-      </div>
-    </form>
+    <article>
+      <header>
+        <h2>Convert Hack Number Types</h2>
+      </header>
+      <main>
+        <dl>
+          <dt>
+            <label htmlFor="util_setBin">Binary</label>
+          </dt>
+          <dd>
+            <input
+              id="util_setBin"
+              type="text"
+              value={bin(value)}
+              onChange={setBin}
+            />
+          </dd>
+          <dt>
+            <label htmlFor="util_setInt">Decimal</label>
+          </dt>
+          <dd>
+            <input
+              id="util_setInt"
+              type="text"
+              value={dec(value)}
+              onChange={setInt}
+            />
+          </dd>
+          <dt>
+            <label htmlFor="util_setUns">Unsigned</label>
+          </dt>
+          <dd>
+            <input
+              id="util_setUns"
+              type="text"
+              value={uns(value)}
+              onChange={setUns}
+            />
+          </dd>
+          <dt>
+            <label htmlFor="util_setHex">Hex</label>
+          </dt>
+          <dd>
+            <input
+              id="util_setHex"
+              type="text"
+              value={hex(value)}
+              onChange={setHex}
+            />
+          </dd>
+          <dt>
+            <label htmlFor="util_setAsm">HACK ASM</label>
+          </dt>
+          <dd>
+            <input
+              id="util_setAsm"
+              type="text"
+              value={asmValue}
+              onChange={setAsm}
+            />
+          </dd>
+        </dl>
+      </main>
+    </article>
   );
 };
 

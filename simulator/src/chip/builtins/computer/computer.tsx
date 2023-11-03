@@ -1,9 +1,4 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-// import { Screen as ScreenComponent } from "../../../../app/components/chips/screen.js";
-// import { Keyboard as KeyboardComponent } from "../../../../app/components/chips/keyboard.js";
-// import { RegisterComponent } from "../../../../app/components/chips/register.js";
-// import { ALUComponent } from "../../../../app/components/chips/alu.js";
-// import { Flags } from "../../../cpu/alu.js";
 import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip.js";
 import { RAM, RAM16K } from "../sequential/ram.js";
 import {
@@ -15,7 +10,12 @@ import {
 } from "../../../cpu/cpu.js";
 import { int10 } from "../../../util/twos.js";
 import { load } from "../../../fs.js";
-import { KEYBOARD, SCREEN } from "../../../cpu/memory.js";
+import {
+  KEYBOARD_OFFSET,
+  KeyboardAdapter,
+  SCREEN_OFFSET,
+  SCREEN_SIZE,
+} from "../../../cpu/memory.js";
 
 export class ROM32K extends RAM {
   constructor() {
@@ -33,18 +33,23 @@ export class ROM32K extends RAM {
 }
 
 export class Screen extends RAM {
-  static readonly OFFSET = SCREEN;
+  static readonly SIZE = SCREEN_SIZE;
+  static readonly OFFSET = SCREEN_OFFSET;
 
   constructor() {
     super(13, "Screen");
   }
 }
 
-export class Keyboard extends Chip {
-  static readonly OFFSET = KEYBOARD;
+export class Keyboard extends Chip implements KeyboardAdapter {
+  static readonly OFFSET = KEYBOARD_OFFSET;
 
   constructor() {
     super([], ["out[16]"], "Keyboard");
+  }
+
+  getKey() {
+    return this.out().busVoltage;
   }
 
   setKey(key: number) {

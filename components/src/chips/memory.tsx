@@ -1,16 +1,27 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import {
+  ChangeEvent,
+  ReactNode,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import {
   Format,
   FORMATS,
-  Memory as MemoryChip,
+  MemoryAdapter,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
+import { loadBlob, loadAsm, loadHack } from "@nand2tetris/simulator/loader.js";
+
 import InlineEdit from "../inline_edit.js";
 import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 import { useClockReset } from "../clockface.js";
+import { BaseContext } from "../stores/base.context.js";
 
 const ITEM_HEIGHT = 34;
 
@@ -23,7 +34,7 @@ export const MemoryBlock = ({
   onChange = () => undefined,
 }: {
   jmp?: { value: number };
-  memory: MemoryChip;
+  memory: MemoryAdapter;
   highlight?: number;
   editable?: boolean;
   format?: (v: number) => string;
@@ -31,7 +42,7 @@ export const MemoryBlock = ({
 }) => {
   const settings = useMemo<Partial<VirtualScrollSettings>>(
     () => ({
-      count: Math.min(memory.size, 20),
+      count: Math.min(memory.size, 25),
       maxIndex: memory.size,
       itemHeight: ITEM_HEIGHT,
       startIndex: jmp.value,
@@ -85,9 +96,7 @@ export const MemoryCell = ({
     <code
       style={{
         ...rounded("none"),
-        ...(highlight
-          ? { background: "var(--code-kbd-background-color)" }
-          : {}),
+        ...(highlight ? { background: "var(--mark-background-color)" } : {}),
       }}
     >
       {hex(index)}
@@ -97,9 +106,7 @@ export const MemoryCell = ({
         flex: "1",
         textAlign: "right",
         ...rounded("none"),
-        ...(highlight
-          ? { background: "var(--code-kbd-background-color)" }
-          : {}),
+        ...(highlight ? { background: "var(--mark-background-color)" } : {}),
       }}
     >
       {editable ? (
@@ -126,7 +133,7 @@ export const Memory = ({
   name?: string;
   editable?: boolean;
   highlight?: number;
-  memory: MemoryChip;
+  memory: MemoryAdapter;
   format: Format;
 }) => {
   const [fmt, setFormat] = useState(format);
@@ -139,17 +146,29 @@ export const Memory = ({
     });
   };
 
-  // const { filePicker, fs } = useContext(AppContext);
-  // const doLoad = useCallback(async () => {
-  //   try {
-  //     const file = await filePicker.select();
-  //     await memory.load(fs, file);
-  //   } catch (e) {
-  //     console.error(e);
-  //   }
-  // }, [fs, filePicker, memory]);
+  const fileUploadRef = useRef<HTMLInputElement>(null);
+  const doLoad = useCallback(() => {
+    fileUploadRef.current?.click();
+  }, [fileUploadRef]);
 
-  const doLoad = () => undefined;
+  const { setStatus } = useContext(BaseContext);
+  const upload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) {
+      setStatus("No file selected");
+      return;
+    }
+    const file = event.target.files[0];
+    const source = await file.text();
+    const loader = file.name.endsWith("hack")
+      ? loadHack
+      : file.name.endsWith("asm")
+      ? loadAsm
+      : loadBlob;
+    const bytes = await loader(source);
+    memory.loadBytes(bytes);
+    event.target.value = ""; // Clear the input out
+    jumpTo();
+  }, []);
 
   const doUpdate = useCallback(
     (i: number, v: string) => {
@@ -164,17 +183,23 @@ export const Memory = ({
   });
 
   return (
-    <article className="panel">
+    <article className={`panel memory ${name}`}>
       <header>
         <div>{name}</div>
         <fieldset role="group">
+          <input
+            type="file"
+            style={{ display: "none" }}
+            ref={fileUploadRef}
+            onChange={upload}
+          />
           <button onClick={doLoad} className="flex-0">
             {/* <Icon name="upload_file" /> */}
             📂
           </button>
           <input
             style={{ width: "4em", height: "100%" }}
-            placeholder="Goto"
+            placeholder="Jump"
             value={jmp}
             onKeyDown={({ key }) => key === "Enter" && jumpTo()}
             onChange={({ target: { value } }) => setJmp(value)}
@@ -183,23 +208,11 @@ export const Memory = ({
             {/* <Icon name="move_down" /> */}
             ⤵️
           </button>
-          {FORMATS.map((option) => (
-            <label
-              className="flex-0"
-              key={option}
-              role="button"
-              aria-current={option === fmt}
-            >
-              <input
-                type="radio"
-                name={name}
-                value={option}
-                checked={option === fmt}
-                onChange={() => setFormat(option)}
-              />
-              {option}
-            </label>
-          ))}
+          <select value={fmt} onChange={(e) => setFormat(e.target.value)}>
+            {FORMATS.map((option) => (
+              <option key={option}>{option}</option>
+            ))}
+          </select>
         </fieldset>
       </header>
       <MemoryBlock

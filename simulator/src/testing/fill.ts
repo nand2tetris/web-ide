@@ -1,5 +1,5 @@
 import { CPU } from "../cpu/cpu.js";
-import { SCREEN } from "../cpu/memory.js";
+import { SCREEN_OFFSET } from "../cpu/memory.js";
 
 const colorfn = () => (Math.random() * 0xffff) & 0xffff;
 
@@ -8,7 +8,7 @@ export const TickScreen = (cpu: CPU) => {
   let col = 0;
   let color = colorfn();
   return () => {
-    const index = SCREEN + col + row * 32;
+    const index = SCREEN_OFFSET + col + row * 32;
     cpu.RAM.set(index, color);
     col += 1;
     if (col >= 32) {

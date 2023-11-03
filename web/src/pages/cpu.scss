@@ -1,0 +1,47 @@
+@use "../pico/button-group.scss";
+@use "../shell/tab.scss";
+
+.CpuPage {
+  --screen-size: calc(
+    512px + calc(calc(var(--block-spacing-horizontal) * 5)) / 2
+  );
+
+  height: 100%;
+
+  margin: 0px;
+  gap: 0;
+
+  grid-template-areas: "ROM RAM" "IO IO" "test test";
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr 1fr;
+
+  @media screen and (min-width: 1024px) {
+    grid-template-areas: "ROM RAM IO" "test test test";
+    grid-template-columns: 1fr 1fr var(--screen-size);
+    grid-template-rows: 1fr 1fr;
+  }
+
+  @media screen and (min-width: 1500px) {
+    grid-template-areas: "ROM RAM IO test";
+    grid-template-columns: 300px 300px var(--screen-size) auto;
+    grid-template-rows: 1fr;
+    // "IO IO test"
+    // "ROM RAM test";
+  }
+
+  .memory.ROM {
+    grid-area: ROM;
+  }
+
+  .memory.RAM {
+    grid-area: RAM;
+  }
+
+  .IO {
+    grid-area: IO;
+  }
+
+  ._test_panel {
+    grid-area: test;
+  }
+}

@@ -1,5 +1,13 @@
 import { alu, COMMANDS_OP, Flags } from "./alu.js";
-import { Memory } from "./memory.js";
+import {
+  Memory,
+  MemoryAdapter,
+  MemoryKeyboard,
+  SubMemory,
+  RAM as RAMMem,
+  SCREEN_OFFSET,
+  SCREEN_SIZE,
+} from "./memory.js";
 
 export interface CPUInput {
   inM: number;
@@ -123,8 +131,10 @@ export function cpu(input: CPUInput, state: CPUState): [CPUOutput, CPUState] {
 }
 
 export class CPU {
-  RAM: Memory;
-  ROM: Memory;
+  readonly RAM: Memory;
+  readonly ROM: Memory;
+  readonly Screen: MemoryAdapter;
+  readonly Keyboard: MemoryKeyboard;
 
   #pc = 0;
   #a = 0;
@@ -154,15 +164,25 @@ export class CPU {
     return this.#d;
   }
 
-  constructor({
-    RAM = new Memory(0x7fff),
-    ROM,
-  }: {
-    RAM?: Memory;
-    ROM: Memory;
-  }) {
+  setA(value: number) {
+    this.#a = value;
+  }
+
+  setD(value: number) {
+    this.#d = value;
+  }
+
+  setPC(value: number) {
+    this.#pc = value;
+  }
+
+  constructor({ RAM = new RAMMem(), ROM }: { RAM?: Memory; ROM: Memory }) {
     this.RAM = RAM;
     this.ROM = ROM;
+
+    // "Device Map"
+    this.Screen = new SubMemory(this.RAM, SCREEN_SIZE, SCREEN_OFFSET);
+    this.Keyboard = new MemoryKeyboard(this.RAM);
   }
 
   reset() {

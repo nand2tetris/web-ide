@@ -1,5 +1,5 @@
-import { Keyboard as KeyboardChip } from "@nand2tetris/simulator/chip/builtins/computer/computer.js";
-import { KeyboardEvent, useCallback, useState } from "react";
+import { KeyboardEvent, useState } from "react";
+import { KeyboardAdapter } from "@nand2tetris/simulator/cpu/memory.js";
 import { RegisterComponent } from "./register.js";
 
 const KeyMap: Record<string, number | undefined> = {
@@ -50,11 +50,11 @@ export const Keyboard = ({
   keyboard,
   update,
 }: {
-  keyboard: KeyboardChip;
+  keyboard: KeyboardAdapter;
   update?: () => void;
 }) => {
   const [showPicker, setShowPicker] = useState(false);
-  const [bits, setBits] = useState(keyboard.out().busVoltage);
+  const [bits, setBits] = useState(keyboard.getKey());
   let currentKey = 0;
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -71,7 +71,7 @@ export const Keyboard = ({
     currentKey = 0;
     keyboard.clearKey();
     update?.();
-    setBits(keyboard.out().busVoltage);
+    setBits(keyboard.getKey());
   };
 
   const setKey = (key: number) => {
@@ -79,21 +79,25 @@ export const Keyboard = ({
       return;
     }
     keyboard.setKey(key);
-    setBits(keyboard.out().busVoltage);
+    setBits(keyboard.getKey());
     currentKey = key;
     // setShowPicker(false);
   };
 
-  const changeKey = useCallback(() => {
+  const clear = () => {
+    setKey(0);
+  };
+
+  const changeKey = () => {
     setShowPicker(true);
-  }, []);
+  };
 
   return (
     <div className="flex row align-baseline">
       <div className="flex-1">
         <RegisterComponent name="Keyboard" bits={bits} />
       </div>
-      <div className="flex-1">
+      <div className={showPicker ? "flex-1" : "flex-0"}>
         {showPicker ? (
           <input
             ref={(e) => e?.focus()}
@@ -102,10 +106,13 @@ export const Keyboard = ({
             onKeyUp={onKeyUp}
           />
         ) : (
-          <button onClick={changeKey}>
-            {/* <Icon name="keyboard" /> */}
-            ⌨️
-          </button>
+          <fieldset role="group">
+            <button onClick={changeKey}>
+              {/* <Icon name="keyboard" /> */}
+              ⌨️
+            </button>
+            <button onClick={clear}>🆑</button>
+          </fieldset>
         )}
       </div>
     </div>

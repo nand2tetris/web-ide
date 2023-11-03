@@ -61,7 +61,7 @@ export function bits(i: number): string {
 }
 
 export function int(n: string, radix: number): number {
-  const i = parseInt(n.replace(/[^\d+-.xa-fA-F]/g, ""), radix);
+  const i = parseInt(n.replace(/[^\d a-f A-F +-.]/g, ""), radix);
   return i & 0xffff;
 }
 
@@ -74,7 +74,14 @@ export function int10(i: string): number {
 }
 
 export function int2(i: string): number {
-  return int(i, 2);
+  return int(i.replaceAll(" ", ""), 2);
+}
+
+export function parseTwosInt(i: string): number {
+  if (i.toUpperCase().includes("X")) {
+    return int16(i);
+  }
+  return int10(i);
 }
 
 export function hex(i: number): string {

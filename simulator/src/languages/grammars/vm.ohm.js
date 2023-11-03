@@ -2,7 +2,7 @@ const vm = `
 Vm <: Base {
   Root := Vm
 
-  Vm = VmInstruction+
+  Vm = VmInstruction*
 
   VmInstruction =
     | StackInstruction

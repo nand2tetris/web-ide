@@ -1,7 +1,7 @@
 /** Reads tst files to apply and perform test runs. */
 
 import ohm from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span } from "./base.js";
+import { baseSemantics, grammars, makeParser } from "./base.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
 export const grammar = ohm.grammar(vmGrammar, grammars);
@@ -31,7 +31,7 @@ export interface StackInstruction {
     | "that"
     | "pointer"
     | "temp";
-  value: number;
+  offset: number;
 }
 export interface OpInstruction {
   op: "add" | "sub" | "neg" | "lt" | "gt" | "eq" | "and" | "or" | "not";
@@ -39,7 +39,7 @@ export interface OpInstruction {
 export interface FunctionInstruction {
   op: "function";
   name: string;
-  nArgs: number;
+  nVars: number;
 }
 export interface CallInstruction {
   op: "call";
@@ -171,7 +171,7 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
     return {
       op: op as "push" | "pop",
       segment,
-      value,
+      offset: value,
     };
   },
   OpInstruction({ op }) {
@@ -189,7 +189,7 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
     };
   },
   FunctionInstruction(_, { name }, { value: nArgs }) {
-    return { op: "function", name, nArgs };
+    return { op: "function", name, nVars: nArgs };
   },
   CallInstruction(_, { name }, { value: nArgs }) {
     return { op: "call", name, nArgs };

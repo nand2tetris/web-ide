@@ -24,7 +24,6 @@ export interface CpuSim {
 }
 
 export interface CPUTestSim {
-  useTest: boolean;
   highlight: Span | undefined;
 }
 
@@ -79,23 +78,21 @@ export function makeCpuStore(
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
   const test = new CPUTest(new ROM(HACK));
-  let useTest = false;
 
   const reducers = {
     update(state: CpuPageState) {
       state.sim = reduceCPUTest(test, dispatch);
-      state.test.useTest = useTest;
       state.test.highlight = test.currentStep?.span;
     },
   };
 
   const actions = {
     tick() {
-      if (useTest) {
-        test.step();
-      } else {
-        test.cpu.tick();
-      }
+      test.cpu.tick();
+    },
+
+    testStep() {
+      test.step();
     },
 
     resetRAM() {
@@ -107,7 +104,6 @@ export function makeCpuStore(
     },
 
     toggleUseTest() {
-      useTest = !useTest;
       dispatch.current({ action: "update" });
     },
 
@@ -127,7 +123,6 @@ export function makeCpuStore(
   const initialState = {
     sim: reduceCPUTest(test, dispatch),
     test: {
-      useTest,
       highlight: test.currentStep?.span,
     },
   };

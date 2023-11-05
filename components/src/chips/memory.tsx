@@ -30,6 +30,7 @@ export const MemoryBlock = ({
   jmp = { value: 0 },
   highlight = -1,
   editable = false,
+  justifyLeft = false,
   format = dec,
   onChange = () => undefined,
   onFocus = () => undefined,
@@ -38,6 +39,7 @@ export const MemoryBlock = ({
   memory: MemoryAdapter;
   highlight?: number;
   editable?: boolean;
+  justifyLeft?: boolean;
   format?: (v: number) => string;
   onChange?: (i: number, value: string, previous: number) => void;
   onFocus?: (i: number) => void;
@@ -64,6 +66,7 @@ export const MemoryBlock = ({
         index={i}
         value={format(v)}
         editable={editable}
+        justifyLeft={justifyLeft}
         highlight={i === highlight}
         onChange={onChange}
         onFocus={onFocus}
@@ -87,6 +90,7 @@ export const MemoryCell = ({
   value,
   highlight = false,
   editable = false,
+  justifyLeft = false,
   onChange = () => undefined,
   onFocus = () => undefined,
 }: {
@@ -94,6 +98,7 @@ export const MemoryCell = ({
   value: string;
   highlight?: boolean;
   editable?: boolean;
+  justifyLeft?: boolean;
   onChange?: (i: number, value: string, previous: number) => void;
   onFocus?: (i: number) => void;
 }) => (
@@ -109,7 +114,7 @@ export const MemoryCell = ({
     <code
       style={{
         flex: "1",
-        textAlign: "right",
+        textAlign: justifyLeft ? "left" : "right",
         ...rounded("none"),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
       }}
@@ -231,6 +236,7 @@ export const Memory = ({
         memory={memory}
         highlight={highlighted}
         editable={editable}
+        justifyLeft={fmt == "asm"}
         format={(v: number) => doFormat(fmt, v)}
         onChange={doUpdate}
         onFocus={(i) => setHighlighted(i)}

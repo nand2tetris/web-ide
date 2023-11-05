@@ -65,6 +65,7 @@ export const MemoryBlock = ({
       <MemoryCell
         index={i}
         value={format(v)}
+        size={memory.size}
         editable={editable}
         justifyLeft={justifyLeft}
         highlight={i === highlight}
@@ -88,6 +89,7 @@ export const MemoryBlock = ({
 export const MemoryCell = ({
   index,
   value,
+  size,
   highlight = false,
   editable = false,
   justifyLeft = false,
@@ -96,6 +98,7 @@ export const MemoryCell = ({
 }: {
   index: number;
   value: string;
+  size?: number;
   highlight?: boolean;
   editable?: boolean;
   justifyLeft?: boolean;
@@ -107,9 +110,12 @@ export const MemoryCell = ({
       style={{
         ...rounded("none"),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
+        whiteSpace: "pre",
       }}
     >
-      {hex(index)}
+      {size
+        ? dec(index).padStart(Math.ceil(Math.log10(size)), " ")
+        : dec(index)}
     </code>
     <code
       style={{

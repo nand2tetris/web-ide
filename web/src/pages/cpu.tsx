@@ -50,7 +50,6 @@ export const CPU = () => {
         memory={state.sim.ROM}
         highlight={state.sim.PC}
         format="asm"
-        editable={false}
       />
       <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
       <Panel className="IO">

@@ -20,8 +20,9 @@ export const CPU = () => {
 
   const cpuRunner = useRef<Timer>();
   const testRunner = useRef<Timer>();
+  const [runnersAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
-    cpuRunner.current = new (class ChipTimer extends Timer {
+    cpuRunner.current = new (class CPUTimer extends Timer {
       override tick() {
         actions.tick();
         return false;
@@ -40,7 +41,7 @@ export const CPU = () => {
       }
     })();
 
-    testRunner.current = new (class ChipTimer extends Timer {
+    testRunner.current = new (class CPUTestTimer extends Timer {
       override tick() {
         actions.testStep();
         return false;
@@ -58,6 +59,7 @@ export const CPU = () => {
         dispatch.current({ action: "update" });
       }
     })();
+    setRunnersAssigned(true);
 
     return () => {
       cpuRunner.current?.stop();
@@ -75,7 +77,11 @@ export const CPU = () => {
       />
       <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
       <Panel className="IO">
-        <div>{cpuRunner.current && <Runbar runner={cpuRunner.current} />}</div>
+        <div>
+          {runnersAssigned && cpuRunner.current && (
+            <Runbar runner={cpuRunner.current} />
+          )}
+        </div>
         <Screen memory={state.sim.Screen}></Screen>
         <Keyboard keyboard={state.sim.Keyboard} />
         <div>
@@ -89,12 +95,14 @@ export const CPU = () => {
           </dl>
         </div>
       </Panel>
-      <TestPanel
-        runner={testRunner}
-        tst={[tst, setTst, state.test.highlight]}
-        out={[out, setOut]}
-        cmp={[cmp, setCmp]}
-      />
+      {runnersAssigned && (
+        <TestPanel
+          runner={testRunner}
+          tst={[tst, setTst, state.test.highlight]}
+          out={[out, setOut]}
+          cmp={[cmp, setCmp]}
+        />
+      )}
     </div>
   );
 };

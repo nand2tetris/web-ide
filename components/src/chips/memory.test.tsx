@@ -8,7 +8,7 @@ describe("<Memory />", () => {
     it("renders a read-only cell", () => {
       render(<MemoryCell index={16} value={"34"} />);
 
-      const addr = screen.getByText("0x0010");
+      const addr = screen.getByText("16");
       expect(addr).toBeVisible();
 
       const cell = screen.getByText("34");

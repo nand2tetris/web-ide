@@ -22,6 +22,7 @@ import InlineEdit from "../inline_edit.js";
 import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 import { useClockReset } from "../clockface.js";
 import { BaseContext } from "../stores/base.context.js";
+import { useStateInitializer } from "../react.js";
 
 const ITEM_HEIGHT = 34;
 
@@ -157,7 +158,7 @@ export const Memory = ({
   const [fmt, setFormat] = useState(format);
   const [jmp, setJmp] = useState("");
   const [goto, setGoto] = useState({ value: 0 });
-  const [highlighted, setHighlighted] = useState(0);
+  const [highlighted, setHighlighted] = useStateInitializer(highlight);
 
   const jumpTo = () => {
     const value =

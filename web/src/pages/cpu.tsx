@@ -17,6 +17,7 @@ export const CPU = () => {
   const [tst, setTst] = useState("repeat {\n\tticktock;\n}");
   const [out, setOut] = useState("");
   const [cmp, setCmp] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
 
   const cpuRunner = useRef<Timer>();
   const testRunner = useRef<Timer>();
@@ -67,6 +68,10 @@ export const CPU = () => {
     };
   }, [actions, dispatch]);
 
+  const onUpload = (fileName: string) => {
+    setFileName(fileName);
+  };
+
   return (
     <div className="CpuPage grid">
       <MemoryComponent
@@ -74,14 +79,22 @@ export const CPU = () => {
         memory={state.sim.ROM}
         highlight={state.sim.PC}
         format="asm"
+        onUpload={onUpload}
       />
       <MemoryComponent name="RAM" memory={state.sim.RAM} format="hex" />
-      <Panel className="IO">
-        <div>
-          {runnersAssigned && cpuRunner.current && (
-            <Runbar runner={cpuRunner.current} />
-          )}
-        </div>
+      <Panel
+        className="IO"
+        header={
+          <>
+            {fileName && <div className="flex-0">{fileName}</div>}
+            <div className="flex-1">
+              {runnersAssigned && cpuRunner.current && (
+                <Runbar runner={cpuRunner.current} />
+              )}
+            </div>
+          </>
+        }
+      >
         <Screen memory={state.sim.Screen}></Screen>
         <Keyboard keyboard={state.sim.Keyboard} />
         <div>

@@ -148,12 +148,14 @@ export const Memory = ({
   editable = true,
   memory,
   format = "dec",
+  onUpload = undefined,
 }: {
   name?: string;
   editable?: boolean;
   highlight?: number;
   memory: MemoryAdapter;
   format: Format;
+  onUpload?: (fileName: string) => void;
 }) => {
   const [fmt, setFormat] = useState(format);
   const [jmp, setJmp] = useState("");
@@ -181,6 +183,7 @@ export const Memory = ({
       return;
     }
     const file = event.target.files[0];
+    onUpload?.(file.name);
     const source = await file.text();
     const loader = file.name.endsWith("hack")
       ? loadHack

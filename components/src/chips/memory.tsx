@@ -161,6 +161,7 @@ export const Memory = ({
   const [jmp, setJmp] = useState("");
   const [goto, setGoto] = useState({ value: 0 });
   const [highlighted, setHighlighted] = useStateInitializer(highlight);
+  const [renderKey, setRenderKey] = useState(0);
 
   const jumpTo = () => {
     const value =
@@ -196,6 +197,15 @@ export const Memory = ({
     jumpTo();
   }, []);
 
+  const rerenderMemoryBlock = () => {
+    setRenderKey(renderKey + 1);
+  };
+
+  const clear = () => {
+    memory.reset();
+    rerenderMemoryBlock();
+  };
+
   const doUpdate = useCallback(
     (i: number, v: string) => {
       memory.update(i, v, fmt ?? "dec");
@@ -228,6 +238,15 @@ export const Memory = ({
             {/* <Icon name="upload_file" /> */}
             📂
           </button>
+          <button
+            onClick={clear}
+            className="flex-0"
+            data-tooltip={"Clear"}
+            data-placement="bottom"
+          >
+            {/* <Icon name="upload_file" /> */}
+            🆑
+          </button>
           <input
             style={{ width: "4em", height: "100%" }}
             placeholder="Addr"
@@ -252,6 +271,7 @@ export const Memory = ({
         </fieldset>
       </header>
       <MemoryBlock
+        key={renderKey}
         jmp={goto}
         memory={memory}
         highlight={highlighted}

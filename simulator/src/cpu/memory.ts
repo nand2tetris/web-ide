@@ -17,6 +17,7 @@ export interface MemoryAdapter {
   size: number;
   get(index: number): number;
   set(index: number, value: number): void;
+  reset(): void;
   update(cell: number, value: string, format: Format): void;
   load(fs: FileSystem, path: string): Promise<void>;
   loadBytes(bytes: number[]): void;
@@ -136,6 +137,12 @@ export class SubMemory implements MemoryAdapter {
   set(index: number, value: number): void {
     if (index >= 0 && index < this.size) {
       this.parent.set(index + this.offset, value);
+    }
+  }
+
+  reset(): void {
+    for (let i = 0; i < this.size; i++) {
+      this.set(i, 0);
     }
   }
 

@@ -20,7 +20,7 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         onClick={() =>
           runner.state.running ? runner.actions.stop() : runner.actions.start()
         }
-        data-tooltip={runner.state.running ? `Pause` : `Play`}
+        data-tooltip={runner.state.running ? `Pause` : `Run`}
         data-placement="bottom"
       >
         {/* <Icon name={runner.state.running ? "pause" : "fast_forward"} /> */}

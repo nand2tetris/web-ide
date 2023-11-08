@@ -216,18 +216,28 @@ export const Memory = ({
             ref={fileUploadRef}
             onChange={upload}
           />
-          <button onClick={doLoad} className="flex-0">
+          <button
+            onClick={doLoad}
+            className="flex-0"
+            data-tooltip={"Load file"}
+            data-placement="bottom"
+          >
             {/* <Icon name="upload_file" /> */}
             📂
           </button>
           <input
             style={{ width: "4em", height: "100%" }}
-            placeholder="Jump"
+            placeholder="Addr"
             value={jmp}
             onKeyDown={({ key }) => key === "Enter" && jumpTo()}
             onChange={({ target: { value } }) => setJmp(value)}
           />
-          <button onClick={jumpTo} className="flex-0">
+          <button
+            onClick={jumpTo}
+            className="flex-0"
+            data-tooltip={"Scroll to address"}
+            data-placement="bottom"
+          >
             {/* <Icon name="move_down" /> */}
             ⤵️
           </button>

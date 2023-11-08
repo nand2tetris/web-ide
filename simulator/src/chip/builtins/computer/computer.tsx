@@ -209,6 +209,11 @@ export class CPU extends ClockedChip {
 
   override reset() {
     this._state = emptyState();
+    
+    // This is a bit of a hack, but because super.reset() does ticktock,
+    // we need to set PC to -1, so that it will be 0 after the reset
+    this._state.PC = -1;
+    
     super.reset();
   }
 }

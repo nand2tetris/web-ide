@@ -206,12 +206,10 @@ export const Memory = ({
     rerenderMemoryBlock();
   };
 
-  const doUpdate = useCallback(
-    (i: number, v: string) => {
-      memory.update(i, v, fmt ?? "dec");
-    },
-    [memory, fmt]
-  );
+  const doUpdate = (i: number, v: string) => {
+    memory.update(i, v, fmt ?? "dec");
+    rerenderMemoryBlock();
+  };
 
   useClockReset(() => {
     setJmp("");

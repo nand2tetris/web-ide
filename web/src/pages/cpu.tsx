@@ -70,6 +70,7 @@ export const CPU = () => {
 
   const onUpload = (fileName: string) => {
     setFileName(fileName);
+    actions.reset();
   };
 
   return (

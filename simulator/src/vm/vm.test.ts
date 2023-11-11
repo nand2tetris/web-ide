@@ -1,13 +1,21 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "./vm.js";
+import {
+  FIBONACCI,
+  NESTED_FUNCTION,
+  SIMPLE_FUNCTION,
+  STATIC,
+} from "@nand2tetris/projects/samples/vm.js";
 
 test("Simple Adder VM", () => {
-  const vm = Vm.build([
-    { op: "push", segment: "constant", offset: 7 },
-    { op: "push", segment: "constant", offset: 8 },
-    { op: "add" },
-  ]);
+  const vm = unwrap(
+    Vm.build([
+      { op: "push", segment: "constant", offset: 7 },
+      { op: "push", segment: "constant", offset: 8 },
+      { op: "add" },
+    ])
+  );
 
   expect(vm.read([0])).toEqual([256]);
   vm.step(); // push 7
@@ -38,7 +46,7 @@ not
 
 test("Bit Ops", () => {
   const { instructions } = unwrap(VM.parse(BIT_TEST));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 11; i++) {
     vm.step();
@@ -91,7 +99,7 @@ not
 
 test("07 / Memory Access / Stack Test", () => {
   const { instructions } = unwrap(VM.parse(STACK_TEST));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 38; i++) {
     vm.step();
@@ -135,7 +143,7 @@ add
 
 test("07 / Memory Access / Basic Test", () => {
   const { instructions } = unwrap(VM.parse(BASIC_TEST));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   vm.write([
     [0, 256],
@@ -173,7 +181,7 @@ add
 
 test("07 / Memory Access / Pointer Test", () => {
   const { instructions } = unwrap(VM.parse(POINTER_TEST));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   vm.write([
     [0, 256],
@@ -210,7 +218,7 @@ push local 0
 
 test("08 / Program Flow / Basic Loop", () => {
   const { instructions } = unwrap(VM.parse(LOOP_TEST));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   vm.write([
     [0, 256],
@@ -271,7 +279,7 @@ label END_PROGRAM
 
 test("08 / Program Flow / Fibonacci Series", () => {
   const { instructions } = unwrap(VM.parse(FIBONACCI_SERIES));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   vm.write([
     [0, 256],
@@ -289,41 +297,9 @@ test("08 / Program Flow / Fibonacci Series", () => {
   expect(test).toEqual([0, 1, 1, 2, 3, 5]);
 });
 
-const SIMPLE_FUNCTION = `
-// __implicit
-  push constant 3
-  push constant 4
-  call mult 2
-
-// returns x * y as sum i = 0 to y x
-// x = arg 0
-// y = arg 1
-// sum = local 0
-// i = local 1
-function mult 2
-label WHILE_LOOP
-  push local 1
-  push argument 1
-  lt
-  not
-  if-goto WHILE_END
-  push local 0
-  push argument 0
-  add
-  pop local 0
-  push local 1
-  push constant 1
-  add
-  pop local 1
-  goto WHILE_LOOP
-label WHILE_END
-  push local 0
-  return
-`;
-
 test("08 / Simple Function / Simple Function", () => {
   const { instructions } = unwrap(VM.parse(SIMPLE_FUNCTION));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   vm.write([]);
 
@@ -335,75 +311,9 @@ test("08 / Simple Function / Simple Function", () => {
   expect(test).toEqual([257, 12]);
 });
 
-const NESTED_FUNCTION = `
-// Sys.vm for NestedCall test.
-
-// Sys.init()
-//
-// Calls Sys.main() and stores return value in temp 1.
-// Does not return.  (Enters infinite loop.)
-
-function Sys.init 0
-push constant 4000	// test THIS and THAT context save
-pop pointer 0
-push constant 5000
-pop pointer 1
-call Sys.main 0
-pop temp 1
-label LOOP
-goto LOOP
-
-// Sys.main()
-//
-// Sets locals 1, 2 and 3, leaving locals 0 and 4 unchanged to test
-// default local initialization to 0.  (RAM set to -1 by test setup.)
-// Calls Sys.add12(123) and stores return value (135) in temp 0.
-// Returns local 0 + local 1 + local 2 + local 3 + local 4 (456) to confirm
-// that locals were not mangled by function call.
-
-function Sys.main 5
-push constant 4001
-pop pointer 0
-push constant 5001
-pop pointer 1
-push constant 200
-pop local 1
-push constant 40
-pop local 2
-push constant 6
-pop local 3
-push constant 123
-call Sys.add12 1
-pop temp 0
-push local 0
-push local 1
-push local 2
-push local 3
-push local 4
-add
-add
-add
-add
-return
-
-// Sys.add12(int n)
-//
-// Returns n+12.
-
-function Sys.add12 0
-push constant 4002
-pop pointer 0
-push constant 5002
-pop pointer 1
-push argument 0
-push constant 12
-add
-return
-`;
-
 test("08 / Functions / Nested Function", () => {
   const { instructions } = unwrap(VM.parse(NESTED_FUNCTION));
-  const vm = Vm.build(instructions);
+  const vm = unwrap(Vm.build(instructions));
 
   const init: [number, number][] = [
     [3, -3],
@@ -430,42 +340,9 @@ test("08 / Functions / Nested Function", () => {
   expect(test).toEqual([261, 261, 256, 4000, 5000, 135, 246]);
 });
 
-const FIB_MAIN = `
-function Main.fibonacci 0
-push argument 0
-push constant 2
-lt                     // checks if n<2
-if-goto IF_TRUE
-goto IF_FALSE
-label IF_TRUE          // if n<2, return n
-push argument 0        
-return
-label IF_FALSE         // if n>=2, returns fib(n-2)+fib(n-1)
-push argument 0
-push constant 2
-sub
-call Main.fibonacci 1  // computes fib(n-2)
-push argument 0
-push constant 1
-sub
-call Main.fibonacci 1  // computes fib(n-1)
-add                    // returns fib(n-1) + fib(n-2)
-return
-`;
-
-const FIB_SYS = `
-function Sys.init 0
-push constant 4
-call Main.fibonacci 1   // computes the 4'th fibonacci element
-label WHILE
-goto WHILE              // loops infinitely
-`;
-
 test("08 / Functions / Fib", () => {
-  const { instructions } = unwrap(VM.parse(FIB_MAIN + FIB_SYS));
-  const vm = Vm.build(instructions);
-
-  vm.write([]);
+  const { instructions } = unwrap(VM.parse(FIBONACCI));
+  const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 1000; i++) {
     vm.step();
@@ -475,59 +352,9 @@ test("08 / Functions / Fib", () => {
   expect(test).toEqual([262, 3]);
 });
 
-const STATIC_CLASS_1 = `function Class1.set 0
-push argument 0
-pop static 0
-push argument 1
-pop static 1
-push constant 0
-return
-
-// Returns static[0] - static[1].
-function Class1.get 0
-push static 0
-push static 1
-sub
-return
-`;
-const STATIC_CLASS_2 = `function Class2.set 0
-push argument 0
-pop static 0
-push argument 1
-pop static 1
-push constant 0
-return
-
-// Returns static[0] - static[1].
-function Class2.get 0
-push static 0
-push static 1
-sub
-return
-`;
-
-const STATIC_SYS = `function Sys.init 0
-push constant 6
-push constant 8
-call Class1.set 2
-pop temp 0 // Dumps the return value
-push constant 23
-push constant 15
-call Class2.set 2
-pop temp 0 // Dumps the return value
-call Class1.get 0
-call Class2.get 0
-label WHILE
-goto WHILE
-`;
-
 test("08 / Functions / Static", () => {
-  const { instructions } = unwrap(
-    VM.parse([STATIC_CLASS_1, STATIC_CLASS_2, STATIC_SYS].join("\n"))
-  );
-  const vm = Vm.build(instructions);
-
-  vm.write([]);
+  const { instructions } = unwrap(VM.parse(STATIC));
+  const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 1000; i++) {
     vm.step();
@@ -535,4 +362,13 @@ test("08 / Functions / Static", () => {
 
   const test = vm.read([0, 261, 262]);
   expect(test).toEqual([263, -2, 8]);
+});
+
+describe("debug frame views", () => {
+  test("top frame", () => {
+    const { instructions } = unwrap(VM.parse(FIBONACCI));
+    const vm = unwrap(Vm.build(instructions));
+
+    expect(vm.vmStack().length).toBe(1);
+  });
 });

@@ -1,6 +1,14 @@
+import {
+  Err,
+  Ok,
+  Result,
+  isErr,
+  unwrap,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
 import { VmCompiler } from "./compiler.js";
 import { VmMemory } from "./memory.js";
+import { MemoryAdapter, RAM } from "../cpu/memory.js";
 
 export type VmOperation =
   | StackOperation
@@ -50,6 +58,19 @@ export interface GotoOperation {
   label: string;
 }
 
+export interface Frame {
+  fn?: VmFunction;
+  locals: MemoryAdapter;
+  args: MemoryAdapter;
+  stack: {
+    RET: number;
+    ARG: number;
+    LCL: number;
+    THIS: number;
+    THAT: number;
+  };
+}
+
 export type VmFunctions = Record<string, VmFunction>;
 export interface VmFunction {
   name: string;
@@ -61,6 +82,8 @@ export interface VmFunction {
 interface VmFunctionInvocation {
   function: string;
   op: number;
+  base: number;
+  nArgs: number;
 }
 
 const BOOTSTRAP: VmFunction = {
@@ -76,8 +99,9 @@ export class Vm {
     [BOOTSTRAP.name]: BOOTSTRAP,
   };
   protected executionStack: VmFunctionInvocation[] = [
-    { function: BOOTSTRAP.name, op: 0 },
+    { function: BOOTSTRAP.name, op: 0, base: 256, nArgs: 0 },
   ];
+  program: VmInstruction[] = [];
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
   private registerStatic(fnName: string, offset: number): number {
@@ -105,8 +129,9 @@ export class Vm {
     }
   }
 
-  static build(instructions: VmInstruction[]): Vm {
+  static build(instructions: VmInstruction[]): Result<Vm> {
     const vm = new Vm();
+    vm.program = instructions;
 
     if (instructions[0]?.op !== "function") {
       instructions.unshift({ op: "function", name: "__implicit", nVars: 0 });
@@ -114,7 +139,10 @@ export class Vm {
 
     let i = 0;
     while (i < instructions.length) {
-      const [fn, i_] = this.buildFunction(instructions, i);
+      const buildFn = this.buildFunction(instructions, i);
+      if (isErr(buildFn))
+        return Err(new Error("Failed to build VM", { cause: Err(buildFn) }));
+      const [fn, i_] = unwrap(buildFn);
       if (vm.functionMap[fn.name])
         throw new Error(`VM Already has a function named ${fn.name}`);
       if (fn.name === "__implicit") {
@@ -140,23 +168,25 @@ export class Vm {
         };
       } else if (vm.functionMap["__implicit"]) {
         // Use __implicit instead of __bootstrap
-        vm.executionStack = [{ function: "__implicit", op: 0 }];
+        vm.executionStack = [
+          { function: "__implicit", op: 0, base: 256, nArgs: 0 },
+        ];
       } else {
-        throw new Error("Could not determine an entry point for VM");
+        return Err(Error("Could not determine an entry point for VM"));
       }
     }
 
     vm.registerStatics();
-    return vm;
+    return Ok(vm);
   }
 
   private static buildFunction(
     instructions: VmInstruction[],
     i: number
-  ): [VmFunction, number] {
+  ): Result<[VmFunction, number]> {
     if (instructions[i].op !== "function")
-      throw new Error(
-        "Only call buildFunction at the initial Function instruction"
+      return Err(
+        Error("Only call buildFunction at the initial Function instruction")
       );
     const fn: VmFunction = {
       name: (instructions[i] as FunctionInstruction).name,
@@ -245,7 +275,18 @@ export class Vm {
       i += 1;
     }
 
-    return [fn, i];
+    return Ok([fn, i]);
+  }
+
+  get RAM(): RAM {
+    return this.memory;
+  }
+
+  get Keyboard(): MemoryAdapter {
+    return this.memory.keyboard;
+  }
+  get Screen(): MemoryAdapter {
+    return this.memory.screen;
   }
 
   get invocation() {
@@ -340,8 +381,17 @@ export class Vm {
         const fnName = operation.name;
         const fn = this.functionMap[fnName];
         if (!fn) throw new Error(`Calling unknown function ${fnName}`);
-        this.memory.pushFrame(this.invocation.op, operation.nArgs, fn.nVars);
-        this.executionStack.push({ function: fnName, op: -1 });
+        const base = this.memory.pushFrame(
+          this.invocation.op,
+          operation.nArgs,
+          fn.nVars
+        );
+        this.executionStack.push({
+          function: fnName,
+          op: -1,
+          nArgs: operation.nArgs,
+          base,
+        });
         break;
       }
       case "return": {
@@ -378,5 +428,20 @@ export class Vm {
 
   compiler(): VmCompiler {
     return new VmCompiler(this.functionMap);
+  }
+
+  vmStack(): Frame[] {
+    return this.executionStack.map((invocation) => {
+      const fn = this.functionMap[invocation.function];
+      const frame = this.memory.getFrame(
+        invocation.base,
+        invocation.nArgs,
+        fn.nVars,
+        0,
+        0
+      );
+      frame.fn = fn;
+      return frame;
+    });
   }
 }

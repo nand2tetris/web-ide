@@ -24,7 +24,7 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import { ChipTest } from "@nand2tetris/simulator/tst.js";
+import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";

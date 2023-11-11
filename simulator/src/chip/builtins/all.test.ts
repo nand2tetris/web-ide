@@ -9,9 +9,9 @@ import { Tst, TST } from "../../languages/tst.js";
 import { ChipProjects, CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { compare } from "../../compare.js";
-import { ChipTest } from "../../tst.js";
 import { build } from "../builder.js";
 import { Chip } from "../chip.js";
+import { ChipTest } from "../../test/chiptst.js";
 
 const SKIP = new Set<string>(["Computer"]);
 

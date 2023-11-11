@@ -30,6 +30,7 @@ import "./pico/flex.scss";
 import "./pico/pico.scss";
 import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
+import { ErrorBoundary, RenderError } from "./ErrorBoundary";
 
 i18n.load("en", messages.messages);
 i18n.load("en-PL", plMessages.messages);
@@ -69,21 +70,23 @@ function App() {
           <Router basename={process.env.PUBLIC_URL}>
             <Header />
             <main className="flex flex-1">
-              <Suspense fallback={<div>Loading...</div>}>
-                <Routes>
-                  <Route
-                    path="/"
-                    element={
-                      <Navigate
-                        to={localStorage.getItem(LAST_ROUTE_KEY) ?? "/chip"}
-                      />
-                    }
-                  />
-                  {Object.values(urls).map(({ href, target }) => (
-                    <Route key={href} path={href} element={target} />
-                  ))}
-                </Routes>
-              </Suspense>
+              <ErrorBoundary fallback={RenderError}>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={
+                        <Navigate
+                          to={localStorage.getItem(LAST_ROUTE_KEY) ?? "/chip"}
+                        />
+                      }
+                    />
+                    {Object.values(urls).map(({ href, target }) => (
+                      <Route key={href} path={href} element={target} />
+                    ))}
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
             </main>
             <Footer />
             <TrackingBanner />

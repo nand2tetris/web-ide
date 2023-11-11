@@ -1,18 +1,20 @@
-import { TstRepeat } from "./languages/tst.js";
-import { Computer } from "./chip/builtins/computer/computer.js";
-import { Nand } from "./chip/builtins/logic/nand.js";
-import { Output } from "./output.js";
+import { TstRepeat } from "../languages/tst.js";
+import { Computer } from "../chip/builtins/computer/computer.js";
+import { Nand } from "../chip/builtins/logic/nand.js";
+import { Output } from "../output.js";
 import {
   ChipTest,
-  TestSetInstruction,
   TestEvalInstruction,
-  TestOutputInstruction,
   TestTickInstruction,
   TestTockInstruction,
+} from "./chiptst.js";
+import {
   TestCompoundInstruction,
-} from "./tst.js";
+  TestOutputInstruction,
+  TestSetInstruction,
+} from "./instruction.js";
 
-describe("Simulator Test", () => {
+describe("Chip Test", () => {
   describe("Builtins", () => {
     it("can set Memory", async () => {
       const computer = new Computer();

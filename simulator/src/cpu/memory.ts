@@ -3,6 +3,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { op } from "../util/asm.js";
 import { int10, int16, int2 } from "../util/twos.js";
 import { load } from "../fs.js";
+import { Screen } from "../chip/builtins/computer/computer.js";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];
@@ -204,6 +205,9 @@ export class ROM extends Memory {
 }
 
 export class RAM extends Memory {
+  keyboard = new SubMemory(this, 1, KEYBOARD_OFFSET);
+  screen = new SubMemory(this, SCREEN_SIZE, SCREEN_OFFSET);
+
   // 4k main memory, 2k screen memory, 1 keyboard
   // static readonly SIZE = 0x4000 + 0x2000 + 0x0001;
   static readonly SIZE = 0x8000;

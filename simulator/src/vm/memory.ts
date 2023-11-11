@@ -1,5 +1,5 @@
-import { RAM } from "../cpu/memory.js";
-import { Segment } from "./vm.js";
+import { RAM, SubMemory } from "../cpu/memory.js";
+import { Frame, Segment } from "./vm.js";
 
 export const SP = 0;
 export const LCL = 1;
@@ -175,25 +175,28 @@ export class VmMemory extends RAM {
   }
   // Stack frame, from figure 8.3, is:
   // [ARG] Arg0 Arg1... RET LCL ARG THIS THAT [LCL] Local0 Local1... [SP]
-  pushFrame(ret: number, nArgs: number, nLocals: number) {
-    const arg = this.SP - nArgs;
-    let sp = this.SP + 5;
-    this.set(sp - 5, ret);
-    this.set(sp - 4, this.LCL);
-    this.set(sp - 3, this.ARG);
-    this.set(sp - 2, this.THIS);
-    this.set(sp - 1, this.THAT);
+  pushFrame(ret: number, nArgs: number, nLocals: number): number {
+    const base = this.SP;
+    const arg = base - nArgs;
+    this.set(base, ret);
+    this.set(base + 1, this.LCL);
+    this.set(base + 2, this.ARG);
+    this.set(base + 3, this.THIS);
+    this.set(base + 4, this.THAT);
 
     this.set(ARG, arg);
-    this.set(LCL, sp);
+    this.set(LCL, base);
 
+    let sp = base + 5;
     // Technically this happens in the function, but the VM will handle it for free
     for (let i = 0; i < nLocals; i++) {
       this.set(sp, 0);
       sp += 1;
     }
     this.set(SP, sp);
+    return base;
   }
+
   popFrame(): number {
     const frame = this.LCL;
     const ret = this.get(frame - 5);
@@ -205,6 +208,26 @@ export class VmMemory extends RAM {
     this.set(ARG, this.get(frame - 3));
     this.set(LCL, this.get(frame - 4));
     return ret;
+  }
+
+  getFrame(
+    base: number, // The address of the frame, the RET address
+    argN: number, // The number of arguments to this frame
+    localN: number, // The number of locals in this frame
+    thisN: number, // The number of items in `this`
+    thatN: number // the number of items in `that`
+  ): Frame {
+    return {
+      args: new SubMemory(this, argN, base - argN),
+      locals: new SubMemory(this, localN, base - localN),
+      stack: {
+        RET: this.get(base),
+        LCL: this.get(base + 1),
+        ARG: this.get(base + 2),
+        THIS: this.get(base + 3),
+        THAT: this.get(base + 4),
+      },
+    };
   }
 
   binOp(fn: (a: number, b: number) => number) {

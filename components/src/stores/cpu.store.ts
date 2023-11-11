@@ -5,16 +5,16 @@ import {
   MemoryAdapter,
   MemoryKeyboard,
   ROM,
-  SubMemory,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { HACK } from "@nand2tetris/simulator/testing/mult.js";
-import { CPUTest } from "@nand2tetris/simulator/tst.js";
+import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
+import { ImmMemory } from "./imm_memory.js";
 
 function makeTst() {
   return `repeat {
@@ -42,20 +42,6 @@ export interface CPUTestSim {
 export interface CpuPageState {
   sim: CpuSim;
   test: CPUTestSim;
-}
-
-class ImmMemory extends SubMemory {
-  constructor(
-    parent: MemoryAdapter,
-    private dispatch: MutableRefObject<CpuStoreDispatch>
-  ) {
-    super(parent, parent.size, 0);
-  }
-
-  override async load(fs: FileSystem, path: string): Promise<void> {
-    await super.load(fs, path);
-    this.dispatch.current({ action: "update" });
-  }
 }
 
 function reduceCPUTest(

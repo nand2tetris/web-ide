@@ -20,7 +20,7 @@ export interface TstSetOperation {
 }
 
 export interface TstEvalOperation {
-  op: "eval" | "tick" | "tock" | "ticktock";
+  op: "eval" | "tick" | "tock" | "ticktock" | "vmstep";
 }
 
 export interface TstOutputOperation {
@@ -49,7 +49,7 @@ export interface TstLoadROMOperation {
 
 export interface TstFileOperation {
   op: "load" | "output-file" | "compare-to";
-  file: string;
+  file?: string;
 }
 
 export type TstOperation =
@@ -183,7 +183,7 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   TstFileOperation(op, file) {
     return {
       op: op.sourceString as TstFileOperation["op"],
-      file: file.sourceString,
+      file: file?.sourceString,
     };
   },
 });

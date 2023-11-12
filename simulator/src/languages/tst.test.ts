@@ -1,3 +1,8 @@
+import {
+  FileSystem,
+  ObjectFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs.js";
+import { resetFiles } from "@nand2tetris/projects/index.js";
 import { grammar, TST } from "./tst.js";
 
 const NOT_TST = `
@@ -468,4 +473,25 @@ describe("tst language", () => {
       ],
     });
   });
+});
+
+it("loads all project tst files", async () => {
+  const fs = new FileSystem(new ObjectFileSystemAdapter());
+  await resetFiles(fs);
+  async function check() {
+    for (const stat of await fs.scandir(".")) {
+      if (stat.isDirectory()) {
+        fs.pushd(stat.name);
+        await check();
+        fs.popd();
+      } else {
+        if (stat.name.endsWith("vm_tst")) {
+          const tst = await fs.readFile(stat.name);
+          const match = grammar.match(tst);
+          expect(match).toHaveSucceeded();
+        }
+      }
+    }
+  }
+  await check();
 });

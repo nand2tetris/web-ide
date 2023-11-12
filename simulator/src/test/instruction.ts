@@ -204,6 +204,18 @@ export class TestLoadROMInstruction implements TestInstruction {
   }
 }
 
+export class TestLoadInstruction implements TestInstruction {
+  constructor(readonly file?: string) {}
+
+  async do(test: Test) {
+    await test.load(this.file);
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
 export class TestBreakpointInstruction implements TestInstruction {
   constructor(readonly variable: string, readonly value: number) {}
 

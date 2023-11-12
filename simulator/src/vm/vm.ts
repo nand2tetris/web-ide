@@ -75,6 +75,8 @@ export interface VmFrame {
   locals: VmFrameValues;
   args: VmFrameValues;
   stack: VmFrameValues;
+  this: VmFrameValues;
+  that: VmFrameValues;
   frame: {
     RET: number;
     ARG: number;
@@ -122,6 +124,19 @@ const BOOTSTRAP: VmFunction = {
   ],
 };
 
+function BootstrapFor(name: string): VmFunction {
+  return {
+    name: "__bootstrap",
+    nVars: 0,
+    opBase: 0,
+    labels: {},
+    operations: [
+      { op: "function", name: "__bootstrap", nVars: 0 },
+      { op: "call", name, nArgs: 0 },
+    ],
+  };
+}
+
 const END_LABEL = "__END";
 const SYS_INIT: VmFunction = {
   name: "Sys.init",
@@ -135,14 +150,11 @@ const SYS_INIT: VmFunction = {
   ],
 };
 
-const INITIAL_FNS = [BOOTSTRAP.name, IMPLICIT.name];
-
 export class Vm {
-  protected memory = new VmMemory();
-  protected functionMap: Record<string, VmFunction> = {
-    [BOOTSTRAP.name]: BOOTSTRAP,
-  };
-  protected executionStack: VmFunctionInvocation[] = [];
+  memory = new VmMemory();
+  entry = "";
+  functionMap: Record<string, VmFunction> = {};
+  executionStack: VmFunctionInvocation[] = [];
 
   functions: VmFunction[] = [];
   program: VmOperation[] = [];
@@ -177,55 +189,9 @@ export class Vm {
 
   static build(instructions: VmInstruction[]): Result<Vm> {
     const vm = new Vm();
-
-    if (instructions[0]?.op !== "function") {
-      instructions.unshift({ op: "function", name: IMPLICIT.name, nVars: 0 });
-    }
-
-    let i = 0;
-    while (i < instructions.length) {
-      const buildFn = this.buildFunction(instructions, i);
-
-      if (isErr(buildFn))
-        return Err(new Error("Failed to build VM", { cause: Err(buildFn) }));
-      const [fn, i_] = unwrap(buildFn);
-      if (vm.functionMap[fn.name])
-        throw new Error(`VM Already has a function named ${fn.name}`);
-
-      vm.functionMap[fn.name] = fn;
-      i = i_;
-    }
-
-    if (!vm.functionMap[SYS_INIT.name]) {
-      if (vm.functionMap["main"]) {
-        // Inject a Sys.init
-        vm.functionMap[SYS_INIT.name] = SYS_INIT;
-      } else if (vm.functionMap[IMPLICIT.name]) {
-        // Use __implicit instead of __bootstrap
-        delete vm.functionMap[BOOTSTRAP.name];
-      } else {
-        return Err(Error("Could not determine an entry point for VM"));
-      }
-    }
-
-    vm.registerStatics();
-
-    vm.functions = Object.values(vm.functionMap);
-    vm.functions.sort((a, b) => {
-      if (INITIAL_FNS.includes(a.name)) return -1;
-      if (INITIAL_FNS.includes(b.name)) return 1;
-      return a.name.localeCompare(b.name);
-    });
-
-    let offset = 0;
-    vm.program = vm.functions.reduce((prog, fn) => {
-      fn.opBase = offset;
-      offset += fn.operations.length;
-      return prog.concat(fn.operations);
-    }, [] as VmOperation[]);
-
-    vm.reset();
-    return Ok(vm);
+    const load = vm.load(instructions);
+    if (isErr(load)) return load;
+    return vm.bootstrap();
   }
 
   private static buildFunction(
@@ -348,7 +314,9 @@ export class Vm {
 
   get invocation() {
     const invocation = this.executionStack.at(-1);
-    if (invocation === undefined) throw new Error("Empty execution stack!");
+    if (invocation === undefined) {
+      throw new Error("Empty execution stack!");
+    }
     return invocation;
   }
 
@@ -370,12 +338,86 @@ export class Vm {
     return this.currentFunction.operations[this.invocation.opPtr];
   }
 
+  load(instructions: VmInstruction[]): Result<this, Error> {
+    if (instructions[0]?.op !== "function") {
+      instructions.unshift({ op: "function", name: IMPLICIT.name, nVars: 0 });
+    }
+
+    let i = 0;
+    while (i < instructions.length) {
+      const buildFn = Vm.buildFunction(instructions, i);
+
+      if (isErr(buildFn))
+        return Err(new Error("Failed to build VM", { cause: Err(buildFn) }));
+      const [fn, i_] = unwrap(buildFn);
+      if (
+        this.functionMap[fn.name] &&
+        this.memory.strict &&
+        fn.name !== IMPLICIT.name
+      ) {
+        return Err(new Error(`VM Already has a function named ${fn.name}`));
+      }
+
+      this.functionMap[fn.name] = fn;
+      i = i_;
+    }
+
+    this.registerStatics();
+
+    return Ok(this);
+  }
+
+  bootstrap() {
+    if (!this.functionMap[SYS_INIT.name] && this.functionMap["main"]) {
+      this.functionMap[SYS_INIT.name] = SYS_INIT;
+      // TODO should this be an error from the compiler/OS?
+    }
+
+    if (this.functionMap[SYS_INIT.name]) {
+      this.functionMap[BOOTSTRAP.name] = BootstrapFor(SYS_INIT.name);
+      this.entry = BOOTSTRAP.name;
+    } else if (this.functionMap[IMPLICIT.name]) {
+      this.entry = IMPLICIT.name;
+    } else {
+      const fnNames = Object.keys(this.functionMap);
+      if (fnNames.length === 1) {
+        this.functionMap[BOOTSTRAP.name] = BootstrapFor(fnNames[0]);
+        this.entry = BOOTSTRAP.name;
+      }
+    }
+
+    if (this.functionMap[IMPLICIT.name] && this.functionMap[BOOTSTRAP.name]) {
+      return Err(
+        new Error("Cannot use both bootstrap and an implicit function")
+      );
+    }
+
+    if (this.entry === "") {
+      return Err(Error("Could not determine an entry point for VM"));
+    }
+
+    this.functions = Object.values(this.functionMap);
+    this.functions.sort((a, b) => {
+      if (a.name === this.entry) return -1;
+      if (a.name === this.entry) return 1;
+      return 0; // Stable sort otherwise
+    });
+
+    let offset = 0;
+    this.program = this.functions.reduce((prog, fn) => {
+      fn.opBase = offset;
+      offset += fn.operations.length;
+      return prog.concat(fn.operations);
+    }, [] as VmOperation[]);
+
+    this.reset();
+
+    return Ok(this);
+  }
+
   reset() {
-    const bootstrap = this.functionMap[BOOTSTRAP.name]
-      ? BOOTSTRAP.name
-      : "__implicit";
     this.executionStack = [
-      { function: bootstrap, opPtr: 1, frameBase: 256, nArgs: 0 },
+      { function: this.entry, opPtr: 1, frameBase: 256, nArgs: 0 },
     ];
     this.memory.reset();
     this.memory.set(0, 256);
@@ -520,6 +562,8 @@ export class Vm {
           count: frameEnd - frameBase,
           values: [...this.memory.map((_, v) => v, frameBase, frameEnd)],
         },
+        ["this"]: { base: 0, count: 0, values: [] },
+        that: { base: 0, count: 0, values: [] },
         frame: {
           ARG: 0,
           LCL: 0,

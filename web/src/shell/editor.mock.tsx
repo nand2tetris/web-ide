@@ -11,7 +11,6 @@ jest.mock("@monaco-editor/react", () => {
       ></textarea>
     );
   });
-  console.log("mocked fake editor");
   return FakeEditor;
 });
 

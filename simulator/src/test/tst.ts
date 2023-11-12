@@ -21,7 +21,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     return undefined;
   }
 
-  async load(_filename: string): Promise<void> {
+  async load(_filename?: string): Promise<void> {
     return undefined;
   }
   async compareTo(_filename: string): Promise<void> {
@@ -45,7 +45,6 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
       }
     })(this);
     this._step = this._steps.next();
-    this._step; //?
     this._log = "";
     return this;
   }

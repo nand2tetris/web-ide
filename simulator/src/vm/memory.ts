@@ -14,37 +14,32 @@ export class VmMemory extends RAM {
   get SP(): number {
     return this.get(SP);
   }
+  set SP(value: number) {
+    this.set(SP, value);
+  }
   get LCL(): number {
     return this.get(LCL);
+  }
+  set LCL(value: number) {
+    this.set(LCL, value);
   }
   get ARG(): number {
     return this.get(ARG);
   }
+  set ARG(value: number) {
+    this.set(ARG, value);
+  }
   get THIS(): number {
     return this.get(THIS);
+  }
+  set THIS(value: number) {
+    this.set(THIS, value);
   }
   get THAT(): number {
     return this.get(THAT);
   }
-
-  get state() {
-    const temps = [];
-    for (let i = 5; i < 13; i++) {
-      temps.push(this.get(i));
-    }
-    const internal = [];
-    for (let i = 13; i < 16; i++) {
-      internal.push(i);
-    }
-    return {
-      ["0: SP"]: this.SP,
-      ["1: LCL"]: this.LCL,
-      ["2: ARG"]: this.ARG,
-      ["3: THIS"]: this.THIS,
-      ["4: THAT"]: this.THAT,
-      TEMPS: temps,
-      VM: internal,
-    };
+  set THAT(value: number) {
+    this.set(THAT, value);
   }
 
   get statics() {
@@ -53,27 +48,6 @@ export class VmMemory extends RAM {
       statics.push(this.get(i));
     }
     return statics;
-  }
-
-  get frame() {
-    // Arg0 Arg1... RET LCL ARG THIS THAT [SP]
-    const args = [];
-    for (let i = this.ARG; i < this.LCL - 5; i++) {
-      args.push(this.get(i));
-    }
-    const locals = [];
-    for (let i = this.LCL; i < this.SP; i++) {
-      locals.push(this.get(i));
-    }
-    const _this = [];
-    for (let i = 0; i < 5; i++) {
-      _this.push(this.this(i));
-    }
-    return {
-      args,
-      locals,
-      this: _this,
-    };
   }
 
   constructor() {
@@ -224,13 +198,14 @@ export class VmMemory extends RAM {
     const args = [...this.map((_, v) => v, arg, arg + argN)];
     const locals = [...this.map((_, v) => v, lcl, lcl + localN)];
     const stack = [...this.map((_, v) => v, stk, stk + stackN)];
-    // [arg, argN, args]; //?
-    // [lcl, localN, locals]; //?
-    // [stk, stackN, stack]; //?
+    const this_ = [...this.map((_, v) => v, this.THIS, this.THIS + thisN)];
+    const that = [...this.map((_, v) => v, this.THIS, this.THIS + thatN)];
     return {
       args: { base: arg, count: argN, values: args },
       locals: { base: lcl, count: localN, values: locals },
       stack: { base: stk, count: stackN, values: stack },
+      this: { base: stk, count: thisN, values: this_ },
+      that: { base: stk, count: thatN, values: that },
       frame: {
         RET: this.get(base),
         LCL: this.LCL,
@@ -238,6 +213,22 @@ export class VmMemory extends RAM {
         THIS: this.THIS,
         THAT: this.THAT,
       },
+    };
+  }
+
+  getVmState(staticN = 240) {
+    const temps = [...this.map((_, v) => v, 5, 13)];
+    const internal = [...this.map((_, v) => v, 13, 16)];
+    const statics = [...this.map((_, v) => v, 16, 16 + staticN)];
+    return {
+      ["0: SP"]: this.SP,
+      ["1: LCL"]: this.LCL,
+      ["2: ARG"]: this.ARG,
+      ["3: THIS"]: this.THIS,
+      ["4: THAT"]: this.THAT,
+      temps,
+      internal,
+      static: statics,
     };
   }
 

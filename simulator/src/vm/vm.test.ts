@@ -307,8 +307,6 @@ test("08 / Simple Function / Simple Function", () => {
     vm.step();
   }
 
-  vm.program; //?
-
   const test = vm.read([0, 256]);
   expect(test).toEqual([257, 12]);
 });

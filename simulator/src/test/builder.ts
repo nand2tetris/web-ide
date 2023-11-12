@@ -24,6 +24,7 @@ import {
   TestWhileInstruction,
 } from "./instruction.js";
 import { Test } from "./tst.js";
+import { TestVMStepInstruction } from "./vmtst.js";
 import { TestTickTockInstruction } from "./cputst.js";
 
 function isTstLineStatment(line: TstStatement): line is TstLineStatement {
@@ -55,6 +56,8 @@ function makeInstruction(inst: TstOperation) {
       return new TestTickTockInstruction();
     case "eval":
       return new TestEvalInstruction();
+    case "vmstep":
+      return new TestVMStepInstruction();
     case "output":
       return new TestOutputInstruction();
     case "set":

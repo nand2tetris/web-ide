@@ -45,7 +45,6 @@ or
 not
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -57,7 +56,7 @@ compare-to StackTest.cmp,
 output-list RAM[0]%D2.6.2 
         RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 
-set RAM[0] 256,  // initializes the stack pointer
+set RAM[0] 256;  // initializes the stack pointer
 
 repeat 38 {      // StackTest.vm consists of 38 instructions
   vmstep;
@@ -69,7 +68,6 @@ output;
 output-list RAM[261]%D2.6.2 RAM[262]%D2.6.2 RAM[263]%D2.6.2 RAM[264]%D2.6.2 RAM[265]%D2.6.2;
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -95,11 +93,8 @@ output-list RAM[261]%D2.6.2 RAM[262]%D2.6.2 RAM[263]%D2.6.2 RAM[264]%D2.6.2 RAM[
 output;
 `;
 
-
 export const cmp = `|  RAM[0]  | RAM[256] | RAM[257] | RAM[258] | RAM[259] | RAM[260] |
 |     266  |      -1  |       0  |       0  |       0  |      -1  |
 | RAM[261] | RAM[262] | RAM[263] | RAM[264] | RAM[265] |
 |       0  |      -1  |       0  |       0  |     -91  |
 `;
-
-

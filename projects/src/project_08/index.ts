@@ -26,7 +26,7 @@ export const VMS = {
     "SimpleFunction.tst": simple_function.hdl_tst,
   },
   NestedCall: {
-    "NestedCall.vm": nested_call.vm,
+    "Sys.vm": nested_call.vm, // Test uses a special name here
     "NestedCall.vm_tst": nested_call.vm_tst,
     "NestedCall.cmp": nested_call.cmp,
     "NestedCall.tst": nested_call.hdl_tst,

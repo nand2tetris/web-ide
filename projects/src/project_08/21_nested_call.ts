@@ -63,7 +63,6 @@ add
 return
 `;
 
-
 export const vm_tst = `// Test file for NestedCall test.
 
 load Sys.vm,
@@ -136,7 +135,6 @@ repeat 50 {
 output;
 `;
 
-
 export const hdl_tst = `// Test file for NestedCall test.
 
 load NestedCall.asm,
@@ -195,7 +193,7 @@ set RAM[295] -1,
 set RAM[296] -1,
 set RAM[297] -1,
 set RAM[298] -1,
-set RAM[299] -1,
+set RAM[299] -1;
 
 repeat 4000 {
   ticktock;
@@ -204,9 +202,6 @@ repeat 4000 {
 output;
 `;
 
-
 export const cmp = `| RAM[0] | RAM[1] | RAM[2] | RAM[3] | RAM[4] | RAM[5] | RAM[6] |
 |    261 |    261 |    256 |   4000 |   5000 |    135 |    246 |
 `;
-
-

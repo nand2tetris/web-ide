@@ -16,7 +16,6 @@ sub
 return
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -39,7 +38,7 @@ set argument[2] 9,
 set argument[3] 305,
 set argument[4] 300,
 set argument[5] 3010,
-set argument[6] 4010,
+set argument[6] 4010;
 
 repeat 10 {
   vmstep;
@@ -47,7 +46,6 @@ repeat 10 {
 
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -80,9 +78,6 @@ repeat 300 {
 output;
 `;
 
-
 export const cmp = `| RAM[0] | RAM[1] | RAM[2] | RAM[3] | RAM[4] |RAM[310]|
 |    311 |    305 |    300 |   3010 |   4010 |   1196 |
 `;
-
-

@@ -49,7 +49,6 @@ goto MAIN_LOOP_START
 label END_PROGRAM
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -65,7 +64,7 @@ set sp 256,
 set local 300,
 set argument 400,
 set argument[0] 6,
-set argument[1] 3000,
+set argument[1] 3000;
 
 repeat 73 {
   vmstep;
@@ -73,7 +72,6 @@ repeat 73 {
 
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -99,9 +97,6 @@ repeat 1100 {
 output;
 `;
 
-
 export const cmp = `|RAM[3000]|RAM[3001]|RAM[3002]|RAM[3003]|RAM[3004]|RAM[3005]|
 |      0  |      1  |      1  |      2  |      3  |      5  |
 `;
-
-

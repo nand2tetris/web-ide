@@ -34,7 +34,7 @@ export const ChipProjects = {
   "05": project_05,
 };
 
-export const VmProjets = {
+export const VmProjects = {
   "07": project_07,
   "08": project_08,
 };
@@ -112,7 +112,7 @@ export const ASM_PROJECTS: Record<"06", string[]> = {
 };
 
 export const VM_PROJECTS: Record<"07" | "08", string[]> = {
-  "07": ["SimpleAdd", "StackTest", "MemoryTest", "PointerTest", "StaticTest"],
+  "07": ["SimpleAdd", "StackTest", "BasicTest", "PointerTest", "StaticTest"],
   "08": [
     "BasicLoop",
     "FibonacciSeries",

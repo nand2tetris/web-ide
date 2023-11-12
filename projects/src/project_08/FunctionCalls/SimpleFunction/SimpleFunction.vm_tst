@@ -20,7 +20,7 @@ set argument[2] 9,
 set argument[3] 305,
 set argument[4] 300,
 set argument[5] 3010,
-set argument[6] 4010,
+set argument[6] 4010;
 
 repeat 10 {
   vmstep;

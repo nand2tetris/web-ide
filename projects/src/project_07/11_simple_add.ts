@@ -9,7 +9,6 @@ push constant 8
 add
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -20,7 +19,7 @@ output-file SimpleAdd.out,
 compare-to SimpleAdd.cmp,
 output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
 
-set RAM[0] 256,  // initializes the stack pointer
+set RAM[0] 256;  // initializes the stack pointer
 
 repeat 3 {       // SimpleAdd.vm has 3 instructions
   vmstep;
@@ -28,7 +27,6 @@ repeat 3 {       // SimpleAdd.vm has 3 instructions
 
 output;          // the stack pointer and the stack base
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -40,7 +38,7 @@ output-file SimpleAdd.out,
 compare-to SimpleAdd.cmp,
 output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
 
-set RAM[0] 256,  // initializes the stack pointer 
+set RAM[0] 256;  // initializes the stack pointer 
 
 repeat 60 {      // enough cycles to complete the execution
   ticktock;
@@ -49,9 +47,6 @@ repeat 60 {      // enough cycles to complete the execution
 output;          // the stack pointer and the stack base
 `;
 
-
 export const cmp = `|  RAM[0]  | RAM[256] |
 |     257  |      15  |
 `;
-
-

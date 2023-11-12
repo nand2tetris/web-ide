@@ -22,7 +22,6 @@ if-goto LOOP_START  // If counter != 0, goto LOOP_START
 push local 0
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -36,7 +35,7 @@ output-list RAM[0]%D1.6.1 RAM[256]%D1.6.1;
 set sp 256,
 set local 300,
 set argument 400,
-set argument[0] 3,
+set argument[0] 3;
 
 repeat 33 {
   vmstep;
@@ -44,7 +43,6 @@ repeat 33 {
 
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -59,7 +57,7 @@ output-list RAM[0]%D1.6.1 RAM[256]%D1.6.1;
 set RAM[0] 256,
 set RAM[1] 300,
 set RAM[2] 400,
-set RAM[400] 3,
+set RAM[400] 3;
 
 repeat 600 {
   ticktock;
@@ -68,9 +66,6 @@ repeat 600 {
 output;
 `;
 
-
 export const cmp = `| RAM[0] |RAM[256]|
 |    257 |      6 |
 `;
-
-

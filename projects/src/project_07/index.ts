@@ -1,7 +1,7 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 import * as simple_add from "./11_simple_add.js";
 import * as stack_test from "./12_stack_test.js";
-import * as memory_test from "./21_basic_test.js";
+import * as basic_test from "./21_basic_test.js";
 import * as pointer_test from "./22_pointer_test.js";
 import * as static_test from "./23_static_test.js";
 
@@ -18,11 +18,11 @@ export const VMS = {
     "StackTest.cmp": stack_test.cmp,
     "StackTest.tst": stack_test.hdl_tst,
   },
-  MemoryTest: {
-    "MemoryTest.vm": memory_test.vm,
-    "MemoryTest.vm_tst": memory_test.vm_tst,
-    "MemoryTest.cmp": memory_test.cmp,
-    "MemoryTest.tst": memory_test.hdl_tst,
+  BasicTest: {
+    "BasicTest.vm": basic_test.vm,
+    "BasicTest.vm_tst": basic_test.vm_tst,
+    "BasicTest.cmp": basic_test.cmp,
+    "BasicTest.tst": basic_test.hdl_tst,
   },
   PointerTest: {
     "PointerTest.vm": pointer_test.vm,

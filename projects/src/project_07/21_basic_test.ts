@@ -31,7 +31,6 @@ push temp 6
 add
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -48,7 +47,7 @@ set sp 256,        // stack pointer
 set local 300,     // base address of the local segment
 set argument 400,  // base address of the argument segment
 set this 3000,     // base address of the this segment
-set that 3010,     // base address of the that segment
+set that 3010;     // base address of the that segment
 
 repeat 25 {        // BasicTest.vm has 25 instructions
   vmstep;
@@ -58,7 +57,6 @@ repeat 25 {        // BasicTest.vm has 25 instructions
 // from the tested memory segments
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -76,7 +74,7 @@ set RAM[0] 256,   // stack pointer
 set RAM[1] 300,   // base address of the local segment
 set RAM[2] 400,   // base address of the argument segment
 set RAM[3] 3000,  // base address of the this segment
-set RAM[4] 3010,  // base address of the that segment
+set RAM[4] 3010;  // base address of the that segment
 
 repeat 600 {      // enough cycles to complete the execution
   ticktock;
@@ -87,9 +85,6 @@ repeat 600 {      // enough cycles to complete the execution
 output;
 `;
 
-
 export const cmp = `|RAM[256]|RAM[300]|RAM[401]|RAM[402]|RAM[3006|RAM[3012|RAM[3015|RAM[11] |
 |    472 |     10 |     21 |     22 |     36 |     42 |     45 |    510 |
 `;
-
-

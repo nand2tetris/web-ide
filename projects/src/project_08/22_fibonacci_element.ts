@@ -45,7 +45,6 @@ label WHILE
 goto WHILE              // loops infinitely
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -56,7 +55,7 @@ output-file FibonacciElement.out,
 compare-to FibonacciElement.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1;
 
-set sp 261,
+set sp 261;
 
 repeat 110 {
   vmstep;
@@ -64,7 +63,6 @@ repeat 110 {
 
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -86,9 +84,6 @@ repeat 6000 {
 output;
 `;
 
-
 export const cmp = `| RAM[0] |RAM[261]|
 |    262 |      3 |
 `;
-
-

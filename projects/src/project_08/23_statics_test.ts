@@ -60,7 +60,6 @@ label WHILE
 goto WHILE
 `;
 
-
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -71,7 +70,7 @@ output-file StaticsTest.out,
 compare-to StaticsTest.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1 RAM[262]%D1.6.1;
 
-set sp 261,
+set sp 261;
 
 repeat 36 {
   vmstep;
@@ -79,7 +78,6 @@ repeat 36 {
 
 output;
 `;
-
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
@@ -91,7 +89,7 @@ output-file StaticsTest.out,
 compare-to StaticsTest.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1 RAM[262]%D1.6.1;
 
-set RAM[0] 256,
+set RAM[0] 256;
 
 repeat 2500 {
   ticktock;
@@ -100,9 +98,6 @@ repeat 2500 {
 output;
 `;
 
-
 export const cmp = `| RAM[0] |RAM[261]|RAM[262]|
 |    263 |     -2 |      8 |
 `;
-
-

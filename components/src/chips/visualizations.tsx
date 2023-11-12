@@ -1,4 +1,5 @@
 import {
+  CPU,
   Keyboard,
   ROM32K,
   Screen,
@@ -14,7 +15,7 @@ import {
 } from "@nand2tetris/simulator/chip/builtins/sequential/ram.js";
 import { Chip, HIGH } from "@nand2tetris/simulator/chip/chip.js";
 import { Flags } from "@nand2tetris/simulator/cpu/alu.js";
-import { CPU, decode } from "@nand2tetris/simulator/cpu/cpu.js";
+import { decode } from "@nand2tetris/simulator/cpu/cpu.js";
 import { ReactElement } from "react";
 import { ALUComponent } from "./alu.js";
 import { Keyboard as KeyboardComponent } from "./keyboard.js";

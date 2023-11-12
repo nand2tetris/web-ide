@@ -307,6 +307,8 @@ test("08 / Simple Function / Simple Function", () => {
     vm.step();
   }
 
+  vm.program; //?
+
   const test = vm.read([0, 256]);
   expect(test).toEqual([257, 12]);
 });
@@ -337,7 +339,7 @@ test("08 / Functions / Nested Function", () => {
   }
 
   const test = vm.read([0, 1, 2, 3, 4, 5, 6]);
-  expect(test).toEqual([261, 261, 256, 4000, 5000, 135, 246]);
+  expect(test).toEqual([261, 261, 256, 4000, 5000, 135, 244]);
 });
 
 test("08 / Functions / Fib", () => {

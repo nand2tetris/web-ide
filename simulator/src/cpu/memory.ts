@@ -3,7 +3,6 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { op } from "../util/asm.js";
 import { int10, int16, int2 } from "../util/twos.js";
 import { load } from "../fs.js";
-import { Screen } from "../chip/builtins/computer/computer.js";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];
@@ -28,6 +27,7 @@ export interface MemoryAdapter {
     start?: number,
     end?: number
   ): Iterable<T>;
+  [Symbol.iterator](): Iterable<number>;
 }
 
 export interface KeyboardAdapter {
@@ -118,10 +118,14 @@ export class Memory implements MemoryAdapter {
     start = 0,
     end = this.size
   ): Iterable<T> {
-    assert(start < end);
+    assert(start <= end);
     for (let i = start; i < end; i++) {
       yield fn(i, this.get(i));
     }
+  }
+
+  [Symbol.iterator](): Iterable<number> {
+    return this.map((_, v) => v);
   }
 }
 
@@ -168,12 +172,17 @@ export class SubMemory implements MemoryAdapter {
   range(start?: number, end?: number): number[] {
     return this.parent.range(start, end);
   }
+
   map<T>(
     fn: (index: number, value: number) => T,
-    start?: number,
-    end?: number
+    start = 0,
+    end: number = this.size
   ): Iterable<T> {
-    return this.parent.map(fn, start, end);
+    return this.parent.map(fn, start + this.offset, end + this.offset);
+  }
+
+  [Symbol.iterator](): Iterable<number> {
+    return this.map((_, v) => v);
   }
 }
 

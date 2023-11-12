@@ -6,11 +6,11 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
-import { VmCompiler } from "./compiler.js";
 import { VmMemory } from "./memory.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
 
 export type VmOperation =
+  | FunctionOperation
   | StackOperation
   | OpOperation
   | CallOperation
@@ -32,6 +32,12 @@ export type BinOp = "add" | "sub" | "and" | "or";
 export type CmpOp = "lt" | "gt" | "eq";
 export type UnOp = "neg" | "not";
 export type Op = BinOp | CmpOp | UnOp;
+
+export interface FunctionOperation {
+  op: "function";
+  name: string;
+  nVars: number;
+}
 
 export interface StackOperation {
   op: "push" | "pop";
@@ -58,11 +64,18 @@ export interface GotoOperation {
   label: string;
 }
 
-export interface Frame {
+interface VmFrameValues {
+  base: number;
+  count: number;
+  values: number[];
+}
+
+export interface VmFrame {
   fn?: VmFunction;
-  locals: MemoryAdapter;
-  args: MemoryAdapter;
-  stack: {
+  locals: VmFrameValues;
+  args: VmFrameValues;
+  stack: VmFrameValues;
+  frame: {
     RET: number;
     ARG: number;
     LCL: number;
@@ -77,20 +90,28 @@ export interface VmFunction {
   nVars: number;
   labels: Record<string, number>;
   operations: VmOperation[];
+  opBase: number;
 }
 
 interface VmFunctionInvocation {
   function: string;
-  op: number;
-  base: number;
+  // The current operation offset in the function
+  opPtr: number;
+  // Base address of the frame in memory
+  frameBase: number;
+  // The number of args the function was called with
   nArgs: number;
 }
 
 const BOOTSTRAP: VmFunction = {
   name: "__bootstrap",
   nVars: 0,
+  opBase: 0,
   labels: {},
-  operations: [{ op: "call", name: "Sys.init", nArgs: 0 }],
+  operations: [
+    { op: "function", name: "__bootstrap", nVars: 0 },
+    { op: "call", name: "Sys.init", nArgs: 0 },
+  ],
 };
 
 export class Vm {
@@ -99,11 +120,15 @@ export class Vm {
     [BOOTSTRAP.name]: BOOTSTRAP,
   };
   protected executionStack: VmFunctionInvocation[] = [
-    { function: BOOTSTRAP.name, op: 0, base: 256, nArgs: 0 },
+    { function: BOOTSTRAP.name, opPtr: 1, frameBase: 256, nArgs: 0 },
   ];
-  program: VmInstruction[] = [];
+
+  functions: VmFunction[] = [];
+  program: VmOperation[] = [];
+
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
+
   private registerStatic(fnName: string, offset: number): number {
     const fileName = fnName.split(".")[0];
     const statics = this.statics[fileName] ?? [];
@@ -131,7 +156,6 @@ export class Vm {
 
   static build(instructions: VmInstruction[]): Result<Vm> {
     const vm = new Vm();
-    vm.program = instructions;
 
     if (instructions[0]?.op !== "function") {
       instructions.unshift({ op: "function", name: "__implicit", nVars: 0 });
@@ -161,6 +185,7 @@ export class Vm {
           name: "Sys.init",
           labels: { END: 1 },
           nVars: 0,
+          opBase: 0,
           operations: [
             { op: "call", name: "main", nArgs: 0 },
             { op: "goto", label: "END" },
@@ -169,14 +194,30 @@ export class Vm {
       } else if (vm.functionMap["__implicit"]) {
         // Use __implicit instead of __bootstrap
         vm.executionStack = [
-          { function: "__implicit", op: 0, base: 256, nArgs: 0 },
+          { function: "__implicit", opPtr: 1, frameBase: 256, nArgs: 0 },
         ];
+        delete vm.functionMap["__bootstrap"];
       } else {
         return Err(Error("Could not determine an entry point for VM"));
       }
     }
 
     vm.registerStatics();
+
+    vm.functions = Object.values(vm.functionMap);
+    vm.functions.sort((a, b) => {
+      if (a.name === "__implicit" || a.name === "__bootstrap") return -1;
+      if (b.name === "__implicit" || b.name === "__bootstrap") return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    let offset = 0;
+    vm.program = vm.functions.reduce((prog, fn) => {
+      fn.opBase = offset;
+      offset += fn.operations.length;
+      return prog.concat(fn.operations);
+    }, [] as VmOperation[]);
+
     return Ok(vm);
   }
 
@@ -188,11 +229,13 @@ export class Vm {
       return Err(
         Error("Only call buildFunction at the initial Function instruction")
       );
+    const { name, nVars } = instructions[i] as FunctionInstruction;
     const fn: VmFunction = {
-      name: (instructions[i] as FunctionInstruction).name,
-      nVars: (instructions[i] as FunctionInstruction).nVars,
+      name,
+      nVars,
       labels: {},
-      operations: [],
+      operations: [{ op: "function", name, nVars }],
+      opBase: 0,
     };
 
     i += 1;
@@ -305,12 +348,12 @@ export class Vm {
   }
 
   get operation() {
-    if (this.invocation.op > this.currentFunction.operations.length)
+    if (this.invocation.opPtr > this.currentFunction.operations.length)
       throw new Error(
-        `Current operation step beyond end of function operations (${this.invocation.op} > ${this.currentFunction.operations.length})`
+        `Current operation step beyond end of function operations (${this.invocation.opPtr} > ${this.currentFunction.operations.length})`
       );
 
-    return this.currentFunction.operations[this.invocation.op];
+    return this.currentFunction.operations[this.invocation.opPtr];
   }
 
   step() {
@@ -382,22 +425,22 @@ export class Vm {
         const fn = this.functionMap[fnName];
         if (!fn) throw new Error(`Calling unknown function ${fnName}`);
         const base = this.memory.pushFrame(
-          this.invocation.op,
+          this.invocation.opPtr,
           operation.nArgs,
           fn.nVars
         );
         this.executionStack.push({
           function: fnName,
-          op: -1,
+          opPtr: 0,
           nArgs: operation.nArgs,
-          base,
+          frameBase: base,
         });
         break;
       }
       case "return": {
         this.executionStack.pop();
         const ret = this.memory.popFrame();
-        this.invocation.op = ret;
+        this.invocation.opPtr = ret;
         break;
       }
       case "label": {
@@ -405,7 +448,7 @@ export class Vm {
         break;
       }
     }
-    this.invocation.op += 1;
+    this.invocation.opPtr += 1;
   }
 
   private goto(label: string) {
@@ -413,7 +456,7 @@ export class Vm {
       throw new Error(
         `Attempting GOTO to unknown label ${label} in ${this.currentFunction.name}`
       );
-    this.invocation.op = this.currentFunction.labels[label];
+    this.invocation.opPtr = this.currentFunction.labels[label];
   }
 
   write(addresses: [number, number][]) {
@@ -426,22 +469,106 @@ export class Vm {
     return addresses.map((address) => this.memory.get(address));
   }
 
-  compiler(): VmCompiler {
-    return new VmCompiler(this.functionMap);
+  vmStack(): VmFrame[] {
+    return this.executionStack.map((invocation, i) => {
+      const next = this.executionStack[i + 1];
+      const end = next ? next.frameBase - next.nArgs : this.memory.get(0);
+      return this.makeFrame(invocation, end);
+    });
   }
 
-  vmStack(): Frame[] {
-    return this.executionStack.map((invocation) => {
-      const fn = this.functionMap[invocation.function];
-      const frame = this.memory.getFrame(
-        invocation.base,
-        invocation.nArgs,
-        fn.nVars,
-        0,
-        0
-      );
-      frame.fn = fn;
-      return frame;
-    });
+  makeFrame(invocation = this.invocation, nextFrame: number): VmFrame {
+    const fn = this.functionMap[invocation.function];
+    if (["__implicit", "__bootstrap"].includes(fn.name)) {
+      // top most frame is "special"
+      const stackN = this.memory.get(0) - 256;
+      return {
+        fn,
+        args: { base: 256, count: 0, values: [] },
+        locals: { base: 256, count: 0, values: [] },
+        stack: {
+          base: 256,
+          count: stackN,
+          values: [...this.memory.map((_, v) => v, 256, 256 + stackN)],
+        },
+        frame: {
+          ARG: 0,
+          LCL: 0,
+          RET: 0,
+          THAT: 0,
+          THIS: 0,
+        },
+      };
+    }
+    const frame = this.memory.getFrame(
+      invocation.frameBase,
+      invocation.nArgs,
+      fn.nVars,
+      0,
+      0,
+      nextFrame
+    );
+    frame.fn = fn;
+    return frame;
+  }
+
+  writeDebug(): string {
+    const line = this.currentFunction.opBase + this.invocation.opPtr;
+    const from = Math.max(line - 5, 0);
+    const to = Math.min(line + 3, this.program.length);
+    const lines = this.program.slice(from, to);
+    const prog = lines
+      .map((op, i) => `${i === line - from ? "->" : "  "} ${writeOp(op)}`)
+      .join("\n");
+    const frame = this.vmStack().at(-1);
+    if (frame) {
+      return prog + "\n\n" + writeFrame(frame);
+    }
+    return prog;
+  }
+}
+
+export function writeFrame(frame: VmFrame): string {
+  return [
+    `Frame: ${frame.fn?.name ?? "Unknown Fn"} ARG:${frame.frame.ARG} LCL:${
+      frame.frame.LCL
+    }`,
+    `Args: ${writeFrameValues(frame.args)}`,
+    `Lcls: ${writeFrameValues(frame.locals)}`,
+    `Stck: ${writeFrameValues(frame.stack)}`,
+  ].join("\n");
+}
+
+function writeFrameValues(fv: VmFrameValues): string {
+  return `[${fv.base};${fv.count}][${fv.values.join(", ")}]`;
+}
+
+function writeOp(op: VmOperation): string {
+  switch (op.op) {
+    case "add":
+    case "and":
+    case "sub":
+    case "eq":
+    case "gt":
+    case "lt":
+    case "neg":
+    case "not":
+    case "or":
+    case "return":
+      return `  ${op.op}`;
+    case "goto":
+      return `  ${op.op}    ${op.label}`;
+    case "if-goto":
+      return `  ${op.op} ${op.label}`;
+    case "label":
+      return `${op.op}     ${op.label}`;
+    case "call":
+      return `  ${op.op}    ${op.name} ${op.nArgs}`;
+    case "function":
+      return `${op.op}  ${op.name} ${op.nVars}`;
+    case "pop":
+      return `  ${op.op}     ${op.segment} ${op.offset}`;
+    case "push":
+      return `  ${op.op}    ${op.segment} ${op.offset}`;
   }
 }

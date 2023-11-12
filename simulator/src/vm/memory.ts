@@ -1,5 +1,5 @@
-import { RAM, SubMemory } from "../cpu/memory.js";
-import { Frame, Segment } from "./vm.js";
+import { RAM } from "../cpu/memory.js";
+import { VmFrame, Segment } from "./vm.js";
 
 export const SP = 0;
 export const LCL = 1;
@@ -185,15 +185,14 @@ export class VmMemory extends RAM {
     this.set(base + 4, this.THAT);
 
     this.set(ARG, arg);
-    this.set(LCL, base);
+    this.set(LCL, base + 5);
 
-    let sp = base + 5;
+    const sp = base + 5;
     // Technically this happens in the function, but the VM will handle it for free
     for (let i = 0; i < nLocals; i++) {
-      this.set(sp, 0);
-      sp += 1;
+      this.set(sp + 1, 0);
     }
-    this.set(SP, sp);
+    this.set(SP, sp + nLocals);
     return base;
   }
 
@@ -215,17 +214,29 @@ export class VmMemory extends RAM {
     argN: number, // The number of arguments to this frame
     localN: number, // The number of locals in this frame
     thisN: number, // The number of items in `this`
-    thatN: number // the number of items in `that`
-  ): Frame {
+    thatN: number, // the number of items in `that`
+    nextFrame: number
+  ): VmFrame {
+    const arg = base - argN;
+    const lcl = base + 5;
+    const stk = lcl + localN;
+    const stackN = nextFrame - stk;
+    const args = [...this.map((_, v) => v, arg, arg + argN)];
+    const locals = [...this.map((_, v) => v, lcl, lcl + localN)];
+    const stack = [...this.map((_, v) => v, stk, stk + stackN)];
+    // [arg, argN, args]; //?
+    // [lcl, localN, locals]; //?
+    // [stk, stackN, stack]; //?
     return {
-      args: new SubMemory(this, argN, base - argN),
-      locals: new SubMemory(this, localN, base - localN),
-      stack: {
+      args: { base: arg, count: argN, values: args },
+      locals: { base: lcl, count: localN, values: locals },
+      stack: { base: stk, count: stackN, values: stack },
+      frame: {
         RET: this.get(base),
-        LCL: this.get(base + 1),
-        ARG: this.get(base + 2),
-        THIS: this.get(base + 3),
-        THAT: this.get(base + 4),
+        LCL: this.LCL,
+        ARG: this.ARG,
+        THIS: this.THIS,
+        THAT: this.THAT,
       },
     };
   }

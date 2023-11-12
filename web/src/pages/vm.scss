@@ -1,7 +1,11 @@
-tbody {
-  font-family: var(--font-family-monospace);
-}
+@use "./page.scss";
 
-tr.highlight {
-  background-color: antiquewhite;
+.VmPage {
+  tbody {
+    font-family: var(--font-family-monospace);
+  }
+
+  tr.highlight {
+    background-color: antiquewhite;
+  }
 }

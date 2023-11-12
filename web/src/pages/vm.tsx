@@ -11,7 +11,7 @@ import "./vm.scss";
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
 
-  const [tst, setTst] = useState("repeat {\n\tticktock;\n}");
+  const [tst, setTst] = useState("repeat {\n\tvmstep;\n}");
   const [out, setOut] = useState("");
   const [cmp, setCmp] = useState("");
 
@@ -42,7 +42,7 @@ const VM = () => {
   }, [actions, dispatch]);
 
   return (
-    <div className="VmPage grid">
+    <div className="Page VmPage grid">
       <Panel className="program">
         <main>
           <table>
@@ -108,8 +108,7 @@ const VM = () => {
       </Panel>
       <TestPanel
         runner={runner}
-        // tst={[tst, setTst, state.test.highlight]}
-        tst={[tst, setTst, undefined]}
+        tst={[tst, setTst, state.test.highlight]}
         out={[out, setOut]}
         cmp={[cmp, setCmp]}
       />

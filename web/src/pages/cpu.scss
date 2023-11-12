@@ -1,16 +1,6 @@
-@use "../pico/button-group.scss";
-@use "../shell/tab.scss";
+@use "./page.scss";
 
 .CpuPage {
-  --screen-size: calc(
-    512px + calc(calc(var(--block-spacing-horizontal) * 5)) / 2
-  );
-
-  height: 100%;
-
-  margin: 0px;
-  gap: 0;
-
   grid-template-areas: "ROM RAM" "IO IO" "test test";
   grid-template-columns: 1fr 1fr;
   grid-template-rows: 1fr 1fr 1fr;

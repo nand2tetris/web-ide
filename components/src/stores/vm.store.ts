@@ -76,11 +76,12 @@ export function makeVmStore(
   const parsed = unwrap(VM.parse(FIBONACCI));
   const vm = unwrap(Vm.build(parsed.instructions));
   const test = new VMTest().with(vm);
-  let useTest = true;
+  let useTest = false;
   const reducers = {
     update(state: VmPageState) {
       state.vm = reduceVMTest(test, dispatch);
       state.test.useTest = useTest;
+      state.test.highlight = test.currentStep?.span;
     },
   };
   const initialState: VmPageState = {
@@ -96,13 +97,21 @@ export function makeVmStore(
   };
   const actions = {
     step() {
-      vm.step();
+      if (useTest) {
+        test.step();
+      } else {
+        vm.step();
+      }
+      dispatch.current({ action: "update" });
     },
     reset() {
-      //todo
+      test.reset();
+      vm.reset();
+      dispatch.current({ action: "update" });
     },
     toggleUseTest() {
       useTest = !useTest;
+      dispatch.current({ action: "update" });
     },
   };
 

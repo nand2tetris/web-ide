@@ -103,6 +103,14 @@ interface VmFunctionInvocation {
   nArgs: number;
 }
 
+const IMPLICIT: VmFunction = {
+  name: "__implicit",
+  nVars: 0,
+  opBase: 0,
+  labels: {},
+  operations: [{ op: "function", name: "__implicit", nVars: 0 }],
+};
+
 const BOOTSTRAP: VmFunction = {
   name: "__bootstrap",
   nVars: 0,
@@ -114,14 +122,27 @@ const BOOTSTRAP: VmFunction = {
   ],
 };
 
+const END_LABEL = "__END";
+const SYS_INIT: VmFunction = {
+  name: "Sys.init",
+  labels: { END: 1 },
+  nVars: 0,
+  opBase: 0,
+  operations: [
+    { op: "call", name: "main", nArgs: 0 },
+    { op: "label", label: END_LABEL },
+    { op: "goto", label: END_LABEL },
+  ],
+};
+
+const INITIAL_FNS = [BOOTSTRAP.name, IMPLICIT.name];
+
 export class Vm {
   protected memory = new VmMemory();
   protected functionMap: Record<string, VmFunction> = {
     [BOOTSTRAP.name]: BOOTSTRAP,
   };
-  protected executionStack: VmFunctionInvocation[] = [
-    { function: BOOTSTRAP.name, opPtr: 1, frameBase: 256, nArgs: 0 },
-  ];
+  protected executionStack: VmFunctionInvocation[] = [];
 
   functions: VmFunction[] = [];
   program: VmOperation[] = [];
@@ -158,45 +179,30 @@ export class Vm {
     const vm = new Vm();
 
     if (instructions[0]?.op !== "function") {
-      instructions.unshift({ op: "function", name: "__implicit", nVars: 0 });
+      instructions.unshift({ op: "function", name: IMPLICIT.name, nVars: 0 });
     }
 
     let i = 0;
     while (i < instructions.length) {
       const buildFn = this.buildFunction(instructions, i);
+
       if (isErr(buildFn))
         return Err(new Error("Failed to build VM", { cause: Err(buildFn) }));
       const [fn, i_] = unwrap(buildFn);
       if (vm.functionMap[fn.name])
         throw new Error(`VM Already has a function named ${fn.name}`);
-      if (fn.name === "__implicit") {
-        fn.labels["__END"] = fn.operations.length;
-        fn.operations.push({ op: "label", label: "__END" });
-        fn.operations.push({ op: "goto", label: "__END" });
-      }
+
       vm.functionMap[fn.name] = fn;
       i = i_;
     }
 
-    if (!vm.functionMap["Sys.init"]) {
+    if (!vm.functionMap[SYS_INIT.name]) {
       if (vm.functionMap["main"]) {
         // Inject a Sys.init
-        vm.functionMap["Sys.init"] = {
-          name: "Sys.init",
-          labels: { END: 1 },
-          nVars: 0,
-          opBase: 0,
-          operations: [
-            { op: "call", name: "main", nArgs: 0 },
-            { op: "goto", label: "END" },
-          ],
-        };
-      } else if (vm.functionMap["__implicit"]) {
+        vm.functionMap[SYS_INIT.name] = SYS_INIT;
+      } else if (vm.functionMap[IMPLICIT.name]) {
         // Use __implicit instead of __bootstrap
-        vm.executionStack = [
-          { function: "__implicit", opPtr: 1, frameBase: 256, nArgs: 0 },
-        ];
-        delete vm.functionMap["__bootstrap"];
+        delete vm.functionMap[BOOTSTRAP.name];
       } else {
         return Err(Error("Could not determine an entry point for VM"));
       }
@@ -206,8 +212,8 @@ export class Vm {
 
     vm.functions = Object.values(vm.functionMap);
     vm.functions.sort((a, b) => {
-      if (a.name === "__implicit" || a.name === "__bootstrap") return -1;
-      if (b.name === "__implicit" || b.name === "__bootstrap") return 1;
+      if (INITIAL_FNS.includes(a.name)) return -1;
+      if (INITIAL_FNS.includes(b.name)) return 1;
       return a.name.localeCompare(b.name);
     });
 
@@ -218,6 +224,7 @@ export class Vm {
       return prog.concat(fn.operations);
     }, [] as VmOperation[]);
 
+    vm.reset();
     return Ok(vm);
   }
 
@@ -229,6 +236,7 @@ export class Vm {
       return Err(
         Error("Only call buildFunction at the initial Function instruction")
       );
+
     const { name, nVars } = instructions[i] as FunctionInstruction;
     const fn: VmFunction = {
       name,
@@ -318,6 +326,12 @@ export class Vm {
       i += 1;
     }
 
+    if (fn.name === IMPLICIT.name) {
+      fn.labels[END_LABEL] = fn.operations.length;
+      fn.operations.push({ op: "label", label: END_LABEL });
+      fn.operations.push({ op: "goto", label: END_LABEL });
+    }
+
     return Ok([fn, i]);
   }
 
@@ -354,6 +368,17 @@ export class Vm {
       );
 
     return this.currentFunction.operations[this.invocation.opPtr];
+  }
+
+  reset() {
+    const bootstrap = this.functionMap[BOOTSTRAP.name]
+      ? BOOTSTRAP.name
+      : "__implicit";
+    this.executionStack = [
+      { function: bootstrap, opPtr: 1, frameBase: 256, nArgs: 0 },
+    ];
+    this.memory.reset();
+    this.memory.set(0, 256);
   }
 
   step() {

@@ -122,7 +122,7 @@ export const CPU = () => {
   };
 
   return (
-    <div className="CpuPage grid">
+    <div className="Page CpuPage grid">
       <MemoryComponent
         name="ROM"
         displayEnabled={displayEnabled}

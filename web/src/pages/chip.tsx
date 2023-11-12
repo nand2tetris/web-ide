@@ -300,7 +300,7 @@ export const Chip = () => {
               sim={state.sim}
               toggle={actions.toggle}
               setInputValid={setInputValid}
-              hideInternal={state.controls.builtinOnly}
+              hideInternal={state.controls.builtinOnly || useBuiltin}
             />
           </PinContext.Provider>
           {visualizations.length > 0 && (

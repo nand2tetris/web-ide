@@ -24,7 +24,6 @@ export const CHIPS = {
     "Computer.hdl": Computer.hdl,
     "Computer.tst": Computer.tst,
     "Computer.cmp": Computer.cmp,
-    "Max.hack": Computer.hack,
   },
 };
 
@@ -39,5 +38,10 @@ export const BUILTIN_CHIPS = {
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/05");
   await reset(fs, CHIPS);
+  await fs.popd();
+
+  // Add files needed for the test scripts to run
+  await fs.pushd("/test");
+  await fs.writeFile("Max.hack", Computer.hack);
   await fs.popd();
 }

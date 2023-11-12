@@ -571,7 +571,7 @@ export class TestClearEchoInstruction implements TestInstruction {
 export class TestLoadROMInstruction implements TestInstruction {
   constructor(readonly file: string) {}
   async do(test: Test) {
-    test.fs.pushd("/samples");
+    test.fs.pushd("/test");
     await test.load(this.file);
     test.fs.popd();
   }

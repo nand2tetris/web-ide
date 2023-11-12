@@ -1,12 +1,12 @@
 import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
-import { MemoryBlock } from "@nand2tetris/components/chips/memory.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { useEffect, useRef, useState } from "react";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
+import "./vm.scss";
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
@@ -55,7 +55,11 @@ const VM = () => {
             </thead>
             <tbody>
               {state.vm.Prog.map((inst, key) =>
-                VMInstructionRow({ inst, key })
+                VMInstructionRow({
+                  inst,
+                  key,
+                  highlighted: key === state.vm.highlight,
+                })
               )}
             </tbody>
           </table>
@@ -85,16 +89,18 @@ const VM = () => {
                 </h3>
               </header>
               <main>
-                {frame.args.size > 0 ? (
-                  <MemoryBlock memory={frame.args} />
-                ) : (
-                  <p>No Args</p>
-                )}
-                {frame.locals.size > 0 ? (
-                  <MemoryBlock memory={frame.locals} />
-                ) : (
-                  <p>No Locals</p>
-                )}
+                <p>
+                  <em>Args:</em>
+                  <code>[{frame.args.values.join(", ")}]</code>
+                </p>
+                <p>
+                  <em>Locals:</em>
+                  <code>[{frame.locals.values.join(", ")}]</code>
+                </p>
+                <p>
+                  <em>Stack:</em>
+                  <code>[{frame.stack.values.join(", ")}]</code>
+                </p>
               </main>
             </section>
           ))}
@@ -116,9 +122,11 @@ export default VM;
 export function VMInstructionRow({
   inst,
   key,
+  highlighted,
 }: {
   inst: VMLang.VmInstruction;
   key: number;
+  highlighted: boolean;
 }) {
   switch (inst.op) {
     case "add":
@@ -132,7 +140,7 @@ export function VMInstructionRow({
     case "sub":
     case "return":
       return (
-        <tr key={key}>
+        <tr key={key} className={highlighted ? "highlight" : ""}>
           <td>{inst.op}</td>
           <td colSpan={2}></td>
         </tr>
@@ -142,7 +150,7 @@ export function VMInstructionRow({
     case "label":
     case "goto":
       return (
-        <tr key={key}>
+        <tr key={key} className={highlighted ? "highlight" : ""}>
           <td>{inst.op}</td>
           <td colSpan={2}>{inst.label}</td>
         </tr>
@@ -150,7 +158,7 @@ export function VMInstructionRow({
     case "function":
     case "call":
       return (
-        <tr key={key}>
+        <tr key={key} className={highlighted ? "highlight" : ""}>
           <td>{inst.op}</td>
           <td>{inst.name}</td>
           <td>{inst.op === "call" ? inst.nArgs : inst.nVars}</td>
@@ -159,7 +167,7 @@ export function VMInstructionRow({
     case "pop":
     case "push":
       return (
-        <tr key={key}>
+        <tr key={key} className={highlighted ? "highlight" : ""}>
           <td>{inst.op}</td>
           <td>{inst.segment}</td>
           <td>{inst.offset}</td>
@@ -167,7 +175,7 @@ export function VMInstructionRow({
       );
     default:
       return (
-        <tr key={key}>
+        <tr key={key} className={highlighted ? "highlight" : ""}>
           <td colSpan={3}>Unknown</td>
         </tr>
       );

@@ -13,14 +13,14 @@ import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { ImmMemory } from "./imm_memory.js";
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Frame, Vm } from "@nand2tetris/simulator/vm/vm.js";
+import { VmFrame, Vm } from "@nand2tetris/simulator/vm/vm.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 
 export interface VmSim {
   RAM: MemoryAdapter;
   Screen: MemoryAdapter;
   Keyboard: KeyboardAdapter;
-  Stack: Frame[];
+  Stack: VmFrame[];
   Prog: VmInstruction[];
   highlight: number;
 }
@@ -55,14 +55,15 @@ function reduceVMTest(
   const Keyboard = new MemoryKeyboard(
     new ImmMemory(vmTest.vm.Keyboard, dispatch)
   );
+  const highlight = vmTest.vm.derivedLine();
 
   return {
     Keyboard,
     RAM,
     Screen,
-    Stack: vmTest.vm.vmStack(),
+    Stack: vmTest.vm.vmStack().reverse(),
     Prog: vmTest.vm.program,
-    highlight: -1,
+    highlight,
   };
 }
 

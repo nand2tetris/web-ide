@@ -481,15 +481,19 @@ export class Vm {
     const fn = this.functionMap[invocation.function];
     if (["__implicit", "__bootstrap"].includes(fn.name)) {
       // top most frame is "special"
-      const stackN = this.memory.get(0) - 256;
+      const frameBase = 256;
+      const nextFrame = this.executionStack[1];
+      const frameEnd = nextFrame
+        ? nextFrame.frameBase - nextFrame.nArgs
+        : this.memory.get(0);
       return {
         fn,
         args: { base: 256, count: 0, values: [] },
         locals: { base: 256, count: 0, values: [] },
         stack: {
           base: 256,
-          count: stackN,
-          values: [...this.memory.map((_, v) => v, 256, 256 + stackN)],
+          count: frameEnd - frameBase,
+          values: [...this.memory.map((_, v) => v, frameBase, frameEnd)],
         },
         frame: {
           ARG: 0,
@@ -512,8 +516,12 @@ export class Vm {
     return frame;
   }
 
+  derivedLine(): number {
+    return this.currentFunction.opBase + this.invocation.opPtr;
+  }
+
   writeDebug(): string {
-    const line = this.currentFunction.opBase + this.invocation.opPtr;
+    const line = this.derivedLine();
     const from = Math.max(line - 5, 0);
     const to = Math.min(line + 3, this.program.length);
     const lines = this.program.slice(from, to);

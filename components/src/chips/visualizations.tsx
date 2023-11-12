@@ -1,5 +1,6 @@
 import {
   Keyboard,
+  ROM32K,
   Screen,
 } from "@nand2tetris/simulator/chip/builtins/computer/computer.js";
 import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
@@ -84,7 +85,7 @@ export function makeVisualization(
       <MemoryComponent
         name={chip.name}
         memory={chip.memory}
-        format="dec"
+        format={chip instanceof ROM32K ? "asm" : "dec"}
         highlight={chip.address}
       />
     );

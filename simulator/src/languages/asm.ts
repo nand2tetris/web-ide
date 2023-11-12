@@ -147,12 +147,37 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
   },
 });
 
+export type Pointer =
+  | "R0"
+  | "R1"
+  | "R2"
+  | "R3"
+  | "R4"
+  | "R5"
+  | "R6"
+  | "R7"
+  | "R8"
+  | "R9"
+  | "R10"
+  | "R11"
+  | "R12"
+  | "R13"
+  | "R14"
+  | "R15"
+  | "SP"
+  | "LCL"
+  | "ARG"
+  | "THIS"
+  | "THAT"
+  | "SCREEN"
+  | "KBD";
+
 export function fillLabel(
   asm: Asm,
   symbolCallback?: (name: string, value: number, isVar: boolean) => void
 ) {
   let nextLabel = 16;
-  const symbols = new Map<string, number>([
+  const symbols = new Map<Pointer | string, number>([
     ["R0", 0],
     ["R1", 1],
     ["R2", 2],
@@ -218,7 +243,27 @@ export function fillLabel(
   unfilled.forEach(transmuteAInstruction);
 }
 
-export function translateInstruction(inst: AsmInstruction) {
+function writeCInst(inst: AsmCInstruction): string {
+  return (
+    (inst.store ? `${ASSIGN.op[inst.store]}=` : "") +
+    COMMANDS.op[inst.op] +
+    (inst.jump ? `;${JUMP.op[inst.jump]}` : "")
+  );
+}
+
+export const AsmToString = (inst: AsmInstruction | string): string => {
+  if (typeof inst === "string") return inst;
+  switch (inst.type) {
+    case "A":
+      return isALabelInstruction(inst) ? `@${inst.label}` : `@${inst.value}`;
+    case "L":
+      return `(${inst.label})`;
+    case "C":
+      return writeCInst(inst);
+  }
+};
+
+export function translateInstruction(inst: AsmInstruction): number | undefined {
   if (inst.type === "A") {
     if (isALabelInstruction(inst)) {
       throw new Error(`ASM Emitting unfilled A instruction`);
@@ -242,6 +287,33 @@ export function emit(asm: Asm): number[] {
     .filter((op): op is number => op !== undefined);
 }
 
+const A = (source: string | number): AsmAInstruction =>
+  typeof source === "string"
+    ? { type: "A", label: source }
+    : { type: "A", value: source };
+const C = (
+  assign: ASSIGN_ASM,
+  op: COMMANDS_ASM,
+  jmp?: JUMP_ASM
+): AsmCInstruction => {
+  const isM = assign.includes("M") || op.includes("M");
+  const inst: AsmCInstruction = {
+    type: "C",
+    op: COMMANDS.asm[op],
+    isM,
+  };
+  if (jmp) inst.jump = JUMP.asm[jmp];
+  if (assign) inst.store = ASSIGN.asm[assign];
+  return inst;
+};
+const AC = (
+  source: string | number,
+  assign: ASSIGN_ASM,
+  op: COMMANDS_ASM,
+  jmp?: JUMP_ASM
+) => [A(source), C(assign, op, jmp)];
+const L = (label: string): AsmLabelInstruction => ({ type: "L", label });
+
 export const ASM = {
   grammar: asmGrammar,
   semantics: asmSemantics,
@@ -251,4 +323,8 @@ export const ASM = {
     fillLabel,
     emit,
   },
+  A,
+  C,
+  AC,
+  L,
 };

@@ -1,5 +1,5 @@
-import { KeyboardEvent, useState } from "react";
 import { KeyboardAdapter } from "@nand2tetris/simulator/cpu/memory.js";
+import { useEffect, useState } from "react";
 import { RegisterComponent } from "./register.js";
 
 const KeyMap: Record<string, number | undefined> = {
@@ -63,7 +63,7 @@ export const Keyboard = ({
     setEnabled(!enabled);
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+  const onKeyDown = (event: KeyboardEvent) => {
     event.preventDefault();
     if (!enabled) {
       return;
@@ -78,7 +78,7 @@ export const Keyboard = ({
     update?.();
   };
 
-  const onKeyUp = (event: KeyboardEvent<HTMLButtonElement>) => {
+  const onKeyUp = (event: KeyboardEvent) => {
     if (!enabled) {
       return;
     }
@@ -99,6 +99,16 @@ export const Keyboard = ({
     currentKey = key;
   };
 
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  });
+
   return (
     <div className="flex row align-baseline">
       <div className="flex-1">
@@ -106,7 +116,7 @@ export const Keyboard = ({
       </div>
       <div className="flex-1">{`Character: ${character}`}</div>
       <div className="flex-1">
-        <button onClick={toggleEnabled} onKeyDown={onKeyDown} onKeyUp={onKeyUp}>
+        <button onClick={toggleEnabled}>
           {/* <Icon name="keyboard" /> */}
           {enabled ? "Disable   " : "Enable   "}⌨️
         </button>

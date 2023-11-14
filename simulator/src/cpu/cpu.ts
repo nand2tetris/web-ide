@@ -7,7 +7,7 @@ import {
   RAM as RAMMem,
   SCREEN_OFFSET,
   SCREEN_SIZE,
-  } from "./memory.js";
+} from "./memory.js";
 
 export interface CPUInput {
   inM: number;

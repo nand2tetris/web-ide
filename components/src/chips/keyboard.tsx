@@ -64,7 +64,6 @@ export const Keyboard = ({
   };
 
   const onKeyDown = (event: KeyboardEvent) => {
-    event.preventDefault();
     if (!enabled) {
       return;
     }

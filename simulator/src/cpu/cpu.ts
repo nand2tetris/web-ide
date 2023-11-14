@@ -96,7 +96,7 @@ export function cpuTock(
     D = ALU;
   }
 
-  const addressM = A;
+  const oldA = A;
   if (!bits.c) {
     A = instruction & 0x7fff;
   } else if (bits.d1) {
@@ -110,7 +110,7 @@ export function cpuTock(
   flag = alu2[1];
 
   const output: CPUOutput = {
-    addressM: addressM,
+    addressM: bits.d3 ? oldA : A,
     outM: ALU,
     writeM: bits.d3,
   };

@@ -7,7 +7,7 @@ import {
   RAM as RAMMem,
   SCREEN_OFFSET,
   SCREEN_SIZE,
-} from "./memory.js";
+  } from "./memory.js";
 
 export interface CPUInput {
   inM: number;
@@ -96,6 +96,7 @@ export function cpuTock(
     D = ALU;
   }
 
+  const addressM = A;
   if (!bits.c) {
     A = instruction & 0x7fff;
   } else if (bits.d1) {
@@ -109,7 +110,7 @@ export function cpuTock(
   flag = alu2[1];
 
   const output: CPUOutput = {
-    addressM: A,
+    addressM: addressM,
     outM: ALU,
     writeM: bits.d3,
   };

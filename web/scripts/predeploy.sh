@@ -2,7 +2,7 @@
 
 cd "$(dirname "$(readlink -f "$0")")/.."
 
-for F in chip guide util ; do
+for F in chip cpu guide util ; do
   mkdir build/$F
   cp build/index.html build/$F
 done

@@ -14,15 +14,15 @@ import {
   FORMATS,
   MemoryAdapter,
 } from "@nand2tetris/simulator/cpu/memory.js";
+import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
-import { loadBlob, loadAsm, loadHack } from "@nand2tetris/simulator/loader.js";
 
-import InlineEdit from "../inline_edit.js";
-import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 import { useClockReset } from "../clockface.js";
-import { BaseContext } from "../stores/base.context.js";
+import InlineEdit from "../inline_edit.js";
 import { useStateInitializer } from "../react.js";
+import { BaseContext } from "../stores/base.context.js";
+import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 
 const ITEM_HEIGHT = 34;
 
@@ -144,6 +144,7 @@ export const MemoryCell = ({
 
 export const Memory = ({
   name = "Memory",
+  displayEnabled = true,
   highlight = -1,
   editable = true,
   memory,
@@ -151,6 +152,7 @@ export const Memory = ({
   onUpload = undefined,
 }: {
   name?: string;
+  displayEnabled?: boolean;
   editable?: boolean;
   highlight?: number;
   memory: MemoryAdapter;
@@ -268,17 +270,21 @@ export const Memory = ({
           </select>
         </fieldset>
       </header>
-      <MemoryBlock
-        key={renderKey}
-        jmp={goto}
-        memory={memory}
-        highlight={highlighted}
-        editable={editable}
-        justifyLeft={fmt == "asm"}
-        format={(v: number) => doFormat(fmt, v)}
-        onChange={doUpdate}
-        onFocus={(i) => setHighlighted(i)}
-      />
+      {displayEnabled ? (
+        <MemoryBlock
+          key={renderKey}
+          jmp={goto}
+          memory={memory}
+          highlight={highlighted}
+          editable={editable}
+          justifyLeft={fmt == "asm"}
+          format={(v: number) => doFormat(fmt, v)}
+          onChange={doUpdate}
+          onFocus={(i) => setHighlighted(i)}
+        />
+      ) : (
+        "Memory display is disabled"
+      )}
     </article>
   );
 };

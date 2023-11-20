@@ -122,6 +122,7 @@ export const MemoryCell = ({
       style={{
         flex: "1",
         textAlign: justifyLeft ? "left" : "right",
+        color: "black",
         ...rounded("none"),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
       }}
@@ -136,7 +137,7 @@ export const MemoryCell = ({
           onFocus={() => onFocus(index)}
         />
       ) : (
-        <span>{value}</span>
+        <span style={{ color: "black" }}>{value}</span>
       )}
     </code>
   </div>

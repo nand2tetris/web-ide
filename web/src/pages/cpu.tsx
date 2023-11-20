@@ -20,6 +20,7 @@ export const CPU = () => {
   const [cmp, setCmp] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [displayEnabled, setDisplayEnabled] = useState(true);
+  const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   const toggleDisplayEnabled = () => {
     setDisplayEnabled(!displayEnabled);
@@ -79,6 +80,14 @@ export const CPU = () => {
     actions.reset();
   };
 
+  const rerenderScreen = () => {
+    setScreenRenderKey(screenRenderKey + 1);
+  };
+
+  const onMemoryChange = () => {
+    rerenderScreen();
+  };
+
   return (
     <div className="CpuPage grid">
       <MemoryComponent
@@ -94,6 +103,7 @@ export const CPU = () => {
         displayEnabled={displayEnabled}
         memory={state.sim.RAM}
         format="hex"
+        onChange={onMemoryChange}
       />
       <Panel
         className="IO"
@@ -108,7 +118,7 @@ export const CPU = () => {
           </>
         }
       >
-        <Screen memory={state.sim.Screen}></Screen>
+        <Screen key={screenRenderKey} memory={state.sim.Screen}></Screen>
         <Keyboard keyboard={state.sim.Keyboard} />
         <label>
           <input

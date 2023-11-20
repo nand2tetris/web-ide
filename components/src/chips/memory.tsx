@@ -151,6 +151,7 @@ export const Memory = ({
   memory,
   format = "dec",
   onUpload = undefined,
+  onChange = undefined,
 }: {
   name?: string;
   displayEnabled?: boolean;
@@ -159,6 +160,7 @@ export const Memory = ({
   memory: MemoryAdapter;
   format: Format;
   onUpload?: (fileName: string) => void;
+  onChange?: () => void;
 }) => {
   const [fmt, setFormat] = useState(format);
   const [jmp, setJmp] = useState("");
@@ -177,6 +179,7 @@ export const Memory = ({
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
   const doLoad = useCallback(() => {
+    onChange?.();
     fileUploadRef.current?.click();
   }, [fileUploadRef]);
 
@@ -206,11 +209,13 @@ export const Memory = ({
 
   const clear = () => {
     memory.reset();
+    onChange?.();
     rerenderMemoryBlock();
   };
 
   const doUpdate = (i: number, v: string) => {
     memory.update(i, v, fmt ?? "dec");
+    onChange?.();
     rerenderMemoryBlock();
   };
 

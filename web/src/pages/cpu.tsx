@@ -88,6 +88,10 @@ export const CPU = () => {
     rerenderScreen();
   };
 
+  const onKeyChange = () => {
+    dispatch.current({ action: "update" });
+  };
+
   return (
     <div className="CpuPage grid">
       <MemoryComponent
@@ -119,7 +123,7 @@ export const CPU = () => {
         }
       >
         <Screen key={screenRenderKey} memory={state.sim.Screen}></Screen>
-        <Keyboard keyboard={state.sim.Keyboard} />
+        <Keyboard update={onKeyChange} keyboard={state.sim.Keyboard} />
         <label>
           <input
             type="checkbox"

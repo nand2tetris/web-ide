@@ -23,6 +23,7 @@ import { FilePicker } from "./shell/file_select";
 
 import "./pico/flex.scss";
 import "./pico/pico.scss";
+import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
 
 i18n.load("en", messages.messages);

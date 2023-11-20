@@ -1,6 +1,20 @@
 // https://github.com/picocss/pico/pull/211/files#
 
 [data-tooltip] {
+  &:focus {
+    &::before,
+    &::after {
+      opacity: 0;
+    }
+  }
+
+  &:hover {
+    &::before,
+    &::after {
+      opacity: 1;
+    }
+  }
+
   &[data-placement="top"]::before,
   &[data-placement="top"]::after {
     display: block;
@@ -87,22 +101,21 @@
   }
 
   @media (hover: hover) and (pointer: fine) {
-    &[data-placement="bottom"]:focus,
-    &[data-placement="bottom"]:hover &:focus,
-    &:hover {
-      &::before,
-      &::after {
-        animation-duration: 0.2s;
-        animation-name: tooltip-slide-top;
-      }
+    &[data-placement="top"] {
+      &:hover {
+        &::before,
+        &::after {
+          animation-duration: 0.2s;
+          animation-name: tooltip-slide-top;
+        }
 
-      &::after {
-        animation-name: tooltip-caret-slide-top;
+        &::after {
+          animation-name: tooltip-caret-slide-top;
+        }
       }
     }
 
     &[data-placement="bottom"] {
-      &:focus,
       &:hover {
         &::before,
         &::after {
@@ -117,7 +130,6 @@
     }
 
     &[data-placement="left"] {
-      &:focus,
       &:hover {
         &::before,
         &::after {
@@ -132,7 +144,6 @@
     }
 
     &[data-placement="right"] {
-      &:focus,
       &:hover {
         &::before,
         &::after {

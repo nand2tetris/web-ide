@@ -114,7 +114,6 @@ export function makeCpuStore(
     },
 
     reset() {
-      this.resetRAM();
       this.resetCPU();
       setStatus("Reset CPU & RAM");
     },

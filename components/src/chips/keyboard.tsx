@@ -31,6 +31,17 @@ const KeyMap: Record<string, number | undefined> = {
   F12: 152,
 };
 
+const keyDisplays: Record<string, string> = {
+  ArrowLeft: "L-arrow",
+  ArrowUp: "U-arrow",
+  ArrowRight: "R-arrow",
+  ArrowDown: "D-arrow",
+};
+
+function getKeyDisplay(key: string) {
+  return keyDisplays[key] || key;
+}
+
 function keyPressToHackCharacter(keypress: KeyboardEvent): number {
   const mapping = KeyMap[keypress.key];
   if (mapping !== undefined) {
@@ -68,7 +79,7 @@ export const Keyboard = ({
       return;
     }
 
-    setCharacter(event.key);
+    setCharacter(getKeyDisplay(event.key));
     const key = keyPressToHackCharacter(event);
     if (key === currentKey) {
       return;
@@ -110,14 +121,14 @@ export const Keyboard = ({
 
   return (
     <div className="flex row align-baseline">
-      <div className="flex-1">
-        <RegisterComponent name="Keyboard" bits={bits} />
+      <div className="flex-2">
+        <RegisterComponent name="Key" bits={bits} />
       </div>
-      <div className="flex-1">{`Character: ${character}`}</div>
-      <div className="flex-1">
+      <div className="flex-2">{`Char: ${character}`}</div>
+      <div className="flex-3">
         <button onClick={toggleEnabled}>
           {/* <Icon name="keyboard" /> */}
-          {enabled ? "Disable   " : "Enable   "}⌨️
+          {`${enabled ? "Disable" : "Enable"} Keyboard`}
         </button>
       </div>
     </div>

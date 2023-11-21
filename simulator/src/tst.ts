@@ -151,6 +151,8 @@ function makeInstruction(inst: TstOperation) {
       return new TestTickInstruction();
     case "tock":
       return new TestTockInstruction();
+    case "ticktock":
+      return new TestTickTockInstruction();
     case "eval":
       return new TestEvalInstruction();
     case "output":
@@ -276,8 +278,8 @@ export class CPUTest extends Test<CPUTestInstruction> {
   readonly cpu: CPU;
   private ticks = 0;
 
-  static from(tst: Tst): CPUTest {
-    const test = new CPUTest();
+  static from(tst: Tst, rom?: ROM): CPUTest {
+    const test = new CPUTest(rom);
     return fill(test, tst);
   }
 
@@ -288,6 +290,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
   }
 
   override reset(): this {
+    super.reset();
     this.cpu.reset();
     this.ticks = 0;
     return this;
@@ -314,7 +317,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
     return false;
   }
 
-  getVar(variable: string | number): number {
+  getVar(variable: string | number, offset?: number): number {
     switch (variable) {
       case "A":
         return this.cpu.A;
@@ -324,12 +327,10 @@ export class CPUTest extends Test<CPUTestInstruction> {
         return this.cpu.PC;
       case "time":
         return this.ticks;
+      case "RAM":
+        return offset === undefined ? 0 : this.cpu.RAM.get(offset);
     }
     if (typeof variable === "number") return 0;
-    if (variable.startsWith("RAM")) {
-      const num = Number(variable.substring(4, variable.length - 1));
-      return this.cpu.RAM.get(num);
-    }
     return 0;
   }
 

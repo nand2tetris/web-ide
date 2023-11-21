@@ -7,6 +7,7 @@ import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
 import { useEffect, useRef, useState } from "react";
 
 import { Trans } from "@lingui/macro";
+import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
@@ -15,12 +16,16 @@ import "./cpu.scss";
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
 
-  const [tst, setTst] = useState("repeat {\n\tticktock;\n}");
-  const [out, setOut] = useState("");
-  const [cmp, setCmp] = useState("");
+  const [tst, setTst] = useStateInitializer(state.test.tst);
+  const [out, setOut] = useStateInitializer(state.test.out);
+  const [cmp, setCmp] = useStateInitializer(state.test.cmp);
   const [fileName, setFileName] = useState<string | null>(null);
   const [displayEnabled, setDisplayEnabled] = useState(true);
   const [screenRenderKey, setScreenRenderKey] = useState(0);
+
+  useEffect(() => {
+    actions.initialize();
+  }, [actions]);
 
   const toggleDisplayEnabled = () => {
     setDisplayEnabled(!displayEnabled);
@@ -78,6 +83,10 @@ export const CPU = () => {
   const onUpload = (fileName: string) => {
     setFileName(fileName);
     actions.reset();
+  };
+
+  const onLoadTest = (tst: string, cmp?: string) => {
+    actions.compileTest(tst, cmp);
   };
 
   const rerenderScreen = () => {
@@ -152,6 +161,7 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          onLoadTest={onLoadTest}
         />
       )}
     </div>

@@ -20,7 +20,7 @@ export interface TstSetOperation {
 }
 
 export interface TstEvalOperation {
-  op: "eval" | "tick" | "tock";
+  op: "eval" | "tick" | "tock" | "ticktock";
 }
 
 export interface TstOutputOperation {

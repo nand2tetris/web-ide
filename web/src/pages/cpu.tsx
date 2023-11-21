@@ -56,8 +56,7 @@ export const CPU = () => {
 
     testRunner.current = new (class CPUTestTimer extends Timer {
       override tick() {
-        actions.testStep();
-        return false;
+        return actions.testStep();
       }
 
       override finishFrame() {

@@ -129,6 +129,7 @@ export function makeCpuStore(
       if (done) {
         dispatch.current({ action: "testFinished" });
       }
+      return done;
     },
 
     resetRAM() {

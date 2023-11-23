@@ -58,7 +58,7 @@ export const InlineEdit = (props: {
             position: "absolute",
             left: "0",
             marginTop: "-0.375rem",
-            color: "black"
+            color: "black",
           }}
           onFocus={props.onFocus}
           onBlur={({ target }) => doChange(target)}

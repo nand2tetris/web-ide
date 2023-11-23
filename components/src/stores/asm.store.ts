@@ -2,6 +2,8 @@ import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   ASM,
   Asm,
+  AsmAInstruction,
+  AsmCInstruction,
   fillLabel,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
@@ -14,7 +16,7 @@ import { BaseContext } from "./base.context.js";
 
 export interface AsmPageState {
   asm: string;
-  next: number;
+  current: number;
   highlight: Span | undefined;
   result: string[];
   compare: string[];
@@ -31,6 +33,9 @@ export function makeAsmStore(
 ) {
   let asmInstructions: Asm | null = null;
   let done = false;
+
+  let instructionToIndex: Map<AsmAInstruction | AsmCInstruction, number> =
+    new Map();
 
   const reducers = {
     setAsm(state: AsmPageState, { asm }: { asm: string }) {
@@ -55,24 +60,26 @@ export function makeAsmStore(
     step(state: AsmPageState) {
       if (
         !asmInstructions ||
-        state.next >= asmInstructions.instructions.length
+        state.current >= asmInstructions.instructions.length - 1
       ) {
         return;
       }
-      while (asmInstructions.instructions[state.next].type === "L") {
-        state.next++;
+      state.current++;
+      while (asmInstructions.instructions[state.current].type === "L") {
+        state.current++;
       }
-      const instruction = asmInstructions.instructions[state.next];
+      const instruction = asmInstructions.instructions[state.current];
       if (instruction.type === "A" || instruction.type === "C") {
         state.highlight = instruction.span;
-      }
-      const result = translateInstruction(
-        asmInstructions.instructions[state.next]
-      );
-      if (result !== undefined) {
+        const result = translateInstruction(
+          asmInstructions.instructions[state.current]
+        );
+        if (result === undefined) {
+          return;
+        }
         state.result.push(bin(result));
-        state.next++;
-        if (state.next >= asmInstructions.instructions.length) {
+        instructionToIndex.set(instruction, state.current);
+        if (state.current === asmInstructions.instructions.length - 1) {
           setStatus("Translation done.");
           done = true;
         }
@@ -81,9 +88,40 @@ export function makeAsmStore(
 
     reset(state: AsmPageState) {
       state.result = [];
-      state.next = 0;
+      state.current = -1;
       state.highlight = undefined;
       done = false;
+      instructionToIndex = new Map();
+    },
+
+    updateHighlightByTextOffset(state: AsmPageState, { index }: { index: number }) {
+      if (!asmInstructions) {
+        return;
+      }
+      for (const instruction of asmInstructions.instructions) {
+        if (instruction.type === "A" || instruction.type === "C") {
+          if (
+            instruction.span.start <= index &&
+            index <= instruction.span.end
+          ) {
+            state.highlight = instruction.span;
+            const current = instructionToIndex.get(instruction);
+            if (current !== undefined) {
+              state.current = current;
+            }
+          }
+        }
+      }
+    },
+
+    updateHighlightByResult(state: AsmPageState, { index }: { index: number }) {
+      state.current = index;
+      for (const [instruction, i] of instructionToIndex) {
+        if (i === index) {
+          state.highlight = instruction.span;
+          return;
+        }
+      }
     },
   };
 
@@ -96,7 +134,7 @@ export function makeAsmStore(
 
   const initialState = {
     asm: "",
-    next: 0,
+    current: -1,
     highlight: undefined,
     result: [],
     compare: [],

@@ -115,6 +115,12 @@ export const Asm = () => {
           onChange={function (source: string): void {
             throw new Error("Function not implemented.");
           }}
+          onCursorPositionChange={(index) => {
+            dispatch.current({
+              action: "updateHighlightByTextOffset",
+              payload: { index },
+            });
+          }}
           grammar={ASM.parser}
           language={"asm"}
           highlight={state.highlight}
@@ -129,7 +135,16 @@ export const Asm = () => {
           </div>
         }
       >
-        <NumberedTable values={state.result} highlight={state.next - 1} />
+        <NumberedTable
+          values={state.result}
+          highlight={state.current}
+          onClick={(i: number) => {
+            dispatch.current({
+              action: "updateHighlightByResult",
+              payload: { index: i },
+            });
+          }}
+        />
         Symbol Table
         <Table />
       </Panel>

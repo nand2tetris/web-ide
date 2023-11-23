@@ -1,8 +1,7 @@
 import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
 import { Trans } from "@lingui/macro";
-import MonacoEditor, { useMonaco } from "@monaco-editor/react";
+import MonacoEditor, { OnMount, useMonaco } from "@monaco-editor/react";
 import type * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
-import { OnMount } from "@monaco-editor/react";
 import ohm from "ohm-js";
 import {
   CSSProperties,
@@ -94,6 +93,7 @@ const makeHighlight = (
 const Monaco = ({
   value,
   onChange,
+  onCursorPositionChange,
   language,
   error,
   disabled = false,
@@ -101,6 +101,7 @@ const Monaco = ({
 }: {
   value: string;
   onChange: (value: string) => void;
+  onCursorPositionChange?: (index: number) => void;
   language: string;
   error?: ohm.MatchResult | undefined;
   disabled?: boolean;
@@ -159,6 +160,12 @@ const Monaco = ({
         readOnly: disabled,
       });
       doHighlight();
+      editor.current?.onDidChangeCursorPosition((e) => {
+        const index = editor.current?.getModel()?.getOffsetAt(e.position);
+        if (index !== undefined) {
+          onCursorPositionChange?.(index);
+        }
+      });
     },
     [codeTheme]
   );
@@ -232,6 +239,7 @@ export const Editor = ({
   disabled = false,
   value,
   onChange,
+  onCursorPositionChange,
   grammar,
   language,
   highlight,
@@ -241,6 +249,7 @@ export const Editor = ({
   disabled?: boolean;
   value: string;
   onChange: (source: string) => void;
+  onCursorPositionChange?: (index: number) => void;
   grammar: ohm.Grammar;
   language: string;
   highlight?: Span;
@@ -273,6 +282,7 @@ export const Editor = ({
         <Monaco
           value={value}
           onChange={onChangeCB}
+          onCursorPositionChange={onCursorPositionChange}
           language={language}
           error={error}
           disabled={disabled}

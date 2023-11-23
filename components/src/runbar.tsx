@@ -58,17 +58,30 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
       >
         {/* <Icon name="fast_rewind" /> */}⏮
       </button>
-      <span>Slow</span>
-      <input
-        type="range"
-        min={0}
-        max={4}
-        step={1}
-        value={speedValue}
-        disabled={runner.state.running}
-        onChange={onChange}
-      ></input>
-      <span>Fast</span>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 16,
+          fontWeight: "normal",
+        }}
+      >
+        <span style={{ padding: "0.2rem" }}>Slow</span>
+        <input
+          type="range"
+          min={0}
+          max={4}
+          step={1}
+          value={speedValue}
+          disabled={runner.state.running}
+          onChange={onChange}
+          style={{ width: "150px", padding: "0.2rem" }}
+          data-tooltip={"Execution speed"}
+          data-placement={"bottom"}
+        />
+        <span style={{ padding: "0.2rem" }}>Fast</span>
+      </div>
       {props.children}
     </fieldset>
   );

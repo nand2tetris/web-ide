@@ -1,11 +1,10 @@
 import { Trans } from "@lingui/macro";
 import { Runbar } from "@nand2tetris/components/runbar";
+import { useAsmPageStore } from "@nand2tetris/components/stores/asm.store";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { NumberedTable, Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
-import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { Timer } from "@nand2tetris/simulator/timer";
-import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
@@ -13,39 +12,36 @@ import { Panel } from "../shell/panel";
 import "./asm.scss";
 
 export const Asm = () => {
+  const { state, actions, dispatch } = useAsmPageStore();
+
   const [asm, setAsm] = useState("");
-  const [cmp, setCmp] = useState<string[]>([]);
+  const [cmp, setCmp] = useState("");
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
 
-  useEffect(
-    () => {
-      runner.current = new (class AsmRunner extends Timer {
-        override tick(): boolean {
-          console.log("tick");
-          return false;
-        }
-        override finishFrame() {
-          console.log("finish frame");
-        }
-        override reset(): void {
-          console.log("reset");
-        }
-        override toggle(): void {
-          console.log("toggle");
-        }
-      })();
-      setRunnerAssigned(true);
+  useEffect(() => {
+    runner.current = new (class AsmRunner extends Timer {
+      override tick(): boolean {
+        console.log("tick");
+        return false;
+      }
+      override finishFrame() {
+        console.log("finish frame");
+      }
+      override reset(): void {
+        console.log("reset");
+      }
+      override toggle(): void {
+        console.log("toggle");
+      }
+    })();
+    setRunnerAssigned(true);
 
-      return () => {
-        runner.current?.stop();
-      };
-    },
-    [
-      /*actions, dispatch */
-    ]
-  );
+    return () => {
+      runner.current?.stop();
+    };
+  }, [actions, dispatch]);
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
   let fileType: "asm" | "cmp" = "asm";
@@ -73,15 +69,15 @@ export const Asm = () => {
         setStatus("File must be .asm file");
         return;
       }
-      setAsm(source);
-      setStatus("Loaded asm file");
+      dispatch.current({ action: "setAsm", payload: { asm: source } });
+      setAsm(file.name);
     } else {
       if (!file.name.endsWith(".hack")) {
         setStatus("File must be .hack file");
         return;
       }
-      setCmp((await loadHack(source)).map((n) => bin(n)));
-      setStatus("Loaded compare file");
+      dispatch.current({ action: "setCmp", payload: { cmp: source } });
+      setCmp(file.name);
     }
   };
 
@@ -97,6 +93,7 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Source</Trans>
+              {asm && `: ${asm}`}
             </div>
             <div className="flex-1">
               {runnerAssigned && runner.current && (
@@ -118,7 +115,7 @@ export const Asm = () => {
         }
       >
         <Editor
-          value={asm}
+          value={state.asm}
           onChange={function (source: string): void {
             throw new Error("Function not implemented.");
           }}
@@ -151,6 +148,7 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Compare</Trans>
+              {cmp && `: ${cmp}`}
             </div>
             <div>
               <fieldset role="group">
@@ -161,7 +159,7 @@ export const Asm = () => {
           </>
         }
       >
-        <NumberedTable values={cmp} />
+        <NumberedTable values={state.compare} />
       </Panel>
     </div>
   );

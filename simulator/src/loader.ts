@@ -15,6 +15,13 @@ export async function loadHack(source: string): Promise<number[]> {
     .map(int2);
 }
 
+export function loadHackSync(source: string): number[] {
+  return source
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map(int2);
+}
+
 export async function loadBlob(bytes: string): Promise<number[]> {
   return bytes
     .split("\n")

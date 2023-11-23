@@ -29,7 +29,7 @@ export const Asm = () => {
         dispatch.current({ action: "reset" });
       }
       override toggle(): void {
-        console.log("toggle");
+        return;
       }
     })();
     setRunnerAssigned(true);
@@ -112,8 +112,8 @@ export const Asm = () => {
       >
         <Editor
           value={state.asm}
-          onChange={function (source: string): void {
-            throw new Error("Function not implemented.");
+          onChange={(source: string) => {
+            return;
           }}
           onCursorPositionChange={(index) => {
             dispatch.current({
@@ -145,8 +145,8 @@ export const Asm = () => {
             });
           }}
         />
-        Symbol Table
-        <Table />
+        {state.symbols.length > 0 && "Symbol Table"}
+        <Table values={state.symbols} />
       </Panel>
       <Panel
         className="compare"

@@ -18,6 +18,7 @@ export interface AsmPageState {
   asm: string;
   current: number;
   highlight: Span | undefined;
+  symbols: [string, number][];
   result: string[];
   compare: string[];
 }
@@ -47,7 +48,12 @@ export function makeAsmStore(
       }
       asmInstructions = Ok(parseResult);
       console.log(asmInstructions.lineMap);
-      fillLabel(asmInstructions);
+      fillLabel(asmInstructions, (name, value) => {
+        state.symbols.push([name, value]);
+      });
+      asmInstructions.instructions = asmInstructions.instructions.filter(
+        (instruction) => instruction.type !== "L"
+      );
       this.reset(state);
       setStatus("Loaded asm file");
     },
@@ -65,9 +71,6 @@ export function makeAsmStore(
         return;
       }
       state.current++;
-      while (asmInstructions.instructions[state.current].type === "L") {
-        state.current++;
-      }
       const instruction = asmInstructions.instructions[state.current];
       if (instruction.type === "A" || instruction.type === "C") {
         state.highlight = instruction.span;
@@ -94,7 +97,10 @@ export function makeAsmStore(
       instructionToIndex = new Map();
     },
 
-    updateHighlightByTextOffset(state: AsmPageState, { index }: { index: number }) {
+    updateHighlightByTextOffset(
+      state: AsmPageState,
+      { index }: { index: number }
+    ) {
       if (!asmInstructions) {
         return;
       }
@@ -136,6 +142,7 @@ export function makeAsmStore(
     asm: "",
     current: -1,
     highlight: undefined,
+    symbols: [],
     result: [],
     compare: [],
   };

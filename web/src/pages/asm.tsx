@@ -78,7 +78,7 @@ export const Asm = () => {
   };
 
   const compare = () => {
-    console.log("compare asm");
+    dispatch.current({ action: "compare" });
   };
 
   return (

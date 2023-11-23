@@ -129,6 +129,20 @@ export function makeAsmStore(
         }
       }
     },
+
+    compare(state: AsmPageState) {
+      if (state.result.length !== state.compare.length) {
+        setStatus("Comparison failed - different lengths");
+        return;
+      }
+      for (let i = 0; i < state.result.length; i++) {
+        if (state.result[i] !== state.compare[i]) {
+          setStatus(`Comparison failed - line ${i} is different`);
+          return;
+        }
+      }
+      setStatus("Comparison successful");
+    },
   };
 
   const actions = {

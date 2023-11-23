@@ -23,14 +23,10 @@ export const Asm = () => {
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
       override tick(): boolean {
-        console.log("tick");
-        return false;
-      }
-      override finishFrame() {
-        console.log("finish frame");
+        return actions.step();
       }
       override reset(): void {
-        console.log("reset");
+        dispatch.current({ action: "reset" });
       }
       override toggle(): void {
         console.log("toggle");
@@ -121,6 +117,7 @@ export const Asm = () => {
           }}
           grammar={ASM.parser}
           language={"asm"}
+          highlight={state.highlight}
           disabled={true}
         />
       </Panel>
@@ -132,15 +129,9 @@ export const Asm = () => {
           </div>
         }
       >
-        <NumberedTable values={["1", "2", "3", "4"]} />
+        <NumberedTable values={state.result} highlight={state.next - 1} />
         Symbol Table
-        <Table
-          values={[
-            ["a", "1"],
-            ["b", "2"],
-            ["c", "3"],
-          ]}
-        />
+        <Table />
       </Panel>
       <Panel
         className="compare"

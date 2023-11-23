@@ -1,19 +1,43 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
 import { dec } from "@nand2tetris/simulator/util/twos.js";
 
-export const Table = ({ values = [] }: { values?: [string, string][] }) => {
-  const rows = values.map((entry, i) => (
-    <TableRow key={i} identifier={entry[0]} value={entry[1]} size={5} />
-  ));
-
-  return <div>{rows}</div>;
+export const Table = ({
+  values = [],
+  highlight = -1,
+}: {
+  values?: [string, string][];
+  highlight?: number;
+}) => {
+  return (
+    <div>
+      {values.map((entry, i) => (
+        <TableRow
+          key={i}
+          identifier={entry[0]}
+          value={entry[1]}
+          highlight={i === highlight}
+        />
+      ))}
+    </div>
+  );
 };
 
-export const NumberedTable = ({ values = [] }: { values?: string[] }) => {
+export const NumberedTable = ({
+  values = [],
+  highlight = -1,
+}: {
+  values?: string[];
+  highlight?: number;
+}) => {
   const getIndexString = (i: number) =>
     values.length ? dec(i).padStart(Math.ceil(Math.log10(i)), " ") : dec(i);
 
-  return <Table values={values.map((v, i) => [getIndexString(i), v])} />;
+  return (
+    <Table
+      values={values.map((v, i) => [getIndexString(i), v])}
+      highlight={highlight}
+    />
+  );
 };
 
 const TableRow = ({
@@ -23,7 +47,6 @@ const TableRow = ({
 }: {
   identifier: string;
   value: string;
-  size: number;
   highlight?: boolean;
 }) => {
   return (

@@ -13,7 +13,7 @@ import {
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
-import { grammars, makeParser, baseSemantics } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser } from "./base.js";
 
 import asmGrammar from "./grammars/asm.ohm.js";
 
@@ -22,6 +22,7 @@ export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
 export interface Asm {
   instructions: AsmInstruction[];
+  lineMap?: Map<number, AsmInstruction>;
 }
 
 export type AsmInstruction =
@@ -33,11 +34,13 @@ export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
 export interface AsmALabelInstruction {
   type: "A";
   label: string;
+  span: Span;
 }
 
 export interface AsmAValueInstruction {
   type: "A";
   value: number;
+  span: Span;
 }
 
 function isALabelInstruction(
@@ -52,6 +55,7 @@ export interface AsmCInstruction {
   isM: boolean;
   store?: ASSIGN_OP;
   jump?: JUMP_OP;
+  span: Span;
 }
 
 export interface AsmLabelInstruction {
@@ -81,6 +85,10 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
       return {
         type: "A",
         label: val.name,
+        span: {
+          start: _at.source.startIdx,
+          end: val.source.endIdx,
+        },
       };
     } catch (e) {
       // Pass
@@ -90,6 +98,10 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
       return {
         type: "A",
         value: val.value,
+        span: {
+          start: _at.source.startIdx,
+          end: val.source.endIdx,
+        },
       };
     } catch (e) {
       // pass
@@ -107,6 +119,10 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
       type: "C",
       op: COMMANDS.asm[op],
       isM,
+      span: {
+        start: assignN.source.startIdx,
+        end: jmpN.source.endIdx,
+      },
     };
     if (jmp) inst.jump = JUMP.asm[jmp];
     if (assign) inst.store = ASSIGN.asm[assign];
@@ -186,20 +202,22 @@ export function fillLabel(asm: Asm) {
   unfilled.forEach(transmuteAInstruction);
 }
 
+export function translateInstruction(inst: AsmInstruction) {
+  if (inst.type === "A") {
+    if (isALabelInstruction(inst)) {
+      throw new Error(`ASM Emitting unfilled A instruction`);
+    }
+    return inst.value;
+  }
+  if (inst.type === "C") {
+    return makeC(inst.isM, inst.op, inst.store, inst.jump);
+  }
+  return undefined;
+}
+
 export function emit(asm: Asm): number[] {
   return asm.instructions
-    .map((inst) => {
-      if (inst.type === "A") {
-        if (isALabelInstruction(inst)) {
-          throw new Error(`ASM Emitting unfilled A instruction`);
-        }
-        return inst.value;
-      }
-      if (inst.type === "C") {
-        return makeC(inst.isM, inst.op, inst.store, inst.jump);
-      }
-      return undefined;
-    })
+    .map(translateInstruction)
     .filter((op): op is number => op !== undefined);
 }
 

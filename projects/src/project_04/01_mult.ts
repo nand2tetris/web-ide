@@ -72,7 +72,6 @@ set RAM[0] 6,   // restores the arguments in case the program used them
 set RAM[1] 7,
 output;`;
 
-
 export const cmp = `|  RAM[0]  |  RAM[1]  |  RAM[2]  |
 |       0  |       0  |       0  |
 |       1  |       0  |       0  |

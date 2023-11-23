@@ -47,7 +47,6 @@ export function makeAsmStore(
         return;
       }
       asmInstructions = Ok(parseResult);
-      console.log(asmInstructions.lineMap);
       fillLabel(asmInstructions, (name, value) => {
         state.symbols.push([name, value]);
       });

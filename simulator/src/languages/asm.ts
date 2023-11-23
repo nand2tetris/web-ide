@@ -22,7 +22,6 @@ export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
 export interface Asm {
   instructions: AsmInstruction[];
-  lineMap?: Map<number, AsmInstruction>;
 }
 
 export type AsmInstruction =

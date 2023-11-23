@@ -1,14 +1,21 @@
 import { Trans } from "@lingui/macro";
 import { Runbar } from "@nand2tetris/components/runbar";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { NumberedTable, Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
+import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { Timer } from "@nand2tetris/simulator/timer";
-import { useEffect, useRef, useState } from "react";
+import { bin } from "@nand2tetris/simulator/util/twos.js";
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
+
 import "./asm.scss";
 
 export const Asm = () => {
+  const [asm, setAsm] = useState("");
+  const [cmp, setCmp] = useState<string[]>([]);
+
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
 
@@ -40,12 +47,42 @@ export const Asm = () => {
     ]
   );
 
+  const fileUploadRef = useRef<HTMLInputElement>(null);
+  let fileType: "asm" | "cmp" = "asm";
+
   const loadAsm = () => {
-    console.log("load asm");
+    fileType = "asm";
+    fileUploadRef.current?.click();
   };
 
   const loadCompare = () => {
-    console.log("load asm");
+    fileType = "cmp";
+    fileUploadRef.current?.click();
+  };
+
+  const { setStatus } = useContext(BaseContext);
+  const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) {
+      setStatus("No file selected");
+      return;
+    }
+    const file = event.target.files[0];
+    const source = await file.text();
+    if (fileType === "asm") {
+      if (!file.name.endsWith(".asm")) {
+        setStatus("File must be .asm file");
+        return;
+      }
+      setAsm(source);
+      setStatus("Loaded asm file");
+    } else {
+      if (!file.name.endsWith(".hack")) {
+        setStatus("File must be .hack file");
+        return;
+      }
+      setCmp((await loadHack(source)).map((n) => bin(n)));
+      setStatus("Loaded compare file");
+    }
   };
 
   const compare = () => {
@@ -68,6 +105,12 @@ export const Asm = () => {
             </div>
             <div>
               <fieldset role="group">
+                <input
+                  type="file"
+                  style={{ display: "none" }}
+                  ref={fileUploadRef}
+                  onChange={uploadFile}
+                />
                 <button onClick={loadAsm}>📂</button>
               </fieldset>
             </div>
@@ -75,7 +118,7 @@ export const Asm = () => {
         }
       >
         <Editor
-          value={""}
+          value={asm}
           onChange={function (source: string): void {
             throw new Error("Function not implemented.");
           }}
@@ -118,7 +161,7 @@ export const Asm = () => {
           </>
         }
       >
-        <NumberedTable values={["1", "2", "3", "4"]} />
+        <NumberedTable values={cmp} />
       </Panel>
     </div>
   );

@@ -1,0 +1,26 @@
+@use "../pico/button-group.scss";
+@use "../shell/tab.scss";
+
+.AsmPage {
+  height: 100%;
+
+  margin: 0px;
+  gap: 0;
+
+  grid-template-areas: "source result compare";
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+
+  .source {
+    grid-area: source;
+    // min-height: calc(var(--line-height) * 10rem);
+  }
+
+  .result {
+    grid-area: result;
+  }
+
+  .compare {
+    grid-area: compare;
+  }
+}

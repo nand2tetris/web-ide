@@ -123,7 +123,7 @@ export const Asm = () => {
           }}
           grammar={ASM.parser}
           language={"asm"}
-          highlight={state.highlight}
+          highlight={state.sourceHighlight}
           disabled={true}
         />
       </Panel>
@@ -137,7 +137,7 @@ export const Asm = () => {
       >
         <NumberedTable
           values={state.result}
-          highlight={state.current}
+          highlight={state.resultHighlight}
           onClick={(i: number) => {
             dispatch.current({
               action: "updateHighlightByResult",

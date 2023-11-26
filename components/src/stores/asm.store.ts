@@ -17,7 +17,8 @@ import { BaseContext } from "./base.context.js";
 export interface AsmPageState {
   asm: string;
   current: number;
-  highlight: Span | undefined;
+  resultHighlight: number;
+  sourceHighlight: Span | undefined;
   symbols: [string, number][];
   result: string[];
   compare: string[];
@@ -46,7 +47,7 @@ export function makeAsmStore(
         setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
         return;
       }
-      state.symbols = []
+      state.symbols = [];
       asmInstructions = Ok(parseResult);
       fillLabel(asmInstructions, (name, value) => {
         state.symbols.push([name, value]);
@@ -71,9 +72,10 @@ export function makeAsmStore(
         return;
       }
       state.current++;
+      state.resultHighlight = state.current;
       const instruction = asmInstructions.instructions[state.current];
       if (instruction.type === "A" || instruction.type === "C") {
-        state.highlight = instruction.span;
+        state.sourceHighlight = instruction.span;
         const result = translateInstruction(
           asmInstructions.instructions[state.current]
         );
@@ -92,7 +94,7 @@ export function makeAsmStore(
     reset(state: AsmPageState) {
       state.result = [];
       state.current = -1;
-      state.highlight = undefined;
+      state.sourceHighlight = undefined;
       done = false;
       instructionToIndex = new Map();
     },
@@ -110,10 +112,10 @@ export function makeAsmStore(
             instruction.span.start <= index &&
             index <= instruction.span.end
           ) {
-            state.highlight = instruction.span;
+            state.sourceHighlight = instruction.span;
             const current = instructionToIndex.get(instruction);
             if (current !== undefined) {
-              state.current = current;
+              state.resultHighlight = current;
             }
           }
         }
@@ -121,10 +123,10 @@ export function makeAsmStore(
     },
 
     updateHighlightByResult(state: AsmPageState, { index }: { index: number }) {
-      state.current = index;
+      state.resultHighlight = index;
       for (const [instruction, i] of instructionToIndex) {
         if (i === index) {
-          state.highlight = instruction.span;
+          state.sourceHighlight = instruction.span;
           return;
         }
       }
@@ -155,7 +157,8 @@ export function makeAsmStore(
   const initialState = {
     asm: "",
     current: -1,
-    highlight: undefined,
+    resultHighlight: -1,
+    sourceHighlight: undefined,
     symbols: [],
     result: [],
     compare: [],

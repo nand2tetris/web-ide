@@ -46,6 +46,7 @@ export function makeAsmStore(
         setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
         return;
       }
+      state.symbols = []
       asmInstructions = Ok(parseResult);
       fillLabel(asmInstructions, (name, value) => {
         state.symbols.push([name, value]);

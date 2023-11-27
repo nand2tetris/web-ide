@@ -36,27 +36,38 @@ const TableRow = ({
   onClick?: () => void;
 }) => {
   return (
-    <div style={{ display: "flex", height: "100%" }} onClick={onClick}>
-      <code
-        style={{
-          ...rounded("none"),
-          ...(highlight ? { background: "var(--mark-background-color)" } : {}),
-          whiteSpace: "pre",
-        }}
-      >
-        {identifier}
-      </code>
-      <code
-        style={{
-          flex: "1",
-          textAlign: "right",
-          color: "black",
-          ...rounded("none"),
-          ...(highlight ? { background: "var(--mark-background-color)" } : {}),
-        }}
-      >
-        <span style={{ color: "black" }}>{value}</span>
-      </code>
+    <div style={{ display: "flex", alignItems: "center" }} onClick={onClick}>
+      {identifier.length > 0 && (
+        <code
+          style={{
+            flex: "1",
+            ...rounded("none"),
+            ...(highlight
+              ? { background: "var(--mark-background-color)" }
+              : {}),
+            whiteSpace: "pre",
+            padding: "3px",
+          }}
+        >
+          {identifier}
+        </code>
+      )}
+      {value.length > 0 && (
+        <code
+          style={{
+            flex: "1",
+            textAlign: "right",
+            color: "black",
+            padding: "3px",
+            ...rounded("none"),
+            ...(highlight
+              ? { background: "var(--mark-background-color)" }
+              : {}),
+          }}
+        >
+          {value}
+        </code>
+      )}
     </div>
   );
 };

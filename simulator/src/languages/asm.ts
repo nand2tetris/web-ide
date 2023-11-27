@@ -42,6 +42,12 @@ export interface AsmAValueInstruction {
   span: Span;
 }
 
+export function isAValueInstruction(
+  inst: AsmAInstruction
+): inst is AsmAValueInstruction {
+  return (inst as AsmAValueInstruction).value !== undefined;
+}
+
 function isALabelInstruction(
   inst: AsmAInstruction
 ): inst is AsmALabelInstruction {
@@ -136,7 +142,7 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
 
 export function fillLabel(
   asm: Asm,
-  symbolCallback?: (name: string, value: number) => void
+  symbolCallback?: (name: string, value: number, isVar: boolean) => void
 ) {
   let nextLabel = 16;
   const symbols = new Map<string, number>([
@@ -168,7 +174,7 @@ export function fillLabel(
   function getLabelValue(label: string) {
     if (!symbols.has(label)) {
       symbols.set(label, nextLabel);
-      symbolCallback?.(label, nextLabel);
+      symbolCallback?.(label, nextLabel, true);
       nextLabel += 1;
     }
     return assertExists(symbols.get(label), `Label not in symbols: ${label}`);
@@ -188,7 +194,7 @@ export function fillLabel(
         throw new Error(`ASM Duplicate label ${instruction.label}`);
       } else {
         symbols.set(instruction.label, line);
-        symbolCallback?.(instruction.label, line);
+        symbolCallback?.(instruction.label, line, false);
       }
       continue;
     }

@@ -7,6 +7,7 @@ import {
   ASM,
   Asm,
   fillLabel,
+  isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
@@ -14,6 +15,109 @@ import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
+
+function defaultSymbols(): [string, string][] {
+  return [
+    ["R0", "0"],
+    ["R1", "1"],
+    ["R2", "2"],
+    ["...", ""],
+    ["R15", "15"],
+    ["SCREEN", SCREEN_OFFSET.toString()],
+    ["KBD", KEYBOARD_OFFSET.toString()],
+  ];
+}
+
+interface HighlightInfo {
+  resultHighlight: Span | undefined;
+  sourceHighlight: Span | undefined;
+  highlightMap: Map<Span, Span>;
+}
+
+class Translator {
+  asm: Asm | null = null;
+  current = -1;
+  done = false;
+  symbols: [string, string][] = [];
+  hiddenSymbols: Map<number, [string, boolean]> = new Map();
+  result = "";
+
+  load(asm: Asm) {
+    this.symbols = defaultSymbols();
+    this.hiddenSymbols.clear();
+    this.asm = asm;
+    fillLabel(asm, (name, value, isVar) => {
+      if (isVar) {
+        this.hiddenSymbols.set(value, [name, false]);
+      } else {
+        this.symbols.push([name, value.toString()]);
+      }
+    });
+    asm.instructions = asm.instructions.filter(
+      (instruction) => instruction.type !== "L"
+    );
+
+    this.reset();
+  }
+
+  step(highlightInfo: HighlightInfo) {
+    if (this.asm === null || this.current >= this.asm.instructions.length - 1) {
+      return;
+    }
+    this.current++;
+    const instruction = this.asm.instructions[this.current];
+    if (instruction.type === "A" || instruction.type === "C") {
+      highlightInfo.sourceHighlight = instruction.span;
+      const result = translateInstruction(this.asm.instructions[this.current]);
+      if (result === undefined) {
+        return;
+      }
+      this.result += `${bin(result)}\n`;
+      highlightInfo.resultHighlight = {
+        start: this.current * 17,
+        end: (this.current + 1) * 17,
+      };
+
+      highlightInfo.highlightMap.set(
+        instruction.span,
+        highlightInfo.resultHighlight
+      );
+
+      if (instruction.type === "A" && isAValueInstruction(instruction)) {
+        const variable = this.hiddenSymbols.get(instruction.value);
+        if (variable != undefined && !variable[1]) {
+          console.log("value", instruction.value, "name", variable[0]);
+          this.symbols.push([variable[0], instruction.value.toString()]);
+          console.log(this.symbols);
+          this.hiddenSymbols.set(instruction.value, [variable[0], true]);
+        }
+      }
+
+      if (this.current === this.asm.instructions.length - 1) {
+        this.done = true;
+      }
+    }
+  }
+
+  resetSymbols() {
+    const hiddenSymbolNames: Set<string> = new Set();
+    for (const [value, variable] of this.hiddenSymbols) {
+      hiddenSymbolNames.add(variable[0]);
+      this.hiddenSymbols.set(value, [variable[0], false]);
+    }
+
+    this.symbols = this.symbols.filter(
+      (symbol) => !hiddenSymbolNames.has(symbol[0])
+    );
+  }
+
+  reset() {
+    this.current = -1;
+    this.result = "";
+    this.done = false;
+    this.resetSymbols();
+  }
+}
 
 export interface AsmPageState {
   asm: string;
@@ -30,45 +134,20 @@ export type AsmStoreDispatch = Dispatch<{
   payload?: unknown;
 }>;
 
-function defaultSymbols(): [string, string][] {
-  return [
-    ["R0", "0"],
-    ["R1", "1"],
-    ["R2", "2"],
-    ["...", ""],
-    ["R15", "15"],
-    ["SCREEN", SCREEN_OFFSET.toString()],
-    ["KBD", KEYBOARD_OFFSET.toString()],
-  ];
-}
-
 export function makeAsmStore(
   setStatus: (status: string) => void,
   dispatch: MutableRefObject<AsmStoreDispatch>
 ) {
-  let asmInstructions: Asm | null = null;
-  let done = false;
-
-  const highlightMap: Map<Span, Span> = new Map();
+  const translator = new Translator();
+  const highlightInfo = {
+    resultHighlight: undefined,
+    sourceHighlight: undefined,
+    highlightMap: new Map(),
+  };
 
   const reducers = {
     setAsm(state: AsmPageState, { asm }: { asm: string }) {
       state.asm = asm;
-      const parseResult = ASM.parse(asm);
-      if (isErr(parseResult)) {
-        setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
-        return;
-      }
-      state.symbols = defaultSymbols();
-      asmInstructions = Ok(parseResult);
-      fillLabel(asmInstructions, (name, value) => {
-        state.symbols.push([name, value.toString()]);
-      });
-      asmInstructions.instructions = asmInstructions.instructions.filter(
-        (instruction) => instruction.type !== "L"
-      );
-      this.reset(state);
-      setStatus("Loaded asm file");
     },
 
     setCmp(state: AsmPageState, { cmp }: { cmp: string }) {
@@ -76,60 +155,12 @@ export function makeAsmStore(
       setStatus("Loaded compare file");
     },
 
-    step(state: AsmPageState) {
-      if (
-        !asmInstructions ||
-        state.current >= asmInstructions.instructions.length - 1
-      ) {
-        return;
-      }
-      state.current++;
-      const instruction = asmInstructions.instructions[state.current];
-      if (instruction.type === "A" || instruction.type === "C") {
-        state.sourceHighlight = instruction.span;
-        const result = translateInstruction(
-          asmInstructions.instructions[state.current]
-        );
-        if (result === undefined) {
-          return;
-        }
-        state.result += `${bin(result)}\n`;
-        state.resultHighlight = {
-          start: state.current * 17,
-          end: (state.current + 1) * 17,
-        };
-
-        highlightMap.set(instruction.span, state.resultHighlight);
-        if (state.current === asmInstructions.instructions.length - 1) {
-          setStatus("Translation done.");
-          done = true;
-        }
-      }
-    },
-
-    reset(state: AsmPageState) {
-      state.result = "";
-      state.current = -1;
-      state.sourceHighlight = undefined;
-      done = false;
-      highlightMap.clear();
-    },
-
-    updateHighlight(
-      state: AsmPageState,
-      { index, fromSource }: { index: number; fromSource: boolean }
-    ) {
-      for (const [sourceSpan, resultSpan] of highlightMap) {
-        if (
-          (fromSource &&
-            sourceSpan.start <= index &&
-            index <= sourceSpan.end) ||
-          (!fromSource && resultSpan.start <= index && index <= resultSpan.end)
-        ) {
-          state.sourceHighlight = sourceSpan;
-          state.resultHighlight = resultSpan;
-        }
-      }
+    update(state: AsmPageState) {
+      state.current = translator.current;
+      state.result = translator.result;
+      state.symbols = Array.from(translator.symbols);
+      state.sourceHighlight = highlightInfo.sourceHighlight;
+      state.resultHighlight = highlightInfo.resultHighlight;
     },
 
     compare(state: AsmPageState) {
@@ -142,9 +173,54 @@ export function makeAsmStore(
   };
 
   const actions = {
+    loadAsm(asm: string) {
+      dispatch.current({ action: "setAsm", payload: { asm } });
+
+      const parseResult = ASM.parse(asm);
+      if (isErr(parseResult)) {
+        setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
+        return;
+      }
+
+      translator.load(Ok(parseResult));
+      dispatch.current({ action: "update" });
+      setStatus("Loaded asm file");
+    },
+
     step(): boolean {
-      dispatch.current({ action: "step" });
-      return done;
+      translator.step(highlightInfo);
+      dispatch.current({ action: "update" });
+      if (translator.done) {
+        setStatus("Translation done.");
+      }
+      return translator.done;
+    },
+
+    updateHighlight(index: number, fromSource: boolean) {
+      for (const [sourceSpan, resultSpan] of highlightInfo.highlightMap) {
+        if (
+          (fromSource &&
+            sourceSpan.start <= index &&
+            index <= sourceSpan.end) ||
+          (!fromSource && resultSpan.start <= index && index <= resultSpan.end)
+        ) {
+          highlightInfo.sourceHighlight = sourceSpan;
+          highlightInfo.resultHighlight = resultSpan;
+        }
+      }
+      dispatch.current({ action: "update" });
+    },
+
+    resetHighlightInfo() {
+      highlightInfo.sourceHighlight = undefined;
+      highlightInfo.resultHighlight = undefined;
+      highlightInfo.highlightMap.clear();
+    },
+
+    reset() {
+      translator.reset();
+      this.resetHighlightInfo();
+      dispatch.current({ action: "update" });
     },
   };
 

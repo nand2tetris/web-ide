@@ -30,7 +30,7 @@ export const Asm = () => {
         return actions.step();
       }
       override reset(): void {
-        dispatch.current({ action: "reset" });
+        actions.reset();
       }
       override toggle(): void {
         return;
@@ -69,7 +69,7 @@ export const Asm = () => {
         setStatus("File must be .asm file");
         return;
       }
-      dispatch.current({ action: "setAsm", payload: { asm: source } });
+      actions.loadAsm(source);
       setAsm(file.name);
     } else {
       if (!file.name.endsWith(".hack")) {
@@ -124,10 +124,7 @@ export const Asm = () => {
               return;
             }
             sourceCursorPos.current = index;
-            dispatch.current({
-              action: "updateHighlight",
-              payload: { index, fromSource: true },
-            });
+            actions.updateHighlight(index, true);
           }}
           grammar={ASM.parser}
           language={"asm"}
@@ -155,10 +152,7 @@ export const Asm = () => {
               return;
             }
             resultCursorPos.current = index;
-            dispatch.current({
-              action: "updateHighlight",
-              payload: { index, fromSource: false },
-            });
+            actions.updateHighlight(index, false);
           }}
           grammar={undefined}
           language={""}

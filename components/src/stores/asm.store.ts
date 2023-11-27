@@ -1,5 +1,9 @@
 import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
+  KEYBOARD_OFFSET,
+  SCREEN_OFFSET,
+} from "@nand2tetris/simulator/cpu/memory.js";
+import {
   ASM,
   Asm,
   fillLabel,
@@ -16,7 +20,7 @@ export interface AsmPageState {
   current: number;
   resultHighlight: Span | undefined;
   sourceHighlight: Span | undefined;
-  symbols: [string, number][];
+  symbols: [string, string][];
   result: string;
   compare: string;
 }
@@ -25,6 +29,18 @@ export type AsmStoreDispatch = Dispatch<{
   action: keyof ReturnType<typeof makeAsmStore>["reducers"];
   payload?: unknown;
 }>;
+
+function defaultSymbols(): [string, string][] {
+  return [
+    ["R0", "0"],
+    ["R1", "1"],
+    ["R2", "2"],
+    ["...", ""],
+    ["R15", "15"],
+    ["SCREEN", SCREEN_OFFSET.toString()],
+    ["KBD", KEYBOARD_OFFSET.toString()],
+  ];
+}
 
 export function makeAsmStore(
   setStatus: (status: string) => void,
@@ -43,10 +59,10 @@ export function makeAsmStore(
         setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
         return;
       }
-      state.symbols = [];
+      state.symbols = defaultSymbols();
       asmInstructions = Ok(parseResult);
       fillLabel(asmInstructions, (name, value) => {
-        state.symbols.push([name, value]);
+        state.symbols.push([name, value.toString()]);
       });
       asmInstructions.instructions = asmInstructions.instructions.filter(
         (instruction) => instruction.type !== "L"

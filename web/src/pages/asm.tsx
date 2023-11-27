@@ -139,7 +139,7 @@ export const Asm = () => {
         className="result"
         header={
           <div>
-            <Trans>Result</Trans>
+            <Trans>Binary Code</Trans>
           </div>
         }
       >

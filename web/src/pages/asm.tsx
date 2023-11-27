@@ -2,7 +2,7 @@ import { Trans } from "@lingui/macro";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { useAsmPageStore } from "@nand2tetris/components/stores/asm.store";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { NumberedTable, Table } from "@nand2tetris/components/table";
+import { Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
 import { Timer } from "@nand2tetris/simulator/timer";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
@@ -16,6 +16,8 @@ export const Asm = () => {
 
   const [asm, setAsm] = useState("");
   const [cmp, setCmp] = useState("");
+  const sourceCursorPos = useRef(0);
+  const resultCursorPos = useRef(0);
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
@@ -23,6 +25,8 @@ export const Asm = () => {
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
       override tick(): boolean {
+        sourceCursorPos.current = 0;
+        resultCursorPos.current = 0;
         return actions.step();
       }
       override reset(): void {
@@ -116,9 +120,13 @@ export const Asm = () => {
             return;
           }}
           onCursorPositionChange={(index) => {
+            if (index == sourceCursorPos.current) {
+              return;
+            }
+            sourceCursorPos.current = index;
             dispatch.current({
-              action: "updateHighlightByTextOffset",
-              payload: { index },
+              action: "updateHighlight",
+              payload: { index, fromSource: true },
             });
           }}
           grammar={ASM.parser}
@@ -135,15 +143,26 @@ export const Asm = () => {
           </div>
         }
       >
-        <NumberedTable
-          values={state.result}
+        <Editor
+          value={state.result}
           highlight={state.resultHighlight}
-          onClick={(i: number) => {
+          disabled={true}
+          onChange={function (source: string): void {
+            return;
+          }}
+          onCursorPositionChange={(index) => {
+            if (index == resultCursorPos.current) {
+              return;
+            }
+            resultCursorPos.current = index;
             dispatch.current({
-              action: "updateHighlightByResult",
-              payload: { index: i },
+              action: "updateHighlight",
+              payload: { index, fromSource: false },
             });
           }}
+          grammar={undefined}
+          language={""}
+          dynamicHeight={true}
         />
         {state.symbols.length > 0 && "Symbol Table"}
         <Table values={state.symbols} />
@@ -165,7 +184,14 @@ export const Asm = () => {
           </>
         }
       >
-        <NumberedTable values={state.compare} />
+        <Editor
+          value={state.compare}
+          disabled={true}
+          onChange={function (source: string): void {
+            return;
+          }}
+          language={""}
+        />
       </Panel>
     </div>
   );

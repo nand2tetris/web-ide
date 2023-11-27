@@ -2,13 +2,10 @@ import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   ASM,
   Asm,
-  AsmAInstruction,
-  AsmCInstruction,
   fillLabel,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
-import { loadHackSync } from "@nand2tetris/simulator/loader.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -17,11 +14,11 @@ import { BaseContext } from "./base.context.js";
 export interface AsmPageState {
   asm: string;
   current: number;
-  resultHighlight: number;
+  resultHighlight: Span | undefined;
   sourceHighlight: Span | undefined;
   symbols: [string, number][];
-  result: string[];
-  compare: string[];
+  result: string;
+  compare: string;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -36,8 +33,7 @@ export function makeAsmStore(
   let asmInstructions: Asm | null = null;
   let done = false;
 
-  let instructionToIndex: Map<AsmAInstruction | AsmCInstruction, number> =
-    new Map();
+  const highlightMap: Map<Span, Span> = new Map();
 
   const reducers = {
     setAsm(state: AsmPageState, { asm }: { asm: string }) {
@@ -60,7 +56,7 @@ export function makeAsmStore(
     },
 
     setCmp(state: AsmPageState, { cmp }: { cmp: string }) {
-      state.compare = loadHackSync(cmp).map((n) => bin(n));
+      state.compare = cmp;
       setStatus("Loaded compare file");
     },
 
@@ -72,7 +68,6 @@ export function makeAsmStore(
         return;
       }
       state.current++;
-      state.resultHighlight = state.current;
       const instruction = asmInstructions.instructions[state.current];
       if (instruction.type === "A" || instruction.type === "C") {
         state.sourceHighlight = instruction.span;
@@ -82,8 +77,13 @@ export function makeAsmStore(
         if (result === undefined) {
           return;
         }
-        state.result.push(bin(result));
-        instructionToIndex.set(instruction, state.current);
+        state.result += `${bin(result)}\n`;
+        state.resultHighlight = {
+          start: state.current * 17,
+          end: (state.current + 1) * 17,
+        };
+
+        highlightMap.set(instruction.span, state.resultHighlight);
         if (state.current === asmInstructions.instructions.length - 1) {
           setStatus("Translation done.");
           done = true;
@@ -92,56 +92,34 @@ export function makeAsmStore(
     },
 
     reset(state: AsmPageState) {
-      state.result = [];
+      state.result = "";
       state.current = -1;
       state.sourceHighlight = undefined;
       done = false;
-      instructionToIndex = new Map();
+      highlightMap.clear();
     },
 
-    updateHighlightByTextOffset(
+    updateHighlight(
       state: AsmPageState,
-      { index }: { index: number }
+      { index, fromSource }: { index: number; fromSource: boolean }
     ) {
-      if (!asmInstructions) {
-        return;
-      }
-      for (const instruction of asmInstructions.instructions) {
-        if (instruction.type === "A" || instruction.type === "C") {
-          if (
-            instruction.span.start <= index &&
-            index <= instruction.span.end
-          ) {
-            state.sourceHighlight = instruction.span;
-            const current = instructionToIndex.get(instruction);
-            if (current !== undefined) {
-              state.resultHighlight = current;
-            }
-          }
-        }
-      }
-    },
-
-    updateHighlightByResult(state: AsmPageState, { index }: { index: number }) {
-      state.resultHighlight = index;
-      for (const [instruction, i] of instructionToIndex) {
-        if (i === index) {
-          state.sourceHighlight = instruction.span;
-          return;
+      for (const [sourceSpan, resultSpan] of highlightMap) {
+        if (
+          (fromSource &&
+            sourceSpan.start <= index &&
+            index <= sourceSpan.end) ||
+          (!fromSource && resultSpan.start <= index && index <= resultSpan.end)
+        ) {
+          state.sourceHighlight = sourceSpan;
+          state.resultHighlight = resultSpan;
         }
       }
     },
 
     compare(state: AsmPageState) {
-      if (state.result.length !== state.compare.length) {
-        setStatus("Comparison failed - different lengths");
+      if (state.result !== state.compare) {
+        setStatus("Comparison failed");
         return;
-      }
-      for (let i = 0; i < state.result.length; i++) {
-        if (state.result[i] !== state.compare[i]) {
-          setStatus(`Comparison failed - line ${i} is different`);
-          return;
-        }
       }
       setStatus("Comparison successful");
     },
@@ -157,11 +135,11 @@ export function makeAsmStore(
   const initialState = {
     asm: "",
     current: -1,
-    resultHighlight: -1,
+    resultHighlight: undefined,
     sourceHighlight: undefined,
     symbols: [],
-    result: [],
-    compare: [],
+    result: "",
+    compare: "",
   };
 
   return { initialState, reducers, actions };

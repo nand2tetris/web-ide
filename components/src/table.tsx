@@ -1,5 +1,4 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
-import { dec } from "@nand2tetris/simulator/util/twos.js";
 
 export const Table = ({
   values = [],
@@ -22,27 +21,6 @@ export const Table = ({
         />
       ))}
     </div>
-  );
-};
-
-export const NumberedTable = ({
-  values = [],
-  highlight = -1,
-  onClick,
-}: {
-  values?: string[];
-  highlight?: number;
-  onClick?: (index: number) => void;
-}) => {
-  const getIndexString = (i: number) =>
-    values.length ? dec(i).padStart(Math.ceil(Math.log10(i)), " ") : dec(i);
-
-  return (
-    <Table
-      values={values.map((v, i) => [getIndexString(i), v])}
-      highlight={highlight}
-      onClick={(id, value) => onClick?.(Number(id))}
-    />
   );
 };
 

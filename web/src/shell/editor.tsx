@@ -98,6 +98,7 @@ const Monaco = ({
   error,
   disabled = false,
   highlight: currentHighlight,
+  dynamicHeight = false,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -106,9 +107,11 @@ const Monaco = ({
   error?: ohm.MatchResult | undefined;
   disabled?: boolean;
   highlight?: Span;
+  dynamicHeight?: boolean;
 }) => {
   const { theme } = useContext(AppContext);
   const monaco = useMonaco();
+  const [height, setHeight] = useState(0);
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
@@ -136,6 +139,15 @@ const Monaco = ({
     );
   }, [decorations, monaco, editor, highlight]);
 
+  const calculateHeight = () => {
+    if (dynamicHeight) {
+      const contentHeight = editor.current?.getContentHeight();
+      if (contentHeight) {
+        setHeight(contentHeight);
+      }
+    }
+  };
+
   // Mark and center highlighted spans
   useEffect(() => {
     highlight.current = currentHighlight;
@@ -160,6 +172,7 @@ const Monaco = ({
         readOnly: disabled,
       });
       doHighlight();
+      calculateHeight();
       editor.current?.onDidChangeCursorPosition((e) => {
         const index = editor.current?.getModel()?.getOffsetAt(e.position);
         if (index !== undefined) {
@@ -221,13 +234,19 @@ const Monaco = ({
     ]);
   }, [error, editor, monaco, language]);
 
+  const onValueChange = (v = "") => {
+    calculateHeight();
+    onChange(v);
+  };
+
   return (
     <>
       <MonacoEditor
         value={value}
-        onChange={(v = "") => onChange(v)}
+        onChange={onValueChange}
         language={language}
         onMount={onMount}
+        height={dynamicHeight ? height : undefined}
       />
     </>
   );
@@ -243,6 +262,7 @@ export const Editor = ({
   grammar,
   language,
   highlight,
+  dynamicHeight = false,
 }: {
   className?: string;
   style?: CSSProperties;
@@ -250,17 +270,20 @@ export const Editor = ({
   value: string;
   onChange: (source: string) => void;
   onCursorPositionChange?: (index: number) => void;
-  grammar: ohm.Grammar;
+  grammar?: ohm.Grammar;
   language: string;
   highlight?: Span;
+  dynamicHeight?: boolean;
 }) => {
   const [error, setError] = useState<ohm.MatchResult>();
   const { monaco } = useContext(AppContext);
 
   const parse = useCallback(
     (text = "") => {
-      const parsed = grammar.match(text);
-      setError(parsed.failed() ? parsed : undefined);
+      if (grammar) {
+        const parsed = grammar.match(text);
+        setError(parsed.failed() ? parsed : undefined);
+      }
     },
     [setError, grammar]
   );
@@ -277,7 +300,10 @@ export const Editor = ({
   );
 
   return (
-    <div className={`Editor ${className}`} style={style}>
+    <div
+      className={`Editor ${dynamicHeight ? "dynamic-height" : ""} ${className}`}
+      style={style}
+    >
       {monaco.canUse && monaco.wants ? (
         <Monaco
           value={value}
@@ -287,6 +313,7 @@ export const Editor = ({
           error={error}
           disabled={disabled}
           highlight={highlight}
+          dynamicHeight={dynamicHeight}
         />
       ) : (
         <>

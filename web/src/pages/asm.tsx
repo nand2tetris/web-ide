@@ -44,6 +44,7 @@ export const Asm = () => {
   }, [actions, dispatch]);
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
+  const fileDownloadRef = useRef<HTMLAnchorElement>(null);
   let fileType: "asm" | "cmp" = "asm";
 
   const loadAsm = () => {
@@ -79,6 +80,20 @@ export const Asm = () => {
       dispatch.current({ action: "setCmp", payload: { cmp: source } });
       setCmp(file.name);
     }
+  };
+
+  const download = () => {
+    const blob = new Blob([state.result], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+
+    if (!fileDownloadRef.current) {
+      return
+    }
+    fileDownloadRef.current.href = url;
+    fileDownloadRef.current.download = asm.replace(".asm", ".hack");
+    fileDownloadRef.current.click();
+
+    URL.revokeObjectURL(url);
   };
 
   const compare = () => {
@@ -135,9 +150,17 @@ export const Asm = () => {
       <Panel
         className="result"
         header={
-          <div>
-            <Trans>Binary Code</Trans>
-          </div>
+          <>
+            <div>
+              <Trans>Binary Code</Trans>
+            </div>
+            <div>
+              <fieldset role="group">
+                <a ref={fileDownloadRef} style={{ display: "none" }} />
+                <button onClick={download}>Download</button>
+              </fieldset>
+            </div>
+          </>
         }
       >
         <Editor

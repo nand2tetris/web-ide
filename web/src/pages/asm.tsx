@@ -217,9 +217,17 @@ export const Asm = () => {
       >
         <Editor
           value={state.compare}
+          highlight={state.resultHighlight}
           disabled={true}
           onChange={function (source: string): void {
             return;
+          }}
+          onCursorPositionChange={(index) => {
+            if (index == resultCursorPos.current) {
+              return;
+            }
+            resultCursorPos.current = index;
+            actions.updateHighlight(index, false);
           }}
           language={""}
         />

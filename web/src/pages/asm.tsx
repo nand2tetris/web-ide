@@ -87,7 +87,7 @@ export const Asm = () => {
     const url = URL.createObjectURL(blob);
 
     if (!fileDownloadRef.current) {
-      return
+      return;
     }
     fileDownloadRef.current.href = url;
     fileDownloadRef.current.download = asm.replace(".asm", ".hack");
@@ -110,21 +110,29 @@ export const Asm = () => {
               <Trans>Source</Trans>
               {asm && `: ${asm}`}
             </div>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              ref={fileUploadRef}
+              onChange={uploadFile}
+            />
             <div className="flex-1">
               {runnerAssigned && runner.current && (
-                <Runbar runner={runner.current} />
-              )}
-            </div>
-            <div>
-              <fieldset role="group">
-                <input
-                  type="file"
-                  style={{ display: "none" }}
-                  ref={fileUploadRef}
-                  onChange={uploadFile}
+                <Runbar
+                  runner={runner.current}
+                  prefix={
+                    <button
+                      className="flex-0"
+                      onClick={loadAsm}
+                      data-tooltip="Load file"
+                      data-placement="bottom"
+                    >
+                      📂
+                    </button>
+                  }
+                  overrideTooltips={["Translate", "Translate all"]}
                 />
-                <button onClick={loadAsm}>📂</button>
-              </fieldset>
+              )}
             </div>
           </>
         }
@@ -195,7 +203,13 @@ export const Asm = () => {
             <div>
               <fieldset role="group">
                 <button onClick={compare}>Compare</button>
-                <button onClick={loadCompare}>📂</button>
+                <button
+                  onClick={loadCompare}
+                  data-tooltip="Load file"
+                  data-placement="left"
+                >
+                  📂
+                </button>
               </fieldset>
             </div>
           </>

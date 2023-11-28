@@ -34,12 +34,14 @@ export interface AsmALabelInstruction {
   type: "A";
   label: string;
   span: Span;
+  lineNum: number;
 }
 
 export interface AsmAValueInstruction {
   type: "A";
   value: number;
   span: Span;
+  lineNum: number;
 }
 
 export function isAValueInstruction(
@@ -61,11 +63,13 @@ export interface AsmCInstruction {
   store?: ASSIGN_OP;
   jump?: JUMP_OP;
   span: Span;
+  lineNum: number;
 }
 
 export interface AsmLabelInstruction {
   type: "L";
   label: string;
+  lineNum: number;
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -94,6 +98,7 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
           start: _at.source.startIdx,
           end: val.source.endIdx,
         },
+        lineNum: _at.source.getLineAndColumn().lineNum,
       };
     } catch (e) {
       // Pass
@@ -107,6 +112,7 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
           start: _at.source.startIdx,
           end: val.source.endIdx,
         },
+        lineNum: _at.source.getLineAndColumn().lineNum,
       };
     } catch (e) {
       // pass
@@ -127,6 +133,7 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
         start: assignN.source.startIdx,
         end: jmpN.source.endIdx,
       },
+      lineNum: assignN.source.getLineAndColumn().lineNum,
     };
     if (jmp) inst.jump = JUMP.asm[jmp];
     if (assign) inst.store = ASSIGN.asm[assign];
@@ -136,6 +143,7 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
     return {
       type: "L",
       label: name,
+      lineNum: _o.source.getLineAndColumn().lineNum,
     };
   },
 });

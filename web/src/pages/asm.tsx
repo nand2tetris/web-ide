@@ -153,6 +153,10 @@ export const Asm = () => {
           language={"asm"}
           highlight={state.sourceHighlight}
           disabled={true}
+          lineNumberTransform={(n) => {
+            const num = state.lineNumbers[n] as number | undefined;
+            return (num === undefined ? "" : num).toString();
+          }}
         />
       </Panel>
       <Panel
@@ -188,6 +192,7 @@ export const Asm = () => {
           grammar={undefined}
           language={""}
           dynamicHeight={true}
+          lineNumberTransform={(n) => (n - 1).toString()}
         />
         {state.symbols.length > 0 && "Symbol Table"}
         <Table values={state.symbols} />
@@ -230,6 +235,7 @@ export const Asm = () => {
             actions.updateHighlight(index, false);
           }}
           language={""}
+          lineNumberTransform={(n) => (n - 1).toString()}
         />
       </Panel>
     </div>

@@ -99,6 +99,7 @@ const Monaco = ({
   disabled = false,
   highlight: currentHighlight,
   dynamicHeight = false,
+  lineNumberTransform,
 }: {
   value: string;
   onChange: (value: string) => void;
@@ -108,6 +109,7 @@ const Monaco = ({
   disabled?: boolean;
   highlight?: Span;
   dynamicHeight?: boolean;
+  lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
   const monaco = useMonaco();
@@ -170,6 +172,7 @@ const Monaco = ({
         theme: codeTheme(),
         scrollBeyondLastLine: false,
         readOnly: disabled,
+        lineNumbers: lineNumberTransform ?? "on",
       });
       doHighlight();
       calculateHeight();
@@ -182,6 +185,11 @@ const Monaco = ({
     },
     [codeTheme]
   );
+
+  useEffect(() => {
+    if (editor.current === undefined) return;
+    editor.current.updateOptions({ lineNumbers: lineNumberTransform ?? "on" });
+  }, [lineNumberTransform]);
 
   // Set themes
   useEffect(() => {
@@ -263,6 +271,7 @@ export const Editor = ({
   language,
   highlight,
   dynamicHeight = false,
+  lineNumberTransform,
 }: {
   className?: string;
   style?: CSSProperties;
@@ -274,6 +283,7 @@ export const Editor = ({
   language: string;
   highlight?: Span;
   dynamicHeight?: boolean;
+  lineNumberTransform?: (n: number) => string;
 }) => {
   const [error, setError] = useState<ohm.MatchResult>();
   const { monaco } = useContext(AppContext);
@@ -314,6 +324,7 @@ export const Editor = ({
           disabled={disabled}
           highlight={highlight}
           dynamicHeight={dynamicHeight}
+          lineNumberTransform={lineNumberTransform}
         />
       ) : (
         <>

@@ -41,8 +41,9 @@ class Translator {
   symbols: [string, string][] = [];
   hiddenSymbols: Map<number, [string, boolean]> = new Map();
   result = "";
+  lineNumbers: number[] = [];
 
-  load(asm: Asm) {
+  load(asm: Asm, lineNum: number) {
     this.symbols = defaultSymbols();
     this.hiddenSymbols.clear();
     this.asm = asm;
@@ -57,7 +58,22 @@ class Translator {
       (instruction) => instruction.type !== "L"
     );
 
+    this.resolveLineNumbers(lineNum);
     this.reset();
+  }
+
+  resolveLineNumbers(lineNum: number) {
+    if (this.asm === null) {
+      return;
+    }
+    this.lineNumbers = Array(lineNum);
+    let currentLine = 0;
+    for (const instruction of this.asm.instructions) {
+      if (instruction.type === "A" || instruction.type === "C") {
+        this.lineNumbers[instruction.lineNum] = currentLine;
+        currentLine++;
+      }
+    }
   }
 
   step(highlightInfo: HighlightInfo) {
@@ -86,9 +102,7 @@ class Translator {
       if (instruction.type === "A" && isAValueInstruction(instruction)) {
         const variable = this.hiddenSymbols.get(instruction.value);
         if (variable != undefined && !variable[1]) {
-          console.log("value", instruction.value, "name", variable[0]);
           this.symbols.push([variable[0], instruction.value.toString()]);
-          console.log(this.symbols);
           this.hiddenSymbols.set(instruction.value, [variable[0], true]);
         }
       }
@@ -127,6 +141,7 @@ export interface AsmPageState {
   symbols: [string, string][];
   result: string;
   compare: string;
+  lineNumbers: number[];
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -159,6 +174,7 @@ export function makeAsmStore(
       state.current = translator.current;
       state.result = translator.result;
       state.symbols = Array.from(translator.symbols);
+      state.lineNumbers = Array.from(translator.lineNumbers);
       state.sourceHighlight = highlightInfo.sourceHighlight;
       state.resultHighlight = highlightInfo.resultHighlight;
     },
@@ -182,7 +198,7 @@ export function makeAsmStore(
         return;
       }
 
-      translator.load(Ok(parseResult));
+      translator.load(Ok(parseResult), asm.split("\n").length);
       dispatch.current({ action: "update" });
       setStatus("Loaded asm file");
     },
@@ -232,6 +248,7 @@ export function makeAsmStore(
     symbols: [],
     result: "",
     compare: "",
+    lineNumbers: [],
   };
 
   return { initialState, reducers, actions };

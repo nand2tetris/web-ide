@@ -257,6 +257,7 @@ export function makeAsmStore(
     },
 
     reset() {
+      setStatus("Reset");
       translator.reset();
       this.resetHighlightInfo();
       dispatch.current({ action: "update" });

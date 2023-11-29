@@ -63,6 +63,7 @@ export const Asm = () => {
       setStatus("No file selected");
       return;
     }
+    setStatus("Loading");
     const file = event.target.files[0];
     const source = await file.text();
     if (fileType === "asm") {

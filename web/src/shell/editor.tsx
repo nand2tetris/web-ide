@@ -173,6 +173,7 @@ const Monaco = ({
         scrollBeyondLastLine: false,
         readOnly: disabled,
         lineNumbers: lineNumberTransform ?? "on",
+        folding: false,
       });
       doHighlight();
       calculateHeight();

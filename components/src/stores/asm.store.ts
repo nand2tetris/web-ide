@@ -159,6 +159,7 @@ export function makeAsmStore(
     sourceHighlight: undefined,
     highlightMap: new Map(),
   };
+  let animate = true;
 
   const reducers = {
     setAsm(state: AsmPageState, { asm }: { asm: string }) {
@@ -203,9 +204,15 @@ export function makeAsmStore(
       setStatus("Loaded asm file");
     },
 
+    setAnimate(value: boolean) { 
+      animate = value;
+    },
+
     step(): boolean {
       translator.step(highlightInfo);
-      dispatch.current({ action: "update" });
+      if (animate || translator.done) {
+        dispatch.current({ action: "update" });
+      }
       if (translator.done) {
         setStatus("Translation done.");
       }

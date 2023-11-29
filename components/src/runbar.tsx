@@ -7,6 +7,7 @@ export const Runbar = (props: {
   prefix?: ReactNode;
   children?: ReactNode;
   overrideTooltips?: (string | undefined)[];
+  onSpeedChange?: (speed: number) => void;
 }) => {
   const runner = useTimer(props.runner);
   const [speedValue, setSpeed] = useState(0);
@@ -31,6 +32,7 @@ export const Runbar = (props: {
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSpeed(Number(e.target.value));
+    props.onSpeedChange?.(Number(e.target.value));
   };
 
   return (

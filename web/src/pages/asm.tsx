@@ -100,6 +100,10 @@ export const Asm = () => {
     dispatch.current({ action: "compare" });
   };
 
+  const onSpeedChange = (speed: number) => {
+    actions.setAnimate(speed <= 2);
+  };
+
   return (
     <div className="AsmPage grid">
       <Panel
@@ -131,6 +135,7 @@ export const Asm = () => {
                     </button>
                   }
                   overrideTooltips={["Translate", "Translate all"]}
+                  onSpeedChange={onSpeedChange}
                 />
               )}
             </div>

@@ -181,9 +181,25 @@ export function makeAsmStore(
     },
 
     compare(state: AsmPageState) {
-      if (state.result !== state.compare) {
-        setStatus("Comparison failed");
+      const resultLines = state.result.split("\n");
+      const compareLines = state.compare.split("\n");
+
+      if (resultLines.length != compareLines.length) {
+        setStatus("Comparison failed - different lengths");
         return;
+      }
+
+      for (let i = 0; i < compareLines.length; i++) {
+        for (let j = 0; j < compareLines[i].length; j++) {
+          if (resultLines[i][j] !== compareLines[i][j]) {
+            setStatus(`Comparison failed at ${i}:${j}`);
+            state.resultHighlight = {
+              start: i * 17,
+              end: (i + 1) * 17,
+            };
+            return;
+          }
+        }
       }
       setStatus("Comparison successful");
     },
@@ -204,7 +220,7 @@ export function makeAsmStore(
       setStatus("Loaded asm file");
     },
 
-    setAnimate(value: boolean) { 
+    setAnimate(value: boolean) {
       animate = value;
     },
 

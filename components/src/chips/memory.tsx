@@ -200,6 +200,13 @@ export const Memory = ({
     const bytes = await loader(source);
     memory.loadBytes(bytes);
     event.target.value = ""; // Clear the input out
+    setFormat(
+      file.name.endsWith("hack")
+        ? "bin"
+        : file.name.endsWith("asm")
+        ? "asm"
+        : fmt
+    );
     jumpTo();
   }, []);
 

@@ -9,10 +9,17 @@ import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 
+import { Link } from "react-router-dom";
+import { AppContext } from "src/App.context";
+import { useDialog } from "src/shell/dialog";
+import URLs from "src/urls";
 import "./asm.scss";
+
+const CPU = URLs[2];
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
+  const { setCpuProgram } = useContext(AppContext);
 
   const [asm, setAsm] = useState("");
   const [cmp, setCmp] = useState("");
@@ -21,6 +28,8 @@ export const Asm = () => {
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
+
+  const dialog = useDialog();
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
@@ -45,6 +54,7 @@ export const Asm = () => {
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
   const fileDownloadRef = useRef<HTMLAnchorElement>(null);
+  const redirectRef = useRef<HTMLAnchorElement>(null);
   let fileType: "asm" | "cmp" = "asm";
 
   const loadAsm = () => {
@@ -173,10 +183,50 @@ export const Asm = () => {
               <Trans>Binary Code</Trans>
             </div>
             <div>
+              <a ref={fileDownloadRef} style={{ display: "none" }} />
               <fieldset role="group">
-                <a ref={fileDownloadRef} style={{ display: "none" }} />
-                <button onClick={download}>Download</button>
+                <button onClick={dialog.open}>📂</button>
               </fieldset>
+              <dialog open={dialog.isOpen}>
+                <article>
+                  <header
+                    style={{ display: "flex", flexDirection: "row-reverse" }}
+                  >
+                    <a
+                      style={{ color: "rgba(0, 0, 0, 0)" }}
+                      className="close"
+                      href="#root"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        dialog.close();
+                      }}
+                    />
+                  </header>
+                  <main>
+                    <button
+                      onClick={() => {
+                        download();
+                        dialog.close();
+                      }}
+                    >
+                      Download
+                    </button>
+                    <Link
+                      ref={redirectRef}
+                      style={{ display: "none" }}
+                      to={CPU.href}
+                    />
+                    <button
+                      onClick={() => {
+                        setCpuProgram(state.result);
+                        redirectRef.current?.click();
+                      }}
+                    >
+                      Load in CPU Emulator
+                    </button>
+                  </main>
+                </article>
+              </dialog>
             </div>
           </>
         }

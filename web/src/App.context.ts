@@ -29,6 +29,7 @@ export function useMonaco() {
 
 export function useAppContext(fs: FileSystem = new FileSystem()) {
   const [theme, setTheme] = useState<Theme>("system");
+  const [cpuProgram, setCpuProgram] = useState<string>();
 
   return {
     monaco: useMonaco(),
@@ -37,6 +38,8 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     tracking: useTracking(),
     theme,
     setTheme,
+    cpuProgram,
+    setCpuProgram,
   };
 }
 
@@ -87,6 +90,10 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   },
   theme: "system",
   setTheme() {
+    return undefined;
+  },
+  cpuProgram: undefined,
+  setCpuProgram() {
     return undefined;
   },
 });

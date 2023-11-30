@@ -4,28 +4,42 @@ import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
+import { loadHack } from "@nand2tetris/simulator/loader.js";
+import { AppContext } from "src/App.context";
 import { Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
 import "./cpu.scss";
 
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
+  const { cpuProgram, setCpuProgram } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [romFormat, setRomFormat] = useState("asm");
   const [displayEnabled, setDisplayEnabled] = useState(true);
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+
+  useEffect(() => {
+    if (cpuProgram) {
+      loadHack(cpuProgram).then((bytes) => {
+        state.sim.ROM.loadBytes(bytes);
+        setRomFormat("bin");
+        setCpuProgram(undefined);
+      });
+    }
+  }, [cpuProgram, setCpuProgram]);
 
   const toggleDisplayEnabled = () => {
     setDisplayEnabled(!displayEnabled);
@@ -107,7 +121,7 @@ export const CPU = () => {
         displayEnabled={displayEnabled}
         memory={state.sim.ROM}
         highlight={state.sim.PC}
-        format="asm"
+        format={romFormat}
         onUpload={onUpload}
       />
       <MemoryComponent

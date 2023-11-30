@@ -19,7 +19,7 @@ const CPU = URLs[2];
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { setCpuProgram } = useContext(AppContext);
+  const { setTool, setCpuProgram } = useContext(AppContext);
 
   const [asm, setAsm] = useState("");
   const [cmp, setCmp] = useState("");
@@ -218,6 +218,7 @@ export const Asm = () => {
                     />
                     <button
                       onClick={() => {
+                        setTool("cpu");
                         setCpuProgram(state.result);
                         redirectRef.current?.click();
                       }}

@@ -33,7 +33,7 @@ export const Asm = () => {
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
-      override tick(): boolean {
+      override async tick(): Promise<boolean> {
         sourceCursorPos.current = 0;
         resultCursorPos.current = 0;
         return actions.step();

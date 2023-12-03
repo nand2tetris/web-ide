@@ -11,7 +11,7 @@ export abstract class Timer {
   }
 
   /// Update the simulation state, but DO NOT perform any UI changes.
-  abstract tick(): boolean;
+  abstract tick(): Promise<boolean>;
 
   /// UI Updates are allowed in finishFrame.
   finishFrame() {
@@ -47,7 +47,7 @@ export abstract class Timer {
       console.time(timingLabel);
       while (!done && steps--) {
         // done = await this.tick();
-        done = this.tick();
+        done = await this.tick();
       }
       console.timeEnd(timingLabel);
       this.finishFrame();

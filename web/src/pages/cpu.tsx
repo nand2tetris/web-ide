@@ -50,7 +50,7 @@ export const CPU = () => {
   const [runnersAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
     cpuRunner.current = new (class CPUTimer extends Timer {
-      override tick() {
+      override async tick() {
         actions.tick();
         return false;
       }
@@ -69,7 +69,7 @@ export const CPU = () => {
     })();
 
     testRunner.current = new (class CPUTestTimer extends Timer {
-      override tick() {
+      override async tick() {
         return actions.testStep();
       }
 

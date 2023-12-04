@@ -31,6 +31,7 @@ export const Asm = () => {
   const dialog = useDialog();
 
   useEffect(() => {
+    toolStates.setTool("asm");
     if (toolStates.asmState.program) {
       actions.loadAsm(toolStates.asmState.program);
 

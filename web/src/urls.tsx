@@ -19,21 +19,18 @@ export const TOOLS: Record<string, string> = {
 const URLs = {
   chip: {
     href: "/chip",
-    tool: "chip",
     tooltip: TOOLS["chip"],
     icon: "memory",
     target: <Chip />,
   },
   cpu: {
     href: "/cpu",
-    tool: "cpu",
     tooltip: TOOLS["cpu"],
     icon: "developer_board",
     target: <CPU />,
   },
   asm: {
     href: "/asm",
-    tool: "asm",
     tooltip: TOOLS["asm"],
     icon: "list_alt",
     target: <ASM />,

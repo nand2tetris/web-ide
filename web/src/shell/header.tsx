@@ -10,7 +10,6 @@ interface HeaderButton {
   icon: string;
   href?: string;
   target?: JSX.Element;
-  tool?: string;
   onClick?: (context: ReturnType<typeof useAppContext>) => void;
 }
 
@@ -65,53 +64,46 @@ const Header = () => {
           </li>
         </ul>
         <ul className="icon-list">
-          {headerButtons.map(
-            ({ href, icon, tool, onClick, tooltip, target }) => {
-              return (
-                <li
-                  key={icon}
-                  data-tooltip={tooltip}
-                  data-placement="bottom"
-                  onClick={
-                    onClick
-                      ? () => {
-                          onClick?.(appContext);
-                        }
-                      : () => {
-                          if (tool) {
-                            appContext.toolStates.setTool(
-                              tool as keyof typeof TOOLS | undefined
-                            );
+          {headerButtons.map(({ href, icon, onClick, tooltip, target }) => {
+            return (
+              <li
+                key={icon}
+                data-tooltip={tooltip}
+                data-placement="bottom"
+                onClick={
+                  onClick
+                    ? () => {
+                        onClick?.(appContext);
+                      }
+                    : () => {
+                        if (href) {
+                          if (target) {
+                            Cookies.set(LAST_ROUTE_COOKIE, href);
                           }
-                          if (href) {
-                            if (target) {
-                              Cookies.set(LAST_ROUTE_COOKIE, href);
-                            }
-                            redirectRefs[href].current?.click();
-                          }
+                          redirectRefs[href].current?.click();
                         }
-                  }
-                >
-                  <Icon name={icon}></Icon>
-                  {href &&
-                    (target ? (
-                      <Link
-                        to={href}
-                        ref={redirectRefs[href]}
-                        style={{ display: "none" }}
-                      />
-                    ) : (
-                      <a
-                        href={href}
-                        target="new"
-                        ref={redirectRefs[href]}
-                        style={{ display: "none" }}
-                      />
-                    ))}
-                </li>
-              );
-            }
-          )}
+                      }
+                }
+              >
+                <Icon name={icon}></Icon>
+                {href &&
+                  (target ? (
+                    <Link
+                      to={href}
+                      ref={redirectRefs[href]}
+                      style={{ display: "none" }}
+                    />
+                  ) : (
+                    <a
+                      href={href}
+                      target="new"
+                      ref={redirectRefs[href]}
+                      style={{ display: "none" }}
+                    />
+                  ))}
+              </li>
+            );
+          })}
         </ul>
       </nav>
     </header>

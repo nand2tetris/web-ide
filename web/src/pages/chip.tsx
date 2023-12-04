@@ -41,7 +41,7 @@ import { Accordian, Panel } from "../shell/panel";
 
 export const Chip = () => {
   const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker, tracking } = useContext(AppContext);
+  const { filePicker, tracking, toolStates } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
@@ -62,6 +62,7 @@ export const Chip = () => {
   };
 
   useEffect(() => {
+    toolStates.setTool("chip");
     tracking.trackEvent("action", "setProject", state.controls.project);
     tracking.trackEvent("action", "setChip", state.controls.chipName);
   }, []);

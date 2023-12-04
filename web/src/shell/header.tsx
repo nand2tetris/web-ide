@@ -1,8 +1,9 @@
+import Cookies from "js-cookie";
 import { RefObject, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
 import { AppContext, useAppContext } from "src/App.context";
 import { Icon } from "../pico/icon";
-import URLs, { TOOLS } from "../urls";
+import URLs, { LAST_ROUTE_COOKIE, TOOLS } from "../urls";
 
 interface HeaderButton {
   tooltip: string;
@@ -83,6 +84,9 @@ const Header = () => {
                             );
                           }
                           if (href) {
+                            if (target) {
+                              Cookies.set(LAST_ROUTE_COOKIE, href);
+                            }
                             redirectRefs[href].current?.click();
                           }
                         }

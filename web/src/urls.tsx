@@ -8,6 +8,8 @@ const Util = lazy(() => import("./pages/util"));
 const Guide = lazy(() => import("./pages/user_guide"));
 const About = lazy(() => import("./pages/about"));
 
+export const LAST_ROUTE_COOKIE = "lastRoute";
+
 export const TOOLS: Record<string, string> = {
   chip: "Hardware Simulator",
   cpu: "CPU Emulator",

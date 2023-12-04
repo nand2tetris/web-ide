@@ -21,6 +21,7 @@
     "@testing-library/user-event": "^14.2.6",
     "@types/error-cause": "^1.0.1",
     "@types/jest": "^27.5.2",
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^16.11.41",
     "@types/react": "^18.0.26",
     "@types/react-dom": "^18.0.10",
@@ -97,6 +98,7 @@
     ]
   },
   "dependencies": {
+    "js-cookie": "^3.0.5",
     "react-ga4": "^1.4.1"
   }
 }

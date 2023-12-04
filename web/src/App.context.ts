@@ -1,5 +1,5 @@
-import { createContext, useCallback, useState } from "react";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
 import { TOOLS } from "./tools";
@@ -28,10 +28,51 @@ export function useMonaco() {
   };
 }
 
+export function useToolStates() {
+  const [tool, setTool] = useState<keyof typeof TOOLS>();
+
+  const [rom, setRom] = useState<number[]>();
+  const [cpuName, setCpuProgramName] = useState<string>();
+
+  const [asmProgram, setAsmProgram] = useState<string>();
+  const [asmName, setAsmName] = useState<string>();
+  const [asmCompareName, setAsmCompareName] = useState<string>();
+  const [asmCompare, setAsmCompare] = useState<string>();
+
+  const setCpuState = (name: string | undefined, rom: number[] | undefined) => {
+    setCpuProgramName(name);
+    setRom(rom);
+  };
+
+  const setAsmState = (
+    name: string | undefined,
+    program: string | undefined,
+    compareName: string | undefined,
+    compare: string | undefined
+  ) => {
+    setAsmName(name);
+    setAsmProgram(program);
+    setAsmCompareName(compareName);
+    setAsmCompare(compare);
+  };
+
+  return {
+    tool,
+    setTool,
+    cpuState: { rom: rom, name: cpuName },
+    setCpuState,
+    asmState: {
+      program: asmProgram,
+      name: asmName,
+      compare: asmCompare,
+      compareName: asmCompareName,
+    },
+    setAsmState,
+  };
+}
+
 export function useAppContext(fs: FileSystem = new FileSystem()) {
   const [theme, setTheme] = useState<Theme>("system");
-  const [tool, setTool] = useState<keyof typeof TOOLS>();
-  const [cpuProgram, setCpuProgram] = useState<string>();
 
   return {
     monaco: useMonaco(),
@@ -40,10 +81,7 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     tracking: useTracking(),
     theme,
     setTheme,
-    cpuProgram,
-    setCpuProgram,
-    tool,
-    setTool,
+    toolStates: useToolStates(),
   };
 }
 
@@ -96,12 +134,23 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   setTheme() {
     return undefined;
   },
-  cpuProgram: undefined,
-  setCpuProgram() {
-    return undefined;
-  },
-  tool: undefined,
-  setTool() {
-    return undefined;
+  toolStates: {
+    tool: undefined,
+    setTool() {
+      return undefined;
+    },
+    cpuState: { rom: undefined, name: undefined },
+    setCpuState() {
+      return undefined;
+    },
+    asmState: {
+      program: undefined,
+      name: undefined,
+      compare: undefined,
+      compareName: undefined,
+    },
+    setAsmState() {
+      return undefined;
+    },
   },
 });

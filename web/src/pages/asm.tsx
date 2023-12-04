@@ -4,6 +4,7 @@ import { useAsmPageStore } from "@nand2tetris/components/stores/asm.store";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
+import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { Timer } from "@nand2tetris/simulator/timer";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
@@ -19,7 +20,7 @@ const CPU = URLs[2];
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { setTool, setCpuProgram } = useContext(AppContext);
+  const { toolStates } = useContext(AppContext);
 
   const [asm, setAsm] = useState("");
   const [cmp, setCmp] = useState("");
@@ -30,6 +31,29 @@ export const Asm = () => {
   const [runnerAssigned, setRunnerAssigned] = useState(false);
 
   const dialog = useDialog();
+
+  useEffect(() => {
+    if (toolStates.asmState.program) {
+      actions.loadAsm(toolStates.asmState.program);
+
+      if (toolStates.asmState.name) {
+        setAsm(toolStates.asmState.name);
+      }
+      if (toolStates.asmState.compare) {
+        dispatch.current({
+          action: "setCmp",
+          payload: { cmp: toolStates.asmState.compare },
+        });
+      }
+      if (toolStates.asmState.compareName) {
+        setCmp(toolStates.asmState.compareName);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    toolStates.setAsmState(asm, state.asm, cmp, state.compare);
+  }, [state, toolStates.setAsmState, asm, cmp]);
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
@@ -217,9 +241,13 @@ export const Asm = () => {
                       to={CPU.href}
                     />
                     <button
-                      onClick={() => {
-                        setTool("cpu");
-                        setCpuProgram(state.result);
+                      onClick={async () => {
+                        toolStates.setTool("cpu");
+                        const bytes = await loadHack(state.result);
+                        toolStates.setCpuState(
+                          asm.replace(".asm", ".hack"),
+                          bytes
+                        );
                         redirectRef.current?.click();
                       }}
                     >

@@ -9,7 +9,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
-import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { AppContext } from "src/App.context";
 import { Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
@@ -17,12 +16,12 @@ import "./cpu.scss";
 
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
-  const { cpuProgram, setCpuProgram } = useContext(AppContext);
+  const { toolStates } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string>();
   const [romFormat, setRomFormat] = useState("asm");
   const [displayEnabled, setDisplayEnabled] = useState(true);
   const [screenRenderKey, setScreenRenderKey] = useState(0);
@@ -32,14 +31,21 @@ export const CPU = () => {
   }, [actions]);
 
   useEffect(() => {
-    if (cpuProgram) {
-      loadHack(cpuProgram).then((bytes) => {
-        state.sim.ROM.loadBytes(bytes);
-        setRomFormat("bin");
-        setCpuProgram(undefined);
-      });
+    if (toolStates.cpuState.rom) {
+      state.sim.ROM.loadBytes(toolStates.cpuState.rom);
+      if (toolStates.cpuState.name) {
+        setFileName(toolStates.cpuState.name);
+        if (toolStates.cpuState.name.endsWith(".hack")) setRomFormat("bin");
+      }
     }
-  }, [cpuProgram, setCpuProgram]);
+  }, []);
+
+  useEffect(() => {
+    toolStates.setCpuState(
+      fileName,
+      Array.from(state.sim.ROM.map((i, v) => v))
+    );
+  }, [state]);
 
   const toggleDisplayEnabled = () => {
     setDisplayEnabled(!displayEnabled);

@@ -6,7 +6,7 @@ import { Icon } from "../pico/icon";
 import URLs from "../urls";
 
 const Header = ({ urls }: { urls: typeof URLs }) => {
-  const { tool, setTool } = useContext(AppContext);
+  const { toolStates } = useContext(AppContext);
 
   const redirectRefs: Record<string, RefObject<HTMLAnchorElement>> = {};
   for (const url of urls) {
@@ -28,7 +28,7 @@ const Header = ({ urls }: { urls: typeof URLs }) => {
               </a>
               &nbsp;IDE Online
             </strong>
-            {tool && ` / ${TOOLS[tool]}`}
+            {toolStates.tool && ` / ${TOOLS[toolStates.tool]}`}
           </li>
         </ul>
         <ul className="icon-list">
@@ -43,7 +43,7 @@ const Header = ({ urls }: { urls: typeof URLs }) => {
                 }
                 data-placement="bottom"
                 onClick={() => {
-                  setTool(tool as keyof typeof TOOLS | undefined);
+                  toolStates.setTool(tool as keyof typeof TOOLS | undefined);
                   redirectRefs[href].current?.click();
                 }}
               >

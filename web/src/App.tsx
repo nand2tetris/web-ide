@@ -1,25 +1,30 @@
-import { Suspense, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { i18n } from "@lingui/core";
-import { I18nProvider } from "@lingui/react";
-import { en } from "make-plural/plurals";
 import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs";
-import urls from "./urls";
-import { loaders } from "@nand2tetris/projects/loader.js";
+import { i18n } from "@lingui/core";
+import { I18nProvider } from "@lingui/react";
 import {
   BaseContext,
   useBaseContext,
 } from "@nand2tetris/components/stores/base.context.js";
-import Header from "./shell/header";
-import Footer from "./shell/footer";
+import { loaders } from "@nand2tetris/projects/loader.js";
+import { en } from "make-plural/plurals";
+import { Suspense, useEffect } from "react";
+import {
+  Navigate,
+  Route,
+  BrowserRouter as Router,
+  Routes,
+} from "react-router-dom";
 import { AppContext, useAppContext } from "./App.context";
-import { Settings } from "./shell/settings";
-import { messages, plMessages } from "./locales";
 import { registerLanguages } from "./languages/loader";
+import { messages, plMessages } from "./locales";
 import { FilePicker } from "./shell/file_select";
+import Footer from "./shell/footer";
+import Header from "./shell/header";
+import { Settings } from "./shell/settings";
+import urls from "./urls";
 
 import "./pico/flex.scss";
 import "./pico/pico.scss";
@@ -62,11 +67,12 @@ function App() {
           <Settings />
           <FilePicker />
           <Router basename={process.env.PUBLIC_URL}>
-            <Header urls={urls} />
+            <Header />
             <main className="flex flex-1">
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
-                  {urls.map(({ href, target }) => (
+                  <Route path="/" element={<Navigate to="/chip" />} />
+                  {Object.values(urls).map(({ href, target }) => (
                     <Route key={href} path={href} element={target} />
                   ))}
                 </Routes>

@@ -1,13 +1,3 @@
-import raw from "raw.macro";
-import Markdown from "../shell/markdown";
-
-const UserGuide = () => (
-  <div
-    className="container"
-    style={{ maxWidth: "900px", margin: "0 auto", overflow: "none" }}
-  >
-    <Markdown>{raw("./USER_GUIDE.md")}</Markdown>
-  </div>
-);
+const UserGuide = () => <span>To be added later</span>;
 
 export default UserGuide;

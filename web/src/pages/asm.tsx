@@ -16,8 +16,6 @@ import { useDialog } from "src/shell/dialog";
 import URLs from "src/urls";
 import "./asm.scss";
 
-const CPU = URLs[2];
-
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
   const { toolStates } = useContext(AppContext);
@@ -238,7 +236,7 @@ export const Asm = () => {
                     <Link
                       ref={redirectRef}
                       style={{ display: "none" }}
-                      to={CPU.href}
+                      to={URLs["cpu"].href}
                     />
                     <button
                       onClick={async () => {

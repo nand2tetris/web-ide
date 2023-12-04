@@ -1,16 +1,47 @@
 import { RefObject, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
-import { AppContext } from "src/App.context";
-import { TOOLS } from "src/tools";
+import { AppContext, useAppContext } from "src/App.context";
 import { Icon } from "../pico/icon";
-import URLs from "../urls";
+import URLs, { TOOLS } from "../urls";
 
-const Header = ({ urls }: { urls: typeof URLs }) => {
-  const { toolStates } = useContext(AppContext);
+interface HeaderButton {
+  tooltip: string;
+  icon: string;
+  href?: string;
+  target?: JSX.Element;
+  tool?: string;
+  onClick?: (context: ReturnType<typeof useAppContext>) => void;
+}
+
+const headerButtons: HeaderButton[] = [
+  URLs["chip"],
+  URLs["cpu"],
+  URLs["asm"],
+  URLs["util"],
+  URLs["guide"],
+  {
+    href: "https://github.com/nand2tetris/web-ide/issues/new/choose",
+    icon: "bug_report",
+    tooltip: "Bug Report",
+  },
+  {
+    onClick: (context: ReturnType<typeof useAppContext>) => {
+      context.settings.open();
+    },
+    icon: "settings",
+    tooltip: "Settings",
+  },
+  URLs["about"],
+];
+
+const Header = () => {
+  const appContext = useContext(AppContext);
 
   const redirectRefs: Record<string, RefObject<HTMLAnchorElement>> = {};
-  for (const url of urls) {
-    redirectRefs[url.href] = useRef<HTMLAnchorElement>(null);
+  for (const button of headerButtons) {
+    if (button.href) {
+      redirectRefs[button.href] = useRef<HTMLAnchorElement>(null);
+    }
   }
 
   return (
@@ -28,34 +59,55 @@ const Header = ({ urls }: { urls: typeof URLs }) => {
               </a>
               &nbsp;IDE Online
             </strong>
-            {toolStates.tool && ` / ${TOOLS[toolStates.tool]}`}
+            {appContext.toolStates.tool &&
+              ` / ${TOOLS[appContext.toolStates.tool]}`}
           </li>
         </ul>
         <ul className="icon-list">
-          {urls.map(({ href, icon, tool, link }) => {
-            return (
-              <li
-                key={href}
-                data-tooltip={
-                  (tool
-                    ? (TOOLS as Record<string, string>)[tool]
-                    : undefined) ?? link
-                }
-                data-placement="bottom"
-                onClick={() => {
-                  toolStates.setTool(tool as keyof typeof TOOLS | undefined);
-                  redirectRefs[href].current?.click();
-                }}
-              >
-                <Icon name={icon}></Icon>
-                <Link
-                  to={href}
-                  ref={redirectRefs[href]}
-                  style={{ display: "none" }}
-                />
-              </li>
-            );
-          })}
+          {headerButtons.map(
+            ({ href, icon, tool, onClick, tooltip, target }) => {
+              return (
+                <li
+                  key={icon}
+                  data-tooltip={tooltip}
+                  data-placement="bottom"
+                  onClick={
+                    onClick
+                      ? () => {
+                          onClick?.(appContext);
+                        }
+                      : () => {
+                          if (tool) {
+                            appContext.toolStates.setTool(
+                              tool as keyof typeof TOOLS | undefined
+                            );
+                          }
+                          if (href) {
+                            redirectRefs[href].current?.click();
+                          }
+                        }
+                  }
+                >
+                  <Icon name={icon}></Icon>
+                  {href &&
+                    (target ? (
+                      <Link
+                        to={href}
+                        ref={redirectRefs[href]}
+                        style={{ display: "none" }}
+                      />
+                    ) : (
+                      <a
+                        href={href}
+                        target="new"
+                        ref={redirectRefs[href]}
+                        style={{ display: "none" }}
+                      />
+                    ))}
+                </li>
+              );
+            }
+          )}
         </ul>
       </nav>
     </header>

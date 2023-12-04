@@ -1,39 +1,55 @@
 import { t } from "@lingui/macro";
 import { lazy } from "react";
 
-const Home = lazy(() => import("./pages/home"));
 const Chip = lazy(() => import("./pages/chip"));
 const CPU = lazy(() => import("./pages/cpu"));
 const ASM = lazy(() => import("./pages/asm"));
 const Util = lazy(() => import("./pages/util"));
 const Guide = lazy(() => import("./pages/user_guide"));
+const About = lazy(() => import("./pages/about"));
 
-const URLs = [
-  { href: "/", link: t`Home`, icon: "home", target: <Home /> },
-  {
+export const TOOLS: Record<string, string> = {
+  chip: "Hardware Simulator",
+  cpu: "CPU Emulator",
+  asm: "Assembler",
+};
+
+const URLs = {
+  chip: {
     href: "/chip",
     tool: "chip",
-    link: t`Chip`,
+    tooltip: TOOLS["chip"],
     icon: "memory",
     target: <Chip />,
   },
-  {
+  cpu: {
     href: "/cpu",
     tool: "cpu",
-    link: t`CPU`,
+    tooltip: TOOLS["cpu"],
     icon: "developer_board",
     target: <CPU />,
   },
-  {
+  asm: {
     href: "/asm",
     tool: "asm",
-    link: t`Asm`,
+    tooltip: TOOLS["asm"],
     icon: "list_alt",
     target: <ASM />,
   },
   // { href: "/vm", link: `VM`, icon: "computer", target: <VM /> },
-  { href: "/util", link: t`Conv`, icon: "function", target: <Util /> },
-  { href: "/guide", link: t`Guide`, icon: "menu_book", target: <Guide /> },
-];
+  util: {
+    href: "/util",
+    tooltip: t`Converter Tool`,
+    icon: "function",
+    target: <Util />,
+  },
+  guide: {
+    href: "/guide",
+    tooltip: t`Guide`,
+    icon: "menu_book",
+    target: <Guide />,
+  },
+  about: { href: "/about", tooltip: t`About`, icon: "info", target: <About /> },
+};
 
 export default URLs;

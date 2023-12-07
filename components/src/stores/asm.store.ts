@@ -207,7 +207,11 @@ export function makeAsmStore(
 
   const actions = {
     loadAsm(asm: string) {
-      dispatch.current({ action: "setAsm", payload: { asm } });
+      asm = asm.replace(/\r\n/g, "\n");
+      dispatch.current({
+        action: "setAsm",
+        payload: { asm },
+      });
 
       const parseResult = ASM.parse(asm);
       if (isErr(parseResult)) {

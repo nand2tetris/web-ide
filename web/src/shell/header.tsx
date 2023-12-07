@@ -1,3 +1,4 @@
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import Cookies from "js-cookie";
 import { RefObject, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -37,6 +38,7 @@ const headerButtons: HeaderButton[] = [
 
 const Header = () => {
   const appContext = useContext(AppContext);
+  const { setStatus } = useContext(BaseContext);
 
   const redirectRefs: Record<string, RefObject<HTMLAnchorElement>> = {};
   for (const button of headerButtons) {
@@ -77,6 +79,7 @@ const Header = () => {
                         onClick?.(appContext);
                       }
                     : () => {
+                        setStatus("");
                         if (href) {
                           if (target) {
                             Cookies.set(LAST_ROUTE_COOKIE, href);

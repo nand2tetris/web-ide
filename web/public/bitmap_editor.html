@@ -1,0 +1,882 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Jack Bitmap Editor</title>
+    <script type="text/javascript">
+        // initializer global variables
+        var grid = new Array(0);
+        var WIDTH = 48;
+        var HEIGHT = 32;
+        var PIXEL_SIZE = "16";
+        var BINARY_BITS = 16;
+		var currentColor = null;
+        var currentIShift = 0;  
+        var currentJShift = 0;
+        var marginSaveFrames = 1;
+        var baseI;
+        var baseJ;
+        var drawHeight = 0;
+        var includeShift = true;
+        var INVERT_MODE = false;
+        var comments = true;
+        var columns = [0, 1, 2];
+
+		function pickColor(cell){
+			var i = cell.id / WIDTH |0;
+            var j = cell.id - i*WIDTH;
+            currentColor = !grid[i][j];    
+			OnCellOver(cell);            
+		}
+		
+		function pauseEvent(e){
+			if(e.stopPropagation) e.stopPropagation();
+			if(e.preventDefault) e.preventDefault();
+			e.cancelBubble=true;
+			e.returnValue=false;
+			return false;
+		}
+		
+		function releaseColor(){
+			currentColor = null;             
+		}
+		
+        function Init() {
+            grid = InitGrid();
+            DisplayGrid(); 
+
+            // enable/disable the rotate button depending on if the canvas is square
+            document.getElementById("rotateButton").disabled = (WIDTH != HEIGHT);
+
+            /*const inputImage = document.getElementById("inputImage");
+            inputImage.addEventListener("change", (event) => {
+                loadImage(event.target.files[0])
+            })*/
+        }
+
+        function InitGrid() {
+            var _grid = new Array(HEIGHT);
+            for (i=0; i<HEIGHT; i++) {
+                _grid[i] = new Array(WIDTH);
+                for (j=0; j<WIDTH; j++) {
+                    _grid[i][j]=false;
+                }
+            }
+            return _grid;
+        }
+        /*
+        // Working on it
+        function loadImage(file, type) {
+            // Check if the file is an image.
+            if (file.type && !file.type.startsWith('image/')) {
+                console.log('File is not an image.', file.type, file);
+                return;
+            }
+            // for now, only png is supported
+            if (!file.type.startsWith('image/png')) return;
+            
+            const reader = new FileReader();
+            reader.addEventListener('load', (event) => {
+                new PNG({filterType: 4}).parse(event.target.result, function(error, image){
+                    if(error) return;
+                    const signature = [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82];
+                    for (let i = 0; i < signature.length; i++) {  
+                    if (byteArray[i] !== signature[i]) {
+                        return false;
+                    }
+                    }
+                });
+            });
+            reader.readAsArrayBuffer(file);
+        }*/
+        function RotateBitmapRight() {
+            // for now, rotate only works for square canvas, and rotates the entire canvas by 90 degrees
+            if (HEIGHT != WIDTH) return;
+            var _grid = InitGrid();
+            let side_length = HEIGHT
+            for (i=0; i<side_length; i++) {
+                for (j=0; j<side_length; j++) {
+                    _grid[j][side_length - 1 -i]=grid[i][j];
+                }
+            }
+            
+            grid = _grid;
+            DisplayGrid();
+            // shifting effects becomes undesirable when rotated, so clear the shift
+            ResetShift();
+        }
+        function InvertBitmap() {
+            for (let i=0; i < HEIGHT; i++) {
+                for (let j=0; j < WIDTH; j++) {
+                    grid[i][j] = !grid[i][j];
+                }
+            }
+            DisplayGrid();
+        }
+        function MirrorBitmap() {
+            var _grid = InitGrid();
+
+            for (i=0; i<HEIGHT; i++) {
+                for (j=0; j<WIDTH; j++) {
+                    _grid[i][WIDTH - 1 -j]=grid[i][j];
+                }
+            }
+
+            grid = _grid;
+            DisplayGrid();
+        }
+        function ShiftLeft() {
+            currentJShift -= 1;
+            for (i=0; i<HEIGHT; i++) {
+                for (j=0; j<WIDTH; j++) {
+                    // handle edge
+                    if (j == WIDTH - 1) {
+                        grid[i][j] = INVERT_MODE;
+                    }
+                    else {
+                        grid[i][j] = grid[i][j+1];
+                    }
+                }
+            }
+            DisplayGrid();
+        }
+        function ShiftRight() {
+            _grid = InitGrid();
+            currentJShift += 1;
+            for (i=0; i<HEIGHT; i++) {
+                for (j=0; j<WIDTH; j++) {
+                    // handle edge
+                    if (j == 0) {
+                        _grid[i][j] = INVERT_MODE;
+                    }
+                    else {
+                        _grid[i][j] = grid[i][j-1];
+                    }
+                }
+            }
+            grid = _grid;
+            DisplayGrid();
+        }
+        function ShiftUp() {
+            currentIShift -= 1;
+            for (i=0; i<HEIGHT; i++) {
+                for (j=0; j<WIDTH; j++) {
+                    // handle edge
+                    if (i == HEIGHT - 1) {
+                        grid[i][j] = INVERT_MODE;
+                    }
+                    else {
+                        grid[i][j] = grid[i+1][j];
+                    }
+                }
+            }
+            DisplayGrid();
+        }
+        function ShiftDown() {
+            _grid = InitGrid();
+            currentIShift += 1;
+            for (i=0; i<HEIGHT; i++) {
+                for (j=0; j<WIDTH; j++) {
+                    // handle edge
+                    if (i == 0) {
+                        _grid[i][j] = INVERT_MODE;
+                    }
+                    else {
+                        _grid[i][j] = grid[i-1][j];
+                    }
+                }
+            }
+            grid = _grid;
+            DisplayGrid();
+        }
+        
+        function DisplayGrid() {
+            var str = '<table id="canvas" border=1 cellspacing=0>';
+            var i,j, backgroundColor;
+            let font_style = "style='font-size:" + PIXEL_SIZE + "px' ";
+            for (i=-1; i<HEIGHT; i++) {
+                str=str+"<tr>";
+                for (j=-1; j<WIDTH; j++) {
+                    if (i == -1 && j != -1) {
+                        str=str+"<td " + font_style +">" + (j+1) + "</td>";
+                    } else if (i != -1 && j == -1) {
+                        str=str+"<td "+ font_style +">" + (i+1) + "</td>";
+                    } else if (i ==-1 && j == -1) {
+                        str=str+"<td/>";
+                    } else {
+
+                        if (grid[i][j] == true)
+                            backgroundColor = "black";
+                        else
+                            backgroundColor = "white";
+                        str=str+"<td onmousedown=\"pickColor(this); pauseEvent(event);\" onmouseup=\"releaseColor(this); pauseEvent(event);\" onmouseover=\"OnCellOver(this)\" id="; str=str+(i*WIDTH+j); str=str+" width=" + PIXEL_SIZE + " height=" + PIXEL_SIZE + " bgcolor=" + backgroundColor + "></td>";
+                    }                                        
+                }
+                str=str+"</tr>";
+            }
+            str=str+"</table>";
+            gridElement = document.getElementById('grid');
+            gridElement.innerHTML = str;
+            GenerateCode();
+        }
+        function UpdateStyling() {
+            // add styling to signify the word edge interpretation
+            str = "<style>";
+            if (document.getElementById("obviousStyling").checked) {
+                red_width = "thick";
+            } 
+            else {red_width = "thin";}
+            for (const col of columns) {
+                str += "#grid table td:nth-child("+ (col*16 + baseJ + 2).toString() + ") {border-color: grey grey grey red; border-width:thin thin thin "+red_width+"}";
+            }
+            str += "</style";
+            document.getElementById("style_stuff").innerHTML = str;
+        }
+
+        function OnCellOver(cell) {
+			if(currentColor==null){
+				return;
+			}
+            var i = cell.id / WIDTH |0;
+            var j = cell.id - i*WIDTH;
+            grid[i][j] = currentColor;
+            if (grid[i][j])
+                cell.style.backgroundColor = "black";
+            else
+                cell.style.backgroundColor = "white";
+            GenerateCode();
+        }
+        function GetColumns(leftJ, rightJ, baseJ) {
+            /*
+                Divides the line segment between leftJ and rightJ into divisions of width 16, making sure that baseJ is the start of one of those divisions,
+                then it returns those divisions, relative baseJ (and only returns divisions that contain at least part of the line segment)
+                so GetColumns(0, 5, 0) should return [0] since there is 1 division that starts 0*16 units away from baseJ=0
+                and GetColumns(0, 5, 3) should return [-1, 0] since baseJ enforces a split in the segment
+                and GetColumns(0, 5, 6) should return [-1] because the entire distance between leftJ and rightJ fits in the chunk that starts at baseJ + (-16*1)
+            */
+
+            let leftmost = Math.min(0, -(Math.ceil( (baseJ - leftJ)/16) ));
+            let rightmost = Math.max(0, (Math.floor( (rightJ - baseJ)/16 )));
+            let columns = []
+            for (let i = leftmost; i < rightmost + 1; i++) {
+                columns.push(i);
+            }
+            if ((rightJ < baseJ) || (leftJ > (baseJ + 16))) {columns.splice(columns.indexOf(0), 1);}
+            return columns;
+        }
+        function GetUsedWords() {
+            // returns an object of {..., -1:[[i, j], [i2, j], [i3, j]...], 0:[i, j2], 1:[i, j3], ...} for which (i,j), (i, j+1), (i, j+2), ... (i,j+15) are the coordinates of a word that is to be included in the 
+            // code for the bitmap and the keys (..., -1, 0, 1, ...) are the columns that the words are in
+            let words = {};
+            let this_col;
+
+            let leftJ = 0;
+            let rightJ = WIDTH - 1;
+            baseJ = 0;
+
+            let bottomI = HEIGHT - 1;
+            let topI = 0;
+            baseI = HEIGHT - 1;
+            
+            // find drawing borders, unless the user wants the whole canvas to be included in the bitmap
+            if (!document.getElementById("fullCanvas").checked) {
+                
+                let breaker = false;
+                for  (let j = 0; j < WIDTH; j++) {
+                    if (breaker) break;
+                    for (let i = HEIGHT - 1; i >= 0; i--) {
+                        if (grid[i][j] != INVERT_MODE) {
+                            leftJ = j;
+                            breaker = true;
+                            break;
+                        }
+                    }
+                }
+                breaker = false;
+                for  (let j = WIDTH - 1; j >= 0; j--) {
+                    if (breaker) break;
+                    for (let i = HEIGHT - 1; i >= 0; i--) {
+                        if (grid[i][j] != INVERT_MODE) {
+                            rightJ = j;
+                            breaker = true;
+                            break;
+                        }
+                    }
+                }
+                breaker = false;
+                for (let i = HEIGHT - 1; i >= 0; i--) {
+                    if (breaker) break;
+                    for (let j = 0; j < WIDTH; j++) {
+                        if (grid[i][j] != INVERT_MODE) {
+                            bottomI = i;
+                            breaker = true;
+                            break;
+                        }
+                    }
+                }
+                breaker = false;
+                for (let i = 0; i < HEIGHT; i++) {
+                    if (breaker) break;
+                    for (let j = 0; j < WIDTH; j++) {
+                        if (grid[i][j] != INVERT_MODE) {
+                            topI = i;
+                            breaker = true;
+                            break;
+                        }
+                    }
+                } 
+                if (includeShift) {
+                    // adjust base for shifting
+                    baseJ = leftJ - currentJShift;
+                    baseI = bottomI - currentIShift;
+
+                    // extend rightJ and leftJ if necessary, to account for shift in drawing
+                    rightJ = Math.max(rightJ, rightJ - currentJShift);
+                    leftJ = Math.min(leftJ, leftJ - currentJShift);
+                }
+                else {
+                    baseJ = leftJ
+                    baseI = bottomI;
+                } 
+            }
+            columns = GetColumns(leftJ, rightJ, baseJ);
+            let previousColumnIncludedIvalues = new Set();
+            for (const col of columns) {
+                this_col = [];
+                col_index = col * 16 + baseJ
+                // Find all the words in this column that are used
+                
+                // if fullCanvas, then use all the words from i=0 to i=HEIGHT-1
+                if (document.getElementById("fullCanvas").checked) {
+                    
+                    for (i=0; i < HEIGHT; i++) {
+                        this_col.push([i, col_index]);
+                    }
+                }
+                // if rectangular, use i=topI to i=bottomI for each column
+                else if (document.getElementById("enforceRectangular").checked) {
+                    //maxI = Math.max(bottomI, baseI);
+                    //minI = Math.min(topI, baseI);
+                    for (i=Math.min(topI, baseI), maxI=Math.max(bottomI, baseI); i <= maxI; i++) {
+                        if (i<0 || i>= HEIGHT) continue;  // ignore rows that are off the canvas and are outside of the contract
+                        this_col.push([i, col_index]);
+                    }
+
+                }
+                // if fit to drawing, for each column, find the i values that have stuff included and include currentIshift words of padding (if necessary) to each words
+                else {  // fit to drawing
+                    let includedIvalues = new Set();
+                    
+                    for (i=Math.min(topI, baseI), maxI=Math.max(bottomI, baseI); i <= maxI; i++) {
+                        this_i_in = false;
+                        if (i<0 || i>= HEIGHT) continue;  // ignore rows that are off the canvas and are outside of the contract
+                        for (j=col_index; j < col_index + 16; j++) {
+                            if (j>=0 && j < WIDTH) {
+                                
+                                if (grid[i][j] != INVERT_MODE) {
+                                    this_i_in = true;
+                                    break;
+                                }
+
+                                // add horizontal buffer if necessary (vertical buffer for this is added later). 
+                                // include this i if there was a pixel on in this word before marginFramesSave shifts happened
+                                if (currentJShift > 0) {
+                                    // check the column to the right (starting from the left) only as far as shifting should be considered
+                                    for (l=col_index+16, m=Math.min(currentJShift, marginSaveFrames)+l; l < m; l++) {
+                                        if (l >= WIDTH) break;
+                                        if (grid[i][l] != INVERT_MODE) {
+                                            this_i_in = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                else if (currentJShift < 0) {
+                                    // check the column to the left (starting from the right) only as far as shifting should be considered
+                                    for (l=col_index-1, m=Math.max(currentJShift, -marginSaveFrames) + l; l > m; l--) {
+                                        if (l < 0) break;
+                                        if (grid[i][l] != INVERT_MODE) {
+                                            this_i_in = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                        }
+                
+                        if (this_i_in) {
+                            includedIvalues.add(i);
+                            // vertical shifting is weird, since it is never necessary (could just change location by a v*32,) so we
+                            // assume that user does it for a reason and include the full vertical buffer always, not checking
+                            // the marginFramesSave
+
+                            // add the buffer region the number of rows as abs(currentIShift) in the direction of currentIShift
+                            for (m=Math.min(i, i - currentIShift), n=Math.max(i, i - currentIShift); m <= n; m++) {
+                                if (m<0 || m>= HEIGHT) continue;  // ignore rows that are off the canvas and are outside of the contract
+                                includedIvalues.add(m);
+                            }
+                        }
+                    }
+                    
+                    // add the coordinates for all the words in this column that are needed to be included
+                    for (let item of includedIvalues) {
+                        this_col.push([item, col_index]);
+                    }
+                    
+                }
+                words[col.toString()] = this_col;
+            }
+            // set drawHeight for the use of other functions
+            drawHeight = Math.max(bottomI, baseI) - Math.min(topI, baseI);
+            return words;
+        }
+        function GetRowsFromWordColumns(col_mapping) {
+            //// This is probably poor design and code from GetWordColumns should be factored
+            let rows = {};
+            let includedIvalues = new Set()
+            // get
+            for (let col in col_mapping) {
+                for (coordinates of col_mapping[col]) {
+                    if (!(includedIvalues.has(coordinates[0]))) {
+                        includedIvalues.add(coordinates[0]);
+                        rows[coordinates[0].toString()] = [];
+                    }
+                    rows[coordinates[0].toString()].push({
+                        "coords":coordinates,
+                        "col": col
+                    });
+                }
+            }
+            return rows;
+        }
+
+        function GenerateCode(force=false) {
+            // Generates and displayes Jack/Hack code unless pauseCode is checked, though this can be overrided with force=true
+            if (document.getElementById("pauseCode").checked && !force) return;
+            let i, j;
+            let value;
+            comments = document.getElementById("commentsOn").checked;
+
+            colsOfWords = GetUsedWords()
+            let baseRow = 0;
+            if (document.getElementById("baseTopLeft").checked) {
+                baseRow = drawHeight;
+            }
+
+            generateCode = document.getElementById('generatedCode');
+            let subroutineName = document.getElementById("subroutineName").value;
+            if (document.getElementById("changeNameOnShift").checked) {
+                subroutineName = subroutineName + (Math.abs(currentJShift) / marginSaveFrames).toString();
+            }
+
+            if (document.getElementById("jackCode").checked) {
+                let subroutineType = "function";
+                if (document.getElementById("methodSubroutine").checked) subroutineType = "method";
+                
+                generateCode.value =    subroutineType + " void " +
+                                        subroutineName +
+                                        "(int location) {\n\tvar int memAddress; \n\tlet memAddress = 16384+location;\n";
+
+                
+                for (const col in colsOfWords) {
+                    if (comments) {
+                        generateCode.value = generateCode.value + "\t// column " + col + "\n";
+                    }
+                    for (coordinates of colsOfWords[col]) {
+                        let value = GetWordValue(coordinates[0], coordinates[1]);
+                        generateCode.value = generateCode.value + GenerateJackCodeLine(coordinates[0] - baseI + baseRow, value, parseInt(col));
+                    }
+                    
+                }
+                generateCode.value = generateCode.value + "\treturn;\n}";
+            }
+            else { // hack assembly
+                rowsOfWords = GetRowsFromWordColumns(colsOfWords);
+                generateCode.value = "(" + subroutineName + ")\n";
+                if (comments) {
+                    generateCode.value = generateCode.value + "\t// put bitmap location value in R12\n\t// put code return address in R13\n";
+                }
+                // initialization of addr
+                generateCode.value += "\t@SCREEN\n\tD=A\n\t@R12\n\tAD=D+M\n";
+                let dHoldsAddr = true;
+                let addrIncrement = 0;
+                let previousCoordinates = null;
+                let previousColumn = null;
+                
+                for (const row in rowsOfWords) {
+                    if (comments) generateCode.value += "\t// row " + (parseInt(row) + 1).toString() + "\n"; // use row + 1 for the human friendly counting from 1 
+                    for (data of rowsOfWords[row]) {
+                        col = data["col"];
+                        coordinates = data["coords"];
+                        let value = GetWordValue(coordinates[0], coordinates[1]);
+                        if (previousCoordinates != null) {
+                            addrIncrement = (coordinates[0] - previousCoordinates[0]) * 32 + (parseInt(col) - parseInt(previousColumn));
+                        }
+                        hackCode = GenerateHackAssemblyCode(addrIncrement, value, dHoldsAddr);
+                        dHoldsAddr = hackCode["dHoldsAddr"];
+                        generateCode.value += hackCode["code"];
+                        
+        
+                        previousCoordinates = coordinates;
+                        previousColumn = col;
+                    }
+                
+                }
+                    
+                if (comments) generateCode.value += "\t// return\n";
+                generateCode.value += "\t@R13\n\tA=M\n\tD;JMP\n";
+            }
+            
+
+            // update styling in case boundaries changed
+            UpdateStyling();
+        }
+        function GetWordValue(i, j) {
+            // given the coordinates i, j of the start of a 16 pixel series corresponding with a 16-bit integer in RAM, returns the base_10 
+            // value that must be stored in the RAM. Interprets pixels that are off the canvas to false
+
+            let binary = "";
+            for (m=j, n=j+BINARY_BITS; m<n; m++) {
+                // see if the pixel is on the canvas. contract: no words are ever included that are entirely off canvas, so we only need to check m (j) values
+                if (m<0 || m >= WIDTH) {
+                    // off canvas pixels
+                    if (INVERT_MODE) binary = "1" + binary;
+                    else binary = "0" + binary;
+                }
+                else {
+                    if (grid[i][m])
+                        binary = "1" + binary;
+                    else
+                        binary = "0" + binary;
+                }
+            }
+            isNegative = false;
+            //if number is negative, get its  one's complement
+            if (binary[0] == "1") {
+                isNegative = true;
+                oneComplement = "";
+                for (k=0; k<BINARY_BITS; k++) { /////
+                    if (binary[k] == "1")
+                        oneComplement = oneComplement + "0";
+                    else
+                        oneComplement = oneComplement + "1";
+                }
+                binary = oneComplement;                 
+            }
+            
+            //calculate one's complement decimal value
+            let value = 0;
+            for (k=0; k<BINARY_BITS; k++) { ////
+                value = value * 2;
+                if (binary[k] == "1")
+                    value=value+1;
+            }                
+
+            //two's complement value if it is a negative value
+            if (isNegative == true)
+                value = -(value + 1);
+        
+            return value;
+        }
+        function GenerateHackAssemblyCode(addrIncrement, pixels_value, dHoldsAddr) {
+            // returns {code: str, dHoldsAddr: bool}
+            let str = "";
+            let c;
+            if (comments) c = ["// D holds previous addr", "// D holds addr", "// D holds addr", "// A holds val", "// D = addr + val", "// A=addr + val - val = addr", "// RAM[addr] = val", "// RAM[addr]=-val"];
+            else c = ["", "", "", "", "", "", "", ""];
+
+            if (!dHoldsAddr && addrIncrement > 2) str += "\tD=A "+ c[0] +"\n";
+
+            // get new addr into D [and A]
+            if (addrIncrement === 1) str += "\tAD=A+1 " + c[1] +"\n";
+            else if (addrIncrement === 2) str += "\tAD=A+1\n AD=A+1 " + c[2] +"\n";
+            else if (addrIncrement != 0) str += "\t@" + addrIncrement + "\n\tAD=D+A\n";
+
+            // put pixels_value into RAM[addr]
+            if (pixels_value === 1 || pixels_value === 0 || pixels_value === -1) {
+                str += "\tM=" + pixels_value.toString() + "\n";
+                return {
+                    "code": str,
+                    "dholdsAddr": true
+                };
+            }
+            else if (pixels_value === -32768) {
+                str += "\t@32767\n\tA=!A " + c[3] + "\n\tD=D+A "+c[4]+"\n\tA=D-A "+c[5]+"\n";
+                str += "\tM=D-A "+c[6]+"\n"
+                return {
+                    "code": str,
+                    "dholdsAddr": false
+                };
+            }
+            else if (pixels_value < 0) {
+                str += "\t@"+(-pixels_value).toString()+" " + c[3] + "\n\tD=D+A "+c[4]+"\n\tA=D-A "+c[5]+"\n";
+                str += "\tM=A-D "+c[7]+"\n";  // M=D-A becomes M=A-D
+                return {
+                    "code": str,
+                    "dholdsAddr": false
+                };
+            }
+            else {
+                str += "\t@" + pixels_value.toString() + " " + c[3] + "\n\tD=D+A "+c[4]+"\n\tA=D-A "+c[5]+"\n";
+                str += "\tM=D-A "+c[6]+"\n"
+                return {
+                    "code": str,
+                    "dholdsAddr": false
+                };
+            }
+
+            
+        }
+        function GenerateJackCodeLine(row, value, col) {
+            let mem_shift = row * 32 + col;
+            if (mem_shift > 0) mem_shift = " +" + mem_shift;
+            else if (mem_shift == 0) mem_shift = "";
+            else mem_shift = " " + mem_shift;
+            if (value == -32768){ 
+                
+                str = "\tdo Memory.poke(memAddress" + mem_shift + ", ~32767);\n"; 
+            } else {
+                str = "\tdo Memory.poke(memAddress" + mem_shift + ", " + value + ");\n";
+            }
+                return str;
+        }
+
+        function ResetShift() {
+            currentIShift = 0;
+            currentJShift = 0;
+            GenerateCode();
+        }
+        function ToggleInvertMode() {
+            if (document.getElementById("invertMode").checked) {
+                INVERT_MODE = true;
+                GenerateCode();
+            }
+            else {
+                INVERT_MODE = false;
+                GenerateCode();
+            }
+        }
+        function isInteger(value) {
+            return /^\d+$/.test(value);
+         }
+        function ResetSize() {
+            // resets the canvas width, height, and pixel size to the values specified by input fields as long as both fields contain integer values
+            newWidth = document.getElementById("inputWidth").value;
+            newHeight  = document.getElementById("inputHeight").value;
+            newPxSize = document.getElementById("pixelSize").value;
+            if (isInteger(newWidth) && isInteger(newHeight) && isInteger(newPxSize)) {
+                // set the new measurements, ensuring that width is a multiple of 16 (for the sake of fullCanvas mode)
+                WIDTH = Math.floor(parseInt(newWidth)/16) * 16;
+                document.getElementById("inputWidth").value = WIDTH.toString();
+                HEIGHT = parseInt(newHeight);
+                PIXEL_SIZE = parseInt(newPxSize);
+                Init();
+            }
+        }
+        function ChangeName() {
+            if (document.getElementById("subroutineName").value == "") document.getElementById("subroutineName").value = "draw";
+            GenerateCode(true);
+        }
+        function ChangeCodeType() {
+            if (document.getElementById("hackAssemblyCode").checked) {
+                document.getElementById("baseTopLeft").click();
+                document.getElementById("baseBottomLeft").disabled = true;
+                document.getElementById("codeTypeHeader").textContent = "Generated Hack Assembly";
+            }
+            else {
+                document.getElementById("baseBottomLeft").disabled = false;
+                document.getElementById("codeTypeHeader").textContent = "Generated Jack Code";
+            }
+            GenerateCode();
+        }
+        function UpdateMarginType() {
+            if (document.getElementById("fitToDrawing").checked) {
+                document.getElementById("marginSaveFramestd").hidden = false;
+                marginSaveFrames = parseInt(document.getElementById("marginSaveFrames").value)
+                if (marginSaveFrames < 1) {
+                    marginSaveFrames = 1;
+                    document.getElementById("marginSaveFrames").value = "1";
+                }
+            }
+            else {
+                document.getElementById("marginSaveFramestd").hidden = true;
+            }
+            GenerateCode();
+        }
+    </script>
+</head>
+<body onload="Init();">
+    <h4><i>Idea and first code by Golan Parashi, updated by Ignacio del Valle Alles, and extended by Erik Umble </i></h4>
+    <h1>Jack Bitmap Editor v2.5</h1>
+    <p>This is a simple bitmap editor, with a special emphasis on making animation frames easier. Simply draw and the Jack code to produce the drawing will be displayed
+        on the right. Note that if your drawing does not fill the canvas, the code will only be generated for the part that your drawing takes up with 'location' in the 
+        code referring to the top left corner of the drawing (this can be changed to refer to the bottom left with the radio button below). 
+    </p>
+    <p>
+        Note that you can create sequencial frames of an animation by using the shift buttons (a buffer is created in the code such that
+         calling a function that refers to the next animation frame will automatically erase the area that the sprite has moved out of). Internally, it is just the absolute shift that is considered (shifting up 5 times and then down 2 times will produce equivalent code to simply shifting up 3 times), so to make animation frames moving in the opposite direction, first clear the shift then begin shifting in that direction. 
+         Also note that you can enter Inverted mode for drawing with white on a black canvas for night/dark themed games 
+         (this mode expects the background to be black, erases by making pixels black, and interprets the drawing as the white pixels on the canvas). Rotation is only 
+         enabled for square canvas sizes (width = height), and automatically clears the shift upon rotating. 
+    </p>
+    <p>
+        If you would rather work on a different sized canvas, simply change the height and width fields and click reload. Note that for very large canvas sizes,
+         you might need to change the canvas pixel size to a smaller value. Also note that width must be a multiple of 16. 'Comments On' referes to the comments in the 
+         Jack code that specify the column of the drawing that the following code is for (column 1 is to the right of column 0, which is to the right of column -1 and so on).
+          If your device is running slow on automatic code generation, you can use 
+         'Pause Code Generation', draw, then unselect the field when you are ready to get the code.
+    </p>
+    <p>
+        For the most optimized code, choose Hack Assembly (note that a base location of Top Left is required in this mode, as it is more efficient in assembly). 
+        Note that the assembly subroutine expects to find location stored in R12 and code return address in R13. By taking 
+        advantage of the fact that a drawing might have screen words that are on the same row, and that in assembly, assigning -1, 0, or 1 is built in, and by eliminating the costly function call,
+         and with a hack assembly trick, this code can take significantly less machine opperations than the corresponding Jack code (though the Jack is quite optimized as well). 
+     See <a href="https://github.com/ErikUmble/JackBitmapEditor">here</a> for updates and tutorials.
+    </p>
+    <p>
+        <b>Whats new?:</b> now it's more clear where the 16 bit word edges are (they are in red and can be made thick using the 'Obvious Word Edges' checkbox) and are the leftmost side of the columns in the code.
+        On 'Fit to Drawing' mode, these edges adapt to the size of the drawing, but you can move the drawing relative these edges simply by using the shift buttons. Also, I found and fixed a few bugs.
+    </p>
+    
+    <p>
+    <table>
+        <thead>
+            <tr>
+                <th align="left">Bitmap</th>
+                <th align="left"><span  id="codeTypeHeader">Generated Jack Code</span></th>
+            </tr>
+            <div id="style_stuff"></div>
+        </thead>
+        <tr>
+            <td><div id="grid"/></td>
+            <td><textarea id="generatedCode" cols="50" rows="48" readonly="read-only"></textarea></td>                                
+        </tr>
+        <tr>
+            <table>
+                <tr>
+                    <td align="center"><input type="button" value="Shift left <" onclick="ShiftLeft()"/></td>
+                    <td align="center"><input type="button" value="Shift right >" onclick="ShiftRight()"/></td>
+                    <td align="center"><input type="button" value="Shift up ^" onclick="ShiftUp()"/></td>
+                    <td align="center"><input type="button" value="Shift down v" onclick="ShiftDown()"/></td>
+                    <td align="center"><input type="button" value="Clear Shifting" onclick="ResetShift()"/></td>
+                    <td>&nbsp</td>
+                    <td align="center"><input id="rotateButton" type="button" value="Rotate right" onclick="RotateBitmapRight()"/></td>
+                    <td align="center"><input type="button" value="Flip horizontally" onclick="MirrorBitmap()"/></td>
+                    <td align="center"><input type="button" value="Invert" onclick="InvertBitmap()"/></td>
+                    <td align="center"><input id="invertMode" onclick="ToggleInvertMode()" type="checkbox"/><label for="invertMode">Inverted Mode</label></td>
+                    <td>&nbsp</td>
+                    <td align="center"><input id="pauseCode" onclick="GenerateCode()" type="checkbox"/><label for="pauseCode">Pause Code Generation</label></td>
+                    <td align="center"><input checked id="commentsOn" onclick="GenerateCode()" type="checkbox"/><label for="commentsOn">Comments On</label></td>
+                    <td align="center"><input id="obviousStyling" onclick="UpdateStyling()" type="checkbox"/><label for="obviousStyling">Obvious Word Edges</label></td>
+                </tr>
+            </table>
+        </tr>
+        <tr>
+            <table>
+                <tr>
+                    <td>
+                        <form action="javascript:ResetSize()">
+                            <label for="inputWidth">Canvase Size: </label>
+                            <input id="inputWidth" placeholder="width" maxlength="3" size="3" type="text" value="48">
+                            x
+                            <input id="inputHeight" placeholder="height" maxlength="3" size="3" type="text" value="32">
+                            <button>Reload</button>
+                            <label for="pixelSize">Canvas pixel size: </label>
+                            <input id="pixelSize" placeholder="px" maxlength="2" size="1" type="text" value="16">
+                        </form>
+                    </td>
+                </tr>
+            </table>
+        </tr>
+        <tr>
+            <table>
+                <tr>
+                    <td align="center">
+                        <input checked id="fitToDrawing" name="marginType" onclick="UpdateMarginType()" type="radio"/>
+                        <label for="fitToDrawing">Fit to drawing</label>
+
+                        <input id="enforceRectangular" name="marginType" onclick="UpdateMarginType()" type="radio"/>
+                        <label for="enforceRectangular">Rectangular</label>
+
+                        <input id="fullCanvas" name="marginType" onclick="UpdateMarginType()" type="radio"/>
+                        <label for="fullCanvas">Full Canvas</label>
+                    </td>
+                    <td>&nbsp</td>
+                    <td id="marginSaveFramestd">
+                        <label for="marginSaveFrames"># horizontal shifts per animation frame: </label>
+                        <input id="marginSaveFrames" maxlength="2" onchange="UpdateMarginType()" size="1" type="text" value="1">
+                    </td>
+                </tr>
+            </table>
+        </tr>
+        <tr>
+            <table>
+                <tr>
+                    <td align="center">
+                        <label for="baseRowFrom">Base address:</label>
+                        <input checked id="baseTopLeft" name="baseRowFrom" onclick="GenerateCode()" type="radio"/>
+                        <label for="baseTopLeft">Top Left</label>
+
+                        <input id="baseBottomLeft" name="baseRowFrom" onclick="GenerateCode()" type="radio"/>
+                        <label for="baseBottomLeft">Bottom Left</label>
+                    </td>
+                </tr>
+            </table>
+        </tr>
+        <tr>
+            <table>
+                <tr>
+                    <td align="center">
+                        <form action="javascript:ChangeName()">
+                            <label for="subroutineName">Subroutine Name: </label>
+                            <input id="subroutineName" placeholder="name" type="text" value="draw">
+                            <button>Generate Code</button>
+                        </form>
+                    </td>
+                    <td align="center">
+                        <input checked id="functionSubroutine" name="subroutineType" onclick="GenerateCode()" type="radio"/>
+                        <label for="functionSubroutine">function</label>
+
+                        <input id="methodSubroutine" name="subroutineType" onclick="GenerateCode()" type="radio"/>
+                        <label for="methodSubroutine">method</label>
+                    </td>
+                    <td align="center"><input id="changeNameOnShift" onclick="GenerateCode()" type="checkbox"/><label for="pauseCode">Change name with horizontal shift</label></td>
+                    
+                </tr>
+            </table>
+        </tr>
+        <tr>
+            <table>
+                <tr>
+                    <td align="center">
+                        <input checked id="jackCode" name="codeType" onclick="ChangeCodeType()" type="radio"/>
+                        <label for="jackCode">Jack</label>
+
+                        <input id="hackAssemblyCode" name="codeType" onclick="ChangeCodeType()" type="radio"/>
+                        <label for="hackAssemblyCode">Hack Assembly</label>
+                    </td>                    
+                </tr>
+            </table>
+        </tr>
+        <!--<tr>
+            <td>
+                <label class="fileButton" for="inputImage">Load from Image</label>
+                <input type="file"
+                    id="inputImage" name="inputImage"
+                    accept="image/png">
+            </td>
+        </tr>-->
+    </table>
+    <style>
+        .fileButton label {
+            display: block;
+            font: 1rem 'Fira Sans', sans-serif;
+        }
+
+        .fileButton input,
+        label {
+            margin: .4rem 0;
+        }
+    </style>
+</body>
+</html>

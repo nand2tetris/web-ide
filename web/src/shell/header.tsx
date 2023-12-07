@@ -17,6 +17,7 @@ const headerButtons: HeaderButton[] = [
   URLs["chip"],
   URLs["cpu"],
   URLs["asm"],
+  URLs["bitmap"],
   URLs["util"],
   URLs["guide"],
   {

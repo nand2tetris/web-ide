@@ -1,4 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
@@ -34,39 +35,20 @@ export function useToolStates() {
   const [rom, setRom] = useState<number[]>();
   const [cpuName, setCpuProgramName] = useState<string>();
 
-  const [asmProgram, setAsmProgram] = useState<string>();
-  const [asmName, setAsmName] = useState<string>();
-  const [asmCompareName, setAsmCompareName] = useState<string>();
-  const [asmCompare, setAsmCompare] = useState<string>();
+  const [asmState, setAsmState] = useState<AsmPageState>();
 
   const setCpuState = (name: string | undefined, rom: number[] | undefined) => {
     setCpuProgramName(name);
     setRom(rom);
   };
 
-  const setAsmState = (
-    name: string | undefined,
-    program: string | undefined,
-    compareName: string | undefined,
-    compare: string | undefined
-  ) => {
-    setAsmName(name);
-    setAsmProgram(program);
-    setAsmCompareName(compareName);
-    setAsmCompare(compare);
-  };
 
   return {
     tool,
     setTool,
     cpuState: { rom: rom, name: cpuName },
     setCpuState,
-    asmState: {
-      program: asmProgram,
-      name: asmName,
-      compare: asmCompare,
-      compareName: asmCompareName,
-    },
+    asmState,
     setAsmState,
   };
 }
@@ -144,10 +126,16 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       return undefined;
     },
     asmState: {
-      program: undefined,
-      name: undefined,
-      compare: undefined,
+      asm: "",
+      asmName: undefined,
+      current: -1,
+      resultHighlight: undefined,
+      sourceHighlight: undefined,
+      symbols: [],
+      result: "",
+      compare: "",
       compareName: undefined,
+      lineNumbers: [],
     },
     setAsmState() {
       return undefined;

@@ -20,8 +20,6 @@ export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
   const { toolStates } = useContext(AppContext);
 
-  const [asm, setAsm] = useState("");
-  const [cmp, setCmp] = useState("");
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
 
@@ -32,27 +30,14 @@ export const Asm = () => {
 
   useEffect(() => {
     toolStates.setTool("asm");
-    if (toolStates.asmState.program) {
-      actions.loadAsm(toolStates.asmState.program);
-
-      if (toolStates.asmState.name) {
-        setAsm(toolStates.asmState.name);
-      }
-      if (toolStates.asmState.compare) {
-        dispatch.current({
-          action: "setCmp",
-          payload: { cmp: toolStates.asmState.compare },
-        });
-      }
-      if (toolStates.asmState.compareName) {
-        setCmp(toolStates.asmState.compareName);
-      }
+    if (toolStates.asmState) {
+      actions.overrideState(toolStates.asmState);
     }
   }, []);
 
   useEffect(() => {
-    toolStates.setAsmState(asm, state.asm, cmp, state.compare);
-  }, [state, toolStates.setAsmState, asm, cmp]);
+    toolStates.setAsmState(state);
+  }, [state, toolStates.setAsmState]);
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
@@ -104,15 +89,16 @@ export const Asm = () => {
         setStatus("File must be .asm file");
         return;
       }
-      actions.loadAsm(source);
-      setAsm(file.name);
+      actions.loadAsm(source, file.name);
     } else {
       if (!file.name.endsWith(".hack")) {
         setStatus("File must be .hack file");
         return;
       }
-      dispatch.current({ action: "setCmp", payload: { cmp: source } });
-      setCmp(file.name);
+      dispatch.current({
+        action: "setCmp",
+        payload: { cmp: source, name: file.name },
+      });
     }
   };
 
@@ -124,7 +110,8 @@ export const Asm = () => {
       return;
     }
     fileDownloadRef.current.href = url;
-    fileDownloadRef.current.download = asm.replace(".asm", ".hack");
+    fileDownloadRef.current.download =
+      state.asmName?.replace(".asm", ".hack") ?? "result.hack";
     fileDownloadRef.current.click();
 
     URL.revokeObjectURL(url);
@@ -146,7 +133,7 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Source</Trans>
-              {asm && `: ${asm}`}
+              {state.asmName && `: ${state.asmName}`}
             </div>
             <input
               type="file"
@@ -244,7 +231,7 @@ export const Asm = () => {
                         toolStates.setTool("cpu");
                         const bytes = await loadHack(state.result);
                         toolStates.setCpuState(
-                          asm.replace(".asm", ".hack"),
+                          state.asmName?.replace(".asm", ".hack"),
                           bytes
                         );
                         redirectRef.current?.click();
@@ -287,7 +274,7 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Compare</Trans>
-              {cmp && `: ${cmp}`}
+              {state.compareName && `: ${state.compareName}`}
             </div>
             <div>
               <fieldset role="group">

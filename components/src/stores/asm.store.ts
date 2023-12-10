@@ -135,12 +135,14 @@ class Translator {
 
 export interface AsmPageState {
   asm: string;
+  asmName: string | undefined;
   current: number;
   resultHighlight: Span | undefined;
   sourceHighlight: Span | undefined;
   symbols: [string, string][];
   result: string;
   compare: string;
+  compareName: string | undefined;
   lineNumbers: number[];
 }
 
@@ -162,12 +164,14 @@ export function makeAsmStore(
   let animate = true;
 
   const reducers = {
-    setAsm(state: AsmPageState, { asm }: { asm: string }) {
+    setAsm(state: AsmPageState, { asm, name }: { asm: string; name: string }) {
       state.asm = asm;
+      state.asmName = name;
     },
 
-    setCmp(state: AsmPageState, { cmp }: { cmp: string }) {
+    setCmp(state: AsmPageState, { cmp, name }: { cmp: string; name: string }) {
       state.compare = cmp;
+      state.compareName = name;
       setStatus("Loaded compare file");
     },
 
@@ -206,11 +210,11 @@ export function makeAsmStore(
   };
 
   const actions = {
-    loadAsm(asm: string) {
+    loadAsm(asm: string, name?: string) {
       asm = asm.replace(/\r\n/g, "\n");
       dispatch.current({
         action: "setAsm",
-        payload: { asm },
+        payload: { asm, name },
       });
 
       const parseResult = ASM.parse(asm);
@@ -266,16 +270,31 @@ export function makeAsmStore(
       this.resetHighlightInfo();
       dispatch.current({ action: "update" });
     },
+
+    overrideState(state: AsmPageState) {
+      this.resetHighlightInfo();
+      this.loadAsm(state.asm, state.asmName);
+      dispatch.current({
+        action: "setCmp",
+        payload: { cmp: state.compare, name: state.compareName },
+      });
+      for (let i = 0; i <= state.current; i++) {
+        this.step();
+      }
+      dispatch.current({ action: "update" });
+    },
   };
 
-  const initialState = {
+  const initialState: AsmPageState = {
     asm: "",
+    asmName: undefined,
     current: -1,
     resultHighlight: undefined,
     sourceHighlight: undefined,
     symbols: [],
     result: "",
     compare: "",
+    compareName: undefined,
     lineNumbers: [],
   };
 

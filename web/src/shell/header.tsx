@@ -1,10 +1,9 @@
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import Cookies from "js-cookie";
 import { RefObject, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
 import { AppContext, useAppContext } from "src/App.context";
 import { Icon } from "../pico/icon";
-import URLs, { LAST_ROUTE_COOKIE, TOOLS } from "../urls";
+import URLs, { LAST_ROUTE_KEY, TOOLS } from "../urls";
 
 interface HeaderButton {
   tooltip: string;
@@ -82,7 +81,7 @@ const Header = () => {
                         setStatus("");
                         if (href) {
                           if (target) {
-                            Cookies.set(LAST_ROUTE_COOKIE, href);
+                            localStorage.setItem(LAST_ROUTE_KEY, href);
                           }
                           redirectRefs[href].current?.click();
                         }

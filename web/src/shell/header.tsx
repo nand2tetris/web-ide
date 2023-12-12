@@ -79,6 +79,7 @@ const Header = () => {
                       }
                     : () => {
                         setStatus("");
+                        appContext.toolStates.setTool(undefined);
                         if (href) {
                           if (target) {
                             localStorage.setItem(LAST_ROUTE_KEY, href);

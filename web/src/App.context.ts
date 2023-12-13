@@ -128,6 +128,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     asmState: {
       asm: "",
       asmName: undefined,
+      translating: false,
       current: -1,
       resultHighlight: undefined,
       sourceHighlight: undefined,

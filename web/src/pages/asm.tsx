@@ -89,7 +89,8 @@ export const Asm = () => {
         setStatus("File must be .asm file");
         return;
       }
-      actions.loadAsm(source, file.name);
+      actions.setAsm(source, file.name);
+      setStatus("Loaded asm file");
     } else {
       if (!file.name.endsWith(".hack")) {
         setStatus("File must be .hack file");
@@ -99,6 +100,7 @@ export const Asm = () => {
         action: "setCmp",
         payload: { cmp: source, name: file.name },
       });
+      setStatus("Loaded cmp file");
     }
   };
 
@@ -166,7 +168,7 @@ export const Asm = () => {
         <Editor
           value={state.asm}
           onChange={(source: string) => {
-            return;
+            actions.setAsm(source);
           }}
           onCursorPositionChange={(index) => {
             if (index == sourceCursorPos.current) {
@@ -177,9 +179,13 @@ export const Asm = () => {
           }}
           grammar={ASM.parser}
           language={"asm"}
-          highlight={state.sourceHighlight}
-          disabled={true}
+          highlight={
+            state.translating ? state.sourceHighlight : { start: 0, end: 0 }
+          }
           lineNumberTransform={(n) => {
+            if (!state.translating) {
+              return "";
+            }
             const num = state.lineNumbers[n] as number | undefined;
             return (num === undefined ? "" : num).toString();
           }}
@@ -265,8 +271,8 @@ export const Asm = () => {
           dynamicHeight={true}
           lineNumberTransform={(n) => (n - 1).toString()}
         />
-        {state.symbols.length > 0 && "Symbol Table"}
-        <Table values={state.symbols} />
+        {state.symbols.length > 0 && state.translating && "Symbol Table"}
+        {state.translating && <Table values={state.symbols} />}
       </Panel>
       <Panel
         className="compare"
@@ -293,7 +299,9 @@ export const Asm = () => {
       >
         <Editor
           value={state.compare}
-          highlight={state.resultHighlight}
+          highlight={
+            state.translating ? state.resultHighlight : { start: 0, end: 0 }
+          }
           disabled={true}
           onChange={function (source: string): void {
             return;

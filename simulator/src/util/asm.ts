@@ -69,28 +69,37 @@ function aop(asm: string): number {
 }
 
 function cop(asm: string): number {
+  const firstPass = asm.match(
+    /(?:(?<assignExists>.+)=)?(.+)(?:;(?<jumpExists>.+))?/
+  );
+  const { assignExists, jumpExists } = firstPass?.groups ?? {};
+
   const parts = asm.match(
-    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
+    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
   );
   const { assign, operation, jump } = parts?.groups ?? {};
-  const mode = operation.includes("M") || assign.includes("M");
-  const aop = ASSIGN.asm[(assign as ASSIGN_ASM) ?? ""];
-  const jop = JUMP.asm[(jump as JUMP_ASM) ?? ""];
-  const cop = COMMANDS.asm[(operation as COMMANDS_ASM) ?? ""];
+  const mode = operation.includes("M") || (assign?.includes("M") ?? false);
+  const aop =
+    ASSIGN.asm[(assign ?? (assignExists ? undefined : "")) as ASSIGN_ASM];
+  const jop = JUMP.asm[(jump ?? (jumpExists ? undefined : "")) as JUMP_ASM];
+  const cop = COMMANDS.getOp(operation);
 
   return makeC(mode, cop, aop, jop);
 }
 
 export function makeC(
   isM: boolean,
-  op: COMMANDS_OP,
-  assign: ASSIGN_OP = 0,
-  jmp: JUMP_OP = 0
+  op: COMMANDS_OP | undefined,
+  assign: ASSIGN_OP | undefined,
+  jmp: JUMP_OP | undefined
 ): number {
+  if (op === undefined || assign === undefined || jmp === undefined) {
+    throw new Error("Invalid c instruction");
+  }
   const C = 0xe000;
   const A = isM ? 0x1000 : 0;
   const O = op << 6;
-  const D = (assign ?? 0) << 3;
-  const J = jmp ?? 0;
+  const D = assign << 3;
+  const J = jmp;
   return C + A + O + D + J;
 }

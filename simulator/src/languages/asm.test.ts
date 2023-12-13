@@ -34,7 +34,7 @@ describe("asm language", () => {
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
-      op: COMMANDS.asm["-1"],
+      op: COMMANDS.getOp("-1"),
       isM: false,
     });
   });
@@ -44,7 +44,7 @@ describe("asm language", () => {
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
-      op: COMMANDS.asm["M"],
+      op: COMMANDS.getOp("M"),
       store: ASSIGN.asm["D"],
       isM: true,
     });
@@ -55,7 +55,7 @@ describe("asm language", () => {
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
-      op: COMMANDS.asm["A+1"],
+      op: COMMANDS.getOp("A+1"),
       store: ASSIGN.asm["M"],
       isM: true,
     });
@@ -66,7 +66,7 @@ describe("asm language", () => {
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
-      op: COMMANDS.asm["D"],
+      op: COMMANDS.getOp("D"),
       jump: JUMP.asm["JEQ"],
       isM: false,
     });
@@ -77,7 +77,7 @@ describe("asm language", () => {
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
-      op: COMMANDS.asm["D"],
+      op: COMMANDS.getOp("D"),
       jump: JUMP.asm["JEQ"],
       store: ASSIGN.asm["A"],
       isM: false,
@@ -92,35 +92,35 @@ describe("asm language", () => {
     expect(instructions[0]).toEqual({ type: "A", label: "R0" });
     expect(instructions[1]).toEqual({
       type: "C",
-      op: COMMANDS.asm["M"],
+      op: COMMANDS.getOp("M"),
       store: ASSIGN.asm["D"],
       isM: true,
     });
     expect(instructions[2]).toEqual({ type: "A", label: "R1" });
     expect(instructions[3]).toEqual({
       type: "C",
-      op: COMMANDS.asm["D-M"],
+      op: COMMANDS.getOp("D-M"),
       store: ASSIGN.asm["D"],
       isM: true,
     });
     expect(instructions[4]).toEqual({ type: "A", label: "OUTPUT_FIRST" });
     expect(instructions[5]).toEqual({
       type: "C",
-      op: COMMANDS.asm["D"],
+      op: COMMANDS.getOp("D"),
       jump: JUMP.asm["JGT"],
       isM: false,
     });
     expect(instructions[6]).toEqual({ type: "A", label: "R1" });
     expect(instructions[7]).toEqual({
       type: "C",
-      op: COMMANDS.asm["M"],
+      op: COMMANDS.getOp("M"),
       store: ASSIGN.asm["D"],
       isM: true,
     });
     expect(instructions[8]).toEqual({ type: "A", label: "OUTPUT_D" });
     expect(instructions[9]).toEqual({
       type: "C",
-      op: COMMANDS.asm["0"],
+      op: COMMANDS.getOp("0"),
       jump: JUMP.asm["JMP"],
       isM: false,
     });
@@ -128,7 +128,7 @@ describe("asm language", () => {
     expect(instructions[11]).toEqual({ type: "A", label: "R0" });
     expect(instructions[12]).toEqual({
       type: "C",
-      op: COMMANDS.asm["M"],
+      op: COMMANDS.getOp("M"),
       store: ASSIGN.asm["D"],
       isM: true,
     });
@@ -136,7 +136,7 @@ describe("asm language", () => {
     expect(instructions[14]).toEqual({ type: "A", label: "R2" });
     expect(instructions[15]).toEqual({
       type: "C",
-      op: COMMANDS.asm["D"],
+      op: COMMANDS.getOp("D"),
       store: ASSIGN.asm["M"],
       isM: true,
     });
@@ -144,7 +144,7 @@ describe("asm language", () => {
     expect(instructions[17]).toEqual({ type: "A", label: "INFINITE_LOOP" });
     expect(instructions[18]).toEqual({
       type: "C",
-      op: COMMANDS.asm["0"],
+      op: COMMANDS.getOp("0"),
       jump: JUMP.asm["JMP"],
       isM: false,
     });
@@ -160,24 +160,24 @@ describe("asm language", () => {
 
     expect(asm.instructions).toEqual([
       { type: "A", value: 0 },
-      { type: "C", op: COMMANDS.asm["M"], store: ASSIGN.asm["D"], isM: true },
+      { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
       { type: "A", value: 1 },
-      { type: "C", op: COMMANDS.asm["D-M"], store: ASSIGN.asm["D"], isM: true },
+      { type: "C", op: COMMANDS.getOp("D-M"), store: ASSIGN.asm["D"], isM: true },
       { type: "A", value: 10 },
-      { type: "C", op: COMMANDS.asm["D"], jump: JUMP.asm["JGT"], isM: false },
+      { type: "C", op: COMMANDS.getOp("D"), jump: JUMP.asm["JGT"], isM: false },
       { type: "A", value: 1 },
-      { type: "C", op: COMMANDS.asm["M"], store: ASSIGN.asm["D"], isM: true },
+      { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
       { type: "A", value: 12 },
-      { type: "C", op: COMMANDS.asm["0"], jump: JUMP.asm["JMP"], isM: false },
+      { type: "C", op: COMMANDS.getOp("0"), jump: JUMP.asm["JMP"], isM: false },
       { type: "L", label: "OUTPUT_FIRST" },
       { type: "A", value: 0 },
-      { type: "C", op: COMMANDS.asm["M"], store: ASSIGN.asm["D"], isM: true },
+      { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
       { type: "L", label: "OUTPUT_D" },
       { type: "A", value: 2 },
-      { type: "C", op: COMMANDS.asm["D"], store: ASSIGN.asm["M"], isM: true },
+      { type: "C", op: COMMANDS.getOp("D"), store: ASSIGN.asm["M"], isM: true },
       { type: "L", label: "INFINITE_LOOP" },
       { type: "A", value: 14 },
-      { type: "C", op: COMMANDS.asm["0"], jump: JUMP.asm["JMP"], isM: false },
+      { type: "C", op: COMMANDS.getOp("0"), jump: JUMP.asm["JMP"], isM: false },
     ]);
   });
 

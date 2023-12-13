@@ -5,7 +5,6 @@ import {
   ASSIGN_ASM,
   ASSIGN_OP,
   COMMANDS,
-  COMMANDS_ASM,
   COMMANDS_OP,
   JUMP,
   JUMP_ASM,
@@ -122,12 +121,12 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
   },
   CInstruction(assignN, opN, jmpN): AsmCInstruction {
     const assign = assignN.child(0)?.child(0)?.sourceString as ASSIGN_ASM;
-    const op = opN.sourceString.replace("M", "A") as COMMANDS_ASM;
+    const op = opN.sourceString;
     const jmp = jmpN.child(0)?.child(1)?.sourceString as JUMP_ASM;
     const isM = opN.sourceString.includes("M");
     const inst: AsmCInstruction = {
       type: "C",
-      op: COMMANDS.asm[op],
+      op: COMMANDS.getOp(op),
       isM,
       span: {
         start: assignN.source.startIdx,
@@ -227,7 +226,12 @@ export function translateInstruction(inst: AsmInstruction) {
     return inst.value;
   }
   if (inst.type === "C") {
-    return makeC(inst.isM, inst.op, inst.store, inst.jump);
+    return makeC(
+      inst.isM,
+      inst.op,
+      (inst.store ?? "") as ASSIGN_OP,
+      (inst.jump ?? "") as ASSIGN_OP
+    );
   }
   return undefined;
 }

@@ -68,10 +68,14 @@ export class Memory implements MemoryAdapter {
   }
 
   update(cell: number, value: string, format: Format) {
-    let current: number;
+    let current: number | undefined;
     switch (format) {
       case "asm":
-        current = op(value);
+        try {
+          current = op(value);
+        } catch {
+          current = undefined;
+        }
         break;
       case "bin":
         current = int2(value);
@@ -85,7 +89,7 @@ export class Memory implements MemoryAdapter {
         break;
     }
 
-    if (isFinite(current) && current <= 0xffff) {
+    if (current !== undefined && isFinite(current) && current <= 0xffff) {
       this.set(cell, current);
     }
   }

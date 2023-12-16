@@ -162,7 +162,12 @@ describe("asm language", () => {
       { type: "A", value: 0 },
       { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
       { type: "A", value: 1 },
-      { type: "C", op: COMMANDS.getOp("D-M"), store: ASSIGN.asm["D"], isM: true },
+      {
+        type: "C",
+        op: COMMANDS.getOp("D-M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+      },
       { type: "A", value: 10 },
       { type: "C", op: COMMANDS.getOp("D"), jump: JUMP.asm["JGT"], isM: false },
       { type: "A", value: 1 },

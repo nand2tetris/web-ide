@@ -42,7 +42,6 @@ export function useToolStates() {
     setRom(rom);
   };
 
-
   return {
     tool,
     setTool,

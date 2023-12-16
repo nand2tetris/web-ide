@@ -174,7 +174,7 @@ export class CPU extends ClockedChip {
     this._state = state;
     this.out("writeM").pull(writeM ? HIGH : LOW);
     this.out("outM").busVoltage = this._state.ALU ?? 0;
-}
+  }
 
   override tock(): void {
     if (!this._state) return; // Skip initial tock

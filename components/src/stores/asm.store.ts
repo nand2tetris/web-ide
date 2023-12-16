@@ -136,6 +136,7 @@ class Translator {
 export interface AsmPageState {
   asm: string;
   asmName: string | undefined;
+  translating: boolean;
   current: number;
   resultHighlight: Span | undefined;
   sourceHighlight: Span | undefined;
@@ -162,11 +163,19 @@ export function makeAsmStore(
     highlightMap: new Map(),
   };
   let animate = true;
+  let compiled = false;
+  let translating = false;
 
   const reducers = {
-    setAsm(state: AsmPageState, { asm, name }: { asm: string; name: string }) {
+    setAsm(
+      state: AsmPageState,
+      { asm, name }: { asm: string; name: string | undefined }
+    ) {
       state.asm = asm;
-      state.asmName = name;
+
+      if (name) {
+        state.asmName = name;
+      }
     },
 
     setCmp(state: AsmPageState, { cmp, name }: { cmp: string; name: string }) {
@@ -176,6 +185,7 @@ export function makeAsmStore(
     },
 
     update(state: AsmPageState) {
+      state.translating = translating;
       state.current = translator.current;
       state.result = translator.result;
       state.symbols = Array.from(translator.symbols);
@@ -210,22 +220,29 @@ export function makeAsmStore(
   };
 
   const actions = {
-    loadAsm(asm: string, name?: string) {
+    setAsm(asm: string, name?: string) {
       asm = asm.replace(/\r\n/g, "\n");
       dispatch.current({
         action: "setAsm",
         payload: { asm, name },
       });
+      translating = false;
+      this.compileAsm(asm);
+    },
 
+    compileAsm(asm: string) {
+      this.reset();
       const parseResult = ASM.parse(asm);
       if (isErr(parseResult)) {
         setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
+        compiled = false;
         return;
       }
 
       translator.load(Ok(parseResult), asm.split("\n").length);
+      compiled = true;
+      setStatus("");
       dispatch.current({ action: "update" });
-      setStatus("Loaded asm file");
     },
 
     setAnimate(value: boolean) {
@@ -233,6 +250,9 @@ export function makeAsmStore(
     },
 
     step(): boolean {
+      if (compiled) {
+        translating = true;
+      }
       translator.step(highlightInfo);
       if (animate || translator.done) {
         dispatch.current({ action: "update" });
@@ -273,14 +293,18 @@ export function makeAsmStore(
 
     overrideState(state: AsmPageState) {
       this.resetHighlightInfo();
-      this.loadAsm(state.asm, state.asmName);
+      this.setAsm(state.asm, state.asmName);
       dispatch.current({
         action: "setCmp",
         payload: { cmp: state.compare, name: state.compareName },
       });
-      for (let i = 0; i <= state.current; i++) {
-        this.step();
+
+      if (state.translating) {
+        for (let i = 0; i <= state.current; i++) {
+          this.step();
+        }
       }
+
       dispatch.current({ action: "update" });
     },
   };
@@ -288,6 +312,7 @@ export function makeAsmStore(
   const initialState: AsmPageState = {
     asm: "",
     asmName: undefined,
+    translating: false,
     current: -1,
     resultHighlight: undefined,
     sourceHighlight: undefined,

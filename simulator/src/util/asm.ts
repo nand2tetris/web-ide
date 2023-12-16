@@ -78,7 +78,7 @@ function cop(asm: string): number {
     /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
   );
   const { assign, operation, jump } = parts?.groups ?? {};
-  const mode = operation.includes("M") || (assign?.includes("M") ?? false);
+  const mode = operation.includes("M");
   const aop =
     ASSIGN.asm[(assign ?? (assignExists ? undefined : "")) as ASSIGN_ASM];
   const jop = JUMP.asm[(jump ?? (jumpExists ? undefined : "")) as JUMP_ASM];

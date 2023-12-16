@@ -229,8 +229,8 @@ export function translateInstruction(inst: AsmInstruction) {
     return makeC(
       inst.isM,
       inst.op,
-      (inst.store ?? "") as ASSIGN_OP,
-      (inst.jump ?? "") as ASSIGN_OP
+      (inst.store ?? 0) as ASSIGN_OP,
+      (inst.jump ?? 0) as ASSIGN_OP
     );
   }
   return undefined;

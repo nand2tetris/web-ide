@@ -16,6 +16,8 @@ describe("asm language", () => {
       type: "A",
       label: "R0",
       value: undefined,
+      lineNum: 1,
+      span: { start: 0, end: 3 },
     });
   });
 
@@ -26,6 +28,8 @@ describe("asm language", () => {
       type: "A",
       label: undefined,
       value: 5,
+      lineNum: 1,
+      span: { start: 0, end: 2 },
     });
   });
 
@@ -36,6 +40,8 @@ describe("asm language", () => {
       type: "C",
       op: COMMANDS.getOp("-1"),
       isM: false,
+      lineNum: 1,
+      span: { start: 0, end: 2 },
     });
   });
 
@@ -47,6 +53,8 @@ describe("asm language", () => {
       op: COMMANDS.getOp("M"),
       store: ASSIGN.asm["D"],
       isM: true,
+      lineNum: 1,
+      span: { start: 0, end: 3 },
     });
   });
 
@@ -58,6 +66,8 @@ describe("asm language", () => {
       op: COMMANDS.getOp("A+1"),
       store: ASSIGN.asm["M"],
       isM: true,
+      lineNum: 1,
+      span: { start: 0, end: 5 },
     });
   });
 
@@ -69,6 +79,8 @@ describe("asm language", () => {
       op: COMMANDS.getOp("D"),
       jump: JUMP.asm["JEQ"],
       isM: false,
+      lineNum: 1,
+      span: { start: 0, end: 5 },
     });
   });
 
@@ -81,6 +93,8 @@ describe("asm language", () => {
       jump: JUMP.asm["JEQ"],
       store: ASSIGN.asm["A"],
       isM: false,
+      lineNum: 1,
+      span: { start: 0, end: 7 },
     });
   });
 
@@ -89,65 +103,135 @@ describe("asm language", () => {
 
     expect(match).toHaveSucceeded();
     const { instructions } = asmSemantics(match).asm as Asm;
-    expect(instructions[0]).toEqual({ type: "A", label: "R0" });
-    expect(instructions[1]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("M"),
-      store: ASSIGN.asm["D"],
-      isM: true,
-    });
-    expect(instructions[2]).toEqual({ type: "A", label: "R1" });
-    expect(instructions[3]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("D-M"),
-      store: ASSIGN.asm["D"],
-      isM: true,
-    });
-    expect(instructions[4]).toEqual({ type: "A", label: "OUTPUT_FIRST" });
-    expect(instructions[5]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("D"),
-      jump: JUMP.asm["JGT"],
-      isM: false,
-    });
-    expect(instructions[6]).toEqual({ type: "A", label: "R1" });
-    expect(instructions[7]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("M"),
-      store: ASSIGN.asm["D"],
-      isM: true,
-    });
-    expect(instructions[8]).toEqual({ type: "A", label: "OUTPUT_D" });
-    expect(instructions[9]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("0"),
-      jump: JUMP.asm["JMP"],
-      isM: false,
-    });
-    expect(instructions[10]).toEqual({ type: "L", label: "OUTPUT_FIRST" });
-    expect(instructions[11]).toEqual({ type: "A", label: "R0" });
-    expect(instructions[12]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("M"),
-      store: ASSIGN.asm["D"],
-      isM: true,
-    });
-    expect(instructions[13]).toEqual({ type: "L", label: "OUTPUT_D" });
-    expect(instructions[14]).toEqual({ type: "A", label: "R2" });
-    expect(instructions[15]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("D"),
-      store: ASSIGN.asm["M"],
-      isM: true,
-    });
-    expect(instructions[16]).toEqual({ type: "L", label: "INFINITE_LOOP" });
-    expect(instructions[17]).toEqual({ type: "A", label: "INFINITE_LOOP" });
-    expect(instructions[18]).toEqual({
-      type: "C",
-      op: COMMANDS.getOp("0"),
-      jump: JUMP.asm["JMP"],
-      isM: false,
-    });
+    expect(instructions).toEqual([
+      {
+        type: "A",
+        label: "R0",
+        lineNum: 4,
+        span: { start: 34, end: 37 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 5,
+        span: { start: 41, end: 44 },
+      },
+      {
+        type: "A",
+        label: "R1",
+        lineNum: 6,
+        span: { start: 81, end: 84 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("D-M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 7,
+        span: { start: 88, end: 93 },
+      },
+      {
+        type: "A",
+        label: "OUTPUT_FIRST",
+        lineNum: 8,
+        span: { start: 144, end: 157 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("D"),
+        jump: JUMP.asm["JGT"],
+        isM: false,
+        lineNum: 9,
+        span: { start: 161, end: 166 },
+      },
+      {
+        type: "A",
+        label: "R1",
+        lineNum: 10,
+        span: { start: 228, end: 231 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 11,
+        span: { start: 235, end: 238 },
+      },
+      {
+        type: "A",
+        label: "OUTPUT_D",
+        lineNum: 12,
+        span: { start: 276, end: 285 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("0"),
+        jump: JUMP.asm["JMP"],
+        isM: false,
+        lineNum: 13,
+        span: { start: 289, end: 294 },
+      },
+      {
+        type: "L",
+        label: "OUTPUT_FIRST",
+        lineNum: 14,
+      },
+      {
+        type: "A",
+        label: "R0",
+        lineNum: 15,
+        span: { start: 341, end: 344 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 16,
+        span: { start: 361, end: 364 },
+      },
+      {
+        type: "L",
+        label: "OUTPUT_D",
+        lineNum: 17,
+      },
+      {
+        type: "A",
+        label: "R2",
+        lineNum: 18,
+        span: { start: 412, end: 415 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("D"),
+        store: ASSIGN.asm["M"],
+        isM: false,
+        lineNum: 19,
+        span: { start: 419, end: 422 },
+      },
+      {
+        type: "L",
+        label: "INFINITE_LOOP",
+        lineNum: 20,
+      },
+      {
+        type: "A",
+        label: "INFINITE_LOOP",
+        lineNum: 21,
+        span: { start: 485, end: 499 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("0"),
+        jump: JUMP.asm["JMP"],
+        isM: false,
+        lineNum: 22,
+        span: { start: 503, end: 508 },
+      },
+    ]);
   });
 
   it("assembles a file to hack", () => {
@@ -159,30 +243,133 @@ describe("asm language", () => {
     fillLabel(asm);
 
     expect(asm.instructions).toEqual([
-      { type: "A", value: 0 },
-      { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
-      { type: "A", value: 1 },
+      {
+        type: "A",
+        value: 0,
+        lineNum: 4,
+        span: { start: 34, end: 37 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 5,
+        span: { start: 41, end: 44 },
+      },
+      {
+        type: "A",
+        value: 1,
+        lineNum: 6,
+        span: { start: 81, end: 84 },
+      },
       {
         type: "C",
         op: COMMANDS.getOp("D-M"),
         store: ASSIGN.asm["D"],
         isM: true,
+        lineNum: 7,
+        span: { start: 88, end: 93 },
       },
-      { type: "A", value: 10 },
-      { type: "C", op: COMMANDS.getOp("D"), jump: JUMP.asm["JGT"], isM: false },
-      { type: "A", value: 1 },
-      { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
-      { type: "A", value: 12 },
-      { type: "C", op: COMMANDS.getOp("0"), jump: JUMP.asm["JMP"], isM: false },
-      { type: "L", label: "OUTPUT_FIRST" },
-      { type: "A", value: 0 },
-      { type: "C", op: COMMANDS.getOp("M"), store: ASSIGN.asm["D"], isM: true },
-      { type: "L", label: "OUTPUT_D" },
-      { type: "A", value: 2 },
-      { type: "C", op: COMMANDS.getOp("D"), store: ASSIGN.asm["M"], isM: true },
-      { type: "L", label: "INFINITE_LOOP" },
-      { type: "A", value: 14 },
-      { type: "C", op: COMMANDS.getOp("0"), jump: JUMP.asm["JMP"], isM: false },
+      {
+        type: "A",
+        value: 10,
+        lineNum: 8,
+        span: { start: 144, end: 157 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("D"),
+        jump: JUMP.asm["JGT"],
+        isM: false,
+        lineNum: 9,
+        span: { start: 161, end: 166 },
+      },
+      {
+        type: "A",
+        value: 1,
+        lineNum: 10,
+        span: { start: 228, end: 231 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 11,
+        span: { start: 235, end: 238 },
+      },
+      {
+        type: "A",
+        value: 12,
+        lineNum: 12,
+        span: { start: 276, end: 285 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("0"),
+        jump: JUMP.asm["JMP"],
+        isM: false,
+        lineNum: 13,
+        span: { start: 289, end: 294 },
+      },
+      {
+        type: "L",
+        label: "OUTPUT_FIRST",
+        lineNum: 14,
+      },
+      {
+        type: "A",
+        value: 0,
+        lineNum: 15,
+        span: { start: 341, end: 344 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("M"),
+        store: ASSIGN.asm["D"],
+        isM: true,
+        lineNum: 16,
+        span: { start: 361, end: 364 },
+      },
+      {
+        type: "L",
+        label: "OUTPUT_D",
+        lineNum: 17,
+      },
+      {
+        type: "A",
+        value: 2,
+        lineNum: 18,
+        span: { start: 412, end: 415 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("D"),
+        store: ASSIGN.asm["M"],
+        isM: false,
+        lineNum: 19,
+        span: { start: 419, end: 422 },
+      },
+      {
+        type: "L",
+        label: "INFINITE_LOOP",
+        lineNum: 20,
+      },
+      {
+        type: "A",
+        value: 14,
+        lineNum: 21,
+        span: { start: 485, end: 499 },
+      },
+      {
+        type: "C",
+        op: COMMANDS.getOp("0"),
+        jump: JUMP.asm["JMP"],
+        isM: false,
+        lineNum: 22,
+        span: { start: 503, end: 508 },
+      },
     ]);
   });
 
@@ -210,7 +397,7 @@ describe("asm language", () => {
       0b0_000000000000000,    // @R0
       0b111_1_110000_010_000, // D=M (OUTPUT_D:12)
       0b0_000000000000010,    // @R2
-      0b111_1_001100_001_000, // M=D (INFINITE LOOP:14)
+      0b111_0_001100_001_000, // M=D (INFINITE LOOP:14)
       0b0_000000000001110,    // @INFINITE_LOOP#14
       0b111_0_101010_000_111, // 0;JMP
     ]);

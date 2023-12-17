@@ -57,10 +57,6 @@ export const Chip = () => {
     tracking.trackPage("/chip");
   }, [tracking]);
 
-  const saveChip = () => {
-    actions.saveChip(hdl);
-  };
-
   useEffect(() => {
     toolStates.setTool("chip");
     tracking.trackEvent("action", "setProject", state.controls.project);
@@ -195,9 +191,6 @@ export const Chip = () => {
             </option>
           ))}
         </select>
-        <button className="flex-0" onClick={saveChip} disabled={useBuiltin}>
-          <Trans>Save</Trans>
-        </button>
       </fieldset>
     </>
   );
@@ -227,8 +220,9 @@ export const Chip = () => {
       <Editor
         className="flex-1"
         value={hdl}
-        onChange={(source) => {
+        onChange={async (source) => {
           setHdl(source);
+          await actions.saveChip(source);
           compile.current(
             useBuiltin || state.controls.builtinOnly ? {} : { hdl: source }
           );

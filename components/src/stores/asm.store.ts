@@ -108,7 +108,7 @@ class Translator {
         highlightInfo.resultHighlight
       );
 
-      if (instruction.type === "A" && isAValueInstruction(instruction)) {
+      if (isAValueInstruction(instruction)) {
         const variable = this.variables.get(instruction.value);
         if (variable != undefined && variable.isHidden) {
           this.symbols.push({

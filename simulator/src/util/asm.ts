@@ -83,7 +83,11 @@ function cop(asm: string): number {
 
   assign = assign ?? (assignExists ? undefined : "");
   jump = jump ?? (jumpExists ? undefined : "");
-  if (!isAssignAsm(assign) || !isJumpAsm(jump) || !isCommandAsm(operation)) {
+  if (
+    !isAssignAsm(assign) ||
+    !isJumpAsm(jump) ||
+    (!isCommandAsm(operation) && !isCommandAsm(operation.replace("M", "A")))
+  ) {
     throw new Error("Invalid c instruction");
   }
 

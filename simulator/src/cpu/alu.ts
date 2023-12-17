@@ -1,24 +1,4 @@
-export type COMMANDS_ASM =
-  | "0"
-  | "1"
-  | "-1"
-  | "D"
-  | "A"
-  | "!D"
-  | "!A"
-  | "-D"
-  | "-A"
-  | "D+1"
-  | "A+1"
-  | "D-1"
-  | "A-1"
-  | "D+A"
-  | "D-A"
-  | "A-D"
-  | "D&A"
-  | "D|A";
-
-const commandASMValues: string[] = [
+const commandASMValues = new Set([
   "0",
   "1",
   "-1",
@@ -37,10 +17,14 @@ const commandASMValues: string[] = [
   "A-D",
   "D&A",
   "D|A",
-];
+] as const);
 
-export function isCommandAsm(command: string): command is COMMANDS_ASM {
-  return commandASMValues.includes(command);
+export type COMMANDS_ASM = typeof commandASMValues extends Set<infer S>
+  ? S
+  : never;
+
+export function isCommandAsm(command: unknown): command is COMMANDS_ASM {
+  return commandASMValues.has(command as COMMANDS_ASM);
 }
 
 export type COMMANDS_OP =
@@ -163,13 +147,25 @@ export const COMMANDS: {
   },
 };
 
-export type ASSIGN_ASM = "" | "M" | "D" | "MD" | "A" | "AM" | "AD" | "AMD";
+const assignAsmValues = new Set([
+  "",
+  "M",
+  "D",
+  "MD",
+  "A",
+  "AM",
+  "AD",
+  "AMD",
+] as const);
+
+export type ASSIGN_ASM = typeof assignAsmValues extends Set<infer S>
+  ? S
+  : never;
+
 export type ASSIGN_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-const assignAsmValues = ["", "M", "D", "MD", "A", "AM", "AD", "AMD"];
-
-export function isAssignAsm(command: string): command is ASSIGN_ASM {
-  return assignAsmValues.includes(command);
+export function isAssignAsm(assign: unknown): assign is ASSIGN_ASM {
+  return assignAsmValues.has(assign as ASSIGN_ASM);
 }
 
 export const ASSIGN: {
@@ -198,20 +194,22 @@ export const ASSIGN: {
   },
 };
 
-export type JUMP_ASM =
-  | ""
-  | "JGT"
-  | "JEQ"
-  | "JGE"
-  | "JLT"
-  | "JNE"
-  | "JLE"
-  | "JMP";
+const jumpAsmValues = new Set([
+  "",
+  "JGT",
+  "JEQ",
+  "JGE",
+  "JLT",
+  "JNE",
+  "JLE",
+  "JMP",
+] as const);
+
+export type JUMP_ASM = typeof jumpAsmValues extends Set<infer S> ? S : never;
 export type JUMP_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-const jumpAsmValues = ["", "JGT", "JEQ", "JGE", "JLT", "JNE", "JLE", "JMP"];
-export function isJumpAsm(command: string): command is JUMP_ASM {
-  return jumpAsmValues.includes(command);
+export function isJumpAsm(jump: unknown): jump is JUMP_ASM {
+  return jumpAsmValues.has(jump as JUMP_ASM);
 }
 
 export const JUMP: {

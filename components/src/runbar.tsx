@@ -2,11 +2,18 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ChangeEvent, ReactNode, useEffect, useState } from "react";
 import { useTimer } from "./timer.js";
 
+interface RunbarTooltipOverrides {
+  step: string;
+  run: string;
+  pause: string;
+  reset: string;
+}
+
 export const Runbar = (props: {
   runner: Timer;
   prefix?: ReactNode;
   children?: ReactNode;
-  overrideTooltips?: (string | undefined)[];
+  overrideTooltips?: Partial<RunbarTooltipOverrides>;
   onSpeedChange?: (speed: number) => void;
 }) => {
   const runner = useTimer(props.runner);
@@ -41,7 +48,7 @@ export const Runbar = (props: {
       <button
         className="flex-0"
         onClick={() => runner.actions.frame()}
-        data-tooltip={props.overrideTooltips?.[0] ?? `Step`}
+        data-tooltip={props.overrideTooltips?.step ?? `Step`}
         data-placement="bottom"
       >
         {/* <Icon name="play_arrow" /> */}
@@ -54,8 +61,8 @@ export const Runbar = (props: {
         }
         data-tooltip={
           runner.state.running
-            ? props.overrideTooltips?.[2] ?? `Pause`
-            : props.overrideTooltips?.[1] ?? `Run`
+            ? props.overrideTooltips?.pause ?? `Pause`
+            : props.overrideTooltips?.run ?? `Run`
         }
         data-placement="bottom"
       >
@@ -65,7 +72,7 @@ export const Runbar = (props: {
       <button
         className="flex-0"
         onClick={() => runner.actions.reset()}
-        data-tooltip={props.overrideTooltips?.[3] ?? `Reset`}
+        data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
         data-placement="bottom"
       >
         {/* <Icon name="fast_rewind" /> */}⏮

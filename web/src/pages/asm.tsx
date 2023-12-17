@@ -157,7 +157,7 @@ export const Asm = () => {
                       📂
                     </button>
                   }
-                  overrideTooltips={["Translate", "Translate all"]}
+                  overrideTooltips={{ step: "Translate", run: "Translate all" }}
                   onSpeedChange={onSpeedChange}
                 />
               )}

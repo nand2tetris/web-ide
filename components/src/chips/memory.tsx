@@ -31,7 +31,7 @@ export const MemoryBlock = ({
   jmp = { value: 0 },
   highlight = -1,
   editable = false,
-  justifyLeft = false,
+  justifyLeft = false, // TODO: handle this in css in the future
   format = dec,
   onChange = () => undefined,
   onFocus = () => undefined,

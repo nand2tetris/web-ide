@@ -44,15 +44,15 @@ export interface AsmAValueInstruction {
 }
 
 export function isAValueInstruction(
-  inst: AsmAInstruction
+  inst: AsmInstruction
 ): inst is AsmAValueInstruction {
-  return (inst as AsmAValueInstruction).value !== undefined;
+  return inst.type == "A" && (inst as AsmAValueInstruction).value !== undefined;
 }
 
 function isALabelInstruction(
-  inst: AsmAInstruction
+  inst: AsmInstruction
 ): inst is AsmALabelInstruction {
-  return (inst as AsmALabelInstruction).label !== undefined;
+  return inst.type == "A" && (inst as AsmALabelInstruction).label !== undefined;
 }
 
 export interface AsmCInstruction {

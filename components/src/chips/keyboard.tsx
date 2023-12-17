@@ -39,7 +39,7 @@ const keyDisplays: Record<string, string> = {
 };
 
 function getKeyDisplay(key: string) {
-  return keyDisplays[key] || key;
+  return keyDisplays[key] ?? key;
 }
 
 function keyPressToHackCharacter(keypress: KeyboardEvent): number {
@@ -64,7 +64,6 @@ export const Keyboard = ({
   keyboard: KeyboardAdapter;
   update?: () => void;
 }) => {
-  // const [showPicker, setShowPicker] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [character, setCharacter] = useState("");
   const [bits, setBits] = useState(keyboard.getKey());
@@ -100,6 +99,10 @@ export const Keyboard = ({
     setCharacter("");
   };
 
+  // note on setCharacter vs setKey:
+  // setCharacter sets the string value that will be displayed in the component,
+  // while setKey actually sets and tracks the value that will be stored in the keyboard memory
+
   const setKey = (key: number) => {
     if (key === 0) {
       return;
@@ -124,7 +127,7 @@ export const Keyboard = ({
       <div className="flex-2">
         <RegisterComponent name="Key" bits={bits} />
       </div>
-      <div className="flex-2">{`Char: ${character}`}</div>
+      <div className="flex-2">Char: {character}</div>
       <div className="flex-3">
         <button onClick={toggleEnabled}>
           {/* <Icon name="keyboard" /> */}

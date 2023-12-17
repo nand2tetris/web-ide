@@ -16,15 +16,20 @@ import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 
-function defaultSymbols(): [string, string][] {
+export interface TranslatorSymbol {
+  name: string;
+  value: string;
+}
+
+function defaultSymbols(): TranslatorSymbol[] {
   return [
-    ["R0", "0"],
-    ["R1", "1"],
-    ["R2", "2"],
-    ["...", ""],
-    ["R15", "15"],
-    ["SCREEN", SCREEN_OFFSET.toString()],
-    ["KBD", KEYBOARD_OFFSET.toString()],
+    { name: "R0", value: "0" },
+    { name: "R1", value: "1" },
+    { name: "R2", value: "2" },
+    { name: "...", value: "" },
+    { name: "R15", value: "15" },
+    { name: "SCREEN", value: SCREEN_OFFSET.toString() },
+    { name: "KBD", value: KEYBOARD_OFFSET.toString() },
   ];
 }
 
@@ -34,53 +39,57 @@ interface HighlightInfo {
   highlightMap: Map<Span, Span>;
 }
 
+interface AsmVariable {
+  name: string;
+  isHidden: boolean;
+}
+
 class Translator {
-  asm: Asm | null = null;
+  asm: Asm = { instructions: [] };
   current = -1;
   done = false;
-  symbols: [string, string][] = [];
-  hiddenSymbols: Map<number, [string, boolean]> = new Map();
-  result = "";
+  symbols: TranslatorSymbol[] = [];
+  private variables: Map<number, AsmVariable> = new Map();
+  private lines: string[] = [];
   lineNumbers: number[] = [];
+
+  getResult() {
+    return this.lines.join("\n");
+  }
 
   load(asm: Asm, lineNum: number) {
     this.symbols = defaultSymbols();
-    this.hiddenSymbols.clear();
+    this.variables.clear();
     this.asm = asm;
     fillLabel(asm, (name, value, isVar) => {
       if (isVar) {
-        this.hiddenSymbols.set(value, [name, false]);
+        this.variables.set(value, { name: name, isHidden: true });
       } else {
-        this.symbols.push([name, value.toString()]);
+        this.symbols.push({ name: name, value: value.toString() });
       }
     });
-    asm.instructions = asm.instructions.filter(
-      (instruction) => instruction.type !== "L"
-    );
+    asm.instructions = asm.instructions.filter(({ type }) => type !== "L");
 
     this.resolveLineNumbers(lineNum);
     this.reset();
   }
 
   resolveLineNumbers(lineNum: number) {
-    if (this.asm === null) {
-      return;
-    }
     this.lineNumbers = Array(lineNum);
     let currentLine = 0;
     for (const instruction of this.asm.instructions) {
       if (instruction.type === "A" || instruction.type === "C") {
         this.lineNumbers[instruction.lineNum] = currentLine;
-        currentLine++;
+        currentLine += 1;
       }
     }
   }
 
   step(highlightInfo: HighlightInfo) {
-    if (this.asm === null || this.current >= this.asm.instructions.length - 1) {
+    if (this.current >= this.asm.instructions.length - 1) {
       return;
     }
-    this.current++;
+    this.current += 1;
     const instruction = this.asm.instructions[this.current];
     if (instruction.type === "A" || instruction.type === "C") {
       highlightInfo.sourceHighlight = instruction.span;
@@ -88,7 +97,7 @@ class Translator {
       if (result === undefined) {
         return;
       }
-      this.result += `${bin(result)}\n`;
+      this.lines.push(`${bin(result)}`);
       highlightInfo.resultHighlight = {
         start: this.current * 17,
         end: (this.current + 1) * 17,
@@ -100,10 +109,13 @@ class Translator {
       );
 
       if (instruction.type === "A" && isAValueInstruction(instruction)) {
-        const variable = this.hiddenSymbols.get(instruction.value);
-        if (variable != undefined && !variable[1]) {
-          this.symbols.push([variable[0], instruction.value.toString()]);
-          this.hiddenSymbols.set(instruction.value, [variable[0], true]);
+        const variable = this.variables.get(instruction.value);
+        if (variable != undefined && variable.isHidden) {
+          this.symbols.push({
+            name: variable.name,
+            value: instruction.value.toString(),
+          });
+          variable.isHidden = false;
         }
       }
 
@@ -114,20 +126,21 @@ class Translator {
   }
 
   resetSymbols() {
-    const hiddenSymbolNames: Set<string> = new Set();
-    for (const [value, variable] of this.hiddenSymbols) {
-      hiddenSymbolNames.add(variable[0]);
-      this.hiddenSymbols.set(value, [variable[0], false]);
+    for (const variable of this.variables.values()) {
+      variable.isHidden = true;
     }
 
+    const variableNames = new Set(
+      Array.from(this.variables.values()).map((v) => v.name)
+    );
     this.symbols = this.symbols.filter(
-      (symbol) => !hiddenSymbolNames.has(symbol[0])
+      (symbol) => !variableNames.has(symbol.name)
     );
   }
 
   reset() {
     this.current = -1;
-    this.result = "";
+    this.lines = [];
     this.done = false;
     this.resetSymbols();
   }
@@ -140,7 +153,7 @@ export interface AsmPageState {
   current: number;
   resultHighlight: Span | undefined;
   sourceHighlight: Span | undefined;
-  symbols: [string, string][];
+  symbols: TranslatorSymbol[];
   result: string;
   compare: string;
   compareName: string | undefined;
@@ -187,7 +200,7 @@ export function makeAsmStore(
     update(state: AsmPageState) {
       state.translating = translating;
       state.current = translator.current;
-      state.result = translator.result;
+      state.result = translator.getResult();
       state.symbols = Array.from(translator.symbols);
       state.lineNumbers = Array.from(translator.lineNumbers);
       state.sourceHighlight = highlightInfo.sourceHighlight;
@@ -240,7 +253,7 @@ export function makeAsmStore(
       }
 
       translator.load(Ok(parseResult), asm.split("\n").length);
-      compiled = true;
+      compiled = translator.asm.instructions.length > 0;
       setStatus("");
       dispatch.current({ action: "update" });
     },

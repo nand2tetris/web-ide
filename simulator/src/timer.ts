@@ -11,6 +11,10 @@ export abstract class Timer {
   }
 
   /// Update the simulation state, but DO NOT perform any UI changes.
+
+  // Note: This used to by synchronous for performance reasons,
+  // but it caused a problem where a 'ROM32k load' test instruction would not resolve before the next ones,
+  // causing the Computer chip to run bad instructions and fail the test script
   abstract tick(): Promise<boolean>;
 
   /// UI Updates are allowed in finishFrame.

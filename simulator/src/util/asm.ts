@@ -1,13 +1,14 @@
 import {
   ASSIGN,
-  ASSIGN_ASM,
   ASSIGN_OP,
   COMMANDS,
   COMMANDS_ASM,
   COMMANDS_OP,
   JUMP,
-  JUMP_ASM,
   JUMP_OP,
+  isAssignAsm,
+  isCommandAsm,
+  isJumpAsm,
 } from "../cpu/alu.js";
 
 export type CommandOps = keyof typeof COMMANDS.op;
@@ -77,11 +78,18 @@ function cop(asm: string): number {
   const parts = asm.match(
     /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
   );
-  const { assign, operation, jump } = parts?.groups ?? {};
+  let { assign, jump } = parts?.groups ?? {};
+  const { operation } = parts?.groups ?? {};
+
+  assign = assign ?? (assignExists ? undefined : "");
+  jump = jump ?? (jumpExists ? undefined : "");
+  if (!isAssignAsm(assign) || !isJumpAsm(jump) || !isCommandAsm(operation)) {
+    throw new Error("Invalid c instruction");
+  }
+
   const mode = operation.includes("M");
-  const aop =
-    ASSIGN.asm[(assign ?? (assignExists ? undefined : "")) as ASSIGN_ASM];
-  const jop = JUMP.asm[(jump ?? (jumpExists ? undefined : "")) as JUMP_ASM];
+  const aop = ASSIGN.asm[assign];
+  const jop = JUMP.asm[jump];
   const cop = COMMANDS.getOp(operation);
 
   return makeC(mode, cop, aop, jop);
@@ -89,13 +97,10 @@ function cop(asm: string): number {
 
 export function makeC(
   isM: boolean,
-  op: COMMANDS_OP | undefined,
-  assign: ASSIGN_OP | undefined,
-  jmp: JUMP_OP | undefined
+  op: COMMANDS_OP,
+  assign: ASSIGN_OP,
+  jmp: JUMP_OP
 ): number {
-  if (op === undefined || assign === undefined || jmp === undefined) {
-    throw new Error("Invalid c instruction");
-  }
   const C = 0xe000;
   const A = isM ? 0x1000 : 0;
   const O = op << 6;

@@ -18,6 +18,31 @@ export type COMMANDS_ASM =
   | "D&A"
   | "D|A";
 
+const commandASMValues: string[] = [
+  "0",
+  "1",
+  "-1",
+  "D",
+  "A",
+  "!D",
+  "!A",
+  "-D",
+  "-A",
+  "D+1",
+  "A+1",
+  "D-1",
+  "A-1",
+  "D+A",
+  "D-A",
+  "A-D",
+  "D&A",
+  "D|A",
+];
+
+export function isCommandAsm(command: string): command is COMMANDS_ASM {
+  return commandASMValues.includes(command);
+}
+
 export type COMMANDS_OP =
   | 0b101010
   | 0b111111
@@ -141,6 +166,12 @@ export const COMMANDS: {
 export type ASSIGN_ASM = "" | "M" | "D" | "MD" | "A" | "AM" | "AD" | "AMD";
 export type ASSIGN_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
+const assignAsmValues = ["", "M", "D", "MD", "A", "AM", "AD", "AMD"];
+
+export function isAssignAsm(command: string): command is ASSIGN_ASM {
+  return assignAsmValues.includes(command);
+}
+
 export const ASSIGN: {
   asm: Record<ASSIGN_ASM, ASSIGN_OP>;
   op: Record<ASSIGN_OP, ASSIGN_ASM>;
@@ -177,6 +208,12 @@ export type JUMP_ASM =
   | "JLE"
   | "JMP";
 export type JUMP_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+const jumpAsmValues = ["", "JGT", "JEQ", "JGE", "JLT", "JNE", "JLE", "JMP"];
+export function isJumpAsm(command: string): command is JUMP_ASM {
+  return jumpAsmValues.includes(command);
+}
+
 export const JUMP: {
   asm: Record<JUMP_ASM, JUMP_OP>;
   op: Record<JUMP_OP, JUMP_ASM>;

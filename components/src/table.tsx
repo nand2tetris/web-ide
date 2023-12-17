@@ -1,11 +1,12 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
+import { TranslatorSymbol } from "./stores/asm.store";
 
 export const Table = ({
   values = [],
   highlight = -1,
   onClick,
 }: {
-  values?: [string, string][];
+  values?: TranslatorSymbol[];
   highlight?: number;
   onClick?: (id: string, value: string) => void;
 }) => {
@@ -14,10 +15,10 @@ export const Table = ({
       {values.map((entry, i) => (
         <TableRow
           key={i}
-          identifier={entry[0]}
-          value={entry[1]}
+          identifier={entry.name}
+          value={entry.value}
           highlight={i === highlight}
-          onClick={() => onClick?.(entry[0], entry[1])}
+          onClick={() => onClick?.(entry.name, entry.value)}
         />
       ))}
     </div>

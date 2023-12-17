@@ -1,7 +1,9 @@
-import { createContext, useCallback, useState } from "react";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
+import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
+import { TOOLS } from "./urls";
 import { useTracking } from "./tracking";
 
 export type Theme = "light" | "dark" | "system";
@@ -27,6 +29,29 @@ export function useMonaco() {
   };
 }
 
+export function useToolStates() {
+  const [tool, setTool] = useState<keyof typeof TOOLS>();
+
+  const [rom, setRom] = useState<number[]>();
+  const [cpuName, setCpuProgramName] = useState<string>();
+
+  const [asmState, setAsmState] = useState<AsmPageState>();
+
+  const setCpuState = (name: string | undefined, rom: number[] | undefined) => {
+    setCpuProgramName(name);
+    setRom(rom);
+  };
+
+  return {
+    tool,
+    setTool,
+    cpuState: { rom: rom, name: cpuName },
+    setCpuState,
+    asmState,
+    setAsmState,
+  };
+}
+
 export function useAppContext(fs: FileSystem = new FileSystem()) {
   const [theme, setTheme] = useState<Theme>("system");
 
@@ -37,6 +62,7 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     tracking: useTracking(),
     theme,
     setTheme,
+    toolStates: useToolStates(),
   };
 }
 
@@ -88,5 +114,31 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   theme: "system",
   setTheme() {
     return undefined;
+  },
+  toolStates: {
+    tool: undefined,
+    setTool() {
+      return undefined;
+    },
+    cpuState: { rom: undefined, name: undefined },
+    setCpuState() {
+      return undefined;
+    },
+    asmState: {
+      asm: "",
+      asmName: undefined,
+      translating: false,
+      current: -1,
+      resultHighlight: undefined,
+      sourceHighlight: undefined,
+      symbols: [],
+      result: "",
+      compare: "",
+      compareName: undefined,
+      lineNumbers: [],
+    },
+    setAsmState() {
+      return undefined;
+    },
   },
 });

@@ -5,7 +5,6 @@ import {
   ASSIGN_ASM,
   ASSIGN_OP,
   COMMANDS,
-  COMMANDS_ASM,
   COMMANDS_OP,
   JUMP,
   JUMP_ASM,
@@ -13,7 +12,7 @@ import {
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
-import { grammars, makeParser, baseSemantics } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser } from "./base.js";
 
 import asmGrammar from "./grammars/asm.ohm.js";
 
@@ -33,17 +32,27 @@ export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
 export interface AsmALabelInstruction {
   type: "A";
   label: string;
+  span: Span;
+  lineNum: number;
 }
 
 export interface AsmAValueInstruction {
   type: "A";
   value: number;
+  span: Span;
+  lineNum: number;
+}
+
+export function isAValueInstruction(
+  inst: AsmInstruction
+): inst is AsmAValueInstruction {
+  return inst.type == "A" && (inst as AsmAValueInstruction).value !== undefined;
 }
 
 function isALabelInstruction(
-  inst: AsmAInstruction
+  inst: AsmInstruction
 ): inst is AsmALabelInstruction {
-  return (inst as AsmALabelInstruction).label !== undefined;
+  return inst.type == "A" && (inst as AsmALabelInstruction).label !== undefined;
 }
 
 export interface AsmCInstruction {
@@ -52,11 +61,14 @@ export interface AsmCInstruction {
   isM: boolean;
   store?: ASSIGN_OP;
   jump?: JUMP_OP;
+  span: Span;
+  lineNum: number;
 }
 
 export interface AsmLabelInstruction {
   type: "L";
   label: string;
+  lineNum: number;
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -81,6 +93,11 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
       return {
         type: "A",
         label: val.name,
+        span: {
+          start: _at.source.startIdx,
+          end: val.source.endIdx,
+        },
+        lineNum: _at.source.getLineAndColumn().lineNum,
       };
     } catch (e) {
       // Pass
@@ -90,6 +107,11 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
       return {
         type: "A",
         value: val.value,
+        span: {
+          start: _at.source.startIdx,
+          end: val.source.endIdx,
+        },
+        lineNum: _at.source.getLineAndColumn().lineNum,
       };
     } catch (e) {
       // pass
@@ -99,14 +121,18 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
   },
   CInstruction(assignN, opN, jmpN): AsmCInstruction {
     const assign = assignN.child(0)?.child(0)?.sourceString as ASSIGN_ASM;
-    const op = opN.sourceString.replace("M", "A") as COMMANDS_ASM;
+    const op = opN.sourceString;
     const jmp = jmpN.child(0)?.child(1)?.sourceString as JUMP_ASM;
-    const isM =
-      assignN.sourceString.includes("M") || opN.sourceString.includes("M");
+    const isM = opN.sourceString.includes("M");
     const inst: AsmCInstruction = {
       type: "C",
-      op: COMMANDS.asm[op],
+      op: COMMANDS.getOp(op),
       isM,
+      span: {
+        start: assignN.source.startIdx,
+        end: jmpN.source.endIdx,
+      },
+      lineNum: assignN.source.getLineAndColumn().lineNum,
     };
     if (jmp) inst.jump = JUMP.asm[jmp];
     if (assign) inst.store = ASSIGN.asm[assign];
@@ -116,11 +142,15 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
     return {
       type: "L",
       label: name,
+      lineNum: _o.source.getLineAndColumn().lineNum,
     };
   },
 });
 
-export function fillLabel(asm: Asm) {
+export function fillLabel(
+  asm: Asm,
+  symbolCallback?: (name: string, value: number, isVar: boolean) => void
+) {
   let nextLabel = 16;
   const symbols = new Map<string, number>([
     ["R0", 0],
@@ -151,6 +181,7 @@ export function fillLabel(asm: Asm) {
   function getLabelValue(label: string) {
     if (!symbols.has(label)) {
       symbols.set(label, nextLabel);
+      symbolCallback?.(label, nextLabel, true);
       nextLabel += 1;
     }
     return assertExists(symbols.get(label), `Label not in symbols: ${label}`);
@@ -170,6 +201,7 @@ export function fillLabel(asm: Asm) {
         throw new Error(`ASM Duplicate label ${instruction.label}`);
       } else {
         symbols.set(instruction.label, line);
+        symbolCallback?.(instruction.label, line, false);
       }
       continue;
     }
@@ -186,20 +218,27 @@ export function fillLabel(asm: Asm) {
   unfilled.forEach(transmuteAInstruction);
 }
 
+export function translateInstruction(inst: AsmInstruction) {
+  if (inst.type === "A") {
+    if (isALabelInstruction(inst)) {
+      throw new Error(`ASM Emitting unfilled A instruction`);
+    }
+    return inst.value;
+  }
+  if (inst.type === "C") {
+    return makeC(
+      inst.isM,
+      inst.op,
+      (inst.store ?? 0) as ASSIGN_OP,
+      (inst.jump ?? 0) as ASSIGN_OP
+    );
+  }
+  return undefined;
+}
+
 export function emit(asm: Asm): number[] {
   return asm.instructions
-    .map((inst) => {
-      if (inst.type === "A") {
-        if (isALabelInstruction(inst)) {
-          throw new Error(`ASM Emitting unfilled A instruction`);
-        }
-        return inst.value;
-      }
-      if (inst.type === "C") {
-        return makeC(inst.isM, inst.op, inst.store, inst.jump);
-      }
-      return undefined;
-    })
+    .map(translateInstruction)
     .filter((op): op is number => op !== undefined);
 }
 

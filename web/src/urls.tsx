@@ -1,19 +1,62 @@
 import { t } from "@lingui/macro";
 import { lazy } from "react";
 
-const Home = lazy(() => import("./pages/home"));
 const Chip = lazy(() => import("./pages/chip"));
 const CPU = lazy(() => import("./pages/cpu"));
+const ASM = lazy(() => import("./pages/asm"));
+const BITMAP = lazy(() => import("./pages/bitmap"));
 const Util = lazy(() => import("./pages/util"));
 const Guide = lazy(() => import("./pages/user_guide"));
+const About = lazy(() => import("./pages/about"));
 
-const URLs = [
-  { href: "/", link: t`Home`, icon: "home", target: <Home /> },
-  { href: "/chip", link: t`Chip`, icon: "memory", target: <Chip /> },
-  { href: "/cpu", link: `CPU`, icon: "developer_board", target: <CPU /> },
+export const LAST_ROUTE_KEY = "lastRoute";
+
+export const TOOLS: Record<string, string> = {
+  chip: "Hardware Simulator",
+  cpu: "CPU Emulator",
+  asm: "Assembler",
+  bitmap: "Bitmap Editor",
+};
+
+const URLs = {
+  chip: {
+    href: "/chip",
+    tooltip: TOOLS["chip"],
+    icon: "memory",
+    target: <Chip />,
+  },
+  cpu: {
+    href: "/cpu",
+    tooltip: TOOLS["cpu"],
+    icon: "developer_board",
+    target: <CPU />,
+  },
+  asm: {
+    href: "/asm",
+    tooltip: TOOLS["asm"],
+    icon: "list_alt",
+    target: <ASM />,
+  },
   // { href: "/vm", link: `VM`, icon: "computer", target: <VM /> },
-  { href: "/util", link: t`Conv`, icon: "function", target: <Util /> },
-  { href: "/guide", link: t`Guide`, icon: "menu_book", target: <Guide /> },
-];
+  bitmap: {
+    href: "/bitmap",
+    tooltip: TOOLS["bitmap"],
+    icon: "grid_on",
+    target: <BITMAP />,
+  },
+  util: {
+    href: "/util",
+    tooltip: t`Converter Tool`,
+    icon: "function",
+    target: <Util />,
+  },
+  guide: {
+    href: "/guide",
+    tooltip: t`Guide`,
+    icon: "menu_book",
+    target: <Guide />,
+  },
+  about: { href: "/about", tooltip: t`About`, icon: "info", target: <About /> },
+};
 
 export default URLs;

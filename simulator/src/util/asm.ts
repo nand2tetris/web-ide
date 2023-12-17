@@ -1,13 +1,14 @@
 import {
   ASSIGN,
-  ASSIGN_ASM,
   ASSIGN_OP,
   COMMANDS,
   COMMANDS_ASM,
   COMMANDS_OP,
   JUMP,
-  JUMP_ASM,
   JUMP_OP,
+  isAssignAsm,
+  isCommandAsm,
+  isJumpAsm,
 } from "../cpu/alu.js";
 
 export type CommandOps = keyof typeof COMMANDS.op;
@@ -69,14 +70,31 @@ function aop(asm: string): number {
 }
 
 function cop(asm: string): number {
-  const parts = asm.match(
-    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
+  const firstPass = asm.match(
+    /(?:(?<assignExists>.+)=)?(.+)(?:;(?<jumpExists>.+))?/
   );
-  const { assign, operation, jump } = parts?.groups ?? {};
-  const mode = operation.includes("M") || assign.includes("M");
-  const aop = ASSIGN.asm[(assign as ASSIGN_ASM) ?? ""];
-  const jop = JUMP.asm[(jump as JUMP_ASM) ?? ""];
-  const cop = COMMANDS.asm[(operation as COMMANDS_ASM) ?? ""];
+  const { assignExists, jumpExists } = firstPass?.groups ?? {};
+
+  const parts = asm.match(
+    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
+  );
+  let { assign, jump } = parts?.groups ?? {};
+  const { operation } = parts?.groups ?? {};
+
+  assign = assign ?? (assignExists ? undefined : "");
+  jump = jump ?? (jumpExists ? undefined : "");
+  if (
+    !isAssignAsm(assign) ||
+    !isJumpAsm(jump) ||
+    (!isCommandAsm(operation) && !isCommandAsm(operation.replace("M", "A")))
+  ) {
+    throw new Error("Invalid c instruction");
+  }
+
+  const mode = operation.includes("M");
+  const aop = ASSIGN.asm[assign];
+  const jop = JUMP.asm[jump];
+  const cop = COMMANDS.getOp(operation);
 
   return makeC(mode, cop, aop, jop);
 }
@@ -84,13 +102,13 @@ function cop(asm: string): number {
 export function makeC(
   isM: boolean,
   op: COMMANDS_OP,
-  assign: ASSIGN_OP = 0,
-  jmp: JUMP_OP = 0
+  assign: ASSIGN_OP,
+  jmp: JUMP_OP
 ): number {
   const C = 0xe000;
   const A = isM ? 0x1000 : 0;
   const O = op << 6;
-  const D = (assign ?? 0) << 3;
-  const J = jmp ?? 0;
+  const D = assign << 3;
+  const J = jmp;
   return C + A + O + D + J;
 }

@@ -4,10 +4,15 @@
 }
 
 ul.icon-list {
+  margin-right: 0.4rem;
+
   li {
     display: flex;
     flex-direction: column;
     align-items: center;
+    border: none;
+    margin: 1.2rem 0.6rem;
+    cursor: pointer;
 
     --raise: -20px;
     --time: 0.33s;
@@ -21,17 +26,6 @@ ul.icon-list {
 
     a {
       opacity: 0;
-    }
-
-    &:hover {
-      span,
-      a {
-        top: var(--raise);
-      }
-
-      a {
-        opacity: 1;
-      }
     }
   }
 }

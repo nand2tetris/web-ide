@@ -31,6 +31,7 @@ import { useImmerReducer } from "../react.js";
 
 import { BaseContext } from "./base.context.js";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { compare } from "../compare.js";
 
 export const PROJECT_NAMES = [
   ["01", `Project 1`],
@@ -241,7 +242,7 @@ export function makeChipStore(
 
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
-      const passed = state.files.out.trim() === state.files.cmp.trim();
+      const passed = compare(state.files.cmp.trim(), state.files.out.trim());
       setStatus(
         passed
           ? `Simulation successful: The output file is identical to the compare file`

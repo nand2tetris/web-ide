@@ -3,6 +3,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import * as project_01 from "./project_01/index.js";
 import * as project_02 from "./project_02/index.js";
 import * as project_03 from "./project_03/index.js";
+import * as project_04 from "./project_04/index.js";
 import * as project_05 from "./project_05/index.js";
 
 /**
@@ -38,6 +39,7 @@ export const resetFiles = async (fs: FileSystem) => {
   await project_01.resetFiles(fs);
   await project_02.resetFiles(fs);
   await project_03.resetFiles(fs);
+  await project_04.resetFiles(fs);
   await project_05.resetFiles(fs);
   reset = false;
 };

@@ -41,7 +41,7 @@ import { Accordian, Panel } from "../shell/panel";
 
 export const Chip = () => {
   const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker, tracking } = useContext(AppContext);
+  const { filePicker, tracking, toolStates } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
@@ -57,11 +57,8 @@ export const Chip = () => {
     tracking.trackPage("/chip");
   }, [tracking]);
 
-  const saveChip = () => {
-    actions.saveChip(hdl);
-  };
-
   useEffect(() => {
+    toolStates.setTool("chip");
     tracking.trackEvent("action", "setProject", state.controls.project);
     tracking.trackEvent("action", "setChip", state.controls.chipName);
   }, []);
@@ -121,8 +118,8 @@ export const Chip = () => {
         dispatch.current({ action: "updateTestStep" });
       }
 
-      tick(): boolean {
-        return actions.stepTest();
+      async tick(): Promise<boolean> {
+        return await actions.stepTest();
       }
 
       toggle(): void {
@@ -194,9 +191,6 @@ export const Chip = () => {
             </option>
           ))}
         </select>
-        <button className="flex-0" onClick={saveChip} disabled={useBuiltin}>
-          <Trans>Save</Trans>
-        </button>
       </fieldset>
     </>
   );
@@ -226,8 +220,9 @@ export const Chip = () => {
       <Editor
         className="flex-1"
         value={hdl}
-        onChange={(source) => {
+        onChange={async (source) => {
           setHdl(source);
+          await actions.saveChip(source);
           compile.current(
             useBuiltin || state.controls.builtinOnly ? {} : { hdl: source }
           );
@@ -285,7 +280,7 @@ export const Chip = () => {
       header={
         <>
           <div>
-            <Trans>Chip</Trans>
+            <Trans>Chip</Trans> {state.controls.chipName}
           </div>
           {chipButtons}
         </>
@@ -300,7 +295,7 @@ export const Chip = () => {
               sim={state.sim}
               toggle={actions.toggle}
               setInputValid={setInputValid}
-              hideInternal={state.controls.builtinOnly}
+              hideInternal={state.controls.builtinOnly || useBuiltin}
             />
           </PinContext.Provider>
           {visualizations.length > 0 && (

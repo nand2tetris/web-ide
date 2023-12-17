@@ -1,26 +1,31 @@
-export type COMMANDS_ASM =
-  | "0"
-  | "1"
-  | "-1"
-  | "D"
-  | "A"
-  | "M"
-  | "!D"
-  | "!A"
-  | "-D"
-  | "-A"
-  | "D+1"
-  | "A+1"
-  | "D-1"
-  | "A-1"
-  | "D+A"
-  | "D-A"
-  | "D-M"
-  | "A-D"
-  | "D&A"
-  | "D&M"
-  | "D|A"
-  | "D|M";
+const commandASMValues = new Set([
+  "0",
+  "1",
+  "-1",
+  "D",
+  "A",
+  "!D",
+  "!A",
+  "-D",
+  "-A",
+  "D+1",
+  "A+1",
+  "D-1",
+  "A-1",
+  "D+A",
+  "D-A",
+  "A-D",
+  "D&A",
+  "D|A",
+] as const);
+
+export type COMMANDS_ASM = typeof commandASMValues extends Set<infer S>
+  ? S
+  : never;
+
+export function isCommandAsm(command: unknown): command is COMMANDS_ASM {
+  return commandASMValues.has(command as COMMANDS_ASM);
+}
 
 export type COMMANDS_OP =
   | 0b101010
@@ -95,6 +100,7 @@ export const COMMANDS_ALU: {
 export const COMMANDS: {
   asm: Record<COMMANDS_ASM, COMMANDS_OP>;
   op: Record<COMMANDS_OP, COMMANDS_ASM>;
+  getOp: (asm: string) => COMMANDS_OP;
 } = {
   asm: {
     "0": 0b101010, // 42 0x2A
@@ -102,7 +108,6 @@ export const COMMANDS: {
     "-1": 0b111010, // 58 0x3A
     D: 0b001100, // 12 0x0C
     A: 0b110000, // 48 0x30
-    M: 0b110000, // 48 0x30
     "!D": 0b001101, // 13 0x0D
     "!A": 0b110001, // 49 0x31
     "-D": 0b001111, // 15 0x0F
@@ -113,12 +118,9 @@ export const COMMANDS: {
     "A-1": 0b110010, // 50 0x32
     "D+A": 0b000010, //  2 0x02
     "D-A": 0b010011, // 19 0x13
-    "D-M": 0b010011, // 19 0x13
     "A-D": 0b000111, //  7 0x07
     "D&A": 0b000000, //  0 0x00
-    "D&M": 0b000000, //  0 0x00
     "D|A": 0b010101, // 21 0x15
-    "D|M": 0b010101, // 21 0x15
   },
   op: {
     0x2a: "0",
@@ -140,10 +142,31 @@ export const COMMANDS: {
     0x00: "D&A",
     0x15: "D|A",
   },
+  getOp(asm: string) {
+    return COMMANDS.asm[asm.replace("M", "A") as COMMANDS_ASM];
+  },
 };
 
-export type ASSIGN_ASM = "" | "M" | "D" | "MD" | "A" | "AM" | "AD" | "AMD";
+const assignAsmValues = new Set([
+  "",
+  "M",
+  "D",
+  "MD",
+  "A",
+  "AM",
+  "AD",
+  "AMD",
+] as const);
+
+export type ASSIGN_ASM = typeof assignAsmValues extends Set<infer S>
+  ? S
+  : never;
+
 export type ASSIGN_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export function isAssignAsm(assign: unknown): assign is ASSIGN_ASM {
+  return assignAsmValues.has(assign as ASSIGN_ASM);
+}
 
 export const ASSIGN: {
   asm: Record<ASSIGN_ASM, ASSIGN_OP>;
@@ -171,16 +194,24 @@ export const ASSIGN: {
   },
 };
 
-export type JUMP_ASM =
-  | ""
-  | "JGT"
-  | "JEQ"
-  | "JGE"
-  | "JLT"
-  | "JNE"
-  | "JLE"
-  | "JMP";
+const jumpAsmValues = new Set([
+  "",
+  "JGT",
+  "JEQ",
+  "JGE",
+  "JLT",
+  "JNE",
+  "JLE",
+  "JMP",
+] as const);
+
+export type JUMP_ASM = typeof jumpAsmValues extends Set<infer S> ? S : never;
 export type JUMP_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export function isJumpAsm(jump: unknown): jump is JUMP_ASM {
+  return jumpAsmValues.has(jump as JUMP_ASM);
+}
+
 export const JUMP: {
   asm: Record<JUMP_ASM, JUMP_OP>;
   op: Record<JUMP_OP, JUMP_ASM>;

@@ -1,4 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
@@ -7,11 +8,19 @@ import {
   SubMemory,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { CPUTest } from "@nand2tetris/simulator/tst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
+
+function makeTst() {
+  return `repeat {
+  ticktock;
+}`;
+}
 
 export interface CpuSim {
   A: number;
@@ -24,7 +33,9 @@ export interface CpuSim {
 }
 
 export interface CPUTestSim {
-  useTest: boolean;
+  tst: string;
+  cmp: string;
+  out: string;
   highlight: Span | undefined;
 }
 
@@ -78,24 +89,47 @@ export function makeCpuStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
-  const test = new CPUTest(new ROM(HACK));
-  let useTest = false;
+  let test = new CPUTest(new ROM(HACK));
 
   const reducers = {
     update(state: CpuPageState) {
       state.sim = reduceCPUTest(test, dispatch);
-      state.test.useTest = useTest;
       state.test.highlight = test.currentStep?.span;
+    },
+
+    setTest(state: CpuPageState, { tst, cmp }: { tst?: string; cmp?: string }) {
+      state.test.tst = tst ?? state.test.tst;
+      state.test.cmp = cmp ?? state.test.cmp;
+      state.test.out = "";
+    },
+
+    testStep(state: CpuPageState) {
+      state.test.out = test.log();
+      this.update(state);
+    },
+
+    testFinished(state: CpuPageState) {
+      const passed = compare(state.test.cmp.trim(), test.log().trim());
+      setStatus(
+        passed
+          ? `Simulation successful: The output file is identical to the compare file`
+          : `Simulation error: The output file differs from the compare file`
+      );
     },
   };
 
   const actions = {
     tick() {
-      if (useTest) {
-        test.step();
-      } else {
-        test.cpu.tick();
+      test.cpu.tick();
+    },
+
+    testStep() {
+      const done = test.step();
+      dispatch.current({ action: "testStep" });
+      if (done) {
+        dispatch.current({ action: "testFinished" });
       }
+      return done;
     },
 
     resetRAM() {
@@ -107,28 +141,48 @@ export function makeCpuStore(
     },
 
     toggleUseTest() {
-      useTest = !useTest;
       dispatch.current({ action: "update" });
     },
 
     resetCPU() {
       test.reset();
+      dispatch.current({ action: "setTest", payload: {} });
       dispatch.current({ action: "update" });
       setStatus("Reset CPU");
     },
 
     reset() {
-      this.resetRAM();
       this.resetCPU();
       setStatus("Reset CPU & RAM");
+    },
+
+    compileTest(file: string, cmp?: string) {
+      dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
+      const tst = TST.parse(file);
+
+      if (isErr(tst)) {
+        setStatus(`Failed to parse test`);
+        return false;
+      }
+      setStatus(`Parsed tst`);
+
+      test = CPUTest.from(Ok(tst), test.cpu.ROM);
+      dispatch.current({ action: "update" });
+      return true;
+    },
+
+    initialize() {
+      this.compileTest(makeTst());
     },
   };
 
   const initialState = {
     sim: reduceCPUTest(test, dispatch),
     test: {
-      useTest,
       highlight: test.currentStep?.span,
+      tst: "",
+      cmp: "",
+      out: "",
     },
   };
 

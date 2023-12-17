@@ -17,6 +17,7 @@ export interface MemoryAdapter {
   size: number;
   get(index: number): number;
   set(index: number, value: number): void;
+  reset(): void;
   update(cell: number, value: string, format: Format): void;
   load(fs: FileSystem, path: string): Promise<void>;
   loadBytes(bytes: number[]): void;
@@ -67,10 +68,14 @@ export class Memory implements MemoryAdapter {
   }
 
   update(cell: number, value: string, format: Format) {
-    let current: number;
+    let current: number | undefined;
     switch (format) {
       case "asm":
-        current = op(value);
+        try {
+          current = op(value);
+        } catch {
+          current = undefined;
+        }
         break;
       case "bin":
         current = int2(value);
@@ -84,7 +89,7 @@ export class Memory implements MemoryAdapter {
         break;
     }
 
-    if (isFinite(current) && current <= 0xffff) {
+    if (current !== undefined && isFinite(current) && current <= 0xffff) {
       this.set(cell, current);
     }
   }
@@ -136,6 +141,12 @@ export class SubMemory implements MemoryAdapter {
   set(index: number, value: number): void {
     if (index >= 0 && index < this.size) {
       this.parent.set(index + this.offset, value);
+    }
+  }
+
+  reset(): void {
+    for (let i = 0; i < this.size; i++) {
+      this.set(i, 0);
     }
   }
 

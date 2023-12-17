@@ -14,14 +14,15 @@ import {
   FORMATS,
   MemoryAdapter,
 } from "@nand2tetris/simulator/cpu/memory.js";
+import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
-import { loadBlob, loadAsm, loadHack } from "@nand2tetris/simulator/loader.js";
 
-import InlineEdit from "../inline_edit.js";
-import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 import { useClockReset } from "../clockface.js";
+import InlineEdit from "../inline_edit.js";
+import { useStateInitializer } from "../react.js";
 import { BaseContext } from "../stores/base.context.js";
+import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 
 const ITEM_HEIGHT = 34;
 
@@ -30,15 +31,19 @@ export const MemoryBlock = ({
   jmp = { value: 0 },
   highlight = -1,
   editable = false,
+  justifyLeft = false, // TODO: handle this in css in the future
   format = dec,
   onChange = () => undefined,
+  onFocus = () => undefined,
 }: {
   jmp?: { value: number };
   memory: MemoryAdapter;
   highlight?: number;
   editable?: boolean;
+  justifyLeft?: boolean;
   format?: (v: number) => string;
   onChange?: (i: number, value: string, previous: number) => void;
+  onFocus?: (i: number) => void;
 }) => {
   const settings = useMemo<Partial<VirtualScrollSettings>>(
     () => ({
@@ -61,9 +66,12 @@ export const MemoryBlock = ({
       <MemoryCell
         index={i}
         value={format(v)}
+        size={memory.size}
         editable={editable}
+        justifyLeft={justifyLeft}
         highlight={i === highlight}
         onChange={onChange}
+        onFocus={onFocus}
       />
     ),
     [format, editable, highlight, onChange]
@@ -82,29 +90,39 @@ export const MemoryBlock = ({
 export const MemoryCell = ({
   index,
   value,
+  size,
   highlight = false,
   editable = false,
+  justifyLeft = false,
   onChange = () => undefined,
+  onFocus = () => undefined,
 }: {
   index: number;
   value: string;
+  size?: number;
   highlight?: boolean;
   editable?: boolean;
+  justifyLeft?: boolean;
   onChange?: (i: number, value: string, previous: number) => void;
+  onFocus?: (i: number) => void;
 }) => (
   <div style={{ display: "flex", height: "100%" }}>
     <code
       style={{
         ...rounded("none"),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
+        whiteSpace: "pre",
       }}
     >
-      {hex(index)}
+      {size
+        ? dec(index).padStart(Math.ceil(Math.log10(size)), " ")
+        : dec(index)}
     </code>
     <code
       style={{
         flex: "1",
-        textAlign: "right",
+        textAlign: justifyLeft ? "left" : "right",
+        color: "black",
         ...rounded("none"),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
       }}
@@ -112,12 +130,14 @@ export const MemoryCell = ({
       {editable ? (
         <InlineEdit
           value={value}
+          highlight={highlight}
           onChange={(newValue: string) =>
             onChange(index, newValue, Number(value))
           }
+          onFocus={() => onFocus(index)}
         />
       ) : (
-        <span>{value}</span>
+        <span style={{ color: "black" }}>{value}</span>
       )}
     </code>
   </div>
@@ -125,29 +145,41 @@ export const MemoryCell = ({
 
 export const Memory = ({
   name = "Memory",
+  displayEnabled = true,
   highlight = -1,
   editable = true,
   memory,
   format = "dec",
+  onUpload = undefined,
+  onChange = undefined,
 }: {
   name?: string;
+  displayEnabled?: boolean;
   editable?: boolean;
   highlight?: number;
   memory: MemoryAdapter;
   format: Format;
+  onUpload?: (fileName: string) => void;
+  onChange?: () => void;
 }) => {
-  const [fmt, setFormat] = useState(format);
+  const [fmt, setFormat] = useStateInitializer(format);
   const [jmp, setJmp] = useState("");
   const [goto, setGoto] = useState({ value: 0 });
+  const [highlighted, setHighlighted] = useStateInitializer(highlight);
+  const [renderKey, setRenderKey] = useState(0);
 
   const jumpTo = () => {
+    const value =
+      !isNaN(parseInt(jmp)) && isFinite(parseInt(jmp)) ? Number(jmp) : 0;
+    setHighlighted(value);
     setGoto({
-      value: !isNaN(parseInt(jmp)) && isFinite(parseInt(jmp)) ? Number(jmp) : 0,
+      value: value,
     });
   };
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
   const doLoad = useCallback(() => {
+    onChange?.();
     fileUploadRef.current?.click();
   }, [fileUploadRef]);
 
@@ -158,6 +190,7 @@ export const Memory = ({
       return;
     }
     const file = event.target.files[0];
+    onUpload?.(file.name);
     const source = await file.text();
     const loader = file.name.endsWith("hack")
       ? loadHack
@@ -167,15 +200,31 @@ export const Memory = ({
     const bytes = await loader(source);
     memory.loadBytes(bytes);
     event.target.value = ""; // Clear the input out
+    setFormat(
+      file.name.endsWith("hack")
+        ? "bin"
+        : file.name.endsWith("asm")
+        ? "asm"
+        : fmt
+    );
     jumpTo();
   }, []);
 
-  const doUpdate = useCallback(
-    (i: number, v: string) => {
-      memory.update(i, v, fmt ?? "dec");
-    },
-    [memory, fmt]
-  );
+  const rerenderMemoryBlock = () => {
+    setRenderKey(renderKey + 1);
+  };
+
+  const clear = () => {
+    memory.reset();
+    onChange?.();
+    rerenderMemoryBlock();
+  };
+
+  const doUpdate = (i: number, v: string) => {
+    memory.update(i, v, fmt ?? "dec");
+    onChange?.();
+    rerenderMemoryBlock();
+  };
 
   useClockReset(() => {
     setJmp("");
@@ -193,18 +242,37 @@ export const Memory = ({
             ref={fileUploadRef}
             onChange={upload}
           />
-          <button onClick={doLoad} className="flex-0">
+          <button
+            onClick={doLoad}
+            className="flex-0"
+            data-tooltip={"Load file"}
+            data-placement="bottom"
+          >
             {/* <Icon name="upload_file" /> */}
             📂
           </button>
+          <button
+            onClick={clear}
+            className="flex-0"
+            data-tooltip={"Clear"}
+            data-placement="bottom"
+          >
+            {/* <Icon name="upload_file" /> */}
+            🆑
+          </button>
           <input
             style={{ width: "4em", height: "100%" }}
-            placeholder="Jump"
+            placeholder="Addr"
             value={jmp}
             onKeyDown={({ key }) => key === "Enter" && jumpTo()}
             onChange={({ target: { value } }) => setJmp(value)}
           />
-          <button onClick={jumpTo} className="flex-0">
+          <button
+            onClick={jumpTo}
+            className="flex-0"
+            data-tooltip={"Scroll to address"}
+            data-placement="bottom"
+          >
             {/* <Icon name="move_down" /> */}
             ⤵️
           </button>
@@ -215,14 +283,21 @@ export const Memory = ({
           </select>
         </fieldset>
       </header>
-      <MemoryBlock
-        jmp={goto}
-        memory={memory}
-        highlight={highlight}
-        editable={editable}
-        format={(v: number) => doFormat(fmt, v)}
-        onChange={doUpdate}
-      />
+      {displayEnabled ? (
+        <MemoryBlock
+          key={renderKey}
+          jmp={goto}
+          memory={memory}
+          highlight={highlighted}
+          editable={editable}
+          justifyLeft={fmt == "asm"}
+          format={(v: number) => doFormat(fmt, v)}
+          onChange={doUpdate}
+          onFocus={(i) => setHighlighted(i)}
+        />
+      ) : (
+        "Memory display is disabled"
+      )}
     </article>
   );
 };

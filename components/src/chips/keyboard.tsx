@@ -1,5 +1,5 @@
-import { KeyboardEvent, useState } from "react";
 import { KeyboardAdapter } from "@nand2tetris/simulator/cpu/memory.js";
+import { useEffect, useState } from "react";
 import { RegisterComponent } from "./register.js";
 
 const KeyMap: Record<string, number | undefined> = {
@@ -31,6 +31,17 @@ const KeyMap: Record<string, number | undefined> = {
   F12: 152,
 };
 
+const keyDisplays: Record<string, string> = {
+  ArrowLeft: "L-arrow",
+  ArrowUp: "U-arrow",
+  ArrowRight: "R-arrow",
+  ArrowDown: "D-arrow",
+};
+
+function getKeyDisplay(key: string) {
+  return keyDisplays[key] ?? key;
+}
+
 function keyPressToHackCharacter(keypress: KeyboardEvent): number {
   const mapping = KeyMap[keypress.key];
   if (mapping !== undefined) {
@@ -53,12 +64,21 @@ export const Keyboard = ({
   keyboard: KeyboardAdapter;
   update?: () => void;
 }) => {
-  const [showPicker, setShowPicker] = useState(false);
+  const [enabled, setEnabled] = useState(false);
+  const [character, setCharacter] = useState("");
   const [bits, setBits] = useState(keyboard.getKey());
   let currentKey = 0;
 
-  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    event.preventDefault();
+  const toggleEnabled = () => {
+    setEnabled(!enabled);
+  };
+
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (!enabled) {
+      return;
+    }
+
+    setCharacter(getKeyDisplay(event.key));
     const key = keyPressToHackCharacter(event);
     if (key === currentKey) {
       return;
@@ -67,12 +87,21 @@ export const Keyboard = ({
     update?.();
   };
 
-  const onKeyUp = (event: KeyboardEvent<HTMLInputElement>) => {
+  const onKeyUp = (event: KeyboardEvent) => {
+    if (!enabled) {
+      return;
+    }
+
     currentKey = 0;
     keyboard.clearKey();
     update?.();
     setBits(keyboard.getKey());
+    setCharacter("");
   };
+
+  // note on setCharacter vs setKey:
+  // setCharacter sets the string value that will be displayed in the component,
+  // while setKey actually sets and tracks the value that will be stored in the keyboard memory
 
   const setKey = (key: number) => {
     if (key === 0) {
@@ -81,39 +110,29 @@ export const Keyboard = ({
     keyboard.setKey(key);
     setBits(keyboard.getKey());
     currentKey = key;
-    // setShowPicker(false);
   };
 
-  const clear = () => {
-    setKey(0);
-  };
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
 
-  const changeKey = () => {
-    setShowPicker(true);
-  };
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  });
 
   return (
     <div className="flex row align-baseline">
-      <div className="flex-1">
-        <RegisterComponent name="Keyboard" bits={bits} />
+      <div className="flex-2">
+        <RegisterComponent name="Key" bits={bits} />
       </div>
-      <div className={showPicker ? "flex-1" : "flex-0"}>
-        {showPicker ? (
-          <input
-            ref={(e) => e?.focus()}
-            type="text"
-            onKeyDown={onKeyDown}
-            onKeyUp={onKeyUp}
-          />
-        ) : (
-          <fieldset role="group">
-            <button onClick={changeKey}>
-              {/* <Icon name="keyboard" /> */}
-              ⌨️
-            </button>
-            <button onClick={clear}>🆑</button>
-          </fieldset>
-        )}
+      <div className="flex-2">Char: {character}</div>
+      <div className="flex-3">
+        <button onClick={toggleEnabled}>
+          {/* <Icon name="keyboard" /> */}
+          {`${enabled ? "Disable" : "Enable"} Keyboard`}
+        </button>
       </div>
     </div>
   );

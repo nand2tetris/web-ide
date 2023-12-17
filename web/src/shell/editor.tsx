@@ -1,8 +1,7 @@
 import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
 import { Trans } from "@lingui/macro";
-import MonacoEditor, { useMonaco } from "@monaco-editor/react";
+import MonacoEditor, { OnMount, useMonaco } from "@monaco-editor/react";
 import type * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
-import { OnMount } from "@monaco-editor/react";
 import ohm from "ohm-js";
 import {
   CSSProperties,
@@ -94,20 +93,27 @@ const makeHighlight = (
 const Monaco = ({
   value,
   onChange,
+  onCursorPositionChange,
   language,
   error,
   disabled = false,
   highlight: currentHighlight,
+  dynamicHeight = false,
+  lineNumberTransform,
 }: {
   value: string;
   onChange: (value: string) => void;
+  onCursorPositionChange?: (index: number) => void;
   language: string;
   error?: ohm.MatchResult | undefined;
   disabled?: boolean;
   highlight?: Span;
+  dynamicHeight?: boolean;
+  lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
   const monaco = useMonaco();
+  const [height, setHeight] = useState(0);
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
@@ -135,6 +141,15 @@ const Monaco = ({
     );
   }, [decorations, monaco, editor, highlight]);
 
+  const calculateHeight = () => {
+    if (dynamicHeight) {
+      const contentHeight = editor.current?.getContentHeight();
+      if (contentHeight) {
+        setHeight(contentHeight);
+      }
+    }
+  };
+
   // Mark and center highlighted spans
   useEffect(() => {
     highlight.current = currentHighlight;
@@ -157,11 +172,25 @@ const Monaco = ({
         theme: codeTheme(),
         scrollBeyondLastLine: false,
         readOnly: disabled,
+        lineNumbers: lineNumberTransform ?? "on",
+        folding: false,
       });
       doHighlight();
+      calculateHeight();
+      editor.current?.onDidChangeCursorPosition((e) => {
+        const index = editor.current?.getModel()?.getOffsetAt(e.position);
+        if (index !== undefined) {
+          onCursorPositionChange?.(index);
+        }
+      });
     },
     [codeTheme]
   );
+
+  useEffect(() => {
+    if (editor.current === undefined) return;
+    editor.current.updateOptions({ lineNumbers: lineNumberTransform ?? "on" });
+  }, [lineNumberTransform]);
 
   // Set themes
   useEffect(() => {
@@ -214,13 +243,19 @@ const Monaco = ({
     ]);
   }, [error, editor, monaco, language]);
 
+  const onValueChange = (v = "") => {
+    calculateHeight();
+    onChange(v);
+  };
+
   return (
     <>
       <MonacoEditor
         value={value}
-        onChange={(v = "") => onChange(v)}
+        onChange={onValueChange}
         language={language}
         onMount={onMount}
+        height={dynamicHeight ? height : undefined}
       />
     </>
   );
@@ -232,26 +267,34 @@ export const Editor = ({
   disabled = false,
   value,
   onChange,
+  onCursorPositionChange,
   grammar,
   language,
   highlight,
+  dynamicHeight = false,
+  lineNumberTransform,
 }: {
   className?: string;
   style?: CSSProperties;
   disabled?: boolean;
   value: string;
   onChange: (source: string) => void;
-  grammar: ohm.Grammar;
+  onCursorPositionChange?: (index: number) => void;
+  grammar?: ohm.Grammar;
   language: string;
   highlight?: Span;
+  dynamicHeight?: boolean;
+  lineNumberTransform?: (n: number) => string;
 }) => {
   const [error, setError] = useState<ohm.MatchResult>();
   const { monaco } = useContext(AppContext);
 
   const parse = useCallback(
     (text = "") => {
-      const parsed = grammar.match(text);
-      setError(parsed.failed() ? parsed : undefined);
+      if (grammar) {
+        const parsed = grammar.match(text);
+        setError(parsed.failed() ? parsed : undefined);
+      }
     },
     [setError, grammar]
   );
@@ -268,15 +311,21 @@ export const Editor = ({
   );
 
   return (
-    <div className={`Editor ${className}`} style={style}>
+    <div
+      className={`Editor ${dynamicHeight ? "dynamic-height" : ""} ${className}`}
+      style={style}
+    >
       {monaco.canUse && monaco.wants ? (
         <Monaco
           value={value}
           onChange={onChangeCB}
+          onCursorPositionChange={onCursorPositionChange}
           language={language}
           error={error}
           disabled={disabled}
           highlight={highlight}
+          dynamicHeight={dynamicHeight}
+          lineNumberTransform={lineNumberTransform}
         />
       ) : (
         <>

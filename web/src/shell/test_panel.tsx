@@ -24,12 +24,14 @@ export const TestPanel = ({
   cmp: [cmp, setCmp],
   out: [out],
   disabled = false,
+  onLoadTest = undefined,
 }: {
   runner: RefObject<Timer | undefined>;
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
   disabled?: boolean;
+  onLoadTest?: (tst: string, cmp?: string) => void;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
@@ -50,7 +52,8 @@ export const TestPanel = ({
     try {
       const path = await filePicker.select();
       const tst = await fs.readFile(path);
-      setTst(tst);
+      const cmp = await fs.readFile(path.replace(/\.tst$/, ".cmp"));
+      onLoadTest?.(tst, cmp);
       // await compile.current({ tst });
     } catch (e) {
       console.error(e);

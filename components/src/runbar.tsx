@@ -1,15 +1,54 @@
-import { ReactNode } from "react";
 import { Timer } from "@nand2tetris/simulator/timer.js";
+import { ChangeEvent, ReactNode, useEffect, useState } from "react";
 import { useTimer } from "./timer.js";
 
-export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
+interface RunbarTooltipOverrides {
+  step: string;
+  run: string;
+  pause: string;
+  reset: string;
+}
+
+export const Runbar = (props: {
+  runner: Timer;
+  prefix?: ReactNode;
+  children?: ReactNode;
+  overrideTooltips?: Partial<RunbarTooltipOverrides>;
+  onSpeedChange?: (speed: number) => void;
+}) => {
   const runner = useTimer(props.runner);
+  const [speedValue, setSpeed] = useState(0);
+
+  const speedValues: Record<number, [number, number]> = {
+    0: [1000, 1],
+    1: [500, 1],
+    2: [16, 1],
+    3: [16, 16666],
+    4: [16, 16666 * 30],
+  };
+
+  useEffect(() => {
+    updateSpeed();
+  }, [speedValue]);
+
+  const updateSpeed = () => {
+    const [speed, steps] = speedValues[speedValue];
+    runner.dispatch({ action: "setSpeed", payload: speed });
+    runner.dispatch({ action: "setSteps", payload: steps });
+  };
+
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setSpeed(Number(e.target.value));
+    props.onSpeedChange?.(Number(e.target.value));
+  };
+
   return (
     <fieldset role="group">
+      {props.prefix}
       <button
         className="flex-0"
         onClick={() => runner.actions.frame()}
-        data-tooltip={`Step`}
+        data-tooltip={props.overrideTooltips?.step ?? `Step`}
         data-placement="bottom"
       >
         {/* <Icon name="play_arrow" /> */}
@@ -20,7 +59,11 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
         onClick={() =>
           runner.state.running ? runner.actions.stop() : runner.actions.start()
         }
-        data-tooltip={runner.state.running ? `Pause` : `Play`}
+        data-tooltip={
+          runner.state.running
+            ? props.overrideTooltips?.pause ?? `Pause`
+            : props.overrideTooltips?.run ?? `Run`
+        }
         data-placement="bottom"
       >
         {/* <Icon name={runner.state.running ? "pause" : "fast_forward"} /> */}
@@ -29,67 +72,35 @@ export const Runbar = (props: { runner: Timer; children?: ReactNode }) => {
       <button
         className="flex-0"
         onClick={() => runner.actions.reset()}
-        data-tooltip={`Reset`}
+        data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
         data-placement="bottom"
       >
         {/* <Icon name="fast_rewind" /> */}⏮
       </button>
-      <select
-        className="flex-1"
-        name="speed"
-        value={runner.state.speed}
-        onChange={(e) => {
-          runner.dispatch({
-            action: "setSpeed",
-            payload: Number(e.target?.value ?? runner.state.speed),
-          });
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 16,
+          fontWeight: "normal",
         }}
-        disabled={runner.state.running}
       >
-        {[
-          // [2000, `Debug`], // For debugging, basically the same as clicking through
-          [1000, `Slow`],
-          [500, `Fast`],
-          [16, `Faster`], // 16ms, or 60fps
-        ].map(([speed, label]) => (
-          <option key={speed} value={speed}>
-            {label}
-          </option>
-        ))}
-      </select>
-      <select
-        className="flex-1"
-        name="steps"
-        value={runner.state.steps}
-        onChange={(e) => {
-          runner.dispatch({
-            action: "setSteps",
-            payload: Number(e.target?.value ?? runner.state.steps),
-          });
-        }}
-        disabled={runner.state.running}
-      >
-        {[
-          ...[
-            [1, `1 Step`],
-            [500, "500"],
-            [1000, "1000"],
-            [2000, "2000"],
-            [8000, "8000"],
-          ],
-          ...(runner.state.speed === 16
-            ? [
-                // 60fps
-                [16666, "1MHz"],
-                [16666 * 30, "30MHz"],
-              ]
-            : []),
-        ].map(([steps, label]) => (
-          <option key={steps} value={steps}>
-            {label}
-          </option>
-        ))}
-      </select>
+        <span style={{ padding: "0.2rem" }}>Slow</span>
+        <input
+          type="range"
+          min={0}
+          max={4}
+          step={1}
+          value={speedValue}
+          disabled={runner.state.running}
+          onChange={onChange}
+          style={{ width: "150px", padding: "0.2rem" }}
+          data-tooltip={"Execution speed"}
+          data-placement={"bottom"}
+        />
+        <span style={{ padding: "0.2rem" }}>Fast</span>
+      </div>
       {props.children}
     </fieldset>
   );

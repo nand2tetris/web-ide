@@ -1,5 +1,7 @@
 import {
+  CPU,
   Keyboard,
+  ROM32K,
   Screen,
 } from "@nand2tetris/simulator/chip/builtins/computer/computer.js";
 import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
@@ -13,7 +15,7 @@ import {
 } from "@nand2tetris/simulator/chip/builtins/sequential/ram.js";
 import { Chip, HIGH } from "@nand2tetris/simulator/chip/chip.js";
 import { Flags } from "@nand2tetris/simulator/cpu/alu.js";
-import { CPU, decode } from "@nand2tetris/simulator/cpu/cpu.js";
+import { decode } from "@nand2tetris/simulator/cpu/cpu.js";
 import { ReactElement } from "react";
 import { ALUComponent } from "./alu.js";
 import { Keyboard as KeyboardComponent } from "./keyboard.js";
@@ -84,7 +86,7 @@ export function makeVisualization(
       <MemoryComponent
         name={chip.name}
         memory={chip.memory}
-        format="dec"
+        format={chip instanceof ROM32K ? "asm" : "dec"}
         highlight={chip.address}
       />
     );

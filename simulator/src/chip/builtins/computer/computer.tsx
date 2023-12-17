@@ -209,14 +209,19 @@ export class CPU extends ClockedChip {
 
   override reset() {
     this._state = emptyState();
+
+    // This is a bit of a hack, but because super.reset() does ticktock,
+    // we need to set PC to -1, so that it will be 0 after the reset
+    this._state.PC = -1;
+
     super.reset();
   }
 }
 
 export class Computer extends Chip {
+  #cpu = new CPU();
   #ram = new Memory();
   #rom = new ROM32K();
-  #cpu = new CPU();
 
   constructor() {
     super(["reset"], []);
@@ -227,12 +232,14 @@ export class Computer extends Chip {
         from: { name: "instruction", start: 0 },
         to: { name: "instruction", start: 0 },
       },
-      { from: { name: "outM", start: 0 }, to: { name: "inM", start: 0 } },
+      { from: { name: "oldOutM", start: 0 }, to: { name: "inM", start: 0 } },
       { from: { name: "writeM", start: 0 }, to: { name: "writeM", start: 0 } },
       {
         from: { name: "addressM", start: 0 },
         to: { name: "addressM", start: 0 },
       },
+      { from: { name: "newInM", start: 0 }, to: { name: "outM", start: 0 } },
+      { from: { name: "pc", start: 0 }, to: { name: "pc", start: 0 } },
     ]);
 
     this.wire(this.#rom, [
@@ -244,13 +251,13 @@ export class Computer extends Chip {
     ]);
 
     this.wire(this.#ram, [
-      { from: { name: "inM", start: 0 }, to: { name: "in", start: 0 } },
+      { from: { name: "newInM", start: 0 }, to: { name: "in", start: 0 } },
       { from: { name: "writeM", start: 0 }, to: { name: "load", start: 0 } },
       {
         from: { name: "addressM", start: 0 },
         to: { name: "address", start: 0 },
       },
-      { from: { name: "outM", start: 0 }, to: { name: "out", start: 0 } },
+      { from: { name: "oldOutM", start: 0 }, to: { name: "out", start: 0 } },
     ]);
   }
 
@@ -272,7 +279,7 @@ export class Computer extends Chip {
     return super.get(name, offset);
   }
 
-  override load(fs: FileSystem, path: string): Promise<void> {
-    return this.#rom.load(fs, path);
+  override async load(fs: FileSystem, path: string): Promise<void> {
+    return await this.#rom.load(fs, path);
   }
 }

@@ -1,6 +1,9 @@
 .Editor {
-  height: 100%;
   width: 100%;
+
+  &:not(.dynamic-height) {
+    height: 100%;
+  }
 
   .monaco-editor {
     // Magic

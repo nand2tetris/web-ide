@@ -26,7 +26,7 @@ function defaultSymbols(): TranslatorSymbol[] {
     { name: "R0", value: "0" },
     { name: "R1", value: "1" },
     { name: "R2", value: "2" },
-    { name: "...", value: "" },
+    { name: "...", value: "" }, // abbreviation of R3 - R14
     { name: "R15", value: "15" },
     { name: "SCREEN", value: SCREEN_OFFSET.toString() },
     { name: "KBD", value: KEYBOARD_OFFSET.toString() },

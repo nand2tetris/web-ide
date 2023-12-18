@@ -13,7 +13,8 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Mux16.hdl
 /**
  * 16-bit multiplexor: 
- * out[i] = ((sel == 0), a[i], b[i]) for i = 0..15
+ * for i = 0, ..., 15:
+ * if (sel == 0) out[i] = a[i], else out[i] = b[i]
  */
 CHIP Mux16 {
     IN a[16], b[16], sel;

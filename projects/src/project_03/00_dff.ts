@@ -3,8 +3,9 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/03/DFF.hdl
 /**
- * Data Flip-flop: out(t) = in(t-1) 
- * where t is the current time unit, or clock cycle.
+ * Data Flip-flop:
+ * maintains its current value:
+ * out(t+1) = in(t)
  */
 CHIP DFF {
     IN  in;

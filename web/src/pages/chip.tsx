@@ -222,7 +222,9 @@ export const Chip = () => {
         value={hdl}
         onChange={async (source) => {
           setHdl(source);
-          await actions.saveChip(source);
+          if (!useBuiltin) {
+            await actions.saveChip(source);
+          }
           compile.current(
             useBuiltin || state.controls.builtinOnly ? {} : { hdl: source }
           );

@@ -9,7 +9,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Xor.hdl
 /**
  * Exclusive-or gate:
- * out = (((a == 0) & (b = 1)) | ((a == 1) & (b = 0)), 1, 0)
+ * out = (not(a) and b) or (a and not(b))
  */
 CHIP Xor {
     IN a, b;

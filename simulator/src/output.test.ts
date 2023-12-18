@@ -1,6 +1,7 @@
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import { Output } from "./output.js";
-import { Test, TestOutputInstruction } from "./tst.js";
+import { Test } from "./test/tst.js";
+import { TestOutputInstruction } from "./test/instruction.js";
 
 class OutputTest extends Test {
   private readonly vars: Map<string, number | string>;

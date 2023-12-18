@@ -1,3 +1,8 @@
+import {
+  FileSystem,
+  ObjectFileSystemAdapter,
+} from "@davidsouther/jiffies/lib/esm/fs.js";
+import { resetFiles } from "@nand2tetris/projects/index.js";
 import { grammar, TST } from "./tst.js";
 
 const NOT_TST = `
@@ -163,8 +168,8 @@ describe("tst language", () => {
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
-        { ops: [{ op: "eval" }], span: { start: 0, end: 5 } },
-        { ops: [{ op: "eval" }], span: { start: 7, end: 12 } },
+        { ops: [{ op: "eval" }], span: { start: 0, end: 5, line: 1 } },
+        { ops: [{ op: "eval" }], span: { start: 7, end: 12, line: 3 } },
       ],
     });
   });
@@ -178,6 +183,7 @@ describe("tst language", () => {
           span: {
             start: 1,
             end: 34,
+            line: 2,
           },
           ops: [
             {
@@ -209,6 +215,7 @@ describe("tst language", () => {
           span: {
             end: 59,
             start: 36,
+            line: 4,
           },
           ops: [
             { op: "set", id: "in", value: 0 },
@@ -220,6 +227,7 @@ describe("tst language", () => {
           span: {
             start: 60,
             end: 83,
+            line: 5,
           },
           ops: [
             { op: "set", id: "in", value: 1 },
@@ -240,6 +248,7 @@ describe("tst language", () => {
           span: {
             start: 1,
             end: 58,
+            line: 2,
           },
           ops: [
             {
@@ -289,6 +298,7 @@ describe("tst language", () => {
           span: {
             start: 59,
             end: 94,
+            line: 3,
           },
           ops: [
             { op: "set", id: "in", value: 0 },
@@ -301,6 +311,7 @@ describe("tst language", () => {
           span: {
             start: 95,
             end: 108,
+            line: 3,
           },
           ops: [{ op: "tock" }, { op: "output" }],
         },
@@ -308,6 +319,7 @@ describe("tst language", () => {
           span: {
             start: 109,
             end: 144,
+            line: 4,
           },
           ops: [
             { op: "set", id: "in", value: 0 },
@@ -330,6 +342,7 @@ describe("tst language", () => {
           span: {
             start: 1,
             end: 35,
+            line: 2,
           },
           ops: [
             {
@@ -362,6 +375,7 @@ describe("tst language", () => {
           span: {
             start: 36,
             end: 64,
+            line: 3,
           },
           ops: [
             { op: "set", id: "in", value: 33413 /* unsigned */ },
@@ -385,13 +399,15 @@ describe("tst language", () => {
               span: {
                 start: 15,
                 end: 28,
+                line: 3,
               },
               ops: [{ op: "eval" }, { op: "output" }],
             },
           ],
           span: {
             start: 1,
-            end: 10,
+            end: 30,
+            line: 2,
           },
         },
       ],
@@ -407,13 +423,15 @@ describe("tst language", () => {
           count: -1,
           span: {
             start: 1,
-            end: 7,
+            end: 27,
+            line: 2,
           },
           statements: [
             {
               span: {
                 start: 12,
                 end: 25,
+                line: 3,
               },
               ops: [{ op: "eval" }, { op: "output" }],
             },
@@ -431,7 +449,8 @@ describe("tst language", () => {
         {
           span: {
             start: 0,
-            end: 15,
+            end: 27,
+            line: 1,
           },
           condition: {
             op: "<>",
@@ -443,6 +462,7 @@ describe("tst language", () => {
               span: {
                 start: 20,
                 end: 25,
+                line: 2,
               },
               ops: [{ op: "eval" }],
             },
@@ -462,10 +482,32 @@ describe("tst language", () => {
           span: {
             start: 0,
             end: 21,
+            line: 1,
           },
           ops: [{ op: "loadRom", file: "Max.hack" }],
         },
       ],
     });
   });
+});
+
+it("loads all project tst files", async () => {
+  const fs = new FileSystem(new ObjectFileSystemAdapter());
+  await resetFiles(fs);
+  async function check() {
+    for (const stat of await fs.scandir(".")) {
+      if (stat.isDirectory()) {
+        fs.pushd(stat.name);
+        await check();
+        fs.popd();
+      } else {
+        if (stat.name.endsWith("vm_tst")) {
+          const tst = await fs.readFile(stat.name);
+          const match = grammar.match(tst);
+          expect(match).toHaveSucceeded();
+        }
+      }
+    }
+  }
+  await check();
 });

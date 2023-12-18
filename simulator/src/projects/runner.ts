@@ -11,9 +11,9 @@ import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
 import { build as buildChip } from "../chip/builder.js";
-import { ChipTest } from "../tst.js";
 import { ParseError } from "../languages/base.js";
 import { Chip } from "../chip/chip.js";
+import { ChipTest } from "../test/chiptst.js";
 
 export interface AssignmentFiles extends Assignment {
   hdl: string;

@@ -150,8 +150,7 @@
     }
   }
 
-  nav ol,
-  nav ul {
+  nav :is(ol, ul) {
     margin-right: 0;
   }
 

@@ -5,6 +5,7 @@ import {
   ASSIGN_ASM,
   ASSIGN_OP,
   COMMANDS,
+  COMMANDS_ASM,
   COMMANDS_OP,
   JUMP,
   JUMP_ASM,
@@ -12,7 +13,7 @@ import {
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
-import { Span, baseSemantics, grammars, makeParser } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 import asmGrammar from "./grammars/asm.ohm.js";
 
@@ -32,15 +33,13 @@ export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
 export interface AsmALabelInstruction {
   type: "A";
   label: string;
-  span: Span;
-  lineNum: number;
+  span?: Span;
 }
 
 export interface AsmAValueInstruction {
   type: "A";
   value: number;
-  span: Span;
-  lineNum: number;
+  span?: Span;
 }
 
 export function isAValueInstruction(
@@ -61,14 +60,13 @@ export interface AsmCInstruction {
   isM: boolean;
   store?: ASSIGN_OP;
   jump?: JUMP_OP;
-  span: Span;
-  lineNum: number;
+  span?: Span;
 }
 
 export interface AsmLabelInstruction {
   type: "L";
   label: string;
-  lineNum: number;
+  span?: Span;
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -88,71 +86,52 @@ asmSemantics.addAttribute<Asm>("asm", {
 });
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  AInstruction(_at, val): AsmAInstruction {
-    try {
-      return {
-        type: "A",
-        label: val.name,
-        span: {
-          start: _at.source.startIdx,
-          end: val.source.endIdx,
-        },
-        lineNum: _at.source.getLineAndColumn().lineNum,
-      };
-    } catch (e) {
-      // Pass
-    }
-
-    try {
-      return {
-        type: "A",
-        value: val.value,
-        span: {
-          start: _at.source.startIdx,
-          end: val.source.endIdx,
-        },
-        lineNum: _at.source.getLineAndColumn().lineNum,
-      };
-    } catch (e) {
-      // pass
-    }
-
-    throw new Error(`AsmAInstruction must have either a name or a value`);
+  AInstruction(_at, name): AsmAInstruction {
+    return A(name.value, span(this.source));
   },
   CInstruction(assignN, opN, jmpN): AsmCInstruction {
-    const assign = assignN.child(0)?.child(0)?.sourceString as ASSIGN_ASM;
-    const op = opN.sourceString;
-    const jmp = jmpN.child(0)?.child(1)?.sourceString as JUMP_ASM;
-    const isM = opN.sourceString.includes("M");
-    const inst: AsmCInstruction = {
-      type: "C",
-      op: COMMANDS.getOp(op),
-      isM,
-      span: {
-        start: assignN.source.startIdx,
-        end: jmpN.source.endIdx,
-      },
-      lineNum: assignN.source.getLineAndColumn().lineNum,
-    };
-    if (jmp) inst.jump = JUMP.asm[jmp];
-    if (assign) inst.store = ASSIGN.asm[assign];
-    return inst;
+    const assign = (assignN.child(0)?.child(0)?.sourceString ??
+      "") as ASSIGN_ASM;
+    const op = opN.sourceString as COMMANDS_ASM;
+    const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
+    return C(assign, op, jmp, span(this.source));
   },
   Label(_o, { name }, _c): AsmLabelInstruction {
-    return {
-      type: "L",
-      label: name,
-      lineNum: _o.source.getLineAndColumn().lineNum,
-    };
+    return L(name, span(this.source));
   },
 });
+
+export type Pointer =
+  | "R0"
+  | "R1"
+  | "R2"
+  | "R3"
+  | "R4"
+  | "R5"
+  | "R6"
+  | "R7"
+  | "R8"
+  | "R9"
+  | "R10"
+  | "R11"
+  | "R12"
+  | "R13"
+  | "R14"
+  | "R15"
+  | "SP"
+  | "LCL"
+  | "ARG"
+  | "THIS"
+  | "THAT"
+  | "SCREEN"
+  | "KBD";
 
 export function fillLabel(
   asm: Asm,
   symbolCallback?: (name: string, value: number, isVar: boolean) => void
 ) {
   let nextLabel = 16;
-  const symbols = new Map<string, number>([
+  const symbols = new Map<Pointer | string, number>([
     ["R0", 0],
     ["R1", 1],
     ["R2", 2],
@@ -218,7 +197,27 @@ export function fillLabel(
   unfilled.forEach(transmuteAInstruction);
 }
 
-export function translateInstruction(inst: AsmInstruction) {
+function writeCInst(inst: AsmCInstruction): string {
+  return (
+    (inst.store ? `${ASSIGN.op[inst.store]}=` : "") +
+    COMMANDS.op[inst.op] +
+    (inst.jump ? `;${JUMP.op[inst.jump]}` : "")
+  );
+}
+
+export const AsmToString = (inst: AsmInstruction | string): string => {
+  if (typeof inst === "string") return inst;
+  switch (inst.type) {
+    case "A":
+      return isALabelInstruction(inst) ? `@${inst.label}` : `@${inst.value}`;
+    case "L":
+      return `(${inst.label})`;
+    case "C":
+      return writeCInst(inst);
+  }
+};
+
+export function translateInstruction(inst: AsmInstruction): number | undefined {
   if (inst.type === "A") {
     if (isALabelInstruction(inst)) {
       throw new Error(`ASM Emitting unfilled A instruction`);
@@ -242,6 +241,49 @@ export function emit(asm: Asm): number[] {
     .filter((op): op is number => op !== undefined);
 }
 
+const A = (source: string | number, span?: Span): AsmAInstruction =>
+  typeof source === "string"
+    ? {
+        type: "A",
+        label: source,
+        span,
+      }
+    : {
+        type: "A",
+        value: source,
+        span,
+      };
+
+const C = (
+  assign: ASSIGN_ASM,
+  op: COMMANDS_ASM,
+  jmp?: JUMP_ASM,
+  span?: Span
+): AsmCInstruction => {
+  const inst: AsmCInstruction = {
+    type: "C",
+    op: COMMANDS.getOp(op),
+    isM: op.includes("M"),
+    span,
+  };
+  if (jmp) inst.jump = JUMP.asm[jmp];
+  if (assign) inst.store = ASSIGN.asm[assign];
+  return inst;
+};
+
+const AC = (
+  source: string | number,
+  assign: ASSIGN_ASM,
+  op: COMMANDS_ASM,
+  jmp?: JUMP_ASM
+) => [A(source), C(assign, op, jmp)];
+
+const L = (label: string, span?: Span): AsmLabelInstruction => ({
+  type: "L",
+  label,
+  span,
+});
+
 export const ASM = {
   grammar: asmGrammar,
   semantics: asmSemantics,
@@ -251,4 +293,8 @@ export const ASM = {
     fillLabel,
     emit,
   },
+  A,
+  C,
+  AC,
+  L,
 };

@@ -18,13 +18,13 @@ Tst <: Base {
     | TstLoadROMOperation
 
   TstLoadROMOperation = ROM32K Load FileName
-  TstFileOperation = FileOperation FileName
+  TstFileOperation = FileOperation FileName?
   TstOutputListOperation = "output-list" OutputFormat+
   OutputFormat = Name Index? percent FormatStyle wholeDec dot wholeDec dot wholeDec
   TstSetOperation = Set Name Index? Number
   Index = OpenSquare wholeDec? CloseSquare
   Condition = Value CompareOp Value
-  TstEvalOperation = Eval | TickTock | Tick | Tock
+  TstEvalOperation = Eval | TickTock | Tick | Tock | VmStep
   TstOutputOperation = Output
   TstEchoOperation = Echo String
   TstClearEchoOperation = ClearEcho
@@ -37,6 +37,7 @@ Tst <: Base {
   Tick = "tick"
   Tock = "tock"
   TickTock = "ticktock"
+  VmStep = "vmstep"
   Echo = "echo"
   Repeat = "repeat"
   ClearEcho = "clear-echo"

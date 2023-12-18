@@ -1,7 +1,7 @@
 /** Reads tst files to apply and perform test runs. */
 
 import ohm from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span } from "./base.js";
+import { baseSemantics, grammars, makeParser, span, Span } from "./base.js";
 
 export interface TstEchoOperation {
   op: "echo";
@@ -20,7 +20,7 @@ export interface TstSetOperation {
 }
 
 export interface TstEvalOperation {
-  op: "eval" | "tick" | "tock" | "ticktock";
+  op: "eval" | "tick" | "tock" | "ticktock" | "vmstep";
 }
 
 export interface TstOutputOperation {
@@ -49,7 +49,7 @@ export interface TstLoadROMOperation {
 
 export interface TstFileOperation {
   op: "load" | "output-file" | "compare-to";
-  file: string;
+  file?: string;
 }
 
 export type TstOperation =
@@ -183,7 +183,7 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   TstFileOperation(op, file) {
     return {
       op: op.sourceString as TstFileOperation["op"],
-      file: file.sourceString,
+      file: file?.sourceString,
     };
   },
 });
@@ -203,20 +203,14 @@ tstSemantics.addAttribute<TstStatement>("statement", {
     return {
       statements: statements.children.map(({ statement }) => statement),
       condition: cond.condition,
-      span: {
-        start: op.source.startIdx,
-        end: cond.source.endIdx,
-      },
+      span: span(this.source),
     };
   },
   TstRepeat(op, count, _o, statements, _c) {
     return {
       statements: statements.children.map(({ statement }) => statement),
       count: count.child(0)?.value ?? -1,
-      span: {
-        start: op.source.startIdx,
-        end: count.source.endIdx,
-      },
+      span: span(this.source),
     };
   },
   TstStatement(list, end) {
@@ -224,10 +218,7 @@ tstSemantics.addAttribute<TstStatement>("statement", {
       ops: list
         .asIteration()
         .children.map((node) => node.operation as TstOperation),
-      span: {
-        start: this.source.startIdx,
-        end: this.source.endIdx,
-      },
+      span: span(this.source),
     };
     if (end.sourceString === "!") {
       stmt.break = true;

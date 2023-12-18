@@ -4,6 +4,29 @@ while (R0 > 0) {
     R0 = R0 - 1
 }`;
 
+export const VM = `
+(_loop_start)
+  push constant 0
+  push arg 0
+  eq
+  jump-eq _loop_end
+
+  push arg 1
+  push local 0
+  add
+  pop local 0
+
+  push arg 0
+  push constant 1
+  sub
+  pop arg 0
+
+  jump _loop_start
+
+(_loop_end)
+  jump loop_end
+`;
+
 export const ASM = `
 @R2
 M=0

@@ -5,6 +5,8 @@ import * as project_02 from "./project_02/index.js";
 import * as project_03 from "./project_03/index.js";
 import * as project_04 from "./project_04/index.js";
 import * as project_05 from "./project_05/index.js";
+import * as project_07 from "./project_07/index.js";
+import * as project_08 from "./project_08/index.js";
 
 /**
  * Duplicated for web from node:path.
@@ -32,6 +34,11 @@ export const ChipProjects = {
   "05": project_05,
 };
 
+export const VmProjects = {
+  "07": project_07,
+  "08": project_08,
+};
+
 let reset = false;
 export const resetFiles = async (fs: FileSystem) => {
   if (reset) return; // React will double-render a call to resetFiles in useEffect.
@@ -41,6 +48,8 @@ export const resetFiles = async (fs: FileSystem) => {
   await project_03.resetFiles(fs);
   await project_04.resetFiles(fs);
   await project_05.resetFiles(fs);
+  await project_07.resetFiles(fs);
+  await project_08.resetFiles(fs);
   reset = false;
 };
 
@@ -102,9 +111,23 @@ export const ASM_PROJECTS: Record<"06", string[]> = {
   "06": ["Add", "Max", "Rectangle", "Pong"],
 };
 
+export const VM_PROJECTS: Record<"07" | "08", string[]> = {
+  "07": ["SimpleAdd", "StackTest", "BasicTest", "PointerTest", "StaticTest"],
+  "08": [
+    "BasicLoop",
+    "FibonacciSeries",
+    "SimpleFunction",
+    "NestedCall",
+    "FibonacciElement",
+    "StaticsTest",
+  ],
+};
+
 export const Assignments = {
   ...project_01.CHIPS,
   ...project_02.CHIPS,
   ...project_03.CHIPS,
   ...project_05.CHIPS,
+  ...project_07.VMS,
+  ...project_08.VMS,
 };

@@ -5,6 +5,7 @@ const Chip = lazy(() => import("./pages/chip"));
 const CPU = lazy(() => import("./pages/cpu"));
 const ASM = lazy(() => import("./pages/asm"));
 const BITMAP = lazy(() => import("./pages/bitmap"));
+const VM = lazy(() => import("./pages/vm"));
 const Util = lazy(() => import("./pages/util"));
 const Guide = lazy(() => import("./pages/user_guide"));
 const About = lazy(() => import("./pages/about"));
@@ -15,6 +16,7 @@ export const TOOLS: Record<string, string> = {
   chip: "Hardware Simulator",
   cpu: "CPU Emulator",
   asm: "Assembler",
+  VM: "VM Emulator",
   bitmap: "Bitmap Editor",
 };
 
@@ -56,6 +58,7 @@ const URLs = {
     icon: "menu_book",
     target: <Guide />,
   },
+  vm: { href: "/vm", link: `VM`, icon: "computer", target: <VM /> },
   about: { href: "/about", tooltip: t`About`, icon: "info", target: <About /> },
 };
 

@@ -10,7 +10,6 @@ import { Asm, ASM } from "../languages/asm.js";
 import { Cmp, CMP } from "../languages/cmp.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
-import { ChipTest } from "../tst.js";
 import {
   ChipProjects,
   ASM_PROJECTS,
@@ -22,6 +21,7 @@ import {
   FILES as ASM_FILES,
 } from "@nand2tetris/projects/samples/project_06/index.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
+import { ChipTest } from "../test/chiptst.js";
 
 const PROJECTS = new Set<string>(["01", "03"]);
 const SKIP = new Set<string>([]);

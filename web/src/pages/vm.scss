@@ -1,0 +1,11 @@
+@use "./page.scss";
+
+.VmPage {
+  tbody {
+    font-family: var(--font-family-monospace);
+  }
+
+  tr.highlight {
+    background-color: antiquewhite;
+  }
+}

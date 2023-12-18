@@ -27,6 +27,7 @@ export interface MemoryAdapter {
     start?: number,
     end?: number
   ): Iterable<T>;
+  [Symbol.iterator](): Iterable<number>;
 }
 
 export interface KeyboardAdapter {
@@ -117,10 +118,14 @@ export class Memory implements MemoryAdapter {
     start = 0,
     end = this.size
   ): Iterable<T> {
-    assert(start < end);
+    assert(start <= end);
     for (let i = start; i < end; i++) {
       yield fn(i, this.get(i));
     }
+  }
+
+  [Symbol.iterator](): Iterable<number> {
+    return this.map((_, v) => v);
   }
 }
 
@@ -167,12 +172,17 @@ export class SubMemory implements MemoryAdapter {
   range(start?: number, end?: number): number[] {
     return this.parent.range(start, end);
   }
+
   map<T>(
     fn: (index: number, value: number) => T,
-    start?: number,
-    end?: number
+    start = 0,
+    end: number = this.size
   ): Iterable<T> {
-    return this.parent.map(fn, start, end);
+    return this.parent.map(fn, start + this.offset, end + this.offset);
+  }
+
+  [Symbol.iterator](): Iterable<number> {
+    return this.map((_, v) => v);
   }
 }
 
@@ -204,6 +214,9 @@ export class ROM extends Memory {
 }
 
 export class RAM extends Memory {
+  keyboard = new SubMemory(this, 1, KEYBOARD_OFFSET);
+  screen = new SubMemory(this, SCREEN_SIZE, SCREEN_OFFSET);
+
   // 4k main memory, 2k screen memory, 1 keyboard
   // static readonly SIZE = 0x4000 + 0x2000 + 0x0001;
   static readonly SIZE = 0x8000;

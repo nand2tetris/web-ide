@@ -1,20 +1,6 @@
-@use "../pico/button-group.scss";
-@use "../shell/tab.scss";
+@use "./page.scss";
 
 .ChipPage {
-  h2 {
-    margin: 0 var(--nav-element-spacing-horizontal);
-  }
-
-  --screen-size: calc(512px + calc(var(--block-spacing-horizontal) * 5));
-
-  height: 100%;
-
-  grid-template-rows: 1fr;
-  grid-template-columns: 1fr var(--screen-size) 1fr;
-  margin: 0px;
-  gap: 0;
-
   grid-template-areas: "hdl prt tst";
 
   ._hdl_panel {

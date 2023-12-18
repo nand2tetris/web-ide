@@ -2,6 +2,10 @@ import ohm from "ohm-js";
 import { int10, int16, int2 } from "../util/twos.js";
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 
+export interface Location extends Span {
+  line: number;
+}
+
 export const UNKNOWN_PARSE_ERROR = `Unknown parse error`;
 
 import baseGrammar from "./grammars/base.ohm.js";

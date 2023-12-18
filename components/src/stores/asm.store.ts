@@ -78,8 +78,11 @@ class Translator {
     this.lineNumbers = Array(lineNum);
     let currentLine = 0;
     for (const instruction of this.asm.instructions) {
-      if (instruction.type === "A" || instruction.type === "C") {
-        this.lineNumbers[instruction.lineNum] = currentLine;
+      if (
+        (instruction.type === "A" || instruction.type === "C") &&
+        instruction.loc != undefined
+      ) {
+        this.lineNumbers[instruction.loc.line] = currentLine;
         currentLine += 1;
       }
     }
@@ -92,7 +95,7 @@ class Translator {
     this.current += 1;
     const instruction = this.asm.instructions[this.current];
     if (instruction.type === "A" || instruction.type === "C") {
-      highlightInfo.sourceHighlight = instruction.span;
+      highlightInfo.sourceHighlight = instruction.loc;
       const result = translateInstruction(this.asm.instructions[this.current]);
       if (result === undefined) {
         return;
@@ -103,10 +106,12 @@ class Translator {
         end: (this.current + 1) * 17,
       };
 
-      highlightInfo.highlightMap.set(
-        instruction.span,
-        highlightInfo.resultHighlight
-      );
+      if (highlightInfo.sourceHighlight) {
+        highlightInfo.highlightMap.set(
+          highlightInfo.sourceHighlight,
+          highlightInfo.resultHighlight
+        );
+      }
 
       if (isAValueInstruction(instruction)) {
         const variable = this.variables.get(instruction.value);

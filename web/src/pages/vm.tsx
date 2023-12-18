@@ -18,7 +18,7 @@ const VM = () => {
   const runner = useRef<Timer>();
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
-      override tick() {
+      override async tick() {
         actions.step();
         return false;
       }

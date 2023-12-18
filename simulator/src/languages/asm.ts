@@ -5,6 +5,7 @@ import {
   ASSIGN_ASM,
   ASSIGN_OP,
   COMMANDS,
+  COMMANDS_ASM,
   COMMANDS_OP,
   JUMP,
   JUMP_ASM,
@@ -12,7 +13,7 @@ import {
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
-import { Span, baseSemantics, grammars, makeParser } from "./base.js";
+import { Location, baseSemantics, grammars, makeParser } from "./base.js";
 
 import asmGrammar from "./grammars/asm.ohm.js";
 
@@ -32,15 +33,13 @@ export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
 export interface AsmALabelInstruction {
   type: "A";
   label: string;
-  span: Span;
-  lineNum: number;
+  loc?: Location;
 }
 
 export interface AsmAValueInstruction {
   type: "A";
   value: number;
-  span: Span;
-  lineNum: number;
+  loc?: Location;
 }
 
 export function isAValueInstruction(
@@ -61,14 +60,13 @@ export interface AsmCInstruction {
   isM: boolean;
   store?: ASSIGN_OP;
   jump?: JUMP_OP;
-  span: Span;
-  lineNum: number;
+  loc?: Location;
 }
 
 export interface AsmLabelInstruction {
   type: "L";
   label: string;
-  lineNum: number;
+  loc?: Location;
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -88,16 +86,16 @@ asmSemantics.addAttribute<Asm>("asm", {
 });
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  AInstruction(_at, val): AsmAInstruction {
+  AInstruction({ source: start }, { name, source: end }): AsmAInstruction {
     try {
       return {
         type: "A",
-        label: val.name,
-        span: {
-          start: _at.source.startIdx,
-          end: val.source.endIdx,
+        label: name,
+        loc: {
+          start: start.startIdx,
+          end: end.endIdx,
+          line: start.getLineAndColumn().lineNum,
         },
-        lineNum: _at.source.getLineAndColumn().lineNum,
       };
     } catch (e) {
       // Pass
@@ -106,12 +104,12 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
     try {
       return {
         type: "A",
-        value: val.value,
-        span: {
-          start: _at.source.startIdx,
-          end: val.source.endIdx,
+        value: name,
+        loc: {
+          start: start.startIdx,
+          end: end.endIdx,
+          line: start.getLineAndColumn().lineNum,
         },
-        lineNum: _at.source.getLineAndColumn().lineNum,
       };
     } catch (e) {
       // pass
@@ -128,21 +126,25 @@ asmSemantics.addAttribute<AsmInstruction>("instruction", {
       type: "C",
       op: COMMANDS.getOp(op),
       isM,
-      span: {
+      loc: {
         start: assignN.source.startIdx,
         end: jmpN.source.endIdx,
+        line: assignN.source.getLineAndColumn().lineNum,
       },
-      lineNum: assignN.source.getLineAndColumn().lineNum,
     };
     if (jmp) inst.jump = JUMP.asm[jmp];
     if (assign) inst.store = ASSIGN.asm[assign];
     return inst;
   },
-  Label(_o, { name }, _c): AsmLabelInstruction {
+  Label({ source }, { name }, _c): AsmLabelInstruction {
     return {
       type: "L",
       label: name,
-      lineNum: _o.source.getLineAndColumn().lineNum,
+      loc: {
+        start: 0,
+        end: name.length,
+        line: source.getLineAndColumn().lineNum,
+      },
     };
   },
 });
@@ -289,8 +291,14 @@ export function emit(asm: Asm): number[] {
 
 const A = (source: string | number): AsmAInstruction =>
   typeof source === "string"
-    ? { type: "A", label: source }
-    : { type: "A", value: source };
+    ? {
+        type: "A",
+        label: source,
+      }
+    : {
+        type: "A",
+        value: source,
+      };
 const C = (
   assign: ASSIGN_ASM,
   op: COMMANDS_ASM,
@@ -312,7 +320,10 @@ const AC = (
   op: COMMANDS_ASM,
   jmp?: JUMP_ASM
 ) => [A(source), C(assign, op, jmp)];
-const L = (label: string): AsmLabelInstruction => ({ type: "L", label });
+const L = (label: string): AsmLabelInstruction => ({
+  type: "L",
+  label,
+});
 
 export const ASM = {
   grammar: asmGrammar,

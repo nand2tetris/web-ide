@@ -209,7 +209,9 @@ export function makeAsmStore(
 
     compare(state: AsmPageState) {
       const resultLines = state.result.split("\n");
-      const compareLines = state.compare.split("\n");
+      const compareLines = state.compare
+        .split("\n")
+        .filter((line) => line.trim() != "");
 
       if (resultLines.length != compareLines.length) {
         setStatus("Comparison failed - different lengths");

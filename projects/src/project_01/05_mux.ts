@@ -13,7 +13,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Mux.hdl
 /** 
  * Multiplexor:
- * out = ((sel == 0), a, b)
+ * if (sel == 0) out = a, else out = b
  */
 CHIP Mux {
     IN a, b, sel;

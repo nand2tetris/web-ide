@@ -4,7 +4,8 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/And16.hdl
 /**
  * 16-bit bitwise And gate:
- * out[i] = And(a[i],b[i]) for i = 0..15 
+ * for i = 0, ..., 15:
+ * out[i] = a[i] And b[i] 
  */
 CHIP And16 {
     IN a[16], b[16];

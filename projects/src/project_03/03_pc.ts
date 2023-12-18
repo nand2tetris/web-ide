@@ -2,18 +2,21 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
 // File name: projects/03/a/PC.hdl
+
 /**
- * A 16-bit counter with reset, load, and inc control bits.
- * if      (reset(t) == 1) out(t+1) = 0
- * else if (load(t) == 1)  out(t+1) = in(t)
- * else if (inc(t) == 1)   out(t+1) = out(t) + 1
- * else                    out(t+1) = out(t)
+ * A 16-bit counter with increment, load, and reset modes.
+ * if      (inc(t))   out(t+1) = out(t) + 1
+ * else if (load(t))  out(t+1) = in(t)
+ * else if (reset(t)) out(t+1) = 0
+ * else               out(t+1) = out(t)
+ *
+ * To select a mode, assert the relevant control bit,
+ * and de-assert the other two bits. 
  */
-
 CHIP PC {
-    IN in[16], load, inc, reset;
+    IN in[16],inc, load, reset;
     OUT out[16];
-
+    
     PARTS:
     //// Replace this comment with your code.
 }`;

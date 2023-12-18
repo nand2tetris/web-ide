@@ -11,7 +11,8 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Or16.hdl
 /**
  * 16-bit bitwise Or gate:
- * out[i] = (a[i] Or b[i]) for i = 0..15 
+ * for i = 0, ..., 15:
+ * out[i] = a[i] Or b[i] 
  */
 CHIP Or16 {
     IN a[16], b[16];

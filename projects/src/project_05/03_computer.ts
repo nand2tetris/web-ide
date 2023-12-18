@@ -3,7 +3,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/05/Computer.hdl
 /**
- * The HACK computer, consisting of CPU, ROM and RAM.
+ * The Hack computer, consisting of CPU, ROM and RAM.
  * When reset is 0, the program stored in the ROM executes.
  * When reset is 1, the program's execution restarts. 
  * Thus, to start running the currently loaded program,

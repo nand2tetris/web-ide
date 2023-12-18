@@ -4,7 +4,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Nand.hdl
 /**
  * Nand gate:
- * out = (((a == 1) && (b == 1))), 0, 1) 
+ * if ((a == 1) and (b == 1)) out = 0, else out = 1 
  */
 CHIP Nand {
     IN  a, b;

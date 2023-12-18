@@ -2,15 +2,14 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
 // File name: projects/01/And.hdl
-/**
+ /**
  * And gate:
- * out = (((a == 1) && (b == 1))), 1, 0) 
+ * if ((a == 1) and (b == 1)) out = 1, else out = 0 
  */
-
 CHIP And {
     IN a, b;
     OUT out;
-
+    
     PARTS:
     //// Replace this comment with your code.
 }`;

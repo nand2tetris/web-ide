@@ -4,7 +4,8 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Not16.hdl
 /**
  * 16-bit Not gate:
- * out[i] = ((in[i] == 0), 1, 0) for i = 0..15 
+ * for i = 0, ..., 15:
+ * out[i] = Not(a[i])
  */
 CHIP Not16 {
     IN in[16];

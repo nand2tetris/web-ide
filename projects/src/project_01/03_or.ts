@@ -9,7 +9,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/01/Or.hdl
 /**
  * Or gate:
- * out = (((a == 1) || (b == 1))), 1, 0) 
+ * if ((a == 1) or (b == 1)) out = 1, else out = 0 
  */
 CHIP Or {
     IN a, b;

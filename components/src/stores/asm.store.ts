@@ -80,9 +80,9 @@ class Translator {
     for (const instruction of this.asm.instructions) {
       if (
         (instruction.type === "A" || instruction.type === "C") &&
-        instruction.loc != undefined
+        instruction.span != undefined
       ) {
-        this.lineNumbers[instruction.loc.line] = currentLine;
+        this.lineNumbers[instruction.span.line] = currentLine;
         currentLine += 1;
       }
     }
@@ -95,7 +95,7 @@ class Translator {
     this.current += 1;
     const instruction = this.asm.instructions[this.current];
     if (instruction.type === "A" || instruction.type === "C") {
-      highlightInfo.sourceHighlight = instruction.loc;
+      highlightInfo.sourceHighlight = instruction.span;
       const result = translateInstruction(this.asm.instructions[this.current]);
       if (result === undefined) {
         return;
@@ -104,6 +104,7 @@ class Translator {
       highlightInfo.resultHighlight = {
         start: this.current * 17,
         end: (this.current + 1) * 17,
+        line: -1,
       };
 
       if (highlightInfo.sourceHighlight) {
@@ -228,6 +229,7 @@ export function makeAsmStore(
             state.resultHighlight = {
               start: i * 17,
               end: (i + 1) * 17,
+              line: -1,
             };
             return;
           }

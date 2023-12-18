@@ -13,7 +13,7 @@ import {
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
-import { Location, baseSemantics, grammars, makeParser } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 import asmGrammar from "./grammars/asm.ohm.js";
 
@@ -33,13 +33,13 @@ export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
 export interface AsmALabelInstruction {
   type: "A";
   label: string;
-  loc?: Location;
+  span?: Span;
 }
 
 export interface AsmAValueInstruction {
   type: "A";
   value: number;
-  loc?: Location;
+  span?: Span;
 }
 
 export function isAValueInstruction(
@@ -60,13 +60,13 @@ export interface AsmCInstruction {
   isM: boolean;
   store?: ASSIGN_OP;
   jump?: JUMP_OP;
-  loc?: Location;
+  span?: Span;
 }
 
 export interface AsmLabelInstruction {
   type: "L";
   label: string;
-  loc?: Location;
+  span?: Span;
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -86,66 +86,18 @@ asmSemantics.addAttribute<Asm>("asm", {
 });
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  AInstruction({ source: start }, { name, source: end }): AsmAInstruction {
-    try {
-      return {
-        type: "A",
-        label: name,
-        loc: {
-          start: start.startIdx,
-          end: end.endIdx,
-          line: start.getLineAndColumn().lineNum,
-        },
-      };
-    } catch (e) {
-      // Pass
-    }
-
-    try {
-      return {
-        type: "A",
-        value: name,
-        loc: {
-          start: start.startIdx,
-          end: end.endIdx,
-          line: start.getLineAndColumn().lineNum,
-        },
-      };
-    } catch (e) {
-      // pass
-    }
-
-    throw new Error(`AsmAInstruction must have either a name or a value`);
+  AInstruction(_at, name): AsmAInstruction {
+    return A(name.value, span(this.source));
   },
   CInstruction(assignN, opN, jmpN): AsmCInstruction {
-    const assign = assignN.child(0)?.child(0)?.sourceString as ASSIGN_ASM;
-    const op = opN.sourceString;
-    const jmp = jmpN.child(0)?.child(1)?.sourceString as JUMP_ASM;
-    const isM = opN.sourceString.includes("M");
-    const inst: AsmCInstruction = {
-      type: "C",
-      op: COMMANDS.getOp(op),
-      isM,
-      loc: {
-        start: assignN.source.startIdx,
-        end: jmpN.source.endIdx,
-        line: assignN.source.getLineAndColumn().lineNum,
-      },
-    };
-    if (jmp) inst.jump = JUMP.asm[jmp];
-    if (assign) inst.store = ASSIGN.asm[assign];
-    return inst;
+    const assign = (assignN.child(0)?.child(0)?.sourceString ??
+      "") as ASSIGN_ASM;
+    const op = opN.sourceString as COMMANDS_ASM;
+    const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
+    return C(assign, op, jmp, span(this.source));
   },
-  Label({ source }, { name }, _c): AsmLabelInstruction {
-    return {
-      type: "L",
-      label: name,
-      loc: {
-        start: 0,
-        end: name.length,
-        line: source.getLineAndColumn().lineNum,
-      },
-    };
+  Label(_o, { name }, _c): AsmLabelInstruction {
+    return L(name, span(this.source));
   },
 });
 
@@ -289,40 +241,47 @@ export function emit(asm: Asm): number[] {
     .filter((op): op is number => op !== undefined);
 }
 
-const A = (source: string | number): AsmAInstruction =>
+const A = (source: string | number, span?: Span): AsmAInstruction =>
   typeof source === "string"
     ? {
         type: "A",
         label: source,
+        span,
       }
     : {
         type: "A",
         value: source,
+        span,
       };
+
 const C = (
   assign: ASSIGN_ASM,
   op: COMMANDS_ASM,
-  jmp?: JUMP_ASM
+  jmp?: JUMP_ASM,
+  span?: Span
 ): AsmCInstruction => {
-  const isM = assign.includes("M") || op.includes("M");
   const inst: AsmCInstruction = {
     type: "C",
-    op: COMMANDS.asm[op],
-    isM,
+    op: COMMANDS.getOp(op),
+    isM: op.includes("M"),
+    span,
   };
   if (jmp) inst.jump = JUMP.asm[jmp];
   if (assign) inst.store = ASSIGN.asm[assign];
   return inst;
 };
+
 const AC = (
   source: string | number,
   assign: ASSIGN_ASM,
   op: COMMANDS_ASM,
   jmp?: JUMP_ASM
 ) => [A(source), C(assign, op, jmp)];
-const L = (label: string): AsmLabelInstruction => ({
+
+const L = (label: string, span?: Span): AsmLabelInstruction => ({
   type: "L",
   label,
+  span,
 });
 
 export const ASM = {

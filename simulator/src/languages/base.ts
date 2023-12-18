@@ -1,10 +1,6 @@
-import ohm from "ohm-js";
+import ohm, { Interval } from "ohm-js";
 import { int10, int16, int2 } from "../util/twos.js";
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
-
-export interface Location extends Span {
-  line: number;
-}
 
 export const UNKNOWN_PARSE_ERROR = `Unknown parse error`;
 
@@ -89,4 +85,13 @@ export function makeParser<ResultType>(
 export interface Span {
   start: number;
   end: number;
+  line: number;
+}
+
+export function span(span: Interval): Span {
+  return {
+    start: span.startIdx,
+    end: span.endIdx,
+    line: span.getLineAndColumn().lineNum,
+  };
 }

@@ -260,6 +260,7 @@ export function makeChipStore(
           state.controls.span = {
             start: end - 1,
             end,
+            line: state.files.tst.split("\n").length,
           };
         }
       }

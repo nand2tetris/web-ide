@@ -136,7 +136,7 @@ const Monaco = ({
       // highlight in the test view to not show. Setting it to [0, 1] will
       // cause a 1-character highlight in the editor view, so don't do that
       // either.
-      highlight.current ?? { start: 0, end: 0 },
+      highlight.current ?? { start: 0, end: 0, line: 0 },
       decorations.current
     );
   }, [decorations, monaco, editor, highlight]);

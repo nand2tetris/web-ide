@@ -16,8 +16,7 @@ describe("asm language", () => {
       type: "A",
       label: "R0",
       value: undefined,
-      lineNum: 1,
-      span: { start: 0, end: 3 },
+      span: { line: 1, start: 0, end: 3 },
     });
   });
 
@@ -28,8 +27,7 @@ describe("asm language", () => {
       type: "A",
       label: undefined,
       value: 5,
-      lineNum: 1,
-      span: { start: 0, end: 2 },
+      span: { line: 1, start: 0, end: 2 },
     });
   });
 
@@ -40,8 +38,7 @@ describe("asm language", () => {
       type: "C",
       op: COMMANDS.getOp("-1"),
       isM: false,
-      lineNum: 1,
-      span: { start: 0, end: 2 },
+      span: { line: 1, start: 0, end: 2 },
     });
   });
 
@@ -53,8 +50,7 @@ describe("asm language", () => {
       op: COMMANDS.getOp("M"),
       store: ASSIGN.asm["D"],
       isM: true,
-      lineNum: 1,
-      span: { start: 0, end: 3 },
+      span: { line: 1, start: 0, end: 3 },
     });
   });
 
@@ -66,8 +62,7 @@ describe("asm language", () => {
       op: COMMANDS.getOp("A+1"),
       store: ASSIGN.asm["M"],
       isM: true,
-      lineNum: 1,
-      span: { start: 0, end: 5 },
+      span: { line: 1, start: 0, end: 5 },
     });
   });
 
@@ -79,8 +74,7 @@ describe("asm language", () => {
       op: COMMANDS.getOp("D"),
       jump: JUMP.asm["JEQ"],
       isM: false,
-      lineNum: 1,
-      span: { start: 0, end: 5 },
+      span: { line: 1, start: 0, end: 5 },
     });
   });
 
@@ -93,8 +87,7 @@ describe("asm language", () => {
       jump: JUMP.asm["JEQ"],
       store: ASSIGN.asm["A"],
       isM: false,
-      lineNum: 1,
-      span: { start: 0, end: 7 },
+      span: { line: 1, start: 0, end: 7 },
     });
   });
 
@@ -107,129 +100,113 @@ describe("asm language", () => {
       {
         type: "A",
         label: "R0",
-        lineNum: 4,
-        span: { start: 34, end: 37 },
+        span: { line: 4, start: 34, end: 37 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 5,
-        span: { start: 41, end: 44 },
+        span: { line: 5, start: 41, end: 44 },
       },
       {
         type: "A",
         label: "R1",
-        lineNum: 6,
-        span: { start: 81, end: 84 },
+        span: { line: 6, start: 81, end: 84 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D-M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 7,
-        span: { start: 88, end: 93 },
+        span: { line: 7, start: 88, end: 93 },
       },
       {
         type: "A",
         label: "OUTPUT_FIRST",
-        lineNum: 8,
-        span: { start: 144, end: 157 },
+        span: { line: 8, start: 144, end: 157 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         jump: JUMP.asm["JGT"],
         isM: false,
-        lineNum: 9,
-        span: { start: 161, end: 166 },
+        span: { line: 9, start: 161, end: 166 },
       },
       {
         type: "A",
         label: "R1",
-        lineNum: 10,
-        span: { start: 228, end: 231 },
+        span: { line: 10, start: 228, end: 231 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 11,
-        span: { start: 235, end: 238 },
+        span: { line: 11, start: 235, end: 238 },
       },
       {
         type: "A",
         label: "OUTPUT_D",
-        lineNum: 12,
-        span: { start: 276, end: 285 },
+        span: { line: 12, start: 276, end: 285 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        lineNum: 13,
-        span: { start: 289, end: 294 },
+        span: { line: 13, start: 289, end: 294 },
       },
       {
         type: "L",
         label: "OUTPUT_FIRST",
-        lineNum: 14,
+        span: { line: 14, start: 323, end: 337 },
       },
       {
         type: "A",
         label: "R0",
-        lineNum: 15,
-        span: { start: 341, end: 344 },
+        span: { line: 15, start: 341, end: 344 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 16,
-        span: { start: 361, end: 364 },
+        span: { line: 16, start: 361, end: 364 },
       },
       {
         type: "L",
         label: "OUTPUT_D",
-        lineNum: 17,
+        span: { line: 17, start: 398, end: 408 },
       },
       {
         type: "A",
         label: "R2",
-        lineNum: 18,
-        span: { start: 412, end: 415 },
+        span: { line: 18, start: 412, end: 415 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         store: ASSIGN.asm["M"],
         isM: false,
-        lineNum: 19,
-        span: { start: 419, end: 422 },
+        span: { line: 19, start: 419, end: 422 },
       },
       {
         type: "L",
         label: "INFINITE_LOOP",
-        lineNum: 20,
+        span: { line: 20, start: 466, end: 481 },
       },
       {
         type: "A",
         label: "INFINITE_LOOP",
-        lineNum: 21,
-        span: { start: 485, end: 499 },
+        span: { line: 21, start: 485, end: 499 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        lineNum: 22,
-        span: { start: 503, end: 508 },
+        span: { line: 22, start: 503, end: 508 },
       },
     ]);
   });
@@ -246,129 +223,113 @@ describe("asm language", () => {
       {
         type: "A",
         value: 0,
-        lineNum: 4,
-        span: { start: 34, end: 37 },
+        span: { line: 4, start: 34, end: 37 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 5,
-        span: { start: 41, end: 44 },
+        span: { line: 5, start: 41, end: 44 },
       },
       {
         type: "A",
         value: 1,
-        lineNum: 6,
-        span: { start: 81, end: 84 },
+        span: { line: 6, start: 81, end: 84 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D-M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 7,
-        span: { start: 88, end: 93 },
+        span: { line: 7, start: 88, end: 93 },
       },
       {
         type: "A",
         value: 10,
-        lineNum: 8,
-        span: { start: 144, end: 157 },
+        span: { line: 8, start: 144, end: 157 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         jump: JUMP.asm["JGT"],
         isM: false,
-        lineNum: 9,
-        span: { start: 161, end: 166 },
+        span: { line: 9, start: 161, end: 166 },
       },
       {
         type: "A",
         value: 1,
-        lineNum: 10,
-        span: { start: 228, end: 231 },
+        span: { line: 10, start: 228, end: 231 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 11,
-        span: { start: 235, end: 238 },
+        span: { line: 11, start: 235, end: 238 },
       },
       {
         type: "A",
         value: 12,
-        lineNum: 12,
-        span: { start: 276, end: 285 },
+        span: { line: 12, start: 276, end: 285 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        lineNum: 13,
-        span: { start: 289, end: 294 },
+        span: { line: 13, start: 289, end: 294 },
       },
       {
         type: "L",
         label: "OUTPUT_FIRST",
-        lineNum: 14,
+        span: { line: 14, start: 323, end: 337 },
       },
       {
         type: "A",
         value: 0,
-        lineNum: 15,
-        span: { start: 341, end: 344 },
+        span: { line: 15, start: 341, end: 344 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        lineNum: 16,
-        span: { start: 361, end: 364 },
+        span: { line: 16, start: 361, end: 364 },
       },
       {
         type: "L",
         label: "OUTPUT_D",
-        lineNum: 17,
+        span: { line: 17, start: 398, end: 408 },
       },
       {
         type: "A",
         value: 2,
-        lineNum: 18,
-        span: { start: 412, end: 415 },
+        span: { line: 18, start: 412, end: 415 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         store: ASSIGN.asm["M"],
         isM: false,
-        lineNum: 19,
-        span: { start: 419, end: 422 },
+        span: { line: 19, start: 419, end: 422 },
       },
       {
         type: "L",
         label: "INFINITE_LOOP",
-        lineNum: 20,
+        span: { line: 20, start: 466, end: 481 },
       },
       {
         type: "A",
         value: 14,
-        lineNum: 21,
-        span: { start: 485, end: 499 },
+        span: { line: 21, start: 485, end: 499 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        lineNum: 22,
-        span: { start: 503, end: 508 },
+        span: { line: 22, start: 503, end: 508 },
       },
     ]);
   });
@@ -384,22 +345,22 @@ describe("asm language", () => {
 
     // prettier-ignore
     expect(bin).toEqual([
-      0b0_000000000000000,    // @R0
-      0b111_1_110000_010_000, // D=M
-      0b0_000000000000001,    // @R1
-      0b111_1_010011_010_000, // D=D-M
-      0b0_000000000001010,    // @OUTPUT_FIRST#10
-      0b111_0_001100_000_001, // D;JGT
-      0b0_000000000000001,    // @R1
-      0b111_1_110000_010_000, // D=M
-      0b0_000000000001100,    // @OUTPUT_D#12
-      0b111_0_101010_000_111, // 0;JMP (OUTPUT_FIRST:10)
-      0b0_000000000000000,    // @R0
-      0b111_1_110000_010_000, // D=M (OUTPUT_D:12)
-      0b0_000000000000010,    // @R2
-      0b111_0_001100_001_000, // M=D (INFINITE LOOP:14)
-      0b0_000000000001110,    // @INFINITE_LOOP#14
-      0b111_0_101010_000_111, // 0;JMP
+      0b0_000000000000000,    // @R0                     0x0000     0
+      0b111_1_110000_010_000, // D=M                     0xFE10
+      0b0_000000000000001,    // @R1                     0x0001
+      0b111_1_010011_010_000, // D=D-M                   0xF8D0
+      0b0_000000000001010,    // @OUTPUT_FIRST#10        0x000A
+      0b111_0_001100_000_001, // D;JGT                   0xE301
+      0b0_000000000000001,    // @R1                     0x0001
+      0b111_1_110000_010_000, // D=M                     0xFE10
+      0b0_000000000001100,    // @OUTPUT_D#12            0x000C
+      0b111_0_101010_000_111, // 0;JMP (OUTPUT_FIRST:10) 0xEA85
+      0b0_000000000000000,    // @R0                     0x0000
+      0b111_1_110000_010_000, // D=M (OUTPUT_D:12)       0x000C
+      0b0_000000000000010,    // @R2                     0x0002
+      0b111_0_001100_001_000, // M=D (INFINITE LOOP:14)  0xE308
+      0b0_000000000001110,    // @INFINITE_LOOP#14       0x0014
+      0b111_0_101010_000_111, // 0;JMP                   0xEA83
     ]);
   });
 });

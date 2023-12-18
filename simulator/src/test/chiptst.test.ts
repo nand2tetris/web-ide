@@ -147,12 +147,14 @@ describe("Chip Test", () => {
               { op: "output" },
             ],
             span: {
+              line: 1,
               start: 0,
               end: 27,
             },
           },
         ],
         span: {
+          line: 1,
           start: 0,
           end: 27,
         },

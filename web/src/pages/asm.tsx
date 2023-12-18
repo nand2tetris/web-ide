@@ -180,7 +180,9 @@ export const Asm = () => {
           grammar={ASM.parser}
           language={"asm"}
           highlight={
-            state.translating ? state.sourceHighlight : { start: 0, end: 0 }
+            state.translating
+              ? state.sourceHighlight
+              : { start: 0, end: 0, line: 1 }
           }
           lineNumberTransform={(n) => {
             if (!state.translating) {
@@ -300,7 +302,9 @@ export const Asm = () => {
         <Editor
           value={state.compare}
           highlight={
-            state.translating ? state.resultHighlight : { start: 0, end: 0 }
+            state.translating
+              ? state.resultHighlight
+              : { start: 0, end: 0, line: 1 }
           }
           disabled={true}
           onChange={function (source: string): void {

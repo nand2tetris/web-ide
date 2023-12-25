@@ -1,12 +1,14 @@
 import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { useEffect, useRef, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
+import { Trans } from "@lingui/macro";
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
@@ -43,9 +45,54 @@ const VM = () => {
     };
   }, [actions, dispatch]);
 
+  const fileUploadRef = useRef<HTMLInputElement>(null);
+
+  const loadProgram = () => {
+    fileUploadRef.current?.click();
+  };
+
+  const { setStatus } = useContext(BaseContext);
+  const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files?.length) {
+      setStatus("No file selected");
+      return;
+    }
+    setStatus("Loading");
+    const file = event.target.files[0];
+    const source = await file.text();
+
+    if (!file.name.endsWith(".vm")) {
+      setStatus("File must be .vm file");
+      return;
+    }
+    actions.loadVm(source);
+    setStatus("Loaded vm file");
+  };
+
   return (
     <div className="Page VmPage grid">
-      <Panel className="program">
+      <Panel
+        className="program"
+        header={
+          <>
+            <Trans>Program</Trans>
+            <input
+              type="file"
+              style={{ display: "none" }}
+              ref={fileUploadRef}
+              onChange={uploadFile}
+            />
+            <button
+              className="flex-0"
+              onClick={loadProgram}
+              data-tooltip="Load file"
+              data-placement="bottom"
+            >
+              📂
+            </button>
+          </>
+        }
+      >
         <main>
           <table>
             <thead>

@@ -12,7 +12,7 @@ import {
 import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { ImmMemory } from "./imm_memory.js";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { VmFrame, Vm } from "@nand2tetris/simulator/vm/vm.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 
@@ -74,8 +74,8 @@ export function makeVmStore(
   dispatch: MutableRefObject<VmStoreDispatch>
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
-  const vm = unwrap(Vm.build(parsed.instructions));
-  const test = new VMTest().with(vm);
+  let vm = unwrap(Vm.build(parsed.instructions));
+  let test = new VMTest().with(vm);
   let useTest = false;
   const reducers = {
     update(state: VmPageState) {
@@ -96,6 +96,25 @@ export function makeVmStore(
     },
   };
   const actions = {
+    loadVm(source: string) {
+      const parseResult = VM.parse(source);
+
+      if (isErr(parseResult)) {
+        setStatus(`Error parsing vm file = ${parseResult.err}`);
+        return;
+      }
+
+      const buildResult = Vm.build(unwrap(parseResult).instructions);
+
+      if (isErr(buildResult)) {
+        setStatus(`Error building vm file = ${buildResult.err}`);
+        return;
+      }
+
+      vm = unwrap(buildResult);
+      test = new VMTest().with(vm);
+      dispatch.current({ action: "update" });
+    },
     step() {
       if (useTest) {
         test.step();

@@ -5,6 +5,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { AppContext } from "src/App.context";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
@@ -12,10 +13,15 @@ import { Trans } from "@lingui/macro";
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
+  const { toolStates } = useContext(AppContext);
 
   const [tst, setTst] = useState("repeat {\n\tvmstep;\n}");
   const [out, setOut] = useState("");
   const [cmp, setCmp] = useState("");
+
+  useEffect(() => {
+    toolStates.setTool("vm");
+  }, []);
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnersAssigned] = useState(false);

@@ -16,6 +16,7 @@ const VM = () => {
   const [cmp, setCmp] = useState("");
 
   const runner = useRef<Timer>();
+  const [runnerAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
       override async tick() {
@@ -35,6 +36,7 @@ const VM = () => {
         dispatch.current({ action: "update" });
       }
     })();
+    setRunnersAssigned(true);
 
     return () => {
       runner.current?.stop();
@@ -106,12 +108,14 @@ const VM = () => {
           ))}
         </div>
       </Panel>
-      <TestPanel
-        runner={runner}
-        tst={[tst, setTst, state.test.highlight]}
-        out={[out, setOut]}
-        cmp={[cmp, setCmp]}
-      />
+      {runnerAssigned && (
+        <TestPanel
+          runner={runner}
+          tst={[tst, setTst, state.test.highlight]}
+          out={[out, setOut]}
+          cmp={[cmp, setCmp]}
+        />
+      )}
     </div>
   );
 };

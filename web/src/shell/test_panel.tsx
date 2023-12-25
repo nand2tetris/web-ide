@@ -52,7 +52,10 @@ export const TestPanel = ({
     try {
       const path = await filePicker.select();
       const tst = await fs.readFile(path);
-      const cmp = await fs.readFile(path.replace(/\.tst$/, ".cmp"));
+      const cmpName = path.includes(".vm_tst")
+        ? path.replace(".vm_tst", ".cmp")
+        : path.replace(".tst", ".cmp");
+      const cmp = await fs.readFile(cmpName);
       onLoadTest?.(tst, cmp);
       // await compile.current({ tst });
     } catch (e) {

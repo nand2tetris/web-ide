@@ -10,26 +10,30 @@ import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
 import { Trans } from "@lingui/macro";
+import { useStateInitializer } from "@nand2tetris/components/react";
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
   const { toolStates } = useContext(AppContext);
 
-  const [tst, setTst] = useState("repeat {\n\tvmstep;\n}");
-  const [out, setOut] = useState("");
-  const [cmp, setCmp] = useState("");
+  const [tst, setTst] = useStateInitializer(state.files.tst);
+  const [out, setOut] = useStateInitializer(state.files.out);
+  const [cmp, setCmp] = useStateInitializer(state.files.cmp);
 
   useEffect(() => {
     toolStates.setTool("vm");
   }, []);
+
+  useEffect(() => {
+    actions.initialize();
+  }, [actions]);
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
       override async tick() {
-        actions.step();
-        return false;
+        return actions.step();
       }
 
       override finishFrame() {
@@ -167,6 +171,7 @@ const VM = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          onLoadTest={actions.loadTest}
         />
       )}
     </div>

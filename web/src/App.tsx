@@ -31,6 +31,7 @@ import "./pico/pico.scss";
 import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
 import { ErrorBoundary, RenderError } from "./ErrorBoundary";
+import { updateVersion } from "./versions";
 
 i18n.load("en", messages.messages);
 i18n.load("en-PL", plMessages.messages);
@@ -54,6 +55,7 @@ function App() {
     fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
       await loaders.resetFiles(fs);
     });
+    updateVersion(fs);
   }, [fs]);
 
   useEffect(() => {

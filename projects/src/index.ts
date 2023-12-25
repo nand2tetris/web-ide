@@ -68,7 +68,7 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "Not",
     "And",
     "Or",
-    "XOr",
+    "Xor",
     "Mux",
     "DMux",
     "Not16",

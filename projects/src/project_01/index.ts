@@ -33,10 +33,10 @@ export const CHIPS = {
     "Or.tst": Or.tst,
     "Or.cmp": Or.cmp,
   },
-  XOr: {
-    "XOr.hdl": Xor.hdl,
-    "XOr.tst": Xor.tst,
-    "XOr.cmp": Xor.cmp,
+  Xor: {
+    "Xor.hdl": Xor.hdl,
+    "Xor.tst": Xor.tst,
+    "Xor.cmp": Xor.cmp,
   },
   Mux: {
     "Mux.hdl": Mux.hdl,

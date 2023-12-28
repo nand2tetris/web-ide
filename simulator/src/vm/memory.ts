@@ -164,7 +164,7 @@ export class VmMemory extends RAM {
     const sp = base + 5;
     // Technically this happens in the function, but the VM will handle it for free
     for (let i = 0; i < nLocals; i++) {
-      this.set(sp + 1, 0);
+      this.set(sp + i, 0);
     }
     this.set(SP, sp + nLocals);
     return base;

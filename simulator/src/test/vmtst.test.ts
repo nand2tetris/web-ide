@@ -11,7 +11,7 @@ async function prepare(project: "07" | "08", name: string): Promise<VMTest> {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   await resetFiles(fs);
   fs.cd(`/projects/${project}/${name}`);
-  const vm_tst = await fs.readFile(name + ".vm_tst");
+  const vm_tst = await fs.readFile(name + "VME.tst");
   const tst = unwrap(TST.parse(vm_tst));
   const test = VMTest.from(tst).using(fs);
   await test.load();

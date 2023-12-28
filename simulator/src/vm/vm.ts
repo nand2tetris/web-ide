@@ -44,6 +44,7 @@ export interface StackOperation {
   segment: Segment;
   offset: number;
 }
+
 export interface OpOperation {
   op: Op;
 }
@@ -175,12 +176,12 @@ export class Vm {
     for (const fn of Object.values(this.functionMap)) {
       for (const op of fn.operations) {
         if (
-          ["push", "pop"].includes(op.op) &&
-          (op as { segment: string }).segment === "static"
+          (op.op === "push" || op.op === "pop") &&
+          (op as StackOperation)?.segment === "static"
         ) {
-          (op as { offset: number }).offset = this.registerStatic(
+          (op as StackOperation).offset = this.registerStatic(
             fn.name,
-            (op as { offset: number }).offset
+            (op as StackOperation).offset
           );
         }
       }
@@ -312,10 +313,15 @@ export class Vm {
     return this.memory.screen;
   }
 
-  get invocation() {
+  get invocation(): VmFunctionInvocation {
     const invocation = this.executionStack.at(-1);
     if (invocation === undefined) {
-      throw new Error("Empty execution stack!");
+      return {
+        frameBase: 256,
+        function: IMPLICIT.name,
+        nArgs: 0,
+        opPtr: 0,
+      };
     }
     return invocation;
   }
@@ -338,7 +344,13 @@ export class Vm {
     return this.currentFunction.operations[this.invocation.opPtr];
   }
 
-  load(instructions: VmInstruction[]): Result<this, Error> {
+  load(instructions: VmInstruction[], reset = false): Result<this, Error> {
+    if (reset) {
+      this.functionMap = {};
+      this.statics = {};
+      this.staticCount = 0;
+    }
+
     if (instructions[0]?.op !== "function") {
       instructions.unshift({ op: "function", name: IMPLICIT.name, nVars: 0 });
     }
@@ -353,7 +365,8 @@ export class Vm {
       if (
         this.functionMap[fn.name] &&
         this.memory.strict &&
-        fn.name !== IMPLICIT.name
+        fn.name !== IMPLICIT.name &&
+        fn.name !== SYS_INIT.name
       ) {
         return Err(new Error(`VM Already has a function named ${fn.name}`));
       }
@@ -363,6 +376,10 @@ export class Vm {
     }
 
     this.registerStatics();
+
+    if (reset) {
+      this.bootstrap();
+    }
 
     return Ok(this);
   }
@@ -374,15 +391,14 @@ export class Vm {
     }
 
     if (this.functionMap[SYS_INIT.name]) {
-      this.functionMap[BOOTSTRAP.name] = BootstrapFor(SYS_INIT.name);
-      this.entry = BOOTSTRAP.name;
+      this.entry = SYS_INIT.name;
     } else if (this.functionMap[IMPLICIT.name]) {
       this.entry = IMPLICIT.name;
     } else {
       const fnNames = Object.keys(this.functionMap);
       if (fnNames.length === 1) {
-        this.functionMap[BOOTSTRAP.name] = BootstrapFor(fnNames[0]);
-        this.entry = BOOTSTRAP.name;
+        this.entry = fnNames[0];
+        this.functionMap[IMPLICIT.name] = IMPLICIT;
       }
     }
 
@@ -546,30 +562,38 @@ export class Vm {
 
   makeFrame(invocation = this.invocation, nextFrame: number): VmFrame {
     const fn = this.functionMap[invocation.function];
-    if (["__implicit", "__bootstrap"].includes(fn.name)) {
-      // top most frame is "special"
+    if (fn.name === this.entry) {
       const frameBase = 256;
       const nextFrame = this.executionStack[1];
       const frameEnd = nextFrame
         ? nextFrame.frameBase - nextFrame.nArgs
         : this.memory.get(0);
+      const { ARG, LCL, THAT, THIS } = this.memory;
       return {
         fn,
-        args: { base: 256, count: 0, values: [] },
-        locals: { base: 256, count: 0, values: [] },
+        args: {
+          base: ARG,
+          count: 7,
+          values: [...this.memory.map((_, v) => v, ARG, ARG + 7)],
+        },
+        locals: {
+          base: LCL,
+          count: 5,
+          values: [...this.memory.map((_, v) => v, LCL, LCL + 5)],
+        },
         stack: {
           base: 256,
           count: frameEnd - frameBase,
           values: [...this.memory.map((_, v) => v, frameBase, frameEnd)],
         },
-        ["this"]: { base: 0, count: 0, values: [] },
-        that: { base: 0, count: 0, values: [] },
+        ["this"]: { base: THAT, count: 0, values: [] },
+        that: { base: THIS, count: 0, values: [] },
         frame: {
-          ARG: 0,
-          LCL: 0,
-          RET: 0,
-          THAT: 0,
-          THIS: 0,
+          ARG,
+          LCL,
+          RET: 0xffff,
+          THAT,
+          THIS,
         },
       };
     }

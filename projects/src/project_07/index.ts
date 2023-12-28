@@ -8,31 +8,31 @@ import * as static_test from "./23_static_test.js";
 export const VMS = {
   SimpleAdd: {
     "SimpleAdd.vm": simple_add.vm,
-    "SimpleAdd.vm_tst": simple_add.vm_tst,
+    "SimpleAddVME.tst": simple_add.vm_tst,
     "SimpleAdd.cmp": simple_add.cmp,
     "SimpleAdd.tst": simple_add.hdl_tst,
   },
   StackTest: {
     "StackTest.vm": stack_test.vm,
-    "StackTest.vm_tst": stack_test.vm_tst,
+    "StackTestVME.tst": stack_test.vm_tst,
     "StackTest.cmp": stack_test.cmp,
     "StackTest.tst": stack_test.hdl_tst,
   },
   BasicTest: {
     "BasicTest.vm": basic_test.vm,
-    "BasicTest.vm_tst": basic_test.vm_tst,
+    "BasicTestVME.tst": basic_test.vm_tst,
     "BasicTest.cmp": basic_test.cmp,
     "BasicTest.tst": basic_test.hdl_tst,
   },
   PointerTest: {
     "PointerTest.vm": pointer_test.vm,
-    "PointerTest.vm_tst": pointer_test.vm_tst,
+    "PointerTestVME.tst": pointer_test.vm_tst,
     "PointerTest.cmp": pointer_test.cmp,
     "PointerTest.tst": pointer_test.hdl_tst,
   },
   StaticTest: {
     "StaticTest.vm": static_test.vm,
-    "StaticTest.vm_tst": static_test.vm_tst,
+    "StaticTestVME.tst": static_test.vm_tst,
     "StaticTest.cmp": static_test.cmp,
     "StaticTest.tst": static_test.hdl_tst,
   },

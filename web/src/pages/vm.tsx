@@ -1,16 +1,25 @@
-import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
+import { Trans } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
+import Memory from "@nand2tetris/components/chips/memory.js";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
+import { useStateInitializer } from "@nand2tetris/components/react";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
+import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import {
+  CSSProperties,
+  ChangeEvent,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { AppContext } from "src/App.context";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
-import { Trans } from "@lingui/macro";
-import { useStateInitializer } from "@nand2tetris/components/react";
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
@@ -27,6 +36,9 @@ const VM = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+  const [selectedRAMTab, setSelectedRAMTab] = useState<"Stack" | "RAM">(
+    "Stack"
+  );
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnersAssigned] = useState(false);
@@ -138,31 +150,56 @@ const VM = () => {
         </div>
         <Screen memory={state.vm.Screen} />
         <Keyboard keyboard={state.vm.Keyboard} />
-        <div>
-          {state.vm.Stack.map((frame, i) => (
-            <section key={i}>
-              <header>
-                <h3>
-                  Function
-                  <code>{frame.fn?.name ?? "Unknown Function"}</code>
-                </h3>
-              </header>
-              <main>
-                <p>
-                  <em>Args:</em>
-                  <code>[{frame.args.values.join(", ")}]</code>
-                </p>
-                <p>
-                  <em>Locals:</em>
-                  <code>[{frame.locals.values.join(", ")}]</code>
-                </p>
-                <p>
-                  <em>Stack:</em>
-                  <code>[{frame.stack.values.join(", ")}]</code>
-                </p>
-              </main>
-            </section>
-          ))}
+
+        <div role="tablist" style={{ "--tab-count": "2" } as CSSProperties}>
+          <div
+            role="tab"
+            id="mem-tab-stack"
+            aria-controls="mem-tabpanel"
+            aria-selected={selectedRAMTab === "Stack"}
+          >
+            <label>
+              <input
+                type="radio"
+                name="mem-tabs"
+                aria-controls="mem-tabpanel"
+                value="tst"
+                checked={selectedRAMTab === "Stack"}
+                onChange={() => setSelectedRAMTab("Stack")}
+              />
+              Stack
+            </label>
+          </div>
+          <div
+            role="tabpanel"
+            aria-labelledby="mem-tab-stack"
+            id="mem-tabpanel"
+          >
+            {state.vm.Stack.map((frame, i) => (
+              <VMStackFrame frame={frame} key={i} />
+            ))}
+          </div>
+          <div
+            role="tab"
+            id="mem-tab-ram"
+            aria-controls="mem-tabpanel"
+            aria-selected={selectedRAMTab === "RAM"}
+          >
+            <label>
+              <input
+                type="radio"
+                name="mem-tabs"
+                aria-controls="mem-tabpanel"
+                value="tst"
+                checked={selectedRAMTab === "RAM"}
+                onChange={() => setSelectedRAMTab("RAM")}
+              />
+              RAM
+            </label>
+          </div>
+          <div role="tabpanel" aria-labelledby="mem-tab-ram" id="mem-tabpanel">
+            <Memory memory={state.vm.RAM} format="hex" />
+          </div>
         </div>
       </Panel>
       {runnerAssigned && (
@@ -179,6 +216,33 @@ const VM = () => {
 };
 
 export default VM;
+
+export function VMStackFrame({ frame }: { frame: VmFrame }) {
+  return (
+    <section>
+      <header>
+        <h3>
+          Function
+          <code>{frame.fn?.name ?? "Unknown Function"}</code>
+        </h3>
+      </header>
+      <main>
+        <p>
+          <em>Args:</em>
+          <code>[{frame.args.values.join(", ")}]</code>
+        </p>
+        <p>
+          <em>Locals:</em>
+          <code>[{frame.locals.values.join(", ")}]</code>
+        </p>
+        <p>
+          <em>Stack:</em>
+          <code>[{frame.stack.values.join(", ")}]</code>
+        </p>
+      </main>
+    </section>
+  );
+}
 
 export function VMInstructionRow({
   inst,

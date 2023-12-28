@@ -75,11 +75,11 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "And16",
     "Or16",
     "Mux16",
+    "Or8Way",
     "Mux4Way16",
     "Mux8Way16",
     "DMux4Way",
     "DMux8Way",
-    "Or8Way",
   ],
   "02": [
     "HalfAdder",
@@ -89,7 +89,7 @@ export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
     "ALU",
     // "ALUAll", // Special secret undocumented ALU tests
   ],
-  "03": ["Bit", "Register", "PC", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K"],
+  "03": ["Bit", "Register", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K", "PC"],
   "05": ["Memory", "CPU", "Computer"],
 };
 

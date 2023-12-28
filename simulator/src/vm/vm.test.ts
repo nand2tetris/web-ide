@@ -311,15 +311,19 @@ test("08 / Simple Function / Simple Function", () => {
   expect(test).toEqual([257, 12]);
 });
 
-test("08 / Functions / Nested Function", () => {
+test("08 / Functions / NestedCall", () => {
   const { instructions } = unwrap(VM.parse(NESTED_FUNCTION));
   const vm = unwrap(Vm.build(instructions));
 
   const init: [number, number][] = [
-    [3, -3],
-    [4, -4],
+    [0, 261],
+    [1, 261],
+    [2, 256],
+    [3, 3000],
+    [4, 4000],
     [5, -1],
     [6, -1],
+    [256, 1234],
     [257, -1],
     [258, -2],
     [259, -3],
@@ -337,7 +341,7 @@ test("08 / Functions / Nested Function", () => {
   }
 
   const test = vm.read([0, 1, 2, 3, 4, 5, 6]);
-  expect(test).toEqual([261, 261, 256, 4000, 5000, 135, 244]);
+  expect(test).toEqual([261, 261, 256, 4000, 5000, 135, 246]);
 });
 
 test("08 / Functions / Fib", () => {
@@ -348,8 +352,8 @@ test("08 / Functions / Fib", () => {
     vm.step();
   }
 
-  const test = vm.read([0, 261]);
-  expect(test).toEqual([262, 3]);
+  const test = vm.read([0, 256]);
+  expect(test).toEqual([257, 3]);
 });
 
 test("08 / Functions / Static", () => {
@@ -360,8 +364,8 @@ test("08 / Functions / Static", () => {
     vm.step();
   }
 
-  const test = vm.read([0, 261, 262]);
-  expect(test).toEqual([263, -2, 8]);
+  const test = vm.read([0, 256, 257]);
+  expect(test).toEqual([258, -2, 8]);
 });
 
 describe("debug frame views", () => {

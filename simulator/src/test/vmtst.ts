@@ -56,12 +56,7 @@ export class VMTest extends Test<VMTestInstruction> {
       index = variable;
       variable = "RAM";
     }
-    if (
-      variable === "RAM" &&
-      index !== undefined &&
-      index > 0 &&
-      index < RAM.SIZE
-    ) {
+    if (variable === "RAM" && index !== undefined) {
       return this.vm.RAM.get(index);
     }
     return this.vm.memory.getSegment(variable as Segment, index ?? 0);
@@ -72,15 +67,10 @@ export class VMTest extends Test<VMTestInstruction> {
       index = variable;
       variable = "RAM";
     }
-    if (
-      variable === "RAM" &&
-      index !== undefined &&
-      index > 0 &&
-      index < RAM.SIZE
-    ) {
+    if (variable === "RAM" && index !== undefined) {
       this.vm.RAM.set(index, value);
     }
-    if (index) {
+    if (index !== undefined) {
       this.vm.memory.setSegment(variable as Segment, index, value);
     } else {
       switch (variable.toLowerCase()) {
@@ -113,7 +103,7 @@ export class VMTest extends Test<VMTestInstruction> {
     if (filename) {
       const file = await this.fs.readFile(filename);
       const { instructions } = unwrap(VM.parse(file));
-      unwrap(this.vm.load(instructions));
+      unwrap(this.vm.load(instructions, true));
     } else {
       for (const file of await this.fs.scandir(".")) {
         if (file.isFile() && file.name.endsWith(".vm")) {

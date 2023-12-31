@@ -41,7 +41,7 @@ import { Accordian, Panel } from "../shell/panel";
 
 export const Chip = () => {
   const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker, tracking, toolStates } = useContext(AppContext);
+  const { filePicker, tracking } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);

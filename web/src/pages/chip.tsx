@@ -58,7 +58,6 @@ export const Chip = () => {
   }, [tracking]);
 
   useEffect(() => {
-    toolStates.setTool("chip");
     tracking.trackEvent("action", "setProject", state.controls.project);
     tracking.trackEvent("action", "setChip", state.controls.chipName);
   }, []);

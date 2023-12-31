@@ -20,7 +20,15 @@ export const TOOLS: Record<string, string> = {
   bitmap: "Bitmap Editor",
 };
 
-const URLs = {
+export interface URL {
+  href: string;
+  tool?: string;
+  tooltip: string;
+  icon: string;
+  target: JSX.Element;
+}
+
+const URLs: Record<string, URL> = {
   chip: {
     href: "/chip",
     tool: "chip",

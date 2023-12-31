@@ -31,7 +31,6 @@ export const CPU = () => {
   }, [actions]);
 
   useEffect(() => {
-    toolStates.setTool("cpu");
     if (toolStates.cpuState.rom) {
       state.sim.ROM.loadBytes(toolStates.cpuState.rom);
       if (toolStates.cpuState.name) {

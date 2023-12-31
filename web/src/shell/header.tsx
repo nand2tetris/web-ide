@@ -81,12 +81,12 @@ const Header = () => {
                         }
                       : () => {
                           setStatus("");
-                          if (href != "/guide") {
-                            appContext.toolStates.setTool(tool);
-                          }
                           if (href) {
-                            if (target) {
-                              localStorage.setItem(LAST_ROUTE_KEY, href);
+                            if (href != "/guide") {
+                              appContext.toolStates.setTool(tool);
+                              if (target) {
+                                localStorage.setItem(LAST_ROUTE_KEY, href);
+                              }
                             }
                             redirectRefs[href].current?.click();
                           }

@@ -1,4 +1,3 @@
-import { t } from "@lingui/macro";
 import { lazy } from "react";
 
 const Chip = lazy(() => import("./pages/chip"));
@@ -7,7 +6,7 @@ const ASM = lazy(() => import("./pages/asm"));
 const BITMAP = lazy(() => import("./pages/bitmap"));
 const VM = lazy(() => import("./pages/vm"));
 const Util = lazy(() => import("./pages/util"));
-const Guide = lazy(() => import("./pages/user_guide"));
+const ChipGuide = lazy(() => import("./pages/guides/chip_guide"));
 const About = lazy(() => import("./pages/about"));
 
 export const LAST_ROUTE_KEY = "lastRoute";
@@ -23,8 +22,6 @@ export const TOOLS: Record<string, string> = {
 export interface URL {
   href: string;
   tool?: string;
-  tooltip: string;
-  icon: string;
   target: JSX.Element;
 }
 
@@ -32,51 +29,38 @@ const URLs: Record<string, URL> = {
   chip: {
     href: "/chip",
     tool: "chip",
-    tooltip: TOOLS["chip"],
-    icon: "memory",
     target: <Chip />,
   },
   cpu: {
     href: "/cpu",
     tool: "cpu",
-    tooltip: TOOLS["cpu"],
-    icon: "developer_board",
     target: <CPU />,
   },
   asm: {
     href: "/asm",
     tool: "asm",
-    tooltip: TOOLS["asm"],
-    icon: "list_alt",
     target: <ASM />,
   },
   vm: {
     href: "/vm",
     tool: `vm`,
-    tooltip: TOOLS["vm"],
-    icon: "computer",
     target: <VM />,
   },
   bitmap: {
     href: "/bitmap",
     tool: "bitmap",
-    tooltip: TOOLS["bitmap"],
-    icon: "grid_on",
     target: <BITMAP />,
   },
   util: {
     href: "/util",
-    tooltip: t`Converter Tool`,
-    icon: "function",
     target: <Util />,
   },
-  guide: {
-    href: "/guide",
-    tooltip: t`Guide`,
-    icon: "menu_book",
-    target: <Guide />,
+  chipGuide: {
+    href: "/chip_guide",
+    target: <ChipGuide />,
   },
-  about: { href: "/about", tooltip: t`About`, icon: "info", target: <About /> },
+  about: { href: "/about", target: <About /> },
+  placeholder: { href: "/placeholder", target: <span>To be added later</span> },
 };
 
 export default URLs;

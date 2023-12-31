@@ -9,6 +9,7 @@ interface HeaderButton {
   tooltip: string;
   icon: string;
   href?: string;
+  tool?: string;
   target?: JSX.Element;
   onClick?: (context: ReturnType<typeof useAppContext>) => void;
 }
@@ -66,48 +67,52 @@ const Header = () => {
           </li>
         </ul>
         <ul className="icon-list">
-          {headerButtons.map(({ href, icon, onClick, tooltip, target }) => {
-            return (
-              <li
-                key={icon}
-                data-tooltip={tooltip}
-                data-placement="bottom"
-                onClick={
-                  onClick
-                    ? () => {
-                        onClick?.(appContext);
-                      }
-                    : () => {
-                        setStatus("");
-                        appContext.toolStates.setTool(undefined);
-                        if (href) {
-                          if (target) {
-                            localStorage.setItem(LAST_ROUTE_KEY, href);
-                          }
-                          redirectRefs[href].current?.click();
+          {headerButtons.map(
+            ({ href, icon, onClick, tooltip, target, tool }) => {
+              return (
+                <li
+                  key={icon}
+                  data-tooltip={tooltip}
+                  data-placement="bottom"
+                  onClick={
+                    onClick
+                      ? () => {
+                          onClick?.(appContext);
                         }
-                      }
-                }
-              >
-                <Icon name={icon}></Icon>
-                {href &&
-                  (target ? (
-                    <Link
-                      to={href}
-                      ref={redirectRefs[href]}
-                      style={{ display: "none" }}
-                    />
-                  ) : (
-                    <a
-                      href={href}
-                      target="new"
-                      ref={redirectRefs[href]}
-                      style={{ display: "none" }}
-                    />
-                  ))}
-              </li>
-            );
-          })}
+                      : () => {
+                          setStatus("");
+                          if (href != "/guide") {
+                            appContext.toolStates.setTool(tool);
+                          }
+                          if (href) {
+                            if (target) {
+                              localStorage.setItem(LAST_ROUTE_KEY, href);
+                            }
+                            redirectRefs[href].current?.click();
+                          }
+                        }
+                  }
+                >
+                  <Icon name={icon}></Icon>
+                  {href &&
+                    (target ? (
+                      <Link
+                        to={href}
+                        ref={redirectRefs[href]}
+                        style={{ display: "none" }}
+                      />
+                    ) : (
+                      <a
+                        href={href}
+                        target="new"
+                        ref={redirectRefs[href]}
+                        style={{ display: "none" }}
+                      />
+                    ))}
+                </li>
+              );
+            }
+          )}
         </ul>
       </nav>
     </header>

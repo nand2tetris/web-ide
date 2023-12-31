@@ -23,25 +23,35 @@ export const TOOLS: Record<string, string> = {
 const URLs = {
   chip: {
     href: "/chip",
+    tool: "chip",
     tooltip: TOOLS["chip"],
     icon: "memory",
     target: <Chip />,
   },
   cpu: {
     href: "/cpu",
+    tool: "cpu",
     tooltip: TOOLS["cpu"],
     icon: "developer_board",
     target: <CPU />,
   },
   asm: {
     href: "/asm",
+    tool: "asm",
     tooltip: TOOLS["asm"],
     icon: "list_alt",
     target: <ASM />,
   },
-  // { href: "/vm", link: `VM`, icon: "computer", target: <VM /> },
+  vm: {
+    href: "/vm",
+    tool: `vm`,
+    tooltip: TOOLS["vm"],
+    icon: "computer",
+    target: <VM />,
+  },
   bitmap: {
     href: "/bitmap",
+    tool: "bitmap",
     tooltip: TOOLS["bitmap"],
     icon: "grid_on",
     target: <BITMAP />,
@@ -58,7 +68,6 @@ const URLs = {
     icon: "menu_book",
     target: <Guide />,
   },
-  vm: { href: "/vm", link: `VM`, icon: "computer", target: <VM /> },
   about: { href: "/about", tooltip: t`About`, icon: "info", target: <About /> },
 };
 

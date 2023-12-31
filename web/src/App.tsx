@@ -11,12 +11,7 @@ import {
 import { loaders } from "@nand2tetris/projects/loader.js";
 import { en } from "make-plural/plurals";
 import { Suspense, useEffect } from "react";
-import {
-  Navigate,
-  Route,
-  BrowserRouter as Router,
-  Routes,
-} from "react-router-dom";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { AppContext, useAppContext } from "./App.context";
 import { registerLanguages } from "./languages/loader";
 import { messages, plMessages } from "./locales";
@@ -24,7 +19,7 @@ import { FilePicker } from "./shell/file_select";
 import Footer from "./shell/footer";
 import Header from "./shell/header";
 import { Settings } from "./shell/settings";
-import urls, { LAST_ROUTE_KEY } from "./urls";
+import urls from "./urls";
 
 import "./pico/flex.scss";
 import "./pico/pico.scss";
@@ -32,6 +27,7 @@ import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
 import { ErrorBoundary, RenderError } from "./ErrorBoundary";
 import { updateVersion } from "./versions";
+import { Redirect } from "./pages/redirect";
 
 i18n.load("en", messages.messages);
 i18n.load("en-PL", plMessages.messages);
@@ -75,14 +71,7 @@ function App() {
               <ErrorBoundary fallback={RenderError}>
                 <Suspense fallback={<div>Loading...</div>}>
                   <Routes>
-                    <Route
-                      path="/"
-                      element={
-                        <Navigate
-                          to={localStorage.getItem(LAST_ROUTE_KEY) ?? "/chip"}
-                        />
-                      }
-                    />
+                    <Route path="/" element={<Redirect />} />
                     {Object.values(urls).map(({ href, target }) => (
                       <Route key={href} path={href} element={target} />
                     ))}

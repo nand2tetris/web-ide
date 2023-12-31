@@ -29,7 +29,6 @@ export const Asm = () => {
   const dialog = useDialog();
 
   useEffect(() => {
-    toolStates.setTool("asm");
     if (toolStates.asmState) {
       actions.overrideState(toolStates.asmState);
     }

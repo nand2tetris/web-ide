@@ -125,19 +125,6 @@ const BOOTSTRAP: VmFunction = {
   ],
 };
 
-function BootstrapFor(name: string): VmFunction {
-  return {
-    name: "__bootstrap",
-    nVars: 0,
-    opBase: 0,
-    labels: {},
-    operations: [
-      { op: "function", name: "__bootstrap", nVars: 0 },
-      { op: "call", name, nArgs: 0 },
-    ],
-  };
-}
-
 const END_LABEL = "__END";
 const SYS_INIT: VmFunction = {
   name: "Sys.init",

@@ -4,7 +4,7 @@ import Markdown from "../../shell/markdown";
 const ChipGuide = () => {
   return (
     <div style={{ overflowY: "scroll" }}>
-      <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+      <div className="container">
         <Markdown>{raw("./HARDWARE_SIMULATOR.md")}</Markdown>
       </div>
     </div>

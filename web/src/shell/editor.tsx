@@ -1,6 +1,6 @@
-import { debounce } from "@davidsouther/jiffies/lib/esm/debounce";
 import { Trans } from "@lingui/macro";
 import MonacoEditor, { OnMount, useMonaco } from "@monaco-editor/react";
+import { CompilationError } from "@nand2tetris/simulator/chip/builder.js";
 import type * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import ohm from "ohm-js";
 import {
@@ -8,7 +8,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -18,18 +17,14 @@ import { Span } from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
 
-const UNKNOWN_PARSE_ERROR = `Unknown parse error`;
-
-export const ErrorPanel = ({ error }: { error?: ohm.MatchResult }) => {
-  return error?.failed() ? (
+export const ErrorPanel = ({ error }: { error?: CompilationError }) => {
+  return error ? (
     <details className="ErrorPanel" open>
       <summary role="button" className="secondary">
         <Trans>Parse Error</Trans>
       </summary>
       <pre>
-        <code>
-          {error?.message ?? error?.shortMessage ?? UNKNOWN_PARSE_ERROR}
-        </code>
+        <code>{error?.message}</code>
       </pre>
     </details>
   ) : (
@@ -106,7 +101,7 @@ const Monaco = ({
   onChange: (value: string) => void;
   onCursorPositionChange?: (index: number) => void;
   language: string;
-  error?: ohm.MatchResult | undefined;
+  error?: CompilationError;
   disabled?: boolean;
   highlight?: Span;
   dynamicHeight?: boolean;
@@ -211,34 +206,21 @@ const Monaco = ({
     if (monaco === null) return;
     const model = editor.current.getModel();
     if (model === null) return;
-    if (error === undefined || error.succeeded()) {
+    if (error === undefined || error.span === undefined) {
       monaco.editor.setModelMarkers(model, language, []);
       return;
     }
-    // Line 7, col 5:
-    const { line, column, message } =
-      /Line (?<line>\d+), col (?<column>\d+): (?<message>.*)/.exec(
-        error.shortMessage ?? ""
-      )?.groups ?? { line: 1, column: 1, message: "could not parse error" };
-    const startLineNumber = Number(line);
-    const endLineNumber = startLineNumber;
-    const startColumn = Number(column);
-    const restOfLine = model
-      .getLineContent(startLineNumber)
-      .substring(startColumn - 1);
-    let endColumn =
-      startColumn + (restOfLine.match(/([^\s]+)/)?.[0].length ?? 1);
-    if (endColumn <= startColumn) {
-      endColumn = startColumn + 1;
-    }
+
+    const startPos = model.getPositionAt(error.span.start);
+    const endPos = model.getPositionAt(error.span.end);
 
     monaco.editor.setModelMarkers(model, language, [
       {
-        message,
-        startColumn,
-        startLineNumber,
-        endColumn,
-        endLineNumber,
+        message: error.message,
+        startColumn: startPos.column,
+        startLineNumber: startPos.lineNumber,
+        endColumn: endPos.column,
+        endLineNumber: endPos.lineNumber,
         severity: 8, // monacoT.MarkerSeverity.Error,
       },
     ]);
@@ -267,6 +249,7 @@ export const Editor = ({
   style = {},
   disabled = false,
   value,
+  error,
   onChange,
   onCursorPositionChange,
   grammar,
@@ -279,6 +262,7 @@ export const Editor = ({
   style?: CSSProperties;
   disabled?: boolean;
   value: string;
+  error?: CompilationError;
   onChange: (source: string) => void;
   onCursorPositionChange?: (index: number) => void;
   grammar?: ohm.Grammar;
@@ -287,29 +271,7 @@ export const Editor = ({
   dynamicHeight?: boolean;
   lineNumberTransform?: (n: number) => string;
 }) => {
-  const [error, setError] = useState<ohm.MatchResult>();
   const { monaco } = useContext(AppContext);
-
-  const parse = useCallback(
-    (text = "") => {
-      if (grammar) {
-        const parsed = grammar.match(text);
-        setError(parsed.failed() ? parsed : undefined);
-      }
-    },
-    [setError, grammar]
-  );
-
-  useEffect(() => parse(value), [parse, value]);
-  const doParse = useMemo(() => debounce(parse, 500), [parse]);
-
-  const onChangeCB = useCallback(
-    (text = "") => {
-      onChange(text);
-      doParse(text);
-    },
-    [doParse, onChange]
-  );
 
   return (
     <div
@@ -319,7 +281,7 @@ export const Editor = ({
       {monaco.canUse && monaco.wants ? (
         <Monaco
           value={value}
-          onChange={onChangeCB}
+          onChange={onChange}
           onCursorPositionChange={onCursorPositionChange}
           language={language}
           error={error}
@@ -332,7 +294,7 @@ export const Editor = ({
         <>
           <Textarea
             value={value}
-            onChange={onChangeCB}
+            onChange={onChange}
             language={language}
             disabled={disabled}
           />

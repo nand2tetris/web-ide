@@ -9,7 +9,7 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
+import { CompilationError, parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,
@@ -132,7 +132,7 @@ export interface ControlsState {
   builtinOnly: boolean;
   runningTest: boolean;
   span?: Span;
-  error: string;
+  error: CompilationError | undefined;
 }
 
 function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
@@ -195,7 +195,7 @@ export function makeChipStore(
         pending?: boolean;
         invalid?: boolean;
         chipName?: string;
-        error?: string;
+        error?: CompilationError | undefined;
       }
     ) {
       state.sim = reduceChip(
@@ -205,7 +205,7 @@ export function makeChipStore(
       );
       state.controls.error = state.sim.invalid
         ? payload?.error ?? state.controls.error
-        : "";
+        : undefined;
     },
 
     setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
@@ -321,13 +321,14 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
-        const errorString = `${
-          error.line != undefined ? `Line ${error.line}: ` : ""
-        }${Err(maybeChip).message}`;
-        setStatus(errorString);
+        setStatus(
+          `${error.span?.line != undefined ? `Line ${error.span.line}: ` : ""}${
+            Err(maybeChip).message
+          }`
+        );
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, error: errorString },
+          payload: { invalid: true, error: error },
         });
         return;
       }
@@ -502,7 +503,7 @@ export function makeChipStore(
       hasBuiltin: REGISTRY.has(chipName),
       builtinOnly: isBuiltinOnly(chipName),
       runningTest: false,
-      error: "",
+      error: undefined,
     };
 
     const maybeChip = getBuiltinChip(controls.chipName);

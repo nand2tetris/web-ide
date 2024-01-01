@@ -57,6 +57,7 @@ baseSemantics.addAttribute("String", {
 
 export interface ParseError {
   message: string | undefined;
+  span?: Span;
 }
 
 export function makeParser<ResultType>(
@@ -74,6 +75,7 @@ export function makeParser<ResultType>(
       } else {
         return Err({
           message: match.shortMessage,
+          span: span(match.getInterval()),
         });
       }
     } catch (e) {

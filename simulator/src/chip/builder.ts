@@ -6,7 +6,7 @@ import {
   Ok,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { ParseError } from "../languages/base.js";
+import { ParseError, Span } from "../languages/base.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
@@ -28,21 +28,21 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
 
 export interface CompilationError {
   message: string;
-  line?: number;
+  span?: Span;
 }
 
 function parseErrorToCompilationError(error: ParseError) {
   if (!error.message) {
-    return { message: UNKNOWN_HDL_ERROR };
+    return { message: UNKNOWN_HDL_ERROR, span: error.span };
   }
   const match = error.message.match(
-    /Line (?<line>\d+), col \d+: (?<message>.*)/
+    /Line \d+, col \d+: (?<message>.*)/
   );
   if (!match || !match.groups) {
-    return { message: error.message };
+    return { message: error.message, span: error.span };
   }
-  const { line, message } = match.groups;
-  return { message, line: line ? Number(line) : undefined };
+  const { message } = match.groups;
+  return { message, span: error.span };
 }
 
 export async function parse(
@@ -95,7 +95,7 @@ function isConstant(pinName: string): boolean {
 
 interface InternalPin {
   isDefined: boolean;
-  firstUse: number;
+  firstUse: Span;
 }
 
 export async function build(
@@ -119,7 +119,10 @@ export async function build(
   for (const part of parts.parts) {
     const builtin = await loadChip(part.name.toString(), fs);
     if (isErr(builtin)) {
-      return Err({ message: UNKNOWN_HDL_ERROR, line: part.span.line });
+      return Err({
+        message: `Undefined chip name: ${part.name}`,
+        span: part.span,
+      });
     }
     const partChip = Ok(builtin);
 
@@ -138,10 +141,13 @@ export async function build(
           if (pinData == undefined) {
             internalPins.set(rhs.pin, {
               isDefined: false,
-              firstUse: rhs.span.line,
+              firstUse: rhs.span,
             });
           } else {
-            pinData.firstUse = Math.min(pinData.firstUse, rhs.span.line);
+            pinData.firstUse =
+              pinData.firstUse.start < rhs.span.start
+                ? pinData.firstUse
+                : rhs.span;
           }
         }
       } else if (partChip.isOutPin(lhs.pin)) {
@@ -151,7 +157,7 @@ export async function build(
           if (pinData == undefined) {
             internalPins.set(rhs.pin, {
               isDefined: true,
-              firstUse: rhs.span.line,
+              firstUse: rhs.span,
             });
           } else {
             pinData.isDefined = true;
@@ -160,7 +166,7 @@ export async function build(
       } else {
         return Err({
           message: `Undefined input/output pin name: ${lhs.pin}`,
-          line: lhs.span.line,
+          span: lhs.span,
         });
       }
 
@@ -189,7 +195,7 @@ export async function build(
     if (!pinData.isDefined) {
       return Err({
         message: `Undefined internal pin name: ${name}`,
-        line: pinData.firstUse,
+        span: pinData.firstUse,
       });
     }
   }

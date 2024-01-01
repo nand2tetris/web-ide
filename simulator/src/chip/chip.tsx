@@ -352,6 +352,10 @@ export class Chip {
     return undefined;
   }
 
+  isInPin(pin: string): boolean {
+    return this.ins.has(pin);
+  }
+
   isOutPin(pin: string): boolean {
     return this.outs.has(pin);
   }
@@ -361,8 +365,10 @@ export class Chip {
     for (const { to, from } of connections) {
       if (part.isOutPin(to.name)) {
         this.wireOutPin(part, to, from);
-      } else {
+      } else if (part.isInPin(to.name)) {
         this.wireInPin(part, to, from);
+      } else {
+        throw new Error(`Undefined input/output pin name: ${to.name}`);
       }
     }
   }

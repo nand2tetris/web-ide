@@ -44,7 +44,7 @@ export async function parse(
 export async function loadChip(
   name: string,
   fs?: FileSystem
-): Promise<Result<Chip>> {
+): Promise<Result<Chip, CompilationError>> {
   if (hasBuiltinChip(name) || fs === undefined) {
     return getBuiltinChip(name);
   }
@@ -63,7 +63,7 @@ export async function loadChip(
 export async function build(
   parts: HdlParse,
   fs?: FileSystem
-): Promise<Result<Chip, Error>> {
+): Promise<Result<Chip, CompilationError>> {
   if (parts.parts === "BUILTIN") {
     return getBuiltinChip(parts.name.toString());
   }
@@ -78,7 +78,9 @@ export async function build(
 
   for (const part of parts.parts) {
     const builtin = await loadChip(part.name.toString(), fs);
-    if (isErr(builtin)) return builtin;
+    if (isErr(builtin)) {
+      return Err({ message: UNKNOWN_HDL_ERROR });
+    }
     const partChip = Ok(builtin);
 
     const wires = part.wires.map<Connection>(({ lhs, rhs }) => ({

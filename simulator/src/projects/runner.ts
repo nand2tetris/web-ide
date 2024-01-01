@@ -58,9 +58,17 @@ export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
 export const maybeBuild =
   (fs: FileSystem) =>
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
-    const maybeChip = isOk(file.maybeParsedHDL)
-      ? await buildChip(Ok(file.maybeParsedHDL), fs)
-      : Err(new Error("HDL Was not parsed"));
+    let maybeChip: Result<Chip, Error>;
+    if (isOk(file.maybeParsedHDL)) {
+      const maybeBuilt = await buildChip(Ok(file.maybeParsedHDL), fs);
+      if (isErr(maybeBuilt)) {
+        maybeChip = Err(new Error(Err(maybeBuilt).message));
+      } else {
+        maybeChip = maybeBuilt;
+      }
+    } else {
+      maybeChip = Err(new Error("HDL Was not parsed"));
+    }
     const maybeTest = isOk(file.maybeParsedTST)
       ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
       : Err(new Error("TST Was not parsed"));

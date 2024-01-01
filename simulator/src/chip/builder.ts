@@ -35,9 +35,7 @@ function parseErrorToCompilationError(error: ParseError) {
   if (!error.message) {
     return { message: UNKNOWN_HDL_ERROR, span: error.span };
   }
-  const match = error.message.match(
-    /Line \d+, col \d+: (?<message>.*)/
-  );
+  const match = error.message.match(/Line \d+, col \d+: (?<message>.*)/);
   if (!match || !match.groups) {
     return { message: error.message, span: error.span };
   }

@@ -9,7 +9,10 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import { CompilationError, parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
+import {
+  CompilationError,
+  parse as parseChip,
+} from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,

@@ -10,6 +10,8 @@ import { HDL, HdlParse } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
 
+const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
+
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {
     return undefined;
@@ -23,11 +25,19 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
   throw new Error(`Bus specification has start > end (${start} > ${end})`);
 }
 
+export interface CompilationError {
+  message: string;
+}
+
 export async function parse(
   code: string
-): Promise<Result<Chip, Error | { message: string; shortMessage: string }>> {
+): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
-  if (isErr(parsed)) return parsed;
+  if (isErr(parsed)) {
+    return Err({
+      message: Err(parsed).message ?? UNKNOWN_HDL_ERROR,
+    });
+  }
   return build(Ok(parsed));
 }
 

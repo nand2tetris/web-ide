@@ -9,7 +9,7 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import { build as buildChip } from "@nand2tetris/simulator/chip/builder.js";
+import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,
@@ -22,7 +22,6 @@ import {
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
-import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
@@ -319,18 +318,9 @@ export function makeChipStore(
 
     async compileChip(hdl: string) {
       chip.remove();
-      const maybeParsed = HDL.parse(hdl);
-      if (isErr(maybeParsed)) {
-        setStatus("Failed to parse chip");
-        dispatch.current({
-          action: "updateChip",
-          payload: { invalid: true, error: display(Err(maybeParsed)) },
-        });
-        return;
-      }
-      const maybeChip = await buildChip(Ok(maybeParsed));
+      const maybeChip = await parseChip(hdl);
       if (isErr(maybeChip)) {
-        const error = display(Err(maybeChip));
+        const error = Err(maybeChip).message;
         setStatus(error);
         dispatch.current({
           action: "updateChip",
@@ -342,6 +332,7 @@ export function makeChipStore(
         setStatus("Warning: Chip name doesn't match selected chip");
       } else {
         setStatus(`Compiled ${chipName}`);
+        setStatus(`HDL code: No syntax errors`);
       }
       this.replaceChip(Ok(maybeChip));
     },

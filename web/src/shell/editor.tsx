@@ -14,12 +14,11 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 
-import {
-  Span,
-  UNKNOWN_PARSE_ERROR,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
+
+const UNKNOWN_PARSE_ERROR = `Unknown parse error`;
 
 export const ErrorPanel = ({ error }: { error?: ohm.MatchResult }) => {
   return error?.failed() ? (

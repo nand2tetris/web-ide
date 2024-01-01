@@ -2,7 +2,6 @@ import ohm, { Interval } from "ohm-js";
 import { int10, int16, int2 } from "../util/twos.js";
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 
-export const UNKNOWN_PARSE_ERROR = `Unknown parse error`;
 
 import baseGrammar from "./grammars/base.ohm.js";
 export const grammars = {
@@ -56,7 +55,9 @@ baseSemantics.addAttribute("String", {
   },
 });
 
-export type ParseError = Error | { message: string; shortMessage: string };
+export interface ParseError {
+  message: string | undefined;
+}
 
 export function makeParser<ResultType>(
   grammar: ohm.Grammar,
@@ -72,12 +73,11 @@ export function makeParser<ResultType>(
         return Ok(parse);
       } else {
         return Err({
-          message: match.message ?? UNKNOWN_PARSE_ERROR,
-          shortMessage: match.shortMessage ?? UNKNOWN_PARSE_ERROR,
+          message: match.shortMessage,
         });
       }
     } catch (e) {
-      return Err(e as Error);
+      return Err({ message: undefined });
     }
   };
 }

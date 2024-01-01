@@ -6,6 +6,7 @@ import {
   Ok,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
+import { ParseError } from "../languages/base.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
@@ -27,6 +28,21 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
 
 export interface CompilationError {
   message: string;
+  line?: number;
+}
+
+function parseErrorToCompilationError(error: ParseError) {
+  if (!error.message) {
+    return { message: UNKNOWN_HDL_ERROR };
+  }
+  const match = error.message.match(
+    /Line (?<line>\d+), col \d+: (?<message>.*)/
+  );
+  if (!match || !match.groups) {
+    return { message: error.message };
+  }
+  const { line, message } = match.groups;
+  return { message, line: line ? Number(line) : undefined };
 }
 
 export async function parse(
@@ -34,9 +50,7 @@ export async function parse(
 ): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
-    return Err({
-      message: Err(parsed).message ?? UNKNOWN_HDL_ERROR,
-    });
+    return Err(parseErrorToCompilationError(Err(parsed)));
   }
   return build(Ok(parsed));
 }
@@ -44,17 +58,27 @@ export async function parse(
 export async function loadChip(
   name: string,
   fs?: FileSystem
-): Promise<Result<Chip, CompilationError>> {
+): Promise<Result<Chip>> {
   if (hasBuiltinChip(name) || fs === undefined) {
     return getBuiltinChip(name);
   }
   try {
     const file = await fs.readFile(`${name}.hdl`);
     const maybeParsedHDL = HDL.parse(file);
-    const chip = isOk(maybeParsedHDL)
-      ? build(Ok(maybeParsedHDL), fs)
-      : Err(new Error("HDL Was not parsed"));
-    return chip;
+
+    let maybeChip: Result<Chip, Error>;
+    if (isOk(maybeParsedHDL)) {
+      const maybeBuilt = await build(Ok(maybeParsedHDL), fs);
+      if (isErr(maybeBuilt)) {
+        maybeChip = Err(new Error(Err(maybeBuilt).message));
+      } else {
+        maybeChip = maybeBuilt;
+      }
+    } else {
+      maybeChip = Err(new Error("HDL Was not parsed"));
+    }
+
+    return maybeChip;
   } catch (e) {
     return Err(new Error(`Could not load chip ${name}.hdl` /*, { cause: e }*/));
   }
@@ -67,6 +91,11 @@ function isConstant(pinName: string): boolean {
     pinName === "0" ||
     pinName === "1"
   );
+}
+
+interface InternalPin {
+  isDefined: boolean;
+  firstUse: number;
 }
 
 export async function build(
@@ -85,34 +114,56 @@ export async function build(
     parts.clocked
   );
 
-  const internalPins: Map<string, boolean> = new Map();
+  const internalPins: Map<string, InternalPin> = new Map();
 
   for (const part of parts.parts) {
     const builtin = await loadChip(part.name.toString(), fs);
     if (isErr(builtin)) {
-      return Err({ message: UNKNOWN_HDL_ERROR });
+      return Err({ message: UNKNOWN_HDL_ERROR, line: part.span.line });
     }
     const partChip = Ok(builtin);
 
     const wires: Connection[] = [];
     for (const { lhs, rhs } of part.wires) {
-      if (
-        !(
-          buildChip.isInPin(rhs.pin.toString()) ||
-          buildChip.isOutPin(rhs.pin.toString()) ||
-          isConstant(rhs.pin.toString())
-        )
-      ) {
-        if (partChip.isInPin(lhs.pin.toString())) {
+      const isRhsInternal = !(
+        buildChip.isInPin(rhs.pin) ||
+        buildChip.isOutPin(rhs.pin) ||
+        isConstant(rhs.pin)
+      );
+
+      if (partChip.isInPin(lhs.pin)) {
+        if (isRhsInternal) {
           // internal pin is being used
-          if (!internalPins.has(rhs.pin.toString())) {
-            internalPins.set(rhs.pin.toString(), false);
+          const pinData = internalPins.get(rhs.pin);
+          if (pinData == undefined) {
+            internalPins.set(rhs.pin, {
+              isDefined: false,
+              firstUse: rhs.span.line,
+            });
+          } else {
+            pinData.firstUse = Math.min(pinData.firstUse, rhs.span.line);
           }
-        } else if (partChip.isOutPin(lhs.pin.toString())) {
-          // internal pin is being defined
-          internalPins.set(rhs.pin.toString(), true);
         }
+      } else if (partChip.isOutPin(lhs.pin)) {
+        if (isRhsInternal) {
+          // internal pin is being defined
+          const pinData = internalPins.get(rhs.pin);
+          if (pinData == undefined) {
+            internalPins.set(rhs.pin, {
+              isDefined: true,
+              firstUse: rhs.span.line,
+            });
+          } else {
+            pinData.isDefined = true;
+          }
+        }
+      } else {
+        return Err({
+          message: `Undefined input/output pin name: ${lhs.pin}`,
+          line: lhs.span.line,
+        });
       }
+
       wires.push({
         to: {
           name: lhs.pin.toString(),
@@ -134,9 +185,12 @@ export async function build(
     }
   }
 
-  for (const [name, isDefined] of internalPins) {
-    if (!isDefined) {
-      return Err({ message: `Undefined internal pin name: ${name}` });
+  for (const [name, pinData] of internalPins) {
+    if (!pinData.isDefined) {
+      return Err({
+        message: `Undefined internal pin name: ${name}`,
+        line: pinData.firstUse,
+      });
     }
   }
 

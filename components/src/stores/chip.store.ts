@@ -320,11 +320,14 @@ export function makeChipStore(
       chip.remove();
       const maybeChip = await parseChip(hdl);
       if (isErr(maybeChip)) {
-        const error = Err(maybeChip).message;
-        setStatus(error);
+        const error = Err(maybeChip);
+        const errorString = `${
+          error.line != undefined ? `Line ${error.line}: ` : ""
+        }${Err(maybeChip).message}`;
+        setStatus(errorString);
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, error },
+          payload: { invalid: true, error: errorString },
         });
         return;
       }

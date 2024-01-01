@@ -1,7 +1,6 @@
 /** Reads and parses HDL chip descriptions. */
 import ohm from "ohm-js";
-import { grammars, baseSemantics } from "./base.js";
-import { makeParser } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -10,6 +9,7 @@ export interface PinIndex {
 
 export interface PinParts extends PinIndex {
   pin: string;
+  span: Span;
 }
 
 export interface PinDeclaration {
@@ -25,6 +25,7 @@ export interface Wire {
 export interface Part {
   name: string;
   wires: Wire[];
+  span: Span;
 }
 
 export interface HdlParse {
@@ -54,7 +55,7 @@ hdlSemantics.addAttribute<PinParts>("WireSide", {
       start: undefined,
       end: undefined,
     };
-    return { pin: name, start, end };
+    return { pin: name, start, end, span: span(this.source) };
   },
 });
 
@@ -75,7 +76,11 @@ hdlSemantics.addAttribute<Wire[]>("Wires", {
 
 hdlSemantics.addAttribute<Part>("Part", {
   Part({ name }, _a, { Wires }, _b, _c) {
-    return { name: name as string, wires: Wires as Wire[] };
+    return {
+      name: name as string,
+      wires: Wires as Wire[],
+      span: span(this.source),
+    };
   },
 });
 

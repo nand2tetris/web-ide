@@ -243,17 +243,43 @@ export const Chip = () => {
 
   const [inputValid, setInputValid] = useState(true);
 
+  const showCannotTestError = () => {
+    setStatus("Cannot test a chip that has syntax errors");
+  };
+
+  const recompile = () => {
+    compile.current(
+      useBuiltin || state.controls.builtinOnly ? {} : { hdl: hdl }
+    );
+  };
+
+  const evalIfCan = () => {
+    if (state.sim.invalid) {
+      showCannotTestError();
+      return;
+    }
+    doEval();
+  };
+
   const chipButtons = (
     <fieldset role="group">
       <button
-        onClick={doEval}
-        onKeyDown={doEval}
+        onClick={evalIfCan}
+        onKeyDown={evalIfCan}
+        onBlur={recompile}
         disabled={!state.sim.pending || !inputValid}
       >
         <Trans>Eval</Trans>
       </button>
       <button
-        onClick={clockActions.toggle}
+        onClick={() => {
+          if (state.sim.invalid) {
+            showCannotTestError();
+            return;
+          }
+          clockActions.toggle();
+        }}
+        onBlur={recompile}
         style={{ maxWidth: "initial" }}
         disabled={!state.sim.clocked}
       >
@@ -261,7 +287,14 @@ export const Chip = () => {
         <Clockface />
       </button>
       <button
-        onClick={clockActions.reset}
+        onClick={() => {
+          if (state.sim.invalid) {
+            showCannotTestError();
+            return;
+          }
+          clockActions.reset();
+        }}
+        onBlur={recompile}
         style={{ maxWidth: "initial" }}
         disabled={!state.sim.clocked}
       >

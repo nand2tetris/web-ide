@@ -1,10 +1,10 @@
 import {
-  grammar,
+grammar,
   hdlSemantics,
   HdlParse,
   Part,
   PinDeclaration,
-} from "./hdl.js";
+  } from "./hdl.js";
 
 const AND_BUILTIN = `CHIP And {
     IN a, b;
@@ -67,8 +67,18 @@ describe("HDL w/ Ohm", () => {
       const wire = grammar.match("a[2..4]=b[10..12]", "Wire");
       expect(wire).toHaveSucceeded();
       expect<PinDeclaration>(hdlSemantics(wire).Wire).toEqual({
-        lhs: { pin: "a", start: 2, end: 4 },
-        rhs: { pin: "b", start: 10, end: 12 },
+        lhs: {
+          pin: "a",
+          start: 2,
+          end: 4,
+          span: { start: 0, end: 7, line: 1 },
+        },
+        rhs: {
+          pin: "b",
+          start: 10,
+          end: 12,
+          span: { start: 8, end: 17, line: 1 },
+        },
       });
     });
 
@@ -77,18 +87,49 @@ describe("HDL w/ Ohm", () => {
       expect(wide).toHaveSucceeded();
       expect<Part>(hdlSemantics(wide).Part).toEqual({
         name: "Nand",
+        span: { start: 0, end: 24, line: 1 },
         wires: [
           {
-            lhs: { pin: "a", start: undefined, end: undefined },
-            rhs: { pin: "a", start: undefined, end: undefined },
+            lhs: {
+              pin: "a",
+              start: undefined,
+              end: undefined,
+              span: { start: 5, end: 6, line: 1 },
+            },
+            rhs: {
+              pin: "a",
+              start: undefined,
+              end: undefined,
+              span: { start: 7, end: 8, line: 1 },
+            },
           },
           {
-            lhs: { pin: "b", start: undefined, end: undefined },
-            rhs: { pin: "b", start: undefined, end: undefined },
+            lhs: {
+              pin: "b",
+              start: undefined,
+              end: undefined,
+              span: { start: 10, end: 11, line: 1 },
+            },
+            rhs: {
+              pin: "b",
+              start: undefined,
+              end: undefined,
+              span: { start: 12, end: 13, line: 1 },
+            },
           },
           {
-            lhs: { pin: "out", start: undefined, end: undefined },
-            rhs: { pin: "out", start: undefined, end: undefined },
+            lhs: {
+              pin: "out",
+              start: undefined,
+              end: undefined,
+              span: { start: 15, end: 18, line: 1 },
+            },
+            rhs: {
+              pin: "out",
+              start: undefined,
+              end: undefined,
+              span: { start: 19, end: 22, line: 1 },
+            },
           },
         ],
       });
@@ -114,30 +155,91 @@ describe("HDL w/ Ohm", () => {
       expect(not8).toHaveSucceeded();
       expect<Part>(hdlSemantics(not8).Part).toEqual({
         name: "Not",
+        span: { start: 0, end: 158, line: 1 },
         wires: [
           {
-            lhs: { pin: "in", start: 0, end: 1 },
-            rhs: { pin: "true", start: undefined, end: undefined },
+            lhs: {
+              pin: "in",
+              start: 0,
+              end: 1,
+              span: { start: 4, end: 12, line: 1 },
+            },
+            rhs: {
+              pin: "true",
+              start: undefined,
+              end: undefined,
+              span: { start: 15, end: 19, line: 1 },
+            },
           },
           {
-            lhs: { pin: "in", start: 3, end: 5 },
-            rhs: { pin: "six", start: undefined, end: undefined },
+            lhs: {
+              pin: "in",
+              start: 3,
+              end: 5,
+              span: { start: 29, end: 37, line: 2 },
+            },
+            rhs: {
+              pin: "six",
+              start: undefined,
+              end: undefined,
+              span: { start: 40, end: 43, line: 2 },
+            },
           },
           {
-            lhs: { pin: "in", start: 7, end: 7 },
-            rhs: { pin: "true", start: undefined, end: undefined },
+            lhs: {
+              pin: "in",
+              start: 7,
+              end: 7,
+              span: { start: 53, end: 58, line: 3 },
+            },
+            rhs: {
+              pin: "true",
+              start: undefined,
+              end: undefined,
+              span: { start: 61, end: 65, line: 3 },
+            },
           },
           {
-            lhs: { pin: "out", start: 3, end: 7 },
-            rhs: { pin: "out1", start: undefined, end: undefined },
+            lhs: {
+              pin: "out",
+              start: 3,
+              end: 7,
+              span: { start: 75, end: 84, line: 4 },
+            },
+            rhs: {
+              pin: "out1",
+              start: undefined,
+              end: undefined,
+              span: { start: 87, end: 91, line: 4 },
+            },
           },
           {
-            lhs: { pin: "address", start: undefined, end: undefined },
-            rhs: { pin: "address", start: 0, end: 13 },
+            lhs: {
+              pin: "address",
+              start: undefined,
+              end: undefined,
+              span: { start: 101, end: 108, line: 5 },
+            },
+            rhs: {
+              pin: "address",
+              start: 0,
+              end: 13,
+              span: { start: 109, end: 123, line: 5 },
+            },
           },
           {
-            lhs: { pin: "out", start: 2, end: 3 },
-            rhs: { pin: "address", start: 5, end: 6 },
+            lhs: {
+              pin: "out",
+              start: 2,
+              end: 3,
+              span: { start: 133, end: 142, line: 6 },
+            },
+            rhs: {
+              pin: "address",
+              start: 5,
+              end: 6,
+              span: { start: 143, end: 156, line: 6 },
+            },
           },
         ],
       });
@@ -183,18 +285,19 @@ describe("HDL w/ Ohm", () => {
         parts: [
           {
             name: "Nand",
+            span: { start: 50, end: 76, line: 5 },
             wires: [
               {
-                lhs: { pin: "a" },
-                rhs: { pin: "in" },
+                lhs: { pin: "a", span: { start: 55, end: 56, line: 5 } },
+                rhs: { pin: "in", span: { start: 57, end: 59, line: 5 } },
               },
               {
-                lhs: { pin: "b" },
-                rhs: { pin: "in" },
+                lhs: { pin: "b", span: { start: 61, end: 62, line: 5 } },
+                rhs: { pin: "in", span: { start: 63, end: 65, line: 5 } },
               },
               {
-                lhs: { pin: "out" },
-                rhs: { pin: "out" },
+                lhs: { pin: "out", span: { start: 67, end: 70, line: 5 } },
+                rhs: { pin: "out", span: { start: 71, end: 74, line: 5 } },
               },
             ],
           },

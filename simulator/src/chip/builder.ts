@@ -60,6 +60,15 @@ export async function loadChip(
   }
 }
 
+function isConstant(pinName: string): boolean {
+  return (
+    pinName.toLowerCase() === "false" ||
+    pinName.toLowerCase() === "true" ||
+    pinName === "0" ||
+    pinName === "1"
+  );
+}
+
 export async function build(
   parts: HdlParse,
   fs?: FileSystem
@@ -76,6 +85,8 @@ export async function build(
     parts.clocked
   );
 
+  const internalPins: Map<string, boolean> = new Map();
+
   for (const part of parts.parts) {
     const builtin = await loadChip(part.name.toString(), fs);
     if (isErr(builtin)) {
@@ -83,23 +94,49 @@ export async function build(
     }
     const partChip = Ok(builtin);
 
-    const wires = part.wires.map<Connection>(({ lhs, rhs }) => ({
-      to: {
-        name: lhs.pin.toString(),
-        start: lhs.start ?? 0,
-        width: pinWidth(lhs.start ?? 0, lhs.end),
-      },
-      from: {
-        name: rhs.pin.toString(),
-        start: rhs.start ?? 0,
-        width: pinWidth(rhs.start ?? 0, rhs.end),
-      },
-    }));
+    const wires: Connection[] = [];
+    for (const { lhs, rhs } of part.wires) {
+      if (
+        !(
+          buildChip.isInPin(rhs.pin.toString()) ||
+          buildChip.isOutPin(rhs.pin.toString()) ||
+          isConstant(rhs.pin.toString())
+        )
+      ) {
+        if (partChip.isInPin(lhs.pin.toString())) {
+          // internal pin is being used
+          if (!internalPins.has(rhs.pin.toString())) {
+            internalPins.set(rhs.pin.toString(), false);
+          }
+        } else if (partChip.isOutPin(lhs.pin.toString())) {
+          // internal pin is being defined
+          internalPins.set(rhs.pin.toString(), true);
+        }
+      }
+      wires.push({
+        to: {
+          name: lhs.pin.toString(),
+          start: lhs.start ?? 0,
+          width: pinWidth(lhs.start ?? 0, lhs.end),
+        },
+        from: {
+          name: rhs.pin.toString(),
+          start: rhs.start ?? 0,
+          width: pinWidth(rhs.start ?? 0, rhs.end),
+        },
+      });
+    }
 
     try {
       buildChip.wire(partChip, wires);
     } catch (e) {
       return Err(e as Error);
+    }
+  }
+
+  for (const [name, isDefined] of internalPins) {
+    if (!isDefined) {
+      return Err({ message: `Undefined internal pin name: ${name}` });
     }
   }
 

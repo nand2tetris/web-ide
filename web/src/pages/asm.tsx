@@ -174,6 +174,9 @@ export const Asm = () => {
               return;
             }
             sourceCursorPos.current = index;
+
+            // wait some time to allow the user to release the mouse before updating the highligh
+            // (otherwise we auto-scroll while the mouse is pressed and cause unwanted text selection)
             setTimeout(() => {
               actions.updateHighlight(index, true);
             }, 100);

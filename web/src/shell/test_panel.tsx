@@ -25,6 +25,7 @@ export const TestPanel = ({
   out: [out],
   disabled = false,
   onLoadTest = undefined,
+  onSpeedChange = undefined,
 }: {
   runner: RefObject<Timer | undefined>;
   tst: [string, Dispatch<string>, Span | undefined];
@@ -32,6 +33,7 @@ export const TestPanel = ({
   out: [string, Dispatch<string>];
   disabled?: boolean;
   onLoadTest?: (tst: string, cmp?: string) => void;
+  onSpeedChange?: (speed: number) => void;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
@@ -75,7 +77,9 @@ export const TestPanel = ({
             <Trans>Test</Trans>
           </div>
           <div className="flex-1">
-            {runner.current && <Runbar runner={runner.current} />}
+            {runner.current && (
+              <Runbar runner={runner.current} onSpeedChange={onSpeedChange} />
+            )}
           </div>
           <div>
             <fieldset role="group">

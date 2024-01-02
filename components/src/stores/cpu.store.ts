@@ -8,8 +8,8 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
-import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
+import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
@@ -76,6 +76,7 @@ export function makeCpuStore(
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
   let test = new CPUTest(new ROM(HACK));
+  let animate = true;
 
   const reducers = {
     update(state: CpuPageState) {
@@ -109,9 +110,15 @@ export function makeCpuStore(
       test.cpu.tick();
     },
 
+    setAnimate(value: boolean) {
+      animate = value;
+    },
+
     testStep() {
       const done = test.step();
-      dispatch.current({ action: "testStep" });
+      if (animate || done) {
+        dispatch.current({ action: "testStep" });
+      }
       if (done) {
         dispatch.current({ action: "testFinished" });
       }

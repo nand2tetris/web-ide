@@ -36,11 +36,10 @@ function parseErrorToCompilationError(error: ParseError) {
     return { message: UNKNOWN_HDL_ERROR, span: error.span };
   }
   const match = error.message.match(/Line \d+, col \d+: (?<message>.*)/);
-  if (!match || !match.groups) {
-    return { message: error.message, span: error.span };
+  if (match?.groups?.message !== undefined) {
+    return { message: match.groups.message, span: error.span };
   }
-  const { message } = match.groups;
-  return { message, span: error.span };
+  return { message: error.message, span: error.span };
 }
 
 export async function parse(

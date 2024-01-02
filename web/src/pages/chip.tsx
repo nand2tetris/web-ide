@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import {
   CSSProperties,
   ReactNode,
@@ -244,7 +244,7 @@ export const Chip = () => {
   const [inputValid, setInputValid] = useState(true);
 
   const showCannotTestError = () => {
-    setStatus("Cannot test a chip that has syntax errors");
+    setStatus(t`Cannot test a chip that has syntax errors`);
   };
 
   const recompile = () => {

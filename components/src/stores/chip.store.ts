@@ -135,7 +135,7 @@ export interface ControlsState {
   builtinOnly: boolean;
   runningTest: boolean;
   span?: Span;
-  error: CompilationError | undefined;
+  error?: CompilationError;
 }
 
 function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
@@ -331,7 +331,7 @@ export function makeChipStore(
         );
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, error: error },
+          payload: { invalid: true, error },
         });
         return;
       }

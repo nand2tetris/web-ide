@@ -56,7 +56,11 @@ function App() {
 
   useEffect(() => {
     (document.children[0] as HTMLHtmlElement).dataset.theme =
-      appContext.theme === "system" ? "" : appContext.theme;
+      appContext.theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : appContext.theme;
   }, [appContext.theme]);
 
   return (

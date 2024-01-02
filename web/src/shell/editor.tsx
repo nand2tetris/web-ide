@@ -85,7 +85,9 @@ const makeHighlight = (
       range,
       options: { inlineClassName: "highlight" },
     });
-    editor.revealRangeInCenter(range);
+    if (highlight.start != highlight.end) {
+      editor.revealRangeInCenter(range);
+    }
   }
   return editor.deltaDecorations(decorations, nextDecoration);
 };

@@ -26,17 +26,22 @@
       "Liberation Mono", monospace, "Apple Color Emoji", "Segoe UI Emoji",
       "Segoe UI Symbol", "Noto Color Emoji";
     --card-border-color: black;
+    --text-color: black;
     --mark-background-color: rgb(255, 230, 121);
   }
 
   @media only screen and (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --card-border-color: white;
+      --text-color: white;
+      --mark-background-color: rgb(30, 74, 109);
     }
   }
 
   [data-theme="dark"] {
     --card-border-color: white;
+    --text-color: white;
+    --mark-background-color: rgb(30, 74, 109);
   }
 }
 

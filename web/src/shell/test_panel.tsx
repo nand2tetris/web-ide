@@ -1,3 +1,11 @@
+import { Trans } from "@lingui/macro";
+import { DiffTable } from "@nand2tetris/components/difftable.js";
+import { Runbar } from "@nand2tetris/components/runbar.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import { Span } from "@nand2tetris/simulator/languages/base";
+import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { Timer } from "@nand2tetris/simulator/timer.js";
 import {
   CSSProperties,
   Dispatch,
@@ -6,17 +14,9 @@ import {
   useContext,
   useState,
 } from "react";
-import { Trans } from "@lingui/macro";
-import { DiffTable } from "@nand2tetris/components/difftable.js";
-import { Runbar } from "@nand2tetris/components/runbar.js";
-import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
-import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import { Timer } from "@nand2tetris/simulator/timer.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { AppContext } from "../App.context";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
-import { Span } from "@nand2tetris/simulator/languages/base";
 
 export const TestPanel = ({
   runner,
@@ -52,7 +52,12 @@ export const TestPanel = ({
     try {
       const path = await filePicker.select();
       const tst = await fs.readFile(path);
-      const cmp = await fs.readFile(path.replace(/\.tst$/, ".cmp"));
+      let cmp: string | undefined = undefined;
+      try {
+        cmp = await fs.readFile(path.replace(/\.tst$/, ".cmp"));
+      } catch (e) {
+        // The doesn't have to be a compare file
+      }
       onLoadTest?.(tst, cmp);
       // await compile.current({ tst });
     } catch (e) {

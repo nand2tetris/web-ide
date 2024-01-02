@@ -174,15 +174,13 @@ export const Asm = () => {
               return;
             }
             sourceCursorPos.current = index;
-            actions.updateHighlight(index, true);
+            setTimeout(() => {
+              actions.updateHighlight(index, true);
+            }, 100);
           }}
           grammar={ASM.parser}
           language={"asm"}
-          highlight={
-            state.translating
-              ? state.sourceHighlight
-              : { start: 0, end: 0, line: 1 }
-          }
+          highlight={state.translating ? state.sourceHighlight : undefined}
           lineNumberTransform={(n) => {
             if (!state.translating) {
               return "";
@@ -300,11 +298,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.compare}
-          highlight={
-            state.translating
-              ? state.resultHighlight
-              : { start: 0, end: 0, line: 1 }
-          }
+          highlight={state.translating ? state.resultHighlight : undefined}
           disabled={true}
           onChange={function (source: string): void {
             return;

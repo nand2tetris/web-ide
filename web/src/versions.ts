@@ -5,7 +5,7 @@ const VERSION_KEY = "version";
 const CURRENT_VERSION = 2;
 
 export function getVersion() {
-  return Number(localStorage.getItem(VERSION_KEY)) ?? 0;
+  return Number(localStorage.getItem(VERSION_KEY) ?? "0");
 }
 
 export function setVersion(version: number) {

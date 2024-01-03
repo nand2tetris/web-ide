@@ -58,7 +58,7 @@ export const TestPanel = ({
       try {
         cmp = await fs.readFile(path.replace(/\.tst$/, ".cmp"));
       } catch (e) {
-        // The doesn't have to be a compare file
+        // There doesn't have to be a compare file
       }
       onLoadTest?.(tst, cmp);
       // await compile.current({ tst });

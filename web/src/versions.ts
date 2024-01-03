@@ -13,7 +13,6 @@ export function setVersion(version: number) {
 }
 
 export async function updateVersion(fs: FileSystem) {
-  console.log("updating version");
   let version = getVersion();
 
   while (version < CURRENT_VERSION) {

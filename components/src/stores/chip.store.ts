@@ -207,16 +207,6 @@ export function makeChipStore(
       state.controls.error = state.sim.invalid
         ? payload?.error ?? state.controls.error
         : "";
-      state.controls.chips = getChips(state.controls.project);
-      state.controls.chipName = state.sim.invalid
-        ? payload?.chipName ?? chipName
-        : chip.name ?? payload?.chipName ?? chipName;
-      if (!state.controls.chips.includes(state.controls.chipName)) {
-        state.controls.chips = [
-          ...state.controls.chips,
-          state.controls.chipName,
-        ];
-      }
     },
 
     setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {

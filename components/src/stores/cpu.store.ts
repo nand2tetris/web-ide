@@ -96,6 +96,9 @@ export function makeCpuStore(
     },
 
     testFinished(state: CpuPageState) {
+      if (state.test.cmp.trim() === "") {
+        return;
+      }
       const passed = compare(state.test.cmp.trim(), test.log().trim());
       setStatus(
         passed

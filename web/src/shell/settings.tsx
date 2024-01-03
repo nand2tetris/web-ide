@@ -1,13 +1,14 @@
-import loaders from "@nand2tetris/projects/loader.js";
 import { i18n } from "@lingui/core";
 import { Trans } from "@lingui/macro";
-import { useContext, useEffect, useMemo } from "react";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import loaders from "@nand2tetris/projects/loader.js";
+import { useContext, useEffect, useMemo } from "react";
 import { AppContext } from "../App.context";
 
+import { TrackingDisclosure } from "src/tracking";
+import { getVersion, setVersion } from "src/versions";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
-import { TrackingDisclosure } from "src/tracking";
 import { useDialog } from "./dialog";
 
 export const Settings = () => {
@@ -32,7 +33,9 @@ export const Settings = () => {
   const resetWarning = useDialog();
 
   const resetFiles = async () => {
+    const version = getVersion();
     localStorage.clear();
+    setVersion(version);
     localStorage["/chip/project"] = "01";
     localStorage["/chip/chip"] = "Not";
     await loaders.resetFiles(fs);

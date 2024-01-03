@@ -1,11 +1,20 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import * as project_04 from "@nand2tetris/projects/project_04/index.js";
 
+const VERSION_KEY = "version";
 const CURRENT_VERSION = 2;
+
+export function getVersion() {
+  return Number(localStorage.getItem(VERSION_KEY)) ?? 0;
+}
+
+export function setVersion(version: number) {
+  localStorage.setItem(VERSION_KEY, version.toString());
+}
 
 export async function updateVersion(fs: FileSystem) {
   console.log("updating version");
-  let version = Number(localStorage.getItem("version")) ?? 0;
+  let version = getVersion();
 
   while (version < CURRENT_VERSION) {
     try {
@@ -16,7 +25,7 @@ export async function updateVersion(fs: FileSystem) {
     }
   }
 
-  localStorage.setItem("version", CURRENT_VERSION.toString());
+  setVersion(CURRENT_VERSION);
 }
 
 const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {

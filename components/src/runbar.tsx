@@ -11,6 +11,7 @@ interface RunbarTooltipOverrides {
 
 export const Runbar = (props: {
   runner: Timer;
+  disabled?: boolean;
   prefix?: ReactNode;
   children?: ReactNode;
   overrideTooltips?: Partial<RunbarTooltipOverrides>;
@@ -47,6 +48,7 @@ export const Runbar = (props: {
       {props.prefix}
       <button
         className="flex-0"
+        disabled={props.disabled}
         onClick={() => runner.actions.frame()}
         data-tooltip={props.overrideTooltips?.step ?? `Step`}
         data-placement="bottom"
@@ -56,6 +58,7 @@ export const Runbar = (props: {
       </button>
       <button
         className="flex-0"
+        disabled={props.disabled}
         onClick={() =>
           runner.state.running ? runner.actions.stop() : runner.actions.start()
         }
@@ -71,6 +74,7 @@ export const Runbar = (props: {
       </button>
       <button
         className="flex-0"
+        disabled={props.disabled}
         onClick={() => runner.actions.reset()}
         data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
         data-placement="bottom"

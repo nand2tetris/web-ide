@@ -369,7 +369,9 @@ export const Chip = () => {
             <Trans>Test</Trans>
           </div>
           <div className="flex-2">
-            {runner.current && <Runbar runner={runner.current} />}
+            {runner.current && (
+              <Runbar runner={runner.current} disabled={state.sim.invalid} />
+            )}
           </div>
           <div>
             <button onClick={loadTest}>

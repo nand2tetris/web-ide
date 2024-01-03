@@ -157,6 +157,12 @@ export async function build(
               firstUse: rhs.span,
             });
           } else {
+            if (pinData.isDefined) {
+              return Err({
+                message: `Internal pin ${rhs.pin} already defined`,
+                span: rhs.span,
+              });
+            }
             pinData.isDefined = true;
           }
         }

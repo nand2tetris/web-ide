@@ -207,16 +207,6 @@ export function makeChipStore(
       state.controls.error = state.sim.invalid
         ? payload?.error ?? state.controls.error
         : "";
-      state.controls.chips = getChips(state.controls.project);
-      state.controls.chipName = state.sim.invalid
-        ? payload?.chipName ?? chipName
-        : chip.name ?? payload?.chipName ?? chipName;
-      if (!state.controls.chips.includes(state.controls.chipName)) {
-        state.controls.chips = [
-          ...state.controls.chips,
-          state.controls.chipName,
-        ];
-      }
     },
 
     setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
@@ -348,7 +338,11 @@ export function makeChipStore(
         });
         return;
       }
-      setStatus(`Compiled ${chip.name}`);
+      if (Ok(maybeChip).name != chipName) {
+        setStatus("Warning: Chip name doesn't match selected chip");
+      } else {
+        setStatus(`Compiled ${chipName}`);
+      }
       this.replaceChip(Ok(maybeChip));
     },
 
@@ -463,7 +457,6 @@ export function makeChipStore(
         setStatus(`Failed to parse test`);
         return false;
       }
-      setStatus(`Parsed tst`);
 
       test = ChipTest.from(Ok(tst)).with(chip).reset();
       test.setFileSystem(fs);

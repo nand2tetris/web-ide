@@ -190,6 +190,11 @@ export const Chip = () => {
             </option>
           ))}
         </select>
+        {!useBuiltin && !state.controls.builtinOnly && (
+          <button className="flex-0" onClick={actions.resetFile}>
+            <Trans>Reset</Trans>
+          </button>
+        )}
       </fieldset>
     </>
   );

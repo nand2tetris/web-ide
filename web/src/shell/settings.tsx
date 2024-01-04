@@ -5,10 +5,10 @@ import loaders from "@nand2tetris/projects/loader.js";
 import { useContext, useEffect, useMemo } from "react";
 import { AppContext } from "../App.context";
 
-import { TrackingDisclosure } from "src/tracking";
-import { getVersion, setVersion } from "src/versions";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
+import { TrackingDisclosure } from "../tracking";
+import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
 export const Settings = () => {

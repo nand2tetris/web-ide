@@ -3,6 +3,12 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 
+import {
+  BUILTIN_CHIP_PROJECTS,
+  CHIP_ORDER,
+  CHIP_PROJECTS,
+  ChipProjects,
+} from "@nand2tetris/projects/index.js";
 import { build as buildChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
@@ -10,28 +16,22 @@ import {
 } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   Chip,
-  Chip as SimChip,
   Low,
   Pin,
+  Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
-import {
-  BUILTIN_CHIP_PROJECTS,
-  CHIP_ORDER,
-  CHIP_PROJECTS,
-  ChipProjects,
-} from "@nand2tetris/projects/index.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
-import { BaseContext } from "./base.context.js";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { compare } from "../compare.js";
+import { BaseContext } from "./base.context.js";
 
 export const PROJECT_NAMES = [
   ["01", `Project 1`],
@@ -338,7 +338,11 @@ export function makeChipStore(
         });
         return;
       }
-      setStatus(`Compiled ${chip.name}`);
+      if (Ok(maybeChip).name != chipName) {
+        setStatus("Warning: Chip name doesn't match selected chip");
+      } else {
+        setStatus(`Compiled ${chipName}`);
+      }
       this.replaceChip(Ok(maybeChip));
     },
 
@@ -453,7 +457,6 @@ export function makeChipStore(
         setStatus(`Failed to parse test`);
         return false;
       }
-      setStatus(`Parsed tst`);
 
       test = ChipTest.from(Ok(tst)).with(chip).reset();
       test.setFileSystem(fs);

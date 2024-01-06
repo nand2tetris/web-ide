@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/web-ide/static/css/main.dc33280d.css",
-    "main.js": "/web-ide/static/js/main.fd49a718.js",
-    "static/js/535.4947f907.chunk.js": "/web-ide/static/js/535.4947f907.chunk.js",
+    "main.js": "/web-ide/static/js/main.73540501.js",
+    "static/js/168.a6f20b5d.chunk.js": "/web-ide/static/js/168.a6f20b5d.chunk.js",
     "static/js/411.2bb7e61b.chunk.js": "/web-ide/static/js/411.2bb7e61b.chunk.js",
     "static/js/196.2b1468c2.chunk.js": "/web-ide/static/js/196.2b1468c2.chunk.js",
     "static/css/495.d2314eed.chunk.css": "/web-ide/static/css/495.d2314eed.chunk.css",
-    "static/js/495.d28511c7.chunk.js": "/web-ide/static/js/495.d28511c7.chunk.js",
+    "static/js/495.cd71701a.chunk.js": "/web-ide/static/js/495.cd71701a.chunk.js",
     "static/css/548.802865bf.chunk.css": "/web-ide/static/css/548.802865bf.chunk.css",
-    "static/js/548.888724b2.chunk.js": "/web-ide/static/js/548.888724b2.chunk.js",
+    "static/js/548.57d49cef.chunk.js": "/web-ide/static/js/548.57d49cef.chunk.js",
     "static/css/428.95ebedec.chunk.css": "/web-ide/static/css/428.95ebedec.chunk.css",
     "static/js/428.524f9679.chunk.js": "/web-ide/static/js/428.524f9679.chunk.js",
     "static/js/630.a0eb52d4.chunk.js": "/web-ide/static/js/630.a0eb52d4.chunk.js",
@@ -17,14 +17,14 @@
     "static/js/912.d13c7b75.chunk.js": "/web-ide/static/js/912.d13c7b75.chunk.js",
     "static/js/70.81b276d7.chunk.js": "/web-ide/static/js/70.81b276d7.chunk.js",
     "static/js/334.75e201d0.chunk.js": "/web-ide/static/js/334.75e201d0.chunk.js",
-    "static/js/802.4f197940.chunk.js": "/web-ide/static/js/802.4f197940.chunk.js",
+    "static/js/114.576dc657.chunk.js": "/web-ide/static/js/114.576dc657.chunk.js",
     "static/js/950.dafa43c8.chunk.js": "/web-ide/static/js/950.dafa43c8.chunk.js",
-    "static/js/996.117a312a.chunk.js": "/web-ide/static/js/996.117a312a.chunk.js",
-    "static/js/318.52ca426c.chunk.js": "/web-ide/static/js/318.52ca426c.chunk.js",
+    "static/js/996.a92a3dcf.chunk.js": "/web-ide/static/js/996.a92a3dcf.chunk.js",
+    "static/js/318.dc5df533.chunk.js": "/web-ide/static/js/318.dc5df533.chunk.js",
     "index.html": "/web-ide/index.html"
   },
   "entrypoints": [
     "static/css/main.dc33280d.css",
-    "static/js/main.fd49a718.js"
+    "static/js/main.73540501.js"
   ]
 }

@@ -88,7 +88,7 @@ function App() {
   );
 
   const chipButtons = state.controls.error ? (
-    <p>{state.controls.error}</p>
+    <p>{state.controls.error?.message}</p>
   ) : (
     <>
       <VSCodeCheckbox onChange={toggleUseBuiltin}>Use Builtin</VSCodeCheckbox>

@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import {
   CSSProperties,
   ReactNode,
@@ -224,6 +224,7 @@ export const Chip = () => {
       <Editor
         className="flex-1"
         value={hdl}
+        error={state.controls.error}
         onChange={async (source) => {
           setHdl(source);
           if (!useBuiltin) {
@@ -242,17 +243,43 @@ export const Chip = () => {
 
   const [inputValid, setInputValid] = useState(true);
 
+  const showCannotTestError = () => {
+    setStatus(t`Cannot test a chip that has syntax errors`);
+  };
+
+  const recompile = () => {
+    compile.current(
+      useBuiltin || state.controls.builtinOnly ? {} : { hdl: hdl }
+    );
+  };
+
+  const evalIfCan = () => {
+    if (state.sim.invalid) {
+      showCannotTestError();
+      return;
+    }
+    doEval();
+  };
+
   const chipButtons = (
     <fieldset role="group">
       <button
-        onClick={doEval}
-        onKeyDown={doEval}
+        onClick={evalIfCan}
+        onKeyDown={evalIfCan}
+        onBlur={recompile}
         disabled={!state.sim.pending || !inputValid}
       >
         <Trans>Eval</Trans>
       </button>
       <button
-        onClick={clockActions.toggle}
+        onClick={() => {
+          if (state.sim.invalid) {
+            showCannotTestError();
+            return;
+          }
+          clockActions.toggle();
+        }}
+        onBlur={recompile}
         style={{ maxWidth: "initial" }}
         disabled={!state.sim.clocked}
       >
@@ -260,7 +287,14 @@ export const Chip = () => {
         <Clockface />
       </button>
       <button
-        onClick={clockActions.reset}
+        onClick={() => {
+          if (state.sim.invalid) {
+            showCannotTestError();
+            return;
+          }
+          clockActions.reset();
+        }}
+        onBlur={recompile}
         style={{ maxWidth: "initial" }}
         disabled={!state.sim.clocked}
       >
@@ -335,7 +369,9 @@ export const Chip = () => {
             <Trans>Test</Trans>
           </div>
           <div className="flex-2">
-            {runner.current && <Runbar runner={runner.current} />}
+            {runner.current && (
+              <Runbar runner={runner.current} disabled={state.sim.invalid} />
+            )}
           </div>
           <div>
             <button onClick={loadTest}>

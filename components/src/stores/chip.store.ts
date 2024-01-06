@@ -9,7 +9,10 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import { build as buildChip } from "@nand2tetris/simulator/chip/builder.js";
+import {
+  CompilationError,
+  parse as parseChip,
+} from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,
@@ -22,7 +25,6 @@ import {
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
-import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
@@ -133,7 +135,7 @@ export interface ControlsState {
   builtinOnly: boolean;
   runningTest: boolean;
   span?: Span;
-  error: string;
+  error?: CompilationError;
 }
 
 function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
@@ -196,7 +198,7 @@ export function makeChipStore(
         pending?: boolean;
         invalid?: boolean;
         chipName?: string;
-        error?: string;
+        error?: CompilationError | undefined;
       }
     ) {
       state.sim = reduceChip(
@@ -206,7 +208,7 @@ export function makeChipStore(
       );
       state.controls.error = state.sim.invalid
         ? payload?.error ?? state.controls.error
-        : "";
+        : undefined;
     },
 
     setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
@@ -319,19 +321,14 @@ export function makeChipStore(
 
     async compileChip(hdl: string) {
       chip.remove();
-      const maybeParsed = HDL.parse(hdl);
-      if (isErr(maybeParsed)) {
-        setStatus("Failed to parse chip");
-        dispatch.current({
-          action: "updateChip",
-          payload: { invalid: true, error: display(Err(maybeParsed)) },
-        });
-        return;
-      }
-      const maybeChip = await buildChip(Ok(maybeParsed));
+      const maybeChip = await parseChip(hdl);
       if (isErr(maybeChip)) {
-        const error = display(Err(maybeChip));
-        setStatus(error);
+        const error = Err(maybeChip);
+        setStatus(
+          `${error.span?.line != undefined ? `Line ${error.span.line}: ` : ""}${
+            Err(maybeChip).message
+          }`
+        );
         dispatch.current({
           action: "updateChip",
           payload: { invalid: true, error },
@@ -342,6 +339,7 @@ export function makeChipStore(
         setStatus("Warning: Chip name doesn't match selected chip");
       } else {
         setStatus(`Compiled ${chipName}`);
+        setStatus(`HDL code: No syntax errors`);
       }
       this.replaceChip(Ok(maybeChip));
     },
@@ -508,7 +506,7 @@ export function makeChipStore(
       hasBuiltin: REGISTRY.has(chipName),
       builtinOnly: isBuiltinOnly(chipName),
       runningTest: false,
-      error: "",
+      error: undefined,
     };
 
     const maybeChip = getBuiltinChip(controls.chipName);

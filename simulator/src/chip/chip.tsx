@@ -352,6 +352,10 @@ export class Chip {
     return undefined;
   }
 
+  isInPin(pin: string): boolean {
+    return this.ins.has(pin);
+  }
+
   isOutPin(pin: string): boolean {
     return this.outs.has(pin);
   }

@@ -209,7 +209,7 @@ tstSemantics.addAttribute<TstStatement>("statement", {
   TstRepeat(op, count, _o, statements, _c) {
     return {
       statements: statements.children.map(({ statement }) => statement),
-      count: count.child(0)?.value ?? -1,
+      count: count.sourceString ? Number(count.sourceString) : -1,
       span: span(this.source),
     };
   },

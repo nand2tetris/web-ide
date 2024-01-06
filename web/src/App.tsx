@@ -21,13 +21,13 @@ import Header from "./shell/header";
 import { Settings } from "./shell/settings";
 import urls from "./urls";
 
+import { ErrorBoundary, RenderError } from "./ErrorBoundary";
+import { Redirect } from "./pages/redirect";
 import "./pico/flex.scss";
 import "./pico/pico.scss";
 import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
-import { ErrorBoundary, RenderError } from "./ErrorBoundary";
 import { updateVersion } from "./versions";
-import { Redirect } from "./pages/redirect";
 
 i18n.load("en", messages.messages);
 i18n.load("en-PL", plMessages.messages);

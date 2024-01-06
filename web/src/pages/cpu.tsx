@@ -181,6 +181,9 @@ export const CPU = () => {
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
           onLoadTest={onLoadTest}
+          onSpeedChange={(speed) => {
+            actions.setAnimate(speed <= 2);
+          }}
         />
       )}
     </div>

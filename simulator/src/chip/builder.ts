@@ -204,6 +204,13 @@ export async function build(
             span: rhs.span,
           });
         }
+        if (isConstant(rhs.pin)) {
+          return Err({
+            message: `Cannot write to constant bus`,
+            span: rhs.span,
+          });
+        }
+
         const pinData = internalPins.get(rhs.pin);
         if (pinData == undefined) {
           internalPins.set(rhs.pin, {

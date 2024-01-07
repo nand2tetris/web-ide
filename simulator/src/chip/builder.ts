@@ -132,6 +132,12 @@ export async function build(
       );
 
       if (partChip.isInPin(lhs.pin)) {
+        if (buildChip.isOutPin(rhs.pin)) {
+          return Err({
+            message: `Cannot use chip output pin as input`,
+            span: rhs.span,
+          });
+        }
         if (rhs.start && isRhsInternal) {
           return Err({
             message: `Cannot use sub bus of an internal pin as input`,

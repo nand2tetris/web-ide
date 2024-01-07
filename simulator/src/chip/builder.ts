@@ -144,6 +144,7 @@ export async function build(
       );
 
       if (partChip.isInPin(lhs.pin)) {
+        // inputting from rhs to chip input
         const indices = inPins.get(lhs.pin);
         if (!indices) {
           inPins.set(lhs.pin, new Set(getIndices(lhs)));
@@ -182,7 +183,6 @@ export async function build(
               span: rhs.span,
             });
           }
-          // internal pin is being used
           const pinData = internalPins.get(rhs.pin);
           if (pinData == undefined) {
             internalPins.set(rhs.pin, {
@@ -197,23 +197,29 @@ export async function build(
           }
         }
       } else if (partChip.isOutPin(lhs.pin)) {
-        if (isRhsInternal) {
-          // internal pin is being defined
-          const pinData = internalPins.get(rhs.pin);
-          if (pinData == undefined) {
-            internalPins.set(rhs.pin, {
-              isDefined: true,
-              firstUse: rhs.span,
+        // inputting from chip output to rhs
+        if (buildChip.isInPin(rhs.pin)) {
+          return Err({
+            message: `Cannot output to chip input pin ${rhs.pin}`,
+            span: rhs.span,
+          });
+        }
+        const pinData = internalPins.get(rhs.pin);
+        if (pinData == undefined) {
+          internalPins.set(rhs.pin, {
+            isDefined: true,
+            firstUse: rhs.span,
+          });
+        } else {
+          if (pinData.isDefined) {
+            return Err({
+              message: buildChip.isOutPin(rhs.pin)
+                ? `Cannot input to output chip ${rhs.pin} multiple times`
+                : `Internal pin ${rhs.pin} already defined`,
+              span: rhs.span,
             });
-          } else {
-            if (pinData.isDefined) {
-              return Err({
-                message: `Internal pin ${rhs.pin} already defined`,
-                span: rhs.span,
-              });
-            }
-            pinData.isDefined = true;
           }
+          pinData.isDefined = true;
         }
       } else {
         return Err({

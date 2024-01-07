@@ -274,6 +274,13 @@ export async function build(
             return result;
           }
         } else {
+          // rhs is necessarily an internal pin
+          if (rhs.start !== undefined || rhs.end !== undefined) {
+            return Err({
+              message: `Cannot write to sub bus of internal pin ${rhs.pin}`,
+              span: rhs.span,
+            });
+          }
           // track internal pin creation to detect undefined pins
           const pinData = internalPins.get(rhs.pin);
           if (pinData == undefined) {

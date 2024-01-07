@@ -30,6 +30,7 @@ export interface Part {
 
 export interface HdlParse {
   name: string;
+  nameSpan: Span;
   ins: PinDeclaration[];
   outs: PinDeclaration[];
   clocked: string[];
@@ -129,9 +130,10 @@ hdlSemantics.addAttribute<PinDeclaration[]>("PinList", {
 });
 
 hdlSemantics.addAttribute<HdlParse>("Chip", {
-  Chip(_a, { name }, _b, body, _c) {
+  Chip(_a, name, _b, body, _c) {
     return {
-      name,
+      name: name.sourceString,
+      nameSpan: span(name.source),
       ins: body.child(0).child(0)?.child(1)?.PinList ?? [],
       outs: body.child(1).child(0)?.child(1)?.PinList ?? [],
       parts: body.child(2).PartList ?? [],

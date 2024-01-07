@@ -321,7 +321,7 @@ export function makeChipStore(
 
     async compileChip(hdl: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl);
+      const maybeChip = await parseChip(hdl, chipName);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
         setStatus(
@@ -335,12 +335,7 @@ export function makeChipStore(
         });
         return;
       }
-      if (Ok(maybeChip).name != chipName) {
-        setStatus("Warning: Chip name doesn't match selected chip");
-      } else {
-        setStatus(`Compiled ${chipName}`);
-        setStatus(`HDL code: No syntax errors`);
-      }
+      setStatus(`HDL code: No syntax errors`);
       this.replaceChip(Ok(maybeChip));
     },
 

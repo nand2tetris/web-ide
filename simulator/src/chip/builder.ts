@@ -43,13 +43,14 @@ function parseErrorToCompilationError(error: ParseError) {
 }
 
 export async function parse(
-  code: string
+  code: string,
+  name?: string
 ): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
     return Err(parseErrorToCompilationError(Err(parsed)));
   }
-  return build(Ok(parsed));
+  return build(Ok(parsed), undefined, name);
 }
 
 export async function loadChip(
@@ -108,8 +109,16 @@ function getIndices(pin: PinParts): number[] {
 
 export async function build(
   parts: HdlParse,
-  fs?: FileSystem
+  fs?: FileSystem,
+  name?: string
 ): Promise<Result<Chip, CompilationError>> {
+  if (parts.name != name) {
+    return Err({
+      message: `Wrong chip name`,
+      span: parts.nameSpan,
+    });
+  }
+
   if (parts.parts === "BUILTIN") {
     return getBuiltinChip(parts.name.toString());
   }

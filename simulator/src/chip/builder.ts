@@ -147,13 +147,11 @@ function checkBadInputSource(
       message: `Cannot use output pin as input`,
       span: rhs.span,
     });
-  } else if (
-    !buildChip.isInPin(rhs.pin) &&
-    !isConstant(rhs.pin) &&
-    rhs.start != undefined
-  ) {
+  } else if (!buildChip.isInPin(rhs.pin) && rhs.start != undefined) {
     return Err({
-      message: `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+      message: isConstant(rhs.pin)
+        ? `Cannot use sub bus of constant bus`
+        : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
       span: rhs.span,
     });
   }

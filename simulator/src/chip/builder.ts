@@ -124,6 +124,7 @@ export async function build(
     const partChip = Ok(builtin);
 
     const wires: Connection[] = [];
+    const inPins: Set<string> = new Set();
     for (const { lhs, rhs } of part.wires) {
       const isRhsInternal = !(
         buildChip.isInPin(rhs.pin) ||
@@ -132,6 +133,15 @@ export async function build(
       );
 
       if (partChip.isInPin(lhs.pin)) {
+        if (inPins.has(lhs.pin)) {
+          return Err({
+            message: `Cannot input to the same pin multiple times`,
+            span: lhs.span,
+          });
+        } else {
+          inPins.add(lhs.pin);
+        }
+
         if (buildChip.isOutPin(rhs.pin)) {
           return Err({
             message: `Cannot use chip output pin as input`,

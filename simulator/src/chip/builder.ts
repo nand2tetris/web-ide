@@ -132,6 +132,12 @@ export async function build(
       );
 
       if (partChip.isInPin(lhs.pin)) {
+        if (rhs.start && isRhsInternal) {
+          return Err({
+            message: `Cannot use sub bus of an internal pin as input`,
+            span: rhs.span,
+          });
+        }
         if (isRhsInternal) {
           // internal pin is being used
           const pinData = internalPins.get(rhs.pin);

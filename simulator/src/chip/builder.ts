@@ -151,14 +151,14 @@ export async function build(
           if (indices.has(-1)) {
             // -1 stands for the whole bus width
             return Err({
-              message: `Cannot input to the same pin multiple times`,
+              message: `Cannot input to the same pin multiple times: ${lhs.pin}`,
               span: lhs.span,
             });
           } else if (lhs.start !== undefined && lhs.end !== undefined) {
             for (const i of getIndices(lhs)) {
               if (indices.has(i)) {
                 return Err({
-                  message: `Cannot input to the same pin multiple times`,
+                  message: `Cannot input to the same pin multiple times: ${lhs.pin}[${i}]`,
                   span: lhs.span,
                 });
               }
@@ -177,7 +177,7 @@ export async function build(
         }
         if (rhs.start && isRhsInternal) {
           return Err({
-            message: `Cannot use sub bus of an internal pin as input`,
+            message: `Cannot use sub bus of internal pin ${rhs.pin} as input`,
             span: rhs.span,
           });
         }

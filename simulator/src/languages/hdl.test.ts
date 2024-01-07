@@ -1,9 +1,9 @@
 import {
-  grammar,
-  hdlSemantics,
   HdlParse,
   Part,
   PinDeclaration,
+  grammar,
+  hdlSemantics,
 } from "./hdl.js";
 
 const AND_BUILTIN = `CHIP And {
@@ -266,6 +266,7 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: "And",
+        nameSpan: { start: 5, end: 8, line: 1 },
         ins: [
           { pin: "a", width: 1 },
           { pin: "b", width: 1 },
@@ -280,6 +281,7 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: "Not",
+        nameSpan: { start: 5, end: 8, line: 1 },
         ins: [{ pin: "in", width: 1 }],
         outs: [{ pin: "out", width: 1 }],
         parts: [
@@ -311,6 +313,7 @@ describe("HDL w/ Ohm", () => {
 
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: "Not",
+        nameSpan: { start: 5, end: 8, line: 1 },
         ins: [{ pin: "in", width: 1 }],
         outs: [{ pin: "out", width: 1 }],
         parts: [],
@@ -322,6 +325,7 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: "And16",
+        nameSpan: { start: 5, end: 10, line: 1 },
         ins: [
           { pin: "a", width: 16 },
           { pin: "b", width: 16 },
@@ -336,6 +340,7 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: "Foo",
+        nameSpan: { start: 5, end: 8, line: 1 },
         ins: [{ pin: "in", width: 1 }],
         outs: [],
         parts: [],

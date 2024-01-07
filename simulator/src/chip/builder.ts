@@ -152,14 +152,14 @@ export async function build(
           if (indices.has(-1)) {
             // -1 stands for the whole bus width
             return Err({
-              message: `Cannot input to the same pin multiple times: ${lhs.pin}`,
+              message: `Cannot write to the same pin multiple times: ${lhs.pin}`,
               span: lhs.span,
             });
           } else if (lhs.start !== undefined && lhs.end !== undefined) {
             for (const i of getIndices(lhs)) {
               if (indices.has(i)) {
                 return Err({
-                  message: `Cannot input to the same pin multiple times: ${lhs.pin}[${i}]`,
+                  message: `Cannot write to the same pin multiple times: ${lhs.pin}[${i}]`,
                   span: lhs.span,
                 });
               }
@@ -172,7 +172,7 @@ export async function build(
 
         if (buildChip.isOutPin(rhs.pin)) {
           return Err({
-            message: `Cannot use chip output pin as input`,
+            message: `Cannot use output pin as input`,
             span: rhs.span,
           });
         }
@@ -200,7 +200,7 @@ export async function build(
         // inputting from chip output to rhs
         if (buildChip.isInPin(rhs.pin)) {
           return Err({
-            message: `Cannot output to chip input pin ${rhs.pin}`,
+            message: `Cannot write to input pin ${rhs.pin}`,
             span: rhs.span,
           });
         }
@@ -214,7 +214,7 @@ export async function build(
           if (pinData.isDefined) {
             return Err({
               message: buildChip.isOutPin(rhs.pin)
-                ? `Cannot input to output chip ${rhs.pin} multiple times`
+                ? `Cannot write to output pin ${rhs.pin} multiple times`
                 : `Internal pin ${rhs.pin} already defined`,
               span: rhs.span,
             });

@@ -107,33 +107,37 @@ function getIndices(pin: PinParts): number[] {
   return [-1];
 }
 
-function checkMultipleInputAssignments(
-  lhs: PinParts,
-  inPins: Map<string, Set<number>>
+// returns the index that has been assigned multiple times if one exists
+function checkMultipleAssignments(
+  pin: PinParts,
+  assignedIndexes: Map<string, Set<number>>
 ): Result<boolean, CompilationError> {
-  const indices = inPins.get(lhs.pin);
+  let errorIndex: number | null = null;
+  const indices = assignedIndexes.get(pin.pin);
   if (!indices) {
-    inPins.set(lhs.pin, new Set(getIndices(lhs)));
+    assignedIndexes.set(pin.pin, new Set(getIndices(pin)));
   } else {
     if (indices.has(-1)) {
       // -1 stands for the whole bus width
-      return Err({
-        message: `Cannot write to the same pin multiple times: ${lhs.pin}`,
-        span: lhs.span,
-      });
-    } else if (lhs.start !== undefined && lhs.end !== undefined) {
-      for (const i of getIndices(lhs)) {
+      errorIndex = pin.start ?? -1;
+    } else if (pin.start !== undefined && pin.end !== undefined) {
+      for (const i of getIndices(pin)) {
         if (indices.has(i)) {
-          return Err({
-            message: `Cannot write to the same pin multiple times: ${lhs.pin}[${i}]`,
-            span: lhs.span,
-          });
+          errorIndex = i;
         }
         indices.add(i);
       }
     } else {
       indices.add(-1);
     }
+  }
+  if (errorIndex != null) {
+    return Err({
+      message: `Cannot write to pin ${pin.pin}${
+        errorIndex != -1 ? `[${errorIndex}]` : ""
+      } multiple times`,
+      span: pin.span,
+    });
   }
   return Ok(true);
 }
@@ -202,6 +206,7 @@ export async function build(
   );
 
   const internalPins: Map<string, InternalPin> = new Map();
+  const outPins: Map<string, Set<number>> = new Map();
 
   for (const part of parts.parts) {
     const builtin = await loadChip(part.name.toString(), fs);
@@ -231,7 +236,7 @@ export async function build(
 
       if (partChip.isInPin(lhs.pin)) {
         // inputting from rhs to chip input
-        let result = checkMultipleInputAssignments(lhs, inPins);
+        let result = checkMultipleAssignments(lhs, inPins);
         if (isErr(result)) {
           return result;
         }
@@ -263,23 +268,30 @@ export async function build(
           return result;
         }
 
-        // track internal pin creation to detect undefined pins
-        const pinData = internalPins.get(rhs.pin);
-        if (pinData == undefined) {
-          internalPins.set(rhs.pin, {
-            isDefined: true,
-            firstUse: rhs.span,
-          });
-        } else {
-          if (pinData.isDefined) {
-            return Err({
-              message: buildChip.isOutPin(rhs.pin)
-                ? `Cannot write to output pin ${rhs.pin} multiple times`
-                : `Internal pin ${rhs.pin} already defined`,
-              span: rhs.span,
-            });
+        if (buildChip.isOutPin(rhs.pin)) {
+          const result = checkMultipleAssignments(rhs, outPins);
+          if (isErr(result)) {
+            return result;
           }
-          pinData.isDefined = true;
+        } else {
+          // track internal pin creation to detect undefined pins
+          const pinData = internalPins.get(rhs.pin);
+          if (pinData == undefined) {
+            internalPins.set(rhs.pin, {
+              isDefined: true,
+              firstUse: rhs.span,
+            });
+          } else {
+            if (pinData.isDefined) {
+              return Err({
+                message: buildChip.isOutPin(rhs.pin)
+                  ? `Cannot write to output pin ${rhs.pin} multiple times`
+                  : `Internal pin ${rhs.pin} already defined`,
+                span: rhs.span,
+              });
+            }
+            pinData.isDefined = true;
+          }
         }
       } else {
         return Err({

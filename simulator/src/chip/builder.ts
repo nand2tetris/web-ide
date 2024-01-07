@@ -182,7 +182,7 @@ export async function build(
   fs?: FileSystem,
   name?: string
 ): Promise<Result<Chip, CompilationError>> {
-  if (parts.name != name) {
+  if (name && parts.name != name) {
     return Err({
       message: `Wrong chip name`,
       span: parts.nameSpan,

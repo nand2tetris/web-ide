@@ -175,13 +175,13 @@ export async function build(
             span: rhs.span,
           });
         }
-        if (rhs.start && isRhsInternal) {
-          return Err({
-            message: `Cannot use sub bus of internal pin ${rhs.pin} as input`,
-            span: rhs.span,
-          });
-        }
         if (isRhsInternal) {
+          if (rhs.start != undefined) {
+            return Err({
+              message: `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+              span: rhs.span,
+            });
+          }
           // internal pin is being used
           const pinData = internalPins.get(rhs.pin);
           if (pinData == undefined) {

@@ -107,6 +107,78 @@ function getIndices(pin: PinParts): number[] {
   return [-1];
 }
 
+function checkMultipleInputAssignments(
+  lhs: PinParts,
+  inPins: Map<string, Set<number>>
+): Result<boolean, CompilationError> {
+  const indices = inPins.get(lhs.pin);
+  if (!indices) {
+    inPins.set(lhs.pin, new Set(getIndices(lhs)));
+  } else {
+    if (indices.has(-1)) {
+      // -1 stands for the whole bus width
+      return Err({
+        message: `Cannot write to the same pin multiple times: ${lhs.pin}`,
+        span: lhs.span,
+      });
+    } else if (lhs.start !== undefined && lhs.end !== undefined) {
+      for (const i of getIndices(lhs)) {
+        if (indices.has(i)) {
+          return Err({
+            message: `Cannot write to the same pin multiple times: ${lhs.pin}[${i}]`,
+            span: lhs.span,
+          });
+        }
+        indices.add(i);
+      }
+    } else {
+      indices.add(-1);
+    }
+  }
+  return Ok(true);
+}
+
+function checkBadInputSource(
+  rhs: PinParts,
+  buildChip: Chip
+): Result<boolean, CompilationError> {
+  if (buildChip.isOutPin(rhs.pin)) {
+    return Err({
+      message: `Cannot use output pin as input`,
+      span: rhs.span,
+    });
+  } else if (
+    !buildChip.isInPin(rhs.pin) &&
+    !isConstant(rhs.pin) &&
+    rhs.start != undefined
+  ) {
+    return Err({
+      message: `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+      span: rhs.span,
+    });
+  }
+  return Ok(true);
+}
+
+function checkBadWriteTarget(
+  rhs: PinParts,
+  buildChip: Chip
+): Result<boolean, CompilationError> {
+  if (buildChip.isInPin(rhs.pin)) {
+    return Err({
+      message: `Cannot write to input pin ${rhs.pin}`,
+      span: rhs.span,
+    });
+  }
+  if (isConstant(rhs.pin)) {
+    return Err({
+      message: `Cannot write to constant bus`,
+      span: rhs.span,
+    });
+  }
+  return Ok(true);
+}
+
 export async function build(
   parts: HdlParse,
   fs?: FileSystem,
@@ -161,44 +233,18 @@ export async function build(
 
       if (partChip.isInPin(lhs.pin)) {
         // inputting from rhs to chip input
-        const indices = inPins.get(lhs.pin);
-        if (!indices) {
-          inPins.set(lhs.pin, new Set(getIndices(lhs)));
-        } else {
-          if (indices.has(-1)) {
-            // -1 stands for the whole bus width
-            return Err({
-              message: `Cannot write to the same pin multiple times: ${lhs.pin}`,
-              span: lhs.span,
-            });
-          } else if (lhs.start !== undefined && lhs.end !== undefined) {
-            for (const i of getIndices(lhs)) {
-              if (indices.has(i)) {
-                return Err({
-                  message: `Cannot write to the same pin multiple times: ${lhs.pin}[${i}]`,
-                  span: lhs.span,
-                });
-              }
-              indices.add(i);
-            }
-          } else {
-            indices.add(-1);
-          }
+        let result = checkMultipleInputAssignments(lhs, inPins);
+        if (isErr(result)) {
+          return result;
         }
 
-        if (buildChip.isOutPin(rhs.pin)) {
-          return Err({
-            message: `Cannot use output pin as input`,
-            span: rhs.span,
-          });
+        result = checkBadInputSource(rhs, buildChip);
+        if (isErr(result)) {
+          return result;
         }
+
+        // track internal pin use to detect undefined pins
         if (isRhsInternal) {
-          if (rhs.start != undefined) {
-            return Err({
-              message: `Cannot use sub bus of internal pin ${rhs.pin} as input`,
-              span: rhs.span,
-            });
-          }
           const pinData = internalPins.get(rhs.pin);
           if (pinData == undefined) {
             internalPins.set(rhs.pin, {
@@ -214,19 +260,12 @@ export async function build(
         }
       } else if (partChip.isOutPin(lhs.pin)) {
         // inputting from chip output to rhs
-        if (buildChip.isInPin(rhs.pin)) {
-          return Err({
-            message: `Cannot write to input pin ${rhs.pin}`,
-            span: rhs.span,
-          });
-        }
-        if (isConstant(rhs.pin)) {
-          return Err({
-            message: `Cannot write to constant bus`,
-            span: rhs.span,
-          });
+        const result = checkBadWriteTarget(rhs, buildChip);
+        if (isErr(result)) {
+          return result;
         }
 
+        // track internal pin creation to detect undefined pins
         const pinData = internalPins.get(rhs.pin);
         if (pinData == undefined) {
           internalPins.set(rhs.pin, {

@@ -7,7 +7,7 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { ParseError, Span } from "../languages/base.js";
-import { HDL, HdlParse } from "../languages/hdl.js";
+import { HDL, HdlParse, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
 
@@ -95,6 +95,17 @@ interface InternalPin {
   firstUse: Span;
 }
 
+function getIndices(pin: PinParts): number[] {
+  if (pin.start != undefined && pin.end != undefined) {
+    const indices = [];
+    for (let i = pin.start; i <= pin.end; i++) {
+      indices.push(i);
+    }
+    return indices;
+  }
+  return [-1];
+}
+
 export async function build(
   parts: HdlParse,
   fs?: FileSystem
@@ -124,7 +135,7 @@ export async function build(
     const partChip = Ok(builtin);
 
     const wires: Connection[] = [];
-    const inPins: Set<string> = new Set();
+    const inPins: Map<string, Set<number>> = new Map();
     for (const { lhs, rhs } of part.wires) {
       const isRhsInternal = !(
         buildChip.isInPin(rhs.pin) ||
@@ -133,13 +144,29 @@ export async function build(
       );
 
       if (partChip.isInPin(lhs.pin)) {
-        if (inPins.has(lhs.pin)) {
-          return Err({
-            message: `Cannot input to the same pin multiple times`,
-            span: lhs.span,
-          });
+        const indices = inPins.get(lhs.pin);
+        if (!indices) {
+          inPins.set(lhs.pin, new Set(getIndices(lhs)));
         } else {
-          inPins.add(lhs.pin);
+          if (indices.has(-1)) {
+            // -1 stands for the whole bus width
+            return Err({
+              message: `Cannot input to the same pin multiple times`,
+              span: lhs.span,
+            });
+          } else if (lhs.start !== undefined && lhs.end !== undefined) {
+            for (const i of getIndices(lhs)) {
+              if (indices.has(i)) {
+                return Err({
+                  message: `Cannot input to the same pin multiple times`,
+                  span: lhs.span,
+                });
+              }
+              indices.add(i);
+            }
+          } else {
+            indices.add(-1);
+          }
         }
 
         if (buildChip.isOutPin(rhs.pin)) {

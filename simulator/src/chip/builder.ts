@@ -134,6 +134,13 @@ export async function build(
     }
     const partChip = Ok(builtin);
 
+    if (partChip.name == buildChip.name) {
+      return Err({
+        message: `Cannot use chip ${partChip.name} to implement itself`,
+        span: part.span,
+      });
+    }
+
     const wires: Connection[] = [];
     const inPins: Map<string, Set<number>> = new Map();
     for (const { lhs, rhs } of part.wires) {

@@ -186,21 +186,21 @@ export async function build(
   fs?: FileSystem,
   name?: string
 ): Promise<Result<Chip, CompilationError>> {
-  if (name && parts.name != name) {
+  if (name && parts.name.value != name) {
     return Err({
       message: `Wrong chip name`,
-      span: parts.nameSpan,
+      span: parts.name.span,
     });
   }
 
   if (parts.parts === "BUILTIN") {
-    return getBuiltinChip(parts.name.toString());
+    return getBuiltinChip(parts.name.value);
   }
 
   const buildChip = new Chip(
     parts.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
     parts.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
-    parts.name.toString(),
+    parts.name.value,
     [],
     parts.clocked
   );
@@ -209,7 +209,7 @@ export async function build(
   const outPins: Map<string, Set<number>> = new Map();
 
   for (const part of parts.parts) {
-    const builtin = await loadChip(part.name.toString(), fs);
+    const builtin = await loadChip(part.name, fs);
     if (isErr(builtin)) {
       return Err({
         message: `Undefined chip name: ${part.name}`,

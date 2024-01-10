@@ -1,9 +1,9 @@
 import {
-  grammar,
-  hdlSemantics,
   HdlParse,
   Part,
   PinDeclaration,
+  grammar,
+  hdlSemantics,
 } from "./hdl.js";
 
 const AND_BUILTIN = `CHIP And {
@@ -265,7 +265,7 @@ describe("HDL w/ Ohm", () => {
       const match = grammar.match(AND_BUILTIN);
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
-        name: "And",
+        name: { value: "And", span: { start: 5, end: 8, line: 1 } },
         ins: [
           { pin: "a", width: 1 },
           { pin: "b", width: 1 },
@@ -279,7 +279,7 @@ describe("HDL w/ Ohm", () => {
       const match = grammar.match(NOT_PARTS);
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
-        name: "Not",
+        name: { value: "Not", span: { start: 5, end: 8, line: 1 } },
         ins: [{ pin: "in", width: 1 }],
         outs: [{ pin: "out", width: 1 }],
         parts: [
@@ -310,7 +310,7 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
 
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
-        name: "Not",
+        name: { value: "Not", span: { start: 5, end: 8, line: 1 } },
         ins: [{ pin: "in", width: 1 }],
         outs: [{ pin: "out", width: 1 }],
         parts: [],
@@ -321,7 +321,7 @@ describe("HDL w/ Ohm", () => {
       const match = grammar.match(AND_16_BUILTIN);
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
-        name: "And16",
+        name: { value: "And16", span: { start: 5, end: 10, line: 1 } },
         ins: [
           { pin: "a", width: 16 },
           { pin: "b", width: 16 },
@@ -335,7 +335,7 @@ describe("HDL w/ Ohm", () => {
       const match = grammar.match(CLOCKED);
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
-        name: "Foo",
+        name: { value: "Foo", span: { start: 5, end: 8, line: 1 } },
         ins: [{ pin: "in", width: 1 }],
         outs: [],
         parts: [],

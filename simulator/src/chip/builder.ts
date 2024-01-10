@@ -7,7 +7,7 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { ParseError, Span } from "../languages/base.js";
-import { HDL, HdlParse } from "../languages/hdl.js";
+import { HDL, HdlParse, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
 
@@ -43,13 +43,14 @@ function parseErrorToCompilationError(error: ParseError) {
 }
 
 export async function parse(
-  code: string
+  code: string,
+  name?: string
 ): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
     return Err(parseErrorToCompilationError(Err(parsed)));
   }
-  return build(Ok(parsed));
+  return build(Ok(parsed), undefined, name);
 }
 
 export async function loadChip(
@@ -95,26 +96,120 @@ interface InternalPin {
   firstUse: Span;
 }
 
+function getIndices(pin: PinParts): number[] {
+  if (pin.start != undefined && pin.end != undefined) {
+    const indices = [];
+    for (let i = pin.start; i <= pin.end; i++) {
+      indices.push(i);
+    }
+    return indices;
+  }
+  return [-1];
+}
+
+// returns the index that has been assigned multiple times if one exists
+function checkMultipleAssignments(
+  pin: PinParts,
+  assignedIndexes: Map<string, Set<number>>
+): Result<boolean, CompilationError> {
+  let errorIndex: number | null = null;
+  const indices = assignedIndexes.get(pin.pin);
+  if (!indices) {
+    assignedIndexes.set(pin.pin, new Set(getIndices(pin)));
+  } else {
+    if (indices.has(-1)) {
+      // -1 stands for the whole bus width
+      errorIndex = pin.start ?? -1;
+    } else if (pin.start !== undefined && pin.end !== undefined) {
+      for (const i of getIndices(pin)) {
+        if (indices.has(i)) {
+          errorIndex = i;
+        }
+        indices.add(i);
+      }
+    } else {
+      indices.add(-1);
+    }
+  }
+  if (errorIndex != null) {
+    return Err({
+      message: `Cannot write to pin ${pin.pin}${
+        errorIndex != -1 ? `[${errorIndex}]` : ""
+      } multiple times`,
+      span: pin.span,
+    });
+  }
+  return Ok(true);
+}
+
+function checkBadInputSource(
+  rhs: PinParts,
+  buildChip: Chip
+): Result<boolean, CompilationError> {
+  if (buildChip.isOutPin(rhs.pin)) {
+    return Err({
+      message: `Cannot use output pin as input`,
+      span: rhs.span,
+    });
+  } else if (!buildChip.isInPin(rhs.pin) && rhs.start != undefined) {
+    return Err({
+      message: isConstant(rhs.pin)
+        ? `Cannot use sub bus of constant bus`
+        : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+      span: rhs.span,
+    });
+  }
+  return Ok(true);
+}
+
+function checkBadWriteTarget(
+  rhs: PinParts,
+  buildChip: Chip
+): Result<boolean, CompilationError> {
+  if (buildChip.isInPin(rhs.pin)) {
+    return Err({
+      message: `Cannot write to input pin ${rhs.pin}`,
+      span: rhs.span,
+    });
+  }
+  if (isConstant(rhs.pin)) {
+    return Err({
+      message: `Cannot write to constant bus`,
+      span: rhs.span,
+    });
+  }
+  return Ok(true);
+}
+
 export async function build(
   parts: HdlParse,
-  fs?: FileSystem
+  fs?: FileSystem,
+  name?: string
 ): Promise<Result<Chip, CompilationError>> {
+  if (name && parts.name.value != name) {
+    return Err({
+      message: `Wrong chip name`,
+      span: parts.name.span,
+    });
+  }
+
   if (parts.parts === "BUILTIN") {
-    return getBuiltinChip(parts.name.toString());
+    return getBuiltinChip(parts.name.value);
   }
 
   const buildChip = new Chip(
     parts.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
     parts.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
-    parts.name.toString(),
+    parts.name.value,
     [],
     parts.clocked
   );
 
   const internalPins: Map<string, InternalPin> = new Map();
+  const outPins: Map<string, Set<number>> = new Map();
 
   for (const part of parts.parts) {
-    const builtin = await loadChip(part.name.toString(), fs);
+    const builtin = await loadChip(part.name, fs);
     if (isErr(builtin)) {
       return Err({
         message: `Undefined chip name: ${part.name}`,
@@ -123,7 +218,15 @@ export async function build(
     }
     const partChip = Ok(builtin);
 
+    if (partChip.name == buildChip.name) {
+      return Err({
+        message: `Cannot use chip ${partChip.name} to implement itself`,
+        span: part.span,
+      });
+    }
+
     const wires: Connection[] = [];
+    const inPins: Map<string, Set<number>> = new Map();
     for (const { lhs, rhs } of part.wires) {
       const isRhsInternal = !(
         buildChip.isInPin(rhs.pin) ||
@@ -132,8 +235,19 @@ export async function build(
       );
 
       if (partChip.isInPin(lhs.pin)) {
+        // inputting from rhs to chip input
+        let result = checkMultipleAssignments(lhs, inPins);
+        if (isErr(result)) {
+          return result;
+        }
+
+        result = checkBadInputSource(rhs, buildChip);
+        if (isErr(result)) {
+          return result;
+        }
+
+        // track internal pin use to detect undefined pins
         if (isRhsInternal) {
-          // internal pin is being used
           const pinData = internalPins.get(rhs.pin);
           if (pinData == undefined) {
             internalPins.set(rhs.pin, {
@@ -148,8 +262,26 @@ export async function build(
           }
         }
       } else if (partChip.isOutPin(lhs.pin)) {
-        if (isRhsInternal) {
-          // internal pin is being defined
+        // inputting from chip output to rhs
+        const result = checkBadWriteTarget(rhs, buildChip);
+        if (isErr(result)) {
+          return result;
+        }
+
+        if (buildChip.isOutPin(rhs.pin)) {
+          const result = checkMultipleAssignments(rhs, outPins);
+          if (isErr(result)) {
+            return result;
+          }
+        } else {
+          // rhs is necessarily an internal pin
+          if (rhs.start !== undefined || rhs.end !== undefined) {
+            return Err({
+              message: `Cannot write to sub bus of internal pin ${rhs.pin}`,
+              span: rhs.span,
+            });
+          }
+          // track internal pin creation to detect undefined pins
           const pinData = internalPins.get(rhs.pin);
           if (pinData == undefined) {
             internalPins.set(rhs.pin, {
@@ -159,7 +291,9 @@ export async function build(
           } else {
             if (pinData.isDefined) {
               return Err({
-                message: `Internal pin ${rhs.pin} already defined`,
+                message: buildChip.isOutPin(rhs.pin)
+                  ? `Cannot write to output pin ${rhs.pin} multiple times`
+                  : `Internal pin ${rhs.pin} already defined`,
                 span: rhs.span,
               });
             }

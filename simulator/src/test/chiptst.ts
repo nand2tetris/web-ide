@@ -42,6 +42,12 @@ export class ChipTest extends Test<ChipTestInstruction> {
     return pin instanceof Bus ? pin.busVoltage : pin.voltage();
   }
 
+  getWidth(variable: string, offset?: number): number {
+    const pin = this.chip.get(variable, offset);
+    if (!pin) return 0;
+    return pin.width;
+  }
+
   setVar(variable: string, value: number, offset?: number): void {
     // Look up built-in chip state variables
     const pinOrBus = this.chip.get(variable, offset);

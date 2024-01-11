@@ -1,7 +1,6 @@
-import { TstRepeat } from "../languages/tst.js";
 import { Computer } from "../chip/builtins/computer/computer.js";
 import { Nand } from "../chip/builtins/logic/nand.js";
-import { Output } from "../output.js";
+import { TstRepeat } from "../languages/tst.js";
 import {
   ChipTest,
   TestEvalInstruction,
@@ -29,7 +28,17 @@ describe("Chip Test", () => {
     it("can read memory", async () => {
       const computer = new Computer();
       const test = new ChipTest().with(computer);
-      test.outputList([new Output("RAM16K", "D", 4, 0, 0, true, 2)]);
+      test.outputList([
+        {
+          id: "RAM16K",
+          style: "D",
+          len: 4,
+          lpad: 0,
+          rpad: 0,
+          builtin: true,
+          address: 2,
+        },
+      ]);
 
       test.addInstruction(new TestSetInstruction("RAM16K", 1234, 2));
       test.addInstruction(new TestOutputInstruction());
@@ -42,7 +51,11 @@ describe("Chip Test", () => {
   describe("Full tests", () => {
     it("creates a simulator test", async () => {
       const test = new ChipTest().with(new Nand());
-      test.outputList(["a", "b", "out"].map((v) => new Output(v)));
+      test.outputList(
+        ["a", "b", "out"].map((v) => {
+          return { id: v };
+        })
+      );
 
       let statement: TestCompoundInstruction;
       statement = new TestCompoundInstruction();
@@ -89,7 +102,7 @@ describe("Chip Test", () => {
 
     it("tick tocks a clock", async () => {
       const test = new ChipTest(); //.with(new DFF());
-      test.outputList([new Output("time", "S", 4, 0, 0)]);
+      test.outputList([{ id: "time", style: "S", len: 4, lpad: 0, rpad: 0 }]);
       for (let i = 0; i < 5; i++) {
         const statement = new TestCompoundInstruction();
         test.addInstruction(statement);
@@ -161,7 +174,7 @@ describe("Chip Test", () => {
       };
 
       const test = ChipTest.from({ lines: [repeat] });
-      test.outputList([new Output("time", "S", 4, 0, 0)]);
+      test.outputList([{ id: "time", style: "S", len: 4, lpad: 0, rpad: 0 }]);
 
       await test.run();
 

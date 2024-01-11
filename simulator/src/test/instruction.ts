@@ -1,6 +1,5 @@
 import { Span } from "../languages/base.js";
 import { TstOutputSpec } from "../languages/tst.js";
-import { Output } from "../output.js";
 import { Test } from "./tst.js";
 
 export interface TestInstruction {
@@ -35,8 +34,18 @@ export class TestOutputInstruction implements TestInstruction {
   }
 }
 
+export interface OutputParams {
+  id: string;
+  style?: "B" | "D" | "S" | "X";
+  len?: number;
+  lpad?: number;
+  rpad?: number;
+  builtin?: boolean;
+  address?: number;
+}
+
 export class TestOutputListInstruction implements TestInstruction {
-  private outputs: Output[] = [];
+  private outputs: OutputParams[] = [];
 
   constructor(specs: TstOutputSpec[] = []) {
     for (const spec of specs) {
@@ -45,17 +54,15 @@ export class TestOutputListInstruction implements TestInstruction {
   }
 
   addOutput(inst: TstOutputSpec) {
-    this.outputs.push(
-      new Output(
-        inst.id,
-        inst.style,
-        inst.width,
-        inst.lpad,
-        inst.rpad,
-        inst.builtin,
-        inst.address
-      )
-    );
+    this.outputs.push({
+      id: inst.id,
+      style: inst.format?.style ?? "B",
+      len: inst.format?.width ?? -1,
+      lpad: inst.format?.lpad ?? 1,
+      rpad: inst.format?.rpad ?? 1,
+      builtin: inst.builtin,
+      address: inst.address,
+    });
   }
 
   do(test: Test) {

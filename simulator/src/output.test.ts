@@ -17,6 +17,9 @@ class OutputTest extends Test {
   getVar(variable: string | number): number | string {
     return this.vars.get(`${variable}`) ?? 0;
   }
+  getWidth(variable: string, offset?: number | undefined): number {
+    return 1;
+  }
   setVar(variable: string, value: number): void {
     this.vars.set(`${variable}`, value);
   }
@@ -52,10 +55,10 @@ describe("Test Output Handler", () => {
 
   it("outputs a line", () => {
     state.test.outputList([
-      new Output("a", "D", 1, 2, 2),
-      new Output("b", "X", 6, 1, 1),
-      new Output("in", "B", 2, 2, 2),
-      new Output("out", "B", 4, 2, 2),
+      { id: "a", style: "D", len: 1, lpad: 2, rpad: 2 },
+      { id: "b", style: "X", len: 6, lpad: 1, rpad: 1 },
+      { id: "in", style: "B", len: 2, lpad: 2, rpad: 2 },
+      { id: "out", style: "B", len: 4, lpad: 2, rpad: 2 },
     ]);
     state.test.addInstruction(new TestOutputInstruction());
     state.test.run();
@@ -69,8 +72,8 @@ describe("Test Output Handler", () => {
       ["b", 0b1001100001110110],
     ]);
     test.outputList([
-      new Output("a", "B", 16, 1, 1),
-      new Output("b", "B", 16, 1, 1),
+      { id: "a", style: "B", len: 16, lpad: 1, rpad: 1 },
+      { id: "b", style: "B", len: 16, lpad: 1, rpad: 1 },
     ]);
 
     test.addInstruction(new TestOutputInstruction());

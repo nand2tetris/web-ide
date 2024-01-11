@@ -62,6 +62,10 @@ export class VMTest extends Test<VMTestInstruction> {
     return this.vm.memory.getSegment(variable as Segment, index ?? 0);
   }
 
+  getWidth(variable: string, offset?: number): number {
+    return 16;
+  }
+
   setVar(variable: string, value: number, index?: number): void {
     if (typeof variable !== "string") {
       index = variable;

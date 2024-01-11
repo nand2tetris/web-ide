@@ -3,7 +3,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { resetFiles } from "@nand2tetris/projects/index.js";
-import { grammar, TST } from "./tst.js";
+import { TST, grammar } from "./tst.js";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;
@@ -44,12 +44,14 @@ describe("tst language", () => {
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).format).toStrictEqual({
       id: "a",
-      style: "B",
-      width: 1,
-      lpad: 3,
-      rpad: 3,
       builtin: false,
       address: -1,
+      format: {
+        style: "B",
+        width: 1,
+        lpad: 3,
+        rpad: 3,
+      },
     });
   });
 
@@ -64,21 +66,16 @@ describe("tst language", () => {
       spec: [
         {
           id: "a",
-          style: "B",
-          width: 1,
-          lpad: 1,
-          rpad: 1,
           builtin: false,
           address: -1,
+          format: { style: "B", width: 1, lpad: 1, rpad: 1 },
         },
         {
           id: "out",
-          style: "X",
-          width: 3,
-          lpad: 2,
-          rpad: 4,
+
           builtin: false,
           address: -1,
+          format: { style: "X", width: 3, lpad: 2, rpad: 4 },
         },
       ],
     });
@@ -95,21 +92,15 @@ describe("tst language", () => {
       spec: [
         {
           id: "a",
-          style: "B",
-          width: 1,
-          lpad: 1,
-          rpad: 1,
           builtin: false,
           address: -1,
+          format: { style: "B", width: 1, lpad: 1, rpad: 1 },
         },
         {
           id: "out",
-          style: "X",
-          width: 3,
-          lpad: 2,
-          rpad: 4,
           builtin: false,
           address: -1,
+          format: { style: "X", width: 3, lpad: 2, rpad: 4 },
         },
       ],
     });
@@ -126,21 +117,15 @@ describe("tst language", () => {
       spec: [
         {
           id: "PC",
-          style: "D",
-          width: 4,
-          lpad: 0,
-          rpad: 0,
           builtin: true,
           address: -1,
+          format: { style: "D", width: 4, lpad: 0, rpad: 0 },
         },
         {
           id: "RAM16K",
-          style: "D",
-          width: 7,
-          lpad: 1,
-          rpad: 1,
           builtin: true,
           address: 0,
+          format: { style: "D", width: 7, lpad: 1, rpad: 1 },
         },
       ],
     });
@@ -191,21 +176,15 @@ describe("tst language", () => {
               spec: [
                 {
                   id: "in",
-                  style: "B",
-                  width: 1,
-                  lpad: 3,
-                  rpad: 3,
                   builtin: false,
                   address: -1,
+                  format: { style: "B", width: 1, lpad: 3, rpad: 3 },
                 },
                 {
                   id: "out",
-                  style: "B",
-                  width: 1,
-                  lpad: 3,
-                  rpad: 3,
                   builtin: false,
                   address: -1,
+                  format: { style: "B", width: 1, lpad: 3, rpad: 3 },
                 },
               ],
             },
@@ -256,39 +235,27 @@ describe("tst language", () => {
               spec: [
                 {
                   id: "time",
-                  style: "S",
-                  width: 4,
-                  lpad: 1,
-                  rpad: 1,
                   builtin: false,
                   address: -1,
+                  format: { style: "S", width: 4, lpad: 1, rpad: 1 },
                 },
                 {
                   id: "in",
-                  style: "B",
-                  width: 1,
-                  lpad: 2,
-                  rpad: 2,
                   builtin: false,
                   address: -1,
+                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
                 },
                 {
                   id: "load",
-                  style: "B",
-                  width: 1,
-                  lpad: 2,
-                  rpad: 2,
                   builtin: false,
                   address: -1,
+                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
                 },
                 {
                   id: "out",
-                  style: "B",
-                  width: 1,
-                  lpad: 2,
-                  rpad: 2,
                   builtin: false,
                   address: -1,
+                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
                 },
               ],
             },
@@ -350,21 +317,15 @@ describe("tst language", () => {
               spec: [
                 {
                   id: "time",
-                  style: "S",
-                  width: 2,
-                  lpad: 1,
-                  rpad: 1,
                   builtin: false,
                   address: -1,
+                  format: { style: "S", width: 2, lpad: 1, rpad: 1 },
                 },
                 {
                   id: "in",
-                  style: "B",
-                  width: 1,
-                  lpad: 2,
-                  rpad: 2,
                   builtin: false,
                   address: -1,
+                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
                 },
               ],
             },

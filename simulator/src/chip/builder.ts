@@ -84,8 +84,8 @@ export async function loadChip(
 
 function isConstant(pinName: string): boolean {
   return (
-    pinName.toLowerCase() === "false" ||
-    pinName.toLowerCase() === "true" ||
+    pinName === "false" ||
+    pinName === "true" ||
     pinName === "0" ||
     pinName === "1"
   );
@@ -329,9 +329,13 @@ export async function build(
   }
 
   for (const [name, pinData] of internalPins) {
+    let message = `Undefined internal pin name: ${name}`;
+    if (name == "True" || name == "False") {
+      message += `. Did you mean the constant bus '${name.toLowerCase()}'?`;
+    }
     if (!pinData.isDefined) {
       return Err({
-        message: `Undefined internal pin name: ${name}`,
+        message: message,
         span: pinData.firstUse,
       });
     }

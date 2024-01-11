@@ -1,5 +1,6 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
+import { resetBySuffix } from "../reset.js";
 import * as Memory from "./01_memory.js";
 import * as CPU from "./02_cpu.js";
 import * as Computer from "./03_computer.js";
@@ -43,5 +44,12 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
   // Add files needed for the test scripts to run
   await fs.pushd("/test");
   await fs.writeFile("Max.hack", Computer.hack);
+  await fs.popd();
+}
+
+export async function resetTests(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/05");
+  await resetBySuffix(fs, CHIPS, "tst");
+  await resetBySuffix(fs, CHIPS, "cmp");
   await fs.popd();
 }

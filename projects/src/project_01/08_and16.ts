@@ -19,9 +19,6 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/1/And16.tst
 
-load And16.hdl,
-output-file And16.out,
-compare-to And16.cmp,
 output-list a%B1.16.1 b%B1.16.1 out%B1.16.1;
 
 set a %B0000000000000000,

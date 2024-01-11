@@ -71,6 +71,10 @@ export class CPUTest extends Test<CPUTestInstruction> {
     return 0;
   }
 
+  getWidth(variable: string, offset?: number): number {
+    return 16;
+  }
+
   setVar(variable: string, value: number, index?: number): void {
     // A: Current value of the address register (unsigned 15-bit);
     // D: Current value of the data register (16-bit);

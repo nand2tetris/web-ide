@@ -39,17 +39,40 @@ export const VmProjects = {
   "08": project_08,
 };
 
+const Projects = {
+  1: project_01,
+  2: project_02,
+  3: project_03,
+  4: project_04,
+  5: project_05,
+  7: project_07,
+  8: project_08,
+};
+
 let reset = false;
-export const resetFiles = async (fs: FileSystem) => {
+export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
   if (reset) return; // React will double-render a call to resetFiles in useEffect.
   reset = true;
-  await project_01.resetFiles(fs);
-  await project_02.resetFiles(fs);
-  await project_03.resetFiles(fs);
-  await project_04.resetFiles(fs);
-  await project_05.resetFiles(fs);
-  await project_07.resetFiles(fs);
-  await project_08.resetFiles(fs);
+  projects ??= [1, 2, 3, 4, 5, 7, 8];
+  for (const project of projects) {
+    if (!Object.keys(Projects).includes(project.toString())) {
+      continue;
+    }
+    await Projects[project as keyof typeof Projects].resetFiles(fs);
+  }
+  reset = false;
+};
+
+export const resetTests = async (fs: FileSystem, projects?: number[]) => {
+  if (reset) return; // React will double-render a call to resetTests in useEffect.
+  reset = true;
+  projects ??= [1, 2, 3, 4, 5, 7, 8];
+  for (const project of projects) {
+    if (!Object.keys(Projects).includes(project.toString())) {
+      continue;
+    }
+    await Projects[project as keyof typeof Projects].resetTests(fs);
+  }
   reset = false;
 };
 

@@ -1,9 +1,9 @@
-export const cmp = `|     in     | out |
-|  00000000  |  0  |
-|  11111111  |  1  |
-|  00010000  |  1  |
-|  00000001  |  1  |
-|  00100110  |  1  |`;
+export const cmp = `|     in     |out|
+|  00000000  | 0 |
+|  11111111  | 1 |
+|  00010000  | 1 |
+|  00000001  | 1 |
+|  00100110  | 1 |`;
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
@@ -19,10 +19,29 @@ CHIP Or8Way {
     PARTS:
     //// Replace this comment with your code.
 }`;
-export const tst = `output-list in%B2.8.2 out%B2.1.2;
+export const tst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/1/Or8Way.tst
 
-set in %B00000000, eval, output;
-set in %B11111111, eval, output;
-set in %B00010000, eval, output;
-set in %B00000001, eval, output;
-set in %B00100110, eval, output;`;
+output-list in%B2.8.2 out;
+
+set in %B00000000,
+eval,
+output;
+
+set in %B11111111,
+eval,
+output;
+
+set in %B00010000,
+eval,
+output;
+
+set in %B00000001,
+eval,
+output;
+
+set in %B00100110,
+eval,
+output;`;

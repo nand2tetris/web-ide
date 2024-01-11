@@ -1,7 +1,9 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Output } from "../output.js";
-import { TestInstruction } from "./instruction.js";
+import { OutputParams, TestInstruction } from "./instruction.js";
+
+export const DEFAULT_TIME_WIDTH = 7;
 
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
@@ -30,8 +32,38 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   outputFile(_filename: string): void {
     return undefined;
   }
-  outputList(outputs: Output[]): void {
-    this._outputList = outputs;
+
+  private createOutputs(params: OutputParams[]): Output[] {
+    return params.map((param) => {
+      if (param.len === -1) {
+        if (param.id === "time") {
+          param.len = DEFAULT_TIME_WIDTH;
+          param.style = "S";
+        } else {
+          const width = this.getWidth(param.id, param.address);
+          if (param.style === "B") {
+            param.len = width;
+          } else if (param.style === "D") {
+            param.len = Math.ceil(Math.log(width));
+          } else if (param.style === "X") {
+            param.len = Math.ceil(width / 4);
+          }
+        }
+      }
+      return new Output(
+        param.id,
+        param.style,
+        param.len,
+        param.lpad,
+        param.rpad,
+        param.builtin,
+        param.address
+      );
+    });
+  }
+
+  outputList(params: OutputParams[]): void {
+    this._outputList = this.createOutputs(params);
   }
 
   addInstruction(instruction: IS | TestInstruction): void {
@@ -108,4 +140,5 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   abstract hasVar(variable: string | number): boolean;
   abstract getVar(variable: string | number, offset?: number): number | string;
   abstract setVar(variable: string, value: number, offset?: number): void;
+  abstract getWidth(variable: string, offset?: number): number;
 }

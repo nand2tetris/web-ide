@@ -19,7 +19,8 @@ Tst <: Base {
   TstLoadROMOperation = ROM32K Load FileName
   TstFileOperation = FileOperation FileName?
   TstOutputListOperation = "output-list" OutputFormat+
-  OutputFormat = Name Index? percent FormatStyle wholeDec dot wholeDec dot wholeDec
+  OutputFormat = Name Index? FormatSpec?
+  FormatSpec = percent FormatStyle wholeDec dot wholeDec dot wholeDec
   TstSetOperation = Set Name Index? Number
   Index = OpenSquare wholeDec? CloseSquare
   Condition = Value CompareOp Value

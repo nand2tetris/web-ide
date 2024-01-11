@@ -27,14 +27,18 @@ export interface TstOutputOperation {
   op: "output";
 }
 
-export interface TstOutputSpec {
-  id: string;
-  builtin: boolean;
-  address: number;
+export interface TstOutputFormat {
   style: "D" | "X" | "B" | "S";
   width: number;
   lpad: number;
   rpad: number;
+}
+
+export interface TstOutputSpec {
+  id: string;
+  builtin: boolean;
+  address: number;
+  format?: TstOutputFormat;
 }
 
 export interface TstOutputListOperation {
@@ -114,10 +118,8 @@ tstSemantics.addAttribute<number>("index", {
   },
 });
 
-tstSemantics.addAttribute<TstOutputSpec>("format", {
-  OutputFormat(
-    { name: id },
-    index,
+tstSemantics.addAttribute<TstOutputFormat>("formatSpec", {
+  FormatSpec(
     _a,
     { sourceString: style },
     { value: lpad },
@@ -127,13 +129,21 @@ tstSemantics.addAttribute<TstOutputSpec>("format", {
     { value: rpad }
   ) {
     return {
-      id,
-      builtin: index?.child(0) !== undefined,
-      address: index?.child(0)?.value ?? -1,
-      style: style as TstOutputSpec["style"],
+      style: style as TstOutputFormat["style"],
       width,
       lpad,
       rpad,
+    };
+  },
+});
+
+tstSemantics.addAttribute<TstOutputSpec>("format", {
+  OutputFormat({ name: id }, index, formatSpec) {
+    return {
+      id,
+      builtin: index?.child(0) !== undefined,
+      address: index?.child(0)?.value ?? -1,
+      format: formatSpec?.child(0)?.formatSpec,
     };
   },
 });

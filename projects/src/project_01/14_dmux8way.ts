@@ -90,7 +90,7 @@ set sel %B111,
 eval,
 output;`;
 
-export const cmp = `| in |  sel  | a | b | c | d | e | f | g | h |
+export const cmp = `|in |  sel  | a | b | c | d | e | f | g | h |
 | 0 |  000  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | 0 |  001  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | 0 |  010  | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |

@@ -14,16 +14,36 @@ CHIP DMux {
     PARTS:
     //// Replace this comment with your code.
 }`;
-export const tst = `output-list in%B3.1.3 sel%B3.1.3 a%B3.1.3 b%B3.1.3;
+export const tst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/1/DMux.tst
 
-set in 0, set sel 0, eval, output;
-set sel 1, eval, output;
+load DMux.hdl,
+output-file DMux.out,
+compare-to DMux.cmp,
+output-list in sel a b;
 
-set in 1, set sel 0, eval, output;
-set sel 1, eval, output;`;
+set in 0,
+set sel 0,
+eval,
+output;
 
-export const cmp = `|  in   |  sel  |   a   |   b   |
-|   0   |   0   |   0   |   0   |
-|   0   |   1   |   0   |   0   |
-|   1   |   0   |   1   |   0   |
-|   1   |   1   |   0   |   1   |`;
+set sel 1,
+eval,
+output;
+
+set in 1,
+set sel 0,
+eval,
+output;
+
+set sel 1,
+eval,
+output;`;
+
+export const cmp = `|in |sel| a | b |
+| 0 | 0 | 0 | 0 |
+| 0 | 1 | 0 | 0 |
+| 1 | 0 | 1 | 0 |
+| 1 | 1 | 0 | 1 |`;

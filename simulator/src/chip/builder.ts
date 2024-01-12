@@ -278,7 +278,7 @@ class ChipBuilder {
     }
     if (this.isConstant(rhs.pin)) {
       throw {
-        message: `Cannot write to constant bus`,
+        message: `Illegal internal pin name: ${rhs.pin}`,
         span: rhs.span,
       };
     }

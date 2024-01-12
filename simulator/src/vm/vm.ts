@@ -8,6 +8,8 @@ import {
 import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
 import { VmMemory } from "./memory.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
+import { VM_BUILTINS } from "./builtins.js";
+import { op } from "../util/asm.js";
 
 export type VmOperation =
   | FunctionOperation
@@ -492,19 +494,24 @@ export class Vm {
       }
       case "call": {
         const fnName = operation.name;
-        const fn = this.functionMap[fnName];
-        if (!fn) throw new Error(`Calling unknown function ${fnName}`);
-        const base = this.memory.pushFrame(
-          this.invocation.opPtr,
-          operation.nArgs,
-          fn.nVars
-        );
-        this.executionStack.push({
-          function: fnName,
-          opPtr: 0,
-          nArgs: operation.nArgs,
-          frameBase: base,
-        });
+        if (this.functionMap[fnName]) {
+          const base = this.memory.pushFrame(
+            this.invocation.opPtr,
+            operation.nArgs,
+            this.functionMap[fnName].nVars
+          );
+          this.executionStack.push({
+            function: fnName,
+            opPtr: 0,
+            nArgs: operation.nArgs,
+            frameBase: base,
+          });
+        } else if (VM_BUILTINS[fnName]) {
+          const ret = VM_BUILTINS[fnName](this.memory);
+          const sp = this.memory.SP - operation.nArgs;
+          this.memory.set(sp, ret);
+          this.memory.SP = sp + 1;
+        }
         break;
       }
       case "return": {

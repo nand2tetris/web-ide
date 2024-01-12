@@ -330,8 +330,8 @@ export async function build(
 
   for (const [name, pinData] of internalPins) {
     let message = `Undefined internal pin name: ${name}`;
-    if (name == "True" || name == "False") {
-      message += `. Did you mean the constant bus '${name.toLowerCase()}'?`;
+    if (name.toLowerCase() == "true" || name.toLowerCase() == "false") {
+      message = `The constants ${name.toLowerCase()} must be in lower-case`;
     }
     if (!pinData.isDefined) {
       return Err({

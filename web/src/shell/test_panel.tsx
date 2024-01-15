@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/macro";
-import { DiffTable } from "@nand2tetris/components/difftable.js";
+import { DiffDisplay, generateDiffs } from "@nand2tetris/components/compare.js";
 import { Runbar } from "@nand2tetris/components/runbar.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { Span } from "@nand2tetris/simulator/languages/base";
@@ -12,6 +12,7 @@ import {
   RefObject,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { AppContext } from "../App.context";
@@ -67,6 +68,12 @@ export const TestPanel = ({
       setStatus(`Failed to load test`);
     }
   }, [filePicker, setStatus, fs]);
+
+  const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();
+
+  useEffect(() => {
+    setDiffDisplay(generateDiffs(cmp, out));
+  }, [out, cmp]);
 
   return (
     <Panel
@@ -152,6 +159,7 @@ export const TestPanel = ({
             grammar={CMP.parser}
             language={"cmp"}
             disabled={disabled}
+            lineNumberTransform={(_) => ""}
           />
         </div>
         <div
@@ -177,7 +185,31 @@ export const TestPanel = ({
           id="test-tabpanel-out"
           aria-labelledby="test-tab-out"
         >
-          <DiffTable cmp={cmp} out={out} />
+          {out == "" && <p>Execute test script to compare output.</p>}
+          {(diffDisplay?.failureNum ?? 0) > 0 && (
+            <p>
+              {diffDisplay?.failureNum} failure
+              {diffDisplay?.failureNum === 1 ? "" : "s"}
+            </p>
+          )}
+          <Editor
+            value={diffDisplay?.text ?? ""}
+            onChange={() => {
+              return;
+            }}
+            language={""}
+            disabled={true}
+            lineNumberTransform={(_) => ""}
+            customDecorations={diffDisplay?.correctCellSpans
+              .map((span) => {
+                return { span, cssClass: "green" };
+              })
+              .concat(
+                diffDisplay?.incorrectCellSpans.map((span) => {
+                  return { span, cssClass: "red" };
+                })
+              )}
+          />
         </div>
       </div>
     </Panel>

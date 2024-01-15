@@ -1,6 +1,5 @@
 import { Trans, t } from "@lingui/macro";
 import {
-  CSSProperties,
   ReactNode,
   useCallback,
   useContext,
@@ -14,14 +13,12 @@ import "./chip.scss";
 
 import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
 import { Clockface } from "@nand2tetris/components/clockface.js";
-import { DiffTable } from "@nand2tetris/components/difftable.js";
 import {
   FullPinout,
   PinContext,
   PinResetDispatcher,
 } from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
-import { Runbar } from "@nand2tetris/components/runbar.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import {
   Files,
@@ -30,24 +27,22 @@ import {
   useChipPageStore,
 } from "@nand2tetris/components/stores/chip.store.js";
 import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
-import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
+import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
-import { Icon } from "../pico/icon";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 
 export const Chip = () => {
-  const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker, tracking } = useContext(AppContext);
+  const { setStatus } = useContext(BaseContext);
+  const { tracking } = useContext(AppContext);
   const { state, actions, dispatch } = useChipPageStore();
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
-  const [out] = useStateInitializer(state.files.out);
+  const [out, setOut] = useStateInitializer(state.files.out);
 
   useEffect(() => {
     actions.initialize();
@@ -92,17 +87,6 @@ export const Chip = () => {
       cmp: files.cmp ?? cmp,
     });
   };
-
-  const loadTest = useCallback(async () => {
-    try {
-      const path = await filePicker.select();
-      const tst = await fs.readFile(path);
-      await compile.current({ tst });
-    } catch (e) {
-      console.error(e);
-      setStatus(`Failed to load into memory`);
-    }
-  }, [filePicker, setStatus, fs, compile]);
 
   const runner = useRef<Timer>();
   useEffect(() => {
@@ -348,131 +332,13 @@ export const Chip = () => {
     </Panel>
   );
 
-  const [selectedTestTab, doSetSelectedTestTab] = useState<
-    "tst" | "cmp" | "out"
-  >("tst");
-
-  const setSelectedTestTab = useCallback(
-    (tab: typeof selectedTestTab) => {
-      doSetSelectedTestTab(tab);
-      tracking.trackEvent("tab", "change", tab);
-    },
-    [tracking]
-  );
-
   const testPanel = (
-    <Panel
-      className="_test_panel"
-      header={
-        <>
-          <div className="flex-1">
-            <Trans>Test</Trans>
-          </div>
-          <div className="flex-2">
-            {runner.current && (
-              <Runbar runner={runner.current} disabled={state.sim.invalid} />
-            )}
-          </div>
-          <div>
-            <button onClick={loadTest}>
-              <Icon name="upload_file" />{" "}
-            </button>
-          </div>
-        </>
-      }
-    >
-      <div role="tablist" style={{ "--tab-count": "3" } as CSSProperties}>
-        <div
-          role="tab"
-          id="test-tab-tst"
-          aria-controls="test-tabpanel-tst"
-          aria-selected={selectedTestTab === "tst"}
-        >
-          <label>
-            <input
-              type="radio"
-              name="test-tabs"
-              aria-controls="test-tabpanel-tst"
-              value="tst"
-              checked={selectedTestTab === "tst"}
-              onChange={() => setSelectedTestTab("tst")}
-            />
-            Test Script
-          </label>
-        </div>
-        <div
-          role="tabpanel"
-          aria-labelledby="test-tab-tst"
-          id="test-tabpanel-tst"
-        >
-          <Editor
-            value={tst}
-            onChange={setTst}
-            grammar={TST.parser}
-            language={"tst"}
-            highlight={state.controls.span}
-            disabled={state.controls.builtinOnly}
-          />
-        </div>
-        <div
-          role="tab"
-          id="test-tab-cmp"
-          aria-controls="test-tablpanel-cmp"
-          aria-selected={selectedTestTab === "cmp"}
-        >
-          <label>
-            <input
-              type="radio"
-              name="test-tabs"
-              aria-controls="test-tabpanel-cmp"
-              value="cmp"
-              checked={selectedTestTab === "cmp"}
-              onChange={() => setSelectedTestTab("cmp")}
-            />
-            Compare File
-          </label>
-        </div>
-        <div
-          role="tabpanel"
-          aria-labelledby="test-tab-cmp"
-          id="test-tabpanel-cmp"
-          style={{ position: "relative" }}
-        >
-          <Editor
-            value={cmp}
-            onChange={setCmp}
-            grammar={CMP.parser}
-            language={"cmp"}
-            disabled={state.controls.builtinOnly}
-          />
-        </div>
-        <div
-          role="tab"
-          id="test-tab-out"
-          aria-controls="test-tabpanel-out"
-          aria-selected={selectedTestTab === "out"}
-        >
-          <label>
-            <input
-              type="radio"
-              name="test-tabs"
-              aria-controls="test-tabpanel-out"
-              value="out"
-              checked={selectedTestTab === "out"}
-              onChange={() => setSelectedTestTab("out")}
-            />
-            Output File
-          </label>
-        </div>
-        <div
-          role="tabpanel"
-          id="test-tabpanel-out"
-          aria-labelledby="test-tab-out"
-        >
-          <DiffTable cmp={cmp} out={out} />
-        </div>
-      </div>
-    </Panel>
+    <TestPanel
+      runner={runner}
+      tst={[tst, setTst, state.controls.span]}
+      cmp={[cmp, setCmp]}
+      out={[out, setOut]}
+    />
   );
 
   return (

@@ -188,8 +188,9 @@ export const TestPanel = ({
           {out == "" && <p>Execute test script to compare output.</p>}
           {(diffDisplay?.failureNum ?? 0) > 0 && (
             <p>
-              {diffDisplay?.failureNum} failure
-              {diffDisplay?.failureNum === 1 ? "" : "s"}
+              {diffDisplay?.failureNum} comparison failure
+              {diffDisplay?.failureNum === 1 ? "" : "s"}. Scroll down for
+              details
             </p>
           )}
           <Editor

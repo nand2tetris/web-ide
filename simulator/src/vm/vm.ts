@@ -9,7 +9,6 @@ import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
 import { VmMemory } from "./memory.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
 import { VM_BUILTINS } from "./builtins.js";
-import { op } from "../util/asm.js";
 
 export type VmOperation =
   | FunctionOperation

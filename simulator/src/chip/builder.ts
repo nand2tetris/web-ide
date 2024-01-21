@@ -133,8 +133,8 @@ function getIndices(pin: PinParts): number[] {
 function checkMultipleAssignments(
   pin: PinParts,
   assignedIndexes: Map<string, Set<number>>
-) {
-  let errorIndex: number | null = null; // -1 stands for the whole bus width
+): Result<boolean, CompilationError> {
+  let errorIndex: number | undefined = undefined; // -1 stands for the whole bus width
   const indices = assignedIndexes.get(pin.pin);
   if (!indices) {
     assignedIndexes.set(pin.pin, new Set(getIndices(pin)));
@@ -152,14 +152,15 @@ function checkMultipleAssignments(
       indices.add(-1);
     }
   }
-  if (errorIndex != null) {
-    throw {
+  if (errorIndex != undefined) {
+    return Err({
       message: `Cannot write to pin ${pin.pin}${
         errorIndex != -1 ? `[${errorIndex}]` : ""
       } multiple times`,
       span: pin.span,
-    };
+    });
   }
+  return Ok(true);
 }
 
 class ChipBuilder {
@@ -197,60 +198,88 @@ class ChipBuilder {
       return getBuiltinChip(this.parts.name.value);
     }
 
+    const result = await this.wireParts();
+    if (isErr(result)) {
+      return result;
+    }
+    return Ok(this.chip);
+  }
+
+  private async wireParts(): Promise<Result<boolean, CompilationError>> {
+    if (this.parts.parts === "BUILTIN") {
+      return Ok(true);
+    }
+    for (const part of this.parts.parts) {
+      const builtin = await loadChip(part.name, this.fs);
+      if (isErr(builtin)) {
+        return Err({
+          message: `Undefined chip name: ${part.name}`,
+          span: part.span,
+        });
+      }
+      const partChip = Ok(builtin);
+      if (partChip.name == this.chip.name) {
+        return Err({
+          message: `Cannot use chip ${partChip.name} to implement itself`,
+          span: part.span,
+        });
+      }
+      const result = this.wirePart(part, partChip);
+      if (isErr(result)) {
+        return result;
+      }
+    }
+    const result = this.validateInternalPins();
+    if (isErr(result)) {
+      return result;
+    }
+    return Ok(true);
+  }
+
+  private wirePart(
+    part: Part,
+    partChip: Chip
+  ): Result<boolean, CompilationError> {
+    const wires: Connection[] = [];
+    this.inPins.clear();
+    for (const { lhs, rhs } of part.wires) {
+      const result = this.validateWire(partChip, lhs, rhs);
+      if (isErr(result)) {
+        return result;
+      }
+      wires.push(createWire(lhs, rhs));
+    }
+
     try {
-      await this.wireParts();
-      return Ok(this.chip);
+      this.chip.wire(partChip, wires);
+      return Ok(true);
     } catch (e) {
       return Err(e as CompilationError);
     }
   }
 
-  private async wireParts() {
-    if (this.parts.parts === "BUILTIN") {
-      return;
-    }
-    for (const part of this.parts.parts) {
-      const builtin = await loadChip(part.name, this.fs);
-      if (isErr(builtin)) {
-        throw {
-          message: `Undefined chip name: ${part.name}`,
-          span: part.span,
-        };
-      }
-      const partChip = Ok(builtin);
-      if (partChip.name == this.chip.name) {
-        throw {
-          message: `Cannot use chip ${partChip.name} to implement itself`,
-          span: part.span,
-        };
-      }
-      this.wirePart(part, partChip);
-    }
-    this.validateInternalPins();
-  }
-
-  private wirePart(part: Part, partChip: Chip) {
-    const wires: Connection[] = [];
-    this.inPins.clear();
-    for (const { lhs, rhs } of part.wires) {
-      this.validateWire(partChip, lhs, rhs);
-      wires.push(createWire(lhs, rhs));
-    }
-
-    this.chip.wire(partChip, wires);
-  }
-
-  private validateWire(partChip: Chip, lhs: PinParts, rhs: PinParts) {
+  private validateWire(
+    partChip: Chip,
+    lhs: PinParts,
+    rhs: PinParts
+  ): Result<boolean, CompilationError> {
     if (partChip.isInPin(lhs.pin)) {
-      this.validateInputWire(lhs, rhs);
+      const result = this.validateInputWire(lhs, rhs);
+      if (isErr(result)) {
+        return result;
+      }
     } else if (partChip.isOutPin(lhs.pin)) {
-      this.validateOutputWire(rhs);
+      const result = this.validateOutputWire(rhs);
+      if (isErr(result)) {
+        return result;
+      }
     } else {
-      throw {
+      return Err({
         message: `Undefined input/output pin name: ${lhs.pin}`,
         span: lhs.span,
-      };
+      });
     }
+    return Ok(true);
   }
 
   private isInternal(pinName: string): boolean {
@@ -261,9 +290,18 @@ class ChipBuilder {
     );
   }
 
-  private validateInputWire(lhs: PinParts, rhs: PinParts) {
-    this.validateInputSource(rhs);
-    checkMultipleAssignments(lhs, this.inPins);
+  private validateInputWire(
+    lhs: PinParts,
+    rhs: PinParts
+  ): Result<boolean, CompilationError> {
+    let result = this.validateInputSource(rhs);
+    if (isErr(result)) {
+      return result;
+    }
+    result = checkMultipleAssignments(lhs, this.inPins);
+    if (isErr(result)) {
+      return result;
+    }
 
     // track internal pin use to detect undefined pins
     if (this.isInternal(rhs.pin)) {
@@ -278,20 +316,27 @@ class ChipBuilder {
           pinData.firstUse.start < rhs.span.start ? pinData.firstUse : rhs.span;
       }
     }
+    return Ok(true);
   }
 
-  private validateOutputWire(rhs: PinParts) {
-    this.validateWriteTarget(rhs);
+  private validateOutputWire(rhs: PinParts): Result<boolean, CompilationError> {
+    let result = this.validateWriteTarget(rhs);
+    if (isErr(result)) {
+      return result;
+    }
 
     if (this.chip.isOutPin(rhs.pin)) {
-      checkMultipleAssignments(rhs, this.outPins);
+      result = checkMultipleAssignments(rhs, this.outPins);
+      if (isErr(result)) {
+        return result;
+      }
     } else {
       // rhs is necessarily an internal pin
       if (rhs.start !== undefined || rhs.end !== undefined) {
-        throw {
+        return Err({
           message: `Cannot write to sub bus of internal pin ${rhs.pin}`,
           span: rhs.span,
-        };
+        });
       }
       // track internal pin creation to detect undefined pins
       const pinData = this.internalPins.get(rhs.pin);
@@ -302,58 +347,66 @@ class ChipBuilder {
         });
       } else {
         if (pinData.isDefined) {
-          throw {
+          return Err({
             message: `Internal pin ${rhs.pin} already defined`,
             span: rhs.span,
-          };
+          });
         }
         pinData.isDefined = true;
       }
     }
+    return Ok(true);
   }
 
-  private validateWriteTarget(rhs: PinParts) {
+  private validateWriteTarget(
+    rhs: PinParts
+  ): Result<boolean, CompilationError> {
     if (this.chip.isInPin(rhs.pin)) {
-      throw {
+      return Err({
         message: `Cannot write to input pin ${rhs.pin}`,
         span: rhs.span,
-      };
+      });
     }
     if (isConstant(rhs.pin)) {
-      throw {
+      return Err({
         message: `Illegal internal pin name: ${rhs.pin}`,
         span: rhs.span,
-      };
+      });
     }
+    return Ok(true);
   }
 
-  private validateInputSource(rhs: PinParts) {
+  private validateInputSource(
+    rhs: PinParts
+  ): Result<boolean, CompilationError> {
     if (this.chip.isOutPin(rhs.pin)) {
-      throw {
+      return Err({
         message: `Cannot use output pin as input`,
         span: rhs.span,
-      };
+      });
     } else if (!this.chip.isInPin(rhs.pin) && rhs.start != undefined) {
-      throw {
+      return Err({
         message: isConstant(rhs.pin)
           ? `Cannot use sub bus of constant bus`
           : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
         span: rhs.span,
-      };
+      });
     }
+    return Ok(true);
   }
 
-  private validateInternalPins() {
+  private validateInternalPins(): Result<boolean, CompilationError> {
     for (const [name, pinData] of this.internalPins) {
       if (!pinData.isDefined) {
-        throw {
+        return Err({
           message:
             name.toLowerCase() == "true" || name.toLowerCase() == "false"
               ? `The constants ${name.toLowerCase()} must be in lower-case`
               : `Undefined internal pin name: ${name}`,
           span: pinData.firstUse,
-        };
+        });
       }
     }
+    return Ok(true);
   }
 }

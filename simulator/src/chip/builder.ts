@@ -95,6 +95,74 @@ interface InternalPin {
   firstUse: Span;
 }
 
+function isConstant(pinName: string): boolean {
+  return (
+    pinName === "false" ||
+    pinName === "true" ||
+    pinName === "0" ||
+    pinName === "1"
+  );
+}
+
+function createWire(lhs: PinParts, rhs: PinParts): Connection {
+  return {
+    to: {
+      name: lhs.pin.toString(),
+      start: lhs.start ?? 0,
+      width: pinWidth(lhs.start ?? 0, lhs.end),
+    },
+    from: {
+      name: rhs.pin.toString(),
+      start: rhs.start ?? 0,
+      width: pinWidth(rhs.start ?? 0, rhs.end),
+    },
+  };
+}
+
+function getIndices(pin: PinParts): number[] {
+  if (pin.start != undefined && pin.end != undefined) {
+    const indices = [];
+    for (let i = pin.start; i <= pin.end; i++) {
+      indices.push(i);
+    }
+    return indices;
+  }
+  return [-1];
+}
+
+function checkMultipleAssignments(
+  pin: PinParts,
+  assignedIndexes: Map<string, Set<number>>
+) {
+  let errorIndex: number | null = null;
+  const indices = assignedIndexes.get(pin.pin);
+  if (!indices) {
+    assignedIndexes.set(pin.pin, new Set(getIndices(pin)));
+  } else {
+    if (indices.has(-1)) {
+      // -1 stands for the whole bus width
+      errorIndex = pin.start ?? -1;
+    } else if (pin.start !== undefined && pin.end !== undefined) {
+      for (const i of getIndices(pin)) {
+        if (indices.has(i)) {
+          errorIndex = i;
+        }
+        indices.add(i);
+      }
+    } else {
+      indices.add(-1);
+    }
+  }
+  if (errorIndex != null) {
+    throw {
+      message: `Cannot write to pin ${pin.pin}${
+        errorIndex != -1 ? `[${errorIndex}]` : ""
+      } multiple times`,
+      span: pin.span,
+    };
+  }
+}
+
 class ChipBuilder {
   private parts: HdlParse;
   private fs?: FileSystem;
@@ -115,15 +183,6 @@ class ChipBuilder {
       parts.name.value,
       [],
       parts.clocked
-    );
-  }
-
-  private isConstant(pinName: string): boolean {
-    return (
-      pinName === "false" ||
-      pinName === "true" ||
-      pinName === "0" ||
-      pinName === "1"
     );
   }
 
@@ -176,25 +235,10 @@ class ChipBuilder {
     this.inPins.clear();
     for (const { lhs, rhs } of part.wires) {
       this.validateWire(partChip, lhs, rhs);
-      wires.push(this.createWire(lhs, rhs));
+      wires.push(createWire(lhs, rhs));
     }
 
     this.chip.wire(partChip, wires);
-  }
-
-  private createWire(lhs: PinParts, rhs: PinParts): Connection {
-    return {
-      to: {
-        name: lhs.pin.toString(),
-        start: lhs.start ?? 0,
-        width: pinWidth(lhs.start ?? 0, lhs.end),
-      },
-      from: {
-        name: rhs.pin.toString(),
-        start: rhs.start ?? 0,
-        width: pinWidth(rhs.start ?? 0, rhs.end),
-      },
-    };
   }
 
   private validateWire(partChip: Chip, lhs: PinParts, rhs: PinParts) {
@@ -214,13 +258,13 @@ class ChipBuilder {
     return !(
       this.chip.isInPin(pinName) ||
       this.chip.isOutPin(pinName) ||
-      this.isConstant(pinName)
+      isConstant(pinName)
     );
   }
 
   private validateInputWire(lhs: PinParts, rhs: PinParts) {
     this.validateInputSource(rhs);
-    this.checkMultipleAssignments(lhs, this.inPins);
+    checkMultipleAssignments(lhs, this.inPins);
 
     // track internal pin use to detect undefined pins
     if (this.isInternal(rhs.pin)) {
@@ -241,7 +285,7 @@ class ChipBuilder {
     this.validateWriteTarget(rhs);
 
     if (this.chip.isOutPin(rhs.pin)) {
-      this.checkMultipleAssignments(rhs, this.outPins);
+      checkMultipleAssignments(rhs, this.outPins);
     } else {
       // rhs is necessarily an internal pin
       if (rhs.start !== undefined || rhs.end !== undefined) {
@@ -276,7 +320,7 @@ class ChipBuilder {
         span: rhs.span,
       };
     }
-    if (this.isConstant(rhs.pin)) {
+    if (isConstant(rhs.pin)) {
       throw {
         message: `Illegal internal pin name: ${rhs.pin}`,
         span: rhs.span,
@@ -292,54 +336,10 @@ class ChipBuilder {
       };
     } else if (!this.chip.isInPin(rhs.pin) && rhs.start != undefined) {
       throw {
-        message: this.isConstant(rhs.pin)
+        message: isConstant(rhs.pin)
           ? `Cannot use sub bus of constant bus`
           : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
         span: rhs.span,
-      };
-    }
-  }
-
-  private getIndices(pin: PinParts): number[] {
-    if (pin.start != undefined && pin.end != undefined) {
-      const indices = [];
-      for (let i = pin.start; i <= pin.end; i++) {
-        indices.push(i);
-      }
-      return indices;
-    }
-    return [-1];
-  }
-
-  private checkMultipleAssignments(
-    pin: PinParts,
-    assignedIndexes: Map<string, Set<number>>
-  ) {
-    let errorIndex: number | null = null;
-    const indices = assignedIndexes.get(pin.pin);
-    if (!indices) {
-      assignedIndexes.set(pin.pin, new Set(this.getIndices(pin)));
-    } else {
-      if (indices.has(-1)) {
-        // -1 stands for the whole bus width
-        errorIndex = pin.start ?? -1;
-      } else if (pin.start !== undefined && pin.end !== undefined) {
-        for (const i of this.getIndices(pin)) {
-          if (indices.has(i)) {
-            errorIndex = i;
-          }
-          indices.add(i);
-        }
-      } else {
-        indices.add(-1);
-      }
-    }
-    if (errorIndex != null) {
-      throw {
-        message: `Cannot write to pin ${pin.pin}${
-          errorIndex != -1 ? `[${errorIndex}]` : ""
-        } multiple times`,
-        span: pin.span,
       };
     }
   }

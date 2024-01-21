@@ -75,20 +75,22 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
 
   const diffs = getDiffs(cmpData, outData);
 
-  const diffsByLine: Map<number, Diff[]> = new Map();
+  const diffsByLine: Diff[][] = new Array<Diff[]>(cmpData.length);
   for (const diff of diffs) {
-    const lineDiffs = diffsByLine.get(diff.row);
+    const lineDiffs = diffsByLine[diff.row];
     if (lineDiffs) {
       lineDiffs.push(diff);
     } else {
-      diffsByLine.set(diff.row, [diff]);
+      diffsByLine[diff.row] = [diff];
     }
   }
 
   const lines = out.split("\n");
-  const diffLines: Map<number, DiffLineDisplay> = new Map();
-  for (const [row, diffs] of diffsByLine) {
-    diffLines.set(row, generateDiffLine(lines[row], diffs));
+  const diffLines: DiffLineDisplay[] = new Array(cmpData.length);
+  for (let i = 0; i < diffsByLine.length; i++) {
+    if (diffsByLine[i]) {
+      diffLines[i] = generateDiffLine(lines[i], diffsByLine[i]);
+    }
   }
 
   const finalLines: string[] = [];
@@ -97,28 +99,24 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
   const incorrectCellSpans: Span[] = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const diffLine = diffLines.get(i);
+    const diffLine = diffLines[i];
     if (diffLine) {
       finalLines.push(diffLine.expectedLine);
       correctCellSpans.push(
-        ...diffLine.correctCellSpans.map((span) => {
-          return {
-            start: span.start + lineStart,
-            end: span.end + lineStart,
-            line: span.line,
-          };
-        })
+        ...diffLine.correctCellSpans.map((span) => ({
+          start: span.start + lineStart,
+          end: span.end + lineStart,
+          line: span.line,
+        }))
       );
       lineStart += diffLine.expectedLine.length + 1; // +1 for the newline character
       finalLines.push(diffLine.givenLine);
       incorrectCellSpans.push(
-        ...diffLine.correctCellSpans.map((span) => {
-          return {
-            start: span.start + lineStart,
-            end: span.end + lineStart,
-            line: span.line,
-          };
-        })
+        ...diffLine.correctCellSpans.map((span) => ({
+          start: span.start + lineStart,
+          end: span.end + lineStart,
+          line: span.line,
+        }))
       );
       lineStart += diffLine.givenLine.length + 1;
     } else {

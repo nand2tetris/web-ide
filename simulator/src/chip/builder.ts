@@ -105,7 +105,7 @@ class ChipBuilder {
   private inPins: Map<string, Set<number>> = new Map();
   private outPins: Map<string, Set<number>> = new Map();
 
-  public constructor(parts: HdlParse, fs?: FileSystem, name?: string) {
+  constructor(parts: HdlParse, fs?: FileSystem, name?: string) {
     this.parts = parts;
     this.expectedName = name;
     this.fs = fs;
@@ -127,7 +127,7 @@ class ChipBuilder {
     );
   }
 
-  public async build() {
+  async build() {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
       return Err({
         message: `Wrong chip name`,

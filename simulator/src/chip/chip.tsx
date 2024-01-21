@@ -372,10 +372,10 @@ export class Chip {
   }
 
   private findPin(from: string, minWidth?: number): Pin {
-    if (from.toLowerCase() === "true" || from === "1") {
+    if (from === "true" || from === "1") {
       return TRUE_BUS;
     }
-    if (from.toLowerCase() === "false" || from === "0") {
+    if (from === "false" || from === "0") {
       return FALSE_BUS;
     }
     if (this.ins.has(from)) {

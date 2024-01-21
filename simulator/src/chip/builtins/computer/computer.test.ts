@@ -10,7 +10,7 @@ describe("Computer Chip Builtins", () => {
   describe("ROM Builtin", () => {
     it("can load a file", async () => {
       const fs = new FileSystem(
-        new ObjectFileSystemAdapter({ "/Max.hack": Max })
+        new ObjectFileSystemAdapter({ "Max.hack": Max })
       );
       const rom = new ROM32K();
 

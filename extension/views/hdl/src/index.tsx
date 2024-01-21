@@ -10,7 +10,7 @@ import {
 
 const baseContext: BaseContext = {
   fs: new FileSystem(
-    new ObjectFileSystemAdapter({ "/projects/01/Not.hdl": Not.hdl })
+    new ObjectFileSystemAdapter({ "projects/01/Not.hdl": Not.hdl })
   ),
   storage: {},
   status: "",

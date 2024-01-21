@@ -453,7 +453,7 @@ describe("tst language", () => {
 });
 
 it("loads all project tst files", async () => {
-  const fs = new FileSystem(new ObjectFileSystemAdapter());
+  const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   await resetFiles(fs);
   async function check() {
     for (const stat of await fs.scandir(".")) {

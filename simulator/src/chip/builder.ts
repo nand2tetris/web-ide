@@ -133,7 +133,7 @@ function getIndices(pin: PinParts): number[] {
 function checkMultipleAssignments(
   pin: PinParts,
   assignedIndexes: Map<string, Set<number>>
-): Result<boolean, CompilationError> {
+): Result<void, CompilationError> {
   let errorIndex: number | undefined = undefined; // -1 stands for the whole bus width
   const indices = assignedIndexes.get(pin.pin);
   if (!indices) {
@@ -160,7 +160,7 @@ function checkMultipleAssignments(
       span: pin.span,
     });
   }
-  return Ok(true);
+  return Ok();
 }
 
 class ChipBuilder {
@@ -205,9 +205,9 @@ class ChipBuilder {
     return Ok(this.chip);
   }
 
-  private async wireParts(): Promise<Result<boolean, CompilationError>> {
+  private async wireParts(): Promise<Result<void, CompilationError>> {
     if (this.parts.parts === "BUILTIN") {
-      return Ok(true);
+      return Ok();
     }
     for (const part of this.parts.parts) {
       const builtin = await loadChip(part.name, this.fs);
@@ -233,13 +233,10 @@ class ChipBuilder {
     if (isErr(result)) {
       return result;
     }
-    return Ok(true);
+    return Ok();
   }
 
-  private wirePart(
-    part: Part,
-    partChip: Chip
-  ): Result<boolean, CompilationError> {
+  private wirePart(part: Part, partChip: Chip): Result<void, CompilationError> {
     const wires: Connection[] = [];
     this.inPins.clear();
     for (const { lhs, rhs } of part.wires) {
@@ -252,7 +249,7 @@ class ChipBuilder {
 
     try {
       this.chip.wire(partChip, wires);
-      return Ok(true);
+      return Ok();
     } catch (e) {
       return Err(e as CompilationError);
     }
@@ -262,7 +259,7 @@ class ChipBuilder {
     partChip: Chip,
     lhs: PinParts,
     rhs: PinParts
-  ): Result<boolean, CompilationError> {
+  ): Result<void, CompilationError> {
     if (partChip.isInPin(lhs.pin)) {
       const result = this.validateInputWire(lhs, rhs);
       if (isErr(result)) {
@@ -279,7 +276,7 @@ class ChipBuilder {
         span: lhs.span,
       });
     }
-    return Ok(true);
+    return Ok();
   }
 
   private isInternal(pinName: string): boolean {
@@ -293,7 +290,7 @@ class ChipBuilder {
   private validateInputWire(
     lhs: PinParts,
     rhs: PinParts
-  ): Result<boolean, CompilationError> {
+  ): Result<void, CompilationError> {
     let result = this.validateInputSource(rhs);
     if (isErr(result)) {
       return result;
@@ -316,10 +313,10 @@ class ChipBuilder {
           pinData.firstUse.start < rhs.span.start ? pinData.firstUse : rhs.span;
       }
     }
-    return Ok(true);
+    return Ok();
   }
 
-  private validateOutputWire(rhs: PinParts): Result<boolean, CompilationError> {
+  private validateOutputWire(rhs: PinParts): Result<void, CompilationError> {
     let result = this.validateWriteTarget(rhs);
     if (isErr(result)) {
       return result;
@@ -355,12 +352,10 @@ class ChipBuilder {
         pinData.isDefined = true;
       }
     }
-    return Ok(true);
+    return Ok();
   }
 
-  private validateWriteTarget(
-    rhs: PinParts
-  ): Result<boolean, CompilationError> {
+  private validateWriteTarget(rhs: PinParts): Result<void, CompilationError> {
     if (this.chip.isInPin(rhs.pin)) {
       return Err({
         message: `Cannot write to input pin ${rhs.pin}`,
@@ -373,12 +368,10 @@ class ChipBuilder {
         span: rhs.span,
       });
     }
-    return Ok(true);
+    return Ok();
   }
 
-  private validateInputSource(
-    rhs: PinParts
-  ): Result<boolean, CompilationError> {
+  private validateInputSource(rhs: PinParts): Result<void, CompilationError> {
     if (this.chip.isOutPin(rhs.pin)) {
       return Err({
         message: `Cannot use output pin as input`,
@@ -392,10 +385,10 @@ class ChipBuilder {
         span: rhs.span,
       });
     }
-    return Ok(true);
+    return Ok();
   }
 
-  private validateInternalPins(): Result<boolean, CompilationError> {
+  private validateInternalPins(): Result<void, CompilationError> {
     for (const [name, pinData] of this.internalPins) {
       if (!pinData.isDefined) {
         return Err({
@@ -407,6 +400,6 @@ class ChipBuilder {
         });
       }
     }
-    return Ok(true);
+    return Ok();
   }
 }

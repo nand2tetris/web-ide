@@ -8,7 +8,7 @@ import {
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { join, parse } from "path";
 
-import { NodeFileSystemAdapter } from "./node_file_system_adapter.js";
+import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 
 /**
  * Given a FileSystem wrapper, curry a function that loads the necessary files for running an HDL test.

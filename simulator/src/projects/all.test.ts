@@ -73,7 +73,7 @@ describe("Chip Projects", () => {
         if (chipName === "Computer") {
           test.setFileSystem(
             new FileSystem(
-              new ObjectFileSystemAdapter({ "/samples/Max.hack": Max })
+              new ObjectFileSystemAdapter({ "samples/Max.hack": Max })
             )
           );
         }

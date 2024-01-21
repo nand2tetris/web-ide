@@ -12,9 +12,9 @@ import { ImmPin } from "src/pinout.js";
 
 function testChipStore(
   fs: Record<string, string> = {
-    "/projects/01/Not/Not.hdl": not.hdl,
-    "/projects/01/Not/Not.tst": not.tst,
-    "/projects/01/Not/Not.cmp": not.cmp,
+    "projects/01/Not/Not.hdl": not.hdl,
+    "projects/01/Not/Not.tst": not.tst,
+    "projects/01/Not/Not.cmp": not.cmp,
   },
   storage: Record<string, string> = {}
 ) {
@@ -59,9 +59,9 @@ describe("ChipStore", () => {
 
     it("reloads initial chip not", async () => {
       const store = testChipStore({
-        "/projects/01/Not/Not.hdl": not.hdl,
-        "/projects/01/Not/Not.tst": not.tst,
-        "/projects/01/Not/Not.cmp": not.cmp,
+        "projects/01/Not/Not.hdl": not.hdl,
+        "projects/01/Not/Not.tst": not.tst,
+        "projects/01/Not/Not.cmp": not.cmp,
       });
 
       await store.actions.initialize();
@@ -77,12 +77,12 @@ describe("ChipStore", () => {
     it("loads saved state", () => {
       const { state } = testChipStore(
         {
-          "/projects/01/Not/Not.hdl": not.hdl,
-          "/projects/01/Not/Not.tst": not.tst,
-          "/projects/01/Not/Not.cmp": not.cmp,
-          "/projects/03/Bit/Bit.hdl": bit.hdl,
-          "/projects/03/Bit/Bit.tst": bit.tst,
-          "/projects/03/Bit/Bit.cmp": bit.cmp,
+          "projects/01/Not/Not.hdl": not.hdl,
+          "projects/01/Not/Not.tst": not.tst,
+          "projects/01/Not/Not.cmp": not.cmp,
+          "projects/03/Bit/Bit.hdl": bit.hdl,
+          "projects/03/Bit/Bit.tst": bit.tst,
+          "projects/03/Bit/Bit.cmp": bit.cmp,
         },
         {
           "/chip/project": "03",
@@ -123,9 +123,9 @@ describe("ChipStore", () => {
   describe("execution", () => {
     const state = cleanState(async () => {
       const store = testChipStore({
-        "/projects/01/Not/Not.hdl": not.hdl,
-        "/projects/01/Not/Not.tst": not.tst,
-        "/projects/01/Not/Not.cmp": not.cmp,
+        "projects/01/Not/Not.hdl": not.hdl,
+        "projects/01/Not/Not.tst": not.tst,
+        "projects/01/Not/Not.cmp": not.cmp,
       });
       await store.actions.initialize();
       return { store };

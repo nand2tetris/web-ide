@@ -116,7 +116,7 @@ describe("Chip Builder", () => {
 
   it("looks up unknown chips in fs", async () => {
     const fs = new FileSystem(
-      new ObjectFileSystemAdapter({ "/Copy.hdl": COPY_HDL })
+      new ObjectFileSystemAdapter({ "Copy.hdl": COPY_HDL })
     );
 
     let foo: Chip;

@@ -61,10 +61,16 @@ const Textarea = ({
 const MONACO_LIGHT_THEME = "vs";
 const MONACO_DARK_THEME = "vs-dark";
 
-const makeHighlight = (
+export interface Decoration {
+  span: Span;
+  cssClass: string;
+}
+
+const makeDecorations = (
   monaco: typeof monacoT | null,
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
   highlight: Span | undefined,
+  additionalDecorations: Decoration[],
   decorations: string[]
 ): string[] => {
   if (!(editor && highlight)) return decorations;
@@ -83,6 +89,18 @@ const makeHighlight = (
       editor.revealRangeInCenter(range);
     }
   }
+  for (const decoration of additionalDecorations) {
+    const range = monaco?.Range.fromPositions(
+      model.getPositionAt(decoration.span.start),
+      model.getPositionAt(decoration.span.end)
+    );
+    if (range) {
+      nextDecoration.push({
+        range,
+        options: { inlineClassName: decoration.cssClass },
+      });
+    }
+  }
   return editor.deltaDecorations(decorations, nextDecoration);
 };
 
@@ -94,6 +112,7 @@ const Monaco = ({
   error,
   disabled = false,
   highlight: currentHighlight,
+  customDecorations: currentCustomDecorations = [],
   dynamicHeight = false,
   lineNumberTransform,
 }: {
@@ -104,6 +123,7 @@ const Monaco = ({
   error?: CompilationError;
   disabled?: boolean;
   highlight?: Span;
+  customDecorations?: Decoration[];
   dynamicHeight?: boolean;
   lineNumberTransform?: (n: number) => string;
 }) => {
@@ -114,6 +134,7 @@ const Monaco = ({
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
   const highlight = useRef<Span | undefined>(undefined);
+  const customDecorations = useRef<Decoration[]>([]);
 
   const codeTheme = useCallback(() => {
     const isDark =
@@ -123,8 +144,8 @@ const Monaco = ({
     return isDark ? MONACO_DARK_THEME : MONACO_LIGHT_THEME;
   }, [theme]);
 
-  const doHighlight = useCallback(() => {
-    decorations.current = makeHighlight(
+  const doDecorations = useCallback(() => {
+    decorations.current = makeDecorations(
       monaco,
       editor.current,
       // I'm not sure why this makes things work, but it is load bearing.
@@ -133,6 +154,7 @@ const Monaco = ({
       // cause a 1-character highlight in the editor view, so don't do that
       // either.
       highlight.current ?? { start: 0, end: 0, line: 0 },
+      customDecorations.current,
       decorations.current
     );
   }, [decorations, monaco, editor, highlight]);
@@ -149,8 +171,13 @@ const Monaco = ({
   // Mark and center highlighted spans
   useEffect(() => {
     highlight.current = currentHighlight;
-    doHighlight();
+    doDecorations();
   }, [currentHighlight]);
+
+  useEffect(() => {
+    customDecorations.current = currentCustomDecorations;
+    doDecorations();
+  }, [currentCustomDecorations]);
 
   // Set options when mounting
   const onMount: OnMount = useCallback(
@@ -171,7 +198,7 @@ const Monaco = ({
         lineNumbers: lineNumberTransform ?? "on",
         folding: false,
       });
-      doHighlight();
+      doDecorations();
       calculateHeight();
       editor.current?.onDidChangeCursorPosition((e) => {
         const index = editor.current?.getModel()?.getOffsetAt(e.position);
@@ -255,6 +282,7 @@ export const Editor = ({
   grammar,
   language,
   highlight,
+  customDecorations = [],
   dynamicHeight = false,
   lineNumberTransform,
 }: {
@@ -268,6 +296,7 @@ export const Editor = ({
   grammar?: ohm.Grammar;
   language: string;
   highlight?: Span;
+  customDecorations?: Decoration[];
   dynamicHeight?: boolean;
   lineNumberTransform?: (n: number) => string;
 }) => {
@@ -287,6 +316,7 @@ export const Editor = ({
           error={error}
           disabled={disabled}
           highlight={highlight}
+          customDecorations={customDecorations}
           dynamicHeight={dynamicHeight}
           lineNumberTransform={lineNumberTransform}
         />

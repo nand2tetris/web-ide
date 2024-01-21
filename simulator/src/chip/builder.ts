@@ -134,13 +134,12 @@ function checkMultipleAssignments(
   pin: PinParts,
   assignedIndexes: Map<string, Set<number>>
 ) {
-  let errorIndex: number | null = null;
+  let errorIndex: number | null = null; // -1 stands for the whole bus width
   const indices = assignedIndexes.get(pin.pin);
   if (!indices) {
     assignedIndexes.set(pin.pin, new Set(getIndices(pin)));
   } else {
     if (indices.has(-1)) {
-      // -1 stands for the whole bus width
       errorIndex = pin.start ?? -1;
     } else if (pin.start !== undefined && pin.end !== undefined) {
       for (const i of getIndices(pin)) {

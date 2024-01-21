@@ -163,9 +163,9 @@ describe("ChipStore", () => {
     it("starts the cursor on the first instruction", () => {
       expect(state.store.state.files.tst).toBe(not.tst);
       expect(state.store.state.controls.span).toEqual({
-        start: 0,
-        end: 33,
-        line: 1,
+        start: 167,
+        end: 186,
+        line: 6,
       });
     });
 
@@ -179,9 +179,9 @@ describe("ChipStore", () => {
       await state.store.actions.stepTest();
 
       expect(state.store.state.controls.span).toEqual({
-        start: 81,
-        end: 82,
-        line: 4,
+        start: 235,
+        end: 236,
+        line: 14,
       });
     });
   });

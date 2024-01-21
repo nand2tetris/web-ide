@@ -7,6 +7,7 @@ import * as Inc16 from "./04_inc16.js";
 import * as Alu from "./05_alu_no_stat.js";
 import * as AluStatus from "./06_alu.js";
 import * as AluAll from "./06_alu_all.js";
+import { resetBySuffix } from "../reset.js";
 
 export const CHIPS = {
   HalfAdder: {
@@ -51,5 +52,12 @@ export const BUILTIN_CHIPS = {};
 export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/02");
   await reset(fs, CHIPS);
+  await fs.popd();
+}
+
+export async function resetTests(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/02");
+  await resetBySuffix(fs, CHIPS, "tst");
+  await resetBySuffix(fs, CHIPS, "cmp");
   await fs.popd();
 }

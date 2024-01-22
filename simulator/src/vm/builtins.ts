@@ -9,6 +9,21 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     const sp = memory.SP;
     return (memory.get(sp - 2) * memory.get(sp - 1)) & 0xffff;
   },
+  "Math.divide": (memory) => {
+    const sp = memory.SP;
+    return Math.floor(memory.get(sp - 2) / memory.get(sp - 1));
+  },
+  "Math.min": (memory) => {
+    const sp = memory.SP;
+    return Math.min(memory.get(sp - 2), memory.get(sp - 1));
+  },
+  "Math.max": (memory) => {
+    const sp = memory.SP;
+    return Math.max(memory.get(sp - 2), memory.get(sp - 1));
+  },
+  "Math.sqrt": (memory) => {
+    return Math.floor(Math.sqrt(memory.get(memory.SP - 1)));
+  },
   "Screen.clearScreen": (memory) => {
     memory.screen.loadBytes(BLANK_SCREEN);
     return 0;

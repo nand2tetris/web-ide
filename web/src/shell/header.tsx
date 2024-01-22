@@ -47,6 +47,7 @@ const headerButtons: HeaderButton[] = [
   headerButtonFromURL(URLs["chip"], "memory"),
   headerButtonFromURL(URLs["cpu"], "developer_board"),
   headerButtonFromURL(URLs["asm"], "list_alt"),
+  headerButtonFromURL(URLs["vm"], "computer"),
   headerButtonFromURL(URLs["bitmap"], "grid_on"),
   headerButtonFromURL(URLs["util"], "function", "Converter Tool"),
   {

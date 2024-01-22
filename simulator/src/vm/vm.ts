@@ -5,10 +5,11 @@ import {
   isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
-import { VmMemory } from "./memory.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
+import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
+import { VmMemory } from "./memory.js";
+import { initOs } from "./os/os.js";
 
 export type VmOperation =
   | FunctionOperation
@@ -141,6 +142,7 @@ const SYS_INIT: VmFunction = {
 
 export class Vm {
   memory = new VmMemory();
+  private os = initOs(this.memory);
   entry = "";
   functionMap: Record<string, VmFunction> = {};
   executionStack: VmFunctionInvocation[] = [];
@@ -506,7 +508,7 @@ export class Vm {
             frameBase: base,
           });
         } else if (VM_BUILTINS[fnName]) {
-          const ret = VM_BUILTINS[fnName](this.memory);
+          const ret = VM_BUILTINS[fnName](this.memory, this.os);
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
           this.memory.SP = sp + 1;

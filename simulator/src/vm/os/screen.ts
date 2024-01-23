@@ -1,4 +1,4 @@
-import { VmMemory } from "../memory";
+import { VmMemory } from "../memory.js";
 
 export class ScreenLib {
   color = true;

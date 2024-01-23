@@ -1,5 +1,5 @@
-import { VmMemory } from "../memory";
-import { ScreenLib } from "./screen";
+import { VmMemory } from "../memory.js";
+import { ScreenLib } from "./screen.js";
 
 export interface OS {
   screen: ScreenLib;

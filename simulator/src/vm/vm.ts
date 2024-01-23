@@ -427,6 +427,7 @@ export class Vm {
     ];
     this.memory.reset();
     this.memory.set(0, 256);
+    this.os = initOs(this.memory);
   }
 
   step() {
@@ -496,6 +497,7 @@ export class Vm {
       case "call": {
         const fnName = operation.name;
         if (this.functionMap[fnName]) {
+          console.log(this.functionMap[fnName].operations);
           const base = this.memory.pushFrame(
             this.invocation.opPtr,
             operation.nArgs,

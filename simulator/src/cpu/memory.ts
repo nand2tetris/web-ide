@@ -1,15 +1,15 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { load } from "../fs.js";
 import { op } from "../util/asm.js";
 import { int10, int16, int2 } from "../util/twos.js";
-import { load } from "../fs.js";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = typeof FORMATS[number];
 
 export const SCREEN_OFFSET = 0x4000;
-export const SCREEN_ROWS = 512;
-export const SCREEN_COLS = 256;
+export const SCREEN_ROWS = 256;
+export const SCREEN_COLS = 32;
 export const SCREEN_SIZE = SCREEN_ROWS * SCREEN_COLS;
 export const KEYBOARD_OFFSET = 0x6000;
 
@@ -19,8 +19,8 @@ export interface MemoryAdapter {
   set(index: number, value: number): void;
   reset(): void;
   update(cell: number, value: string, format: Format): void;
-  load(fs: FileSystem, path: string): Promise<void>;
-  loadBytes(bytes: number[]): void;
+  load(fs: FileSystem, path: string, offset?: number): Promise<void>;
+  loadBytes(bytes: number[], offset?: number): void;
   range(start?: number, end?: number): number[];
   map<T>(
     fn: (index: number, value: number) => T,
@@ -95,17 +95,17 @@ export class Memory implements MemoryAdapter {
     }
   }
 
-  async load(fs: FileSystem, path: string) {
+  async load(fs: FileSystem, path: string, offset?: number) {
     try {
-      this.loadBytes(await load(fs, path));
+      this.loadBytes(await load(fs, path), offset);
     } catch (cause) {
       // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
       throw new Error(`Memory Failed to load file ${path}`);
     }
   }
 
-  loadBytes(bytes: number[]): void {
-    this.memory.set(new Int16Array(bytes));
+  loadBytes(bytes: number[], offset?: number): void {
+    this.memory.set(new Int16Array(bytes), offset);
     this.memory.fill(0, bytes.length, this.size);
   }
 
@@ -162,11 +162,11 @@ export class SubMemory implements MemoryAdapter {
   }
 
   load(fs: FileSystem, path: string): Promise<void> {
-    return this.parent.load(fs, path);
+    return this.parent.load(fs, path, this.offset);
   }
 
   loadBytes(bytes: number[]): void {
-    return this.parent.loadBytes(bytes);
+    return this.parent.loadBytes(bytes, this.offset);
   }
 
   range(start?: number, end?: number): number[] {

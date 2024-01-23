@@ -63,7 +63,7 @@ function reduceVMTest(
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
   const Screen = new ImmMemory(vmTest.vm.Screen, dispatch);
   const Keyboard = new MemoryKeyboard(
-    new ImmMemory(vmTest.vm.Keyboard, dispatch)
+    new ImmMemory(vmTest.vm.RAM, dispatch)
   );
   const highlight = vmTest.vm.derivedLine();
 

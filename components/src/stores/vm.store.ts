@@ -1,22 +1,22 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 // import { VM as multVM } from "@nand2tetris/simulator/testing/mult.js";
+import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm.js";
-import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { BaseContext } from "./base.context.js";
-import { useImmerReducer } from "../react.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
-import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
-import { ImmMemory } from "./imm_memory.js";
-import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
-import { VmFrame, Vm } from "@nand2tetris/simulator/vm/vm.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
-import { compare } from "../compare.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
+import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
+import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import { compare } from "../compare.js";
+import { useImmerReducer } from "../react.js";
+import { BaseContext } from "./base.context.js";
+import { ImmMemory } from "./imm_memory.js";
 
 export interface VmSim {
   RAM: MemoryAdapter;
@@ -42,6 +42,7 @@ export interface VmPageState {
 export interface ControlsState {
   runningTest: boolean;
   error: string;
+  animate: boolean;
 }
 
 export interface VMFiles {
@@ -86,6 +87,7 @@ export function makeVmStore(
   let vm = unwrap(Vm.build(parsed.instructions));
   let test = new VMTest().with(vm);
   let useTest = false;
+  let animate = true;
   const reducers = {
     setTst(state: VmPageState, { tst, cmp }: { tst: string; cmp?: string }) {
       state.files.tst = tst;
@@ -95,6 +97,9 @@ export function makeVmStore(
       state.vm = reduceVMTest(test, dispatch);
       state.test.useTest = useTest;
       state.test.highlight = test.currentStep?.span;
+    },
+    setAnimate(state: VmPageState, value: boolean) {
+      state.controls.animate = value;
     },
     testStep(state: VmPageState) {
       state.files.out = test.log();
@@ -113,6 +118,7 @@ export function makeVmStore(
     controls: {
       error: "",
       runningTest: false,
+      animate: true,
     },
     test: {
       useTest,
@@ -129,21 +135,22 @@ export function makeVmStore(
       const parseResult = VM.parse(source);
 
       if (isErr(parseResult)) {
-        setStatus(`Error parsing vm file = ${parseResult.err}`);
-        return;
+        setStatus(`Error parsing vm file ${parseResult.err}`);
+        return false;
       }
 
       const buildResult = Vm.build(unwrap(parseResult).instructions);
 
       if (isErr(buildResult)) {
-        setStatus(`Error building vm file = ${buildResult.err}`);
-        return;
+        setStatus(`Error building vm file ${buildResult.err}`);
+        return false;
       }
 
       vm = unwrap(buildResult);
       test.vm = vm;
       test.reset();
       dispatch.current({ action: "update" });
+      return true;
     },
     loadTest(source: string, cmp?: string) {
       dispatch.current({ action: "setTst", payload: { tst: source, cmp } });
@@ -161,6 +168,10 @@ export function makeVmStore(
       dispatch.current({ action: "update" });
       return true;
     },
+    setAnimate(value: boolean) {
+      animate = value;
+      dispatch.current({ action: "setAnimate", payload: value });
+    },
     step() {
       let done = false;
       if (useTest) {
@@ -172,7 +183,9 @@ export function makeVmStore(
       } else {
         vm.step();
       }
-      dispatch.current({ action: "update" });
+      if (animate) {
+        dispatch.current({ action: "update" });
+      }
       return done;
     },
     reset() {

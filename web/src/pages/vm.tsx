@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
-import Memory from "@nand2tetris/components/chips/memory.js";
+import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
@@ -87,8 +87,14 @@ const VM = () => {
       setStatus("File must be .vm file");
       return;
     }
-    actions.loadVm(source);
-    setStatus("Loaded vm file");
+    const success = actions.loadVm(source);
+    if (success) {
+      setStatus("Loaded vm file");
+    }
+  };
+
+  const onSpeedChange = (speed: number) => {
+    actions.setAnimate(speed <= 2);
   };
 
   return (
@@ -150,57 +156,64 @@ const VM = () => {
         </div>
         <Screen memory={state.vm.Screen} />
         <Keyboard keyboard={state.vm.Keyboard} />
-
-        <div role="tablist" style={{ "--tab-count": "2" } as CSSProperties}>
-          <div
-            role="tab"
-            id="mem-tab-stack"
-            aria-controls="mem-tabpanel"
-            aria-selected={selectedRAMTab === "Stack"}
-          >
-            <label>
-              <input
-                type="radio"
-                name="mem-tabs"
-                aria-controls="mem-tabpanel"
-                value="tst"
-                checked={selectedRAMTab === "Stack"}
-                onChange={() => setSelectedRAMTab("Stack")}
-              />
-              Stack
-            </label>
+        {state.controls.animate ? (
+          <div role="tablist" style={{ "--tab-count": "2" } as CSSProperties}>
+            <div
+              role="tab"
+              id="mem-tab-stack"
+              aria-controls="mem-tabpanel"
+              aria-selected={selectedRAMTab === "Stack"}
+            >
+              <label>
+                <input
+                  type="radio"
+                  name="mem-tabs"
+                  aria-controls="mem-tabpanel"
+                  value="tst"
+                  checked={selectedRAMTab === "Stack"}
+                  onChange={() => setSelectedRAMTab("Stack")}
+                />
+                Stack
+              </label>
+            </div>
+            <div
+              role="tabpanel"
+              aria-labelledby="mem-tab-stack"
+              id="mem-tabpanel"
+            >
+              {state.vm.Stack.map((frame, i) => (
+                <VMStackFrame frame={frame} key={i} />
+              ))}
+            </div>
+            <div
+              role="tab"
+              id="mem-tab-ram"
+              aria-controls="mem-tabpanel"
+              aria-selected={selectedRAMTab === "RAM"}
+            >
+              <label>
+                <input
+                  type="radio"
+                  name="mem-tabs"
+                  aria-controls="mem-tabpanel"
+                  value="tst"
+                  checked={selectedRAMTab === "RAM"}
+                  onChange={() => setSelectedRAMTab("RAM")}
+                />
+                RAM
+              </label>
+            </div>
+            <div
+              role="tabpanel"
+              aria-labelledby="mem-tab-ram"
+              id="mem-tabpanel"
+            >
+              <Memory memory={state.vm.RAM} format="hex" />
+            </div>
           </div>
-          <div
-            role="tabpanel"
-            aria-labelledby="mem-tab-stack"
-            id="mem-tabpanel"
-          >
-            {state.vm.Stack.map((frame, i) => (
-              <VMStackFrame frame={frame} key={i} />
-            ))}
-          </div>
-          <div
-            role="tab"
-            id="mem-tab-ram"
-            aria-controls="mem-tabpanel"
-            aria-selected={selectedRAMTab === "RAM"}
-          >
-            <label>
-              <input
-                type="radio"
-                name="mem-tabs"
-                aria-controls="mem-tabpanel"
-                value="tst"
-                checked={selectedRAMTab === "RAM"}
-                onChange={() => setSelectedRAMTab("RAM")}
-              />
-              RAM
-            </label>
-          </div>
-          <div role="tabpanel" aria-labelledby="mem-tab-ram" id="mem-tabpanel">
-            <Memory memory={state.vm.RAM} format="hex" />
-          </div>
-        </div>
+        ) : (
+          <p>Hiding display for high speeds</p>
+        )}
       </Panel>
       {runnerAssigned && (
         <TestPanel
@@ -209,6 +222,7 @@ const VM = () => {
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
           onLoadTest={actions.loadTest}
+          onSpeedChange={onSpeedChange}
         />
       )}
     </div>

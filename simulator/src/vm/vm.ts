@@ -130,13 +130,13 @@ const BOOTSTRAP: VmFunction = {
 const END_LABEL = "__END";
 const SYS_INIT: VmFunction = {
   name: "Sys.init",
-  labels: { END: 1 },
+  labels: {},
   nVars: 0,
   opBase: 0,
   operations: [
-    { op: "call", name: "main", nArgs: 0 },
-    { op: "label", label: END_LABEL },
-    { op: "goto", label: END_LABEL },
+    { op: "function", name: "Sys.init", nVars: 0 },
+    { op: "call", name: "Main.main", nArgs: 0 },
+    { op: "call", name: "Sys.halt", nArgs: 0 },
   ],
 };
 
@@ -375,7 +375,7 @@ export class Vm {
   }
 
   bootstrap() {
-    if (!this.functionMap[SYS_INIT.name] && this.functionMap["main"]) {
+    if (!this.functionMap[SYS_INIT.name] && this.functionMap["Main.main"]) {
       this.functionMap[SYS_INIT.name] = SYS_INIT;
       // TODO should this be an error from the compiler/OS?
     }
@@ -405,7 +405,7 @@ export class Vm {
     this.functions = Object.values(this.functionMap);
     this.functions.sort((a, b) => {
       if (a.name === this.entry) return -1;
-      if (a.name === this.entry) return 1;
+      if (b.name === this.entry) return 1;
       return 0; // Stable sort otherwise
     });
 

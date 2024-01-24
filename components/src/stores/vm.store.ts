@@ -129,7 +129,8 @@ export function makeVmStore(
     },
   };
   const actions = {
-    loadVm(source: string) {
+    loadVm(sources: string[]) {
+      const source = sources.join("\n");
       const parseResult = VM.parse(source);
 
       if (isErr(parseResult)) {

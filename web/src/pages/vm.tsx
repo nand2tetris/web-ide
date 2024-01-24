@@ -80,14 +80,19 @@ const VM = () => {
       return;
     }
     setStatus("Loading");
-    const file = event.target.files[0];
-    const source = await file.text();
 
-    if (!file.name.endsWith(".vm")) {
-      setStatus("File must be .vm file");
+    const sources = [];
+    for (const file of event.target.files) {
+      if (file.name.endsWith(".vm")) {
+        sources.push(await file.text());
+      }
+    }
+
+    if (sources.length == 0) {
+      setStatus("No .vm file was selected");
       return;
     }
-    const success = actions.loadVm(source);
+    const success = actions.loadVm(sources);
     if (success) {
       setStatus("Loaded vm file");
     }
@@ -106,6 +111,7 @@ const VM = () => {
             <Trans>Program</Trans>
             <input
               type="file"
+              multiple
               style={{ display: "none" }}
               ref={fileUploadRef}
               onChange={uploadFile}

@@ -1,3 +1,4 @@
+import { FONT } from "./font.js";
 import { ScreenLib } from "./screen.js";
 import { StringLib, intToCharArray } from "./string.js";
 
@@ -9,28 +10,37 @@ export class OutputLib {
   private row = 0;
   private screen: ScreenLib;
   private string: StringLib;
+  private lastColor = false;
 
   constructor(screen: ScreenLib, string: StringLib) {
     this.screen = screen;
     this.string = string;
   }
 
+  private setColor(color: boolean) {
+    this.lastColor = this.screen.color;
+    this.screen.color = color;
+  }
+
+  private restoreColor() {
+    this.screen.color = this.lastColor;
+  }
+
   private clear() {
-    this.screen.color = !this.screen.color;
+    this.setColor(false);
     this.screen.drawRect(
       this.col * 8,
       this.row * 11,
       (this.col + 1) * 8,
       (this.row + 1) * 11
     );
-    this.screen.color = !this.screen.color;
+    this.restoreColor();
   }
 
   moveCursor(i: number, j: number) {
-    this.clear();
     this.row = i;
     this.col = j;
-    this.printChar(0); // draw the cursor
+    this.drawCursor();
   }
 
   println() {
@@ -38,13 +48,31 @@ export class OutputLib {
     this.col = 0;
   }
 
-  printChar(code: number) {
+  private drawCursor() {
+    this.setColor(true);
     this.screen.drawRect(
       this.col * 8 + 2,
       this.row * 11 + 2,
       (this.col + 1) * 8 - 2,
       (this.row + 1) * 11 - 2
     );
+    this.restoreColor();
+  }
+
+  printChar(code: number) {
+    this.setColor(true);
+    const bitmap = FONT[code];
+    if (bitmap) {
+      this.clear();
+      for (let row = 0; row < bitmap.length; row++) {
+        for (let col = 0; col < bitmap[row].length; col++) {
+          if (bitmap[row][col]) {
+            this.screen.drawPixel(this.col * 8 + col, this.row * 11 + row);
+          }
+        }
+      }
+    }
+
     this.col += 1;
     if (this.col == MAX_WIDTH) {
       this.println();
@@ -52,6 +80,8 @@ export class OutputLib {
         // TODO
       }
     }
+
+    this.restoreColor();
   }
 
   printString(pointer: number) {
@@ -76,6 +106,6 @@ export class OutputLib {
         this.row = 0;
       }
     }
-    this.printChar(0); // draw the cursor again.
+    this.drawCursor();
   }
 }

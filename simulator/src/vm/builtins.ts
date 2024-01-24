@@ -175,19 +175,19 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
   "Keyboard.keyPressed": (_, os) => {
     return os.keyboard.keyPressed();
   },
-  "Keyboard.readChar": (_, __) => {
-    return 48; // TODO
+  "Keyboard.readChar": (_, os) => {
+    os.keyboard.readChar();
+    return 0;
   },
-  "Keyboard.readLine": (_, os) => {
-    // TODO
-    const str = os.string.new(3);
-    os.string.appendChar(str, 48);
-    os.string.appendChar(str, 48);
-    os.string.appendChar(str, 48);
-    return str;
+  "Keyboard.readLine": (memory, os) => {
+    const [message] = getArgs(memory, 1);
+    os.keyboard.readLine(message);
+    return 0;
   },
-  "Keyboard.readInt": (_, __) => {
-    return 0; // TODO
+  "Keyboard.readInt": (memory, os) => {
+    const [message] = getArgs(memory, 1);
+    os.keyboard.readInt(message);
+    return 0;
   },
   "Sys.halt": (_, __) => {
     return 0; // TODO
@@ -195,7 +195,9 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
   "Sys.error": (_, __) => {
     return 0; // TODO
   },
-  "Sys.wait": (_, __) => {
-    return 0; // TODO
+  "Sys.wait": (memory, os) => {
+    const [ms] = getArgs(memory, 1);
+    os.sys.wait(ms);
+    return 0;
   },
 };

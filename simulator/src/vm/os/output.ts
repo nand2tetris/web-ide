@@ -26,7 +26,7 @@ export class OutputLib {
     this.screen.color = this.lastColor;
   }
 
-  private clear() {
+  clearChar() {
     this.setColor(false);
     this.screen.drawRect(
       this.col * 8,
@@ -48,7 +48,8 @@ export class OutputLib {
     this.col = 0;
   }
 
-  private drawCursor() {
+  drawCursor() {
+    this.clearChar();
     this.setColor(true);
     this.screen.drawRect(
       this.col * 8 + 2,
@@ -60,10 +61,10 @@ export class OutputLib {
   }
 
   printChar(code: number) {
-    this.setColor(true);
     const bitmap = FONT[code];
     if (bitmap) {
-      this.clear();
+      this.clearChar();
+      this.setColor(true);
       for (let row = 0; row < bitmap.length; row++) {
         for (let col = 0; col < bitmap[row].length; col++) {
           if (bitmap[row][col]) {
@@ -71,6 +72,7 @@ export class OutputLib {
           }
         }
       }
+      this.restoreColor();
     }
 
     this.col += 1;
@@ -80,8 +82,6 @@ export class OutputLib {
         // TODO
       }
     }
-
-    this.restoreColor();
   }
 
   printString(pointer: number) {
@@ -97,7 +97,7 @@ export class OutputLib {
   }
 
   backspace() {
-    this.clear();
+    this.clearChar();
     this.col -= 1;
     if (this.col < 0) {
       this.col = 0;

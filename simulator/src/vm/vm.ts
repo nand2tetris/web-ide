@@ -427,11 +427,25 @@ export class Vm {
     ];
     this.memory.reset();
     this.memory.set(0, 256);
+    this.os.keyboard.dispose();
     this.os = initOs(this.memory);
   }
 
   step() {
+    if (this.os.sys.isBlocked) {
+      return;
+    }
+    if (this.os.sys.hasReleased && this.operation.op == "call") {
+      const ret = this.os.sys.readReturnValue();
+            const sp = this.memory.SP - this.operation.nArgs;
+      this.memory.set(sp, ret);
+      this.memory.SP = sp + 1;
+      this.invocation.opPtr += 1;
+      return;
+    }
+
     const operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
+
     switch (operation.op) {
       case "push": {
         const value = this.memory.getSegment(
@@ -497,7 +511,6 @@ export class Vm {
       case "call": {
         const fnName = operation.name;
         if (this.functionMap[fnName]) {
-          console.log(this.functionMap[fnName].operations);
           const base = this.memory.pushFrame(
             this.invocation.opPtr,
             operation.nArgs,
@@ -511,6 +524,9 @@ export class Vm {
           });
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName](this.memory, this.os);
+          if (this.os.sys.isBlocked) {
+            return; // we will handle the return when the OS is released
+          }
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
           this.memory.SP = sp + 1;

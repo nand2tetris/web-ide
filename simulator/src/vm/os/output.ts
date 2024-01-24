@@ -90,6 +90,12 @@ export class OutputLib {
     }
   }
 
+  printJsString(str: string) {
+    for (const char of str) {
+      this.printChar(char.charCodeAt(0));
+    }
+  }
+
   printInt(value: number) {
     for (const c of intToCharArray(value)) {
       this.printChar(c);

@@ -432,16 +432,19 @@ export class Vm {
   }
 
   step() {
+    if (this.os.sys.shouldHalt) {
+      return true;
+    }
     if (this.os.sys.isBlocked) {
-      return;
+      return false;
     }
     if (this.os.sys.hasReleased && this.operation.op == "call") {
       const ret = this.os.sys.readReturnValue();
-            const sp = this.memory.SP - this.operation.nArgs;
+      const sp = this.memory.SP - this.operation.nArgs;
       this.memory.set(sp, ret);
       this.memory.SP = sp + 1;
       this.invocation.opPtr += 1;
-      return;
+      return false;
     }
 
     const operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
@@ -525,7 +528,7 @@ export class Vm {
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName](this.memory, this.os);
           if (this.os.sys.isBlocked) {
-            return; // we will handle the return when the OS is released
+            return false; // we will handle the return when the OS is released
           }
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
@@ -545,6 +548,7 @@ export class Vm {
       }
     }
     this.invocation.opPtr += 1;
+    return false;
   }
 
   private goto(label: string) {

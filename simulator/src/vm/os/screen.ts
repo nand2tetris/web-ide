@@ -1,4 +1,7 @@
+import { SCREEN_SIZE } from "../../cpu/memory.js";
 import { VmMemory } from "../memory.js";
+
+const BLANK_SCREEN = new Array(SCREEN_SIZE).fill(0);
 
 export class ScreenLib {
   color = true;
@@ -6,6 +9,10 @@ export class ScreenLib {
 
   constructor(memory: VmMemory) {
     this.memory = memory;
+  }
+
+  clear() {
+    this.memory.screen.loadBytes(BLANK_SCREEN);
   }
 
   drawPixel(col: number, row: number) {

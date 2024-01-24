@@ -2,6 +2,7 @@ export class SysLib {
   private blocked = false;
   private released = false;
   private returnValue = 0;
+  shouldHalt = false;
 
   get isBlocked() {
     return this.blocked;

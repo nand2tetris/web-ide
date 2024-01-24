@@ -62,9 +62,7 @@ function reduceVMTest(
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
   const Screen = new ImmMemory(vmTest.vm.Screen, dispatch);
-  const Keyboard = new MemoryKeyboard(
-    new ImmMemory(vmTest.vm.RAM, dispatch)
-  );
+  const Keyboard = new MemoryKeyboard(new ImmMemory(vmTest.vm.RAM, dispatch));
   const highlight = vmTest.vm.derivedLine();
 
   return {
@@ -181,7 +179,10 @@ export function makeVmStore(
           dispatch.current({ action: "testFinished" });
         }
       } else {
-        vm.step();
+        done = vm.step();
+        if (done) {
+          setStatus("Program halted");
+        }
       }
       if (animate) {
         dispatch.current({ action: "update" });

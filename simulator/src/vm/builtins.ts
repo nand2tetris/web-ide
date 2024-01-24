@@ -1,4 +1,3 @@
-import { SCREEN_SIZE } from "../cpu/memory.js";
 import { VmMemory } from "./memory.js";
 import { OS } from "./os/os.js";
 import { BACKSPACE, DOUBLE_QUOTES, NEW_LINE } from "./os/string.js";
@@ -13,7 +12,6 @@ function getArgs(memory: VmMemory, n: number) {
   return args;
 }
 
-const BLANK_SCREEN = new Array(SCREEN_SIZE).fill(0);
 export const VM_BUILTINS: Record<string, VmBuiltin> = {
   "Math.multiply": (memory, _) => {
     const [a, b] = getArgs(memory, 2);
@@ -39,8 +37,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     const [x] = getArgs(memory, 1);
     return Math.abs(x) & 0xffff;
   },
-  "Screen.clearScreen": (memory, _) => {
-    memory.screen.loadBytes(BLANK_SCREEN);
+  "Screen.clearScreen": (_, os) => {
+    os.screen.clear();
     return 0;
   },
   "Screen.setColor": (memory, os) => {
@@ -189,11 +187,17 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     os.keyboard.readInt(message);
     return 0;
   },
-  "Sys.halt": (_, __) => {
-    return 0; // TODO
+  "Sys.halt": (_, os) => {
+    os.sys.shouldHalt = true;
+    return 0;
   },
-  "Sys.error": (_, __) => {
-    return 0; // TODO
+  "Sys.error": (memory, os) => {
+    const [code] = getArgs(memory, 1);
+    os.screen.clear();
+    os.output.moveCursor(0, 0);
+    os.output.printJsString(`ERR${code}`);
+    os.sys.shouldHalt = true;
+    return 0;
   },
   "Sys.wait": (memory, os) => {
     const [ms] = getArgs(memory, 1);

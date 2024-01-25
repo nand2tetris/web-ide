@@ -1,21 +1,34 @@
-import { SCREEN_SIZE } from "../../cpu/memory.js";
+import { SCREEN_COLS, SCREEN_ROWS, SCREEN_SIZE } from "../../cpu/memory.js";
 import { VmMemory } from "../memory.js";
+import { OS } from "./os.js";
 
 const BLANK_SCREEN = new Array(SCREEN_SIZE).fill(0);
+const MAX_R = 181;
 
 export class ScreenLib {
-  color = true;
   private memory: VmMemory;
+  private os: OS;
 
-  constructor(memory: VmMemory) {
+  color = true;
+
+  constructor(memory: VmMemory, os: OS) {
     this.memory = memory;
+    this.os = os;
   }
 
   clear() {
     this.memory.screen.loadBytes(BLANK_SCREEN);
   }
 
+  private outOfBounds(col: number, row: number) {
+    return col < 0 || col > SCREEN_COLS * 16 || row < 0 || row > SCREEN_ROWS;
+  }
+
   drawPixel(col: number, row: number) {
+    if (this.outOfBounds(col, row)) {
+      this.os.sys.error(7);
+      return;
+    }
     const address = row * 32 + Math.floor(col / 16);
     let value = this.memory.screen.get(address);
     if (this.color) {
@@ -27,6 +40,10 @@ export class ScreenLib {
   }
 
   drawLine(x1: number, y1: number, x2: number, y2: number) {
+    if (this.outOfBounds(x1, y1) || this.outOfBounds(x2, y2)) {
+      this.os.sys.error(8);
+      return;
+    }
     if (x1 == x2) {
       this.drawVerticalLine(x1, y1, y2);
     } else if (y1 == y2) {
@@ -72,6 +89,10 @@ export class ScreenLib {
   }
 
   drawRect(x1: number, y1: number, x2: number, y2: number) {
+    if (this.outOfBounds(x1, y1) || this.outOfBounds(x2, y2)) {
+      this.os.sys.error(9);
+      return;
+    }
     for (let x = x1; x <= x2; x++) {
       for (let y = y1; y <= y2; y++) {
         this.drawPixel(x, y);
@@ -80,7 +101,14 @@ export class ScreenLib {
   }
 
   drawCircle(x: number, y: number, r: number) {
-    r = Math.min(r, 181);
+    if (this.outOfBounds(x, y)) {
+      this.os.sys.error(12);
+      return;
+    }
+    if (r > MAX_R) {
+      this.os.sys.error(13);
+      return;
+    }
     for (let dy = -r; dy <= r; dy++) {
       this.drawLine(
         x - Math.floor(Math.sqrt(r * r - dy * dy)),

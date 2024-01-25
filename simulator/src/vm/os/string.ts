@@ -1,5 +1,5 @@
 import { VmMemory } from "../memory.js";
-import { MemoryLib } from "./memory.js";
+import { OS } from "./os.js";
 
 export const NEW_LINE = 128;
 export const BACKSPACE = 129;
@@ -26,33 +26,57 @@ export function intToCharArray(value: number) {
 
 export class StringLib {
   private memory: VmMemory;
-  private memoryLib: MemoryLib;
+  private os: OS;
 
-  constructor(memory: VmMemory, memoryLib: MemoryLib) {
-    this.memoryLib = memoryLib;
+  constructor(memory: VmMemory, os: OS) {
     this.memory = memory;
+    this.os = os;
   }
 
   new(size: number) {
-    const pointer = this.memoryLib.alloc(size + 2); // +2 to save length, maxLength fields
+    if (size <= 0) {
+      this.os.sys.error(14);
+    }
+    const pointer = this.os.memory.alloc(size + 2); // +2 to save length, maxLength fields
+    if (this.os.sys.halted) {
+      // alloc returned with an error
+      return 0;
+    }
+
     this.memory.set(pointer, size); // set maxLength = size
     this.memory.set(pointer + 1, 0); // set length = 0
     return pointer;
   }
 
   dispose(pointer: number) {
-    this.memoryLib.deAlloc(pointer);
+    this.os.memory.deAlloc(pointer);
+  }
+
+  private maxLength(pointer: number) {
+    return this.memory.get(pointer);
   }
 
   length(pointer: number) {
     return this.memory.get(pointer + 1);
   }
 
+  private setLength(pointer: number, length: number) {
+    this.memory.set(pointer + 1, length);
+  }
+
   charAt(pointer: number, index: number) {
+    if (index < 0 || index >= this.length(pointer)) {
+      this.os.sys.error(15);
+      return 0;
+    }
     return this.memory.get(pointer + index + 2); // +2 to skip the length fields
   }
 
   setCharAt(pointer: number, index: number, value: number) {
+    if (index < 0 || index >= this.length(pointer)) {
+      this.os.sys.error(16);
+      return;
+    }
     this.memory.set(pointer + index + 2, value);
   }
 
@@ -63,21 +87,23 @@ export class StringLib {
   //    push constant <character-code>
   //    call String.appendChar 2
   appendChar(pointer: number, value: number) {
-    const l = this.length(pointer);
-    if (l == this.memory.get(pointer)) {
-      // length == maxLength
-      return pointer;
+    const length = this.length(pointer);
+    if (length == this.maxLength(pointer)) {
+      this.os.sys.error(17);
+      return 0;
     }
-    this.setCharAt(pointer, l, value);
-    this.memory.set(pointer + 1, l + 1); // length = length + 1
+    this.setLength(pointer, length + 1);
+    this.setCharAt(pointer, length, value);
     return pointer;
   }
 
   eraseLastChar(pointer: number) {
-    const l = this.length(pointer);
-    if (l > 0) {
-      this.memory.set(pointer + 1, l - 1); // length = length - 1
+    const length = this.length(pointer);
+    if (length == 0) {
+      this.os.sys.error(18);
+      return;
     }
+    this.setLength(pointer, length - 1);
   }
 
   intValue(pointer: number) {
@@ -93,7 +119,13 @@ export class StringLib {
   }
 
   setInt(pointer: number, value: number) {
-    for (const c of intToCharArray(value)) {
+    const chars = intToCharArray(value);
+    if (chars.length > this.maxLength(pointer)) {
+      this.os.sys.error(19);
+      return;
+    }
+    this.setLength(pointer, 0);
+    for (const c of chars) {
       this.appendChar(pointer, c);
     }
   }

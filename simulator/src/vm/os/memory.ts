@@ -1,4 +1,5 @@
 import { VmMemory } from "../memory.js";
+import { OS } from "./os.js";
 
 const HEAP_BASE = 2048;
 const HEAP_SIZE = 14336;
@@ -10,13 +11,20 @@ interface Segment {
 
 export class MemoryLib {
   private memory: VmMemory;
+  private os: OS;
+
   private freeSegments: Segment[] = [{ address: HEAP_BASE, length: HEAP_SIZE }];
 
-  public constructor(memory: VmMemory) {
+  public constructor(memory: VmMemory, os: OS) {
     this.memory = memory;
+    this.os = os;
   }
 
   alloc(size: number): number {
+    if (size <= 0) {
+      this.os.sys.error(5);
+      return 0;
+    }
     for (let i = 0; i < this.freeSegments.length; i++) {
       const seg = this.freeSegments[i];
       if (seg.length >= size) {
@@ -30,8 +38,8 @@ export class MemoryLib {
         return address + 1;
       }
     }
-    console.log("no matching memory segment found");
-    return -1;
+    this.os.sys.error(6);
+    return 0;
   }
 
   deAlloc(address: number) {

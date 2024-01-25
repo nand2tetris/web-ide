@@ -180,9 +180,16 @@ export function makeVmStore(
           dispatch.current({ action: "testFinished" });
         }
       } else {
-        done = vm.step();
-        if (done) {
-          setStatus("Program halted");
+        const result = vm.step();
+        if (result !== undefined) {
+          done = true;
+          setStatus(
+            result == 0
+              ? "Program halted"
+              : `Program exited with error code ${result}${
+                  ERRORS[result] ? `: ${ERRORS[result]}` : ""
+                }`
+          );
         }
       }
       if (animate) {
@@ -223,3 +230,24 @@ export function useVmPageStore() {
 
   return { state, dispatch, actions };
 }
+
+const ERRORS: Record<number, string> = {
+  1: "Duration must be positive (Sys.wait)",
+  2: "Array size must be positive (Array.new)",
+  3: "Division by zero (Math.divide)",
+  4: "Cannot compute square root of a negative number (Math.sqrt)",
+  5: "Allocated memory size must be positive (Memory.alloc)",
+  6: "Heap overflow (Memory.alloc)",
+  7: "Illegal pixel coordinates (Screen.drawPixel)",
+  8: "Illegal line coordinates (Screen.drawLine)",
+  9: "Illegal rectangle coordinates (Screen.drawRectangle)",
+  12: "Illegal center coordinates (Screen.drawCircle)",
+  13: "Illegal radius (Screen.drawCircle)",
+  14: "Maximum length must be non-negative (String.new)",
+  15: "String index out of bounds (String.charAt)",
+  16: "String index out of bounds (String.setCharAt)",
+  17: "String is full (String.appendChar)",
+  18: "String is empty (String.eraseLastChar)",
+  19: "Insufficient string capacity (String.setInt)",
+  20: "Illegal cursor location (Output.moveCursor)",
+};

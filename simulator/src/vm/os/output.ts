@@ -1,34 +1,33 @@
 import { FONT } from "./font.js";
-import { ScreenLib } from "./screen.js";
-import { StringLib, intToCharArray } from "./string.js";
+import { OS } from "./os.js";
+import { intToCharArray } from "./string.js";
 
 const MAX_WIDTH = 64;
 const MAX_HEIGHT = 22;
 
 export class OutputLib {
+  private os: OS;
+
   private col = 0;
   private row = 0;
-  private screen: ScreenLib;
-  private string: StringLib;
   private lastColor = false;
 
-  constructor(screen: ScreenLib, string: StringLib) {
-    this.screen = screen;
-    this.string = string;
+  constructor(os: OS) {
+    this.os = os;
   }
 
   private setColor(color: boolean) {
-    this.lastColor = this.screen.color;
-    this.screen.color = color;
+    this.lastColor = this.os.screen.color;
+    this.os.screen.color = color;
   }
 
   private restoreColor() {
-    this.screen.color = this.lastColor;
+    this.os.screen.color = this.lastColor;
   }
 
   clearChar() {
     this.setColor(false);
-    this.screen.drawRect(
+    this.os.screen.drawRect(
       this.col * 8,
       this.row * 11,
       (this.col + 1) * 8,
@@ -38,6 +37,10 @@ export class OutputLib {
   }
 
   moveCursor(i: number, j: number) {
+    if (i < 0 || i > MAX_HEIGHT || j < 0 || j > MAX_WIDTH) {
+      this.os.sys.error(20);
+      return;
+    }
     this.row = i;
     this.col = j;
     this.drawCursor();
@@ -51,7 +54,7 @@ export class OutputLib {
   drawCursor() {
     this.clearChar();
     this.setColor(true);
-    this.screen.drawRect(
+    this.os.screen.drawRect(
       this.col * 8 + 2,
       this.row * 11 + 2,
       (this.col + 1) * 8 - 2,
@@ -68,7 +71,7 @@ export class OutputLib {
       for (let row = 0; row < bitmap.length; row++) {
         for (let col = 0; col < bitmap[row].length; col++) {
           if (bitmap[row][col]) {
-            this.screen.drawPixel(this.col * 8 + col, this.row * 11 + row);
+            this.os.screen.drawPixel(this.col * 8 + col, this.row * 11 + row);
           }
         }
       }
@@ -79,14 +82,14 @@ export class OutputLib {
     if (this.col == MAX_WIDTH) {
       this.println();
       if (this.row == MAX_HEIGHT) {
-        // TODO
+        this.row = 0;
       }
     }
   }
 
   printString(pointer: number) {
-    for (let i = 0; i < this.string.length(pointer); i++) {
-      this.printChar(this.string.charAt(pointer, i));
+    for (let i = 0; i < this.os.string.length(pointer); i++) {
+      this.printChar(this.os.string.charAt(pointer, i));
     }
   }
 

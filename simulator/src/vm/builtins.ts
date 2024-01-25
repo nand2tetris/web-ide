@@ -17,8 +17,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     const [a, b] = getArgs(memory, 2);
     return (a * b) & 0xffff;
   },
-  "Math.divide": (memory, _) => {
+  "Math.divide": (memory, os) => {
     const [a, b] = getArgs(memory, 2);
+    if (b == 0) {
+      os.sys.error(3);
+      return 0;
+    }
     return Math.floor(a / b) & 0xffff;
   },
   "Math.min": (memory, _) => {
@@ -29,8 +33,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     const [a, b] = getArgs(memory, 2);
     return Math.max(a, b) & 0xffff;
   },
-  "Math.sqrt": (memory, _) => {
+  "Math.sqrt": (memory, os) => {
     const [x] = getArgs(memory, 1);
+    if (x < 0) {
+      os.sys.error(4);
+      return 0;
+    }
     return Math.floor(Math.sqrt(x)) & 0xffff;
   },
   "Math.abs": (memory, _) => {
@@ -86,6 +94,10 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
   },
   "Array.new": (memory, os) => {
     const [size] = getArgs(memory, 1);
+    if (size <= 0) {
+      os.sys.error(2);
+      return 0;
+    }
     return os.memory.alloc(size);
   },
   "Array.dispose": (memory, os) => {
@@ -188,15 +200,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     return 0;
   },
   "Sys.halt": (_, os) => {
-    os.sys.shouldHalt = true;
+    os.sys.halt();
     return 0;
   },
   "Sys.error": (memory, os) => {
     const [code] = getArgs(memory, 1);
-    os.screen.clear();
-    os.output.moveCursor(0, 0);
-    os.output.printJsString(`ERR${code}`);
-    os.sys.shouldHalt = true;
+    os.sys.error(code);
     return 0;
   },
   "Sys.wait": (memory, os) => {

@@ -9,7 +9,7 @@ import { MemoryAdapter, RAM } from "../cpu/memory.js";
 import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
 import { VmMemory } from "./memory.js";
-import { initOs } from "./os/os.js";
+import { OS } from "./os/os.js";
 
 export type VmOperation =
   | FunctionOperation
@@ -142,7 +142,7 @@ const SYS_INIT: VmFunction = {
 
 export class Vm {
   memory = new VmMemory();
-  private os = initOs(this.memory);
+  private os = new OS(this.memory);
   entry = "";
   functionMap: Record<string, VmFunction> = {};
   executionStack: VmFunctionInvocation[] = [];
@@ -427,24 +427,24 @@ export class Vm {
     ];
     this.memory.reset();
     this.memory.set(0, 256);
-    this.os.keyboard.dispose();
-    this.os = initOs(this.memory);
+    this.os.dispose();
+    this.os = new OS(this.memory);
   }
 
-  step() {
-    if (this.os.sys.shouldHalt) {
-      return true;
+  step(): number | undefined {
+    if (this.os.sys.halted) {
+      return this.os.sys.exitCode;
     }
-    if (this.os.sys.isBlocked) {
-      return false;
+    if (this.os.sys.blocked) {
+      return;
     }
-    if (this.os.sys.hasReleased && this.operation.op == "call") {
+    if (this.os.sys.released && this.operation.op == "call") {
       const ret = this.os.sys.readReturnValue();
       const sp = this.memory.SP - this.operation.nArgs;
       this.memory.set(sp, ret);
       this.memory.SP = sp + 1;
       this.invocation.opPtr += 1;
-      return false;
+      return;
     }
 
     const operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
@@ -527,8 +527,8 @@ export class Vm {
           });
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName](this.memory, this.os);
-          if (this.os.sys.isBlocked) {
-            return false; // we will handle the return when the OS is released
+          if (this.os.sys.blocked) {
+            return; // we will handle the return when the OS is released
           }
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
@@ -548,7 +548,7 @@ export class Vm {
       }
     }
     this.invocation.opPtr += 1;
-    return false;
+    return;
   }
 
   private goto(label: string) {

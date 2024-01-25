@@ -1,26 +1,16 @@
 import { KEYBOARD_OFFSET } from "../../cpu/memory.js";
 import { VmMemory } from "../memory.js";
-import { OutputLib } from "./output.js";
-import { BACKSPACE, NEW_LINE, StringLib } from "./string.js";
-import { SysLib } from "./sys.js";
+import { OS } from "./os.js";
+import { BACKSPACE, NEW_LINE } from "./string.js";
 
 export class KeyboardLib {
   private memory: VmMemory;
-  private output: OutputLib;
-  private string: StringLib;
-  private sys: SysLib;
+  private os: OS;
   private interval?: NodeJS.Timeout;
 
-  constructor(
-    memory: VmMemory,
-    output: OutputLib,
-    string: StringLib,
-    sys: SysLib
-  ) {
+  constructor(memory: VmMemory, os: OS) {
     this.memory = memory;
-    this.output = output;
-    this.string = string;
-    this.sys = sys;
+    this.os = os;
   }
 
   keyPressed() {
@@ -43,19 +33,22 @@ export class KeyboardLib {
   }
 
   readChar() {
-    this.sys.block();
-    this.output.drawCursor();
+    this.os.sys.block();
+    this.os.output.drawCursor();
 
     new Promise<number>((resolve) => {
       this.readCharLoop(resolve);
     }).then((c) => {
-      this.output.printChar(c);
-      this.sys.release(c);
+      this.os.output.printChar(c);
+      this.os.sys.release(c);
     });
   }
 
   private readLineLoop(resolve: (value: number) => void) {
-    const str = this.string.new(100);
+    const str = this.os.string.new(100);
+    if (this.os.sys.halted) {
+      resolve(0);
+    }
 
     let pressed = false;
     let c = 0;
@@ -68,47 +61,54 @@ export class KeyboardLib {
         pressed = false;
         // key was released
         if (c == BACKSPACE) {
-          if (this.string.length(str) > 0) {
-            this.output.backspace();
+          if (this.os.string.length(str) > 0) {
+            this.os.output.backspace();
           }
-          this.string.eraseLastChar(str);
+          this.os.string.eraseLastChar(str);
         } else if (c == NEW_LINE) {
           clearInterval(this.interval);
           resolve(str);
         } else {
-          this.string.appendChar(str, c);
-          this.output.printChar(c);
-          this.output.drawCursor();
+          this.os.string.appendChar(str, c);
+          if (this.os.sys.halted) {
+            resolve(0);
+          }
+          this.os.output.printChar(c);
+          this.os.output.drawCursor();
         }
       }
     }, 1);
   }
 
   readLine(messagePointer: number) {
-    this.sys.block();
-    this.output.printString(messagePointer);
-    this.output.drawCursor();
+    this.os.sys.block();
+    this.os.output.printString(messagePointer);
+    this.os.output.drawCursor();
 
     new Promise<number>((resolve) => {
       this.readLineLoop(resolve);
     }).then((str) => {
-      this.output.clearChar();
-      this.output.println();
-      this.sys.release(str);
+      if (!this.os.sys.halted) {
+        this.os.output.clearChar();
+        this.os.output.println();
+      }
+      this.os.sys.release(str);
     });
   }
 
   readInt(messagePointer: number) {
-    this.sys.block();
-    this.output.printString(messagePointer);
-    this.output.drawCursor();
+    this.os.sys.block();
+    this.os.output.printString(messagePointer);
+    this.os.output.drawCursor();
 
     new Promise<number>((resolve) => {
       this.readLineLoop(resolve);
     }).then((str) => {
-      this.output.clearChar();
-      this.output.println();
-      this.sys.release(this.string.intValue(str));
+      if (!this.os.sys.halted) {
+        this.os.output.clearChar();
+        this.os.output.println();
+      }
+      this.os.sys.release(this.os.string.intValue(str));
     });
   }
 

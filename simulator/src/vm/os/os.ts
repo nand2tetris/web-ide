@@ -6,28 +6,26 @@ import { ScreenLib } from "./screen.js";
 import { StringLib } from "./string.js";
 import { SysLib } from "./sys.js";
 
-export interface OS {
+export class OS {
+  private vmMemory: VmMemory;
   screen: ScreenLib;
   memory: MemoryLib;
   string: StringLib;
   output: OutputLib;
   keyboard: KeyboardLib;
   sys: SysLib;
-}
 
-export function initOs(memory: VmMemory): OS {
-  const memoryLib = new MemoryLib(memory);
-  const screen = new ScreenLib(memory);
-  const string = new StringLib(memory, memoryLib);
-  const output = new OutputLib(screen, string);
-  const sys = new SysLib();
-  const keyboard = new KeyboardLib(memory, output, string, sys);
-  return {
-    memory: memoryLib,
-    screen,
-    string,
-    output,
-    keyboard,
-    sys,
-  };
+  constructor(memory: VmMemory) {
+    this.vmMemory = memory;
+    this.screen = new ScreenLib(this.vmMemory, this);
+    this.memory = new MemoryLib(this.vmMemory, this);
+    this.string = new StringLib(this.vmMemory, this);
+    this.output = new OutputLib(this);
+    this.keyboard = new KeyboardLib(this.vmMemory, this);
+    this.sys = new SysLib(this);
+  }
+
+  dispose() {
+    this.keyboard.dispose();
+  }
 }

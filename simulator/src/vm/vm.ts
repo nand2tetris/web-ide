@@ -388,7 +388,6 @@ export class Vm {
       const fnNames = Object.keys(this.functionMap);
       if (fnNames.length === 1) {
         this.entry = fnNames[0];
-        this.functionMap[IMPLICIT.name] = IMPLICIT;
       }
     }
 
@@ -538,6 +537,9 @@ export class Vm {
         break;
       }
       case "return": {
+        if (this.executionStack.length === 1) {
+          return 0;
+        }
         this.executionStack.pop();
         const ret = this.memory.popFrame();
         this.invocation.opPtr = ret;

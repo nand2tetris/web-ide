@@ -116,17 +116,6 @@ const IMPLICIT: VmFunction = {
   operations: [{ op: "function", name: "__implicit", nVars: 0 }],
 };
 
-const BOOTSTRAP: VmFunction = {
-  name: "__bootstrap",
-  nVars: 0,
-  opBase: 0,
-  labels: {},
-  operations: [
-    { op: "function", name: "__bootstrap", nVars: 0 },
-    { op: "call", name: "Sys.init", nArgs: 0 },
-  ],
-};
-
 const END_LABEL = "__END";
 const SYS_INIT: VmFunction = {
   name: "Sys.init",
@@ -391,7 +380,7 @@ export class Vm {
       }
     }
 
-    if (this.functionMap[IMPLICIT.name] && this.functionMap[BOOTSTRAP.name]) {
+    if (this.functionMap[IMPLICIT.name] && this.functionMap[SYS_INIT.name]) {
       return Err(
         new Error("Cannot use both bootstrap and an implicit function")
       );

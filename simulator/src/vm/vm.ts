@@ -142,6 +142,8 @@ export class Vm {
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
 
+  private returnLine: number | undefined = undefined;
+
   private registerStatic(fnName: string, offset: number): number {
     const fileName = fnName.split(".")[0];
     const statics = this.statics[fileName] ?? [];
@@ -308,13 +310,17 @@ export class Vm {
   get currentFunction() {
     const fn = this.functionMap[this.invocation.function];
     if (fn === undefined)
-      throw new Error(
-        `Executing undefined function ${this.invocation.function}`
-      );
+      // throw new Error(
+      //   `Executing undefined function ${this.invocation.function}`
+      // );
+      return;
     return fn;
   }
 
   get operation() {
+    if (!this.currentFunction) {
+      return;
+    }
     if (this.invocation.opPtr > this.currentFunction.operations.length)
       throw new Error(
         `Current operation step beyond end of function operations (${this.invocation.opPtr} > ${this.currentFunction.operations.length})`
@@ -428,12 +434,16 @@ export class Vm {
     if (this.os.sys.blocked) {
       return;
     }
-    if (this.os.sys.released && this.operation.op == "call") {
+    if (this.os.sys.released && this.operation?.op == "call") {
       const ret = this.os.sys.readReturnValue();
       const sp = this.memory.SP - this.operation.nArgs;
       this.memory.set(sp, ret);
       this.memory.SP = sp + 1;
       this.invocation.opPtr += 1;
+      return;
+    }
+    if (!this.operation && this.returnLine != undefined) {
+      // already returned
       return;
     }
 
@@ -527,12 +537,14 @@ export class Vm {
         break;
       }
       case "return": {
-        if (this.executionStack.length === 1) {
-          return 0;
-        }
+        const line = this.derivedLine();
         this.executionStack.pop();
         const ret = this.memory.popFrame();
         this.invocation.opPtr = ret;
+        if (this.executionStack.length === 0) {
+          this.returnLine = line;
+          return 0;
+        }
         break;
       }
       case "label": {
@@ -545,6 +557,9 @@ export class Vm {
   }
 
   private goto(label: string) {
+    if (!this.currentFunction) {
+      return;
+    }
     if (this.currentFunction.labels[label] === undefined)
       throw new Error(
         `Attempting GOTO to unknown label ${label} in ${this.currentFunction.name}`
@@ -622,7 +637,9 @@ export class Vm {
   }
 
   derivedLine(): number {
-    return this.currentFunction.opBase + this.invocation.opPtr;
+    return this.currentFunction
+      ? this.currentFunction.opBase + this.invocation.opPtr
+      : this.returnLine ?? 0;
   }
 
   writeDebug(): string {

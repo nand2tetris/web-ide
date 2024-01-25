@@ -427,6 +427,7 @@ export class Vm {
     ];
     this.memory.reset();
     this.memory.set(0, 256);
+    this.memory.pushFrame(-1, 0, this.functionMap[this.entry].nVars);
     this.os.dispose();
     this.os = new OS(this.memory);
   }
@@ -580,7 +581,7 @@ export class Vm {
   makeFrame(invocation = this.invocation, nextFrame: number): VmFrame {
     const fn = this.functionMap[invocation.function];
     if (fn.name === this.entry) {
-      const frameBase = 256;
+      const frameBase = 261 + fn.nVars;
       const nextFrame = this.executionStack[1];
       const frameEnd = nextFrame
         ? nextFrame.frameBase - nextFrame.nArgs
@@ -590,13 +591,15 @@ export class Vm {
         fn,
         args: {
           base: ARG,
-          count: 7,
-          values: [...this.memory.map((_, v) => v, ARG, ARG + 7)],
+          count: invocation.nArgs,
+          values: [
+            ...this.memory.map((_, v) => v, ARG, ARG + invocation.nArgs),
+          ],
         },
         locals: {
           base: LCL,
-          count: 5,
-          values: [...this.memory.map((_, v) => v, LCL, LCL + 5)],
+          count: fn.nVars,
+          values: [...this.memory.map((_, v) => v, LCL, LCL + fn.nVars)],
         },
         stack: {
           base: 256,

@@ -232,14 +232,38 @@ export class Vm {
   }
 
   private static validateFunctions(instructions: VmInstruction[]) {
-    const functions: Set<string> = new Set(
-      instructions
-        .filter((inst) => inst.op == "function")
-        .map((inst) => (inst as FunctionInstruction).name)
-    );
-    const calls = instructions
-      .filter((inst) => inst.op == "call")
-      .map((inst) => inst as CallInstruction);
+    const functions: Set<string> = new Set();
+    //   instructions
+    //     .filter((inst) => inst.op == "function")
+    //     .map((inst) => (inst as FunctionInstruction).name)
+    // );
+    const calls = [];
+    // instructions
+    // .filter((inst) => inst.op == "call")
+    // .map((inst) => inst as CallInstruction);
+
+    for (const inst of instructions) {
+      if (inst.op == "function") {
+        if (inst.nVars < 0 || inst.nVars > 32767) {
+          return Err(
+            new Error(
+              `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`
+            )
+          );
+        }
+        functions.add(inst.name);
+      }
+      if (inst.op == "call") {
+        if (inst.nArgs < 0 || inst.nArgs > 32767) {
+          return Err(
+            new Error(
+              `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`
+            )
+          );
+        }
+        calls.push(inst as CallInstruction);
+      }
+    }
 
     for (const call of calls) {
       if (!functions.has(call.name)) {

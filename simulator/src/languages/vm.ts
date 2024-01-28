@@ -167,11 +167,11 @@ vmSemantics.addAttribute<
 });
 
 vmSemantics.addAttribute<VmInstruction>("instruction", {
-  StackInstruction({ op }, { segment }, { value }) {
+  StackInstruction({ op }, { segment }, value) {
     return {
       op: op as "push" | "pop",
       segment,
-      offset: value,
+      offset: Number(value.sourceString),
     };
   },
   OpInstruction({ op }) {
@@ -188,11 +188,11 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
         | "not",
     };
   },
-  FunctionInstruction(_, { name }, { value: nArgs }) {
-    return { op: "function", name, nVars: nArgs };
+  FunctionInstruction(_, { name }, nVars) {
+    return { op: "function", name, nVars: Number(nVars.sourceString) };
   },
-  CallInstruction(_, { name }, { value: nArgs }) {
-    return { op: "call", name, nArgs };
+  CallInstruction(_, { name }, nArgs) {
+    return { op: "call", name, nArgs: Number(nArgs.sourceString) };
   },
   ReturnInstruction(_) {
     return { op: "return" };

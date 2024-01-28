@@ -2,7 +2,12 @@ import { VmMemory } from "./memory.js";
 import { OS } from "./os/os.js";
 import { BACKSPACE, DOUBLE_QUOTES, NEW_LINE } from "./os/string.js";
 
-export type VmBuiltin = (memory: VmMemory, os: OS) => number;
+export type VmBuiltinFunction = (memory: VmMemory, os: OS) => number;
+
+export interface VmBuiltin {
+  func: VmBuiltinFunction;
+  nArgs: number;
+}
 
 function getArgs(memory: VmMemory, n: number) {
   const args = [];
@@ -13,204 +18,333 @@ function getArgs(memory: VmMemory, n: number) {
 }
 
 export const VM_BUILTINS: Record<string, VmBuiltin> = {
-  "Math.multiply": (memory, _) => {
-    const [a, b] = getArgs(memory, 2);
-    return (a * b) & 0xffff;
+  "Math.multiply": {
+    func: (memory, _) => {
+      const [a, b] = getArgs(memory, 2);
+      return (a * b) & 0xffff;
+    },
+    nArgs: 2,
   },
-  "Math.divide": (memory, os) => {
-    const [a, b] = getArgs(memory, 2);
-    if (b == 0) {
-      os.sys.error(3);
+  "Math.divide": {
+    func: (memory, os) => {
+      const [a, b] = getArgs(memory, 2);
+      if (b == 0) {
+        os.sys.error(3);
+        return 0;
+      }
+      return Math.floor(a / b) & 0xffff;
+    },
+    nArgs: 2,
+  },
+  "Math.min": {
+    func: (memory, _) => {
+      const [a, b] = getArgs(memory, 2);
+      return Math.min(a, b) & 0xffff;
+    },
+    nArgs: 2,
+  },
+  "Math.max": {
+    func: (memory, _) => {
+      const [a, b] = getArgs(memory, 2);
+      return Math.max(a, b) & 0xffff;
+    },
+    nArgs: 2,
+  },
+  "Math.sqrt": {
+    func: (memory, os) => {
+      const [x] = getArgs(memory, 1);
+      if (x < 0) {
+        os.sys.error(4);
+        return 0;
+      }
+      return Math.floor(Math.sqrt(x)) & 0xffff;
+    },
+    nArgs: 1,
+  },
+  "Math.abs": {
+    func: (memory, _) => {
+      const [x] = getArgs(memory, 1);
+      return Math.abs(x) & 0xffff;
+    },
+    nArgs: 1,
+  },
+  "Screen.clearScreen": {
+    func: (_, os) => {
+      os.screen.clear();
       return 0;
-    }
-    return Math.floor(a / b) & 0xffff;
+    },
+    nArgs: 0,
   },
-  "Math.min": (memory, _) => {
-    const [a, b] = getArgs(memory, 2);
-    return Math.min(a, b) & 0xffff;
-  },
-  "Math.max": (memory, _) => {
-    const [a, b] = getArgs(memory, 2);
-    return Math.max(a, b) & 0xffff;
-  },
-  "Math.sqrt": (memory, os) => {
-    const [x] = getArgs(memory, 1);
-    if (x < 0) {
-      os.sys.error(4);
+  "Screen.setColor": {
+    func: (memory, os) => {
+      const [color] = getArgs(memory, 1);
+      os.screen.color = color !== 0;
       return 0;
-    }
-    return Math.floor(Math.sqrt(x)) & 0xffff;
+    },
+    nArgs: 1,
   },
-  "Math.abs": (memory, _) => {
-    const [x] = getArgs(memory, 1);
-    return Math.abs(x) & 0xffff;
-  },
-  "Screen.clearScreen": (_, os) => {
-    os.screen.clear();
-    return 0;
-  },
-  "Screen.setColor": (memory, os) => {
-    const [color] = getArgs(memory, 1);
-    os.screen.color = color !== 0;
-    return 0;
-  },
-  "Screen.drawPixel": (memory, os) => {
-    const [x, y] = getArgs(memory, 2);
-    os.screen.drawPixel(x, y);
-    return 0;
-  },
-  "Screen.drawLine": (memory, os) => {
-    const [x1, y1, x2, y2] = getArgs(memory, 4);
-    os.screen.drawLine(x1, y1, x2, y2);
-    return 0;
-  },
-  "Screen.drawRectangle": (memory, os) => {
-    const [x1, y1, x2, y2] = getArgs(memory, 4);
-    os.screen.drawRect(x1, y1, x2, y2);
-    return 0;
-  },
-  "Screen.drawCircle": (memory, os) => {
-    const [x, y, r] = getArgs(memory, 3);
-    os.screen.drawCircle(x, y, r);
-    return 0;
-  },
-  "Memory.peek": (memory, _) => {
-    const [address] = getArgs(memory, 1);
-    return memory.get(address);
-  },
-  "Memory.poke": (memory, _) => {
-    const [address, value] = getArgs(memory, 2);
-    memory.set(address, value);
-    return 0;
-  },
-  "Memory.alloc": (memory, os) => {
-    const [size] = getArgs(memory, 1);
-    return os.memory.alloc(size);
-  },
-  "Memory.deAlloc": (memory, os) => {
-    const [address] = getArgs(memory, 1);
-    os.memory.deAlloc(address);
-    return 0;
-  },
-  "Array.new": (memory, os) => {
-    const [size] = getArgs(memory, 1);
-    if (size <= 0) {
-      os.sys.error(2);
+  "Screen.drawPixel": {
+    func: (memory, os) => {
+      const [x, y] = getArgs(memory, 2);
+      os.screen.drawPixel(x, y);
       return 0;
-    }
-    return os.memory.alloc(size);
+    },
+    nArgs: 2,
   },
-  "Array.dispose": (memory, os) => {
-    const [pointer] = getArgs(memory, 1);
-    os.memory.deAlloc(pointer);
-    return 0;
+  "Screen.drawLine": {
+    func: (memory, os) => {
+      const [x1, y1, x2, y2] = getArgs(memory, 4);
+      os.screen.drawLine(x1, y1, x2, y2);
+      return 0;
+    },
+    nArgs: 4,
   },
-  "String.new": (memory, os) => {
-    const [length] = getArgs(memory, 1);
-    return os.string.new(length);
+  "Screen.drawRectangle": {
+    func: (memory, os) => {
+      const [x1, y1, x2, y2] = getArgs(memory, 4);
+      os.screen.drawRect(x1, y1, x2, y2);
+      return 0;
+    },
+    nArgs: 4,
   },
-  "String.dispose": (memory, os) => {
-    const [pointer] = getArgs(memory, 1);
-    os.string.dispose(pointer);
-    return 0;
+  "Screen.drawCircle": {
+    func: (memory, os) => {
+      const [x, y, r] = getArgs(memory, 3);
+      os.screen.drawCircle(x, y, r);
+      return 0;
+    },
+    nArgs: 3,
   },
-  "String.length": (memory, os) => {
-    const [pointer] = getArgs(memory, 1);
-    return os.string.length(pointer);
+  "Memory.peek": {
+    func: (memory, _) => {
+      const [address] = getArgs(memory, 1);
+      return memory.get(address);
+    },
+    nArgs: 1,
   },
-  "String.charAt": (memory, os) => {
-    const [pointer, index] = getArgs(memory, 2);
-    return os.string.charAt(pointer, index);
+  "Memory.poke": {
+    func: (memory, _) => {
+      const [address, value] = getArgs(memory, 2);
+      memory.set(address, value);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "String.setCharAt": (memory, os) => {
-    const [pointer, index, value] = getArgs(memory, 3);
-    os.string.setCharAt(pointer, index, value);
-    return 0;
+  "Memory.alloc": {
+    func: (memory, os) => {
+      const [size] = getArgs(memory, 1);
+      return os.memory.alloc(size);
+    },
+    nArgs: 1,
   },
-  "String.appendChar": (memory, os) => {
-    const [pointer, value] = getArgs(memory, 2);
-    return os.string.appendChar(pointer, value);
+  "Memory.deAlloc": {
+    func: (memory, os) => {
+      const [address] = getArgs(memory, 1);
+      os.memory.deAlloc(address);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "String.eraseLastChar": (memory, os) => {
-    const [pointer] = getArgs(memory, 1);
-    os.string.eraseLastChar(pointer);
-    return 0;
+  "Array.new": {
+    func: (memory, os) => {
+      const [size] = getArgs(memory, 1);
+      if (size <= 0) {
+        os.sys.error(2);
+        return 0;
+      }
+      return os.memory.alloc(size);
+    },
+    nArgs: 1,
   },
-  "String.intValue": (memory, os) => {
-    const [pointer] = getArgs(memory, 1);
-    return os.string.intValue(pointer);
+  "Array.dispose": {
+    func: (memory, os) => {
+      const [pointer] = getArgs(memory, 1);
+      os.memory.deAlloc(pointer);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "String.setInt": (memory, os) => {
-    const [pointer, value] = getArgs(memory, 2);
-    os.string.setInt(pointer, value);
-    return 0;
+  "String.new": {
+    func: (memory, os) => {
+      const [length] = getArgs(memory, 1);
+      return os.string.new(length);
+    },
+    nArgs: 1,
   },
-  "String.backSpace": (_, __) => {
-    return BACKSPACE;
+  "String.dispose": {
+    func: (memory, os) => {
+      const [pointer] = getArgs(memory, 1);
+      os.string.dispose(pointer);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "String.doubleQuote": (_, __) => {
-    return DOUBLE_QUOTES;
+  "String.length": {
+    func: (memory, os) => {
+      const [pointer] = getArgs(memory, 1);
+      return os.string.length(pointer);
+    },
+    nArgs: 1,
   },
-  "String.newLine": (_, __) => {
-    return NEW_LINE;
+  "String.charAt": {
+    func: (memory, os) => {
+      const [pointer, index] = getArgs(memory, 2);
+      return os.string.charAt(pointer, index);
+    },
+    nArgs: 2,
   },
-  "Output.moveCursor": (memory, os) => {
-    const [i, j] = getArgs(memory, 2);
-    os.output.moveCursor(i, j);
-    return 0;
+  "String.setCharAt": {
+    func: (memory, os) => {
+      const [pointer, index, value] = getArgs(memory, 3);
+      os.string.setCharAt(pointer, index, value);
+      return 0;
+    },
+    nArgs: 3,
   },
-  "Output.printChar": (memory, os) => {
-    const [code] = getArgs(memory, 1);
-    os.output.printChar(code);
-    return 0;
+  "String.appendChar": {
+    func: (memory, os) => {
+      const [pointer, value] = getArgs(memory, 2);
+      return os.string.appendChar(pointer, value);
+    },
+    nArgs: 2,
   },
-  "Output.printString": (memory, os) => {
-    const [pointer] = getArgs(memory, 1);
-    os.output.printString(pointer);
-    return 0;
+  "String.eraseLastChar": {
+    func: (memory, os) => {
+      const [pointer] = getArgs(memory, 1);
+      os.string.eraseLastChar(pointer);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "Output.printInt": (memory, os) => {
-    const [value] = getArgs(memory, 1);
-    os.output.printInt(value);
-    return 0;
+  "String.intValue": {
+    func: (memory, os) => {
+      const [pointer] = getArgs(memory, 1);
+      return os.string.intValue(pointer);
+    },
+    nArgs: 1,
   },
-  "Output.println": (_, os) => {
-    os.output.println();
-    return 0;
+  "String.setInt": {
+    func: (memory, os) => {
+      const [pointer, value] = getArgs(memory, 2);
+      os.string.setInt(pointer, value);
+      return 0;
+    },
+    nArgs: 2,
   },
-  "Output.backSpace": (_, os) => {
-    os.output.backspace();
-    return 0;
+  "String.backSpace": {
+    func: (_, __) => {
+      return BACKSPACE;
+    },
+    nArgs: 0,
   },
-  "Keyboard.keyPressed": (_, os) => {
-    return os.keyboard.keyPressed();
+  "String.doubleQuote": {
+    func: (_, __) => {
+      return DOUBLE_QUOTES;
+    },
+    nArgs: 0,
   },
-  "Keyboard.readChar": (_, os) => {
-    os.keyboard.readChar();
-    return 0;
+  "String.newLine": {
+    func: (_, __) => {
+      return NEW_LINE;
+    },
+    nArgs: 0,
   },
-  "Keyboard.readLine": (memory, os) => {
-    const [message] = getArgs(memory, 1);
-    os.keyboard.readLine(message);
-    return 0;
+  "Output.moveCursor": {
+    func: (memory, os) => {
+      const [i, j] = getArgs(memory, 2);
+      os.output.moveCursor(i, j);
+      return 0;
+    },
+    nArgs: 2,
   },
-  "Keyboard.readInt": (memory, os) => {
-    const [message] = getArgs(memory, 1);
-    os.keyboard.readInt(message);
-    return 0;
+  "Output.printChar": {
+    func: (memory, os) => {
+      const [code] = getArgs(memory, 1);
+      os.output.printChar(code);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "Sys.halt": (_, os) => {
-    os.sys.halt();
-    return 0;
+  "Output.printString": {
+    func: (memory, os) => {
+      const [pointer] = getArgs(memory, 1);
+      os.output.printString(pointer);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "Sys.error": (memory, os) => {
-    const [code] = getArgs(memory, 1);
-    os.sys.error(code);
-    return 0;
+  "Output.printInt": {
+    func: (memory, os) => {
+      const [value] = getArgs(memory, 1);
+      os.output.printInt(value);
+      return 0;
+    },
+    nArgs: 1,
   },
-  "Sys.wait": (memory, os) => {
-    const [ms] = getArgs(memory, 1);
-    os.sys.wait(ms);
-    return 0;
+  "Output.println": {
+    func: (_, os) => {
+      os.output.println();
+      return 0;
+    },
+    nArgs: 0,
+  },
+  "Output.backSpace": {
+    func: (_, os) => {
+      os.output.backspace();
+      return 0;
+    },
+    nArgs: 0,
+  },
+  "Keyboard.keyPressed": {
+    func: (_, os) => {
+      return os.keyboard.keyPressed();
+    },
+    nArgs: 0,
+  },
+  "Keyboard.readChar": {
+    func: (_, os) => {
+      os.keyboard.readChar();
+      return 0;
+    },
+    nArgs: 0,
+  },
+  "Keyboard.readLine": {
+    func: (memory, os) => {
+      const [message] = getArgs(memory, 1);
+      os.keyboard.readLine(message);
+      return 0;
+    },
+    nArgs: 1,
+  },
+  "Keyboard.readInt": {
+    func: (memory, os) => {
+      const [message] = getArgs(memory, 1);
+      os.keyboard.readInt(message);
+      return 0;
+    },
+    nArgs: 1,
+  },
+  "Sys.halt": {
+    func: (_, os) => {
+      os.sys.halt();
+      return 0;
+    },
+    nArgs: 0,
+  },
+  "Sys.error": {
+    func: (memory, os) => {
+      const [code] = getArgs(memory, 1);
+      os.sys.error(code);
+      return 0;
+    },
+    nArgs: 1,
+  },
+  "Sys.wait": {
+    func: (memory, os) => {
+      const [ms] = getArgs(memory, 1);
+      os.sys.wait(ms);
+      return 0;
+    },
+    nArgs: 1,
   },
 };

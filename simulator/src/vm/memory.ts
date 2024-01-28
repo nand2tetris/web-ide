@@ -1,5 +1,5 @@
 import { RAM } from "../cpu/memory.js";
-import { VmFrame, Segment } from "./vm.js";
+import { Segment, VmFrame } from "./vm.js";
 
 export const SP = 0;
 export const LCL = 1;
@@ -56,6 +56,8 @@ export class VmMemory extends RAM {
   }
 
   baseSegment(segment: Segment, offset: number): number {
+    if (this.strict && offset < 0)
+      throw new Error(`Cannot access negative offsets: ${offset}`);
     switch (segment) {
       case "argument":
         return this.ARG + offset;
@@ -66,8 +68,14 @@ export class VmMemory extends RAM {
       case "pointer":
         return this.pointer(offset);
       case "static":
+        if (this.strict && offset > 255 - 16)
+          throw new Error(`Cannot access statics beyond 239: ${offset}`);
         return 16 + offset;
       case "temp":
+        if (this.strict && offset > 7)
+          throw new Error(
+            `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`
+          );
         return 5 + offset;
       case "that":
         return this.THAT + offset;
@@ -77,7 +85,9 @@ export class VmMemory extends RAM {
   }
 
   getSegment(segment: Segment, offset: number): number {
-    if (segment === "constant") return offset;
+    if (segment === "constant") {
+      return this.constant(offset);
+    }
     const base = this.baseSegment(segment, offset);
     return this.get(base);
   }
@@ -87,34 +97,27 @@ export class VmMemory extends RAM {
   }
 
   argument(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    return this.get(this.ARG + offset);
+    return this.getSegment("argument", offset);
   }
   local(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    return this.get(this.LCL + offset);
+    return this.getSegment("local", offset);
   }
   static(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    if (this.strict && offset > 255 - 16)
-      throw new Error(`Cannot access statics beyond 239: ${offset}`);
-    return this.get(16 + offset);
+    return this.getSegment("static", offset);
   }
   constant(offset: number): number {
+    if (offset < 0 || offset > 32767) {
+      throw new Error(
+        `Illegal constant value ${offset} (must be between 0 and 32767)`
+      );
+    }
     return offset;
   }
   this(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    return this.get(this.THIS + offset);
+    return this.getSegment("this", offset);
   }
   that(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    return this.get(this.THAT + offset);
+    return this.getSegment("that", offset);
   }
   pointer(offset: number): number {
     if (this.strict && offset < 0)
@@ -126,13 +129,7 @@ export class VmMemory extends RAM {
     return offset === 0 ? THIS : THAT;
   }
   temp(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    if (this.strict && offset > 7)
-      throw new Error(
-        `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`
-      );
-    return this.get(5 + offset);
+    return this.getSegment("temp", offset);
   }
 
   push(value: number) {

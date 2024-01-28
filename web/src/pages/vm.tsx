@@ -84,7 +84,10 @@ const VM = () => {
     const sources = [];
     for (const file of event.target.files) {
       if (file.name.endsWith(".vm")) {
-        sources.push(await file.text());
+        sources.push({
+          name: file.name.replace(".vm", ""),
+          content: await file.text(),
+        });
       }
     }
 
@@ -272,7 +275,8 @@ export function VMInstructionRow({
   inst: VMLang.VmInstruction;
   key: number;
   highlighted: boolean;
-}) {
+  }) {
+  console.log(inst)
   switch (inst.op) {
     case "add":
     case "and":
@@ -315,7 +319,7 @@ export function VMInstructionRow({
         <tr key={key} className={highlighted ? "highlight" : ""}>
           <td>{inst.op}</td>
           <td>{inst.segment}</td>
-          <td>{inst.offset}</td>
+          <td>{inst.offset.toString()}</td>
         </tr>
       );
     default:

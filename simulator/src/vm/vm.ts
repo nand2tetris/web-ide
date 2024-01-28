@@ -6,7 +6,11 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
+import {
+  CallInstruction,
+  FunctionInstruction,
+  VmInstruction,
+} from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
 import { VmMemory } from "./memory.js";
 import { OS } from "./os/os.js";
@@ -129,6 +133,11 @@ const SYS_INIT: VmFunction = {
   ],
 };
 
+export interface ParsedVmFile {
+  name: string;
+  instructions: VmInstruction[];
+}
+
 export class Vm {
   memory = new VmMemory();
   private os = new OS(this.memory);
@@ -167,6 +176,95 @@ export class Vm {
         }
       }
     }
+  }
+
+  private static validateFile(file: ParsedVmFile) {
+    for (const inst of file.instructions) {
+      if (inst.op == "function") {
+        const parts = inst.name.split(".");
+        if (parts.length != 2) {
+          return Err(
+            new Error(
+              `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`
+            )
+          );
+        }
+        if (parts[0] != file.name) {
+          return Err(
+            new Error(
+              `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`
+            )
+          );
+        }
+      }
+    }
+    return Ok();
+  }
+
+  private static validateFiles(files: ParsedVmFile[]) {
+    const names: Set<string> = new Set();
+
+    for (const file of files) {
+      if (names.has(file.name)) {
+        return Err(new Error(`File ${file.name} already exists`));
+      }
+      const result = this.validateFile(file);
+      if (isErr(result)) {
+        return result;
+      }
+      names.add(file.name);
+    }
+    return Ok();
+  }
+
+  private static validateFunctions(instructions: VmInstruction[]) {
+    const functions: Set<string> = new Set(
+      instructions
+        .filter((inst) => inst.op == "function")
+        .map((inst) => (inst as FunctionInstruction).name)
+    );
+    const calls = instructions
+      .filter((inst) => inst.op == "call")
+      .map((inst) => inst as CallInstruction);
+
+    for (const call of calls) {
+      if (!functions.has(call.name)) {
+        if (VM_BUILTINS[call.name]) {
+          if (VM_BUILTINS[call.name].nArgs != call.nArgs) {
+            return Err(
+              new Error(
+                `OS function ${call} expects ${call.nArgs} arguments, not ${
+                  VM_BUILTINS[call.name].nArgs
+                }`
+              )
+            );
+          }
+        } else {
+          return Err(new Error(`Undefined function ${call}`));
+        }
+      }
+    }
+
+    return Ok();
+  }
+
+  static buildFromFiles(files: ParsedVmFile[]) {
+    let result = this.validateFiles(files);
+    if (isErr(result)) {
+      return result;
+    }
+    const instructions = files
+      .map((file) => file.instructions)
+      .reduce((list1, list2) => list1.concat(list2));
+    console.log(instructions);
+    result = this.validateFunctions(instructions);
+    if (isErr(result)) {
+      return result;
+    }
+    const vm = new Vm();
+    const load = vm.load(instructions);
+    if (isErr(load)) return load;
+    return vm.bootstrap();
   }
 
   static build(instructions: VmInstruction[]): Result<Vm> {
@@ -526,7 +624,7 @@ export class Vm {
             frameBase: base,
           });
         } else if (VM_BUILTINS[fnName]) {
-          const ret = VM_BUILTINS[fnName](this.memory, this.os);
+          const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
           if (this.os.sys.blocked) {
             return; // we will handle the return when the OS is released
           }

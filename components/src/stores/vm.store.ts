@@ -56,6 +56,11 @@ export type VmStoreDispatch = Dispatch<{
   payload?: unknown;
 }>;
 
+export interface VmFile {
+  name: string;
+  content: string;
+}
+
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>
@@ -129,16 +134,22 @@ export function makeVmStore(
     },
   };
   const actions = {
-    loadVm(sources: string[]) {
-      const source = sources.join("\n");
-      const parseResult = VM.parse(source);
+    loadVm(files: VmFile[]) {
+      const parsed = [];
 
-      if (isErr(parseResult)) {
-        setStatus(`Error parsing vm file ${parseResult.err.message}`);
-        return false;
+      for (const file of files) {
+        const parseResult = VM.parse(file.content);
+
+        if (isErr(parseResult)) {
+          setStatus(`Error parsing vm file ${parseResult.err.message}`);
+          return false;
+        }
+        parsed.push({
+          name: file.name,
+          instructions: unwrap(parseResult).instructions,
+        });
       }
-
-      const buildResult = Vm.build(unwrap(parseResult).instructions);
+      const buildResult = Vm.buildFromFiles(parsed);
 
       if (isErr(buildResult)) {
         setStatus(`Error building vm file ${buildResult.err.message}`);
@@ -172,35 +183,41 @@ export function makeVmStore(
       dispatch.current({ action: "setAnimate", payload: value });
     },
     step() {
-      let done = false;
-      if (useTest) {
-        done = test.step();
-        dispatch.current({ action: "testStep" });
-        if (done) {
-          dispatch.current({ action: "testFinished" });
+      try {
+        let done = false;
+        if (useTest) {
+          done = test.step();
+          dispatch.current({ action: "testStep" });
+          if (done) {
+            dispatch.current({ action: "testFinished" });
+          }
+        } else {
+          const result = vm.step();
+          if (result !== undefined) {
+            done = true;
+            setStatus(
+              result == 0
+                ? "Program halted"
+                : `Program exited with error code ${result}${
+                    ERRORS[result] ? `: ${ERRORS[result]}` : ""
+                  }`
+            );
+          }
         }
-      } else {
-        const result = vm.step();
-        if (result !== undefined) {
-          done = true;
-          setStatus(
-            result == 0
-              ? "Program halted"
-              : `Program exited with error code ${result}${
-                  ERRORS[result] ? `: ${ERRORS[result]}` : ""
-                }`
-          );
+        if (animate) {
+          dispatch.current({ action: "update" });
         }
+        return done;
+      } catch (e) {
+        setStatus(`Runtime error: ${(e as Error).message}`);
+        return true;
       }
-      if (animate) {
-        dispatch.current({ action: "update" });
-      }
-      return done;
     },
     reset() {
       test.reset();
       vm.reset();
       dispatch.current({ action: "update" });
+      setStatus("Reset");
     },
     toggleUseTest() {
       useTest = !useTest;

@@ -73,6 +73,7 @@ export class VMTest extends Test<VMTestInstruction> {
     }
     if (variable === "RAM" && index !== undefined) {
       this.vm.RAM.set(index, value);
+      return;
     }
     if (index !== undefined) {
       this.vm.memory.setSegment(variable as Segment, index, value);

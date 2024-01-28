@@ -559,6 +559,18 @@ export class Vm {
     this.os = new OS(this.memory);
   }
 
+  private validateStackOp(op: StackOperation) {
+    if (op.segment == "argument" && op.offset >= this.invocation.nArgs) {
+      throw new Error("Argument offset out of bounds");
+    }
+    if (
+      op.segment == "local" &&
+      op.offset >= this.functionMap[this.invocation.function]?.nVars
+    ) {
+      throw new Error("Local offset out of bounds");
+    }
+  }
+
   step(): number | undefined {
     if (this.os.sys.halted) {
       return this.os.sys.exitCode;
@@ -583,6 +595,7 @@ export class Vm {
 
     switch (operation.op) {
       case "push": {
+        this.validateStackOp(operation);
         const value = this.memory.getSegment(
           operation.segment,
           operation.offset
@@ -591,6 +604,7 @@ export class Vm {
         break;
       }
       case "pop": {
+        this.validateStackOp(operation);
         const value = this.memory.pop();
         this.memory.setSegment(operation.segment, operation.offset, value);
         break;

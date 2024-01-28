@@ -1,3 +1,9 @@
+import {
+  Err,
+  Ok,
+  Result,
+  isErr,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import { RAM } from "../cpu/memory.js";
 import { Segment, VmFrame } from "./vm.js";
 
@@ -55,45 +61,65 @@ export class VmMemory extends RAM {
     this.set(SP, 256);
   }
 
-  baseSegment(segment: Segment, offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
+  baseSegment(segment: Segment, offset: number): Result<number, Error> {
+    if (this.strict && (offset < 0 || offset > 32767))
+      return Err(
+        new Error(
+          `Illegal offset value ${offset} (must be between 0 and 32767)`
+        )
+      );
     switch (segment) {
       case "argument":
-        return this.ARG + offset;
+        return Ok(this.ARG + offset);
       case "constant":
-        return offset;
+        return Ok(offset);
       case "local":
-        return this.LCL + offset;
+        return Ok(this.LCL + offset);
       case "pointer":
-        return this.pointer(offset);
+        if (this.strict && offset > 1)
+          throw new Error(
+            `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`
+          );
+        return Ok(offset === 0 ? THIS : THAT);
       case "static":
         if (this.strict && offset > 255 - 16)
-          throw new Error(`Cannot access statics beyond 239: ${offset}`);
-        return 16 + offset;
+          return Err(new Error(`Cannot access statics beyond 239: ${offset}`));
+        return Ok(16 + offset);
       case "temp":
         if (this.strict && offset > 7)
-          throw new Error(
-            `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`
+          return Err(
+            new Error(
+              `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`
+            )
           );
-        return 5 + offset;
+        return Ok(5 + offset);
       case "that":
-        return this.THAT + offset;
+        return Ok(this.THAT + offset);
       case "this":
-        return this.THIS + offset;
+        return Ok(this.THIS + offset);
     }
   }
 
   getSegment(segment: Segment, offset: number): number {
     if (segment === "constant") {
-      return this.constant(offset);
+      if (this.strict && (offset < 0 || offset > 32767))
+        throw new Error(
+          `Illegal offset value ${offset} (must be between 0 and 32767)`
+        );
+      return offset;
     }
     const base = this.baseSegment(segment, offset);
-    return this.get(base);
+    if (isErr(base)) {
+      throw Err(base);
+    }
+    return this.get(Ok(base));
   }
   setSegment(segment: Segment, offset: number, value: number) {
     const base = this.baseSegment(segment, offset);
-    this.set(base, value);
+    if (isErr(base)) {
+      throw Err(base);
+    }
+    this.set(Ok(base), value);
   }
 
   argument(offset: number): number {
@@ -106,12 +132,7 @@ export class VmMemory extends RAM {
     return this.getSegment("static", offset);
   }
   constant(offset: number): number {
-    if (offset < 0 || offset > 32767) {
-      throw new Error(
-        `Illegal constant value ${offset} (must be between 0 and 32767)`
-      );
-    }
-    return offset;
+    return this.getSegment("constant", offset);
   }
   this(offset: number): number {
     return this.getSegment("this", offset);
@@ -120,13 +141,7 @@ export class VmMemory extends RAM {
     return this.getSegment("that", offset);
   }
   pointer(offset: number): number {
-    if (this.strict && offset < 0)
-      throw new Error(`Cannot access negative offsets: ${offset}`);
-    if (this.strict && offset > 1)
-      throw new Error(
-        `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`
-      );
-    return offset === 0 ? THIS : THAT;
+    return this.getSegment("pointer", offset);
   }
   temp(offset: number): number {
     return this.getSegment("temp", offset);

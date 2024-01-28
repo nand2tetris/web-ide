@@ -217,6 +217,20 @@ export class Vm {
     return Ok();
   }
 
+  private validateStackInstructions() {
+    for (const fn of Object.values(this.functionMap)) {
+      for (const inst of fn.operations) {
+        if (inst.op == "pop" || inst.op == "push") {
+          const base = this.memory.baseSegment(inst.segment, inst.offset);
+          if (isErr(base)) {
+            return base;
+          }
+        }
+      }
+    }
+    return Ok();
+  }
+
   private static validateFunctions(instructions: VmInstruction[]) {
     const functions: Set<string> = new Set(
       instructions
@@ -256,7 +270,6 @@ export class Vm {
     const instructions = files
       .map((file) => file.instructions)
       .reduce((list1, list2) => list1.concat(list2));
-    console.log(instructions);
     result = this.validateFunctions(instructions);
     if (isErr(result)) {
       return result;
@@ -458,6 +471,10 @@ export class Vm {
       i = i_;
     }
 
+    const result = this.validateStackInstructions();
+    if (isErr(result)) {
+      return result;
+    }
     this.registerStatics();
 
     if (reset) {

@@ -141,7 +141,7 @@ export function makeVmStore(
         const parseResult = VM.parse(file.content);
 
         if (isErr(parseResult)) {
-          setStatus(`Error parsing vm file ${parseResult.err.message}`);
+          setStatus(`Parse error: ${parseResult.err.message}`);
           return false;
         }
         parsed.push({
@@ -152,7 +152,7 @@ export function makeVmStore(
       const buildResult = Vm.buildFromFiles(parsed);
 
       if (isErr(buildResult)) {
-        setStatus(`Error building vm file ${buildResult.err.message}`);
+        setStatus(`Build Error: ${buildResult.err.message}`);
         return false;
       }
 

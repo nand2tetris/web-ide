@@ -276,7 +276,6 @@ export function VMInstructionRow({
   key: number;
   highlighted: boolean;
   }) {
-  console.log(inst)
   switch (inst.op) {
     case "add":
     case "and":

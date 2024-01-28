@@ -233,14 +233,7 @@ export class Vm {
 
   private static validateFunctions(instructions: VmInstruction[]) {
     const functions: Set<string> = new Set();
-    //   instructions
-    //     .filter((inst) => inst.op == "function")
-    //     .map((inst) => (inst as FunctionInstruction).name)
-    // );
     const calls = [];
-    // instructions
-    // .filter((inst) => inst.op == "call")
-    // .map((inst) => inst as CallInstruction);
 
     for (const inst of instructions) {
       if (inst.op == "function") {

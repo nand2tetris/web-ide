@@ -271,9 +271,9 @@ export class Vm {
           if (VM_BUILTINS[call.name].nArgs != call.nArgs) {
             return Err(
               new Error(
-                `OS function ${call} expects ${call.nArgs} arguments, not ${
+                `OS function ${call.name} expects ${
                   VM_BUILTINS[call.name].nArgs
-                }`
+                } arguments, not ${call.nArgs}`
               )
             );
           }

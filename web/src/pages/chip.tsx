@@ -132,27 +132,24 @@ export const Chip = () => {
 
   const downloadRef = useRef<HTMLAnchorElement>(null);
 
-  const download = (blob: Blob) => {
-    const url = URL.createObjectURL(blob);
-
+  const downloadProject = async () => {
     if (!downloadRef.current) {
       return;
     }
-    downloadRef.current.href = url;
-    downloadRef.current.download = `Project${state.controls.project}`;
-    downloadRef.current.click();
 
-    URL.revokeObjectURL(url);
-  };
-
-  const downloadProject = async () => {
     const files = await actions.getProjectFiles();
     const zip = new JSZip();
 
     for (const file of files) {
       zip.file(file.name, file.content);
     }
-    await zip.generateAsync({ type: "blob" }).then(download);
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    downloadRef.current.href = url;
+    downloadRef.current.download = `Project${state.controls.project}`;
+    downloadRef.current.click();
+
+    URL.revokeObjectURL(url);
   };
 
   const [useBuiltin, setUseBuiltin] = useState(false);

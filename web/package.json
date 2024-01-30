@@ -97,6 +97,7 @@
     ]
   },
   "dependencies": {
+    "jszip": "^3.10.1",
     "react-ga4": "^1.4.1"
   }
 }

@@ -138,6 +138,11 @@ export interface ControlsState {
   error?: CompilationError;
 }
 
+export interface HDLFile {
+  name: string;
+  content: string;
+}
+
 function reduceChip(chip: SimChip, pending = false, invalid = false): ChipSim {
   return {
     clocked: chip.clocked,
@@ -490,6 +495,15 @@ export function makeChipStore(
         ChipProjects[project].CHIPS as Record<string, Record<string, string>>
       )[chipName][`${chipName}.hdl`];
       dispatch.current({ action: "setFiles", payload: { hdl: template } });
+    },
+
+    async getProjectFiles() {
+      return await Promise.all(
+        CHIP_PROJECTS[project].map((chip) => ({
+          name: `${chip}.hdl`,
+          content: fs.readFile(`/projects/${project}/${chip}/${chip}.hdl`),
+        }))
+      );
     },
   };
 

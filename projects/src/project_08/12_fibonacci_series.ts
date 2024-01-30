@@ -52,48 +52,53 @@ label END_PROGRAM
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/08/ProgramFlow/FibonacciSeries/FibonacciSeriesVME.tst
+// File name: projects/8/ProgramFlow/FibonacciSeries/FibonacciSeriesVME.tst
 
-load FibonacciSeries.vm,
-output-file FibonacciSeries.out,
-compare-to FibonacciSeries.cmp,
-output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2 
-            RAM[3003]%D1.6.2 RAM[3004]%D1.6.2 RAM[3005]%D1.6.2;
+// Tests and illustrates FibonacciSeries.vm on the VM emulator.
+// Before executing the code, initializes the stack pointer
+// and the base addresses of the local and argument segments,
+// and sets argument[0] to n and argument [1] to the base address
+// of the generated series.
 
 set sp 256,
 set local 300,
 set argument 400,
 set argument[0] 6,
-set argument[1] 3000;
+set argument[1] 3000,
 
 repeat 73 {
-  vmstep;
+	vmstep;
 }
 
+// Outputs the series of values generated and written by the code.
+output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2 
+            RAM[3003]%D1.6.2 RAM[3004]%D1.6.2 RAM[3005]%D1.6.2;
 output;
 `;
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/08/ProgramFlow/FibonacciSeries/FibonacciSeries.tst
+// File name: projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.tst
 
-load FibonacciSeries.asm,
-output-file FibonacciSeries.out,
-compare-to FibonacciSeries.cmp,
-output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2 
-            RAM[3003]%D1.6.2 RAM[3004]%D1.6.2 RAM[3005]%D1.6.2;
+// Tests FibonacciSeries.asm on the CPU emulator.
+// Before executing the code, initializes the stack pointer
+// and the base addresses of the local and argument segments,
+// and sets argument[0] and argument [1].
 
-set RAM[0] 256,
-set RAM[1] 300,
-set RAM[2] 400,
-set RAM[400] 6,
-set RAM[401] 3000,
+set RAM[0] 256,    // SP
+set RAM[1] 300,    // LCL
+set RAM[2] 400,    // ARG
+set RAM[400] 6,    // argument[0], n
+set RAM[401] 3000, // argument[1], base address of the generated series
 
 repeat 1100 {
-  ticktock;
+	ticktock;
 }
 
+// Outputs the series of values generated and written by the code.
+output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2 
+            RAM[3003]%D1.6.2 RAM[3004]%D1.6.2 RAM[3005]%D1.6.2;
 output;
 `;
 

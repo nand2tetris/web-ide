@@ -63,11 +63,10 @@ add
 return
 `;
 
-export const vm_tst = `// Test file for NestedCall test.
+export const vm_tst = `// Tests and illustrates how the VM implementation handles function-call-and-return,
+// by executing the functions in Sys.vm in the VM emulator.
+// In particular, loads and runs the functions in Sys.vm.
 
-load Sys.vm,
-output-file NestedCall.out,
-compare-to NestedCall.cmp,
 output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
 
 set RAM[0] 261,
@@ -130,24 +129,23 @@ set this 3000,
 set that 4000;
 
 repeat 50 {
-  vmstep;
+	vmstep;
 }
 output;
 `;
 
-export const hdl_tst = `// Test file for NestedCall test.
-
-load NestedCall.asm,
-output-file NestedCall.out,
-compare-to NestedCall.cmp,
-output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
+export const hdl_tst = `// Tests how the VM implementation handles function-call-and-return,
+// by executing the functions in Sys.vm.
+// In particular, loads and runs NestedCall.asm, which results when 
+// the VM translator is applied to the NestedCall folder, which 
+// includes only one VM file: Sys.vm.
 
 set RAM[0] 261,
 set RAM[1] 261,
 set RAM[2] 256,
 set RAM[3] -3,
 set RAM[4] -4,
-set RAM[5] -1, // test results
+set RAM[5] -1,     // test results
 set RAM[6] -1,
 set RAM[256] 1234, // fake stack frame from call Sys.init
 set RAM[257] -1,
@@ -155,8 +153,8 @@ set RAM[258] -2,
 set RAM[259] -3,
 set RAM[260] -4,
 
-set RAM[261] -1, // Initialize stack to check for local segment
-set RAM[262] -1, // being cleared to zero.
+set RAM[261] -1,   // Initializes the stack, to check that the local segment
+set RAM[262] -1,   // is initialized to zeros by the 'function' VM command.
 set RAM[263] -1,
 set RAM[264] -1,
 set RAM[265] -1,
@@ -193,12 +191,13 @@ set RAM[295] -1,
 set RAM[296] -1,
 set RAM[297] -1,
 set RAM[298] -1,
-set RAM[299] -1;
+set RAM[299] -1,
 
 repeat 4000 {
-  ticktock;
+	ticktock;
 }
 
+output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
 output;
 `;
 

@@ -447,7 +447,7 @@ export function makeChipStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus(`Failed to parse test`);
+        setStatus(`Failed to parse test ${tst.err.message}`);
         return false;
       }
 

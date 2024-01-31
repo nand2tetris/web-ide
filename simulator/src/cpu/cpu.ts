@@ -96,7 +96,6 @@ export function cpuTock(
     D = ALU;
   }
 
-  const oldA = A;
   if (!bits.c) {
     A = instruction & 0x7fff;
   } else if (bits.d1) {
@@ -110,7 +109,7 @@ export function cpuTock(
   flag = alu2[1];
 
   const output: CPUOutput = {
-    addressM: bits.d3 ? oldA : A,
+    addressM: A,
     outM: ALU,
     writeM: bits.d3,
   };
@@ -193,7 +192,8 @@ export class CPU {
   }
 
   tick() {
-    const [{ addressM, outM, writeM }, { A, D, PC }] = cpu(
+    const addressM = this.#a;
+    const [{ outM, writeM }, { A, D, PC }] = cpu(
       {
         inM: this.RAM.get(this.#a),
         instruction: this.ROM.get(this.#pc),

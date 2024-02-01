@@ -303,7 +303,9 @@ class ChipBuilder {
         span: lhs.span,
       });
     }
-    this.wires.push({ chip: partChip, lhs, rhs });
+    if (!isConstant(rhs.pin)) {
+      this.wires.push({ chip: partChip, lhs, rhs });
+    }
     return Ok();
   }
 

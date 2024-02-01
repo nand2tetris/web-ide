@@ -451,7 +451,7 @@ export function makeChipStore(
         return false;
       }
 
-      test = ChipTest.from(Ok(tst)).with(chip).reset();
+      test = ChipTest.from(Ok(tst), setStatus).with(chip).reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
       return true;

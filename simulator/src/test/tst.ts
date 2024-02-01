@@ -10,6 +10,11 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
+  protected setStatus?: (status: string) => void;
+
+  constructor(setStatus?: (status: string) => void) {
+    this.setStatus = setStatus;
+  }
 
   setFileSystem(fs: FileSystem): this {
     this.fs = fs;
@@ -17,10 +22,12 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   echo(_content: string) {
-    return undefined;
+    this.setStatus?.(_content);
+    return;
   }
   clearEcho() {
-    return undefined;
+    this.setStatus?.("");
+    return;
   }
 
   async load(_filename?: string): Promise<void> {

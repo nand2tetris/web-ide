@@ -152,7 +152,7 @@ set in 0, set load 1, set address %X4000, tick, output; tock, output;
 // Keyboard test
 
 set address 24576,
-echo "Click the Keyboard icon and hold down the 'K' key (uppercase) until you see the next message...";
+echo "Click the Keyboard icon and hold down the 'K' key (uppercase) until you see the next message...",
 // It's important to keep holding the key down since if the system is busy,
 // the memory will zero itself before being outputted.
 
@@ -205,7 +205,7 @@ set address %X5FCF, eval, output;
 
 set load 0,
 set address 24576,
-echo "Two horizontal lines should be in the middle of the screen. Hold down 'Y' (uppercase) until you see the next message ...";
+echo "Two horizontal lines should be in the middle of the screen. Hold down 'Y' (uppercase) until you see the next message ...",
 // It's important to keep holding the key down since if the system is busy,
 // the memory will zero itself before being outputted.
 

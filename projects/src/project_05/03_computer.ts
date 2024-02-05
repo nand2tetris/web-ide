@@ -47,7 +47,7 @@ set RAM16K[0] 0,
 tick, tock, output;
 
 // Second run, to check that the PC was reset correctly.
-set reset 0;
+set reset 0,
 
 repeat 6 {
     tick, tock, output;

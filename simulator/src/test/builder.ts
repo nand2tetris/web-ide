@@ -1,7 +1,8 @@
 import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { Span } from "../languages/base.js";
 import {
   Tst,
-  TstLineStatement,
+  TstCommand,
   TstOperation,
   TstStatement,
   TstWhileStatement,
@@ -11,38 +12,31 @@ import {
   TestTickInstruction,
   TestTockInstruction,
 } from "./chiptst.js";
+import { TestTickTockInstruction } from "./cputst.js";
 import {
   Condition,
+  TestBreakInstruction,
   TestClearEchoInstruction,
-  TestCompoundInstruction,
   TestEchoInstruction,
+  TestInstruction,
   TestLoadROMInstruction,
   TestOutputInstruction,
   TestOutputListInstruction,
   TestRepeatInstruction,
   TestSetInstruction,
+  TestStopInstruction,
   TestWhileInstruction,
 } from "./instruction.js";
 import { Test } from "./tst.js";
 import { TestVMStepInstruction } from "./vmtst.js";
-import { TestTickTockInstruction } from "./cputst.js";
 
-function isTstLineStatment(line: TstStatement): line is TstLineStatement {
-  return (line as TstLineStatement).ops !== undefined;
+
+function isTstCommand(line: TstStatement): line is TstCommand {
+  return (line as TstCommand).op !== undefined;
 }
 
 function isTstWhileStatement(line: TstStatement): line is TstWhileStatement {
   return (line as TstWhileStatement).condition !== undefined;
-}
-
-function makeLineStatement(line: TstLineStatement) {
-  const statement = new TestCompoundInstruction();
-  statement.span = line.span;
-  for (const op of line.ops) {
-    const inst = makeInstruction(op);
-    if (inst !== undefined) statement.addInstruction(inst);
-  }
-  return statement;
 }
 
 function makeInstruction(inst: TstOperation) {
@@ -80,9 +74,16 @@ function makeInstruction(inst: TstOperation) {
 }
 
 export function fill<T extends Test>(test: T, tst: Tst): T {
+  let span: Span | undefined;
+  let stepInstructions: TestInstruction[] = [];
+
+  let base: T | TestWhileInstruction | TestRepeatInstruction = test;
+  let commands: TstCommand[] = [];
+
   for (const line of tst.lines) {
-    if (isTstLineStatment(line)) {
-      test.addInstruction(makeLineStatement(line));
+    if (isTstCommand(line)) {
+      base = test;
+      commands = [line];
     } else {
       const repeat = isTstWhileStatement(line)
         ? new TestWhileInstruction(
@@ -95,8 +96,34 @@ export function fill<T extends Test>(test: T, tst: Tst): T {
         : new TestRepeatInstruction(line.count);
       repeat.span = line.span;
       test.addInstruction(repeat);
-      for (const statement of line.statements) {
-        repeat.addInstruction(makeLineStatement(statement));
+
+      base = repeat;
+      commands = line.statements;
+    }
+
+    for (const command of commands) {
+      const inst = makeInstruction(command.op);
+      if (inst !== undefined) {
+        if (span === undefined) {
+          span = line.span;
+        } else {
+          span.end = line.span.end;
+        }
+
+        base.addInstruction(inst);
+        stepInstructions.push(inst);
+      }
+      if (command.separator != ",") {
+        if (command.separator == ";") {
+          base.addInstruction(new TestStopInstruction(span ?? command.span));
+        } else if (command.separator == "!") {
+          base.addInstruction(new TestBreakInstruction(span ?? command.span));
+        }
+        for (const inst of stepInstructions) {
+          inst.span = span ?? command.span;
+        }
+        span = undefined;
+        stepInstructions = [];
       }
     }
   }

@@ -15,8 +15,7 @@ CHIP Register {
     PARTS:
     //// Replace this comment with your code.
 }`;
-export const tst =
-  `// This file is part of www.nand2tetris.org
+export const tst = `// This file is part of www.nand2tetris.org
   // and the book "The Elements of Computing Systems"
   // by Nisan and Schocken, MIT Press.
   // File name: projects/3/a/Register.tst
@@ -581,7 +580,7 @@ export const tst =
   output;
   
   tock,
-  output;`
+  output;`;
 
 export const cmp = `|time |   in   |load|  out   |
 | 0+  |      0 |  0 |      0 |

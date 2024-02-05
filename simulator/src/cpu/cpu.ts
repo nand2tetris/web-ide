@@ -3,10 +3,10 @@ import {
   Memory,
   MemoryAdapter,
   MemoryKeyboard,
-  SubMemory,
   RAM as RAMMem,
   SCREEN_OFFSET,
   SCREEN_SIZE,
+  SubMemory,
 } from "./memory.js";
 
 export interface CPUInput {
@@ -76,6 +76,10 @@ export function cpuTick(
   const a = bits.am ? inM : A;
   const [ALU, flag] = alu(bits.op, D, a);
 
+  if (bits.d2) {
+    D = ALU;
+  }
+
   return [{ A, D, PC: PC + 1, ALU, flag }, bits.d3];
 }
 
@@ -91,10 +95,6 @@ export function cpuTock(
   const jmp = j1 || j2 || j3;
 
   PC = reset ? 0 : jmp ? A : PC;
-
-  if (bits.d2) {
-    D = ALU;
-  }
 
   const oldA = A;
   if (!bits.c) {

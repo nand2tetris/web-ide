@@ -227,7 +227,7 @@ test("08 / Program Flow / Basic Loop", () => {
     [400, 3],
   ]);
 
-  for (let i = 0; i < 26; i++) {
+  for (let i = 0; i < 33; i++) {
     vm.step();
   }
 

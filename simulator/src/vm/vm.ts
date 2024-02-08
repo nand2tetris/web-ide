@@ -5,10 +5,10 @@ import {
   isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
-import { VmMemory } from "./memory.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
+import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
+import { VmMemory } from "./memory.js";
 
 export type VmOperation =
   | FunctionOperation
@@ -428,7 +428,13 @@ export class Vm {
   }
 
   step() {
-    const operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
+    let operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
+
+    if (operation.op === "label") {
+      this.invocation.opPtr += 1;
+      operation = this.operation ?? { op: "return" };
+    }
+
     switch (operation.op) {
       case "push": {
         const value = this.memory.getSegment(

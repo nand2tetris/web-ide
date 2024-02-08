@@ -29,6 +29,7 @@ import {
 import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
+import JSZip from "jszip";
 import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
 import { Editor } from "../shell/editor";
@@ -129,6 +130,28 @@ export const Chip = () => {
     [actions]
   );
 
+  const downloadRef = useRef<HTMLAnchorElement>(null);
+
+  const downloadProject = async () => {
+    if (!downloadRef.current) {
+      return;
+    }
+
+    const files = await actions.getProjectFiles();
+    const zip = new JSZip();
+
+    for (const file of files) {
+      zip.file(file.name, file.content);
+    }
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    downloadRef.current.href = url;
+    downloadRef.current.download = `Project${state.controls.project}`;
+    downloadRef.current.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = () => {
     if (useBuiltin) {
@@ -174,10 +197,16 @@ export const Chip = () => {
             </option>
           ))}
         </select>
+        <a ref={downloadRef} style={{ display: "none" }} />
         {!useBuiltin && !state.controls.builtinOnly && (
-          <button className="flex-0" onClick={actions.resetFile}>
-            <Trans>Reset</Trans>
-          </button>
+          <>
+            <button className="flex-0" onClick={actions.resetFile}>
+              <Trans>Reset</Trans>
+            </button>
+            <button className="flex-0" onClick={downloadProject}>
+              <Trans>Download</Trans>
+            </button>
+          </>
         )}
       </fieldset>
     </>

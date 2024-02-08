@@ -138,6 +138,40 @@ describe("Chip Builder", () => {
     foo.eval();
     expect(foo.out("b").busVoltage).toBe(0);
   });
+
+  it("returns error for mismatching input width", async () => {
+    try {
+      const chip = unwrap(
+        HDL.parse(`CHIP Foo {
+        IN in[3]; OUT out;
+        PARTS: Or8Way(in=in, out=out);
+      }`)
+      );
+      const foo = await build(chip);
+      expect(foo).toBeErr();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    }
+  });
+
+  it("returns error for mismatching output width", async () => {
+    try {
+      const chip = unwrap(
+        HDL.parse(`CHIP Foo {
+        IN in; OUT out[5];
+        PARTS: Not(in=in, out=out);
+      }`)
+      );
+      const foo = await build(chip);
+      expect(foo).toBeErr();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    }
+  });
 });
 
 const USE_COPY_HDL = `CHIP UseCopy {

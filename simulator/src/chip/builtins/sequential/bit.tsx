@@ -49,7 +49,7 @@ export class Register extends ClockedChip {
 
   override get(name: string, offset?: number): Pin | undefined {
     return name === this.name
-      ? new ConstantBus("DRegister", this.bits & 0xffff)
+      ? new ConstantBus(this.name, this.bits & 0xffff)
       : super.get(name, offset);
   }
 

@@ -20,6 +20,8 @@ export const CHIPS = {
     "CPU.hdl": CPU.hdl,
     "CPU.tst": CPU.tst,
     "CPU.cmp": CPU.cmp,
+    "CPU-external.tst": CPU.external_tst,
+    "CPU-external.cmp": CPU.external_cmp,
   },
   Computer: {
     "Computer.hdl": Computer.hdl,

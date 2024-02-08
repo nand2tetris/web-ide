@@ -452,3 +452,381 @@ set f  0,
 set no 1,
 eval,
 output;`;
+export const basic_tst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/2/ALU-basic.tst
+
+// Tests the basic version of the ALU chip.
+// DOES NOT replace the final test provided by ALU.tst.
+// Specifically: Tests the ALU logic that computes the 'out' output;
+// The 'zr' and 'ng' output bits are ignored.
+
+output-list x%B1.16.1 y%B1.16.1 zx nx zy ny f no out%B1.16.1;
+
+set x %B0000000000000000,
+set y %B1111111111111111,
+
+set zx 1,
+set nx 0,
+set zy 1,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 1,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 1,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  0,
+set no 0,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  0,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  0,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  0,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 1,
+set zy 1,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 0,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 0,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 0,
+set ny 0,
+set f  0,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 1,
+set zy 0,
+set ny 1,
+set f  0,
+set no 1,
+eval,
+output;
+
+set x %B101101110100000,
+set y %B001111011010010,
+
+set zx 1,
+set nx 0,
+set zy 1,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 1,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 1,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  0,
+set no 0,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  0,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  0,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  0,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 1,
+set zy 1,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 1,
+set ny 1,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 1,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 0,
+set ny 0,
+set f  1,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 1,
+set zy 0,
+set ny 0,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 0,
+set ny 1,
+set f  1,
+set no 1,
+eval,
+output;
+
+set zx 0,
+set nx 0,
+set zy 0,
+set ny 0,
+set f  0,
+set no 0,
+eval,
+output;
+
+set zx 0,
+set nx 1,
+set zy 0,
+set ny 1,
+set f  0,
+set no 1,
+eval,
+output;`;
+export const basic_cmp = `|        x         |        y         |zx |nx |zy |ny | f |no |       out        |
+| 0000000000000000 | 1111111111111111 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 1 | 0 | 1 | 0 | 1111111111111111 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 1 | 1 | 0 | 0 | 0000000000000000 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 0 | 0 | 0 | 0 | 1111111111111111 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 1 | 1 | 0 | 1 | 1111111111111111 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 0 | 0 | 0 | 1 | 0000000000000000 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 1 | 1 | 1 | 1 | 0000000000000000 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 0 | 0 | 1 | 1 | 0000000000000001 |
+| 0000000000000000 | 1111111111111111 | 0 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 0 | 1 | 1 | 1 | 0000000000000000 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 1 | 1 | 1 | 0 | 1111111111111111 |
+| 0000000000000000 | 1111111111111111 | 1 | 1 | 0 | 0 | 1 | 0 | 1111111111111110 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 0 | 0 | 1 | 0 | 1111111111111111 |
+| 0000000000000000 | 1111111111111111 | 0 | 1 | 0 | 0 | 1 | 1 | 0000000000000001 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 0 | 1 | 1 | 1 | 1111111111111111 |
+| 0000000000000000 | 1111111111111111 | 0 | 0 | 0 | 0 | 0 | 0 | 0000000000000000 |
+| 0000000000000000 | 1111111111111111 | 0 | 1 | 0 | 1 | 0 | 1 | 1111111111111111 |
+| 0101101110100000 | 0001111011010010 | 1 | 0 | 1 | 0 | 1 | 0 | 0000000000000000 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 1 | 1 | 1 | 1 | 0000000000000001 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 1 | 0 | 1 | 0 | 1111111111111111 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 1 | 1 | 0 | 0 | 0101101110100000 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 0 | 0 | 0 | 0 | 0001111011010010 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 1 | 1 | 0 | 1 | 1010010001011111 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 0 | 0 | 0 | 1 | 1110000100101101 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 1 | 1 | 1 | 1 | 1010010001100000 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 0 | 0 | 1 | 1 | 1110000100101110 |
+| 0101101110100000 | 0001111011010010 | 0 | 1 | 1 | 1 | 1 | 1 | 0101101110100001 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 0 | 1 | 1 | 1 | 0001111011010011 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 1 | 1 | 1 | 0 | 0101101110011111 |
+| 0101101110100000 | 0001111011010010 | 1 | 1 | 0 | 0 | 1 | 0 | 0001111011010001 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 0 | 0 | 1 | 0 | 0111101001110010 |
+| 0101101110100000 | 0001111011010010 | 0 | 1 | 0 | 0 | 1 | 1 | 0011110011001110 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 0 | 1 | 1 | 1 | 1100001100110010 |
+| 0101101110100000 | 0001111011010010 | 0 | 0 | 0 | 0 | 0 | 0 | 0001101010000000 |
+| 0101101110100000 | 0001111011010010 | 0 | 1 | 0 | 1 | 0 | 1 | 0101111111110010 |`;

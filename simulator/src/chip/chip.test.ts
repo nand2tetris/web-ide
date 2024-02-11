@@ -1,4 +1,9 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { bin } from "../util/twos.js";
+import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
+import { Nand } from "./builtins/logic/nand.js";
+import { Bit, PC } from "./builtins/sequential/bit.js";
+import { DFF } from "./builtins/sequential/dff.js";
 import {
   Bus,
   Chip,
@@ -11,12 +16,7 @@ import {
   parseToPin,
   printChip,
 } from "./chip.js";
-import { Nand } from "./builtins/logic/nand.js";
-import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
-import { bin } from "../util/twos.js";
-import { DFF } from "./builtins/sequential/dff.js";
 import { Clock } from "./clock.js";
-import { Bit, PC } from "./builtins/sequential/bit.js";
 
 describe("Chip", () => {
   it("parses toPin", () => {
@@ -226,6 +226,36 @@ describe("Chip", () => {
       inPin.busVoltage = 0b111;
       not3Chip.eval();
       expect(notPart.in().busVoltage).toBe(0b1);
+    });
+
+    it("wires SubBus in[0]=a", () => {
+      const chip = new Chip(["a", "b"], ["out[3]"]);
+      const not3 = new Not3();
+
+      // Not3(in[0]=a, in[1]=b, in[2]=b, out=out)
+      chip.wire(not3, [
+        {
+          from: { name: "a", start: 0, width: undefined },
+          to: { name: "in", start: 0, width: 1 },
+        },
+        {
+          from: { name: "b", start: 0, width: undefined },
+          to: { name: "in", start: 1, width: 1 },
+        },
+        {
+          from: { name: "b", start: 0, width: undefined },
+          to: { name: "in", start: 2, width: 1 },
+        },
+        {
+          from: { name: "out", start: 0, width: undefined },
+          to: { name: "out", start: 0, width: undefined },
+        },
+      ]);
+
+      chip.in("b")!.busVoltage = 1;
+      chip.in("a")!.busVoltage = 0;
+      chip.eval();
+      expect(chip.out().busVoltage).toBe(0b001);
     });
 
     it("wires SubBus out=out[1]", () => {

@@ -7,7 +7,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
 // File name: projects/1/Not.hdl
 /**
  * Not gate:
- * if (in) out = 1, else out = 0
+ * if (in) out = 0, else out = 1
  */
 CHIP Not {
     IN in;

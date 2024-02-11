@@ -1,4 +1,4 @@
-@import "https://unpkg.com/@picocss/pico@latest/css/pico.min.css" layer(pico);
+@import "https://unpkg.com/@picocss/pico@1/css/pico.min.css" layer(pico);
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Poppins:wght@400;700&display=swap");
 
 @layer pico component user;

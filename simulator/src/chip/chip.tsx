@@ -414,7 +414,7 @@ export class Chip {
     }
 
     // Wrap the chipPin in an OutBus when the part side is dimensioned
-    if (to.start > 0 || to.width !== chipPin.width) {
+    if (to.start > 0 || to.width !== partPin.width) {
       chipPin = new OutSubBus(chipPin, to.start, to.width);
     }
 
@@ -433,7 +433,7 @@ export class Chip {
     from.width ??= chipPin.width;
 
     // Wrap the partPin in an InBus when the part side is dimensioned
-    if (to.start > 0 || to.width !== chipPin.width) {
+    if (to.start > 0 || to.width !== partPin.width) {
       partPin = new InSubBus(partPin, to.start, to.width);
     }
 

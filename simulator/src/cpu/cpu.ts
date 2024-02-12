@@ -76,7 +76,7 @@ export function cpuTick(
   const a = bits.am ? inM : A;
   const [ALU, flag] = alu(bits.op, D, a);
 
-  // The reason that we change D here and not in cpuTock is that it represents the internal state of the D register, 
+  // The reason that we change D here and not in cpuTock is that it represents the internal state of the D register,
   // rather then its out pin.
   // (According to appendix 3 - A.3.2 in the book, the output ChipName[] refers to the internal state of said chip)
   if (bits.d2) {

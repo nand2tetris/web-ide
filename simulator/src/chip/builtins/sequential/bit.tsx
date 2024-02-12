@@ -1,11 +1,4 @@
-import {
-  ClockedChip,
-  ConstantBus,
-  HIGH,
-  LOW,
-  Pin,
-  Voltage,
-} from "../../chip.js";
+import { Bus, ClockedChip, HIGH, LOW, Pin, Voltage } from "../../chip.js";
 
 export class Bit extends ClockedChip {
   bit: Voltage = LOW;
@@ -30,6 +23,20 @@ export class Bit extends ClockedChip {
   }
 }
 
+class RegisterBus extends Bus {
+  constructor(name: string, private register: { bits: number }) {
+    super(name);
+  }
+
+  override get busVoltage(): number {
+    return this.register.bits & 0xffff;
+  }
+
+  override set busVoltage(num: number) {
+    this.register.bits = num & 0xffff;
+  }
+}
+
 export class Register extends ClockedChip {
   bits = 0x00;
 
@@ -49,7 +56,7 @@ export class Register extends ClockedChip {
 
   override get(name: string, offset?: number): Pin | undefined {
     return name === this.name
-      ? new ConstantBus(this.name, this.bits & 0xffff)
+      ? new RegisterBus(this.name, this)
       : super.get(name, offset);
   }
 
@@ -83,7 +90,9 @@ export class PC extends ClockedChip {
   }
 
   override get(name: string, offset?: number): Pin | undefined {
-    return name === this.name ? this.out() : super.get(name, offset);
+    return name === this.name
+      ? new RegisterBus(this.name, this)
+      : super.get(name, offset);
   }
 
   override reset() {

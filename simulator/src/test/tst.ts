@@ -15,10 +15,10 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
-  protected setStatus?: (status: string) => void;
+  protected doEcho?: (status: string) => void;
 
-  constructor(setStatus?: (status: string) => void) {
-    this.setStatus = setStatus;
+  constructor(doEcho?: (status: string) => void) {
+    this.doEcho = doEcho;
   }
 
   setFileSystem(fs: FileSystem): this {
@@ -27,11 +27,11 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   echo(_content: string) {
-    this.setStatus?.(_content);
+    this.doEcho?.(_content);
     return;
   }
   clearEcho() {
-    this.setStatus?.("");
+    this.doEcho?.("");
     return;
   }
 

@@ -8,7 +8,7 @@ Tst <: Base {
   TstStatement = TstCommand
 
   TstCommand = TstOperation Separator
-  Separator = (Semi | Bang | ",")
+  Separator = (Semi | Bang | Comma)
 
   TstOperation =
     | TstFileOperation

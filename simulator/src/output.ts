@@ -74,7 +74,7 @@ export class Output {
     if (this.fmt === "D") {
       return this.padRight(value);
     } else {
-      return this.padCenter(value.slice(value.length - this.len));
+      return this.padLeft(value.slice(value.length - this.len));
     }
   }
 

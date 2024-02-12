@@ -30,7 +30,7 @@ export function diff(as: string[], bs: string[]): Diff[] {
   for (let col = 0; col < q; col++) {
     const a = as[col] ?? "";
     const b = bs[col] ?? "";
-    if (a.trim() !== b.trim() && !a.match(/\*+/)) {
+    if (a !== b && !a.match(/\*+/)) {
       diffs.push({ a, b, col });
     }
   }

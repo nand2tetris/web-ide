@@ -70,11 +70,17 @@ export const FormattedInput = (props: {
     <input
       id="util_setBin"
       type="text"
-      value={selected ? rawValue : props.value ? props.format(props.value) : ""}
+      value={
+        selected
+          ? rawValue
+          : props.value !== undefined
+          ? props.format(props.value)
+          : ""
+      }
       onChange={onChange}
       onFocus={() => {
         setSelected(true);
-        setRawValue(props.value ? props.format(props.value) : "");
+        setRawValue(props.value !== undefined ? props.format(props.value) : "");
       }}
       onBlur={() => setSelected(false)}
     />

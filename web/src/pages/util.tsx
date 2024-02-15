@@ -27,7 +27,7 @@ function validUns(value: string) {
 }
 
 function validHex(value: string) {
-  return /^[0-9a-fA-F]+$/.test(value) && value.length <= 4;
+  return /^0x[0-9a-fA-F]+$/.test(value) && value.length <= 6;
 }
 
 function validAsm(value: string) {

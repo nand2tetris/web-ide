@@ -89,6 +89,11 @@ export const Chip = () => {
     });
   };
 
+  useEffect(() => {
+    compile.current({ tst, cmp });
+    actions.reset();
+  }, [tst, cmp]);
+
   const runner = useRef<Timer>();
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {

@@ -129,8 +129,6 @@ export function makeCpuStore(
     },
 
     resetRAM() {
-      // test.cpu.RAM.set(0, 3);
-      // test.cpu.RAM.set(1, 2);
       test.cpu.RAM.loadBytes([]);
       dispatch.current({ action: "update" });
       setStatus("Reset RAM");
@@ -140,16 +138,11 @@ export function makeCpuStore(
       dispatch.current({ action: "update" });
     },
 
-    resetCPU() {
+    reset() {
       test.reset();
       dispatch.current({ action: "setTest", payload: {} });
       dispatch.current({ action: "update" });
       setStatus("Reset CPU");
-    },
-
-    reset() {
-      this.resetCPU();
-      setStatus("Reset CPU & RAM");
     },
 
     compileTest(file: string, cmp?: string) {

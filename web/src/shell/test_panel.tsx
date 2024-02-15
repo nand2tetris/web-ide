@@ -25,16 +25,16 @@ export const TestPanel = ({
   cmp: [cmp, setCmp],
   out: [out],
   disabled = false,
-  onLoadTest = undefined,
-  onSpeedChange = undefined,
+  onSpeedChange,
+  compileTest,
 }: {
   runner: RefObject<Timer | undefined>;
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
   disabled?: boolean;
-  onLoadTest?: (tst: string, cmp?: string) => void;
   onSpeedChange?: (speed: number) => void;
+  compileTest?: (tst: string, cmp: string) => void;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
@@ -61,8 +61,8 @@ export const TestPanel = ({
       } catch (e) {
         // There doesn't have to be a compare file
       }
-      onLoadTest?.(tst, cmp);
-      // await compile.current({ tst });
+      setTst?.(tst);
+      setCmp?.(cmp ?? "");
     } catch (e) {
       console.error(e);
       setStatus(`Failed to load test`);
@@ -158,7 +158,6 @@ export const TestPanel = ({
             onChange={setCmp}
             grammar={CMP.parser}
             language={"cmp"}
-            disabled={disabled}
             lineNumberTransform={(_) => ""}
           />
         </div>

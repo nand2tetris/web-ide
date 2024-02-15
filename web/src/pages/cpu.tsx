@@ -47,6 +47,11 @@ export const CPU = () => {
     );
   }, [state]);
 
+  useEffect(() => {
+    actions.compileTest(tst, cmp);
+    actions.reset();
+  }, [tst, cmp]);
+
   const toggleDisplayEnabled = () => {
     setDisplayEnabled(!displayEnabled);
   };
@@ -102,10 +107,6 @@ export const CPU = () => {
   const onUpload = (fileName: string) => {
     setFileName(fileName);
     actions.reset();
-  };
-
-  const onLoadTest = (tst: string, cmp?: string) => {
-    actions.compileTest(tst, cmp);
   };
 
   const rerenderScreen = () => {
@@ -180,7 +181,6 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
-          onLoadTest={onLoadTest}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);
           }}

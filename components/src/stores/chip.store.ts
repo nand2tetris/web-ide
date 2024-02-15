@@ -175,6 +175,7 @@ export function makeChipStore(
   let test = new ChipTest();
   let usingBuiltin = false;
   let builtinOnly = false;
+  let invalid = false;
 
   const reducers = {
     setFiles(
@@ -310,7 +311,8 @@ export function makeChipStore(
       hdl?: string;
       tst?: string;
       cmp: string;
-    }) {
+      }) {
+      invalid = false;
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       try {
         if (hdl) {
@@ -321,6 +323,10 @@ export function makeChipStore(
         }
       } catch (e) {
         setStatus(display(e));
+      }
+      dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
+      if (!invalid) {
+        setStatus(`HDL code: No syntax errors`);
       }
     },
 
@@ -334,13 +340,14 @@ export function makeChipStore(
             Err(maybeChip).message
           }`
         );
+        invalid = true;
         dispatch.current({
           action: "updateChip",
           payload: { invalid: true, error },
         });
         return;
       }
-      setStatus(`HDL code: No syntax errors`);
+      invalid ||= false;
       this.replaceChip(Ok(maybeChip));
     },
 
@@ -452,13 +459,15 @@ export function makeChipStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus(`Failed to parse test`);
+        setStatus(`Failed to parse test ${Err(tst).message}`);
+        invalid = true;
         return false;
       }
 
       test = ChipTest.from(Ok(tst)).with(chip).reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
+      invalid ||= false;
       return true;
     },
 

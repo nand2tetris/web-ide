@@ -85,7 +85,11 @@ export const TestPanel = ({
           </div>
           <div className="flex-1">
             {runner.current && (
-              <Runbar runner={runner.current} onSpeedChange={onSpeedChange} />
+              <Runbar
+                runner={runner.current}
+                disabled={disabled}
+                onSpeedChange={onSpeedChange}
+              />
             )}
           </div>
           <div>
@@ -126,7 +130,6 @@ export const TestPanel = ({
             grammar={TST.parser}
             language={"tst"}
             highlight={tstHighlight}
-            disabled={disabled}
           />
         </div>
         <div

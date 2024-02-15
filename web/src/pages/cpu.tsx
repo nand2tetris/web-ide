@@ -27,10 +27,6 @@ export const CPU = () => {
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
-    actions.initialize();
-  }, [actions]);
-
-  useEffect(() => {
     if (toolStates.cpuState.rom) {
       state.sim.ROM.loadBytes(toolStates.cpuState.rom);
       if (toolStates.cpuState.name) {
@@ -181,6 +177,7 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          disabled={!state.test.valid}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);
           }}

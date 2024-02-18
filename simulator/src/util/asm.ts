@@ -76,7 +76,7 @@ function cop(asm: string): number {
   const { assignExists, jumpExists } = firstPass?.groups ?? {};
 
   const parts = asm.match(
-    /((?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?)/
+    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
   );
   let { assign, jump } = parts?.groups ?? {};
   const { operation } = parts?.groups ?? {};
@@ -84,11 +84,12 @@ function cop(asm: string): number {
   assign = assign ?? (assignExists ? undefined : "");
   jump = jump ?? (jumpExists ? undefined : "");
   if (
-    parts?.[1] != asm || // match is not exhaustive
+    parts?.[0] != asm || // match is not exhaustive
     !isAssignAsm(assign) ||
     !isJumpAsm(jump) ||
     (!isCommandAsm(operation) && !isCommandAsm(operation.replace("M", "A")))
   ) {
+    // TODO: This should return Result<> instead of throw
     throw new Error("Invalid c instruction");
   }
 

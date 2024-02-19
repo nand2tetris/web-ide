@@ -6,7 +6,7 @@ import {
   int10,
   int16,
   int2,
-  uns,
+  unsigned,
 } from "@nand2tetris/simulator/util/twos.js";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
 
@@ -22,7 +22,7 @@ function validDec(value: string) {
   );
 }
 
-function validUns(value: string) {
+function validUnsigned(value: string) {
   return /^\d+$/.test(value) && Number(value) <= 65535;
 }
 
@@ -127,17 +127,17 @@ export const Util = () => {
             />
           </dd>
           <dt>
-            <label htmlFor="util_setUns">Unsigned</label>
+            <label htmlFor="util_setUnsigned">Unsigned</label>
           </dt>
           <dd>
             <FormattedInput
-              id="util_setUns"
+              id="util_setUnsigned"
               value={value}
               setValue={setValue}
               setError={setError}
               parse={int10}
-              format={uns}
-              isValid={validUns}
+              format={unsigned}
+              isValid={validUnsigned}
             />
           </dd>
           <dt>

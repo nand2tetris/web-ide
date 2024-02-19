@@ -115,7 +115,7 @@ export function dec(i: number): string {
   return `${i}`;
 }
 
-export function uns(i: number): string {
+export function unsigned(i: number): string {
   i = i & 0xffff;
   return `${i}`;
 }

@@ -4,7 +4,7 @@ A Javascript reimplementation of the software suite described in www.nand2tetris
 
 Presently the implementation focuses on the Hardware Simulator (projects 1, 2, 3, 5). The CPU and the VM Emulators will be next. The goal is to allow students complete the projects using modern, web-based tools, without having to download code to their computers.
 
-Users can work with the tools via a web IDE, or via a VS Code extension. Both are decsribed below.
+Users can work with the tools via a web IDE, or via a VS Code extension. Both are described below.
 
 ## User Guide
 

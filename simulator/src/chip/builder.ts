@@ -93,6 +93,13 @@ export async function build(
 interface InternalPin {
   isDefined: boolean;
   firstUse: Span;
+  width?: number;
+}
+
+interface Wire {
+  chip: Chip;
+  lhs: PinParts;
+  rhs: PinParts;
 }
 
 function isConstant(pinName: string): boolean {
@@ -102,6 +109,20 @@ function isConstant(pinName: string): boolean {
     pinName === "0" ||
     pinName === "1"
   );
+}
+
+function getSubBusWidth(pin: PinParts): number | undefined {
+  if (pin.start != undefined && pin.end != undefined) {
+    return pin.end - pin.start + 1;
+  }
+  return undefined;
+}
+
+function display(pin: PinParts): string {
+  if (pin.start != undefined && pin.end != undefined) {
+    return `${pin.pin}[${pin.start}..${pin.end}]`;
+  }
+  return pin.pin;
 }
 
 function createWire(lhs: PinParts, rhs: PinParts): Connection {
@@ -172,6 +193,7 @@ class ChipBuilder {
   private internalPins: Map<string, InternalPin> = new Map();
   private inPins: Map<string, Set<number>> = new Map();
   private outPins: Map<string, Set<number>> = new Map();
+  private wires: Wire[] = [];
 
   constructor(parts: HdlParse, fs?: FileSystem, name?: string) {
     this.parts = parts;
@@ -229,7 +251,12 @@ class ChipBuilder {
         return result;
       }
     }
-    const result = this.validateInternalPins();
+    let result = this.validateInternalPins();
+    if (isErr(result)) {
+      return result;
+    }
+    // We need to check this at the end because during wiring we might not know the width of some internal pins
+    result = this.validateWireWidths();
     if (isErr(result)) {
       return result;
     }
@@ -266,7 +293,7 @@ class ChipBuilder {
         return result;
       }
     } else if (partChip.isOutPin(lhs.pin)) {
-      const result = this.validateOutputWire(rhs);
+      const result = this.validateOutputWire(partChip, lhs, rhs);
       if (isErr(result)) {
         return result;
       }
@@ -275,6 +302,9 @@ class ChipBuilder {
         message: `Undefined input/output pin name: ${lhs.pin}`,
         span: lhs.span,
       });
+    }
+    if (!isConstant(rhs.pin)) {
+      this.wires.push({ chip: partChip, lhs, rhs });
     }
     return Ok();
   }
@@ -316,7 +346,11 @@ class ChipBuilder {
     return Ok();
   }
 
-  private validateOutputWire(rhs: PinParts): Result<void, CompilationError> {
+  private validateOutputWire(
+    partChip: Chip,
+    lhs: PinParts,
+    rhs: PinParts
+  ): Result<void, CompilationError> {
     let result = this.validateWriteTarget(rhs);
     if (isErr(result)) {
       return result;
@@ -337,10 +371,12 @@ class ChipBuilder {
       }
       // track internal pin creation to detect undefined pins
       const pinData = this.internalPins.get(rhs.pin);
+      const width = getSubBusWidth(lhs) ?? partChip.get(lhs.pin)?.width;
       if (pinData == undefined) {
         this.internalPins.set(rhs.pin, {
           isDefined: true,
           firstUse: rhs.span,
+          width,
         });
       } else {
         if (pinData.isDefined) {
@@ -350,6 +386,7 @@ class ChipBuilder {
           });
         }
         pinData.isDefined = true;
+        pinData.width = width;
       }
     }
     return Ok();
@@ -397,6 +434,26 @@ class ChipBuilder {
               ? `The constants ${name.toLowerCase()} must be in lower-case`
               : `Undefined internal pin name: ${name}`,
           span: pinData.firstUse,
+        });
+      }
+    }
+    return Ok();
+  }
+
+  private validateWireWidths(): Result<void, CompilationError> {
+    for (const wire of this.wires) {
+      const lhsWidth =
+        getSubBusWidth(wire.lhs) ?? wire.chip.get(wire.lhs.pin)?.width;
+      const rhsWidth =
+        getSubBusWidth(wire.rhs) ??
+        this.chip.get(wire.rhs.pin)?.width ??
+        this.internalPins.get(wire.rhs.pin)?.width;
+      if (lhsWidth != rhsWidth) {
+        return Err({
+          message: `Different bus widths: ${display(
+            wire.lhs
+          )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
+          span: wire.lhs.span,
         });
       }
     }

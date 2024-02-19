@@ -275,7 +275,7 @@ export function VMInstructionRow({
   inst: VMLang.VmInstruction;
   key: number;
   highlighted: boolean;
-  }) {
+}) {
   switch (inst.op) {
     case "add":
     case "and":

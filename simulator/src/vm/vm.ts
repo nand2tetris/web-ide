@@ -141,9 +141,15 @@ export interface ParsedVmFile {
 export class Vm {
   memory = new VmMemory();
   private os = new OS(this.memory);
-  entry = "";
   functionMap: Record<string, VmFunction> = {};
   executionStack: VmFunctionInvocation[] = [];
+
+  entry = "";
+
+  entryLocalInitialized = false;
+  entryArgInitialized = false;
+  private entryNLocal = 0;
+  private entryNArg = 0;
 
   functions: VmFunction[] = [];
   program: VmOperation[] = [];
@@ -555,19 +561,37 @@ export class Vm {
     this.memory.ARG = 256;
     this.memory.LCL = 256;
     this.memory.SP = 256 + this.functionMap[this.entry].nVars;
+    this.entryNLocal = 0;
+    this.entryNArg = 0;
+    this.entryLocalInitialized = false;
+    this.entryArgInitialized = false;
     this.os.dispose();
     this.os = new OS(this.memory);
   }
 
   private validateStackOp(op: StackOperation) {
     if (op.segment == "argument" && op.offset >= this.invocation.nArgs) {
-      throw new Error("Argument offset out of bounds");
+      if (
+        this.currentFunction?.name == this.entry &&
+        this.entryArgInitialized
+      ) {
+        this.entryNArg = Math.max(op.offset + 1, this.entryNLocal);
+      } else {
+        throw new Error("Argument offset out of bounds");
+      }
     }
     if (
       op.segment == "local" &&
       op.offset >= this.functionMap[this.invocation.function]?.nVars
     ) {
-      throw new Error("Local offset out of bounds");
+      if (
+        this.currentFunction?.name == this.entry &&
+        this.entryLocalInitialized
+      ) {
+        this.entryNLocal = Math.max(op.offset + 1, this.entryNLocal);
+      } else {
+        throw new Error("Local offset out of bounds");
+      }
     }
   }
 
@@ -744,22 +768,22 @@ export class Vm {
         fn,
         args: {
           base: ARG,
-          count: invocation.nArgs,
-          values: [
-            ...this.memory.map((_, v) => v, ARG, ARG + invocation.nArgs),
-          ],
+          count: this.entryNArg,
+          values: [...this.memory.map((_, v) => v, ARG, ARG + this.entryNArg)],
         },
         locals: {
           base: LCL,
-          count: fn.nVars,
-          values: [...this.memory.map((_, v) => v, LCL, LCL + fn.nVars)],
+          count: this.entryNLocal,
+          values: [
+            ...this.memory.map((_, v) => v, LCL, LCL + this.entryNLocal),
+          ],
         },
         stack: {
           base: 256,
           count: frameEnd - stackBase,
           values: [...this.memory.map((_, v) => v, stackBase, frameEnd)],
         },
-        ["this"]: { base: THAT, count: 0, values: [] },
+        this: { base: THAT, count: 0, values: [] },
         that: { base: THIS, count: 0, values: [] },
         frame: {
           ARG,

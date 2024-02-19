@@ -311,7 +311,7 @@ export function makeChipStore(
       hdl?: string;
       tst?: string;
       cmp: string;
-      }) {
+    }) {
       invalid = false;
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       try {

@@ -16,8 +16,11 @@ import {
   useState,
 } from "react";
 import { AppContext } from "../App.context";
+import { useDialog } from "./dialog";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
+
+const WARNING_KEY = "skipTestEditWarning";
 
 export const TestPanel = ({
   runner,
@@ -51,6 +54,27 @@ export const TestPanel = ({
     [tracking]
   );
 
+  const [editMode, setEditMode] = useState(false);
+  const [skipWarning, setSkipWarning] = useState(false);
+  const [savedTst, setSavedTst] = useState("");
+  const [savedCmp, setSavedCmp] = useState("");
+  const editDialog = useDialog();
+
+  const onEdit = () => {
+    if (!localStorage.getItem(WARNING_KEY)) {
+      editDialog.open();
+    }
+    setEditMode(true);
+    setSavedTst(tst);
+    setSavedCmp(cmp);
+  };
+
+  const restore = () => {
+    setEditMode(false);
+    setTst(savedTst);
+    setCmp(savedCmp);
+  };
+
   const loadTest = useCallback(async () => {
     try {
       const path = await filePicker.select();
@@ -75,6 +99,44 @@ export const TestPanel = ({
     setDiffDisplay(generateDiffs(cmp, out));
   }, [out, cmp]);
 
+  const editWarning = (
+    <dialog open={editDialog.isOpen}>
+      <article>
+        <header>Warning</header>
+        <main>
+          <p>
+            The test script can be edited during this IDE session. In the next
+            session, the original script will be restored.
+            <br />
+          </p>
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            <input
+              type="checkbox"
+              checked={skipWarning}
+              onChange={(e) => {
+                setSkipWarning(e.target.checked);
+              }}
+            />
+            <p>Do not show this again</p>
+          </div>
+          <p>
+            <br />
+          </p>
+          <button
+            onClick={() => {
+              if (skipWarning) {
+                localStorage.setItem(WARNING_KEY, "true");
+              }
+              editDialog.close();
+            }}
+          >
+            Ok
+          </button>
+        </main>
+      </article>
+    </dialog>
+  );
+
   return (
     <Panel
       className="_test_panel"
@@ -94,8 +156,14 @@ export const TestPanel = ({
           </div>
           <div>
             <fieldset role="group">
+              {editMode ? (
+                <button onClick={restore}>Restore</button>
+              ) : (
+                <button onClick={onEdit}>Edit</button>
+              )}
               <button onClick={loadTest}>📂</button>
             </fieldset>
+            {editWarning}
           </div>
         </>
       }
@@ -129,6 +197,7 @@ export const TestPanel = ({
             onChange={setTst}
             grammar={TST.parser}
             language={"tst"}
+            disabled={!editMode}
             highlight={tstHighlight}
           />
         </div>
@@ -162,6 +231,7 @@ export const TestPanel = ({
             grammar={CMP.parser}
             language={"cmp"}
             lineNumberTransform={(_) => ""}
+            disabled={!editMode}
           />
         </div>
         <div

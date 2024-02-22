@@ -47,7 +47,7 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
 
 export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/02");
-  await resetBySuffix(fs, CHIPS, "tst");
-  await resetBySuffix(fs, CHIPS, "cmp");
+  await resetBySuffix(fs, CHIPS, ".tst");
+  await resetBySuffix(fs, CHIPS, ".cmp");
   await fs.popd();
 }

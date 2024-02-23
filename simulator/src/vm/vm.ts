@@ -442,13 +442,7 @@ export class Vm {
   }
 
   get currentFunction() {
-    const fn = this.functionMap[this.invocation.function];
-    if (fn === undefined)
-      // throw new Error(
-      //   `Executing undefined function ${this.invocation.function}`
-      // );
-      return;
-    return fn;
+    return this.functionMap[this.invocation.function];
   }
 
   get operation() {

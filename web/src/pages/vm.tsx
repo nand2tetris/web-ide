@@ -8,14 +8,7 @@ import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
 import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
-import {
-  CSSProperties,
-  ChangeEvent,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "src/App.context";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
@@ -36,9 +29,6 @@ const VM = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
-  const [selectedRAMTab, setSelectedRAMTab] = useState<"Stack" | "RAM">(
-    "Stack"
-  );
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnersAssigned] = useState(false);
@@ -151,7 +141,12 @@ const VM = () => {
           </table>
         </main>
       </Panel>
-      <Panel className="IO">
+      <Panel className="stack" header={<Trans>VM</Trans>}>
+        {state.vm.Stack.map((frame, i) => (
+          <VMStackFrame frame={frame} key={i} />
+        ))}
+      </Panel>
+      <Panel className="display" style={{ gridArea: "display" }}>
         <div>
           <label>
             <input
@@ -166,59 +161,9 @@ const VM = () => {
         <Screen memory={state.vm.Screen} />
         <Keyboard keyboard={state.vm.Keyboard} />
         {state.controls.animate ? (
-          <div role="tablist" style={{ "--tab-count": "2" } as CSSProperties}>
-            <div
-              role="tab"
-              id="mem-tab-stack"
-              aria-controls="mem-tabpanel"
-              aria-selected={selectedRAMTab === "Stack"}
-            >
-              <label>
-                <input
-                  type="radio"
-                  name="mem-tabs"
-                  aria-controls="mem-tabpanel"
-                  value="tst"
-                  checked={selectedRAMTab === "Stack"}
-                  onChange={() => setSelectedRAMTab("Stack")}
-                />
-                Stack
-              </label>
-            </div>
-            <div
-              role="tabpanel"
-              aria-labelledby="mem-tab-stack"
-              id="mem-tabpanel"
-            >
-              {state.vm.Stack.map((frame, i) => (
-                <VMStackFrame frame={frame} key={i} />
-              ))}
-            </div>
-            <div
-              role="tab"
-              id="mem-tab-ram"
-              aria-controls="mem-tabpanel"
-              aria-selected={selectedRAMTab === "RAM"}
-            >
-              <label>
-                <input
-                  type="radio"
-                  name="mem-tabs"
-                  aria-controls="mem-tabpanel"
-                  value="tst"
-                  checked={selectedRAMTab === "RAM"}
-                  onChange={() => setSelectedRAMTab("RAM")}
-                />
-                RAM
-              </label>
-            </div>
-            <div
-              role="tabpanel"
-              aria-labelledby="mem-tab-ram"
-              id="mem-tabpanel"
-            >
-              <Memory memory={state.vm.RAM} format="hex" />
-            </div>
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            <Memory memory={state.vm.RAM} format="hex" />
+            <Memory memory={state.vm.RAM} format="hex" />
           </div>
         ) : (
           <p>Hiding display for high speeds</p>

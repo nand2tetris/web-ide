@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
@@ -7,6 +7,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
 import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
+import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "src/App.context";
@@ -14,9 +15,31 @@ import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
 
+const ERROR_MESSAGES: Record<ERRNO, string> = {
+  [ERRNO.SYS_WAIT_DURATION_NOT_POSITIVE]: t`Duration must be positive (Sys.wait)`,
+  [ERRNO.ARRAY_SIZE_NOT_POSITIVE]: t`Array size must be positive (Array.new)`,
+  [ERRNO.DIVIDE_BY_ZERO]: t`Division by zero (Math.divide)`,
+  [ERRNO.SQRT_NEG]: t`Cannot compute square root of a negative number (Math.sqrt)`,
+  [ERRNO.ALLOC_SIZE_NOT_POSITIVE]: t`Allocated memory size must be positive (Memory.alloc)`,
+  [ERRNO.HEAP_OVERFLOW]: t`Heap overflow (Memory.alloc)`,
+  [ERRNO.ILLEGAL_PIXEL_COORD]: t`Illegal pixel coordinates (Screen.drawPixel)`,
+  [ERRNO.ILLEGAL_LINE_COORD]: t`Illegal line coordinates (Screen.drawLine)`,
+  [ERRNO.ILLEGAL_RECT_COORD]: t`Illegal rectangle coordinates (Screen.drawRectangle)`,
+  [ERRNO.ILLEGAL_CENTER_COORD]: t`Illegal center coordinates (Screen.drawCircle)`,
+  [ERRNO.ILLEGAL_RADIUS]: t`Illegal radius (Screen.drawCircle)`,
+  [ERRNO.STRING_LENGTH_NEG]: t`Maximum length must be non-negative (String.new)`,
+  [ERRNO.GET_CHAR_INDEX_OUT_OF_BOUNDS]: t`String index out of bounds (String.charAt)`,
+  [ERRNO.SET_CHAR_INDEX_OUT_OF_BOUNDS]: t`String index out of bounds (String.setCharAt)`,
+  [ERRNO.STRING_FULL]: t`String is full (String.appendChar)`,
+  [ERRNO.STRING_EMPTY]: t`String is empty (String.eraseLastChar)`,
+  [ERRNO.STRING_INSUFFICIENT_CAPACITY]: t`Insufficient string capacity (String.setInt)`,
+  [ERRNO.ILLEGAL_CURSOR_LOCATION]: t`Illegal cursor location (Output.moveCursor)`,
+};
+
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
   const { toolStates } = useContext(AppContext);
+  const { setStatus } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -29,6 +52,21 @@ const VM = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+
+  useEffect(() => {
+    console.log("use effect exit code", state.controls.exitCode);
+    if (state.controls.exitCode !== undefined) {
+      setStatus(
+        state.controls.exitCode == 0
+          ? "Program halted"
+          : `Program exited with error code ${state.controls.exitCode}${
+              isSysError(state.controls.exitCode)
+                ? `: ${ERROR_MESSAGES[state.controls.exitCode]}`
+                : ""
+            }`
+      );
+    }
+  }, [state.controls.exitCode]);
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnersAssigned] = useState(false);
@@ -63,7 +101,6 @@ const VM = () => {
     fileUploadRef.current?.click();
   };
 
-  const { setStatus } = useContext(BaseContext);
   const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files?.length) {
       setStatus("No file selected");

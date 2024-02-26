@@ -1,5 +1,6 @@
 import { SCREEN_COLS, SCREEN_ROWS, SCREEN_SIZE } from "../../cpu/memory.js";
 import { VmMemory } from "../memory.js";
+import { ERRNO } from "./errors.js";
 import { OS } from "./os.js";
 
 const BLANK_SCREEN = new Array(SCREEN_SIZE).fill(0);
@@ -26,7 +27,7 @@ export class ScreenLib {
 
   drawPixel(col: number, row: number) {
     if (this.outOfBounds(col, row)) {
-      this.os.sys.error(7);
+      this.os.sys.error(ERRNO.ILLEGAL_PIXEL_COORD);
       return;
     }
     const address = row * 32 + Math.floor(col / 16);
@@ -41,7 +42,7 @@ export class ScreenLib {
 
   drawLine(x1: number, y1: number, x2: number, y2: number) {
     if (this.outOfBounds(x1, y1) || this.outOfBounds(x2, y2)) {
-      this.os.sys.error(8);
+      this.os.sys.error(ERRNO.ILLEGAL_LINE_COORD);
       return;
     }
     if (x1 == x2) {
@@ -90,7 +91,7 @@ export class ScreenLib {
 
   drawRect(x1: number, y1: number, x2: number, y2: number) {
     if (this.outOfBounds(x1, y1) || this.outOfBounds(x2, y2)) {
-      this.os.sys.error(9);
+      this.os.sys.error(ERRNO.ILLEGAL_RECT_COORD);
       return;
     }
     for (let x = x1; x <= x2; x++) {
@@ -102,11 +103,11 @@ export class ScreenLib {
 
   drawCircle(x: number, y: number, r: number) {
     if (this.outOfBounds(x, y)) {
-      this.os.sys.error(12);
+      this.os.sys.error(ERRNO.ILLEGAL_CENTER_COORD);
       return;
     }
     if (r > MAX_R) {
-      this.os.sys.error(13);
+      this.os.sys.error(ERRNO.ILLEGAL_RADIUS);
       return;
     }
     for (let dy = -r; dy <= r; dy++) {

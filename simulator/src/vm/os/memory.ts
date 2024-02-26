@@ -1,4 +1,5 @@
 import { VmMemory } from "../memory.js";
+import { ERRNO } from "./errors.js";
 import { OS } from "./os.js";
 
 const HEAP_BASE = 2048;
@@ -22,7 +23,7 @@ export class MemoryLib {
 
   alloc(size: number): number {
     if (size <= 0) {
-      this.os.sys.error(5);
+      this.os.sys.error(ERRNO.ARRAY_SIZE_NOT_POSITIVE);
       return 0;
     }
     for (let i = 0; i < this.freeSegments.length; i++) {
@@ -38,7 +39,7 @@ export class MemoryLib {
         return address + 1;
       }
     }
-    this.os.sys.error(6);
+    this.os.sys.error(ERRNO.HEAP_OVERFLOW);
     return 0;
   }
 

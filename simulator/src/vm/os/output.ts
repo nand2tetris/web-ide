@@ -1,3 +1,4 @@
+import { ERRNO } from "./errors.js";
 import { FONT } from "./font.js";
 import { OS } from "./os.js";
 import { intToCharArray } from "./string.js";
@@ -38,7 +39,7 @@ export class OutputLib {
 
   moveCursor(i: number, j: number) {
     if (i < 0 || i > MAX_HEIGHT || j < 0 || j > MAX_WIDTH) {
-      this.os.sys.error(20);
+      this.os.sys.error(ERRNO.ILLEGAL_CURSOR_LOCATION);
       return;
     }
     this.row = i;

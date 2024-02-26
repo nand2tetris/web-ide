@@ -1,4 +1,5 @@
 import { VmMemory } from "../memory.js";
+import { ERRNO } from "./errors.js";
 import { OS } from "./os.js";
 
 export const NEW_LINE = 128;
@@ -35,7 +36,7 @@ export class StringLib {
 
   new(size: number) {
     if (size <= 0) {
-      this.os.sys.error(14);
+      this.os.sys.error(ERRNO.STRING_LENGTH_NEG);
     }
     const pointer = this.os.memory.alloc(size + 2); // +2 to save length, maxLength fields
     if (this.os.sys.halted) {
@@ -66,7 +67,7 @@ export class StringLib {
 
   charAt(pointer: number, index: number) {
     if (index < 0 || index >= this.length(pointer)) {
-      this.os.sys.error(15);
+      this.os.sys.error(ERRNO.GET_CHAR_INDEX_OUT_OF_BOUNDS);
       return 0;
     }
     return this.memory.get(pointer + index + 2); // +2 to skip the length fields
@@ -74,7 +75,7 @@ export class StringLib {
 
   setCharAt(pointer: number, index: number, value: number) {
     if (index < 0 || index >= this.length(pointer)) {
-      this.os.sys.error(16);
+      this.os.sys.error(ERRNO.SET_CHAR_INDEX_OUT_OF_BOUNDS);
       return;
     }
     this.memory.set(pointer + index + 2, value);
@@ -89,7 +90,7 @@ export class StringLib {
   appendChar(pointer: number, value: number) {
     const length = this.length(pointer);
     if (length == this.maxLength(pointer)) {
-      this.os.sys.error(17);
+      this.os.sys.error(ERRNO.STRING_FULL);
       return 0;
     }
     this.setLength(pointer, length + 1);
@@ -100,7 +101,7 @@ export class StringLib {
   eraseLastChar(pointer: number) {
     const length = this.length(pointer);
     if (length == 0) {
-      this.os.sys.error(18);
+      this.os.sys.error(ERRNO.STRING_EMPTY);
       return;
     }
     this.setLength(pointer, length - 1);
@@ -121,7 +122,7 @@ export class StringLib {
   setInt(pointer: number, value: number) {
     const chars = intToCharArray(value);
     if (chars.length > this.maxLength(pointer)) {
-      this.os.sys.error(19);
+      this.os.sys.error(ERRNO.STRING_INSUFFICIENT_CAPACITY);
       return;
     }
     this.setLength(pointer, 0);

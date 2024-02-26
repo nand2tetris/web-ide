@@ -1,4 +1,5 @@
 import { VmMemory } from "./memory.js";
+import { ERRNO } from "./os/errors.js";
 import { OS } from "./os/os.js";
 import { BACKSPACE, DOUBLE_QUOTES, NEW_LINE } from "./os/string.js";
 
@@ -29,7 +30,7 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     func: (memory, os) => {
       const [a, b] = getArgs(memory, 2);
       if (b == 0) {
-        os.sys.error(3);
+        os.sys.error(ERRNO.DIVIDE_BY_ZERO);
         return 0;
       }
       return Math.floor(a / b) & 0xffff;
@@ -54,7 +55,7 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     func: (memory, os) => {
       const [x] = getArgs(memory, 1);
       if (x < 0) {
-        os.sys.error(4);
+        os.sys.error(ERRNO.SQRT_NEG);
         return 0;
       }
       return Math.floor(Math.sqrt(x)) & 0xffff;
@@ -149,7 +150,7 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     func: (memory, os) => {
       const [size] = getArgs(memory, 1);
       if (size <= 0) {
-        os.sys.error(2);
+        os.sys.error(ERRNO.ARRAY_SIZE_NOT_POSITIVE);
         return 0;
       }
       return os.memory.alloc(size);

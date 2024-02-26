@@ -1,6 +1,7 @@
 import { ERRNO } from "./errors.js";
 import { FONT } from "./font.js";
 import { OS } from "./os.js";
+import { BLACK, Color, WHITE } from "./screen.js";
 import { intToCharArray } from "./string.js";
 
 const MAX_WIDTH = 64;
@@ -17,7 +18,7 @@ export class OutputLib {
     this.os = os;
   }
 
-  private setColor(color: boolean) {
+  private setColor(color: Color) {
     this.lastColor = this.os.screen.color;
     this.os.screen.color = color;
   }
@@ -27,7 +28,7 @@ export class OutputLib {
   }
 
   clearChar() {
-    this.setColor(false);
+    this.setColor(WHITE);
     this.os.screen.drawRect(
       this.col * 8,
       this.row * 11,
@@ -54,7 +55,7 @@ export class OutputLib {
 
   drawCursor() {
     this.clearChar();
-    this.setColor(true);
+    this.setColor(BLACK);
     this.os.screen.drawRect(
       this.col * 8 + 2,
       this.row * 11 + 2,
@@ -68,7 +69,7 @@ export class OutputLib {
     const bitmap = FONT[code];
     if (bitmap) {
       this.clearChar();
-      this.setColor(true);
+      this.setColor(BLACK);
       for (let row = 0; row < bitmap.length; row++) {
         for (let col = 0; col < bitmap[row].length; col++) {
           if (bitmap[row][col]) {

@@ -9,7 +9,7 @@ export type Format = typeof FORMATS[number];
 
 export const SCREEN_OFFSET = 0x4000;
 export const SCREEN_ROWS = 256;
-export const SCREEN_COLS = 32;
+export const SCREEN_COLS = 32; // These are 16-bit columns
 export const SCREEN_SIZE = SCREEN_ROWS * SCREEN_COLS;
 export const KEYBOARD_OFFSET = 0x6000;
 

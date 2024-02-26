@@ -6,11 +6,15 @@ import { OS } from "./os.js";
 const BLANK_SCREEN = new Array(SCREEN_SIZE).fill(0);
 const MAX_R = 181;
 
+export type Color = boolean;
+export const BLACK: Color = true;
+export const WHITE: Color = false;
+
 export class ScreenLib {
   private memory: VmMemory;
   private os: OS;
 
-  color = true;
+  color: Color = BLACK;
 
   constructor(memory: VmMemory, os: OS) {
     this.memory = memory;

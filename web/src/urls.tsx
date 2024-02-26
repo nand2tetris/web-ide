@@ -41,11 +41,11 @@ const URLs: Record<string, URL> = {
     tool: "asm",
     target: <ASM />,
   },
-  vm: {
-    href: "/vm",
-    tool: `vm`,
-    target: <VM />,
-  },
+  // vm: {
+  //   href: "/vm",
+  //   tool: `vm`,
+  //   target: <VM />,
+  // },
   bitmap: {
     href: "/bitmap",
     tool: "bitmap",

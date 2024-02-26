@@ -16,8 +16,11 @@ import {
   useState,
 } from "react";
 import { AppContext } from "../App.context";
+import { useDialog } from "./dialog";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
+
+const WARNING_KEY = "skipTestEditWarning";
 
 export const TestPanel = ({
   runner,
@@ -25,16 +28,16 @@ export const TestPanel = ({
   cmp: [cmp, setCmp],
   out: [out],
   disabled = false,
-  onLoadTest = undefined,
-  onSpeedChange = undefined,
+  onSpeedChange,
+  compileTest,
 }: {
   runner: RefObject<Timer | undefined>;
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
   disabled?: boolean;
-  onLoadTest?: (tst: string, cmp?: string) => void;
   onSpeedChange?: (speed: number) => void;
+  compileTest?: (tst: string, cmp: string) => void;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
@@ -51,6 +54,27 @@ export const TestPanel = ({
     [tracking]
   );
 
+  const [editMode, setEditMode] = useState(false);
+  const [skipWarning, setSkipWarning] = useState(false);
+  const [savedTst, setSavedTst] = useState("");
+  const [savedCmp, setSavedCmp] = useState("");
+  const editDialog = useDialog();
+
+  const onEdit = () => {
+    if (!localStorage.getItem(WARNING_KEY)) {
+      editDialog.open();
+    }
+    setEditMode(true);
+    setSavedTst(tst);
+    setSavedCmp(cmp);
+  };
+
+  const restore = () => {
+    setEditMode(false);
+    setTst(savedTst);
+    setCmp(savedCmp);
+  };
+
   const loadTest = useCallback(async () => {
     try {
       const path = await filePicker.select();
@@ -62,8 +86,8 @@ export const TestPanel = ({
       } catch (e) {
         // There doesn't have to be a compare file
       }
-      onLoadTest?.(tst, cmp);
-      // await compile.current({ tst });
+      setTst?.(tst);
+      setCmp?.(cmp ?? "");
     } catch (e) {
       console.error(e);
       setStatus(`Failed to load test`);
@@ -76,6 +100,44 @@ export const TestPanel = ({
     setDiffDisplay(generateDiffs(cmp, out));
   }, [out, cmp]);
 
+  const editWarning = (
+    <dialog open={editDialog.isOpen}>
+      <article>
+        <header>Warning</header>
+        <main>
+          <p>
+            The test script can be edited during this IDE session. In the next
+            session, the original script will be restored.
+            <br />
+          </p>
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            <input
+              type="checkbox"
+              checked={skipWarning}
+              onChange={(e) => {
+                setSkipWarning(e.target.checked);
+              }}
+            />
+            <p>Do not show this again</p>
+          </div>
+          <p>
+            <br />
+          </p>
+          <button
+            onClick={() => {
+              if (skipWarning) {
+                localStorage.setItem(WARNING_KEY, "true");
+              }
+              editDialog.close();
+            }}
+          >
+            Ok
+          </button>
+        </main>
+      </article>
+    </dialog>
+  );
+
   return (
     <Panel
       className="_test_panel"
@@ -86,13 +148,23 @@ export const TestPanel = ({
           </div>
           <div className="flex-1">
             {runner.current && (
-              <Runbar runner={runner.current} onSpeedChange={onSpeedChange} />
+              <Runbar
+                runner={runner.current}
+                disabled={disabled}
+                onSpeedChange={onSpeedChange}
+              />
             )}
           </div>
           <div>
             <fieldset role="group">
+              {editMode ? (
+                <button onClick={restore}>Restore</button>
+              ) : (
+                <button onClick={onEdit}>Edit</button>
+              )}
               <button onClick={loadTest}>📂</button>
             </fieldset>
+            {editWarning}
           </div>
         </>
       }
@@ -126,8 +198,8 @@ export const TestPanel = ({
             onChange={setTst}
             grammar={TST.parser}
             language={"tst"}
+            disabled={!editMode}
             highlight={tstHighlight}
-            disabled={disabled}
           />
         </div>
         <div
@@ -159,8 +231,8 @@ export const TestPanel = ({
             onChange={setCmp}
             grammar={CMP.parser}
             language={"cmp"}
-            disabled={disabled}
             lineNumberTransform={(_) => ""}
+            disabled={!editMode}
           />
         </div>
         <div

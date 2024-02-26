@@ -27,10 +27,6 @@ export const CPU = () => {
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
-    actions.initialize();
-  }, [actions]);
-
-  useEffect(() => {
     if (toolStates.cpuState.rom) {
       state.sim.ROM.loadBytes(toolStates.cpuState.rom);
       if (toolStates.cpuState.name) {
@@ -46,6 +42,11 @@ export const CPU = () => {
       Array.from(state.sim.ROM.map((i, v) => v))
     );
   }, [state]);
+
+  useEffect(() => {
+    actions.compileTest(tst, cmp);
+    actions.reset();
+  }, [tst, cmp]);
 
   const toggleDisplayEnabled = () => {
     setDisplayEnabled(!displayEnabled);
@@ -102,10 +103,6 @@ export const CPU = () => {
   const onUpload = (fileName: string) => {
     setFileName(fileName);
     actions.reset();
-  };
-
-  const onLoadTest = (tst: string, cmp?: string) => {
-    actions.compileTest(tst, cmp);
   };
 
   const rerenderScreen = () => {
@@ -180,7 +177,7 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
-          onLoadTest={onLoadTest}
+          disabled={!state.test.valid}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);
           }}

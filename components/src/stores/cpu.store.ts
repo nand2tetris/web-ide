@@ -1,5 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
@@ -37,6 +37,7 @@ export interface CPUTestSim {
   cmp: string;
   out: string;
   highlight: Span | undefined;
+  valid: boolean;
 }
 
 export interface CpuPageState {
@@ -77,11 +78,13 @@ export function makeCpuStore(
 ) {
   let test = new CPUTest(new ROM(HACK));
   let animate = true;
+  let valid = true;
 
   const reducers = {
     update(state: CpuPageState) {
       state.sim = reduceCPUTest(test, dispatch);
       state.test.highlight = test.currentStep?.span;
+      state.test.valid = valid;
     },
 
     setTest(state: CpuPageState, { tst, cmp }: { tst?: string; cmp?: string }) {
@@ -129,8 +132,6 @@ export function makeCpuStore(
     },
 
     resetRAM() {
-      // test.cpu.RAM.set(0, 3);
-      // test.cpu.RAM.set(1, 2);
       test.cpu.RAM.loadBytes([]);
       dispatch.current({ action: "update" });
       setStatus("Reset RAM");
@@ -140,16 +141,10 @@ export function makeCpuStore(
       dispatch.current({ action: "update" });
     },
 
-    resetCPU() {
+    reset() {
       test.reset();
       dispatch.current({ action: "setTest", payload: {} });
       dispatch.current({ action: "update" });
-      setStatus("Reset CPU");
-    },
-
-    reset() {
-      this.resetCPU();
-      setStatus("Reset CPU & RAM");
     },
 
     compileTest(file: string, cmp?: string) {
@@ -157,18 +152,17 @@ export function makeCpuStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus(`Failed to parse test`);
+        setStatus(`Failed to parse test - ${Err(tst).message}`);
+        valid = false;
+        dispatch.current({ action: "update" });
         return false;
       }
+      valid = true;
       setStatus(`Parsed tst`);
 
       test = CPUTest.from(Ok(tst), test.cpu.ROM);
       dispatch.current({ action: "update" });
       return true;
-    },
-
-    initialize() {
-      this.compileTest(makeTst());
     },
   };
 
@@ -176,9 +170,10 @@ export function makeCpuStore(
     sim: reduceCPUTest(test, dispatch),
     test: {
       highlight: test.currentStep?.span,
-      tst: "",
+      tst: makeTst(),
       cmp: "",
       out: "",
+      valid: true,
     },
   };
 

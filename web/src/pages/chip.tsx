@@ -89,6 +89,11 @@ export const Chip = () => {
     });
   };
 
+  useEffect(() => {
+    compile.current({ tst, cmp });
+    actions.reset();
+  }, [tst, cmp]);
+
   const runner = useRef<Timer>();
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
@@ -340,7 +345,7 @@ export const Chip = () => {
       }
     >
       {state.sim.invalid ? (
-        <Trans>Syntax errors in the HDL code</Trans>
+        <Trans>Syntax errors in the HDL code or test</Trans>
       ) : (
         <>
           <PinContext.Provider value={pinResetDispatcher}>
@@ -364,13 +369,10 @@ export const Chip = () => {
   const testPanel = (
     <TestPanel
       runner={runner}
+      disabled={state.sim.invalid}
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}
-      onLoadTest={(tst, cmp) => {
-        compile.current({ tst, cmp });
-        actions.reset();
-      }}
     />
   );
 

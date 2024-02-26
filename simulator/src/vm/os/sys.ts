@@ -1,3 +1,4 @@
+import { ERRNO } from "./errors.js";
 import { OS } from "./os";
 
 export class SysLib {
@@ -8,6 +9,9 @@ export class SysLib {
   private _returnValue = 0;
   private _halted = false;
   private _exitCode = 0;
+
+  private cancelWait = false;
+  private animationFrameId: number | undefined;
 
   constructor(os: OS) {
     this.os = os;
@@ -46,14 +50,28 @@ export class SysLib {
 
   wait(ms: number) {
     if (ms <= 0) {
-      this.error(1);
+      this.error(ERRNO.SYS_WAIT_DURATION_NOT_POSITIVE);
       return;
     }
     this.block();
 
-    setTimeout(() => {
-      this.release();
-    }, ms);
+    let waited = 0;
+
+    const loop = (delta: number) => {
+      if (this.cancelWait) {
+        return;
+      }
+      
+      waited += delta;
+
+      if (waited >= ms) {
+        this.release();
+      } else {
+        this.animationFrameId = requestAnimationFrame(loop);
+      }
+    };
+
+    loop(0);
   }
 
   halt() {
@@ -65,5 +83,13 @@ export class SysLib {
     this.os.output.printJsString(`ERR${code}`);
     this._halted = true;
     this._exitCode = code;
+  }
+
+  dispose() {
+    this.cancelWait = true;
+
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+    }
   }
 }

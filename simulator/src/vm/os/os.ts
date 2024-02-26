@@ -27,5 +27,6 @@ export class OS {
 
   dispose() {
     this.keyboard.dispose();
+    this.sys.dispose();
   }
 }

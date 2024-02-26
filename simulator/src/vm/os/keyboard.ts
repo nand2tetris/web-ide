@@ -6,7 +6,8 @@ import { BACKSPACE, NEW_LINE } from "./string.js";
 export class KeyboardLib {
   private memory: VmMemory;
   private os: OS;
-  private interval?: NodeJS.Timeout;
+  private animationFrameId: number | undefined = undefined;
+  private cancel = false;
 
   constructor(memory: VmMemory, os: OS) {
     this.memory = memory;
@@ -20,16 +21,29 @@ export class KeyboardLib {
   private readCharLoop(resolve: (value: number) => void) {
     let pressed = false;
     let c = 0;
-    this.interval = setInterval(() => {
-      if (!pressed && this.keyPressed() != 0) {
+
+    const loop = () => {
+      if (this.cancel) {
+        return;
+      }
+
+      let exit = false;
+
+      if (!pressed && this.keyPressed() !== 0) {
         pressed = true;
         c = this.keyPressed();
       }
-      if (pressed && this.keyPressed() == 0) {
-        clearInterval(this.interval);
+      if (pressed && this.keyPressed() === 0) {
+        exit = true;
         resolve(c);
       }
-    }, 1);
+
+      if (!exit) {
+        this.animationFrameId = requestAnimationFrame(loop);
+      }
+    };
+
+    loop();
   }
 
   readChar() {
@@ -49,10 +63,16 @@ export class KeyboardLib {
     if (this.os.sys.halted) {
       resolve(0);
     }
-
     let pressed = false;
     let c = 0;
-    this.interval = setInterval(() => {
+
+    const loop = () => {
+      if (this.cancel) {
+        return;
+      }
+
+      let exit = false;
+
       if (!pressed && this.keyPressed() != 0) {
         pressed = true;
         c = this.keyPressed();
@@ -66,8 +86,8 @@ export class KeyboardLib {
           }
           this.os.string.eraseLastChar(str);
         } else if (c == NEW_LINE) {
-          clearInterval(this.interval);
           resolve(str);
+          exit = true;
         } else {
           this.os.string.appendChar(str, c);
           if (this.os.sys.halted) {
@@ -77,7 +97,11 @@ export class KeyboardLib {
           this.os.output.drawCursor();
         }
       }
-    }, 1);
+      if (!exit) {
+        this.animationFrameId = requestAnimationFrame(loop);
+      }
+    };
+    loop();
   }
 
   readLine(messagePointer: number) {
@@ -113,8 +137,9 @@ export class KeyboardLib {
   }
 
   dispose() {
-    if (this.interval) {
-      clearInterval(this.interval);
+    this.cancel = true;
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
     }
   }
 }

@@ -347,7 +347,6 @@ export function makeChipStore(
         });
         return;
       }
-      invalid ||= false;
       this.replaceChip(Ok(maybeChip));
     },
 
@@ -467,7 +466,6 @@ export function makeChipStore(
       test = ChipTest.from(Ok(tst)).with(chip).reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
-      invalid ||= false;
       return true;
     },
 

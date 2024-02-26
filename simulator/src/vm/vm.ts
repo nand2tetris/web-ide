@@ -277,7 +277,7 @@ export class Vm {
             );
           }
         } else {
-          return Err(new Error(`Undefined function ${call}`));
+          return Err(new Error(`Undefined function ${call.name}`));
         }
       }
     }

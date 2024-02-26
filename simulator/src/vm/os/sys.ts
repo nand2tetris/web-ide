@@ -61,7 +61,7 @@ export class SysLib {
       if (this.cancelWait) {
         return;
       }
-      
+
       waited += delta;
 
       if (waited >= ms) {

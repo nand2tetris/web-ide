@@ -6,10 +6,10 @@ export const cmp = `| a | b |out|
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/01/Or.hdl
+// File name: projects/1/Or.hdl
 /**
  * Or gate:
- * if ((a == 1) or (b == 1)) out = 1, else out = 0 
+ * if (a or b) out = 1, else out = 0 
  */
 CHIP Or {
     IN a, b;

@@ -367,6 +367,10 @@ export const Chip = () => {
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}
+      onLoadTest={(tst, cmp) => {
+        compile.current({ tst, cmp });
+        actions.reset();
+      }}
     />
   );
 

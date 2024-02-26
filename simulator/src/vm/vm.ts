@@ -609,7 +609,12 @@ export class Vm {
       return;
     }
 
-    const operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
+    let operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
+
+    if (operation.op === "label") {
+      this.invocation.opPtr += 1;
+      operation = this.operation ?? { op: "return" };
+    }
 
     switch (operation.op) {
       case "push": {

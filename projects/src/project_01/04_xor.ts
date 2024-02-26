@@ -6,10 +6,10 @@ export const cmp = `| a | b |out|
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/01/Xor.hdl
+// File name: projects/1/Xor.hdl
 /**
  * Exclusive-or gate:
- * out = (not(a) and b) or (a and not(b))
+ * if ((a and Not(b)) or (Not(a) and b)) out = 1, else out = 0
  */
 CHIP Xor {
     IN a, b;

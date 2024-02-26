@@ -1,13 +1,11 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
+import { resetBySuffix } from "../reset.js";
 import * as HalfAdder from "./01_half_adder.js";
 import * as FullAdder from "./02_full_adder.js";
 import * as Add16 from "./03_add16.js";
 import * as Inc16 from "./04_inc16.js";
-import * as Alu from "./05_alu_no_stat.js";
-import * as AluStatus from "./06_alu.js";
-import * as AluAll from "./06_alu_all.js";
-import { resetBySuffix } from "../reset.js";
+import * as Alu from "./06_alu.js";
 
 export const CHIPS = {
   HalfAdder: {
@@ -30,20 +28,12 @@ export const CHIPS = {
     "Inc16.tst": Inc16.tst,
     "Inc16.cmp": Inc16.cmp,
   },
-  ALUNoStat: {
-    "ALUNoStat.hdl": Alu.hdl,
-    "ALUNoStat.tst": Alu.tst,
-    "ALUNoStat.cmp": Alu.cmp,
-  },
   ALU: {
-    "ALU.hdl": AluStatus.hdl,
-    "ALU.tst": AluStatus.tst,
-    "ALU.cmp": AluStatus.cmp,
-  },
-  ALUAll: {
-    "ALUAll.hdl": AluAll.hdl,
-    "ALUAll.tst": AluAll.tst,
-    "ALUAll.cmp": AluAll.cmp,
+    "ALU.hdl": Alu.hdl,
+    "ALU.tst": Alu.tst,
+    "ALU.cmp": Alu.cmp,
+    "ALU-basic.tst": Alu.basic_tst,
+    "ALU-basic.cmp": Alu.basic_cmp,
   },
 };
 
@@ -57,7 +47,7 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
 
 export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/02");
-  await resetBySuffix(fs, CHIPS, "tst");
-  await resetBySuffix(fs, CHIPS, "cmp");
+  await resetBySuffix(fs, CHIPS, ".tst");
+  await resetBySuffix(fs, CHIPS, ".cmp");
   await fs.popd();
 }

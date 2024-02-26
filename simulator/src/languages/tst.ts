@@ -66,14 +66,16 @@ export type TstOperation =
   | TstOutputListOperation
   | TstLoadROMOperation;
 
-export interface TstLineStatement {
-  ops: TstOperation[];
-  break?: true;
+export type Separator = "," | ";" | "!";
+
+export interface TstCommand {
+  op: TstOperation;
+  separator: Separator;
   span: Span;
 }
 
 export interface TstRepeat {
-  statements: TstLineStatement[];
+  statements: TstCommand[];
   count: number;
   span: Span;
 }
@@ -85,12 +87,12 @@ export interface TstWhileCondition {
 }
 
 export interface TstWhileStatement {
-  statements: TstLineStatement[];
+  statements: TstCommand[];
   condition: TstWhileCondition;
   span: Span;
 }
 
-export type TstStatement = TstLineStatement | TstRepeat | TstWhileStatement;
+export type TstStatement = TstCommand | TstRepeat | TstWhileStatement;
 
 export interface Tst {
   lines: TstStatement[];
@@ -198,6 +200,16 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   },
 });
 
+tstSemantics.addAttribute<TstCommand>("command", {
+  TstCommand(op, sep) {
+    return {
+      op: op.operation,
+      separator: sep.sourceString as Separator,
+      span: span(this.source),
+    };
+  },
+});
+
 tstSemantics.addAttribute<TstWhileCondition>("condition", {
   Condition({ value: left }, { sourceString: op }, { value: right }) {
     return {
@@ -209,31 +221,22 @@ tstSemantics.addAttribute<TstWhileCondition>("condition", {
 });
 
 tstSemantics.addAttribute<TstStatement>("statement", {
-  TstWhile(op, cond, _o, statements, _c) {
+  TstWhile(op, cond, _o, commands, _c) {
     return {
-      statements: statements.children.map(({ statement }) => statement),
+      statements: commands.children.map((node) => node.command as TstCommand),
       condition: cond.condition,
       span: span(this.source),
     };
   },
-  TstRepeat(op, count, _o, statements, _c) {
+  TstRepeat(op, count, _o, commands, _c) {
     return {
-      statements: statements.children.map(({ statement }) => statement),
+      statements: commands.children.map((node) => node.command as TstCommand),
       count: count.sourceString ? Number(count.sourceString) : -1,
       span: span(this.source),
     };
   },
-  TstStatement(list, end) {
-    const stmt: TstStatement = {
-      ops: list
-        .asIteration()
-        .children.map((node) => node.operation as TstOperation),
-      span: span(this.source),
-    };
-    if (end.sourceString === "!") {
-      stmt.break = true;
-    }
-    return stmt;
+  TstStatement(command) {
+    return command.command;
   },
 });
 

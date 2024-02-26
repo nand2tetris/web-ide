@@ -153,8 +153,16 @@ describe("tst language", () => {
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).tst).toEqual({
       lines: [
-        { ops: [{ op: "eval" }], span: { start: 0, end: 5, line: 1 } },
-        { ops: [{ op: "eval" }], span: { start: 7, end: 12, line: 3 } },
+        {
+          op: { op: "eval" },
+          separator: ";",
+          span: { start: 0, end: 5, line: 1 },
+        },
+        {
+          op: { op: "eval" },
+          separator: ";",
+          span: { start: 7, end: 12, line: 3 },
+        },
       ],
     });
   });
@@ -165,54 +173,57 @@ describe("tst language", () => {
     expect(TST.semantics(match).tst).toEqual({
       lines: [
         {
-          span: {
-            start: 1,
-            end: 34,
-            line: 2,
+          op: {
+            op: "output-list",
+            spec: [
+              {
+                id: "in",
+                builtin: false,
+                address: -1,
+                format: { style: "B", width: 1, lpad: 3, rpad: 3 },
+              },
+              {
+                id: "out",
+                builtin: false,
+                address: -1,
+                format: { style: "B", width: 1, lpad: 3, rpad: 3 },
+              },
+            ],
           },
-          ops: [
-            {
-              op: "output-list",
-              spec: [
-                {
-                  id: "in",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "B", width: 1, lpad: 3, rpad: 3 },
-                },
-                {
-                  id: "out",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "B", width: 1, lpad: 3, rpad: 3 },
-                },
-              ],
-            },
-          ],
+          separator: ";",
+          span: { line: 2, start: 1, end: 34 },
+        },
+
+        {
+          op: { op: "set", id: "in", value: 0 },
+          separator: ",",
+          span: { line: 4, start: 36, end: 45 },
         },
         {
-          span: {
-            end: 59,
-            start: 36,
-            line: 4,
-          },
-          ops: [
-            { op: "set", id: "in", value: 0 },
-            { op: "eval" },
-            { op: "output" },
-          ],
+          op: { op: "eval" },
+          separator: ",",
+          span: { line: 4, start: 46, end: 51 },
         },
         {
-          span: {
-            start: 60,
-            end: 83,
-            line: 5,
-          },
-          ops: [
-            { op: "set", id: "in", value: 1 },
-            { op: "eval" },
-            { op: "output" },
-          ],
+          op: { op: "output" },
+          separator: ";",
+          span: { line: 4, start: 52, end: 59 },
+        },
+
+        {
+          op: { op: "set", id: "in", value: 1 },
+          separator: ",",
+          span: { line: 5, start: 60, end: 69 },
+        },
+        {
+          op: { op: "eval" },
+          separator: ",",
+          span: { line: 5, start: 70, end: 75 },
+        },
+        {
+          op: { op: "output" },
+          separator: ";",
+          span: { line: 5, start: 76, end: 83 },
         },
       ],
     });
@@ -224,76 +235,90 @@ describe("tst language", () => {
     expect(TST.semantics(match).tst).toEqual({
       lines: [
         {
-          span: {
-            start: 1,
-            end: 58,
-            line: 2,
+          op: {
+            op: "output-list",
+            spec: [
+              {
+                id: "time",
+                builtin: false,
+                address: -1,
+                format: { style: "S", width: 4, lpad: 1, rpad: 1 },
+              },
+              {
+                id: "in",
+                builtin: false,
+                address: -1,
+                format: { style: "B", width: 1, lpad: 2, rpad: 2 },
+              },
+              {
+                id: "load",
+                builtin: false,
+                address: -1,
+                format: { style: "B", width: 1, lpad: 2, rpad: 2 },
+              },
+              {
+                id: "out",
+                builtin: false,
+                address: -1,
+                format: { style: "B", width: 1, lpad: 2, rpad: 2 },
+              },
+            ],
           },
-          ops: [
-            {
-              op: "output-list",
-              spec: [
-                {
-                  id: "time",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "S", width: 4, lpad: 1, rpad: 1 },
-                },
-                {
-                  id: "in",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
-                },
-                {
-                  id: "load",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
-                },
-                {
-                  id: "out",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
-                },
-              ],
-            },
-          ],
+          separator: ";",
+          span: { line: 2, start: 1, end: 58 },
+        },
+
+        {
+          op: { op: "set", id: "in", value: 0 },
+          separator: ",",
+          span: { line: 3, start: 59, end: 68 },
         },
         {
-          span: {
-            start: 59,
-            end: 94,
-            line: 3,
-          },
-          ops: [
-            { op: "set", id: "in", value: 0 },
-            { op: "set", id: "load", value: 0 },
-            { op: "tick" },
-            { op: "output" },
-          ],
+          op: { op: "set", id: "load", value: 0 },
+          separator: ",",
+          span: { line: 3, start: 69, end: 80 },
         },
         {
-          span: {
-            start: 95,
-            end: 108,
-            line: 3,
-          },
-          ops: [{ op: "tock" }, { op: "output" }],
+          op: { op: "tick" },
+          separator: ",",
+          span: { line: 3, start: 81, end: 86 },
         },
         {
-          span: {
-            start: 109,
-            end: 144,
-            line: 4,
-          },
-          ops: [
-            { op: "set", id: "in", value: 0 },
-            { op: "set", id: "load", value: 1 },
-            { op: "eval" },
-            { op: "output" },
-          ],
+          op: { op: "output" },
+          separator: ";",
+          span: { line: 3, start: 87, end: 94 },
+        },
+
+        {
+          op: { op: "tock" },
+          separator: ",",
+          span: { line: 3, start: 95, end: 100 },
+        },
+        {
+          op: { op: "output" },
+          separator: ";",
+          span: { line: 3, start: 101, end: 108 },
+        },
+
+        {
+          op: { op: "set", id: "in", value: 0 },
+          separator: ",",
+          span: { line: 4, start: 109, end: 118 },
+        },
+        {
+          op: { op: "set", id: "load", value: 1 },
+          separator: ",",
+          span: { line: 4, start: 119, end: 130 },
+        },
+        {
+          op: { op: "eval" },
+          separator: ",",
+          span: { line: 4, start: 131, end: 136 },
+        },
+        {
+          op: { op: "output" },
+          separator: ";",
+          span: { line: 4, start: 137, end: 144 },
         },
       ],
     });
@@ -306,43 +331,45 @@ describe("tst language", () => {
       lines: [
         // output-list time%S1.2.1 in%B2.1.2;
         {
+          op: {
+            op: "output-list",
+            spec: [
+              {
+                id: "time",
+                builtin: false,
+                address: -1,
+                format: { style: "S", width: 2, lpad: 1, rpad: 1 },
+              },
+              {
+                id: "in",
+                builtin: false,
+                address: -1,
+                format: { style: "B", width: 1, lpad: 2, rpad: 2 },
+              },
+            ],
+          },
+          separator: ";",
           span: {
             start: 1,
             end: 35,
             line: 2,
           },
-          ops: [
-            {
-              op: "output-list",
-              spec: [
-                {
-                  id: "time",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "S", width: 2, lpad: 1, rpad: 1 },
-                },
-                {
-                  id: "in",
-                  builtin: false,
-                  address: -1,
-                  format: { style: "B", width: 1, lpad: 2, rpad: 2 },
-                },
-              ],
-            },
-          ],
         },
         // set in -32123, tick, output;
         {
-          span: {
-            start: 36,
-            end: 64,
-            line: 3,
-          },
-          ops: [
-            { op: "set", id: "in", value: 33413 /* unsigned */ },
-            { op: "tick" },
-            { op: "output" },
-          ],
+          op: { op: "set", id: "in", value: 33413 /* unsigned */ },
+          separator: ",",
+          span: { line: 3, start: 36, end: 50 },
+        },
+        {
+          op: { op: "tick" },
+          separator: ",",
+          span: { line: 3, start: 51, end: 56 },
+        },
+        {
+          op: { op: "output" },
+          separator: ";",
+          span: { line: 3, start: 57, end: 64 },
         },
       ],
     });
@@ -357,12 +384,14 @@ describe("tst language", () => {
           count: 14,
           statements: [
             {
-              span: {
-                start: 15,
-                end: 28,
-                line: 3,
-              },
-              ops: [{ op: "eval" }, { op: "output" }],
+              op: { op: "eval" },
+              separator: ",",
+              span: { line: 3, start: 15, end: 20 },
+            },
+            {
+              op: { op: "output" },
+              separator: ";",
+              span: { line: 3, start: 21, end: 28 },
             },
           ],
           span: {
@@ -389,12 +418,14 @@ describe("tst language", () => {
           },
           statements: [
             {
-              span: {
-                start: 12,
-                end: 25,
-                line: 3,
-              },
-              ops: [{ op: "eval" }, { op: "output" }],
+              op: { op: "eval" },
+              separator: ",",
+              span: { line: 3, start: 12, end: 17 },
+            },
+            {
+              op: { op: "output" },
+              separator: ";",
+              span: { line: 3, start: 18, end: 25 },
             },
           ],
         },
@@ -420,12 +451,13 @@ describe("tst language", () => {
           },
           statements: [
             {
+              op: { op: "eval" },
+              separator: ";",
               span: {
                 start: 20,
                 end: 25,
                 line: 2,
               },
-              ops: [{ op: "eval" }],
             },
           ],
         },
@@ -445,7 +477,8 @@ describe("tst language", () => {
             end: 21,
             line: 1,
           },
-          ops: [{ op: "loadRom", file: "Max.hack" }],
+          op: { op: "loadRom", file: "Max.hack" },
+          separator: ";",
         },
       ],
     });

@@ -20,11 +20,17 @@ export const CHIPS = {
     "CPU.hdl": CPU.hdl,
     "CPU.tst": CPU.tst,
     "CPU.cmp": CPU.cmp,
+    "CPU-external.tst": CPU.external_tst,
+    "CPU-external.cmp": CPU.external_cmp,
   },
   Computer: {
     "Computer.hdl": Computer.hdl,
-    "Computer.tst": Computer.tst,
-    "Computer.cmp": Computer.cmp,
+    "Computer.tst": Computer.add_tst,
+    "Computer.cmp": Computer.add_cmp,
+    "ComputerMax.tst": Computer.max_tst,
+    "ComputerMax.cmp": Computer.max_cmp,
+    "ComputerRect.tst": Computer.rect_tst,
+    "ComputerRect.cmp": Computer.rect_cmp,
   },
 };
 
@@ -42,14 +48,16 @@ export async function resetFiles(fs: FileSystem): Promise<void> {
   await fs.popd();
 
   // Add files needed for the test scripts to run
-  await fs.pushd("/test");
-  await fs.writeFile("Max.hack", Computer.hack);
+  await fs.pushd("/samples");
+  await fs.writeFile("Add.hack", Computer.add);
+  await fs.writeFile("Max.hack", Computer.max);
+  await fs.writeFile("Rect.hack", Computer.rect);
   await fs.popd();
 }
 
 export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/05");
-  await resetBySuffix(fs, CHIPS, "tst");
-  await resetBySuffix(fs, CHIPS, "cmp");
+  await resetBySuffix(fs, CHIPS, ".tst");
+  await resetBySuffix(fs, CHIPS, ".cmp");
   await fs.popd();
 }

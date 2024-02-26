@@ -1,9 +1,10 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/07/StackArithmetic/SimpleAdd/SimpleAdd.vm
+// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm
 
 // Pushes and adds two constants.
+
 push constant 7
 push constant 8
 add
@@ -12,39 +13,36 @@ add
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/07/StackArithmetic/SimpleAdd/SimpleAddVME.tst
+// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAddVME.tst
 
-load SimpleAdd.vm,
-output-file SimpleAdd.out,
-compare-to SimpleAdd.cmp,
-output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
+// Tests and illustrates SimpleAdd.vm on the VM simulator.
 
-set RAM[0] 256;  // initializes the stack pointer
+set RAM[0] 256,  // initializes the stack pointer
 
-repeat 3 {       // SimpleAdd.vm has 3 instructions
+repeat 3 {       // SimpleAdd.vm has 3 VM commands
   vmstep;
 }
 
-output;          // the stack pointer and the stack base
-`;
+// Outputs the stack pointer and the value at the stack's base
+output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
+output;`;
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/07/StackArithmetic/SimpleAdd/SimpleAdd.tst
+// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.tst
 
-load SimpleAdd.asm,
-output-file SimpleAdd.out,
-compare-to SimpleAdd.cmp,
-output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
+// Tests SimpleAdd.asm on the CPU emulator.
 
-set RAM[0] 256;  // initializes the stack pointer 
+set RAM[0] 256,  // initializes the stack pointer 
 
 repeat 60 {      // enough cycles to complete the execution
   ticktock;
 }
 
-output;          // the stack pointer and the stack base
+// Outputs the stack pointer and the value at the stack's base
+output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
+output;
 `;
 
 export const cmp = `|  RAM[0]  | RAM[256] |

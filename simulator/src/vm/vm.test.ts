@@ -1,12 +1,12 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
-import { VM } from "../languages/vm.js";
-import { Vm } from "./vm.js";
 import {
   FIBONACCI,
   NESTED_FUNCTION,
   SIMPLE_FUNCTION,
   STATIC,
 } from "@nand2tetris/projects/samples/vm.js";
+import { VM } from "../languages/vm.js";
+import { Vm } from "./vm.js";
 
 test("Simple Adder VM", () => {
   const vm = unwrap(
@@ -152,6 +152,8 @@ test("07 / Memory Access / Basic Test", () => {
     [3, 3000],
     [4, 3010],
   ]);
+  vm.entryArgInitialized = true;
+  vm.entryLocalInitialized = true;
 
   for (let i = 0; i < 25; i++) {
     vm.step();
@@ -190,6 +192,8 @@ test("07 / Memory Access / Pointer Test", () => {
     [3, 3000],
     [4, 3010],
   ]);
+  vm.entryArgInitialized = true;
+  vm.entryLocalInitialized = true;
 
   for (let i = 0; i < 16; i++) {
     vm.step();
@@ -226,6 +230,8 @@ test("08 / Program Flow / Basic Loop", () => {
     [2, 400],
     [400, 3],
   ]);
+  vm.entryArgInitialized = true;
+  vm.entryLocalInitialized = true;
 
   for (let i = 0; i < 33; i++) {
     vm.step();
@@ -288,6 +294,8 @@ test("08 / Program Flow / Fibonacci Series", () => {
     [400, 6],
     [401, 3000],
   ]);
+  vm.entryArgInitialized = true;
+  vm.entryLocalInitialized = true;
 
   for (let i = 0; i < 1000; i++) {
     vm.step();
@@ -335,6 +343,8 @@ test("08 / Functions / NestedCall", () => {
   }
 
   vm.write(init);
+  vm.entryArgInitialized = true;
+  vm.entryLocalInitialized = true;
 
   for (let i = 0; i < 1000; i++) {
     vm.step();

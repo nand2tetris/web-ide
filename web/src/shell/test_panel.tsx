@@ -57,7 +57,8 @@ export const TestPanel = ({
       const tst = await fs.readFile(path);
       let cmp: string | undefined = undefined;
       try {
-        cmp = await fs.readFile(path.replace(/\.tst$/, ".cmp"));
+        const cmpName = path.replace("VME.tst", ".tst").replace(".tst", ".cmp");
+        cmp = await fs.readFile(cmpName);
       } catch (e) {
         // There doesn't have to be a compare file
       }

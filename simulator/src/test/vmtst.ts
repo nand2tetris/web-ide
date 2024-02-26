@@ -73,6 +73,7 @@ export class VMTest extends Test<VMTestInstruction> {
     }
     if (variable === "RAM" && index !== undefined) {
       this.vm.RAM.set(index, value);
+      return;
     }
     if (index !== undefined) {
       this.vm.memory.setSegment(variable as Segment, index, value);
@@ -84,10 +85,12 @@ export class VMTest extends Test<VMTestInstruction> {
         case "arg":
         case "argument":
           this.vm.memory.ARG = value;
+          this.vm.entryArgInitialized = true;
           break;
         case "lcl":
         case "local":
           this.vm.memory.LCL = value;
+          this.vm.entryLocalInitialized = true;
           break;
         case "this":
           this.vm.memory.THIS = value;

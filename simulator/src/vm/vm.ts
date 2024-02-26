@@ -6,9 +6,14 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { FunctionInstruction, VmInstruction } from "../languages/vm.js";
+import {
+  CallInstruction,
+  FunctionInstruction,
+  VmInstruction,
+} from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
 import { VmMemory } from "./memory.js";
+import { OS } from "./os/os.js";
 
 export type VmOperation =
   | FunctionOperation
@@ -115,41 +120,44 @@ const IMPLICIT: VmFunction = {
   operations: [{ op: "function", name: "__implicit", nVars: 0 }],
 };
 
-const BOOTSTRAP: VmFunction = {
-  name: "__bootstrap",
-  nVars: 0,
-  opBase: 0,
-  labels: {},
-  operations: [
-    { op: "function", name: "__bootstrap", nVars: 0 },
-    { op: "call", name: "Sys.init", nArgs: 0 },
-  ],
-};
-
 const END_LABEL = "__END";
 const SYS_INIT: VmFunction = {
   name: "Sys.init",
-  labels: { END: 1 },
+  labels: {},
   nVars: 0,
   opBase: 0,
   operations: [
-    { op: "call", name: "main", nArgs: 0 },
-    { op: "label", label: END_LABEL },
-    { op: "goto", label: END_LABEL },
+    { op: "function", name: "Sys.init", nVars: 0 },
+    { op: "call", name: "Main.main", nArgs: 0 },
+    { op: "call", name: "Sys.halt", nArgs: 0 },
   ],
 };
 
+export interface ParsedVmFile {
+  name: string;
+  instructions: VmInstruction[];
+}
+
 export class Vm {
   memory = new VmMemory();
-  entry = "";
+  private os = new OS(this.memory);
   functionMap: Record<string, VmFunction> = {};
   executionStack: VmFunctionInvocation[] = [];
+
+  entry = "";
+
+  entryLocalInitialized = false;
+  entryArgInitialized = false;
+  private entryNLocal = 0;
+  private entryNArg = 0;
 
   functions: VmFunction[] = [];
   program: VmOperation[] = [];
 
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
+
+  private returnLine: number | undefined = undefined;
 
   private registerStatic(fnName: string, offset: number): number {
     const fileName = fnName.split(".")[0];
@@ -174,6 +182,125 @@ export class Vm {
         }
       }
     }
+  }
+
+  private static validateFile(file: ParsedVmFile) {
+    for (const inst of file.instructions) {
+      if (inst.op == "function") {
+        const parts = inst.name.split(".");
+        if (parts.length != 2) {
+          return Err(
+            new Error(
+              `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`
+            )
+          );
+        }
+        if (parts[0] != file.name) {
+          return Err(
+            new Error(
+              `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`
+            )
+          );
+        }
+      }
+    }
+    return Ok();
+  }
+
+  private static validateFiles(files: ParsedVmFile[]) {
+    const names: Set<string> = new Set();
+
+    for (const file of files) {
+      if (names.has(file.name)) {
+        return Err(new Error(`File ${file.name} already exists`));
+      }
+      const result = this.validateFile(file);
+      if (isErr(result)) {
+        return result;
+      }
+      names.add(file.name);
+    }
+    return Ok();
+  }
+
+  private validateStackInstructions() {
+    for (const fn of Object.values(this.functionMap)) {
+      for (const inst of fn.operations) {
+        if (inst.op == "pop" || inst.op == "push") {
+          const base = this.memory.baseSegment(inst.segment, inst.offset);
+          if (isErr(base)) {
+            return base;
+          }
+        }
+      }
+    }
+    return Ok();
+  }
+
+  private static validateFunctions(instructions: VmInstruction[]) {
+    const functions: Set<string> = new Set();
+    const calls = [];
+
+    for (const inst of instructions) {
+      if (inst.op == "function") {
+        if (inst.nVars < 0 || inst.nVars > 32767) {
+          return Err(
+            new Error(
+              `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`
+            )
+          );
+        }
+        functions.add(inst.name);
+      }
+      if (inst.op == "call") {
+        if (inst.nArgs < 0 || inst.nArgs > 32767) {
+          return Err(
+            new Error(
+              `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`
+            )
+          );
+        }
+        calls.push(inst as CallInstruction);
+      }
+    }
+
+    for (const call of calls) {
+      if (!functions.has(call.name)) {
+        if (VM_BUILTINS[call.name]) {
+          if (VM_BUILTINS[call.name].nArgs != call.nArgs) {
+            return Err(
+              new Error(
+                `OS function ${call.name} expects ${
+                  VM_BUILTINS[call.name].nArgs
+                } arguments, not ${call.nArgs}`
+              )
+            );
+          }
+        } else {
+          return Err(new Error(`Undefined function ${call.name}`));
+        }
+      }
+    }
+
+    return Ok();
+  }
+
+  static buildFromFiles(files: ParsedVmFile[]) {
+    let result = this.validateFiles(files);
+    if (isErr(result)) {
+      return result;
+    }
+    const instructions = files
+      .map((file) => file.instructions)
+      .reduce((list1, list2) => list1.concat(list2));
+    result = this.validateFunctions(instructions);
+    if (isErr(result)) {
+      return result;
+    }
+    const vm = new Vm();
+    const load = vm.load(instructions);
+    if (isErr(load)) return load;
+    return vm.bootstrap();
   }
 
   static build(instructions: VmInstruction[]): Result<Vm> {
@@ -315,15 +442,13 @@ export class Vm {
   }
 
   get currentFunction() {
-    const fn = this.functionMap[this.invocation.function];
-    if (fn === undefined)
-      throw new Error(
-        `Executing undefined function ${this.invocation.function}`
-      );
-    return fn;
+    return this.functionMap[this.invocation.function];
   }
 
   get operation() {
+    if (!this.currentFunction) {
+      return;
+    }
     if (this.invocation.opPtr > this.currentFunction.operations.length)
       throw new Error(
         `Current operation step beyond end of function operations (${this.invocation.opPtr} > ${this.currentFunction.operations.length})`
@@ -363,6 +488,10 @@ export class Vm {
       i = i_;
     }
 
+    const result = this.validateStackInstructions();
+    if (isErr(result)) {
+      return result;
+    }
     this.registerStatics();
 
     if (reset) {
@@ -373,7 +502,7 @@ export class Vm {
   }
 
   bootstrap() {
-    if (!this.functionMap[SYS_INIT.name] && this.functionMap["main"]) {
+    if (!this.functionMap[SYS_INIT.name] && this.functionMap["Main.main"]) {
       this.functionMap[SYS_INIT.name] = SYS_INIT;
       // TODO should this be an error from the compiler/OS?
     }
@@ -386,11 +515,10 @@ export class Vm {
       const fnNames = Object.keys(this.functionMap);
       if (fnNames.length === 1) {
         this.entry = fnNames[0];
-        this.functionMap[IMPLICIT.name] = IMPLICIT;
       }
     }
 
-    if (this.functionMap[IMPLICIT.name] && this.functionMap[BOOTSTRAP.name]) {
+    if (this.functionMap[IMPLICIT.name] && this.functionMap[SYS_INIT.name]) {
       return Err(
         new Error("Cannot use both bootstrap and an implicit function")
       );
@@ -403,7 +531,7 @@ export class Vm {
     this.functions = Object.values(this.functionMap);
     this.functions.sort((a, b) => {
       if (a.name === this.entry) return -1;
-      if (a.name === this.entry) return 1;
+      if (b.name === this.entry) return 1;
       return 0; // Stable sort otherwise
     });
 
@@ -424,10 +552,63 @@ export class Vm {
       { function: this.entry, opPtr: 1, frameBase: 256, nArgs: 0 },
     ];
     this.memory.reset();
-    this.memory.set(0, 256);
+    this.memory.ARG = 256;
+    this.memory.LCL = 256;
+    this.memory.SP = 256 + this.functionMap[this.entry].nVars;
+    this.entryNLocal = 0;
+    this.entryNArg = 0;
+    this.entryLocalInitialized = false;
+    this.entryArgInitialized = false;
+    this.os.dispose();
+    this.os = new OS(this.memory);
   }
 
-  step() {
+  private validateStackOp(op: StackOperation) {
+    if (op.segment == "argument" && op.offset >= this.invocation.nArgs) {
+      if (
+        this.currentFunction?.name == this.entry &&
+        this.entryArgInitialized
+      ) {
+        this.entryNArg = Math.max(op.offset + 1, this.entryNLocal);
+      } else {
+        throw new Error("Argument offset out of bounds");
+      }
+    }
+    if (
+      op.segment == "local" &&
+      op.offset >= this.functionMap[this.invocation.function]?.nVars
+    ) {
+      if (
+        this.currentFunction?.name == this.entry &&
+        this.entryLocalInitialized
+      ) {
+        this.entryNLocal = Math.max(op.offset + 1, this.entryNLocal);
+      } else {
+        throw new Error("Local offset out of bounds");
+      }
+    }
+  }
+
+  step(): number | undefined {
+    if (this.os.sys.halted) {
+      return this.os.sys.exitCode;
+    }
+    if (this.os.sys.blocked) {
+      return;
+    }
+    if (this.os.sys.released && this.operation?.op == "call") {
+      const ret = this.os.sys.readReturnValue();
+      const sp = this.memory.SP - this.operation.nArgs;
+      this.memory.set(sp, ret);
+      this.memory.SP = sp + 1;
+      this.invocation.opPtr += 1;
+      return;
+    }
+    if (!this.operation && this.returnLine != undefined) {
+      // already returned
+      return;
+    }
+
     let operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
 
     if (operation.op === "label") {
@@ -437,6 +618,7 @@ export class Vm {
 
     switch (operation.op) {
       case "push": {
+        this.validateStackOp(operation);
         const value = this.memory.getSegment(
           operation.segment,
           operation.offset
@@ -445,6 +627,7 @@ export class Vm {
         break;
       }
       case "pop": {
+        this.validateStackOp(operation);
         const value = this.memory.pop();
         this.memory.setSegment(operation.segment, operation.offset, value);
         break;
@@ -512,7 +695,10 @@ export class Vm {
             frameBase: base,
           });
         } else if (VM_BUILTINS[fnName]) {
-          const ret = VM_BUILTINS[fnName](this.memory);
+          const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
+          if (this.os.sys.blocked) {
+            return; // we will handle the return when the OS is released
+          }
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
           this.memory.SP = sp + 1;
@@ -520,9 +706,14 @@ export class Vm {
         break;
       }
       case "return": {
+        const line = this.derivedLine();
         this.executionStack.pop();
         const ret = this.memory.popFrame();
         this.invocation.opPtr = ret;
+        if (this.executionStack.length === 0) {
+          this.returnLine = line;
+          return 0;
+        }
         break;
       }
       case "label": {
@@ -531,9 +722,13 @@ export class Vm {
       }
     }
     this.invocation.opPtr += 1;
+    return;
   }
 
   private goto(label: string) {
+    if (!this.currentFunction) {
+      return;
+    }
     if (this.currentFunction.labels[label] === undefined)
       throw new Error(
         `Attempting GOTO to unknown label ${label} in ${this.currentFunction.name}`
@@ -562,7 +757,7 @@ export class Vm {
   makeFrame(invocation = this.invocation, nextFrame: number): VmFrame {
     const fn = this.functionMap[invocation.function];
     if (fn.name === this.entry) {
-      const frameBase = 256;
+      const stackBase = 256 + fn.nVars;
       const nextFrame = this.executionStack[1];
       const frameEnd = nextFrame
         ? nextFrame.frameBase - nextFrame.nArgs
@@ -572,20 +767,22 @@ export class Vm {
         fn,
         args: {
           base: ARG,
-          count: 7,
-          values: [...this.memory.map((_, v) => v, ARG, ARG + 7)],
+          count: this.entryNArg,
+          values: [...this.memory.map((_, v) => v, ARG, ARG + this.entryNArg)],
         },
         locals: {
           base: LCL,
-          count: 5,
-          values: [...this.memory.map((_, v) => v, LCL, LCL + 5)],
+          count: this.entryNLocal,
+          values: [
+            ...this.memory.map((_, v) => v, LCL, LCL + this.entryNLocal),
+          ],
         },
         stack: {
           base: 256,
-          count: frameEnd - frameBase,
-          values: [...this.memory.map((_, v) => v, frameBase, frameEnd)],
+          count: frameEnd - stackBase,
+          values: [...this.memory.map((_, v) => v, stackBase, frameEnd)],
         },
-        ["this"]: { base: THAT, count: 0, values: [] },
+        this: { base: THAT, count: 0, values: [] },
         that: { base: THIS, count: 0, values: [] },
         frame: {
           ARG,
@@ -609,7 +806,9 @@ export class Vm {
   }
 
   derivedLine(): number {
-    return this.currentFunction.opBase + this.invocation.opPtr;
+    return this.currentFunction
+      ? this.currentFunction.opBase + this.invocation.opPtr
+      : this.returnLine ?? 0;
   }
 
   writeDebug(): string {

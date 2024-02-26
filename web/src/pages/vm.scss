@@ -1,6 +1,28 @@
 @use "./page.scss";
 
 .VmPage {
+  grid-template-columns: 1fr auto 2fr;
+  grid-template-rows: 3fr 2fr;
+  grid-template-areas:
+    "program display test"
+    "stack display test";
+
+  .program {
+    grid-area: program;
+  }
+
+  .stack {
+    grid-area: stack;
+  }
+
+  .display {
+    grid-area: display;
+  }
+
+  ._test_panel {
+    grid-area: test;
+  }
+
   tbody {
     font-family: var(--font-family-monospace);
   }

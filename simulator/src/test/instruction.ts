@@ -8,6 +8,24 @@ export interface TestInstruction {
   steps(test: Test): IterableIterator<TestInstruction>;
 }
 
+export class TestControlInstruction implements TestInstruction {
+  span: Span;
+
+  constructor(span: Span) {
+    this.span = span;
+  }
+
+  do() {
+    return;
+  }
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestStopInstruction extends TestControlInstruction {}
+export class TestBreakInstruction extends TestControlInstruction {}
+
 export class TestSetInstruction implements TestInstruction {
   constructor(
     private variable: string,

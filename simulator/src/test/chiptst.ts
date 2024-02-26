@@ -13,8 +13,8 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   private clock = Clock.get();
 
-  static from(tst: Tst): ChipTest {
-    const test = new ChipTest();
+  static from(tst: Tst, setStatus?: (status: string) => void): ChipTest {
+    const test = new ChipTest(setStatus);
     return fill(test, tst);
   }
 

@@ -33,9 +33,7 @@ function getDiffs(cmpData: Cmp, outData: Cmp): Diff[] {
     for (let j = 0; j < Math.max(cmpI.length, outI.length); j++) {
       const cmpJ = cmpI[j] ?? "";
       const outJ = outI[j] ?? "";
-      if (
-        !(cmpJ?.trim().match(/^\*+$/) !== null || outJ?.trim() === cmpJ?.trim())
-      ) {
+      if (!(cmpJ?.trim().match(/^\*+$/) !== null || outJ === cmpJ)) {
         diffs.push({ row: i, col: j, expected: cmpJ, given: outJ });
       }
     }

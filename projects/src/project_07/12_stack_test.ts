@@ -1,10 +1,10 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/07/StackArithmetic/StackTest/StackTest.vm
+// File name: projects/7/StackArithmetic/StackTest/StackTest.vm
 
-// Executes a sequence of arithmetic and logical operations
-// on the stack. 
+// Executes a sequence of arithmetic and logical operations on the stack. 
+
 push constant 17
 push constant 17
 eq
@@ -48,22 +48,19 @@ not
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/07/StackArithmetic/StackTest/StackTestVME.tst
+// File name: projects/7/StackArithmetic/StackTest/StackTestVME.tst
 
-load StackTest.vm,
-output-file StackTest.out,
-compare-to StackTest.cmp,
-output-list RAM[0]%D2.6.2 
-        RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
+// Tests and illustrates StackTest.vm on the VM simulator.
 
-set RAM[0] 256;  // initializes the stack pointer
+set RAM[0] 256,  // initializes the stack pointer
 
-repeat 38 {      // StackTest.vm consists of 38 instructions
+repeat 38 {      // StackTest.vm has 38 VM commands
   vmstep;
 }
 
-// outputs the stack pointer (RAM[0]) and 
-// the stack contents: RAM[256]-RAM[265]
+// Outputs the stack pointer (RAM[0]) and the stack contents: RAM[256]-RAM[265]
+output-list RAM[0]%D2.6.2 
+        RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 output;
 output-list RAM[261]%D2.6.2 RAM[262]%D2.6.2 RAM[263]%D2.6.2 RAM[264]%D2.6.2 RAM[265]%D2.6.2;
 output;
@@ -72,13 +69,9 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/07/StackArithmetic/StackTest/StackTest.tst
+// File name: projects/7/StackArithmetic/StackTest/StackTest.tst
 
-load StackTest.asm,
-output-file StackTest.out,
-compare-to StackTest.cmp,
-output-list RAM[0]%D2.6.2 
-        RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
+// Tests StackTest.asm on the CPU emulator.
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -86,8 +79,9 @@ repeat 1000 {    // enough cycles to complete the execution
   ticktock;
 }
 
-// outputs the stack pointer (RAM[0]) and 
-// the stack contents: RAM[256]-RAM[265]
+// Outputs the stack pointer and the stack contents: RAM[256]-RAM[265]
+output-list RAM[0]%D2.6.2 
+        RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 output;
 output-list RAM[261]%D2.6.2 RAM[262]%D2.6.2 RAM[263]%D2.6.2 RAM[264]%D2.6.2 RAM[265]%D2.6.2;
 output;

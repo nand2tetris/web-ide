@@ -8,7 +8,7 @@ export async function resetBySuffix(
 ) {
   for (const [key, value] of Object.entries(tree)) {
     if (typeof value === "string") {
-      if (key.endsWith(`.${suffix}`)) {
+      if (key.endsWith(`${suffix}`)) {
         await fs.writeFile(key, value);
       }
     } else {

@@ -1,9 +1,9 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/01/And16.hdl
+// File name: projects/1/And16.hdl
 /**
- * 16-bit bitwise And gate:
+ * 16-bit And gate:
  * for i = 0, ..., 15:
  * out[i] = a[i] And b[i] 
  */

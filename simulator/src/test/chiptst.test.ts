@@ -153,17 +153,24 @@ describe("Chip Test", () => {
         count: 5,
         statements: [
           {
-            ops: [
-              { op: "tick" },
-              { op: "output" },
-              { op: "tock" },
-              { op: "output" },
-            ],
-            span: {
-              line: 1,
-              start: 0,
-              end: 27,
-            },
+            op: { op: "tick" },
+            separator: ",",
+            span: { start: 0, end: 27, line: 1 },
+          },
+          {
+            op: { op: "output" },
+            separator: ",",
+            span: { start: 0, end: 27, line: 1 },
+          },
+          {
+            op: { op: "tock" },
+            separator: ",",
+            span: { start: 0, end: 27, line: 1 },
+          },
+          {
+            op: { op: "output" },
+            separator: ";",
+            span: { start: 0, end: 27, line: 1 },
           },
         ],
         span: {

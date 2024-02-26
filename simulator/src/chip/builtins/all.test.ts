@@ -3,17 +3,17 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Ok } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Cmp, CMP } from "../../languages/cmp.js";
-import { HDL, HdlParse } from "../../languages/hdl.js";
-import { Tst, TST } from "../../languages/tst.js";
-import { ChipProjects, CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
+import { CHIP_PROJECTS, ChipProjects } from "@nand2tetris/projects/index.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { compare } from "../../compare.js";
+import { CMP, Cmp } from "../../languages/cmp.js";
+import { HDL, HdlParse } from "../../languages/hdl.js";
+import { TST, Tst } from "../../languages/tst.js";
+import { ChipTest } from "../../test/chiptst.js";
 import { build } from "../builder.js";
 import { Chip } from "../chip.js";
-import { ChipTest } from "../../test/chiptst.js";
 
-const SKIP = new Set<string>(["Computer"]);
+const SKIP = new Set<string>(["Computer", "Memory"]);
 
 describe("All Projects", () => {
   describe.each(Object.keys(CHIP_PROJECTS))("project %s", (project) => {

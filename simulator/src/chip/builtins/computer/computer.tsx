@@ -1,6 +1,4 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Chip, ClockedChip, ConstantBus, HIGH, LOW, Pin } from "../../chip.js";
-import { RAM, RAM16K } from "../sequential/ram.js";
 import {
   CPUInput,
   CPUState,
@@ -8,14 +6,24 @@ import {
   cpuTock,
   emptyState,
 } from "../../../cpu/cpu.js";
-import { int10 } from "../../../util/twos.js";
-import { load } from "../../../fs.js";
 import {
   KEYBOARD_OFFSET,
   KeyboardAdapter,
   SCREEN_OFFSET,
   SCREEN_SIZE,
 } from "../../../cpu/memory.js";
+import { load } from "../../../fs.js";
+import { int10 } from "../../../util/twos.js";
+import {
+  Bus,
+  Chip,
+  ClockedChip,
+  ConstantBus,
+  HIGH,
+  LOW,
+  Pin,
+} from "../../chip.js";
+import { RAM, RAM16K } from "../sequential/ram.js";
 
 export class ROM32K extends RAM {
   constructor() {
@@ -58,6 +66,12 @@ export class Keyboard extends Chip implements KeyboardAdapter {
 
   clearKey() {
     this.out().busVoltage = 0;
+  }
+
+  override get(name: string) {
+    return name === this.name
+      ? new ConstantBus(this.name, this.getKey()) // readonly
+      : super.get(name);
   }
 }
 
@@ -155,6 +169,48 @@ export class Memory extends ClockedChip {
   }
 }
 
+class DRegisterBus extends Bus {
+  constructor(name: string, private cpu: CPUState) {
+    super(name);
+  }
+
+  override get busVoltage(): number {
+    return this.cpu.D;
+  }
+
+  override set busVoltage(num: number) {
+    this.cpu.D = num;
+  }
+}
+
+class ARegisterBus extends Bus {
+  constructor(name: string, private cpu: CPUState) {
+    super(name);
+  }
+
+  override get busVoltage(): number {
+    return this.cpu.A;
+  }
+
+  override set busVoltage(num: number) {
+    this.cpu.A = num;
+  }
+}
+
+class PCBus extends Bus {
+  constructor(name: string, private cpu: CPUState) {
+    super(name);
+  }
+
+  override get busVoltage(): number {
+    return this.cpu.PC;
+  }
+
+  override set busVoltage(num: number) {
+    this.cpu.PC = num;
+  }
+}
+
 export class CPU extends ClockedChip {
   private _state: CPUState = emptyState();
 
@@ -196,13 +252,13 @@ export class CPU extends ClockedChip {
 
   override get(pin: string, offset?: number): Pin | undefined {
     if (pin?.startsWith("ARegister")) {
-      return new ConstantBus("ARegister", this._state.A);
+      return new ARegisterBus("ARegister", this._state);
     }
     if (pin?.startsWith("DRegister")) {
-      return new ConstantBus("DRegister", this._state.D);
+      return new DRegisterBus("DRegister", this._state);
     }
     if (pin?.startsWith("PC")) {
-      return new ConstantBus("PC", this._state.PC);
+      return new PCBus("PC", this._state);
     }
     return super.get(pin, offset);
   }

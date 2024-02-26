@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/02/FullAdder.hdl
+// File name: projects/2/FullAdder.hdl
 /**
  * Computes the sum of three bits.
  */
@@ -13,16 +13,21 @@ CHIP FullAdder {
     PARTS:
     //// Replace this comment with your code.
 }`;
-export const cmp = `|   a   |   b   |   c   |  sum  | carry |
-|   0   |   0   |   0   |   0   |   0   |
-|   0   |   0   |   1   |   1   |   0   |
-|   0   |   1   |   0   |   1   |   0   |
-|   0   |   1   |   1   |   0   |   1   |
-|   1   |   0   |   0   |   1   |   0   |
-|   1   |   0   |   1   |   0   |   1   |
-|   1   |   1   |   0   |   0   |   1   |
-|   1   |   1   |   1   |   1   |   1   |`;
-export const tst = `output-list a%B3.1.3 b%B3.1.3 c%B3.1.3 sum%B3.1.3 carry%B3.1.3;
+export const cmp = `| a | b | c |sum|carry|
+| 0 | 0 | 0 | 0 |  0  |
+| 0 | 0 | 1 | 1 |  0  |
+| 0 | 1 | 0 | 1 |  0  |
+| 0 | 1 | 1 | 0 |  1  |
+| 1 | 0 | 0 | 1 |  0  |
+| 1 | 0 | 1 | 0 |  1  |
+| 1 | 1 | 0 | 0 |  1  |
+| 1 | 1 | 1 | 1 |  1  |`;
+export const tst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/2/FullAdder.tst
+
+output-list a b c sum carry%B2.1.2;
 
 set a 0,
 set b 0,

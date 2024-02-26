@@ -452,11 +452,11 @@ export function makeChipStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus(`Failed to parse test`);
+        setStatus(`Failed to parse test ${tst.err.message}`);
         return false;
       }
 
-      test = ChipTest.from(Ok(tst)).with(chip).reset();
+      test = ChipTest.from(Ok(tst), setStatus).with(chip).reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
       return true;

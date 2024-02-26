@@ -10,11 +10,11 @@ export const cmp = `|        a         |        b         |sel|       out       
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/01/Mux16.hdl
+// File name: projects/1/Mux16.hdl
 /**
  * 16-bit multiplexor: 
  * for i = 0, ..., 15:
- * if (sel == 0) out[i] = a[i], else out[i] = b[i]
+ * if (sel = 0) out[i] = a[i], else out[i] = b[i]
  */
 CHIP Mux16 {
     IN a[16], b[16], sel;

@@ -3,10 +3,10 @@ import {
   Memory,
   MemoryAdapter,
   MemoryKeyboard,
-  SubMemory,
   RAM as RAMMem,
   SCREEN_OFFSET,
   SCREEN_SIZE,
+  SubMemory,
 } from "./memory.js";
 
 export interface CPUInput {
@@ -76,6 +76,12 @@ export function cpuTick(
   const a = bits.am ? inM : A;
   const [ALU, flag] = alu(bits.op, D, a);
 
+  // While a DRegister would update during the Tock clock step,
+  // this implementation updates the D internal state during tick because the test will need to access the internal D state.
+  if (bits.d2) {
+    D = ALU;
+  }
+
   return [{ A, D, PC: PC + 1, ALU, flag }, bits.d3];
 }
 
@@ -91,10 +97,6 @@ export function cpuTock(
   const jmp = j1 || j2 || j3;
 
   PC = reset ? 0 : jmp ? A : PC;
-
-  if (bits.d2) {
-    D = ALU;
-  }
 
   if (!bits.c) {
     A = instruction & 0x7fff;

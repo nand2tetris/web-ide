@@ -1,6 +1,6 @@
-import { Bus, ClockedChip, Pin } from "../../chip.js";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { Memory, Memory as MemoryChip } from "../../../cpu/memory.js";
+import { Bus, ClockedChip, Pin } from "../../chip.js";
 
 export class RAM extends ClockedChip {
   protected _memory: MemoryChip;
@@ -45,6 +45,10 @@ export class RAM extends ClockedChip {
     return new RamBus(`${this.name}[${idx}]`, idx, this._memory);
   }
 
+  override get(name: string, offset?: number) {
+    return name === this.name ? this.at(offset ?? 0) : super.get(name);
+  }
+
   override reset(): void {
     this._memory.reset();
     super.reset();
@@ -70,31 +74,31 @@ export class RamBus extends Bus {
 }
 
 export class RAM8 extends RAM {
-  constructor(name?: string) {
-    super(3, name);
+  constructor() {
+    super(3, "RAM8");
   }
 }
 
 export class RAM64 extends RAM {
-  constructor(name?: string) {
-    super(6, name);
+  constructor() {
+    super(6, "RAM64");
   }
 }
 
 export class RAM512 extends RAM {
-  constructor(name?: string) {
-    super(9, name);
+  constructor() {
+    super(9, "RAM512");
   }
 }
 
 export class RAM4K extends RAM {
-  constructor(name?: string) {
-    super(12, name);
+  constructor() {
+    super(12, "RAM4K");
   }
 }
 
 export class RAM16K extends RAM {
-  constructor(name?: string) {
-    super(14, name);
+  constructor() {
+    super(14, "RAM16K");
   }
 }

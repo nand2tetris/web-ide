@@ -1,7 +1,12 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Output } from "../output.js";
-import { OutputParams, TestInstruction } from "./instruction.js";
+import {
+  OutputParams,
+  TestBreakInstruction,
+  TestInstruction,
+  TestStopInstruction,
+} from "./instruction.js";
 
 export const DEFAULT_TIME_WIDTH = 7;
 
@@ -10,6 +15,11 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
+  protected doEcho?: (status: string) => void;
+
+  constructor(doEcho?: (status: string) => void) {
+    this.doEcho = doEcho;
+  }
 
   setFileSystem(fs: FileSystem): this {
     this.fs = fs;
@@ -17,10 +27,12 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   echo(_content: string) {
-    return undefined;
+    this.doEcho?.(_content);
+    return;
   }
   clearEcho() {
-    return undefined;
+    this.doEcho?.("");
+    return;
   }
 
   async load(_filename?: string): Promise<void> {
@@ -102,10 +114,16 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   step() {
-    if (!this._step.done) {
+    while (!this._step.done) {
       this._step.value.do(this);
       this._step = this.steps.next();
-      return false;
+
+      if (this._step.value instanceof TestStopInstruction) {
+        this._step = this.steps.next();
+        return false;
+      } else if (this._step.value instanceof TestBreakInstruction) {
+        return true;
+      }
     }
     return true;
   }

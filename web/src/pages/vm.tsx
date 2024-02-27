@@ -50,8 +50,9 @@ const VM = () => {
   }, []);
 
   useEffect(() => {
-    actions.initialize();
-  }, [actions]);
+    actions.loadTest(tst, cmp);
+    actions.reset();
+  }, [tst, cmp]);
 
   useEffect(() => {
     console.log("use effect exit code", state.controls.exitCode);
@@ -81,6 +82,7 @@ const VM = () => {
       }
 
       override reset() {
+        setStatus("Reset");
         actions.reset();
       }
 
@@ -213,6 +215,7 @@ const VM = () => {
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
           onSpeedChange={onSpeedChange}
+          disabled={!state.controls.valid}
         />
       )}
     </div>

@@ -43,6 +43,7 @@ export interface ControlsState {
   runningTest: boolean;
   exitCode: number | undefined;
   animate: boolean;
+  valid: boolean;
 }
 
 export interface VMFiles {
@@ -100,6 +101,9 @@ export function makeVmStore(
       state.controls.exitCode = code;
       console.log("exit code", code);
     },
+    setValid(state: VmPageState, valid: boolean) {
+      state.controls.valid = valid;
+    },
     update(state: VmPageState) {
       state.vm = reduceVMTest(test, dispatch);
       state.test.useTest = useTest;
@@ -126,13 +130,14 @@ export function makeVmStore(
       exitCode: undefined,
       runningTest: false,
       animate: true,
+      valid: true,
     },
     test: {
       useTest,
       highlight: undefined,
     },
     files: {
-      tst: "",
+      tst: "repeat {\n\tvmstep;\n}",
       cmp: "",
       out: "",
     },
@@ -171,9 +176,11 @@ export function makeVmStore(
       const tst = TST.parse(source);
 
       if (isErr(tst)) {
+        dispatch.current({ action: "setValid", payload: false });
         setStatus(`Failed to parse test`);
         return false;
       }
+      dispatch.current({ action: "setValid", payload: true });
       setStatus(`Parsed tst`);
 
       vm.reset();
@@ -216,14 +223,9 @@ export function makeVmStore(
       vm.reset();
       dispatch.current({ action: "update" });
       dispatch.current({ action: "setExitCode", payload: undefined });
-      setStatus("Reset");
     },
     toggleUseTest() {
       useTest = !useTest;
-      dispatch.current({ action: "update" });
-    },
-    initialize() {
-      this.loadTest("repeat {\n\tvmstep;\n}", "");
       dispatch.current({ action: "update" });
     },
   };

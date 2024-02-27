@@ -4,7 +4,7 @@ const Chip = lazy(() => import("./pages/chip"));
 const CPU = lazy(() => import("./pages/cpu"));
 const ASM = lazy(() => import("./pages/asm"));
 const BITMAP = lazy(() => import("./pages/bitmap"));
-// const VM = lazy(() => import("./pages/vm"));
+const VM = lazy(() => import("./pages/vm"));
 const Util = lazy(() => import("./pages/util"));
 const ChipGuide = lazy(() => import("./pages/guides/chip_guide"));
 const About = lazy(() => import("./pages/about"));
@@ -41,11 +41,11 @@ const URLs: Record<string, URL> = {
     tool: "asm",
     target: <ASM />,
   },
-  // vm: {
-  //   href: "/vm",
-  //   tool: `vm`,
-  //   target: <VM />,
-  // },
+  vm: {
+    href: "/vm",
+    tool: `vm`,
+    target: <VM />,
+  },
   bitmap: {
     href: "/bitmap",
     tool: "bitmap",

@@ -9,67 +9,12 @@ import { MemoryAdapter, RAM } from "../cpu/memory.js";
 import {
   CallInstruction,
   FunctionInstruction,
+  StackInstruction,
   VmInstruction,
 } from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
 import { VmMemory } from "./memory.js";
 import { OS } from "./os/os.js";
-
-export type VmOperation =
-  | FunctionOperation
-  | StackOperation
-  | OpOperation
-  | CallOperation
-  | ReturnOperation
-  | GotoOperation
-  | LabelOperation;
-
-export type Segment =
-  | "argument"
-  | "local"
-  | "static"
-  | "constant"
-  | "this"
-  | "that"
-  | "pointer"
-  | "temp";
-
-export type BinOp = "add" | "sub" | "and" | "or";
-export type CmpOp = "lt" | "gt" | "eq";
-export type UnOp = "neg" | "not";
-export type Op = BinOp | CmpOp | UnOp;
-
-export interface FunctionOperation {
-  op: "function";
-  name: string;
-  nVars: number;
-}
-
-export interface StackOperation {
-  op: "push" | "pop";
-  segment: Segment;
-  offset: number;
-}
-
-export interface OpOperation {
-  op: Op;
-}
-export interface CallOperation {
-  op: "call";
-  name: string;
-  nArgs: number;
-}
-export interface ReturnOperation {
-  op: "return";
-}
-export interface LabelOperation {
-  op: "label";
-  label: string;
-}
-export interface GotoOperation {
-  op: "goto" | "if-goto";
-  label: string;
-}
 
 interface VmFrameValues {
   base: number;
@@ -98,7 +43,7 @@ export interface VmFunction {
   name: string;
   nVars: number;
   labels: Record<string, number>;
-  operations: VmOperation[];
+  operations: VmInstruction[];
   opBase: number;
 }
 
@@ -112,15 +57,8 @@ interface VmFunctionInvocation {
   nArgs: number;
 }
 
-const IMPLICIT: VmFunction = {
-  name: "__implicit",
-  nVars: 0,
-  opBase: 0,
-  labels: {},
-  operations: [{ op: "function", name: "__implicit", nVars: 0 }],
-};
+const IMPLICIT = "__implicit";
 
-const END_LABEL = "__END";
 const SYS_INIT: VmFunction = {
   name: "Sys.init",
   labels: {},
@@ -129,7 +67,6 @@ const SYS_INIT: VmFunction = {
   operations: [
     { op: "function", name: "Sys.init", nVars: 0 },
     { op: "call", name: "Main.main", nArgs: 0 },
-    { op: "call", name: "Sys.halt", nArgs: 0 },
   ],
 };
 
@@ -152,7 +89,7 @@ export class Vm {
   private entryNArg = 0;
 
   functions: VmFunction[] = [];
-  program: VmOperation[] = [];
+  program: VmInstruction[] = [];
 
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
@@ -173,11 +110,11 @@ export class Vm {
       for (const op of fn.operations) {
         if (
           (op.op === "push" || op.op === "pop") &&
-          (op as StackOperation)?.segment === "static"
+          (op as StackInstruction)?.segment === "static"
         ) {
-          (op as StackOperation).offset = this.registerStatic(
+          (op as StackInstruction).offset = this.registerStatic(
             fn.name,
-            (op as StackOperation).offset
+            (op as StackInstruction).offset
           );
         }
       }
@@ -324,7 +261,7 @@ export class Vm {
       name,
       nVars,
       labels: {},
-      operations: [{ op: "function", name, nVars }],
+      operations: [{ op: "function", name, nVars, line: instructions[i].line }],
       opBase: 0,
     };
 
@@ -353,6 +290,7 @@ export class Vm {
               | "and"
               | "or"
               | "not",
+            line: instructions[i].line,
           });
           break;
         case "push":
@@ -373,6 +311,7 @@ export class Vm {
               }
             ).segment,
             offset: (instructions[i] as { offset: number }).offset,
+            line: instructions[i].line,
           });
           break;
         case "call":
@@ -380,6 +319,7 @@ export class Vm {
             op: "call",
             name: (instructions[i] as { name: string }).name,
             nArgs: (instructions[i] as { nArgs: number }).nArgs,
+            line: instructions[i].line,
           });
           break;
         case "goto":
@@ -387,6 +327,7 @@ export class Vm {
           fn.operations.push({
             op: instructions[i].op as "goto" | "if-goto",
             label: (instructions[i] as { label: string }).label,
+            line: instructions[i].line,
           });
           break;
         case "label": {
@@ -396,22 +337,20 @@ export class Vm {
               `Cannot redeclare label ${label} in function ${fn.name} (previously at ${fn.labels[label]})`
             );
           fn.labels[label] = fn.operations.length;
-          fn.operations.push({ op: "label", label });
+          fn.operations.push({
+            op: "label",
+            label,
+            line: instructions[i].line,
+          });
           break;
         }
         case "return": {
-          fn.operations.push({ op: "return" });
+          fn.operations.push({ op: "return", line: instructions[i].line });
           break;
         }
       }
 
       i += 1;
-    }
-
-    if (fn.name === IMPLICIT.name) {
-      fn.labels[END_LABEL] = fn.operations.length;
-      fn.operations.push({ op: "label", label: END_LABEL });
-      fn.operations.push({ op: "goto", label: END_LABEL });
     }
 
     return Ok([fn, i]);
@@ -433,7 +372,7 @@ export class Vm {
     if (invocation === undefined) {
       return {
         frameBase: 256,
-        function: IMPLICIT.name,
+        function: IMPLICIT,
         nArgs: 0,
         opPtr: 0,
       };
@@ -465,7 +404,7 @@ export class Vm {
     }
 
     if (instructions[0]?.op !== "function") {
-      instructions.unshift({ op: "function", name: IMPLICIT.name, nVars: 0 });
+      instructions.unshift({ op: "function", name: IMPLICIT, nVars: 0 });
     }
 
     let i = 0;
@@ -478,7 +417,7 @@ export class Vm {
       if (
         this.functionMap[fn.name] &&
         this.memory.strict &&
-        fn.name !== IMPLICIT.name &&
+        fn.name !== IMPLICIT &&
         fn.name !== SYS_INIT.name
       ) {
         return Err(new Error(`VM Already has a function named ${fn.name}`));
@@ -509,8 +448,8 @@ export class Vm {
 
     if (this.functionMap[SYS_INIT.name]) {
       this.entry = SYS_INIT.name;
-    } else if (this.functionMap[IMPLICIT.name]) {
-      this.entry = IMPLICIT.name;
+    } else if (this.functionMap[IMPLICIT]) {
+      this.entry = IMPLICIT;
     } else {
       const fnNames = Object.keys(this.functionMap);
       if (fnNames.length === 1) {
@@ -518,7 +457,7 @@ export class Vm {
       }
     }
 
-    if (this.functionMap[IMPLICIT.name] && this.functionMap[SYS_INIT.name]) {
+    if (this.functionMap[IMPLICIT] && this.functionMap[SYS_INIT.name]) {
       return Err(
         new Error("Cannot use both bootstrap and an implicit function")
       );
@@ -540,7 +479,7 @@ export class Vm {
       fn.opBase = offset;
       offset += fn.operations.length;
       return prog.concat(fn.operations);
-    }, [] as VmOperation[]);
+    }, [] as VmInstruction[]);
 
     this.reset();
 
@@ -563,7 +502,7 @@ export class Vm {
     this.os = new OS(this.memory);
   }
 
-  private validateStackOp(op: StackOperation) {
+  private validateStackOp(op: StackInstruction) {
     if (op.segment == "argument" && op.offset >= this.invocation.nArgs) {
       if (
         this.currentFunction?.name == this.entry &&
@@ -604,16 +543,17 @@ export class Vm {
       this.invocation.opPtr += 1;
       return;
     }
-    if (!this.operation && this.returnLine != undefined) {
-      // already returned
-      return;
+
+    if (this.operation == undefined) {
+      this.os.sys.halt();
+      return this.step();
     }
 
-    let operation = this.operation ?? { op: "return" }; // Implicit return if the function doesn't end on its own.
+    const operation = this.operation;
 
     if (operation.op === "label") {
       this.invocation.opPtr += 1;
-      operation = this.operation ?? { op: "return" };
+      return this.step();
     }
 
     switch (operation.op) {
@@ -716,10 +656,6 @@ export class Vm {
         }
         break;
       }
-      case "label": {
-        // noop
-        break;
-      }
     }
     this.invocation.opPtr += 1;
     return;
@@ -806,9 +742,7 @@ export class Vm {
   }
 
   derivedLine(): number {
-    return this.currentFunction
-      ? this.currentFunction.opBase + this.invocation.opPtr
-      : this.returnLine ?? 0;
+    return this.operation?.line ?? this.returnLine ?? 0;
   }
 
   writeDebug(): string {
@@ -842,7 +776,7 @@ function writeFrameValues(fv: VmFrameValues): string {
   return `[${fv.base};${fv.count}][${fv.values.join(", ")}]`;
 }
 
-function writeOp(op: VmOperation): string {
+function writeOp(op: VmInstruction): string {
   switch (op.op) {
     case "add":
     case "and":

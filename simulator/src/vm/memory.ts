@@ -5,7 +5,8 @@ import {
   isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { RAM } from "../cpu/memory.js";
-import { Segment, VmFrame } from "./vm.js";
+import { VmFrame } from "./vm.js";
+import { Segment } from "../languages/vm.js";
 
 export const SP = 0;
 export const LCL = 1;

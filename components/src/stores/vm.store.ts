@@ -47,6 +47,7 @@ export interface ControlsState {
 }
 
 export interface VMFiles {
+  vm: string;
   tst: string;
   cmp: string;
   out: string;
@@ -93,13 +94,15 @@ export function makeVmStore(
   let useTest = false;
   let animate = true;
   const reducers = {
+    setVm(state: VmPageState, vm: string) {
+      state.files.vm = vm;
+    },
     setTst(state: VmPageState, { tst, cmp }: { tst: string; cmp?: string }) {
       state.files.tst = tst;
       state.files.cmp = cmp ?? "";
     },
     setExitCode(state: VmPageState, code: number | undefined) {
       state.controls.exitCode = code;
-      console.log("exit code", code);
     },
     setValid(state: VmPageState, valid: boolean) {
       state.controls.valid = valid;
@@ -137,6 +140,7 @@ export function makeVmStore(
       highlight: undefined,
     },
     files: {
+      vm: "",
       tst: "repeat {\n\tvmstep;\n}",
       cmp: "",
       out: "",
@@ -144,23 +148,45 @@ export function makeVmStore(
   };
   const actions = {
     loadVm(files: VmFile[]) {
+      for (const file of files) {
+        if (file.content.endsWith("\n")) {
+          file.content = file.content.slice(0, -1);
+        }
+      }
+      dispatch.current({
+        action: "setVm",
+        payload: files.map((f) => f.content).join("\n"),
+      });
+
       const parsed = [];
 
+      let lineOffset = 0;
       for (const file of files) {
         const parseResult = VM.parse(file.content);
 
         if (isErr(parseResult)) {
+          dispatch.current({ action: "setValid", payload: false });
           setStatus(`Parse error: ${parseResult.err.message}`);
           return false;
         }
+        const instructions = unwrap(parseResult).instructions;
+
+        for (const instruction of instructions) {
+          if (instruction.line != undefined) {
+            instruction.line += lineOffset;
+          }
+        }
+        lineOffset += instructions.length;
+
         parsed.push({
           name: file.name,
-          instructions: unwrap(parseResult).instructions,
+          instructions,
         });
       }
       const buildResult = Vm.buildFromFiles(parsed);
 
       if (isErr(buildResult)) {
+        dispatch.current({ action: "setValid", payload: false });
         setStatus(`Build Error: ${buildResult.err.message}`);
         return false;
       }
@@ -227,6 +253,9 @@ export function makeVmStore(
     toggleUseTest() {
       useTest = !useTest;
       dispatch.current({ action: "update" });
+    },
+    initialize() {
+      this.loadVm([{ name: "fib", content: FIBONACCI }]);
     },
   };
 

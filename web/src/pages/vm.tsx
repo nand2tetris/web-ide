@@ -11,6 +11,7 @@ import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "src/App.context";
+import { Editor } from "src/shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
@@ -54,12 +55,15 @@ const VM = () => {
   }, []);
 
   useEffect(() => {
+    actions.initialize();
+  }, [actions]);
+
+  useEffect(() => {
     actions.loadTest(tst, cmp);
     actions.reset();
   }, [tst, cmp]);
 
   useEffect(() => {
-    console.log("use effect exit code", state.controls.exitCode);
     if (state.controls.exitCode !== undefined) {
       setStatus(
         state.controls.exitCode == 0
@@ -165,26 +169,15 @@ const VM = () => {
           </>
         }
       >
-        <main>
-          <table>
-            <thead>
-              <tr>
-                <td>Inst</td>
-                <td>Target</td>
-                <td>Val</td>
-              </tr>
-            </thead>
-            <tbody>
-              {state.vm.Prog.map((inst, key) =>
-                VMInstructionRow({
-                  inst,
-                  key,
-                  highlighted: key === state.vm.highlight,
-                })
-              )}
-            </tbody>
-          </table>
-        </main>
+        <Editor
+          value={state.files.vm}
+          onChange={function (source: string): void {
+            return;
+          }}
+          disabled={true}
+          language={""}
+          highlight={state.vm.highlight}
+        />
       </Panel>
       <Panel className="stack" header={<Trans>VM</Trans>}>
         {state.vm.Stack.map((frame, i) => (

@@ -5,7 +5,6 @@ import {
   ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -70,13 +69,6 @@ export const MemoryBlock = ({
         .map((v, i) => [i + pos + offset, v] as [number, number]),
     [memory]
   );
-
-  useEffect(() => {
-    const maxLabelLength = cellLabels
-      ? Math.max(...cellLabels.map((label) => label.length))
-      : 0;
-    console.log(maxLabelLength);
-  }, []);
 
   const row = useCallback(
     ([i, v]: [number, number]) => (

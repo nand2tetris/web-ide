@@ -36,6 +36,10 @@ const ERROR_MESSAGES: Record<ERRNO, string> = {
   [ERRNO.ILLEGAL_CURSOR_LOCATION]: t`Illegal cursor location (Output.moveCursor)`,
 };
 
+interface Rerenderable {
+  rerender: () => void;
+}
+
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
   const { toolStates } = useContext(AppContext);
@@ -134,6 +138,8 @@ const VM = () => {
     actions.setAnimate(speed <= 2);
   };
 
+  const stackRef = useRef<Rerenderable>();
+
   return (
     <div className="Page VmPage grid">
       <Panel
@@ -201,8 +207,43 @@ const VM = () => {
         <Keyboard keyboard={state.vm.Keyboard} />
         {state.controls.animate ? (
           <div style={{ display: "flex", flexDirection: "row" }}>
-            <Memory memory={state.vm.RAM} format="hex" />
-            <Memory memory={state.vm.RAM} format="hex" />
+            <Memory
+              ref={stackRef}
+              name="Global Stack"
+              memory={state.vm.RAM}
+              maxSize={1792}
+              offset={256}
+              format="dec"
+              showUpload={false}
+              showClear={false}
+            />
+            <Memory
+              name="RAM"
+              memory={state.vm.RAM}
+              format="dec"
+              cellLabels={[
+                "SP:",
+                "LCL:",
+                "ARG:",
+                "THIS:",
+                "THAT:",
+                "TEMP1:",
+                "TEMP2:",
+                "TEMP3:",
+                "TEMP4:",
+                "TEMP5:",
+                "TEMP6:",
+                "TEMP7:",
+                "TEMP8:",
+                "R13:",
+                "R14:",
+                "R15:",
+              ]}
+              showUpload={false}
+              onChange={() => {
+                stackRef.current?.rerender();
+              }}
+            />
           </div>
         ) : (
           <p>Hiding display for high speeds</p>

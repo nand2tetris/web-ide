@@ -1,8 +1,8 @@
 @use "./page.scss";
 
 .VmPage {
-  grid-template-columns: 1fr auto 2fr;
-  grid-template-rows: 3fr 2fr;
+  grid-template-columns: 1fr auto 2fr !important;
+  grid-template-rows: 3fr 2fr !important;
   grid-template-areas:
     "program display test"
     "stack display test";

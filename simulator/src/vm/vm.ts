@@ -552,9 +552,9 @@ export class Vm {
       { function: this.entry, opPtr: 1, frameBase: 256, nArgs: 0 },
     ];
     this.memory.reset();
-    this.memory.ARG = 256;
-    this.memory.LCL = 256;
-    this.memory.SP = 256 + this.functionMap[this.entry].nVars;
+    this.memory.ARG = 0;
+    this.memory.LCL = 0;
+    this.memory.SP = 256;
     this.entryNLocal = 0;
     this.entryNArg = 0;
     this.entryLocalInitialized = false;

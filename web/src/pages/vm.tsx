@@ -9,10 +9,9 @@ import {
   DEFAULT_TEST,
   useVmPageStore,
 } from "@nand2tetris/components/stores/vm.store.js";
-import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
-import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "src/App.context";
 import { Editor } from "src/shell/editor";
@@ -206,9 +205,10 @@ const VM = () => {
         />
       </Panel>
       <Panel className="stack" header={<Trans>VM</Trans>}>
-        {state.vm.Stack.map((frame, i) => (
-          <VMStackFrame frame={frame} key={i} />
-        ))}
+        {/* {state.vm.Stack.map((frame, i) => ( */}
+        <CallStack stack={state.vm.Stack} />
+        <VMStackFrame frame={state.vm.Stack[0]} />
+        {/* ))} */}
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
         {runnersAssigned && vmRunner.current && (
@@ -282,92 +282,81 @@ const VM = () => {
 
 export default VM;
 
-export function VMStackFrame({ frame }: { frame: VmFrame }) {
+const UNKNOWN = "Unknown function";
+
+function callStack(frames: VmFrame[]) {
+  const nameCounts: Record<string, number> = {};
+  frames = frames.filter((frame) => frame.fn?.name != IMPLICIT);
+
+  for (const frame of frames) {
+    if (!frame.fn) {
+      continue;
+    }
+
+    if (nameCounts[frame.fn.name]) {
+      nameCounts[frame.fn.name]++;
+    } else {
+      nameCounts[frame.fn.name] = 1;
+    }
+  }
+
+  const names = frames
+    .slice()
+    .reverse()
+    .map((frame) =>
+      frame.fn?.name == SYS_INIT.name
+        ? `${SYS_INIT.name} (built-in)`
+        : frame.fn?.name ?? UNKNOWN
+    );
+
+  for (const name of Object.keys(nameCounts)) {
+    if (nameCounts[name] == 1) {
+      continue;
+    }
+
+    nameCounts[name] = 0;
+    for (let i = 0; i < names.length; i++) {
+      if (names[i] === name) {
+        names[i] = `${name}[${nameCounts[name]}]`;
+        nameCounts[name]++;
+      }
+    }
+  }
+
+  return names;
+}
+
+function CallStack({ stack }: { stack: VmFrame[] }) {
+  return (
+    <section>
+      <p>
+        Call Stack:
+        <code>{callStack(stack).join(" > ")}</code>
+      </p>
+    </section>
+  );
+}
+
+function VMStackFrame({ frame }: { frame: VmFrame }) {
   return (
     <section>
       <header>
-        <h3>
-          Function
-          <code>{frame.fn?.name ?? "Unknown Function"}</code>
-        </h3>
+        <h6>Segments</h6>
       </header>
       <main>
         <p>
-          <em>Args:</em>
+          Args:
           <code>[{frame.args.values.join(", ")}]</code>
         </p>
         <p>
-          <em>Locals:</em>
+          Locals:
           <code>[{frame.locals.values.join(", ")}]</code>
         </p>
         <p>
-          <em>Stack:</em>
+          Stack:
           <code>[{frame.stack.values.join(", ")}]</code>
         </p>
       </main>
     </section>
   );
-}
-
-export function VMInstructionRow({
-  inst,
-  key,
-  highlighted,
-}: {
-  inst: VMLang.VmInstruction;
-  key: number;
-  highlighted: boolean;
-}) {
-  switch (inst.op) {
-    case "add":
-    case "and":
-    case "eq":
-    case "gt":
-    case "lt":
-    case "neg":
-    case "not":
-    case "or":
-    case "sub":
-    case "return":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td colSpan={2}></td>
-        </tr>
-      );
-
-    case "if-goto":
-    case "label":
-    case "goto":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td colSpan={2}>{inst.label}</td>
-        </tr>
-      );
-    case "function":
-    case "call":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td>{inst.name}</td>
-          <td>{inst.op === "call" ? inst.nArgs : inst.nVars}</td>
-        </tr>
-      );
-    case "pop":
-    case "push":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td>{inst.segment}</td>
-          <td>{inst.offset.toString()}</td>
-        </tr>
-      );
-    default:
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td colSpan={3}>Unknown</td>
-        </tr>
-      );
-  }
 }

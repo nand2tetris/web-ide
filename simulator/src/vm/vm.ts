@@ -57,9 +57,9 @@ interface VmFunctionInvocation {
   nArgs: number;
 }
 
-const IMPLICIT = "__implicit";
+export const IMPLICIT = "__implicit";
 
-const SYS_INIT: VmFunction = {
+export const SYS_INIT: VmFunction = {
   name: "Sys.init",
   labels: {},
   nVars: 0,

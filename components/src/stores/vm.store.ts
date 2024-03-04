@@ -86,7 +86,7 @@ function reduceVMTest(
     Statics: [
       ...vmTest.vm.memory.map((_, v) => v, 16, 16 + vmTest.vm.getStaticCount()),
     ],
-    Temp: [...vmTest.vm.memory.map((_, v) => v, 5, 15)],
+    Temp: [...vmTest.vm.memory.map((_, v) => v, 5, 13)],
     AddedSysInit: vmTest.vm.addedSysInit,
     highlight,
   };

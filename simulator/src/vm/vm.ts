@@ -94,6 +94,7 @@ export class Vm {
 
   functions: VmFunction[] = [];
   program: VmInstruction[] = [];
+  addedSysInit = false;
 
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
@@ -451,6 +452,7 @@ export class Vm {
   bootstrap() {
     if (!this.functionMap[SYS_INIT.name] && this.functionMap["Main.main"]) {
       this.functionMap[SYS_INIT.name] = SYS_INIT;
+      this.addedSysInit = true;
       // TODO should this be an error from the compiler/OS?
     }
 

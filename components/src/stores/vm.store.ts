@@ -28,6 +28,7 @@ export interface VmSim {
   Prog: VmInstruction[];
   Statics: number[];
   Temp: number[];
+  AddedSysInit: boolean;
   highlight: number;
 }
 
@@ -86,6 +87,7 @@ function reduceVMTest(
       ...vmTest.vm.memory.map((_, v) => v, 16, 16 + vmTest.vm.getStaticCount()),
     ],
     Temp: [...vmTest.vm.memory.map((_, v) => v, 5, 15)],
+    AddedSysInit: vmTest.vm.addedSysInit,
     highlight,
   };
 }

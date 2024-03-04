@@ -205,7 +205,10 @@ const VM = () => {
         />
       </Panel>
       <Panel className="stack" header={<Trans>VM</Trans>}>
-        <CallStack stack={state.vm.Stack} />
+        <CallStack
+          stack={state.vm.Stack}
+          addedSysInit={state.vm.AddedSysInit}
+        />
         <VMStackFrame
           statics={state.vm.Statics}
           temp={state.vm.Temp}
@@ -286,7 +289,7 @@ export default VM;
 
 const UNKNOWN = "Unknown function";
 
-function callStack(frames: VmFrame[]) {
+function callStack(frames: VmFrame[], addedSysInit: boolean) {
   const nameCounts: Record<string, number> = {};
   frames = frames.filter((frame) => frame.fn?.name != IMPLICIT);
 
@@ -307,7 +310,9 @@ function callStack(frames: VmFrame[]) {
     .reverse()
     .map((frame) =>
       frame.fn?.name == SYS_INIT.name
-        ? `${SYS_INIT.name} (built-in)`
+        ? addedSysInit
+          ? `${SYS_INIT.name} (built-in)`
+          : SYS_INIT.name
         : frame.fn?.name ?? UNKNOWN
     );
 
@@ -328,12 +333,18 @@ function callStack(frames: VmFrame[]) {
   return names;
 }
 
-function CallStack({ stack }: { stack: VmFrame[] }) {
+function CallStack({
+  stack,
+  addedSysInit,
+}: {
+  stack: VmFrame[];
+  addedSysInit: boolean;
+}) {
   return (
     <section>
       <p>
         Call Stack:
-        <code>{callStack(stack).join(" > ")}</code>
+        <code>{callStack(stack, addedSysInit).join(" > ")}</code>
       </p>
     </section>
   );

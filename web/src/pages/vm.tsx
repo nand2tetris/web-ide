@@ -3,8 +3,12 @@ import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
+import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { DEFAULT_TEST, useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
+import {
+  DEFAULT_TEST,
+  useVmPageStore,
+} from "@nand2tetris/components/stores/vm.store.js";
 import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
@@ -77,10 +81,11 @@ const VM = () => {
     }
   }, [state.controls.exitCode]);
 
-  const runner = useRef<Timer>();
-  const [runnerAssigned, setRunnersAssigned] = useState(false);
+  const vmRunner = useRef<Timer>();
+  const testRunner = useRef<Timer>();
+  const [runnersAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
-    runner.current = new (class ChipTimer extends Timer {
+    vmRunner.current = new (class VMTimer extends Timer {
       override async tick() {
         return actions.step();
       }
@@ -98,10 +103,31 @@ const VM = () => {
         dispatch.current({ action: "update" });
       }
     })();
+
+    testRunner.current = new (class TestTimer extends Timer {
+      override async tick() {
+        return actions.testStep();
+      }
+
+      override finishFrame() {
+        dispatch.current({ action: "update" });
+      }
+
+      override reset() {
+        setStatus("Reset");
+        actions.reset();
+      }
+
+      override toggle() {
+        dispatch.current({ action: "update" });
+      }
+    })();
+
     setRunnersAssigned(true);
 
     return () => {
-      runner.current?.stop();
+      vmRunner.current?.stop();
+      testRunner.current?.stop();
     };
   }, [actions, dispatch]);
 
@@ -185,17 +211,13 @@ const VM = () => {
         ))}
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              onChange={actions.toggleUseTest}
-              checked={state.test.useTest}
-              role="switch"
-            />
-            Use Test Script
-          </label>
-        </div>
+        {runnersAssigned && vmRunner.current && (
+          <Runbar
+            runner={vmRunner.current}
+            disabled={!state.controls.valid}
+            onSpeedChange={onSpeedChange}
+          />
+        )}
         <Screen memory={state.vm.Screen} />
         <Keyboard keyboard={state.vm.Keyboard} />
         {state.controls.animate ? (
@@ -242,9 +264,9 @@ const VM = () => {
           <p>Hiding display for high speeds</p>
         )}
       </Panel>
-      {runnerAssigned && (
+      {runnersAssigned && (
         <TestPanel
-          runner={runner}
+          runner={testRunner}
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}

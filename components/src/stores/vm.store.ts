@@ -221,22 +221,27 @@ export function makeVmStore(
       animate = value;
       dispatch.current({ action: "setAnimate", payload: value });
     },
+    testStep() {
+      const done = test.step();
+      dispatch.current({ action: "testStep" });
+      if (done) {
+        dispatch.current({ action: "testFinished" });
+      }
+      if (animate) {
+        dispatch.current({ action: "update" });
+      }
+      return done;
+    },
     step() {
       try {
         let done = false;
-        if (useTest) {
-          done = test.step();
-          dispatch.current({ action: "testStep" });
-          if (done) {
-            dispatch.current({ action: "testFinished" });
-          }
-        } else {
-          const exitCode = vm.step();
-          if (exitCode !== undefined) {
-            done = true;
-            dispatch.current({ action: "setExitCode", payload: exitCode });
-          }
+
+        const exitCode = vm.step();
+        if (exitCode !== undefined) {
+          done = true;
+          dispatch.current({ action: "setExitCode", payload: exitCode });
         }
+
         if (animate) {
           dispatch.current({ action: "update" });
         }

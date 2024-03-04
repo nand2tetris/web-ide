@@ -212,7 +212,7 @@ export class VmMemory extends RAM {
     const locals = [...this.map((_, v) => v, lcl, lcl + localN)];
     const stack = [...this.map((_, v) => v, stk, stk + stackN)];
     const this_ = [...this.map((_, v) => v, this.THIS, this.THIS + thisN)];
-    const that = [...this.map((_, v) => v, this.THIS, this.THIS + thatN)];
+    const that = [...this.map((_, v) => v, this.THAT, this.THAT + thatN)];
     return {
       args: { base: arg, count: argN, values: args },
       locals: { base: lcl, count: localN, values: locals },

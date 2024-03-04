@@ -205,10 +205,12 @@ const VM = () => {
         />
       </Panel>
       <Panel className="stack" header={<Trans>VM</Trans>}>
-        {/* {state.vm.Stack.map((frame, i) => ( */}
         <CallStack stack={state.vm.Stack} />
-        <VMStackFrame frame={state.vm.Stack[0]} />
-        {/* ))} */}
+        <VMStackFrame
+          statics={state.vm.Statics}
+          temp={state.vm.Temp}
+          frame={state.vm.Stack[0]}
+        />
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
         {runnersAssigned && vmRunner.current && (
@@ -337,7 +339,15 @@ function CallStack({ stack }: { stack: VmFrame[] }) {
   );
 }
 
-function VMStackFrame({ frame }: { frame: VmFrame }) {
+function VMStackFrame({
+  statics,
+  temp,
+  frame,
+}: {
+  statics: number[];
+  temp: number[];
+  frame: VmFrame;
+}) {
   return (
     <section>
       <header>
@@ -345,17 +355,45 @@ function VMStackFrame({ frame }: { frame: VmFrame }) {
       </header>
       <main>
         <p>
-          Args:
-          <code>[{frame.args.values.join(", ")}]</code>
-        </p>
-        <p>
-          Locals:
-          <code>[{frame.locals.values.join(", ")}]</code>
-        </p>
-        <p>
           Stack:
           <code>[{frame.stack.values.join(", ")}]</code>
         </p>
+        {frame.usedSegments?.has("static") && (
+          <p>
+            Statics:
+            <code>[{statics.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("local") && (
+          <p>
+            Local:
+            <code>[{frame.locals.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("argument") && (
+          <p>
+            Argument:
+            <code>[{frame.args.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("this") && (
+          <p>
+            This:
+            <code>[{frame.this.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("that") && (
+          <p>
+            That:
+            <code>[{frame.that.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("temp") && (
+          <p>
+            Temp:
+            <code>[{temp.join(", ")}]</code>
+          </p>
+        )}
       </main>
     </section>
   );

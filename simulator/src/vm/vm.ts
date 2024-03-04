@@ -9,6 +9,7 @@ import { MemoryAdapter, RAM } from "../cpu/memory.js";
 import {
   CallInstruction,
   FunctionInstruction,
+  Segment,
   StackInstruction,
   VmInstruction,
 } from "../languages/vm.js";
@@ -36,6 +37,7 @@ export interface VmFrame {
     THIS: number;
     THAT: number;
   };
+  usedSegments?: Set<Segment>;
 }
 
 export type VmFunctions = Record<string, VmFunction>;
@@ -55,6 +57,8 @@ interface VmFunctionInvocation {
   frameBase: number;
   // The number of args the function was called with
   nArgs: number;
+  // The size of the memory block pointed to by the function's THIS (if exists)
+  thisN?: number;
 }
 
 export const IMPLICIT = "__implicit";
@@ -93,6 +97,10 @@ export class Vm {
 
   private staticCount = 0;
   protected statics: Record<string, number[]> = {};
+
+  getStaticCount() {
+    return this.staticCount;
+  }
 
   private returnLine: number | undefined = undefined;
 
@@ -570,6 +578,11 @@ export class Vm {
         this.validateStackOp(operation);
         const value = this.memory.pop();
         this.memory.setSegment(operation.segment, operation.offset, value);
+
+        // update this size if changed
+        if (operation.segment == "pointer" && operation.offset == 0) {
+          this.invocation.thisN = this.memory.get(this.memory.THIS - 1);
+        }
         break;
       }
       case "add": {
@@ -690,6 +703,18 @@ export class Vm {
     });
   }
 
+  private getUsedSegments(invocation: VmFunctionInvocation) {
+    const usedSegments = new Set<Segment>();
+
+    for (const inst of this.functionMap[invocation.function].operations) {
+      if (inst.op === "push" || inst.op == "pop") {
+        usedSegments.add(inst.segment);
+      }
+    }
+
+    return usedSegments;
+  }
+
   makeFrame(invocation = this.invocation, nextFrame: number): VmFrame {
     const fn = this.functionMap[invocation.function];
     if (fn.name === this.entry) {
@@ -727,17 +752,19 @@ export class Vm {
           THAT,
           THIS,
         },
+        usedSegments: this.getUsedSegments(invocation),
       };
     }
     const frame = this.memory.getFrame(
       invocation.frameBase,
       invocation.nArgs,
       fn.nVars,
-      0,
-      0,
+      this.invocation.thisN ?? 0,
+      1,
       nextFrame
     );
     frame.fn = fn;
+    frame.usedSegments = this.getUsedSegments(invocation);
     return frame;
   }
 

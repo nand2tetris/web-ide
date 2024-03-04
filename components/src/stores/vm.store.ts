@@ -26,6 +26,8 @@ export interface VmSim {
   Keyboard: KeyboardAdapter;
   Stack: VmFrame[];
   Prog: VmInstruction[];
+  Statics: number[];
+  Temp: number[];
   highlight: number;
 }
 
@@ -80,6 +82,10 @@ function reduceVMTest(
     Screen,
     Stack: vmTest.vm.vmStack().reverse(),
     Prog: vmTest.vm.program,
+    Statics: [
+      ...vmTest.vm.memory.map((_, v) => v, 16, 16 + vmTest.vm.getStaticCount()),
+    ],
+    Temp: [...vmTest.vm.memory.map((_, v) => v, 5, 15)],
     highlight,
   };
 }

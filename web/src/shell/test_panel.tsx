@@ -28,6 +28,9 @@ export const TestPanel = ({
   cmp: [cmp, setCmp],
   out: [out],
   disabled = false,
+  defaultTst,
+  defaultCmp,
+  showClear = false,
   onSpeedChange,
   compileTest,
 }: {
@@ -35,6 +38,9 @@ export const TestPanel = ({
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
+  defaultTst?: string;
+  defaultCmp?: string;
+  showClear?: boolean;
   disabled?: boolean;
   onSpeedChange?: (speed: number) => void;
   compileTest?: (tst: string, cmp: string) => void;
@@ -59,6 +65,11 @@ export const TestPanel = ({
   const [savedTst, setSavedTst] = useState("");
   const [savedCmp, setSavedCmp] = useState("");
   const editDialog = useDialog();
+
+  const clear = () => {
+    setTst(defaultTst ?? "");
+    setCmp(defaultCmp ?? "");
+  };
 
   const onEdit = () => {
     if (!localStorage.getItem(WARNING_KEY)) {
@@ -157,6 +168,7 @@ export const TestPanel = ({
           </div>
           <div>
             <fieldset role="group">
+              {showClear && <button onClick={clear}>Clear</button>}
               {editMode ? (
                 <button onClick={restore}>Restore</button>
               ) : (

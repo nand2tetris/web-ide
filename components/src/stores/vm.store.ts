@@ -18,6 +18,8 @@ import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 
+export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
+
 export interface VmSim {
   RAM: MemoryAdapter;
   Screen: MemoryAdapter;
@@ -141,7 +143,7 @@ export function makeVmStore(
     },
     files: {
       vm: "",
-      tst: "repeat {\n\tvmstep;\n}",
+      tst: DEFAULT_TEST,
       cmp: "",
       out: "",
     },

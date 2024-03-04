@@ -4,7 +4,7 @@ import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
+import { DEFAULT_TEST, useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
 import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
@@ -248,6 +248,8 @@ const VM = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          showClear={true}
+          defaultTst={DEFAULT_TEST}
           onSpeedChange={onSpeedChange}
           disabled={!state.controls.valid}
         />

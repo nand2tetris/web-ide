@@ -484,7 +484,9 @@ export class Vm {
 
     let offset = 0;
     this.program = this.functions.reduce((prog, fn) => {
-      fn.opBase = offset;
+      if (fn.name != SYS_INIT.name) {
+        fn.opBase = offset;
+      }
       offset += fn.operations.length;
       return prog.concat(fn.operations);
     }, [] as VmInstruction[]);

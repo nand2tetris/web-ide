@@ -1,6 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-// import { VM as multVM } from "@nand2tetris/simulator/testing/mult.js";
-import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Result, isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm.js";
 import {
   KeyboardAdapter,
@@ -157,6 +156,23 @@ export function makeVmStore(
     },
   };
   const actions = {
+    setVm(content: string) {
+      dispatch.current({
+        action: "setVm",
+        payload: content,
+      });
+
+      const parseResult = VM.parse(content);
+
+      if (isErr(parseResult)) {
+        dispatch.current({ action: "setValid", payload: false });
+        setStatus(`Parse error: ${parseResult.err.message}`);
+        return false;
+      }
+      const instructions = unwrap(parseResult).instructions;
+      const buildResult = Vm.build(instructions);
+      return this.replaceVm(buildResult);
+    },
     loadVm(files: VmFile[]) {
       for (const file of files) {
         if (file.content.endsWith("\n")) {
@@ -194,12 +210,16 @@ export function makeVmStore(
         });
       }
       const buildResult = Vm.buildFromFiles(parsed);
-
+      return this.replaceVm(buildResult);
+    },
+    replaceVm(buildResult: Result<Vm, Error>) {
       if (isErr(buildResult)) {
         dispatch.current({ action: "setValid", payload: false });
         setStatus(`Build Error: ${buildResult.err.message}`);
         return false;
       }
+      dispatch.current({ action: "setValid", payload: true });
+      setStatus("Compiled VM code successfully");
 
       vm = unwrap(buildResult);
       test.vm = vm;

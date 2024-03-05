@@ -196,10 +196,10 @@ const VM = () => {
       >
         <Editor
           value={state.files.vm}
-          onChange={function (source: string): void {
+          onChange={(source: string) => {
             actions.setVm(source);
           }}
-          language={""}
+          language={"vm"}
           highlight={state.controls.valid ? state.vm.highlight : undefined}
         />
       </Panel>

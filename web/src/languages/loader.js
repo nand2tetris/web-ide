@@ -8,7 +8,7 @@ const LANGUAGES = {
   hdl: HdlLanguage,
   cmp: CmpLanguage,
   tst: TstLanguage,
-  vm: VmLanguage
+  vm: VmLanguage,
 };
 
 export async function registerLanguages() {

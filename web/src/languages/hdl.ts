@@ -108,6 +108,7 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
       // characters
       [/'[^\\']'/, "string"],
       [/(')(@escapes)(')/, ["string", "string.escape", "string"]],
+      [/@escapes/, "string.escape"],
       [/'/, "string.invalid"],
     ],
 

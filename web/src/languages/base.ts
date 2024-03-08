@@ -10,7 +10,6 @@ export const base: monaco.languages.IMonarchLanguage = {
 
     string: [
       [/[^\\"]+/, "string"],
-      [/@escapes/, "string.escape"],
       [/\\./, "string.escape.invalid"],
       [/"/, { token: "string.quote", bracket: "@close", next: "@pop" }],
     ],

@@ -219,6 +219,7 @@ export const Memory = forwardRef(
       setGoto({
         value: value,
       });
+      rerenderMemoryBlock();
     };
 
     const fileUploadRef = useRef<HTMLInputElement>(null);

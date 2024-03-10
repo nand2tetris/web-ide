@@ -120,6 +120,9 @@ export class VMTest extends Test<VMTestInstruction> {
   }
 
   override async load(filename?: string) {
+    if (!this.loadAction) {
+      return;
+    }
     if (filename) {
       const file = await this.fs.readFile(
         `${this.dir ? `${this.dir}/` : ""}${filename}`
@@ -136,7 +139,7 @@ export class VMTest extends Test<VMTestInstruction> {
           files.push({ name: stat.name.replace(".vm", ""), content: file });
         }
       }
-      this.loadAction?.(files);
+      this.loadAction(files);
     }
   }
 }

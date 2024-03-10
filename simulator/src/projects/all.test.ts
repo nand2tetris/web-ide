@@ -123,15 +123,23 @@ describe("Vm Projects", () => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ...VmProjects[project]!,
         };
-        const vmFile = vmProject.VMS[vmName]?.[`${vmName}.vm`];
+
         const tstFile = vmProject.VMS[vmName]?.[`${vmName}VME.tst`];
         const cmpFile = vmProject.VMS[vmName]?.[`${vmName}.cmp`];
 
-        expect(vmFile).toBeDefined();
+        let vmCode = "";
+        for (const filename of Object.keys(vmProject.VMS[vmName])) {
+          if (filename.endsWith(".vm")) {
+            const vmFile = vmProject.VMS[vmName]?.[filename];
+            expect(vmFile).toBeDefined();
+            vmCode += vmFile;
+          }
+        }
+
         expect(tstFile).toBeDefined();
         expect(cmpFile).toBeDefined();
 
-        const parsed = VM.parse(vmFile);
+        const parsed = VM.parse(vmCode);
         expect(parsed).toBeOk();
         const tst = TST.parse(tstFile);
         expect(tst).toBeOk();

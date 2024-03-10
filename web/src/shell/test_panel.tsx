@@ -160,26 +160,37 @@ export const TestPanel = ({
           <div className="flex-0">
             <Trans>Test</Trans>
           </div>
+          <fieldset role="group"></fieldset>
+          {editWarning}
           <div className="flex-1">
             {runner.current && (
               <Runbar
+                prefix={
+                  <>
+                    {showClear && (
+                      <button className="flex-0" onClick={clear}>
+                        Clear
+                      </button>
+                    )}
+                    {editMode ? (
+                      <button className="flex-0" onClick={restore}>
+                        Restore
+                      </button>
+                    ) : (
+                      <button className="flex-0" onClick={onEdit}>
+                        Edit
+                      </button>
+                    )}
+                    <button className="flex-0" onClick={loadTest}>
+                      📂
+                    </button>
+                  </>
+                }
                 runner={runner.current}
                 disabled={disabled}
                 onSpeedChange={onSpeedChange}
               />
             )}
-          </div>
-          <div>
-            <fieldset role="group">
-              {showClear && <button onClick={clear}>Clear</button>}
-              {editMode ? (
-                <button onClick={restore}>Restore</button>
-              ) : (
-                <button onClick={onEdit}>Edit</button>
-              )}
-              <button onClick={loadTest}>📂</button>
-            </fieldset>
-            {editWarning}
           </div>
         </>
       }

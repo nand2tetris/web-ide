@@ -182,7 +182,38 @@ const VM = () => {
         className="program"
         header={
           <>
-            <Trans>VM Code</Trans>
+            <div className="flex-0" style={{ whiteSpace: "nowrap" }}>
+              <Trans>VM Code</Trans>
+            </div>
+            <div className="flex-1">
+              {runnersAssigned && vmRunner.current && (
+                <Runbar
+                  prefix={
+                    <>
+                      <button
+                        className="flex-0"
+                        onClick={loadFile}
+                        data-tooltip="Load file"
+                        data-placement="bottom"
+                      >
+                        📄
+                      </button>
+                      <button
+                        className="flex-0"
+                        onClick={loadDir}
+                        data-tooltip="Load directory"
+                        data-placement="bottom"
+                      >
+                        📂
+                      </button>
+                    </>
+                  }
+                  runner={vmRunner.current}
+                  disabled={!state.controls.valid}
+                  onSpeedChange={onSpeedChange}
+                />
+              )}
+            </div>
             <input
               type="file"
               style={{ display: "none" }}
@@ -196,24 +227,6 @@ const VM = () => {
               ref={dirUploadRef}
               onChange={uploadFile}
             />
-            <fieldset role="group">
-              <button
-                className="flex-0"
-                onClick={loadFile}
-                data-tooltip="Load file"
-                data-placement="bottom"
-              >
-                📄
-              </button>
-              <button
-                className="flex-0"
-                onClick={loadDir}
-                data-tooltip="Load directory"
-                data-placement="bottom"
-              >
-                📂
-              </button>
-            </fieldset>
           </>
         }
       >
@@ -242,13 +255,6 @@ const VM = () => {
         )}
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
-        {runnersAssigned && vmRunner.current && (
-          <Runbar
-            runner={vmRunner.current}
-            disabled={!state.controls.valid}
-            onSpeedChange={onSpeedChange}
-          />
-        )}
         <Screen memory={state.vm.Screen} />
         <Keyboard keyboard={state.vm.Keyboard} />
 
@@ -272,6 +278,7 @@ const VM = () => {
               "ARG:",
               "THIS:",
               "THAT:",
+              "TEMP0:",
               "TEMP1:",
               "TEMP2:",
               "TEMP3:",
@@ -279,7 +286,6 @@ const VM = () => {
               "TEMP5:",
               "TEMP6:",
               "TEMP7:",
-              "TEMP8:",
               "R13:",
               "R14:",
               "R15:",

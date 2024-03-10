@@ -68,7 +68,7 @@ function makeInstruction(inst: TstOperation) {
       return new TestLoadInstruction(inst.file);
     case "output-file":
     case "compare-to":
-      return undefined
+      return undefined;
     default:
       checkExhaustive(op, `Unknown tst operation ${op}`);
   }

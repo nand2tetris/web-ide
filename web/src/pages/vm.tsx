@@ -131,9 +131,14 @@ const VM = () => {
   }, [actions, dispatch]);
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
+  const dirUploadRef = useRef<HTMLInputElement>(null);
 
-  const loadProgram = () => {
+  const loadFile = () => {
     fileUploadRef.current?.click();
+  };
+
+  const loadDir = () => {
+    dirUploadRef.current?.click();
   };
 
   const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -178,19 +183,35 @@ const VM = () => {
             <Trans>Program</Trans>
             <input
               type="file"
-              multiple
               style={{ display: "none" }}
               ref={fileUploadRef}
               onChange={uploadFile}
             />
-            <button
-              className="flex-0"
-              onClick={loadProgram}
-              data-tooltip="Load file"
-              data-placement="bottom"
-            >
-              📂
-            </button>
+            <input
+              type="file"
+              webkitdirectory=""
+              style={{ display: "none" }}
+              ref={dirUploadRef}
+              onChange={uploadFile}
+            />
+            <fieldset role="group">
+              <button
+                className="flex-0"
+                onClick={loadFile}
+                data-tooltip="Load file"
+                data-placement="bottom"
+              >
+                📄
+              </button>
+              <button
+                className="flex-0"
+                onClick={loadDir}
+                data-tooltip="Load directory"
+                data-placement="bottom"
+              >
+                📂
+              </button>
+            </fieldset>
           </>
         }
       >

@@ -32,6 +32,7 @@ export const VmLanguage: monaco.languages.IMonarchLanguage = {
 
   tokenizer: {
     root: [
+      [/if-goto/, "keyword"], // next rule doesn't catch this because of the hyphen
       [
         /[_a-zA-Z][_a-zA-Z0-9.$]*/,
         {

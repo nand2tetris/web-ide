@@ -401,10 +401,10 @@ function VMStackFrame({
             <code>[{statics.join(", ")}]</code>
           </p>
         )}
-        {frame.usedSegments?.has("this") && (
+        {frame.usedSegments?.has("pointer") && (
           <p>
-            this:
-            <code>[{frame.this.values.join(", ")}]</code>
+            pointer:
+            <code>[{`${frame.frame.THIS}, ${frame.frame.THAT}`}]</code>
           </p>
         )}
         {frame.usedSegments?.has("that") && (

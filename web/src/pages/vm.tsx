@@ -251,8 +251,7 @@ const VM = () => {
             ref={stackRef}
             name="Global Stack"
             memory={state.vm.RAM}
-            maxSize={1792}
-            offset={256}
+            initialAddr={256}
             format="dec"
             showUpload={false}
             showClear={false}

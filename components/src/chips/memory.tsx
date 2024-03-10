@@ -182,6 +182,7 @@ export const Memory = forwardRef(
       format = "dec",
       maxSize,
       offset,
+      initialAddr,
       cellLabels,
       showUpload = true,
       showClear = true,
@@ -195,6 +196,7 @@ export const Memory = forwardRef(
       memory: MemoryAdapter;
       maxSize?: number;
       offset?: number;
+      initialAddr?: number;
       format: Format;
       cellLabels?: string[];
       showUpload?: boolean;
@@ -206,7 +208,7 @@ export const Memory = forwardRef(
   ) => {
     const [fmt, setFormat] = useStateInitializer(format);
     const [jmp, setJmp] = useState("");
-    const [goto, setGoto] = useState({ value: 0 });
+    const [goto, setGoto] = useState({ value: initialAddr ?? 0 });
     const [highlighted, setHighlighted] = useStateInitializer(highlight);
     const [renderKey, setRenderKey] = useState(0);
 

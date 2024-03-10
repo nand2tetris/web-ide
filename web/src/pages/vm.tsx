@@ -180,7 +180,7 @@ const VM = () => {
         className="program"
         header={
           <>
-            <Trans>Program</Trans>
+            <Trans>VM Code</Trans>
             <input
               type="file"
               style={{ display: "none" }}
@@ -224,15 +224,15 @@ const VM = () => {
           highlight={state.controls.valid ? state.vm.highlight : undefined}
         />
       </Panel>
-      <Panel className="stack" header={<Trans>VM</Trans>}>
-        <CallStack
-          stack={state.vm.Stack}
-          addedSysInit={state.vm.AddedSysInit}
-        />
+      <Panel className="stack" header={<Trans>VM Structures</Trans>}>
         <VMStackFrame
           statics={state.vm.Statics}
           temp={state.vm.Temp}
           frame={state.vm.Stack[0]}
+        />
+        <CallStack
+          stack={state.vm.Stack}
+          addedSysInit={state.vm.AddedSysInit}
         />
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
@@ -360,7 +360,7 @@ function CallStack({
   return (
     <section>
       <p>
-        Call Stack:
+        Call-stack:
         <code>{callStack(stack, addedSysInit).join(" > ")}</code>
       </p>
     </section>
@@ -378,47 +378,44 @@ function VMStackFrame({
 }) {
   return (
     <section>
-      <header>
-        <h6>Segments</h6>
-      </header>
       <main>
         <p>
           Stack:
           <code>[{frame.stack.values.join(", ")}]</code>
         </p>
-        {frame.usedSegments?.has("static") && (
-          <p>
-            Statics:
-            <code>[{statics.join(", ")}]</code>
-          </p>
-        )}
         {frame.usedSegments?.has("local") && (
           <p>
-            Local:
+            local:
             <code>[{frame.locals.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("argument") && (
           <p>
-            Argument:
+            argument:
             <code>[{frame.args.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("static") && (
+          <p>
+            static:
+            <code>[{statics.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("this") && (
           <p>
-            This:
+            this:
             <code>[{frame.this.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("that") && (
           <p>
-            That:
+            that:
             <code>[{frame.that.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("temp") && (
           <p>
-            Temp:
+            temp:
             <code>[{temp.join(", ")}]</code>
           </p>
         )}

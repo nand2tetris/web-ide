@@ -1,52 +1,47 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/08/ProgramFlow/FibonacciSeries/FibonacciSeries.vm
+// File name: projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm
 
-// Puts the first argument[0] elements of the Fibonacci series
-// in the memory, starting in the address given in argument[1].
-// Argument[0] and argument[1] are initialized by the test script 
-// before this code starts running.
+// Puts the first n elements of the Fibonacci series in the memory,
+// starting at address addr. n and addr are given in argument[0] and
+// argument[1], which must be initialized by the caller of this code.
 
-push argument 1
-pop pointer 1           // that = argument[1]
+	push argument 1         // sets THAT, the base address of the
+	pop pointer 1           // that segment, to argument[1]
+	push constant 0         // sets the series' first and second
+	pop that 0              // elements to 0 and 1, respectively       
+	push constant 1   
+	pop that 1              
+	push argument 0         // sets n, the number of remaining elements
+	push constant 2         // to be computed, to argument[0] minus 2,
+	sub                     // since 2 elements were already computed.
+	pop argument 0          
 
-push constant 0
-pop that 0              // first element in the series = 0
-push constant 1
-pop that 1              // second element in the series = 1
-
-push argument 0
-push constant 2
-sub
-pop argument 0          // num_of_elements -= 2 (first 2 elements are set)
-
-label MAIN_LOOP_START
-
-push argument 0
-if-goto COMPUTE_ELEMENT // if num_of_elements > 0, goto COMPUTE_ELEMENT
-goto END_PROGRAM        // otherwise, goto END_PROGRAM
+label LOOP
+	push argument 0
+	if-goto COMPUTE_ELEMENT // if n > 0, goto COMPUTE_ELEMENT
+	goto END                // otherwise, goto END
 
 label COMPUTE_ELEMENT
+    // that[2] = that[0] + that[1]
+	push that 0
+	push that 1
+	add
+	pop that 2
+	// THAT += 1 (updates the base address of that)
+	push pointer 1
+	push constant 1
+	add
+	pop pointer 1 
+	// updates n-- and loops          
+	push argument 0
+	push constant 1
+	sub
+	pop argument 0          
+	goto LOOP
 
-push that 0
-push that 1
-add
-pop that 2              // that[2] = that[0] + that[1]
-
-push pointer 1
-push constant 1
-add
-pop pointer 1           // that += 1
-
-push argument 0
-push constant 1
-sub
-pop argument 0          // num_of_elements--
-
-goto MAIN_LOOP_START
-
-label END_PROGRAM
+label END
 `;
 
 export const vm_tst = `// This file is part of www.nand2tetris.org
@@ -59,6 +54,8 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the base addresses of the local and argument segments,
 // and sets argument[0] to n and argument [1] to the base address
 // of the generated series.
+
+load FibonacciSeries.vm,
 
 set sp 256,
 set local 300,

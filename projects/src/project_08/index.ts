@@ -27,20 +27,22 @@ export const VMS = {
     "SimpleFunction.tst": simple_function.hdl_tst,
   },
   NestedCall: {
-    "Sys.vm": nested_call.vm, // Test uses a special name here
-    "NestedCall.vm": nested_call.vm,
+    "Sys.vm": nested_call.sys, // Test uses a special name here
     "NestedCallVME.tst": nested_call.vm_tst,
     "NestedCall.cmp": nested_call.cmp,
     "NestedCall.tst": nested_call.hdl_tst,
   },
   FibonacciElement: {
-    "FibonacciElement.vm": fibonacci_element.vm,
+    "Sys.vm": fibonacci_element.sys,
+    "Main.vm": fibonacci_element.main,
     "FibonacciElementVME.tst": fibonacci_element.vm_tst,
     "FibonacciElement.cmp": fibonacci_element.cmp,
     "FibonacciElement.tst": fibonacci_element.hdl_tst,
   },
   StaticsTest: {
-    "StaticsTest.vm": statics_test.vm,
+    "Class1.vm": statics_test.class1,
+    "Class2.vm": statics_test.class2,
+    "Sys.vm": statics_test.sys,
     "StaticsTestVME.tst": statics_test.vm_tst,
     "StaticsTest.cmp": statics_test.cmp,
     "StaticsTest.tst": statics_test.hdl_tst,

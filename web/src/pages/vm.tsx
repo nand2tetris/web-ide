@@ -52,6 +52,7 @@ const VM = () => {
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
+  const [path, setPath] = useState("/");
 
   useEffect(() => {
     toolStates.setTool("vm");
@@ -62,7 +63,7 @@ const VM = () => {
   }, [actions]);
 
   useEffect(() => {
-    actions.loadTest(tst, cmp);
+    actions.loadTest(path, tst, cmp);
     actions.reset();
   }, [tst, cmp]);
 
@@ -163,6 +164,7 @@ const VM = () => {
       return;
     }
     const success = actions.loadVm(sources);
+    actions.reset();
     if (success) {
       setStatus("Loaded vm file");
     }
@@ -295,6 +297,7 @@ const VM = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          setPath={setPath}
           showClear={true}
           defaultTst={DEFAULT_TEST}
           onSpeedChange={onSpeedChange}

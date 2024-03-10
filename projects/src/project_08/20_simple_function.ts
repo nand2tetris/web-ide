@@ -1,19 +1,21 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/08/FunctionCalls/SimpleFunction/SimpleFunction.vm
+// File name: projects/8/FunctionCalls/SimpleFunction/SimpleFunction.vm
 
 // Performs a simple calculation and returns the result.
+// argument[0] and argument[1] must be set by the caller.
+
 function SimpleFunction.test 2
-push local 0
-push local 1
-add
-not
-push argument 0
-add
-push argument 1
-sub
-return
+	push local 0
+	push local 1
+	add
+	not
+	push argument 0
+	add
+	push argument 1
+	sub
+	return
 `;
 
 export const vm_tst = `// This file is part of www.nand2tetris.org
@@ -25,6 +27,8 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Before executing the code, initializes the stack pointer
 // and the base addresses of some of the memory segments, 
 // and sets some values in the argument segment.
+
+load SimpleFunction.vm,
 
 set sp 317,
 set local 317,

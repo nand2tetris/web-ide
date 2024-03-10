@@ -27,6 +27,7 @@ export const TestPanel = ({
   tst: [tst, setTst, tstHighlight],
   cmp: [cmp, setCmp],
   out: [out],
+  setPath,
   disabled = false,
   defaultTst,
   defaultCmp,
@@ -38,6 +39,7 @@ export const TestPanel = ({
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
+  setPath?: Dispatch<string>;
   defaultTst?: string;
   defaultCmp?: string;
   showClear?: boolean;
@@ -89,6 +91,7 @@ export const TestPanel = ({
   const loadTest = useCallback(async () => {
     try {
       const path = await filePicker.select();
+      setPath?.(path);
       const tst = await fs.readFile(path);
       let cmp: string | undefined = undefined;
       try {

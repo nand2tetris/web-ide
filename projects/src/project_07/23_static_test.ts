@@ -25,6 +25,8 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 
 // Tests and illustrates StaticTest.vm on the VM simulator.
 
+load StaticTest.vm,
+
 set sp 256,    // initializes the stack pointer
 
 repeat 11 {    // StaticTest.vm has 11 VM commands

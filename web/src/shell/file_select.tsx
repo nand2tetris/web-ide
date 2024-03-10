@@ -1,6 +1,6 @@
 import { Stats } from "@davidsouther/jiffies/lib/esm/fs";
-import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { Trans } from "@lingui/macro";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
@@ -67,7 +67,6 @@ export const FilePicker = () => {
 
   const cd = useCallback(
     (dir: string) => {
-      setFile("");
       fs.cd(dir);
       fs.scandir(fs.cwd()).then((files) => {
         setFiles(files);
@@ -78,13 +77,12 @@ export const FilePicker = () => {
 
   const select = useCallback(
     (basename: string) => {
-      setFile(basename);
+      setFile(`${fs.cwd()}/${basename}`);
     },
     [setFile]
   );
 
   const confirm = useCallback(() => {
-    // const contents = await fs.readFile(chosen);
     setStatus(`Selected ${chosen}`);
     filePicker.close();
     filePicker[Selected].current?.(chosen);
@@ -131,7 +129,7 @@ export const FilePicker = () => {
             <FileEntry
               key={file.name}
               stats={file}
-              highlighted={file.name === chosen}
+              highlighted={file.name === chosen.split("/").pop()}
               onSelect={() =>
                 file.isDirectory() ? cd(file.name) : select(file.name)
               }

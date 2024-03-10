@@ -2,7 +2,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import { resetFiles, resetTests } from "@nand2tetris/projects/index";
 
 const VERSION_KEY = "version";
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 5;
 
 export function getVersion() {
   return Number(localStorage.getItem(VERSION_KEY) ?? "0");
@@ -45,5 +45,8 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
   },
   3: async (fs: FileSystem) => {
     await resetTests(fs);
+  },
+  4: async (fs: FileSystem) => {
+    await resetFiles(fs, [7, 8]);
   },
 };

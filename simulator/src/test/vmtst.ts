@@ -1,18 +1,31 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
-import { Segment, VM } from "../languages/vm.js";
+import { Segment } from "../languages/vm.js";
 import { Vm } from "../vm/vm.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
 
+export interface VmFile {
+  name: string;
+  content: string;
+}
+
 export class VMTest extends Test<VMTestInstruction> {
   vm: Vm = new Vm();
 
-  static from(tst: Tst): VMTest {
+  private loadAction?: (files: VmFile[]) => void;
+  private dir?: string;
+
+  static from(
+    tst: Tst,
+    path?: string,
+    loadAction?: (files: VmFile[]) => void
+  ): VMTest {
     const test = new VMTest();
+    test.dir = path?.split("/").slice(0, -1).join("/");
+    test.loadAction = loadAction;
     return fill(test, tst);
   }
 
@@ -108,28 +121,34 @@ export class VMTest extends Test<VMTestInstruction> {
 
   override async load(filename?: string) {
     if (filename) {
-      const file = await this.fs.readFile(filename);
-      const { instructions } = unwrap(VM.parse(file));
-      unwrap(this.vm.load(instructions, true));
+      const file = await this.fs.readFile(
+        `${this.dir ? `${this.dir}/` : ""}${filename}`
+      );
+      this.loadAction?.([{ name: filename, content: file.replace(".vm", "") }]);
     } else {
-      for (const file of await this.fs.scandir(".")) {
-        if (file.isFile() && file.name.endsWith(".vm")) {
-          await this.load(file.name);
+      const stats = await this.fs.scandir(this.dir ?? "/");
+      const files: VmFile[] = [];
+      for (const stat of stats) {
+        if (stat.isFile() && stat.name.endsWith(".vm")) {
+          const file = await this.fs.readFile(
+            `${this.dir ? `${this.dir}/` : ""}${stat.name}`
+          );
+          files.push({ name: stat.name.replace(".vm", ""), content: file });
         }
       }
+      this.loadAction?.(files);
     }
-    unwrap(this.vm.bootstrap());
   }
 }
 
 export interface VMTestInstruction extends TestInstruction {
   _vmTestInstruction_: true;
-  do(test: VMTest): void | Promise<void>;
+  do(test: VMTest): Promise<void>;
 }
 
 export class TestVMStepInstruction implements VMTestInstruction {
   readonly _vmTestInstruction_ = true;
-  do(test: VMTest) {
+  async do(test: VMTest) {
     test.vmstep();
   }
 

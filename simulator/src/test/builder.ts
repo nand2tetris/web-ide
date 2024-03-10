@@ -19,6 +19,7 @@ import {
   TestClearEchoInstruction,
   TestEchoInstruction,
   TestInstruction,
+  TestLoadInstruction,
   TestLoadROMInstruction,
   TestOutputInstruction,
   TestOutputListInstruction,
@@ -64,9 +65,10 @@ function makeInstruction(inst: TstOperation) {
     case "loadRom":
       return new TestLoadROMInstruction(inst.file);
     case "load":
+      return new TestLoadInstruction(inst.file);
     case "output-file":
     case "compare-to":
-      return undefined;
+      return undefined
     default:
       checkExhaustive(op, `Unknown tst operation ${op}`);
   }

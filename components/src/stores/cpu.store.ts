@@ -120,8 +120,8 @@ export function makeCpuStore(
       animate = value;
     },
 
-    testStep() {
-      const done = test.step();
+    async testStep() {
+      const done = await test.step();
       if (animate || done) {
         dispatch.current({ action: "testStep" });
       }

@@ -9,7 +9,7 @@ import {
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
-import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
+import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
@@ -32,8 +32,8 @@ export interface VmSim {
 }
 
 export interface VMTestSim {
-  useTest: boolean;
   highlight: Span | undefined;
+  path: string;
 }
 
 export interface VmPageState {
@@ -61,11 +61,6 @@ export type VmStoreDispatch = Dispatch<{
   action: keyof ReturnType<typeof makeVmStore>["reducers"];
   payload?: unknown;
 }>;
-
-export interface VmFile {
-  name: string;
-  content: string;
-}
 
 function reduceVMTest(
   vmTest: VMTest,
@@ -110,6 +105,7 @@ export function makeVmStore(
   let test = new VMTest().with(vm);
   let useTest = false;
   let animate = true;
+  let vmSource = "";
   const reducers = {
     setVm(state: VmPageState, vm: string) {
       state.files.vm = vm;
@@ -124,9 +120,11 @@ export function makeVmStore(
     setValid(state: VmPageState, valid: boolean) {
       state.controls.valid = valid;
     },
+    setPath(state: VmPageState, path: string) {
+      state.test.path = path;
+    },
     update(state: VmPageState) {
       state.vm = reduceVMTest(test, dispatch, setStatus);
-      state.test.useTest = useTest;
       state.test.highlight = test.currentStep?.span;
     },
     setAnimate(state: VmPageState, value: boolean) {
@@ -153,8 +151,8 @@ export function makeVmStore(
       valid: true,
     },
     test: {
-      useTest,
       highlight: undefined,
+      path: "/",
     },
     files: {
       vm: "",
@@ -169,6 +167,10 @@ export function makeVmStore(
         action: "setVm",
         payload: content,
       });
+      if (vmSource == content) {
+        return;
+      }
+      vmSource = content;
 
       const parseResult = VM.parse(content);
 
@@ -187,10 +189,16 @@ export function makeVmStore(
           file.content = file.content.slice(0, -1);
         }
       }
+      const content = files.map((f) => f.content).join("\n");
       dispatch.current({
         action: "setVm",
-        payload: files.map((f) => f.content).join("\n"),
+        payload: content,
       });
+
+      if (vmSource == content) {
+        return;
+      }
+      vmSource = content;
 
       const parsed = [];
 
@@ -231,11 +239,10 @@ export function makeVmStore(
 
       vm = unwrap(buildResult);
       test.vm = vm;
-      test.reset();
       dispatch.current({ action: "update" });
       return true;
     },
-    loadTest(source: string, cmp?: string) {
+    loadTest(path: string, source: string, cmp?: string) {
       dispatch.current({ action: "setTst", payload: { tst: source, cmp } });
       const tst = TST.parse(source);
 
@@ -248,7 +255,9 @@ export function makeVmStore(
       setStatus(`Parsed tst`);
 
       vm.reset();
-      test = VMTest.from(unwrap(tst));
+      test = VMTest.from(unwrap(tst), path, (files) => {
+        this.loadVm(files);
+      }).using(fs);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;
@@ -257,10 +266,10 @@ export function makeVmStore(
       animate = value;
       dispatch.current({ action: "setAnimate", payload: value });
     },
-    testStep() {
+    async testStep() {
       let done = false;
       try {
-        done = test.step();
+        done = await test.step();
         dispatch.current({ action: "testStep" });
         if (done) {
           dispatch.current({ action: "testFinished" });

@@ -1,9 +1,9 @@
-import { ROM } from "../cpu/memory.js";
 import { CPU } from "../cpu/cpu.js";
-import { Test } from "./tst.js";
+import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
-import { TestInstruction } from "./instruction.js";
 import { fill } from "./builder.js";
+import { TestInstruction } from "./instruction.js";
+import { Test } from "./tst.js";
 
 export class CPUTest extends Test<CPUTestInstruction> {
   readonly cpu: CPU;
@@ -102,19 +102,19 @@ export class CPUTest extends Test<CPUTestInstruction> {
     this.cpu.tick();
   }
 
-  override async load(filename: string): Promise<void> {
+  override async loadROM(filename: string): Promise<void> {
     await this.cpu.ROM.load(this.fs, filename);
   }
 }
 
 export interface CPUTestInstruction extends TestInstruction {
   _cpuTestInstruction_: true;
-  do(test: CPUTest): void | Promise<void>;
+  do(test: CPUTest): Promise<void>;
 }
 
 export class TestTickTockInstruction implements CPUTestInstruction {
   readonly _cpuTestInstruction_ = true;
-  do(test: CPUTest) {
+  async do(test: CPUTest) {
     test.ticktock();
   }
 

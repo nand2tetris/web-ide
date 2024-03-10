@@ -1,16 +1,13 @@
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { base } from "./base";
 
-export const CmpLanguage: monaco.languages.IMonarchLanguage = {
+export const AsmLanguage: monaco.languages.IMonarchLanguage = {
   tokenizer: {
     root: [
-      // identifiers and keywords
-      [/@[\w_]+/, "identifier"],
-      [/\([\w_]+)/, "identifier"],
-      [
-        /([AMD]+=)?(0|-?1|!?[ADM][-+&|][ADM])(;J(GT|EQ|LT|NE|LE|MP))?/,
-        "identifier",
-      ],
+      [/(JGT|JLT|JGE|JLE|JEQ|JMP|[AMD]{1,3}|R\d+)/, "keyword"],
+      [/(\+|-|!|=|&&|\|\|)/, "operators"],
+      [/[\d]+/, "number"],
+      [/[\w_]+/, "identifier"],
 
       // whitespace
       { include: "@whitespace" },

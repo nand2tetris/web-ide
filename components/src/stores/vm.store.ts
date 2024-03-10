@@ -69,18 +69,26 @@ export interface VmFile {
 
 function reduceVMTest(
   vmTest: VMTest,
-  dispatch: MutableRefObject<VmStoreDispatch>
+  dispatch: MutableRefObject<VmStoreDispatch>,
+  setStatus: (status: string) => void
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
   const Screen = new ImmMemory(vmTest.vm.Screen, dispatch);
   const Keyboard = new MemoryKeyboard(new ImmMemory(vmTest.vm.RAM, dispatch));
   const highlight = vmTest.vm.derivedLine();
 
+  let stack: VmFrame[] = [];
+  try {
+    stack = vmTest.vm.vmStack().reverse();
+  } catch (e) {
+    setStatus("Runtime error: Invalid stack");
+  }
+
   return {
     Keyboard,
     RAM,
     Screen,
-    Stack: vmTest.vm.vmStack().reverse(),
+    Stack: stack,
     Prog: vmTest.vm.program,
     Statics: [
       ...vmTest.vm.memory.map((_, v) => v, 16, 16 + vmTest.vm.getStaticCount()),
@@ -117,7 +125,7 @@ export function makeVmStore(
       state.controls.valid = valid;
     },
     update(state: VmPageState) {
-      state.vm = reduceVMTest(test, dispatch);
+      state.vm = reduceVMTest(test, dispatch, setStatus);
       state.test.useTest = useTest;
       state.test.highlight = test.currentStep?.span;
     },
@@ -137,7 +145,7 @@ export function makeVmStore(
     },
   };
   const initialState: VmPageState = {
-    vm: reduceVMTest(test, dispatch),
+    vm: reduceVMTest(test, dispatch, setStatus),
     controls: {
       exitCode: undefined,
       runningTest: false,
@@ -250,15 +258,22 @@ export function makeVmStore(
       dispatch.current({ action: "setAnimate", payload: value });
     },
     testStep() {
-      const done = test.step();
-      dispatch.current({ action: "testStep" });
-      if (done) {
-        dispatch.current({ action: "testFinished" });
+      let done = false;
+      try {
+        done = test.step();
+        dispatch.current({ action: "testStep" });
+        if (done) {
+          dispatch.current({ action: "testFinished" });
+        }
+        if (animate) {
+          dispatch.current({ action: "update" });
+        }
+        return done;
+      } catch (e) {
+        setStatus(`Runtime error: ${(e as Error).message}`);
+        dispatch.current({ action: "setValid", payload: false });
+        return true;
       }
-      if (animate) {
-        dispatch.current({ action: "update" });
-      }
-      return done;
     },
     step() {
       try {
@@ -276,6 +291,7 @@ export function makeVmStore(
         return done;
       } catch (e) {
         setStatus(`Runtime error: ${(e as Error).message}`);
+        dispatch.current({ action: "setValid", payload: false });
         return true;
       }
     },
@@ -284,6 +300,7 @@ export function makeVmStore(
       vm.reset();
       dispatch.current({ action: "update" });
       dispatch.current({ action: "setExitCode", payload: undefined });
+      dispatch.current({ action: "setValid", payload: true });
     },
     toggleUseTest() {
       useTest = !useTest;

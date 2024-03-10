@@ -225,15 +225,19 @@ const VM = () => {
         />
       </Panel>
       <Panel className="stack" header={<Trans>VM Structures</Trans>}>
-        <VMStackFrame
-          statics={state.vm.Statics}
-          temp={state.vm.Temp}
-          frame={state.vm.Stack[0]}
-        />
-        <CallStack
-          stack={state.vm.Stack}
-          addedSysInit={state.vm.AddedSysInit}
-        />
+        {state.controls.valid && state.vm.Stack.length > 0 && (
+          <>
+            <VMStackFrame
+              statics={state.vm.Statics}
+              temp={state.vm.Temp}
+              frame={state.vm.Stack[0]}
+            />
+            <CallStack
+              stack={state.vm.Stack}
+              addedSysInit={state.vm.AddedSysInit}
+            />
+          </>
+        )}
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
         {runnersAssigned && vmRunner.current && (

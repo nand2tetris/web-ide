@@ -212,7 +212,6 @@ const VM = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
-          onLoadTest={actions.loadTest}
           onSpeedChange={onSpeedChange}
         />
       )}

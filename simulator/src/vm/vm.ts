@@ -100,7 +100,6 @@ export class Vm {
     local: { initialized: false, n: 0 },
     argument: { initialized: false, n: 0 },
   };
-  entryNThis = 0;
 
   functions: VmFunction[] = [];
   program: VmInstruction[] = [];
@@ -551,7 +550,7 @@ export class Vm {
         }
       }
       if (op.segment == "this" && this.invocation.thisInitialized) {
-        this.entryNThis = Math.max(op.offset + 1, this.entryNThis);
+        this.invocation.thisN = Math.max(op.offset + 1, this.invocation.thisN ?? 0);
         return;
       }
     }

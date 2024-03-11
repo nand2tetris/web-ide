@@ -419,6 +419,12 @@ function VMStackFrame({
             <code>[{`${frame.frame.THIS}, ${frame.frame.THAT}`}]</code>
           </p>
         )}
+        {frame.usedSegments?.has("this") && (
+          <p>
+            this:
+            <code>[{frame.this.values.join(", ")}]</code>
+          </p>
+        )}
         {frame.usedSegments?.has("that") && (
           <p>
             that:

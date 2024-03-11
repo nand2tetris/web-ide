@@ -57,6 +57,10 @@ interface VmFunctionInvocation {
   frameBase: number;
   // The number of args the function was called with
   nArgs: number;
+  // Whether the THIS segment was initialized in this invocation
+  thisInitialized: boolean;
+  // Whether the THAT segment was initialized in this invocation
+  thatInitialized: boolean;
   // The size of the memory block pointed to by the function's THIS (if exists)
   thisN?: number;
 }
@@ -79,6 +83,11 @@ export interface ParsedVmFile {
   instructions: VmInstruction[];
 }
 
+interface SegmentStatus {
+  initialized: boolean;
+  n: number;
+}
+
 export class Vm {
   memory = new VmMemory();
   private os = new OS(this.memory);
@@ -87,10 +96,11 @@ export class Vm {
 
   entry = "";
 
-  entryLocalInitialized = false;
-  entryArgInitialized = false;
-  private entryNLocal = 0;
-  private entryNArg = 0;
+  segmentInitializations: Record<"local" | "argument", SegmentStatus> = {
+    local: { initialized: false, n: 0 },
+    argument: { initialized: false, n: 0 },
+  };
+  entryNThis = 0;
 
   functions: VmFunction[] = [];
   program: VmInstruction[] = [];
@@ -384,6 +394,8 @@ export class Vm {
         function: IMPLICIT,
         nArgs: 0,
         opPtr: 0,
+        thisInitialized: false,
+        thatInitialized: false,
       };
     }
     return invocation;
@@ -500,43 +512,65 @@ export class Vm {
 
   reset() {
     this.executionStack = [
-      { function: this.entry, opPtr: 1, frameBase: 256, nArgs: 0 },
+      {
+        function: this.entry,
+        opPtr: 1,
+        frameBase: 256,
+        nArgs: 0,
+        thisInitialized: false,
+        thatInitialized: false,
+      },
     ];
     this.memory.reset();
     this.memory.ARG = 0;
     this.memory.LCL = 0;
     this.memory.SP = 256;
-    this.entryNLocal = 0;
-    this.entryNArg = 0;
-    this.entryLocalInitialized = false;
-    this.entryArgInitialized = false;
+    this.segmentInitializations = {
+      local: { initialized: false, n: 0 },
+      argument: { initialized: false, n: 0 },
+    };
+
     this.os.dispose();
     this.os = new OS(this.memory);
   }
 
   private validateStackOp(op: StackInstruction) {
-    if (op.segment == "argument" && op.offset >= this.invocation.nArgs) {
-      if (
-        this.currentFunction?.name == this.entry &&
-        this.entryArgInitialized
-      ) {
-        this.entryNArg = Math.max(op.offset + 1, this.entryNLocal);
-      } else {
-        throw new Error("Argument offset out of bounds");
+    if (this.currentFunction?.name == this.entry) {
+      for (const segment of ["local", "argument"] as const) {
+        if (op.segment == segment) {
+          if (this.segmentInitializations[segment].initialized) {
+            // the size of that segment is always 1
+            this.segmentInitializations[segment].n = Math.max(
+              op.offset + 1,
+              this.segmentInitializations[segment].n
+            );
+            return;
+          } else {
+            throw new Error(
+              `${segment} segment can be used only in the context of a VM function, or if it was initialized by a test script`
+            );
+          }
+        }
       }
+      if (op.segment == "this" && this.invocation.thisInitialized) {
+        this.entryNThis = Math.max(op.offset + 1, this.entryNThis);
+        return;
+      }
+    }
+    if (op.segment == "argument" && op.offset >= this.invocation.nArgs) {
+      throw new Error("Argument offset out of bounds");
     }
     if (
       op.segment == "local" &&
       op.offset >= this.functionMap[this.invocation.function]?.nVars
     ) {
-      if (
-        this.currentFunction?.name == this.entry &&
-        this.entryLocalInitialized
-      ) {
-        this.entryNLocal = Math.max(op.offset + 1, this.entryNLocal);
-      } else {
-        throw new Error("Local offset out of bounds");
-      }
+      throw new Error("Local offset out of bounds");
+    }
+    if (op.segment == "this" && !this.invocation.thisInitialized) {
+      throw new Error("This segment was not initialized");
+    }
+    if (op.segment == "that" && !this.invocation.thatInitialized) {
+      throw new Error("That segment was not initialized");
     }
   }
 
@@ -583,9 +617,14 @@ export class Vm {
         const value = this.memory.pop();
         this.memory.setSegment(operation.segment, operation.offset, value);
 
-        // update this size if changed
-        if (operation.segment == "pointer" && operation.offset == 0) {
-          this.invocation.thisN = this.memory.get(this.memory.THIS - 1);
+        // update THIS/THAT segment status
+        if (operation.segment == "pointer") {
+          if (operation.offset == 0) {
+            this.invocation.thisInitialized = true;
+            this.invocation.thisN = this.memory.get(this.memory.THIS - 1);
+          } else if (operation.offset == 1) {
+            this.invocation.thatInitialized = true;
+          }
         }
         break;
       }
@@ -650,6 +689,8 @@ export class Vm {
             opPtr: 0,
             nArgs: operation.nArgs,
             frameBase: base,
+            thisInitialized: false,
+            thatInitialized: false,
           });
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
@@ -728,27 +769,36 @@ export class Vm {
         ? nextFrame.frameBase - nextFrame.nArgs
         : this.memory.get(0);
       const { ARG, LCL, THAT, THIS } = this.memory;
+      const nArg = this.segmentInitializations["argument"].n;
+      const nLocal = this.segmentInitializations["local"].n;
+      const nThis = this.invocation.thisN ?? 0;
       return {
         fn,
         args: {
           base: ARG,
-          count: this.entryNArg,
-          values: [...this.memory.map((_, v) => v, ARG, ARG + this.entryNArg)],
+          count: nArg,
+          values: [...this.memory.map((_, v) => v, ARG, ARG + nArg)],
         },
         locals: {
           base: LCL,
-          count: this.entryNLocal,
-          values: [
-            ...this.memory.map((_, v) => v, LCL, LCL + this.entryNLocal),
-          ],
+          count: nLocal,
+          values: [...this.memory.map((_, v) => v, LCL, LCL + nLocal)],
         },
         stack: {
           base: 256,
           count: frameEnd - stackBase,
           values: [...this.memory.map((_, v) => v, stackBase, frameEnd)],
         },
-        this: { base: THAT, count: 0, values: [] },
-        that: { base: THIS, count: 0, values: [] },
+        this: {
+          base: THIS,
+          count: nThis,
+          values: [...this.memory.map((_, v) => v, THIS, THIS + nThis)],
+        },
+        that: {
+          base: THAT,
+          count: 1,
+          values: [this.memory.THAT],
+        },
         frame: {
           ARG,
           LCL,

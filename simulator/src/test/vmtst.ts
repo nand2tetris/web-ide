@@ -98,18 +98,20 @@ export class VMTest extends Test<VMTestInstruction> {
         case "arg":
         case "argument":
           this.vm.memory.ARG = value;
-          this.vm.entryArgInitialized = true;
+          this.vm.segmentInitializations["argument"].initialized = true;
           break;
         case "lcl":
         case "local":
           this.vm.memory.LCL = value;
-          this.vm.entryLocalInitialized = true;
+          this.vm.segmentInitializations["local"].initialized = true;
           break;
         case "this":
           this.vm.memory.THIS = value;
+          this.vm.invocation.thisInitialized = true;
           break;
         case "that":
           this.vm.memory.THAT = value;
+          this.vm.invocation.thatInitialized = true;
           break;
       }
     }

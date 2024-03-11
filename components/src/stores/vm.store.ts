@@ -38,6 +38,7 @@ export interface VmSim {
   Temp: number[];
   AddedSysInit: boolean;
   highlight: number;
+  showHighlight: boolean;
 }
 
 export interface VMTestSim {
@@ -75,7 +76,8 @@ export type VmStoreDispatch = Dispatch<{
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
-  setStatus: (status: string) => void
+  setStatus: (status: string) => void,
+  showHighlight: boolean
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
   const Screen = new ImmMemory(vmTest.vm.Screen, dispatch);
@@ -101,6 +103,7 @@ function reduceVMTest(
     Temp: [...vmTest.vm.memory.map((_, v) => v, 5, 13)],
     AddedSysInit: vmTest.vm.addedSysInit,
     highlight,
+    showHighlight,
   };
 }
 
@@ -116,6 +119,7 @@ export function makeVmStore(
   let useTest = false;
   let animate = true;
   let vmSource = "";
+  let showHighlight = true;
   const reducers = {
     setVm(state: VmPageState, vm: string) {
       state.files.vm = vm;
@@ -130,6 +134,9 @@ export function makeVmStore(
     setValid(state: VmPageState, valid: boolean) {
       state.controls.valid = valid;
     },
+    setShowHighlight(state: VmPageState, value: boolean) {
+      state.vm.showHighlight = value;
+    },
     setError(state: VmPageState, error?: CompilationError) {
       state.controls.error = error;
     },
@@ -137,7 +144,7 @@ export function makeVmStore(
       state.test.path = path;
     },
     update(state: VmPageState) {
-      state.vm = reduceVMTest(test, dispatch, setStatus);
+      state.vm = reduceVMTest(test, dispatch, setStatus, showHighlight);
       state.test.highlight = test.currentStep?.span;
     },
     setAnimate(state: VmPageState, value: boolean) {
@@ -156,7 +163,7 @@ export function makeVmStore(
     },
   };
   const initialState: VmPageState = {
-    vm: reduceVMTest(test, dispatch, setStatus),
+    vm: reduceVMTest(test, dispatch, setStatus, true),
     controls: {
       exitCode: undefined,
       runningTest: false,
@@ -182,6 +189,7 @@ export function makeVmStore(
       setStatus(`Parse error: ${error.message}`);
     },
     setVm(content: string) {
+      showHighlight = false;
       dispatch.current({
         action: "setVm",
         payload: content,
@@ -202,6 +210,7 @@ export function makeVmStore(
       return this.replaceVm(buildResult);
     },
     loadVm(files: VmFile[]) {
+      showHighlight = false;
       for (const file of files) {
         if (file.content.endsWith("\n")) {
           file.content = file.content.slice(0, -1);
@@ -284,6 +293,7 @@ export function makeVmStore(
       dispatch.current({ action: "setAnimate", payload: value });
     },
     async testStep() {
+      showHighlight = true;
       let done = false;
       try {
         done = await test.step();
@@ -302,6 +312,7 @@ export function makeVmStore(
       }
     },
     step() {
+      showHighlight = true;
       try {
         let done = false;
 
@@ -322,6 +333,7 @@ export function makeVmStore(
       }
     },
     reset() {
+      showHighlight = true;
       test.reset();
       vm.reset();
       dispatch.current({ action: "update" });

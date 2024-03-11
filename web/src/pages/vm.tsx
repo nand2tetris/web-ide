@@ -236,7 +236,11 @@ const VM = () => {
             actions.setVm(source);
           }}
           language={"vm"}
-          highlight={state.controls.valid ? state.vm.highlight : undefined}
+          highlight={
+            state.controls.valid && state.vm.showHighlight
+              ? state.vm.highlight
+              : undefined
+          }
           error={state.controls.valid ? undefined : state.controls.error}
         />
       </Panel>

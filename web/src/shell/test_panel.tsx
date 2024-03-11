@@ -13,6 +13,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { AppContext } from "../App.context";
@@ -23,7 +24,7 @@ import { Panel } from "./panel";
 const WARNING_KEY = "skipTestEditWarning";
 
 export const TestPanel = ({
-  runner,
+  runner: baseRunner,
   tst: [tst, setTst, tstHighlight],
   cmp: [cmp, setCmp],
   out: [out],
@@ -50,6 +51,35 @@ export const TestPanel = ({
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
 
+  const [showHighlight, setShowHighlight] = useState(true);
+  const runner = useRef<Timer>();
+  useEffect(() => {
+    runner.current = new (class ChipTimer extends Timer {
+      async reset(): Promise<void> {
+        await baseRunner.current?.reset();
+        setShowHighlight(true);
+      }
+
+      override finishFrame(): void {
+        super.finishFrame();
+        baseRunner.current?.finishFrame();
+      }
+
+      async tick(): Promise<boolean> {
+        setShowHighlight(true);
+        return (await baseRunner.current?.tick()) ?? false;
+      }
+
+      toggle(): void {
+        baseRunner.current?.toggle();
+      }
+    })();
+
+    return () => {
+      runner.current?.stop();
+    };
+  }, [baseRunner]);
+
   const [selectedTestTab, doSetSelectedTestTab] = useState<
     "tst" | "cmp" | "out"
   >("tst");
@@ -67,6 +97,11 @@ export const TestPanel = ({
   const [savedTst, setSavedTst] = useState("");
   const [savedCmp, setSavedCmp] = useState("");
   const editDialog = useDialog();
+
+  const onChange = (test: string) => {
+    setTst(test);
+    setShowHighlight(false);
+  };
 
   const clear = () => {
     setTst(defaultTst ?? "");
@@ -221,11 +256,11 @@ export const TestPanel = ({
         >
           <Editor
             value={tst}
-            onChange={setTst}
+            onChange={onChange}
             grammar={TST.parser}
             language={"tst"}
             disabled={!editMode}
-            highlight={tstHighlight}
+            highlight={showHighlight ? tstHighlight : undefined}
           />
         </div>
         <div

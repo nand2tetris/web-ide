@@ -522,8 +522,6 @@ export class Vm {
       },
     ];
     this.memory.reset();
-    this.memory.ARG = 0;
-    this.memory.LCL = 0;
     this.memory.SP = 256;
     this.segmentInitializations = {
       local: { initialized: false, n: 0 },

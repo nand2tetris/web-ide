@@ -2,19 +2,19 @@
 
 .CpuPage {
   grid-template-areas: "ROM RAM" "IO IO" "test test";
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-rows: 1fr 1fr 1fr !important;
 
   @media screen and (min-width: 1024px) {
     grid-template-areas: "ROM RAM IO" "test test test";
-    grid-template-columns: 1fr 1fr var(--screen-size);
-    grid-template-rows: 1fr 1fr;
+    grid-template-columns: 1fr 1fr var(--screen-size) !important;
+    grid-template-rows: 1fr 1fr !important;
   }
 
   @media screen and (min-width: 1500px) {
     grid-template-areas: "ROM RAM IO test";
-    grid-template-columns: 350px 350px var(--screen-size) auto;
-    grid-template-rows: 1fr;
+    grid-template-columns: 350px 350px var(--screen-size) auto !important;
+    grid-template-rows: 1fr !important;
     // "IO IO test"
     // "ROM RAM test";
   }

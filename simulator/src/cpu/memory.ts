@@ -17,6 +17,8 @@ export interface MemoryAdapter {
   size: number;
   get(index: number): number;
   set(index: number, value: number): void;
+  wasChanged(index: number): boolean;
+  setChanged(index: number, value: boolean): void;
   reset(): void;
   update(cell: number, value: string, format: Format): void;
   load(fs: FileSystem, path: string, offset?: number): Promise<void>;
@@ -38,6 +40,7 @@ export interface KeyboardAdapter {
 
 export class Memory implements MemoryAdapter {
   private memory: Int16Array;
+  private changed: boolean[];
 
   get size(): number {
     return this.memory.length;
@@ -46,8 +49,10 @@ export class Memory implements MemoryAdapter {
   constructor(memory: ArrayBuffer | number) {
     if (typeof memory === "number") {
       this.memory = new Int16Array(memory);
+      this.changed = new Array(memory).fill(false);
     } else {
       this.memory = new Int16Array(memory);
+      this.changed = new Array(this.size).fill(true);
     }
   }
 
@@ -58,14 +63,24 @@ export class Memory implements MemoryAdapter {
     return this.memory[index] ?? 0;
   }
 
+  wasChanged(index: number): boolean {
+    return this.changed[index];
+  }
+
+  setChanged(index: number, value: boolean): void {
+    this.changed[index] = value;
+  }
+
   set(index: number, value: number): void {
     if (index >= 0 && index < this.size) {
       this.memory[index] = value & 0xffff;
+      this.setChanged(index, true);
     }
   }
 
   reset(): void {
     this.memory.fill(0);
+    this.changed.fill(false);
   }
 
   update(cell: number, value: string, format: Format) {
@@ -106,7 +121,9 @@ export class Memory implements MemoryAdapter {
 
   loadBytes(bytes: number[], offset?: number): void {
     this.memory.set(new Int16Array(bytes), offset);
+    this.changed.fill(true, 0, bytes.length);
     this.memory.fill(0, bytes.length, this.size);
+    this.changed.fill(false, bytes.length, this.size);
   }
 
   range(start = 0, end = this.size): number[] {
@@ -143,7 +160,15 @@ export class SubMemory implements MemoryAdapter {
     return this.parent.get(this.offset + index);
   }
 
-  set(index: number, value: number): void {
+  wasChanged(index: number): boolean {
+    return this.parent.wasChanged(this.offset + index);
+  }
+
+  setChanged(index: number, value: boolean): void {
+    this.parent.setChanged(index + this.offset, value);
+  }
+
+  set(index: number, value: number, trackChange = true): void {
     if (index >= 0 && index < this.size) {
       this.parent.set(index + this.offset, value);
     }
@@ -151,7 +176,8 @@ export class SubMemory implements MemoryAdapter {
 
   reset(): void {
     for (let i = 0; i < this.size; i++) {
-      this.set(i, 0);
+      this.set(i, 0, false);
+      this.setChanged(i, false);
     }
   }
 

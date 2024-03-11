@@ -550,7 +550,10 @@ export class Vm {
         }
       }
       if (op.segment == "this" && this.invocation.thisInitialized) {
-        this.invocation.thisN = Math.max(op.offset + 1, this.invocation.thisN ?? 0);
+        this.invocation.thisN = Math.max(
+          op.offset + 1,
+          this.invocation.thisN ?? 0
+        );
         return;
       }
     }

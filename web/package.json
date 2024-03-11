@@ -6,11 +6,15 @@
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "homepage": "https://nand2tetris.github.io/web-ide",
+  "dependencies": {
+    "jszip": "^3.10.1",
+    "react-ga4": "^1.4.1"
+  },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.0.6",
-    "@lingui/cli": "^3.15.0",
-    "@lingui/macro": "^3.15.0",
-    "@lingui/react": "^3.15.0",
+    "@lingui/cli": "^3.17.2",
+    "@lingui/macro": "^3.17.2",
+    "@lingui/react": "^3.17.2",
     "@monaco-editor/react": "^4.4.6",
     "@nand2tetris/components": "^1.0.0",
     "@nand2tetris/projects": "^1.0.0",
@@ -51,7 +55,7 @@
     "test": "react-scripts test",
     "prebuild": "npm run extract && npm run lingui",
     "extract": "lingui extract",
-    "lingui": "lingui compile",
+    "lingui": "lingui compile --namespace es",
     "predeploy": "npm run build ; ./scripts/predeploy.sh",
     "deploy": "gh-pages -d build"
   },
@@ -95,9 +99,5 @@
     "transformIgnorePatterns": [
       "node_modules/(?!@davidsouther)"
     ]
-  },
-  "dependencies": {
-    "jszip": "^3.10.1",
-    "react-ga4": "^1.4.1"
   }
 }

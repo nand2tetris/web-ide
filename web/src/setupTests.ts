@@ -6,7 +6,7 @@ import "@testing-library/jest-dom";
 // import "@nand2tetris/simulator/setupTests.js";
 import { i18n } from "@lingui/core";
 import { en } from "make-plural/plurals";
-import { messages } from "./locales/en/messages";
+import { messages } from "./locales/en/messages.mjs";
 
 i18n.load("en", messages);
 i18n.loadLocaleData({

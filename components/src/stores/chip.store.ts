@@ -9,10 +9,7 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import {
-  CompilationError,
-  parse as parseChip,
-} from "@nand2tetris/simulator/chip/builder.js";
+import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,
@@ -32,6 +29,7 @@ import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { CompilationError } from "@nand2tetris/simulator/errors.js";
 import { compare } from "../compare.js";
 import { BaseContext } from "./base.context.js";
 

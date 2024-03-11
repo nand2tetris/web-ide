@@ -6,12 +6,11 @@ import {
   Ok,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { ParseError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
-
-const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
+import { CompilationError, parseErrorToCompilationError } from "../errors.js";
+import { Span } from "../languages/base.js";
 
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {
@@ -24,22 +23,6 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
     return 1;
   }
   throw new Error(`Bus specification has start > end (${start} > ${end})`);
-}
-
-export interface CompilationError {
-  message: string;
-  span?: Span;
-}
-
-function parseErrorToCompilationError(error: ParseError) {
-  if (!error.message) {
-    return { message: UNKNOWN_HDL_ERROR, span: error.span };
-  }
-  const match = error.message.match(/Line \d+, col \d+: (?<message>.*)/);
-  if (match?.groups?.message !== undefined) {
-    return { message: match.groups.message, span: error.span };
-  }
-  return { message: error.message, span: error.span };
 }
 
 export async function parse(

@@ -1,12 +1,21 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Result, isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import {
+  Err,
+  Result,
+  isErr,
+  unwrap,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  parseErrorToCompilationError,
+} from "@nand2tetris/simulator/errors.js";
+import { ParseError, Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
@@ -48,6 +57,7 @@ export interface ControlsState {
   exitCode: number | undefined;
   animate: boolean;
   valid: boolean;
+  error?: CompilationError;
 }
 
 export interface VMFiles {
@@ -120,6 +130,9 @@ export function makeVmStore(
     setValid(state: VmPageState, valid: boolean) {
       state.controls.valid = valid;
     },
+    setError(state: VmPageState, error?: CompilationError) {
+      state.controls.error = error;
+    },
     setPath(state: VmPageState, path: string) {
       state.test.path = path;
     },
@@ -162,6 +175,12 @@ export function makeVmStore(
     },
   };
   const actions = {
+    setParseError(parseError: ParseError) {
+      dispatch.current({ action: "setValid", payload: false });
+      const error = parseErrorToCompilationError(parseError);
+      dispatch.current({ action: "setError", payload: error });
+      setStatus(`Parse error: ${error.message}`);
+    },
     setVm(content: string) {
       dispatch.current({
         action: "setVm",
@@ -175,8 +194,7 @@ export function makeVmStore(
       const parseResult = VM.parse(content);
 
       if (isErr(parseResult)) {
-        dispatch.current({ action: "setValid", payload: false });
-        setStatus(`Parse error: ${parseResult.err.message}`);
+        this.setParseError(Err(parseResult));
         return false;
       }
       const instructions = unwrap(parseResult).instructions;
@@ -207,8 +225,7 @@ export function makeVmStore(
         const parseResult = VM.parse(file.content);
 
         if (isErr(parseResult)) {
-          dispatch.current({ action: "setValid", payload: false });
-          setStatus(`Parse error: ${parseResult.err.message}`);
+          this.setParseError(Err(parseResult));
           return false;
         }
         const instructions = unwrap(parseResult).instructions;

@@ -21,7 +21,10 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
@@ -29,7 +32,6 @@ import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { CompilationError } from "@nand2tetris/simulator/errors.js";
 import { compare } from "../compare.js";
 import { BaseContext } from "./base.context.js";
 
@@ -333,11 +335,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, chipName);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
-        setStatus(
-          `${error.span?.line != undefined ? `Line ${error.span.line}: ` : ""}${
-            Err(maybeChip).message
-          }`
-        );
+        setStatus(Err(maybeChip).message);
         invalid = true;
         dispatch.current({
           action: "updateChip",

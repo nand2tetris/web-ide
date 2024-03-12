@@ -11,11 +11,8 @@ import {
   MemoryAdapter,
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import {
-  CompilationError,
-  parseErrorToCompilationError,
-} from "@nand2tetris/simulator/errors.js";
-import { ParseError, Span } from "@nand2tetris/simulator/languages/base.js";
+import { CompilationError } from "@nand2tetris/simulator/errors.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
@@ -138,6 +135,10 @@ export function makeVmStore(
       state.vm.showHighlight = value;
     },
     setError(state: VmPageState, error?: CompilationError) {
+      if (error) {
+        this.setValid(state, false);
+        setStatus(error?.message);
+      }
       state.controls.error = error;
     },
     setPath(state: VmPageState, path: string) {
@@ -182,12 +183,6 @@ export function makeVmStore(
     },
   };
   const actions = {
-    setParseError(parseError: ParseError) {
-      dispatch.current({ action: "setValid", payload: false });
-      const error = parseErrorToCompilationError(parseError);
-      dispatch.current({ action: "setError", payload: error });
-      setStatus(`Parse error: ${error.message}`);
-    },
     setVm(content: string) {
       showHighlight = false;
       dispatch.current({
@@ -202,7 +197,7 @@ export function makeVmStore(
       const parseResult = VM.parse(content);
 
       if (isErr(parseResult)) {
-        this.setParseError(Err(parseResult));
+        dispatch.current({ action: "setError", payload: Err(parseResult) });
         return false;
       }
       const instructions = unwrap(parseResult).instructions;
@@ -234,7 +229,7 @@ export function makeVmStore(
         const parseResult = VM.parse(file.content);
 
         if (isErr(parseResult)) {
-          this.setParseError(Err(parseResult));
+          dispatch.current({ action: "setError", payload: Err(parseResult) });
           return false;
         }
         const instructions = unwrap(parseResult).instructions;

@@ -54,16 +54,32 @@ baseSemantics.addAttribute("String", {
   },
 });
 
-export interface ParseError {
-  message: string | undefined;
+export interface CompilationError {
+  message: string;
   span?: Span;
+}
+
+const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
+
+export function createError(
+  description: string,
+  span?: Span
+): CompilationError {
+  const match = description.match(/Line \d+, col \d+: (?<message>.*)/);
+  const message = match?.groups?.message ? match.groups.message : description;
+  return {
+    message: `${
+      span?.line != undefined ? `Line ${span.line}: ` : ""
+    }${message}`,
+    span: span,
+  };
 }
 
 export function makeParser<ResultType>(
   grammar: ohm.Grammar,
   semantics: ohm.Semantics,
   property: (obj: ohm.Dict) => ResultType = ({ root }) => root
-): (source: string) => Result<ResultType, ParseError> {
+): (source: string) => Result<ResultType, CompilationError> {
   return function parse(source) {
     try {
       const match = grammar.match(source);
@@ -72,10 +88,12 @@ export function makeParser<ResultType>(
         const parse = property(parsed);
         return Ok(parse);
       } else {
-        return Err({
-          message: match.shortMessage,
-          span: span(match.getInterval()),
-        });
+        return Err(
+          createError(
+            match.shortMessage ?? UNKNOWN_HDL_ERROR,
+            span(match.getInterval())
+          )
+        );
       }
     } catch (e) {
       return Err(e as Error);

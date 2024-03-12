@@ -12,10 +12,12 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
-import { CompilationError } from "@nand2tetris/simulator/errors";
 
 export const ErrorPanel = ({ error }: { error?: CompilationError }) => {
   return error ? (

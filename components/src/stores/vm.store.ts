@@ -136,8 +136,11 @@ export function makeVmStore(
     },
     setError(state: VmPageState, error?: CompilationError) {
       if (error) {
+        state.controls.valid = false;
         this.setValid(state, false);
         setStatus(error?.message);
+      } else {
+        state.controls.valid = true;
       }
       state.controls.error = error;
     },
@@ -255,7 +258,7 @@ export function makeVmStore(
         setStatus(`Build Error: ${buildResult.err.message}`);
         return false;
       }
-      dispatch.current({ action: "setValid", payload: true });
+      dispatch.current({ action: "setError" });
       setStatus("Compiled VM code successfully");
 
       vm = unwrap(buildResult);

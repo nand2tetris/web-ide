@@ -241,7 +241,7 @@ const VM = () => {
               ? state.vm.highlight
               : undefined
           }
-          error={state.controls.valid ? undefined : state.controls.error}
+          error={state.controls.error}
         />
       </Panel>
       <Panel className="stack" header={<Trans>VM Structures</Trans>}>

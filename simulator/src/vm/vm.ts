@@ -6,7 +6,7 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { CompilationError, createError } from "../languages/base.js";
+import { CompilationError, Span, createError } from "../languages/base.js";
 import {
   CallInstruction,
   FunctionInstruction,
@@ -147,14 +147,16 @@ export class Vm {
         if (parts.length != 2) {
           return Err(
             createError(
-              `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`
+              `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`,
+              inst.span
             )
           );
         }
         if (parts[0] != file.name) {
           return Err(
             createError(
-              `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`
+              `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`,
+              inst.span
             )
           );
         }
@@ -185,7 +187,7 @@ export class Vm {
         if (inst.op == "pop" || inst.op == "push") {
           const base = this.memory.baseSegment(inst.segment, inst.offset);
           if (isErr(base)) {
-            return Err(createError(Err(base).message));
+            return Err(createError(Err(base).message, inst.span));
           }
         }
       }
@@ -202,7 +204,8 @@ export class Vm {
         if (inst.nVars < 0 || inst.nVars > 32767) {
           return Err(
             createError(
-              `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`
+              `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`,
+              inst.span
             )
           );
         }
@@ -212,7 +215,8 @@ export class Vm {
         if (inst.nArgs < 0 || inst.nArgs > 32767) {
           return Err(
             createError(
-              `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`
+              `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`,
+              inst.span
             )
           );
         }
@@ -233,7 +237,7 @@ export class Vm {
             );
           }
         } else {
-          return Err(createError(`Undefined function ${call.name}`));
+          return Err(createError(`Undefined function ${call.name}`, call.span));
         }
       }
     }
@@ -284,12 +288,12 @@ export class Vm {
       name,
       nVars,
       labels: {},
-      operations: [{ op: "function", name, nVars, line: instructions[i].line }],
+      operations: [{ op: "function", name, nVars, span: instructions[i].span }],
       opBase: 0,
     };
 
     const declaredLabels: Set<string> = new Set();
-    const usedLabels: Set<string> = new Set();
+    const usedLabels: Record<string, Span | undefined> = {};
 
     i += 1;
     instructions: while (i < instructions.length) {
@@ -316,7 +320,7 @@ export class Vm {
               | "and"
               | "or"
               | "not",
-            line: instructions[i].line,
+            span: instructions[i].span,
           });
           break;
         case "push":
@@ -337,7 +341,7 @@ export class Vm {
               }
             ).segment,
             offset: (instructions[i] as { offset: number }).offset,
-            line: instructions[i].line,
+            span: instructions[i].span,
           });
           break;
         case "call":
@@ -345,17 +349,17 @@ export class Vm {
             op: "call",
             name: (instructions[i] as { name: string }).name,
             nArgs: (instructions[i] as { nArgs: number }).nArgs,
-            line: instructions[i].line,
+            span: instructions[i].span,
           });
           break;
         case "goto":
         case "if-goto": {
           const { label } = instructions[i] as { label: string };
-          usedLabels.add(label);
+          usedLabels[label] = instructions[i].span;
           fn.operations.push({
             op: instructions[i].op as "goto" | "if-goto",
             label,
-            line: instructions[i].line,
+            span: instructions[i].span,
           });
           break;
         }
@@ -365,19 +369,22 @@ export class Vm {
           if (fn.labels[label])
             return Err(
               createError(
-                `Cannot redeclare label ${label} in function ${fn.name} (previously at ${fn.labels[label]})`
+                `Cannot redeclare label ${label} in function ${
+                  fn.name
+                } (previously at line ${fn.labels[label] + 1})`,
+                instructions[i].span
               )
             );
           fn.labels[label] = fn.operations.length;
           fn.operations.push({
             op: "label",
             label,
-            line: instructions[i].line,
+            span: instructions[i].span,
           });
           break;
         }
         case "return": {
-          fn.operations.push({ op: "return", line: instructions[i].line });
+          fn.operations.push({ op: "return", span: instructions[i].span });
           break;
         }
       }
@@ -385,9 +392,9 @@ export class Vm {
       i += 1;
     }
 
-    for (const label of usedLabels) {
+    for (const label of Object.keys(usedLabels)) {
       if (!declaredLabels.has(label)) {
-        return Err(createError(`Undeclared label ${label}`));
+        return Err(createError(`Undeclared label ${label}`, usedLabels[label]));
       }
     }
 
@@ -462,7 +469,12 @@ export class Vm {
         fn.name !== IMPLICIT &&
         fn.name !== SYS_INIT.name
       ) {
-        return Err(createError(`VM Already has a function named ${fn.name}`));
+        return Err(
+          createError(
+            `VM Already has a function named ${fn.name}`,
+            instructions[0].span
+          )
+        );
       }
 
       this.functionMap[fn.name] = fn;
@@ -849,7 +861,7 @@ export class Vm {
   }
 
   derivedLine(): number {
-    return this.operation?.line ?? this.returnLine ?? 0;
+    return this.operation?.span?.line ?? this.returnLine ?? 0;
   }
 
   writeDebug(): string {

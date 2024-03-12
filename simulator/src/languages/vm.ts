@@ -1,7 +1,7 @@
 /** Reads tst files to apply and perform test runs. */
 
 import ohm from "ohm-js";
-import { baseSemantics, grammars, makeParser, span } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
 export const grammar = ohm.grammar(vmGrammar, grammars);
@@ -34,37 +34,37 @@ export interface StackInstruction {
   op: "push" | "pop";
   segment: Segment;
   offset: number;
-  line?: number;
+  span?: Span;
 }
 export interface OpInstruction {
   op: "add" | "sub" | "neg" | "lt" | "gt" | "eq" | "and" | "or" | "not";
-  line?: number;
+  span?: Span;
 }
 export interface FunctionInstruction {
   op: "function";
   name: string;
   nVars: number;
-  line?: number;
+  span?: Span;
 }
 export interface CallInstruction {
   op: "call";
   name: string;
   nArgs: number;
-  line?: number;
+  span?: Span;
 }
 export interface ReturnInstruction {
   op: "return";
-  line?: number;
+  span?: Span;
 }
 export interface LabelInstruction {
   op: "label";
   label: string;
-  line?: number;
+  span?: Span;
 }
 export interface GotoInstruction {
   op: "goto" | "if-goto";
   label: string;
-  line?: number;
+  span?: Span;
 }
 
 vmSemantics.addAttribute<
@@ -181,7 +181,7 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       op: op as "push" | "pop",
       segment,
       offset: Number(value.sourceString),
-      line: span(this.source).line,
+      span: span(this.source),
     };
   },
   OpInstruction({ op }) {
@@ -196,7 +196,7 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
         | "and"
         | "or"
         | "not",
-      line: span(this.source).line,
+      span: span(this.source),
     };
   },
   FunctionInstruction(_, { name }, nVars) {
@@ -204,7 +204,7 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       op: "function",
       name,
       nVars: Number(nVars.sourceString),
-      line: span(this.source).line,
+      span: span(this.source),
     };
   },
   CallInstruction(_, { name }, nArgs) {
@@ -212,22 +212,22 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       op: "call",
       name,
       nArgs: Number(nArgs.sourceString),
-      line: span(this.source).line,
+      span: span(this.source),
     };
   },
   ReturnInstruction(_) {
-    return { op: "return", line: span(this.source).line };
+    return { op: "return", span: span(this.source) };
   },
   // LabelInstruction = Label Name
   LabelInstruction(_, { name: label }) {
-    return { op: "label", label, line: span(this.source).line };
+    return { op: "label", label, span: span(this.source) };
   },
   // GotoInstruction = (Goto | IfGoto) Name
   GotoInstruction({ op }, { name: label }) {
     return {
       op: op as "goto" | "if-goto",
       label,
-      line: span(this.source).line,
+      span: span(this.source),
     };
   },
 });

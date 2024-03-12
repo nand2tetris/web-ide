@@ -237,8 +237,8 @@ export function makeVmStore(
         const instructions = unwrap(parseResult).instructions;
 
         for (const instruction of instructions) {
-          if (instruction.line != undefined) {
-            instruction.line += lineOffset;
+          if (instruction.span?.line != undefined) {
+            instruction.span.line += lineOffset;
           }
         }
         lineOffset += instructions.length;

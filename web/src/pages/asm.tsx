@@ -146,6 +146,7 @@ export const Asm = () => {
               {runnerAssigned && runner.current && (
                 <Runbar
                   runner={runner.current}
+                  disabled={state.error != undefined}
                   prefix={
                     <button
                       className="flex-0"

@@ -1,9 +1,5 @@
 import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
-  CompilationError,
-  parseErrorToCompilationError,
-} from "@nand2tetris/simulator/chip/builder.js";
-import {
   KEYBOARD_OFFSET,
   SCREEN_OFFSET,
 } from "@nand2tetris/simulator/cpu/memory.js";
@@ -14,7 +10,10 @@ import {
   isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -210,11 +209,7 @@ export function makeAsmStore(
 
     setError(state: AsmPageState, error?: CompilationError) {
       if (error) {
-        setStatus(
-          `${error.span?.line != undefined ? `Line ${error.span.line}: ` : ""}${
-            error.message
-          }`
-        );
+        setStatus(error.message);
       }
       state.error = error;
     },
@@ -274,7 +269,7 @@ export function makeAsmStore(
       if (isErr(parseResult)) {
         dispatch.current({
           action: "setError",
-          payload: parseErrorToCompilationError(Err(parseResult)),
+          payload: Err(parseResult),
         });
         compiled = false;
         return;

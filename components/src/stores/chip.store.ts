@@ -9,10 +9,7 @@ import {
   CHIP_PROJECTS,
   ChipProjects,
 } from "@nand2tetris/projects/index.js";
-import {
-  CompilationError,
-  parse as parseChip,
-} from "@nand2tetris/simulator/chip/builder.js";
+import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
   REGISTRY,
@@ -24,7 +21,10 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
@@ -335,11 +335,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, chipName);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
-        setStatus(
-          `${error.span?.line != undefined ? `Line ${error.span.line}: ` : ""}${
-            Err(maybeChip).message
-          }`
-        );
+        setStatus(Err(maybeChip).message);
         invalid = true;
         dispatch.current({
           action: "updateChip",

@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/macro";
 import MonacoEditor, { OnMount, useMonaco } from "@monaco-editor/react";
-import { CompilationError } from "@nand2tetris/simulator/chip/builder.js";
 import type * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import ohm from "ohm-js";
 import {
@@ -13,7 +12,10 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
 

@@ -544,7 +544,7 @@ export class Vm {
             return;
           } else {
             throw new Error(
-              `${segment} segment can be used only in the context of a VM function, or if it was initialized by a test script`
+              `The ${segment} segment cannot be accessed since it was not initialized`
             );
           }
         }
@@ -567,10 +567,14 @@ export class Vm {
       throw new Error("Local offset out of bounds");
     }
     if (op.segment == "this" && !this.invocation.thisInitialized) {
-      throw new Error("This segment was not initialized");
+      throw new Error(
+        `The this segment cannot be accessed since it was not initialized`
+      );
     }
     if (op.segment == "that" && !this.invocation.thatInitialized) {
-      throw new Error("That segment was not initialized");
+      throw new Error(
+        `The that segment cannot be accessed since it was not initialized`
+      );
     }
   }
 

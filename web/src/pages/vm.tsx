@@ -244,7 +244,7 @@ const VM = () => {
           error={state.controls.error}
         />
       </Panel>
-      <Panel className="stack" header={<Trans>VM Structures</Trans>}>
+      <Panel className="vm" header={<Trans>VM Structures</Trans>}>
         {state.controls.valid && state.vm.Stack.length > 0 && (
           <>
             <VMStackFrame
@@ -262,46 +262,44 @@ const VM = () => {
       <Panel className="display" style={{ gridArea: "display" }}>
         <Screen memory={state.vm.Screen} />
         <Keyboard keyboard={state.vm.Keyboard} />
-
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          <Memory
-            ref={stackRef}
-            name="Global Stack"
-            memory={state.vm.RAM}
-            initialAddr={256}
-            format="dec"
-            showUpload={false}
-            showClear={false}
-          />
-          <Memory
-            name="RAM"
-            memory={state.vm.RAM}
-            format="dec"
-            cellLabels={[
-              "SP:",
-              "LCL:",
-              "ARG:",
-              "THIS:",
-              "THAT:",
-              "TEMP0:",
-              "TEMP1:",
-              "TEMP2:",
-              "TEMP3:",
-              "TEMP4:",
-              "TEMP5:",
-              "TEMP6:",
-              "TEMP7:",
-              "R13:",
-              "R14:",
-              "R15:",
-            ]}
-            showUpload={false}
-            onChange={() => {
-              stackRef.current?.rerender();
-            }}
-          />
-        </div>
       </Panel>
+      <Memory
+        ref={stackRef}
+        name="Global Stack"
+        memory={state.vm.RAM}
+        initialAddr={256}
+        format="dec"
+        showUpload={false}
+        showClear={false}
+      />
+      <Memory
+        name="RAM"
+        memory={state.vm.RAM}
+        format="dec"
+        cellLabels={[
+          "SP:",
+          "LCL:",
+          "ARG:",
+          "THIS:",
+          "THAT:",
+          "TEMP0:",
+          "TEMP1:",
+          "TEMP2:",
+          "TEMP3:",
+          "TEMP4:",
+          "TEMP5:",
+          "TEMP6:",
+          "TEMP7:",
+          "R13:",
+          "R14:",
+          "R15:",
+        ]}
+        showUpload={false}
+        onChange={() => {
+          stackRef.current?.rerender();
+        }}
+      />
+
       {runnersAssigned && (
         <TestPanel
           runner={testRunner}

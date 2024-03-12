@@ -1,22 +1,31 @@
 @use "./page.scss";
 
 .VmPage {
-  grid-template-columns: 4fr auto 5fr !important;
-  grid-template-rows: 3fr 2fr !important;
+  grid-template-columns: 4fr auto auto 5fr !important;
+  grid-template-rows: auto 1fr 2fr !important;
   grid-template-areas:
-    "program display test"
-    "stack display test";
+    "program display display test"
+    "program stack RAM test"
+    "vm stack RAM test";
 
   .program {
     grid-area: program;
   }
 
-  .stack {
-    grid-area: stack;
+  .vm {
+    grid-area: vm;
   }
 
   .display {
     grid-area: display;
+  }
+
+  .memory.Stack {
+    grid-area: stack;
+  }
+
+  .memory.RAM {
+    grid-area: RAM;
   }
 
   ._test_panel {

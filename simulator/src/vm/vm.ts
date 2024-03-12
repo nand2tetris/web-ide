@@ -288,6 +288,9 @@ export class Vm {
       opBase: 0,
     };
 
+    const declaredLabels: Set<string> = new Set();
+    const usedLabels: Set<string> = new Set();
+
     i += 1;
     instructions: while (i < instructions.length) {
       switch (instructions[i].op) {
@@ -346,15 +349,19 @@ export class Vm {
           });
           break;
         case "goto":
-        case "if-goto":
+        case "if-goto": {
+          const { label } = instructions[i] as { label: string };
+          usedLabels.add(label);
           fn.operations.push({
             op: instructions[i].op as "goto" | "if-goto",
-            label: (instructions[i] as { label: string }).label,
+            label,
             line: instructions[i].line,
           });
           break;
+        }
         case "label": {
           const { label } = instructions[i] as { label: string };
+          declaredLabels.add(label);
           if (fn.labels[label])
             return Err(
               createError(
@@ -376,6 +383,12 @@ export class Vm {
       }
 
       i += 1;
+    }
+
+    for (const label of usedLabels) {
+      if (!declaredLabels.has(label)) {
+        return Err(createError(`Undeclared label ${label}`));
+      }
     }
 
     return Ok([fn, i]);

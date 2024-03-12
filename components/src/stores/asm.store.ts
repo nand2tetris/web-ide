@@ -1,5 +1,9 @@
 import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
+  CompilationError,
+  parseErrorToCompilationError,
+} from "@nand2tetris/simulator/chip/builder.js";
+import {
   KEYBOARD_OFFSET,
   SCREEN_OFFSET,
 } from "@nand2tetris/simulator/cpu/memory.js";
@@ -164,6 +168,7 @@ export interface AsmPageState {
   compare: string;
   compareName: string | undefined;
   lineNumbers: number[];
+  error?: CompilationError;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -201,6 +206,17 @@ export function makeAsmStore(
       state.compare = cmp;
       state.compareName = name;
       setStatus("Loaded compare file");
+    },
+
+    setError(state: AsmPageState, error?: CompilationError) {
+      if (error) {
+        setStatus(
+          `${error.span?.line != undefined ? `Line ${error.span.line}: ` : ""}${
+            error.message
+          }`
+        );
+      }
+      state.error = error;
     },
 
     update(state: AsmPageState) {
@@ -256,7 +272,10 @@ export function makeAsmStore(
       this.reset();
       const parseResult = ASM.parse(asm);
       if (isErr(parseResult)) {
-        setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
+        dispatch.current({
+          action: "setError",
+          payload: parseErrorToCompilationError(Err(parseResult)),
+        });
         compiled = false;
         return;
       }
@@ -264,6 +283,7 @@ export function makeAsmStore(
       translator.load(Ok(parseResult), asm.split("\n").length);
       compiled = translator.asm.instructions.length > 0;
       setStatus("");
+      dispatch.current({ action: "setError" });
       dispatch.current({ action: "update" });
     },
 

@@ -31,7 +31,7 @@ export interface CompilationError {
   span?: Span;
 }
 
-function parseErrorToCompilationError(error: ParseError) {
+export function parseErrorToCompilationError(error: ParseError) {
   if (!error.message) {
     return { message: UNKNOWN_HDL_ERROR, span: error.span };
   }

@@ -166,6 +166,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.asm}
+          error={state.error}
           onChange={(source: string) => {
             actions.setAsm(source);
           }}

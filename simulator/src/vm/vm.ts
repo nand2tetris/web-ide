@@ -6,6 +6,7 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
+import { CompilationError, createError } from "../languages/base.js";
 import {
   CallInstruction,
   FunctionInstruction,
@@ -145,14 +146,14 @@ export class Vm {
         const parts = inst.name.split(".");
         if (parts.length != 2) {
           return Err(
-            new Error(
+            createError(
               `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`
             )
           );
         }
         if (parts[0] != file.name) {
           return Err(
-            new Error(
+            createError(
               `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`
             )
           );
@@ -167,7 +168,7 @@ export class Vm {
 
     for (const file of files) {
       if (names.has(file.name)) {
-        return Err(new Error(`File ${file.name} already exists`));
+        return Err(createError(`File ${file.name} already exists`));
       }
       const result = this.validateFile(file);
       if (isErr(result)) {
@@ -184,7 +185,7 @@ export class Vm {
         if (inst.op == "pop" || inst.op == "push") {
           const base = this.memory.baseSegment(inst.segment, inst.offset);
           if (isErr(base)) {
-            return base;
+            return Err(createError(Err(base).message));
           }
         }
       }
@@ -200,7 +201,7 @@ export class Vm {
       if (inst.op == "function") {
         if (inst.nVars < 0 || inst.nVars > 32767) {
           return Err(
-            new Error(
+            createError(
               `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`
             )
           );
@@ -210,7 +211,7 @@ export class Vm {
       if (inst.op == "call") {
         if (inst.nArgs < 0 || inst.nArgs > 32767) {
           return Err(
-            new Error(
+            createError(
               `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`
             )
           );
@@ -232,7 +233,7 @@ export class Vm {
             );
           }
         } else {
-          return Err(new Error(`Undefined function ${call.name}`));
+          return Err(createError(`Undefined function ${call.name}`));
         }
       }
     }
@@ -240,7 +241,7 @@ export class Vm {
     return Ok();
   }
 
-  static buildFromFiles(files: ParsedVmFile[]) {
+  static buildFromFiles(files: ParsedVmFile[]): Result<Vm, CompilationError> {
     let result = this.validateFiles(files);
     if (isErr(result)) {
       return result;
@@ -258,7 +259,11 @@ export class Vm {
     return vm.bootstrap();
   }
 
-  static build(instructions: VmInstruction[]): Result<Vm> {
+  static build(instructions: VmInstruction[]): Result<Vm, CompilationError> {
+    const result = this.validateFunctions(instructions);
+    if (isErr(result)) {
+      return result;
+    }
     const vm = new Vm();
     const load = vm.load(instructions);
     if (isErr(load)) return load;
@@ -268,10 +273,10 @@ export class Vm {
   private static buildFunction(
     instructions: VmInstruction[],
     i: number
-  ): Result<[VmFunction, number]> {
+  ): Result<[VmFunction, number], CompilationError> {
     if (instructions[i].op !== "function")
-      return Err(
-        Error("Only call buildFunction at the initial Function instruction")
+      throw new Error(
+        "Only call buildFunction at the initial Function instruction"
       );
 
     const { name, nVars } = instructions[i] as FunctionInstruction;
@@ -351,8 +356,10 @@ export class Vm {
         case "label": {
           const { label } = instructions[i] as { label: string };
           if (fn.labels[label])
-            throw new Error(
-              `Cannot redeclare label ${label} in function ${fn.name} (previously at ${fn.labels[label]})`
+            return Err(
+              createError(
+                `Cannot redeclare label ${label} in function ${fn.name} (previously at ${fn.labels[label]})`
+              )
             );
           fn.labels[label] = fn.operations.length;
           fn.operations.push({
@@ -416,7 +423,10 @@ export class Vm {
     return this.currentFunction.operations[this.invocation.opPtr];
   }
 
-  load(instructions: VmInstruction[], reset = false): Result<this, Error> {
+  load(
+    instructions: VmInstruction[],
+    reset = false
+  ): Result<this, CompilationError> {
     if (reset) {
       this.functionMap = {};
       this.statics = {};
@@ -431,8 +441,7 @@ export class Vm {
     while (i < instructions.length) {
       const buildFn = Vm.buildFunction(instructions, i);
 
-      if (isErr(buildFn))
-        return Err(new Error("Failed to build VM", { cause: Err(buildFn) }));
+      if (isErr(buildFn)) return buildFn;
       const [fn, i_] = unwrap(buildFn);
       if (
         this.functionMap[fn.name] &&
@@ -440,7 +449,7 @@ export class Vm {
         fn.name !== IMPLICIT &&
         fn.name !== SYS_INIT.name
       ) {
-        return Err(new Error(`VM Already has a function named ${fn.name}`));
+        return Err(createError(`VM Already has a function named ${fn.name}`));
       }
 
       this.functionMap[fn.name] = fn;
@@ -480,12 +489,12 @@ export class Vm {
 
     if (this.functionMap[IMPLICIT] && this.functionMap[SYS_INIT.name]) {
       return Err(
-        new Error("Cannot use both bootstrap and an implicit function")
+        createError("Cannot use both bootstrap and an implicit function")
       );
     }
 
     if (this.entry === "") {
-      return Err(Error("Could not determine an entry point for VM"));
+      return Err(createError("Could not determine an entry point for VM"));
     }
 
     this.functions = Object.values(this.functionMap);

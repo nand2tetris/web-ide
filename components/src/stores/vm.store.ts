@@ -137,7 +137,6 @@ export function makeVmStore(
     setError(state: VmPageState, error?: CompilationError) {
       if (error) {
         state.controls.valid = false;
-        this.setValid(state, false);
         setStatus(error?.message);
       } else {
         state.controls.valid = true;
@@ -252,10 +251,9 @@ export function makeVmStore(
       const buildResult = Vm.buildFromFiles(parsed);
       return this.replaceVm(buildResult);
     },
-    replaceVm(buildResult: Result<Vm, Error>) {
+    replaceVm(buildResult: Result<Vm, CompilationError>) {
       if (isErr(buildResult)) {
-        dispatch.current({ action: "setValid", payload: false });
-        setStatus(`Build Error: ${buildResult.err.message}`);
+        dispatch.current({ action: "setError", payload: Err(buildResult) });
         return false;
       }
       dispatch.current({ action: "setError" });
@@ -343,7 +341,7 @@ export function makeVmStore(
       dispatch.current({ action: "update" });
     },
     initialize() {
-      this.loadVm([{ name: "fib", content: FIBONACCI }]);
+      this.setVm(FIBONACCI);
     },
   };
 

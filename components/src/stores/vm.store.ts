@@ -241,7 +241,7 @@ export function makeVmStore(
             instruction.span.line += lineOffset;
           }
         }
-        lineOffset += instructions.length;
+        lineOffset += file.content.split("\n").length;
 
         parsed.push({
           name: file.name,

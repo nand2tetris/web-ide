@@ -1,5 +1,5 @@
-import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
 import { useCallback, useRef } from "react";
 import { useClockFrame, useClockReset } from "../clockface.js";
 
@@ -48,7 +48,13 @@ function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
   ctx.putImageData(image, 0, 0);
 }
 
-export const Screen = ({ memory }: { memory: ScreenMemory }) => {
+export const Screen = ({
+  memory,
+  scale = 1,
+}: {
+  memory: ScreenMemory;
+  scale?: number;
+}) => {
   const canvas = useRef<HTMLCanvasElement>();
 
   const draw = useCallback(() => {
@@ -80,8 +86,8 @@ export const Screen = ({ memory }: { memory: ScreenMemory }) => {
       <main style={{ backgroundColor: "var(--code-background-color)" }}>
         <figure
           style={{
-            width: "100%",
-            maxWidth: "512px",
+            width: `${512 * scale}px`,
+            height: `${256 * scale}px`,
             boxSizing: "content-box",
             marginInline: "auto",
             margin: "auto",
@@ -91,7 +97,15 @@ export const Screen = ({ memory }: { memory: ScreenMemory }) => {
             borderRight: "2px solid lightgray",
           }}
         >
-          <canvas ref={ctxRef} width={512} height={256}></canvas>
+          <canvas
+            ref={ctxRef}
+            width={512}
+            height={256}
+            style={{
+              transform: `translate(-50%, -50%) scale(${scale}) translate(50%, 50%)`,
+              imageRendering: "pixelated",
+            }}
+          ></canvas>
         </figure>
       </main>
     </article>

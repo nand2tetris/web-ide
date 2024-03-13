@@ -260,7 +260,7 @@ const VM = () => {
         )}
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
-        <Screen memory={state.vm.Screen} />
+        <Screen memory={state.vm.Screen} scale={1.4} />
         <Keyboard keyboard={state.vm.Keyboard} />
       </Panel>
       <Memory

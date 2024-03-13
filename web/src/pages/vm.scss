@@ -1,8 +1,10 @@
 @use "./page.scss";
 
 .VmPage {
-  grid-template-columns: 4fr auto auto 5fr !important;
-  grid-template-rows: auto 1fr 2fr !important;
+  grid-template-columns:
+    1fr calc(var(--screen-size) * 0.7) calc(var(--screen-size) * 0.7)
+    1fr !important;
+  grid-template-rows: auto 1fr 4fr !important;
   grid-template-areas:
     "program display display test"
     "program stack RAM test"

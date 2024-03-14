@@ -23,6 +23,7 @@
     "fix": "eslint --fix cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "check:format": "prettier --ignore-unknown --check cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "check:lint": "eslint --no-error-on-unmatched-pattern cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
+    "precheck:types": "npm run build -w simulator",
     "check:types": "tsc --build tsconfig.json",
     "build": "CI=true npm run build -w projects && CI=true npm run build -w runner && CI=true npm run build -w simulator && CI=true npm run build -w cli && CI=true npm run build -w components && CI=true npm run build -w web && CI=true npm run build -w extension",
     "build:extension": "CI=true npm run build -w extension",

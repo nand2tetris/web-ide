@@ -5,7 +5,7 @@ import { op } from "../util/asm.js";
 import { int10, int16, int2 } from "../util/twos.js";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
-export type Format = typeof FORMATS[number];
+export type Format = (typeof FORMATS)[number];
 
 export const SCREEN_OFFSET = 0x4000;
 export const SCREEN_ROWS = 256;

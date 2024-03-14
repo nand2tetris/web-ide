@@ -11,6 +11,7 @@
     "react-ga4": "^1.4.1"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@davidsouther/jiffies": "^2.0.6",
     "@lingui/cli": "^3.17.2",
     "@lingui/macro": "^3.17.2",

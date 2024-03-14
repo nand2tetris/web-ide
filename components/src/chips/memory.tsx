@@ -183,6 +183,7 @@ export const Memory = forwardRef(
   (
     {
       name = "Memory",
+      className,
       displayEnabled = true,
       highlight = -1,
       editable = true,
@@ -198,6 +199,7 @@ export const Memory = forwardRef(
       onChange = undefined,
     }: {
       name?: string;
+      className?: string;
       displayEnabled?: boolean;
       editable?: boolean;
       highlight?: number;
@@ -289,7 +291,7 @@ export const Memory = forwardRef(
     });
 
     return (
-      <article className={`panel memory ${name}`}>
+      <article className={`panel memory ${className ?? name}`}>
         <header>
           <div style={{ whiteSpace: "nowrap" }}>{name}</div>
           <fieldset role="group">

@@ -265,7 +265,7 @@ const VM = () => {
       </Panel>
       <Memory
         ref={stackRef}
-        name="Global Stack"
+        name="RAM"
         memory={state.vm.RAM}
         initialAddr={256}
         format="dec"
@@ -274,6 +274,7 @@ const VM = () => {
       />
       <Memory
         name="RAM"
+        className="Stack"
         memory={state.vm.RAM}
         format="dec"
         cellLabels={[

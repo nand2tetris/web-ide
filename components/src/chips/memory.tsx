@@ -201,7 +201,7 @@ export const Memory = ({
       const bytes = await loader(source);
       memory.loadBytes(bytes);
     } catch (e) {
-      setStatus(`Error loading file: ${(e as Error).message}`);
+      setStatus(`Error loading memory: ${(e as Error).message}`);
       return;
     }
     event.target.value = ""; // Clear the input out

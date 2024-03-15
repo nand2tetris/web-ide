@@ -121,8 +121,9 @@ export class Memory implements MemoryAdapter {
 
   loadBytes(bytes: number[], offset?: number): void {
     this.memory.set(new Int16Array(bytes), offset);
-    this.changed.fill(true, 0, bytes.length);
     this.memory.fill(0, bytes.length, this.size);
+    // Mark only the loaded bytes as having changed, and everything else as untouched
+    this.changed.fill(true, 0, bytes.length);
     this.changed.fill(false, bytes.length, this.size);
   }
 

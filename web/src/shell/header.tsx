@@ -90,8 +90,7 @@ const Header = () => {
   redirectRefs[URLs["chipGuide"].href] = useRef<HTMLAnchorElement>(null);
   redirectRefs[URLs["placeholder"].href] = useRef<HTMLAnchorElement>(null);
 
-  let { pathname } = useLocation();
-  pathname = pathname.replace("/", "");
+  const pathname = useLocation().pathname.replace("/", "");
 
   return (
     <header>

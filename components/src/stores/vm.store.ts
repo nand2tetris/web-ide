@@ -11,8 +11,10 @@ import {
   MemoryAdapter,
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { CompilationError } from "@nand2tetris/simulator/errors.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";

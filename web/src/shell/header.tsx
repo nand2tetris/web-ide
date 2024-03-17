@@ -1,6 +1,6 @@
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { RefObject, useContext, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { AppContext, useAppContext } from "src/App.context";
 import { Icon } from "../pico/icon";
 import URLs, { LAST_ROUTE_KEY, TOOLS, URL } from "../urls";
@@ -13,6 +13,7 @@ interface HeaderButton {
   target?: JSX.Element;
   onClick?: (
     context: ReturnType<typeof useAppContext>,
+    pathname: string,
     redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
   ) => void;
 }
@@ -33,9 +34,10 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
 
 function openGuide(
   context: ReturnType<typeof useAppContext>,
+  pathname: string,
   redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
 ) {
-  if (context.toolStates.tool == "chip") {
+  if (pathname == "chip") {
     redirectRefs[URLs["chipGuide"].href].current?.click();
   } else {
     redirectRefs[URLs["placeholder"].href].current?.click();
@@ -63,6 +65,7 @@ const headerButtons: HeaderButton[] = [
   {
     onClick: (
       context: ReturnType<typeof useAppContext>,
+      pathname: string,
       redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
     ) => {
       context.settings.open();
@@ -87,6 +90,8 @@ const Header = () => {
   redirectRefs[URLs["chipGuide"].href] = useRef<HTMLAnchorElement>(null);
   redirectRefs[URLs["placeholder"].href] = useRef<HTMLAnchorElement>(null);
 
+  const pathname = useLocation().pathname.replace("/", "");
+
   return (
     <header>
       <nav style={{ width: "100%" }}>
@@ -102,8 +107,7 @@ const Header = () => {
               </a>
               &nbsp;IDE Online
             </strong>
-            {appContext.toolStates.tool &&
-              ` / ${TOOLS[appContext.toolStates.tool]}`}
+            {TOOLS[pathname] && ` / ${TOOLS[pathname]}`}
           </li>
         </ul>
         {/* for guide */}
@@ -126,12 +130,11 @@ const Header = () => {
                   onClick={
                     onClick
                       ? () => {
-                          onClick?.(appContext, redirectRefs);
+                          onClick?.(appContext, pathname, redirectRefs);
                         }
                       : () => {
                           setStatus("");
                           if (href) {
-                            appContext.toolStates.setTool(tool);
                             if (target) {
                               localStorage.setItem(LAST_ROUTE_KEY, href);
                             }

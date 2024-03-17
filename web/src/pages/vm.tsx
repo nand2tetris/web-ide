@@ -10,7 +10,6 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
-import { AppContext } from "src/App.context";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
@@ -38,16 +37,11 @@ const ERROR_MESSAGES: Record<ERRNO, string> = {
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
-  const { toolStates } = useContext(AppContext);
   const { setStatus } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
-
-  useEffect(() => {
-    toolStates.setTool("vm");
-  }, []);
 
   useEffect(() => {
     actions.initialize();

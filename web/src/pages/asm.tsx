@@ -238,7 +238,6 @@ export const Asm = () => {
                     />
                     <button
                       onClick={async () => {
-                        toolStates.setTool("cpu");
                         const bytes = await loadHack(state.result);
                         toolStates.setCpuState(
                           state.asmName?.replace(".asm", ".hack"),

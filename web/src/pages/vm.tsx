@@ -1,3 +1,5 @@
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
@@ -12,7 +14,8 @@ import {
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+
+import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";

@@ -399,10 +399,12 @@ export function makeChipStore(
     async loadTest(test: string) {
       const [tst, cmp] = await Promise.all([
         fs
-          .readFile(`/projects/${project}/${chipName}/${test}.tst`)
+          .readFile(`/projects/${project}/${chipName}/${test}`)
           .catch(() => makeTst()),
         fs
-          .readFile(`/projects/${project}/${chipName}/${test}.cmp`)
+          .readFile(
+            `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp")
+          )
           .catch(() => makeCmp()),
       ]);
       dispatch.current({ action: "setFiles", payload: { cmp, tst } });

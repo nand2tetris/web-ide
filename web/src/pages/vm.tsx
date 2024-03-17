@@ -16,6 +16,7 @@ import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
+import { Editor } from "src/shell/editor";
 
 const ERROR_MESSAGES: Record<ERRNO, string> = {
   [ERRNO.SYS_WAIT_DURATION_NOT_POSITIVE]: t`Duration must be positive (Sys.wait)`,

@@ -17,6 +17,8 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 
 // Tests and illustrates SimpleAdd.vm on the VM simulator.
 
+load SimpleAdd.vm,
+
 set RAM[0] 256,  // initializes the stack pointer
 
 repeat 3 {       // SimpleAdd.vm has 3 VM commands

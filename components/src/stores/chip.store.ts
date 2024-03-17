@@ -479,13 +479,13 @@ export function makeChipStore(
       dispatch.current({ action: "testFinished" });
     },
 
-    tick(): boolean {
+    tick(): Promise<boolean> {
       return this.stepTest();
     },
 
-    stepTest(): boolean {
+    async stepTest(): Promise<boolean> {
       assert(test.chipId === chip.id, "Test and chip out of sync");
-      const done = test.step();
+      const done = await test.step();
       dispatch.current({ action: "updateTestStep" });
       if (done) {
         dispatch.current({ action: "testFinished" });

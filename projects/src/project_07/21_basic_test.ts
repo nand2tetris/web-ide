@@ -39,7 +39,9 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 
 // Tests and illustrates BasicTest.vm on the VM simulator.
 // Starts by setting the stack pointer and the base addresses
-// of relevant memory segments to selected RAM addresses.  
+// of relevant memory segments to selected RAM addresses.
+
+load BasicTest.vm,
 
 set sp 256,        // stack pointer
 set local 300,     // base address of the local segment

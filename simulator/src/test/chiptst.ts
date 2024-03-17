@@ -72,7 +72,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
     this.clock.tock();
   }
 
-  override async load(filename: string) {
+  override async loadROM(filename: string) {
     await this.chip.load(this.fs, filename);
   }
 
@@ -84,12 +84,12 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
 export interface ChipTestInstruction extends TestInstruction {
   _chipTestInstruction_: true;
-  do(test: ChipTest): void | Promise<void>;
+  do(test: ChipTest): Promise<void>;
 }
 
 export class TestEvalInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  do(test: ChipTest) {
+  async do(test: ChipTest) {
     test.eval();
   }
 
@@ -100,7 +100,7 @@ export class TestEvalInstruction implements ChipTestInstruction {
 
 export class TestTickInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  do(test: ChipTest) {
+  async do(test: ChipTest) {
     test.tick();
   }
 
@@ -111,7 +111,7 @@ export class TestTickInstruction implements ChipTestInstruction {
 
 export class TestTockInstruction implements ChipTestInstruction {
   readonly _chipTestInstruction_ = true;
-  do(test: ChipTest) {
+  async do(test: ChipTest) {
     test.tock();
   }
 

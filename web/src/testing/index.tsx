@@ -6,7 +6,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import { render, RenderOptions } from "@testing-library/react";
+import { render, RenderOptions, RenderResult } from "@testing-library/react";
 import ue from "@testing-library/user-event";
 import { ReactElement } from "react";
 import { useAppContext } from "../App.context";
@@ -20,7 +20,10 @@ const I18nWrapper = ({ children }: { children: ReactElement }) => (
   <I18nProvider i18n={i18n}>{children}</I18nProvider>
 );
 
-const i18nRender = (ui: ReactElement, options: RenderOptions = {}) =>
+const i18nRender: (
+  ui: ReactElement,
+  options?: RenderOptions
+) => RenderResult = (ui: ReactElement, options: RenderOptions = {}) =>
   render(ui, { wrapper: I18nWrapper, ...options });
 
 export const useTestingAppContext = () => ({

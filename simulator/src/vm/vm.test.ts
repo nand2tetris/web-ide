@@ -152,8 +152,10 @@ test("07 / Memory Access / Basic Test", () => {
     [3, 3000],
     [4, 3010],
   ]);
-  vm.entryArgInitialized = true;
-  vm.entryLocalInitialized = true;
+  vm.segmentInitializations["argument"].initialized = true;
+  vm.segmentInitializations["local"].initialized = true;
+  vm.invocation.thisInitialized = true;
+  vm.invocation.thatInitialized = true;
 
   for (let i = 0; i < 25; i++) {
     vm.step();
@@ -192,8 +194,10 @@ test("07 / Memory Access / Pointer Test", () => {
     [3, 3000],
     [4, 3010],
   ]);
-  vm.entryArgInitialized = true;
-  vm.entryLocalInitialized = true;
+  vm.segmentInitializations["argument"].initialized = true;
+  vm.segmentInitializations["local"].initialized = true;
+  vm.invocation.thisInitialized = true;
+  vm.invocation.thatInitialized = true;
 
   for (let i = 0; i < 16; i++) {
     vm.step();
@@ -230,8 +234,8 @@ test("08 / Program Flow / Basic Loop", () => {
     [2, 400],
     [400, 3],
   ]);
-  vm.entryArgInitialized = true;
-  vm.entryLocalInitialized = true;
+  vm.segmentInitializations["argument"].initialized = true;
+  vm.segmentInitializations["local"].initialized = true;
 
   for (let i = 0; i < 33; i++) {
     vm.step();
@@ -294,8 +298,8 @@ test("08 / Program Flow / Fibonacci Series", () => {
     [400, 6],
     [401, 3000],
   ]);
-  vm.entryArgInitialized = true;
-  vm.entryLocalInitialized = true;
+  vm.segmentInitializations["argument"].initialized = true;
+  vm.segmentInitializations["local"].initialized = true;
 
   for (let i = 0; i < 1000; i++) {
     vm.step();
@@ -343,8 +347,10 @@ test("08 / Functions / NestedCall", () => {
   }
 
   vm.write(init);
-  vm.entryArgInitialized = true;
-  vm.entryLocalInitialized = true;
+  vm.segmentInitializations["argument"].initialized = true;
+  vm.segmentInitializations["local"].initialized = true;
+  vm.invocation.thisInitialized = true;
+  vm.invocation.thatInitialized = true;
 
   for (let i = 0; i < 1000; i++) {
     vm.step();

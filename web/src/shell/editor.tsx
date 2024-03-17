@@ -124,7 +124,7 @@ const Monaco = ({
   language: string;
   error?: CompilationError;
   disabled?: boolean;
-  highlight?: Span;
+  highlight?: Span | number;
   customDecorations?: Decoration[];
   dynamicHeight?: boolean;
   lineNumberTransform?: (n: number) => string;
@@ -135,7 +135,7 @@ const Monaco = ({
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
-  const highlight = useRef<Span | undefined>(undefined);
+  const highlight = useRef<Span | number | undefined>(undefined);
   const customDecorations = useRef<Decoration[]>([]);
 
   const codeTheme = useCallback(() => {
@@ -147,6 +147,26 @@ const Monaco = ({
   }, [theme]);
 
   const doDecorations = useCallback(() => {
+    let newHighlight: Span | undefined;
+    if (typeof highlight.current == "number") {
+      const lineCount = editor.current?.getModel()?.getLineCount() ?? 0;
+      if (highlight.current <= lineCount) {
+        const start =
+          editor.current
+            ?.getModel()
+            ?.getOffsetAt({ lineNumber: highlight.current, column: 0 }) ?? 0;
+        const end =
+          highlight.current == lineCount
+            ? editor.current?.getModel()?.getValueLength() ?? 0
+            : (editor.current?.getModel()?.getOffsetAt({
+                lineNumber: highlight.current + 1,
+                column: 0,
+              }) ?? 1) - 1;
+        newHighlight = { start: start, end: end, line: highlight.current };
+      }
+    } else {
+      newHighlight = highlight.current;
+    }
     decorations.current = makeDecorations(
       monaco,
       editor.current,
@@ -155,7 +175,7 @@ const Monaco = ({
       // highlight in the test view to not show. Setting it to [0, 1] will
       // cause a 1-character highlight in the editor view, so don't do that
       // either.
-      highlight.current ?? { start: 0, end: 0, line: 0 },
+      newHighlight ?? { start: 0, end: 0, line: 0 },
       customDecorations.current,
       decorations.current
     );
@@ -297,7 +317,7 @@ export const Editor = ({
   onCursorPositionChange?: (index: number) => void;
   grammar?: ohm.Grammar;
   language: string;
-  highlight?: Span;
+  highlight?: Span | number;
   customDecorations?: Decoration[];
   dynamicHeight?: boolean;
   lineNumberTransform?: (n: number) => string;

@@ -70,7 +70,7 @@ Base {
   commentEnd = "*/"
   comment = commentStart (~commentEnd any)* commentEnd
   lineCommentStart = "//"
-  lineComment = lineCommentStart (~"\\n" any)* "\\n"
+  lineComment = lineCommentStart (~"\\n" any)*
 
   List<elem, sep> = NonemptyListOf<elem, sep> sep?
   EmptyList<elem, sep> = EmptyList<elem, sep> sep?

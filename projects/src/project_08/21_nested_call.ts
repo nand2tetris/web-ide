@@ -1,72 +1,67 @@
-export const vm = `// Sys.vm for NestedCall test.
+export const sys = `// Sys.vm. Tested by the NestedCall test script.
+// Consists of three functions: Sys.init, Sys.main, and Sys.add12.
 
-// Sys.init()
-//
-// Calls Sys.main() and stores return value in temp 1.
-// Does not return.  (Enters infinite loop.)
-
+// Calls Sys.main() and stores a return value in temp 1.
+// Does not return (enters infinite loop).
+// The VM implementation starts running the Sys.init function, by default.
 function Sys.init 0
-push constant 4000	// test THIS and THAT context save
-pop pointer 0
-push constant 5000
-pop pointer 1
-call Sys.main 0
-pop temp 1
-label LOOP
-goto LOOP
+	push constant 4000	// tests that THIS and THAT are handled correctly
+	pop pointer 0
+	push constant 5000
+	pop pointer 1
+	call Sys.main 0
+	pop temp 1
+	label LOOP
+	goto LOOP
 
-// Sys.main()
-//
-// Sets locals 1, 2 and 3, leaving locals 0 and 4 unchanged to test
-// default local initialization to 0.  (RAM set to -1 by test setup.)
-// Calls Sys.add12(123) and stores return value (135) in temp 0.
-// Returns local 0 + local 1 + local 2 + local 3 + local 4 (456) to confirm
-// that locals were not mangled by function call.
-
+// Sets locals 1, 2 and 3 to some values. Leaves locals 0 and 4 unchanged, 
+// to test that the 'function' VM command initliazes them to 0 (the test 
+// script sets them to -1 before this code starts running).
+// Calls Sys.add12(123) and stores the return value (should be 135) in temp 0.
+// Returns local 0 + local 1 + local 2 + local 3 + local 4 (should be 456), to 
+// confirm that locals were not mangled by the function call.
 function Sys.main 5
-push constant 4001
-pop pointer 0
-push constant 5001
-pop pointer 1
-push constant 200
-pop local 1
-push constant 40
-pop local 2
-push constant 6
-pop local 3
-push constant 123
-call Sys.add12 1
-pop temp 0
-push local 0
-push local 1
-push local 2
-push local 3
-push local 4
-add
-add
-add
-add
-return
+	push constant 4001
+	pop pointer 0
+	push constant 5001
+	pop pointer 1
+	push constant 200
+	pop local 1
+	push constant 40
+	pop local 2
+	push constant 6
+	pop local 3
+	push constant 123
+	call Sys.add12 1
+	pop temp 0
+	push local 0
+	push local 1
+	push local 2
+	push local 3
+	push local 4
+	add
+	add
+	add
+	add
+	return
 
-// Sys.add12(int n)
-//
-// Returns n+12.
-
+// Returns (argument 0) + 12.
 function Sys.add12 0
-push constant 4002
-pop pointer 0
-push constant 5002
-pop pointer 1
-push argument 0
-push constant 12
-add
-return
+	push constant 4002
+	pop pointer 0
+	push constant 5002
+	pop pointer 1
+	push argument 0
+	push constant 12
+	add
+	return
 `;
 
 export const vm_tst = `// Tests and illustrates how the VM implementation handles function-call-and-return,
 // by executing the functions in Sys.vm in the VM emulator.
 // In particular, loads and runs the functions in Sys.vm.
 
+load Sys.vm,
 output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
 
 set RAM[0] 261,

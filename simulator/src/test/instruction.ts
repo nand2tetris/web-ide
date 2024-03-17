@@ -4,7 +4,7 @@ import { Test } from "./tst.js";
 
 export interface TestInstruction {
   span?: Span;
-  do(test: Test): void;
+  do(test: Test): Promise<void>;
   steps(test: Test): IterableIterator<TestInstruction>;
 }
 
@@ -15,7 +15,7 @@ export class TestControlInstruction implements TestInstruction {
     this.span = span;
   }
 
-  do() {
+  async do() {
     return;
   }
   *steps() {
@@ -33,7 +33,7 @@ export class TestSetInstruction implements TestInstruction {
     private index?: number | undefined
   ) {}
 
-  do(test: Test) {
+  async do(test: Test) {
     test.setVar(this.variable, this.value, this.index);
   }
 
@@ -43,7 +43,7 @@ export class TestSetInstruction implements TestInstruction {
 }
 
 export class TestOutputInstruction implements TestInstruction {
-  do(test: Test) {
+  async do(test: Test) {
     test.output();
   }
 
@@ -83,7 +83,7 @@ export class TestOutputListInstruction implements TestInstruction {
     });
   }
 
-  do(test: Test) {
+  async do(test: Test) {
     test.outputList(this.outputs);
     test.header();
   }
@@ -101,7 +101,7 @@ export class TestCompoundInstruction implements TestInstruction {
     this.instructions.push(instruction);
   }
 
-  do(test: Test<TestInstruction>): void {
+  async do(test: Test<TestInstruction>) {
     for (const instruction of this.instructions) {
       instruction.do(test);
     }
@@ -117,7 +117,7 @@ export class TestRepeatInstruction extends TestCompoundInstruction {
     super();
   }
 
-  override do() {
+  override async do() {
     return undefined;
   }
 
@@ -197,7 +197,7 @@ export class TestWhileInstruction extends TestCompoundInstruction {
 
 export class TestEchoInstruction implements TestInstruction {
   constructor(public readonly content: string) {}
-  do(test: Test) {
+  async do(test: Test) {
     test.echo(this.content);
   }
 
@@ -207,7 +207,7 @@ export class TestEchoInstruction implements TestInstruction {
 }
 
 export class TestClearEchoInstruction implements TestInstruction {
-  do(test: Test) {
+  async do(test: Test) {
     test.clearEcho();
   }
 
@@ -220,7 +220,7 @@ export class TestLoadROMInstruction implements TestInstruction {
   constructor(readonly file: string) {}
   async do(test: Test) {
     test.fs.pushd("/samples");
-    await test.load(this.file);
+    await test.loadROM(this.file);
     test.fs.popd();
   }
 
@@ -244,7 +244,7 @@ export class TestLoadInstruction implements TestInstruction {
 export class TestBreakpointInstruction implements TestInstruction {
   constructor(readonly variable: string, readonly value: number) {}
 
-  do(test: Test) {
+  async do(test: Test) {
     test.addBreakpoint(this.variable, this.value);
   }
 
@@ -254,7 +254,7 @@ export class TestBreakpointInstruction implements TestInstruction {
 }
 
 export class TestClearBreakpointsInstruction implements TestInstruction {
-  do(test: Test) {
+  async do(test: Test) {
     test.clearBreakpoints();
   }
 

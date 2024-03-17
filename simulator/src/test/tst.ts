@@ -35,6 +35,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     return;
   }
 
+  async loadROM(_filename?: string): Promise<void> {
+    return undefined;
+  }
   async load(_filename?: string): Promise<void> {
     return undefined;
   }
@@ -113,9 +116,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     return this._step?.done ?? false;
   }
 
-  step() {
+  async step() {
     while (!this._step.done) {
-      this._step.value.do(this);
+      await this._step.value.do(this);
       this._step = this.steps.next();
 
       if (this._step.value instanceof TestStopInstruction) {

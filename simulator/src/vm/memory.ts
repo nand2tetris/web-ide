@@ -5,7 +5,8 @@ import {
   isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { RAM } from "../cpu/memory.js";
-import { Segment, VmFrame } from "./vm.js";
+import { VmFrame } from "./vm.js";
+import { Segment } from "../languages/vm.js";
 
 export const SP = 0;
 export const LCL = 1;
@@ -211,7 +212,7 @@ export class VmMemory extends RAM {
     const locals = [...this.map((_, v) => v, lcl, lcl + localN)];
     const stack = [...this.map((_, v) => v, stk, stk + stackN)];
     const this_ = [...this.map((_, v) => v, this.THIS, this.THIS + thisN)];
-    const that = [...this.map((_, v) => v, this.THIS, this.THIS + thatN)];
+    const that = [...this.map((_, v) => v, this.THAT, this.THAT + thatN)];
     return {
       args: { base: arg, count: argN, values: args },
       locals: { base: lcl, count: localN, values: locals },

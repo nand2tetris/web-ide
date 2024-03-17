@@ -74,7 +74,6 @@ export const Runbar = (props: {
       </button>
       <button
         className="flex-0"
-        disabled={props.disabled}
         onClick={() => runner.actions.reset()}
         data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
         data-placement="bottom"

@@ -13,6 +13,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { AppContext } from "../App.context";
@@ -23,11 +24,15 @@ import { Panel } from "./panel";
 const WARNING_KEY = "skipTestEditWarning";
 
 export const TestPanel = ({
-  runner,
+  runner: baseRunner,
   tst: [tst, setTst, tstHighlight],
   cmp: [cmp, setCmp],
   out: [out],
+  setPath,
   disabled = false,
+  defaultTst,
+  defaultCmp,
+  showClear = false,
   onSpeedChange,
   compileTest,
 }: {
@@ -35,12 +40,45 @@ export const TestPanel = ({
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
+  setPath?: Dispatch<string>;
+  defaultTst?: string;
+  defaultCmp?: string;
+  showClear?: boolean;
   disabled?: boolean;
   onSpeedChange?: (speed: number) => void;
   compileTest?: (tst: string, cmp: string) => void;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
+
+  const [showHighlight, setShowHighlight] = useState(true);
+  const runner = useRef<Timer>();
+  useEffect(() => {
+    runner.current = new (class ChipTimer extends Timer {
+      async reset(): Promise<void> {
+        await baseRunner.current?.reset();
+        setShowHighlight(true);
+      }
+
+      override finishFrame(): void {
+        super.finishFrame();
+        baseRunner.current?.finishFrame();
+      }
+
+      async tick(): Promise<boolean> {
+        setShowHighlight(true);
+        return (await baseRunner.current?.tick()) ?? false;
+      }
+
+      toggle(): void {
+        baseRunner.current?.toggle();
+      }
+    })();
+
+    return () => {
+      runner.current?.stop();
+    };
+  }, [baseRunner]);
 
   const [selectedTestTab, doSetSelectedTestTab] = useState<
     "tst" | "cmp" | "out"
@@ -60,6 +98,16 @@ export const TestPanel = ({
   const [savedCmp, setSavedCmp] = useState("");
   const editDialog = useDialog();
 
+  const onChange = (test: string) => {
+    setTst(test);
+    setShowHighlight(false);
+  };
+
+  const clear = () => {
+    setTst(defaultTst ?? "");
+    setCmp(defaultCmp ?? "");
+  };
+
   const onEdit = () => {
     if (!localStorage.getItem(WARNING_KEY)) {
       editDialog.open();
@@ -78,6 +126,7 @@ export const TestPanel = ({
   const loadTest = useCallback(async () => {
     try {
       const path = await filePicker.select();
+      setPath?.(path);
       const tst = await fs.readFile(path);
       let cmp: string | undefined = undefined;
       try {
@@ -146,25 +195,37 @@ export const TestPanel = ({
           <div className="flex-0">
             <Trans>Test</Trans>
           </div>
+          <fieldset role="group"></fieldset>
+          {editWarning}
           <div className="flex-1">
             {runner.current && (
               <Runbar
+                prefix={
+                  <>
+                    {showClear && (
+                      <button className="flex-0" onClick={clear}>
+                        Clear
+                      </button>
+                    )}
+                    {editMode ? (
+                      <button className="flex-0" onClick={restore}>
+                        Restore
+                      </button>
+                    ) : (
+                      <button className="flex-0" onClick={onEdit}>
+                        Edit
+                      </button>
+                    )}
+                    <button className="flex-0" onClick={loadTest}>
+                      📂
+                    </button>
+                  </>
+                }
                 runner={runner.current}
                 disabled={disabled}
                 onSpeedChange={onSpeedChange}
               />
             )}
-          </div>
-          <div>
-            <fieldset role="group">
-              {editMode ? (
-                <button onClick={restore}>Restore</button>
-              ) : (
-                <button onClick={onEdit}>Edit</button>
-              )}
-              <button onClick={loadTest}>📂</button>
-            </fieldset>
-            {editWarning}
           </div>
         </>
       }
@@ -195,11 +256,11 @@ export const TestPanel = ({
         >
           <Editor
             value={tst}
-            onChange={setTst}
+            onChange={onChange}
             grammar={TST.parser}
             language={"tst"}
             disabled={!editMode}
-            highlight={tstHighlight}
+            highlight={showHighlight ? tstHighlight : undefined}
           />
         </div>
         <div

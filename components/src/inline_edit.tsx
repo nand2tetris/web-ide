@@ -26,14 +26,17 @@ export const InlineEdit = (props: {
   };
 
   const view = () => (
-    <span
-      style={{ cursor: "text", ...width("full", "inline") }}
+    <div
+      style={{
+        cursor: "text",
+        ...width("full", "inline"),
+      }}
       onClick={() => {
         setMode(Mode.EDIT);
       }}
     >
-      {value}
-    </span>
+      {value}&nbsp;
+    </div>
   );
 
   const doSelect = useCallback(

@@ -1,7 +1,7 @@
 /** Reads tst files to apply and perform test runs. */
 
 import ohm from "ohm-js";
-import { baseSemantics, grammars, makeParser } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
 export const grammar = ohm.grammar(vmGrammar, grammars);
@@ -10,6 +10,16 @@ export const vmSemantics = grammar.extendSemantics(baseSemantics);
 export interface Vm {
   instructions: VmInstruction[];
 }
+
+export type Segment =
+  | "argument"
+  | "local"
+  | "static"
+  | "constant"
+  | "this"
+  | "that"
+  | "pointer"
+  | "temp";
 
 export type VmInstruction =
   | StackInstruction
@@ -22,40 +32,39 @@ export type VmInstruction =
 
 export interface StackInstruction {
   op: "push" | "pop";
-  segment:
-    | "argument"
-    | "local"
-    | "static"
-    | "constant"
-    | "this"
-    | "that"
-    | "pointer"
-    | "temp";
+  segment: Segment;
   offset: number;
+  span?: Span;
 }
 export interface OpInstruction {
   op: "add" | "sub" | "neg" | "lt" | "gt" | "eq" | "and" | "or" | "not";
+  span?: Span;
 }
 export interface FunctionInstruction {
   op: "function";
   name: string;
   nVars: number;
+  span?: Span;
 }
 export interface CallInstruction {
   op: "call";
   name: string;
   nArgs: number;
+  span?: Span;
 }
 export interface ReturnInstruction {
   op: "return";
+  span?: Span;
 }
 export interface LabelInstruction {
   op: "label";
   label: string;
+  span?: Span;
 }
 export interface GotoInstruction {
   op: "goto" | "if-goto";
   label: string;
+  span?: Span;
 }
 
 vmSemantics.addAttribute<
@@ -172,6 +181,7 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       op: op as "push" | "pop",
       segment,
       offset: Number(value.sourceString),
+      span: span(this.source),
     };
   },
   OpInstruction({ op }) {
@@ -186,24 +196,39 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
         | "and"
         | "or"
         | "not",
+      span: span(this.source),
     };
   },
   FunctionInstruction(_, { name }, nVars) {
-    return { op: "function", name, nVars: Number(nVars.sourceString) };
+    return {
+      op: "function",
+      name,
+      nVars: Number(nVars.sourceString),
+      span: span(this.source),
+    };
   },
   CallInstruction(_, { name }, nArgs) {
-    return { op: "call", name, nArgs: Number(nArgs.sourceString) };
+    return {
+      op: "call",
+      name,
+      nArgs: Number(nArgs.sourceString),
+      span: span(this.source),
+    };
   },
   ReturnInstruction(_) {
-    return { op: "return" };
+    return { op: "return", span: span(this.source) };
   },
   // LabelInstruction = Label Name
   LabelInstruction(_, { name: label }) {
-    return { op: "label", label };
+    return { op: "label", label, span: span(this.source) };
   },
   // GotoInstruction = (Goto | IfGoto) Name
   GotoInstruction({ op }, { name: label }) {
-    return { op: op as "goto" | "if-goto", label };
+    return {
+      op: op as "goto" | "if-goto",
+      label,
+      span: span(this.source),
+    };
   },
 });
 

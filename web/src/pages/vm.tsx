@@ -1,15 +1,21 @@
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
+import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { useVmPageStore } from "@nand2tetris/components/stores/vm.store.js";
-import * as VMLang from "@nand2tetris/simulator/languages/vm.js";
+import {
+  DEFAULT_TEST,
+  useVmPageStore,
+} from "@nand2tetris/components/stores/vm.store.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
-import { VmFrame } from "@nand2tetris/simulator/vm/vm.js";
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+
+import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
@@ -35,6 +41,10 @@ const ERROR_MESSAGES: Record<ERRNO, string> = {
   [ERRNO.ILLEGAL_CURSOR_LOCATION]: t`Illegal cursor location (Output.moveCursor)`,
 };
 
+interface Rerenderable {
+  rerender: () => void;
+}
+
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
   const { setStatus } = useContext(BaseContext);
@@ -42,13 +52,18 @@ const VM = () => {
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
+  const [path, setPath] = useState("/");
 
   useEffect(() => {
     actions.initialize();
   }, [actions]);
 
   useEffect(() => {
-    console.log("use effect exit code", state.controls.exitCode);
+    actions.loadTest(path, tst, cmp);
+    actions.reset();
+  }, [tst, cmp]);
+
+  useEffect(() => {
     if (state.controls.exitCode !== undefined) {
       setStatus(
         state.controls.exitCode == 0
@@ -62,10 +77,11 @@ const VM = () => {
     }
   }, [state.controls.exitCode]);
 
-  const runner = useRef<Timer>();
-  const [runnerAssigned, setRunnersAssigned] = useState(false);
+  const vmRunner = useRef<Timer>();
+  const testRunner = useRef<Timer>();
+  const [runnersAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
-    runner.current = new (class ChipTimer extends Timer {
+    vmRunner.current = new (class VMTimer extends Timer {
       override async tick() {
         return actions.step();
       }
@@ -75,6 +91,7 @@ const VM = () => {
       }
 
       override reset() {
+        setStatus("Reset");
         actions.reset();
       }
 
@@ -82,17 +99,43 @@ const VM = () => {
         dispatch.current({ action: "update" });
       }
     })();
+
+    testRunner.current = new (class TestTimer extends Timer {
+      override async tick() {
+        return actions.testStep();
+      }
+
+      override finishFrame() {
+        dispatch.current({ action: "update" });
+      }
+
+      override reset() {
+        setStatus("Reset");
+        actions.reset();
+      }
+
+      override toggle() {
+        dispatch.current({ action: "update" });
+      }
+    })();
+
     setRunnersAssigned(true);
 
     return () => {
-      runner.current?.stop();
+      vmRunner.current?.stop();
+      testRunner.current?.stop();
     };
   }, [actions, dispatch]);
 
   const fileUploadRef = useRef<HTMLInputElement>(null);
+  const dirUploadRef = useRef<HTMLInputElement>(null);
 
-  const loadProgram = () => {
+  const loadFile = () => {
     fileUploadRef.current?.click();
+  };
+
+  const loadDir = () => {
+    dirUploadRef.current?.click();
   };
 
   const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -117,6 +160,7 @@ const VM = () => {
       return;
     }
     const success = actions.loadVm(sources);
+    actions.reset();
     if (success) {
       setStatus("Loaded vm file");
     }
@@ -126,87 +170,144 @@ const VM = () => {
     actions.setAnimate(speed <= 2);
   };
 
+  const stackRef = useRef<Rerenderable>();
+
   return (
     <div className="Page VmPage grid">
       <Panel
         className="program"
         header={
           <>
-            <Trans>Program</Trans>
+            <div className="flex-0" style={{ whiteSpace: "nowrap" }}>
+              <Trans>VM Code</Trans>
+            </div>
+            <div className="flex-1">
+              {runnersAssigned && vmRunner.current && (
+                <Runbar
+                  prefix={
+                    <>
+                      <button
+                        className="flex-0"
+                        onClick={loadFile}
+                        data-tooltip="Load file"
+                        data-placement="bottom"
+                      >
+                        📄
+                      </button>
+                      <button
+                        className="flex-0"
+                        onClick={loadDir}
+                        data-tooltip="Load directory"
+                        data-placement="bottom"
+                      >
+                        📂
+                      </button>
+                    </>
+                  }
+                  runner={vmRunner.current}
+                  disabled={!state.controls.valid}
+                  onSpeedChange={onSpeedChange}
+                />
+              )}
+            </div>
             <input
               type="file"
-              multiple
               style={{ display: "none" }}
               ref={fileUploadRef}
               onChange={uploadFile}
             />
-            <button
-              className="flex-0"
-              onClick={loadProgram}
-              data-tooltip="Load file"
-              data-placement="bottom"
-            >
-              📂
-            </button>
+            <input
+              type="file"
+              webkitdirectory=""
+              style={{ display: "none" }}
+              ref={dirUploadRef}
+              onChange={uploadFile}
+            />
           </>
         }
       >
-        <main>
-          <table>
-            <thead>
-              <tr>
-                <td>Inst</td>
-                <td>Target</td>
-                <td>Val</td>
-              </tr>
-            </thead>
-            <tbody>
-              {state.vm.Prog.map((inst, key) =>
-                VMInstructionRow({
-                  inst,
-                  key,
-                  highlighted: key === state.vm.highlight,
-                })
-              )}
-            </tbody>
-          </table>
-        </main>
+        <Editor
+          value={state.files.vm}
+          onChange={(source: string) => {
+            actions.setVm(source);
+          }}
+          language={"vm"}
+          highlight={
+            state.controls.valid && state.vm.showHighlight
+              ? state.vm.highlight
+              : undefined
+          }
+          error={state.controls.error}
+        />
       </Panel>
-      <Panel className="stack" header={<Trans>VM</Trans>}>
-        {state.vm.Stack.map((frame, i) => (
-          <VMStackFrame frame={frame} key={i} />
-        ))}
-      </Panel>
-      <Panel className="display" style={{ gridArea: "display" }}>
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              onChange={actions.toggleUseTest}
-              checked={state.test.useTest}
-              role="switch"
+      <Panel className="vm" header={<Trans>VM Structures</Trans>}>
+        {state.controls.valid && state.vm.Stack.length > 0 && (
+          <>
+            <VMStackFrame
+              statics={state.vm.Statics}
+              temp={state.vm.Temp}
+              frame={state.vm.Stack[0]}
             />
-            Use Test Script
-          </label>
-        </div>
-        <Screen memory={state.vm.Screen} />
-        <Keyboard keyboard={state.vm.Keyboard} />
-        {state.controls.animate ? (
-          <div style={{ display: "flex", flexDirection: "row" }}>
-            <Memory memory={state.vm.RAM} format="hex" />
-            <Memory memory={state.vm.RAM} format="hex" />
-          </div>
-        ) : (
-          <p>Hiding display for high speeds</p>
+            <CallStack
+              stack={state.vm.Stack}
+              addedSysInit={state.vm.AddedSysInit}
+            />
+          </>
         )}
       </Panel>
-      {runnerAssigned && (
+      <Panel className="display" style={{ gridArea: "display" }}>
+        <Screen memory={state.vm.Screen} scale={1.4} />
+        <Keyboard keyboard={state.vm.Keyboard} />
+      </Panel>
+      <Memory
+        ref={stackRef}
+        name="RAM"
+        memory={state.vm.RAM}
+        initialAddr={256}
+        format="dec"
+        showUpload={false}
+        showClear={false}
+      />
+      <Memory
+        name="RAM"
+        className="Stack"
+        memory={state.vm.RAM}
+        format="dec"
+        cellLabels={[
+          "SP:",
+          "LCL:",
+          "ARG:",
+          "THIS:",
+          "THAT:",
+          "TEMP0:",
+          "TEMP1:",
+          "TEMP2:",
+          "TEMP3:",
+          "TEMP4:",
+          "TEMP5:",
+          "TEMP6:",
+          "TEMP7:",
+          "R13:",
+          "R14:",
+          "R15:",
+        ]}
+        showUpload={false}
+        onChange={() => {
+          stackRef.current?.rerender();
+        }}
+      />
+
+      {runnersAssigned && (
         <TestPanel
-          runner={runner}
+          runner={testRunner}
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          setPath={setPath}
+          showClear={true}
+          defaultTst={DEFAULT_TEST}
           onSpeedChange={onSpeedChange}
+          disabled={!state.controls.valid}
         />
       )}
     </div>
@@ -215,92 +316,128 @@ const VM = () => {
 
 export default VM;
 
-export function VMStackFrame({ frame }: { frame: VmFrame }) {
+const UNKNOWN = "Unknown function";
+
+function callStack(frames: VmFrame[], addedSysInit: boolean) {
+  const nameCounts: Record<string, number> = {};
+  frames = frames.filter((frame) => frame.fn?.name != IMPLICIT);
+
+  for (const frame of frames) {
+    if (!frame.fn) {
+      continue;
+    }
+
+    if (nameCounts[frame.fn.name]) {
+      nameCounts[frame.fn.name]++;
+    } else {
+      nameCounts[frame.fn.name] = 1;
+    }
+  }
+
+  const names = frames
+    .slice()
+    .reverse()
+    .map((frame) =>
+      frame.fn?.name == SYS_INIT.name
+        ? addedSysInit
+          ? `${SYS_INIT.name} (built-in)`
+          : SYS_INIT.name
+        : frame.fn?.name ?? UNKNOWN
+    );
+
+  for (const name of Object.keys(nameCounts)) {
+    if (nameCounts[name] == 1) {
+      continue;
+    }
+
+    nameCounts[name] = 0;
+    for (let i = 0; i < names.length; i++) {
+      if (names[i] === name) {
+        names[i] = `${name}[${nameCounts[name]}]`;
+        nameCounts[name]++;
+      }
+    }
+  }
+
+  return names;
+}
+
+function CallStack({
+  stack,
+  addedSysInit,
+}: {
+  stack: VmFrame[];
+  addedSysInit: boolean;
+}) {
   return (
     <section>
-      <header>
-        <h3>
-          Function
-          <code>{frame.fn?.name ?? "Unknown Function"}</code>
-        </h3>
-      </header>
-      <main>
-        <p>
-          <em>Args:</em>
-          <code>[{frame.args.values.join(", ")}]</code>
-        </p>
-        <p>
-          <em>Locals:</em>
-          <code>[{frame.locals.values.join(", ")}]</code>
-        </p>
-        <p>
-          <em>Stack:</em>
-          <code>[{frame.stack.values.join(", ")}]</code>
-        </p>
-      </main>
+      <p>
+        Call-stack:
+        <code>{callStack(stack, addedSysInit).join(" > ")}</code>
+      </p>
     </section>
   );
 }
 
-export function VMInstructionRow({
-  inst,
-  key,
-  highlighted,
+function VMStackFrame({
+  statics,
+  temp,
+  frame,
 }: {
-  inst: VMLang.VmInstruction;
-  key: number;
-  highlighted: boolean;
+  statics: number[];
+  temp: number[];
+  frame: VmFrame;
 }) {
-  switch (inst.op) {
-    case "add":
-    case "and":
-    case "eq":
-    case "gt":
-    case "lt":
-    case "neg":
-    case "not":
-    case "or":
-    case "sub":
-    case "return":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td colSpan={2}></td>
-        </tr>
-      );
-
-    case "if-goto":
-    case "label":
-    case "goto":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td colSpan={2}>{inst.label}</td>
-        </tr>
-      );
-    case "function":
-    case "call":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td>{inst.name}</td>
-          <td>{inst.op === "call" ? inst.nArgs : inst.nVars}</td>
-        </tr>
-      );
-    case "pop":
-    case "push":
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td>{inst.op}</td>
-          <td>{inst.segment}</td>
-          <td>{inst.offset.toString()}</td>
-        </tr>
-      );
-    default:
-      return (
-        <tr key={key} className={highlighted ? "highlight" : ""}>
-          <td colSpan={3}>Unknown</td>
-        </tr>
-      );
-  }
+  return (
+    <section>
+      <main>
+        <p>
+          Stack:
+          <code>[{frame.stack.values.join(", ")}]</code>
+        </p>
+        {frame.usedSegments?.has("local") && (
+          <p>
+            local:
+            <code>[{frame.locals.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("argument") && (
+          <p>
+            argument:
+            <code>[{frame.args.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("static") && (
+          <p>
+            static:
+            <code>[{statics.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("pointer") && (
+          <p>
+            pointer:
+            <code>[{`${frame.frame.THIS}, ${frame.frame.THAT}`}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("this") && (
+          <p>
+            this:
+            <code>[{frame.this.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("that") && (
+          <p>
+            that:
+            <code>[{frame.that.values.join(", ")}]</code>
+          </p>
+        )}
+        {frame.usedSegments?.has("temp") && (
+          <p>
+            temp:
+            <code>[{temp.join(", ")}]</code>
+          </p>
+        )}
+      </main>
+    </section>
+  );
 }

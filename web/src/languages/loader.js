@@ -2,12 +2,14 @@ import { loader } from "@monaco-editor/react";
 import { CmpLanguage } from "./cmp";
 import { HdlLanguage } from "./hdl";
 import { TstLanguage } from "./tst";
+import { VmLanguage } from "./vm";
 import { AsmLanguage } from "./asm";
 
 const LANGUAGES = {
   hdl: HdlLanguage,
   cmp: CmpLanguage,
   tst: TstLanguage,
+  vm: VmLanguage,
   asm: AsmLanguage,
 };
 

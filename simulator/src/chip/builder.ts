@@ -6,12 +6,10 @@ import {
   Ok,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { ParseError, Span } from "../languages/base.js";
+import { CompilationError, createError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
-
-const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
 
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {
@@ -26,29 +24,13 @@ function pinWidth(start: number, end: number | undefined): number | undefined {
   throw new Error(`Bus specification has start > end (${start} > ${end})`);
 }
 
-export interface CompilationError {
-  message: string;
-  span?: Span;
-}
-
-function parseErrorToCompilationError(error: ParseError) {
-  if (!error.message) {
-    return { message: UNKNOWN_HDL_ERROR, span: error.span };
-  }
-  const match = error.message.match(/Line \d+, col \d+: (?<message>.*)/);
-  if (match?.groups?.message !== undefined) {
-    return { message: match.groups.message, span: error.span };
-  }
-  return { message: error.message, span: error.span };
-}
-
 export async function parse(
   code: string,
   name?: string
 ): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
-    return Err(parseErrorToCompilationError(Err(parsed)));
+    return parsed;
   }
   return build(Ok(parsed), undefined, name);
 }
@@ -174,12 +156,14 @@ function checkMultipleAssignments(
     }
   }
   if (errorIndex != undefined) {
-    return Err({
-      message: `Cannot write to pin ${pin.pin}${
-        errorIndex != -1 ? `[${errorIndex}]` : ""
-      } multiple times`,
-      span: pin.span,
-    });
+    return Err(
+      createError(
+        `Cannot write to pin ${pin.pin}${
+          errorIndex != -1 ? `[${errorIndex}]` : ""
+        } multiple times`,
+        pin.span
+      )
+    );
   }
   return Ok();
 }
@@ -210,10 +194,7 @@ class ChipBuilder {
 
   async build() {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
-      return Err({
-        message: `Wrong chip name`,
-        span: this.parts.name.span,
-      });
+      return Err(createError(`Wrong chip name`, this.parts.name.span));
     }
 
     if (this.parts.parts === "BUILTIN") {
@@ -234,17 +215,16 @@ class ChipBuilder {
     for (const part of this.parts.parts) {
       const builtin = await loadChip(part.name, this.fs);
       if (isErr(builtin)) {
-        return Err({
-          message: `Undefined chip name: ${part.name}`,
-          span: part.span,
-        });
+        return Err(createError(`Undefined chip name: ${part.name}`, part.span));
       }
       const partChip = Ok(builtin);
       if (partChip.name == this.chip.name) {
-        return Err({
-          message: `Cannot use chip ${partChip.name} to implement itself`,
-          span: part.span,
-        });
+        return Err(
+          createError(
+            `Cannot use chip ${partChip.name} to implement itself`,
+            part.span
+          )
+        );
       }
       const result = this.wirePart(part, partChip);
       if (isErr(result)) {
@@ -298,10 +278,9 @@ class ChipBuilder {
         return result;
       }
     } else {
-      return Err({
-        message: `Undefined input/output pin name: ${lhs.pin}`,
-        span: lhs.span,
-      });
+      return Err(
+        createError(`Undefined input/output pin name: ${lhs.pin}`, lhs.span)
+      );
     }
     if (!isConstant(rhs.pin)) {
       this.wires.push({ chip: partChip, lhs, rhs });
@@ -364,10 +343,12 @@ class ChipBuilder {
     } else {
       // rhs is necessarily an internal pin
       if (rhs.start !== undefined || rhs.end !== undefined) {
-        return Err({
-          message: `Cannot write to sub bus of internal pin ${rhs.pin}`,
-          span: rhs.span,
-        });
+        return Err(
+          createError(
+            `Cannot write to sub bus of internal pin ${rhs.pin}`,
+            rhs.span
+          )
+        );
       }
       // track internal pin creation to detect undefined pins
       const pinData = this.internalPins.get(rhs.pin);
@@ -380,10 +361,9 @@ class ChipBuilder {
         });
       } else {
         if (pinData.isDefined) {
-          return Err({
-            message: `Internal pin ${rhs.pin} already defined`,
-            span: rhs.span,
-          });
+          return Err(
+            createError(`Internal pin ${rhs.pin} already defined`, rhs.span)
+          );
         }
         pinData.isDefined = true;
         pinData.width = width;
@@ -394,33 +374,28 @@ class ChipBuilder {
 
   private validateWriteTarget(rhs: PinParts): Result<void, CompilationError> {
     if (this.chip.isInPin(rhs.pin)) {
-      return Err({
-        message: `Cannot write to input pin ${rhs.pin}`,
-        span: rhs.span,
-      });
+      return Err(createError(`Cannot write to input pin ${rhs.pin}`, rhs.span));
     }
     if (isConstant(rhs.pin)) {
-      return Err({
-        message: `Illegal internal pin name: ${rhs.pin}`,
-        span: rhs.span,
-      });
+      return Err(
+        createError(`Illegal internal pin name: ${rhs.pin}`, rhs.span)
+      );
     }
     return Ok();
   }
 
   private validateInputSource(rhs: PinParts): Result<void, CompilationError> {
     if (this.chip.isOutPin(rhs.pin)) {
-      return Err({
-        message: `Cannot use output pin as input`,
-        span: rhs.span,
-      });
+      return Err(createError(`Cannot use output pin as input`, rhs.span));
     } else if (!this.chip.isInPin(rhs.pin) && rhs.start != undefined) {
-      return Err({
-        message: isConstant(rhs.pin)
-          ? `Cannot use sub bus of constant bus`
-          : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
-        span: rhs.span,
-      });
+      return Err(
+        createError(
+          isConstant(rhs.pin)
+            ? `Cannot use sub bus of constant bus`
+            : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+          rhs.span
+        )
+      );
     }
     return Ok();
   }
@@ -428,13 +403,14 @@ class ChipBuilder {
   private validateInternalPins(): Result<void, CompilationError> {
     for (const [name, pinData] of this.internalPins) {
       if (!pinData.isDefined) {
-        return Err({
-          message:
+        return Err(
+          createError(
             name.toLowerCase() == "true" || name.toLowerCase() == "false"
               ? `The constants ${name.toLowerCase()} must be in lower-case`
               : `Undefined internal pin name: ${name}`,
-          span: pinData.firstUse,
-        });
+            pinData.firstUse
+          )
+        );
       }
     }
     return Ok();
@@ -449,12 +425,14 @@ class ChipBuilder {
         this.chip.get(wire.rhs.pin)?.width ??
         this.internalPins.get(wire.rhs.pin)?.width;
       if (lhsWidth != rhsWidth) {
-        return Err({
-          message: `Different bus widths: ${display(
-            wire.lhs
-          )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
-          span: wire.lhs.span,
-        });
+        return Err(
+          createError(
+            `Different bus widths: ${display(
+              wire.lhs
+            )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
+            wire.lhs.span
+          )
+        );
       }
     }
     return Ok();

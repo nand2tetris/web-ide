@@ -197,8 +197,13 @@ export const Memory = ({
       : file.name.endsWith("asm")
       ? loadAsm
       : loadBlob;
-    const bytes = await loader(source);
-    memory.loadBytes(bytes);
+    try {
+      const bytes = await loader(source);
+      memory.loadBytes(bytes);
+    } catch (e) {
+      setStatus(`Error loading memory: ${(e as Error).message}`);
+      return;
+    }
     event.target.value = ""; // Clear the input out
     setFormat(
       file.name.endsWith("hack")

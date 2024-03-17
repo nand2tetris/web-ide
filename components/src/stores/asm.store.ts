@@ -10,7 +10,10 @@ import {
   isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  CompilationError,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -164,6 +167,7 @@ export interface AsmPageState {
   compare: string;
   compareName: string | undefined;
   lineNumbers: number[];
+  error?: CompilationError;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -201,6 +205,13 @@ export function makeAsmStore(
       state.compare = cmp;
       state.compareName = name;
       setStatus("Loaded compare file");
+    },
+
+    setError(state: AsmPageState, error?: CompilationError) {
+      if (error) {
+        setStatus(error.message);
+      }
+      state.error = error;
     },
 
     update(state: AsmPageState) {
@@ -256,7 +267,10 @@ export function makeAsmStore(
       this.reset();
       const parseResult = ASM.parse(asm);
       if (isErr(parseResult)) {
-        setStatus(`Error parsing asm file - ${Err(parseResult).message}`);
+        dispatch.current({
+          action: "setError",
+          payload: Err(parseResult),
+        });
         compiled = false;
         return;
       }
@@ -264,6 +278,7 @@ export function makeAsmStore(
       translator.load(Ok(parseResult), asm.split("\n").length);
       compiled = translator.asm.instructions.length > 0;
       setStatus("");
+      dispatch.current({ action: "setError" });
       dispatch.current({ action: "update" });
     },
 

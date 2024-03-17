@@ -385,7 +385,7 @@ export function makeChipStore(
       const files = await fs.scandir(`/projects/${project}/${name}`);
       tests = files
         .filter((file) => file.name.endsWith(".tst"))
-        .map((file) => file.name.replace(".tst", ""));
+        .map((file) => file.name);
 
       console.log("tests", tests);
 

@@ -147,7 +147,11 @@ export const CPU = () => {
           </>
         }
       >
-        <Screen key={screenRenderKey} memory={state.sim.Screen}></Screen>
+        <Screen
+          key={screenRenderKey}
+          memory={state.sim.Screen}
+          scale={1.3}
+        ></Screen>
         <Keyboard update={onKeyChange} keyboard={state.sim.Keyboard} />
         <label>
           <input

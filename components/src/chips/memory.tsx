@@ -238,8 +238,9 @@ export const Memory = forwardRef(
       fileUploadRef.current?.click();
     }, [fileUploadRef]);
 
+        
     const { setStatus } = useContext(BaseContext);
-    const upload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const upload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {     
       if (!event.target.files?.length) {
         setStatus("No file selected");
         return;
@@ -252,8 +253,13 @@ export const Memory = forwardRef(
         : file.name.endsWith("asm")
         ? loadAsm
         : loadBlob;
-      const bytes = await loader(source);
-      memory.loadBytes(bytes);
+      try {
+        const bytes = await loader(source);
+        memory.loadBytes(bytes);
+      } catch (e) {
+        setStatus(`Error loading memory: ${(e as Error).message}`);
+        return;
+      }
       event.target.value = ""; // Clear the input out
       setFormat(
         file.name.endsWith("hack")

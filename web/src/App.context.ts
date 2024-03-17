@@ -3,7 +3,6 @@ import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
-import { TOOLS } from "./urls";
 import { useTracking } from "./tracking";
 
 export type Theme = "light" | "dark" | "system";
@@ -30,8 +29,6 @@ export function useMonaco() {
 }
 
 export function useToolStates() {
-  const [tool, setTool] = useState<keyof typeof TOOLS>();
-
   const [rom, setRom] = useState<number[]>();
   const [cpuName, setCpuProgramName] = useState<string>();
 
@@ -43,8 +40,6 @@ export function useToolStates() {
   };
 
   return {
-    tool,
-    setTool,
     cpuState: { rom: rom, name: cpuName },
     setCpuState,
     asmState,
@@ -116,10 +111,6 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     return undefined;
   },
   toolStates: {
-    tool: undefined,
-    setTool() {
-      return undefined;
-    },
     cpuState: { rom: undefined, name: undefined },
     setCpuState() {
       return undefined;

@@ -6,10 +6,10 @@ import {
   Ok,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
+import { CompilationError, createError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
-import { CompilationError, createError, Span } from "../languages/base.js";
 
 function pinWidth(start: number, end: number | undefined): number | undefined {
   if (end === undefined) {

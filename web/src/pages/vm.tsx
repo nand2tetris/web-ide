@@ -13,8 +13,6 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
-import { AppContext } from "src/App.context";
-import { Editor } from "src/shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
@@ -46,17 +44,12 @@ interface Rerenderable {
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
-  const { toolStates } = useContext(AppContext);
   const { setStatus } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
   const [path, setPath] = useState("/");
-
-  useEffect(() => {
-    toolStates.setTool("vm");
-  }, []);
 
   useEffect(() => {
     actions.initialize();

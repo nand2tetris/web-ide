@@ -9,6 +9,7 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import {
   CSSProperties,
   Dispatch,
+  ReactNode,
   RefObject,
   useCallback,
   useContext,
@@ -32,9 +33,11 @@ export const TestPanel = ({
   disabled = false,
   defaultTst,
   defaultCmp,
+  showLoad = true,
   showClear = false,
   onSpeedChange,
   compileTest,
+  prefix,
 }: {
   runner: RefObject<Timer | undefined>;
   tst: [string, Dispatch<string>, Span | undefined];
@@ -43,10 +46,12 @@ export const TestPanel = ({
   setPath?: Dispatch<string>;
   defaultTst?: string;
   defaultCmp?: string;
+  showLoad?: boolean;
   showClear?: boolean;
   disabled?: boolean;
   onSpeedChange?: (speed: number) => void;
   compileTest?: (tst: string, cmp: string) => void;
+  prefix?: ReactNode;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker, tracking } = useContext(AppContext);
@@ -195,13 +200,13 @@ export const TestPanel = ({
           <div className="flex-0">
             <Trans>Test</Trans>
           </div>
-          <fieldset role="group"></fieldset>
           {editWarning}
           <div className="flex-1">
             {runner.current && (
               <Runbar
                 prefix={
                   <>
+                    {prefix}
                     {showClear && (
                       <button className="flex-0" onClick={clear}>
                         Clear
@@ -216,9 +221,11 @@ export const TestPanel = ({
                         Edit
                       </button>
                     )}
-                    <button className="flex-0" onClick={loadTest}>
-                      📂
-                    </button>
+                    {showLoad && (
+                      <button className="flex-0" onClick={loadTest}>
+                        📂
+                      </button>
+                    )}
                   </>
                 }
                 runner={runner.current}

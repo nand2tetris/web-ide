@@ -25,8 +25,8 @@ export const CHIPS = {
   },
   Computer: {
     "Computer.hdl": Computer.hdl,
-    "Computer.tst": Computer.add_tst,
-    "Computer.cmp": Computer.add_cmp,
+    "ComputerAdd.tst": Computer.add_tst,
+    "ComputerAdd.cmp": Computer.add_cmp,
     "ComputerMax.tst": Computer.max_tst,
     "ComputerMax.cmp": Computer.max_cmp,
     "ComputerRect.tst": Computer.rect_tst,

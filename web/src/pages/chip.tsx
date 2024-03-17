@@ -370,6 +370,24 @@ export const Chip = () => {
     <TestPanel
       runner={runner}
       disabled={state.sim.invalid}
+      showLoad={false}
+      prefix={
+        state.controls.tests.length > 1 && (
+          <select
+            value={state.controls.testName}
+            onChange={({ target: { value } }) => {
+              actions.setTest(value);
+            }}
+            data-testid="test-picker"
+          >
+            {state.controls.tests.map((test) => (
+              <option key={test} value={test}>
+                {test}
+              </option>
+            ))}
+          </select>
+        )
+      }
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}

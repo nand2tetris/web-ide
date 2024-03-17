@@ -131,6 +131,8 @@ export interface ControlsState {
   project: keyof typeof CHIP_PROJECTS;
   chips: string[];
   chipName: string;
+  tests: string[];
+  testName: string;
   hasBuiltin: boolean;
   builtinOnly: boolean;
   runningTest: boolean;
@@ -172,6 +174,7 @@ export function makeChipStore(
   let { project, chipName } = dropdowns;
   const { chips } = dropdowns;
   let chip = new Low();
+  let tests: string[] = [];
   let test = new ChipTest();
   let usingBuiltin = false;
   let builtinOnly = false;
@@ -230,8 +233,13 @@ export function makeChipStore(
 
     setChip(state: ChipPageState, chipName: string) {
       state.controls.chipName = chipName;
+      state.controls.tests = Array.from(tests);
       state.controls.hasBuiltin = REGISTRY.has(chipName);
       state.controls.builtinOnly = isBuiltinOnly(chipName);
+    },
+
+    setTest(state: ChipPageState, testName: string) {
+      state.controls.testName = testName;
     },
 
     testRunning(state: ChipPageState) {
@@ -278,7 +286,6 @@ export function makeChipStore(
 
     async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
       chipName = storage["/chip/chip"] = chip;
-      dispatch.current({ action: "setChip", payload: chipName });
       builtinOnly = isBuiltinOnly(chipName);
 
       if (builtinOnly) {
@@ -293,6 +300,12 @@ export function makeChipStore(
       if (usingBuiltin) {
         this.useBuiltin();
       }
+      dispatch.current({ action: "setChip", payload: chipName });
+    },
+
+    setTest(test: string) {
+      dispatch.current({ action: "setTest", payload: test });
+      this.loadTest(test);
     },
 
     reset() {
@@ -369,16 +382,30 @@ export function makeChipStore(
       const fsName = (ext: string) =>
         `/projects/${project}/${name}/${name}.${ext}`;
 
-      const [hdl, tst, cmp] = await Promise.all([
-        fs.readFile(fsName("hdl")).catch(() => makeHdl(name)),
-        fs.readFile(fsName("tst")).catch((e) => {
-          return makeTst();
-        }),
-        fs.readFile(fsName("cmp")).catch(() => makeCmp()),
-      ]);
+      const files = await fs.scandir(`/projects/${project}/${name}`);
+      tests = files
+        .filter((file) => file.name.endsWith(".tst"))
+        .map((file) => file.name.replace(".tst", ""));
 
-      dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
+      console.log("tests", tests);
+
+      const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
+
+      dispatch.current({ action: "setFiles", payload: { hdl } });
+      await this.loadTest(tests[0]);
       await this.compileChip(hdl);
+    },
+
+    async loadTest(test: string) {
+      const [tst, cmp] = await Promise.all([
+        fs
+          .readFile(`/projects/${project}/${chipName}/${test}.tst`)
+          .catch(() => makeTst()),
+        fs
+          .readFile(`/projects/${project}/${chipName}/${test}.cmp`)
+          .catch(() => makeCmp()),
+      ]);
+      dispatch.current({ action: "setFiles", payload: { cmp, tst } });
       this.compileTest(tst);
     },
 
@@ -515,6 +542,8 @@ export function makeChipStore(
       project,
       chips,
       chipName,
+      tests,
+      testName: "",
       hasBuiltin: REGISTRY.has(chipName),
       builtinOnly: isBuiltinOnly(chipName),
       runningTest: false,

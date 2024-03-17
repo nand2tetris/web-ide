@@ -237,7 +237,7 @@ export const Memory = forwardRef(
       onChange?.();
       fileUploadRef.current?.click();
     }, [fileUploadRef]);
-        
+
     const { setStatus } = useContext(BaseContext);
     const upload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
       if (!event.target.files?.length) {

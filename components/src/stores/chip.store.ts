@@ -77,12 +77,15 @@ function makeCmp() {
   return `| in|out|`;
 }
 
-export function isBuiltinOnly(chipName: string) {
-  return Object.values(BUILTIN_CHIP_PROJECTS).flat().includes(chipName);
+export function isBuiltinOnly(
+  project: keyof typeof CHIP_PROJECTS,
+  chipName: string
+) {
+  return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
 function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
-  if (isBuiltinOnly(chipName)) {
+  if (isBuiltinOnly(project, chipName)) {
     return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
       chipName
     ];
@@ -95,7 +98,7 @@ function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
 
 function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   const template = getTemplate(project, chipName);
-  if (isBuiltinOnly(chipName)) {
+  if (isBuiltinOnly(project, chipName)) {
     return template;
   }
   const bodyComment = "//// Replace this comment with your code.";
@@ -238,7 +241,10 @@ export function makeChipStore(
       state.controls.chipName = chipName;
       state.controls.tests = Array.from(tests);
       state.controls.hasBuiltin = REGISTRY.has(chipName);
-      state.controls.builtinOnly = isBuiltinOnly(chipName);
+      state.controls.builtinOnly = isBuiltinOnly(
+        state.controls.project,
+        chipName
+      );
     },
 
     setTest(state: ChipPageState, testName: string) {
@@ -293,7 +299,10 @@ export function makeChipStore(
 
     async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
       chipName = storage["/chip/chip"] = chip;
-      builtinOnly = isBuiltinOnly(chipName);
+      builtinOnly = isBuiltinOnly(
+        project as keyof typeof CHIP_PROJECTS,
+        chipName
+      );
 
       if (builtinOnly) {
         dispatch.current({
@@ -562,7 +571,7 @@ export function makeChipStore(
       tests,
       testName: "",
       hasBuiltin: REGISTRY.has(chipName),
-      builtinOnly: isBuiltinOnly(chipName),
+      builtinOnly: isBuiltinOnly(project, chipName),
       runningTest: false,
       error: undefined,
       visualizationParameters: new Set(),

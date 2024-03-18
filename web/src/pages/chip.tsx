@@ -196,9 +196,15 @@ export const Chip = () => {
             <option
               key={chip}
               value={chip}
-              style={isBuiltinOnly(chip) ? { color: "rgb(170, 170, 170)" } : {}}
+              style={
+                isBuiltinOnly(state.controls.project, chip)
+                  ? { color: "rgb(170, 170, 170)" }
+                  : {}
+              }
             >
-              {`${chip} ${isBuiltinOnly(chip) ? "(given)" : ""}`}
+              {`${chip} ${
+                isBuiltinOnly(state.controls.project, chip) ? "(given)" : ""
+              }`}
             </option>
           ))}
         </select>

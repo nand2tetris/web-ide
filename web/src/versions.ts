@@ -50,6 +50,6 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
     await resetFiles(fs, [7, 8]);
   },
   5: async (fs: FileSystem) => {
-    await resetTests(fs, [5]);
+    await resetTests(fs, [3, 5]);
   },
 };

@@ -203,16 +203,21 @@ export const Chip = () => {
           ))}
         </select>
         <a ref={downloadRef} style={{ display: "none" }} />
-        {!useBuiltin && !state.controls.builtinOnly && (
-          <>
-            <button className="flex-0" onClick={actions.resetFile}>
-              <Trans>Reset</Trans>
-            </button>
-            <button className="flex-0" onClick={downloadProject}>
-              <Trans>Download</Trans>
-            </button>
-          </>
-        )}
+
+        <button
+          className="flex-0"
+          onClick={actions.resetFile}
+          disabled={state.controls.builtinOnly}
+        >
+          <Trans>Reset</Trans>
+        </button>
+        <button
+          className="flex-0"
+          onClick={downloadProject}
+          disabled={state.controls.builtinOnly}
+        >
+          <Trans>Download</Trans>
+        </button>
       </fieldset>
     </>
   );
@@ -223,17 +228,16 @@ export const Chip = () => {
         <>
           <div tabIndex={0}>HDL</div>
           <fieldset>
-            {state.controls.hasBuiltin && !state.controls.builtinOnly && (
-              <label>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={useBuiltin}
-                  onChange={toggleUseBuiltin}
-                />
-                <Trans>Builtin</Trans>
-              </label>
-            )}
+            <label>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={state.controls.builtinOnly ? true : useBuiltin}
+                onChange={toggleUseBuiltin}
+                disabled={state.controls.builtinOnly}
+              />
+              <Trans>Builtin</Trans>
+            </label>
           </fieldset>
           {selectors}
         </>

@@ -294,11 +294,11 @@ export function makeChipStore(
           payload: { hdl: "", tst: "", cmp: "" },
         });
         this.useBuiltin();
-        return;
-      }
-      await this.loadChip(project, chipName);
-      if (usingBuiltin) {
-        this.useBuiltin();
+      } else {
+        await this.loadChip(project, chipName);
+        if (usingBuiltin) {
+          this.useBuiltin();
+        }
       }
       dispatch.current({ action: "setChip", payload: chipName });
     },
@@ -386,8 +386,6 @@ export function makeChipStore(
       tests = files
         .filter((file) => file.name.endsWith(".tst"))
         .map((file) => file.name);
-
-      console.log("tests", tests);
 
       const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
 

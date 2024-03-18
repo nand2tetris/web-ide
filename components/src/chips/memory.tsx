@@ -39,6 +39,7 @@ export const MemoryBlock = ({
   highlight = -1,
   editable = false,
   justifyLeft = false, // TODO: handle this in css in the future
+  count,
   maxSize,
   offset = 0,
   cellLabels,
@@ -51,6 +52,7 @@ export const MemoryBlock = ({
   highlight?: number;
   editable?: boolean;
   justifyLeft?: boolean;
+  count?: number;
   offset?: number;
   maxSize?: number;
   cellLabels?: string[];
@@ -60,7 +62,7 @@ export const MemoryBlock = ({
 }) => {
   const settings = useMemo<Partial<VirtualScrollSettings>>(
     () => ({
-      count: Math.min(memory.size, 25),
+      count: Math.min(memory.size, count ?? 25),
       maxIndex: maxSize ?? memory.size,
       itemHeight: ITEM_HEIGHT,
       startIndex: jmp.value,
@@ -189,6 +191,7 @@ export const Memory = forwardRef(
       editable = true,
       memory,
       format = "dec",
+      count,
       maxSize,
       offset,
       initialAddr,
@@ -204,6 +207,7 @@ export const Memory = forwardRef(
       editable?: boolean;
       highlight?: number;
       memory: MemoryAdapter;
+      count?: number;
       maxSize?: number;
       offset?: number;
       initialAddr?: number;
@@ -359,6 +363,7 @@ export const Memory = forwardRef(
             highlight={highlighted}
             editable={editable}
             justifyLeft={fmt == "asm"}
+            count={count}
             format={(v: number) => doFormat(fmt, v)}
             cellLabels={cellLabels}
             maxSize={maxSize}

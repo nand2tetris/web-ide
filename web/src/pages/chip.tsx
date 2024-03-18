@@ -331,7 +331,8 @@ export const Chip = () => {
     },
     () => {
       dispatch.current({ action: "updateChip" });
-    }
+    },
+    state.controls.visualizationParameters
   );
 
   const pinResetDispatcher = new PinResetDispatcher();

@@ -17,7 +17,7 @@ import {
 import {
   Chip,
   Low,
-  Pin,
+Pin,
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
@@ -34,6 +34,8 @@ import { useImmerReducer } from "../react.js";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { compare } from "../compare.js";
 import { BaseContext } from "./base.context.js";
+
+export const NO_SCREEN = "noScreen";
 
 export const PROJECT_NAMES = [
   ["01", `Project 1`],
@@ -138,6 +140,7 @@ export interface ControlsState {
   runningTest: boolean;
   span?: Span;
   error?: CompilationError;
+  visualizationParameters: Set<string>;
 }
 
 export interface HDLFile {
@@ -242,6 +245,10 @@ export function makeChipStore(
       state.controls.testName = testName;
     },
 
+    setVisualizationParams(state: ChipPageState, params: Set<string>) {
+      state.controls.visualizationParameters = new Set(params);
+    },
+
     testRunning(state: ChipPageState) {
       state.controls.runningTest = true;
     },
@@ -305,6 +312,16 @@ export function makeChipStore(
 
     setTest(test: string) {
       dispatch.current({ action: "setTest", payload: test });
+
+      dispatch.current({
+        action: "setVisualizationParams",
+        payload: new Set(
+          test == "ComputerAdd.tst" || test == "ComputerMax.tst"
+            ? [NO_SCREEN]
+            : []
+        ),
+      });
+
       this.loadTest(test);
     },
 
@@ -390,7 +407,7 @@ export function makeChipStore(
       const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
 
       dispatch.current({ action: "setFiles", payload: { hdl } });
-      await this.loadTest(tests[0]);
+      await this.setTest(tests[0]);
       await this.compileChip(hdl);
     },
 
@@ -548,6 +565,7 @@ export function makeChipStore(
       builtinOnly: isBuiltinOnly(chipName),
       runningTest: false,
       error: undefined,
+      visualizationParameters: new Set(),
     };
 
     const maybeChip = getBuiltinChip(controls.chipName);

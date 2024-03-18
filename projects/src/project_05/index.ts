@@ -41,7 +41,10 @@ export const BUILTIN_CHIPS = {
   DRegister: DRegister.hdl,
   ARegister: ARegister.hdl,
   ROM32K: ROM32K.hdl,
-  RAM16K: RAM16K.hdl.replace("//// Replace this comment with your code.", "BUILTIN RAM16K;"),
+  RAM16K: RAM16K.hdl.replace(
+    "//// Replace this comment with your code.",
+    "BUILTIN RAM16K;"
+  ),
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {

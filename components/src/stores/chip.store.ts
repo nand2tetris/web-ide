@@ -17,7 +17,7 @@ import {
 import {
   Chip,
   Low,
-Pin,
+  Pin,
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";

@@ -9,6 +9,7 @@ import * as Keyboard from "./05_keyboard.js";
 import * as DRegister from "./06_d_register.js";
 import * as ARegister from "./07_a_register.js";
 import * as ROM32K from "./08_rom32k.js";
+import * as RAM16K from "../project_03/08_ram16k.js";
 
 export const CHIPS = {
   Memory: {
@@ -40,6 +41,7 @@ export const BUILTIN_CHIPS = {
   DRegister: DRegister.hdl,
   ARegister: ARegister.hdl,
   ROM32K: ROM32K.hdl,
+  RAM16K: RAM16K.hdl.replace("//// Replace this comment with your code.", "BUILTIN RAM16K;"),
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {

@@ -76,8 +76,8 @@ export class Keyboard extends Chip implements KeyboardAdapter {
 }
 
 export class Memory extends ClockedChip {
-  ram = new RAM16K();
-  screen = new Screen();
+  readonly ram = new RAM16K();
+  readonly screen = new Screen();
   private keyboard = new Keyboard();
   private address = 0;
 
@@ -275,9 +275,9 @@ export class CPU extends ClockedChip {
 }
 
 export class Computer extends Chip {
-  cpu = new CPU();
-  ram = new Memory();
-  rom = new ROM32K();
+  readonly cpu = new CPU();
+  readonly ram = new Memory();
+  readonly rom = new ROM32K();
 
   constructor() {
     super(["reset"], []);

@@ -383,7 +383,7 @@ export const Chip = () => {
       disabled={state.sim.invalid}
       showLoad={false}
       prefix={
-        state.controls.tests.length > 1 && (
+        state.controls.tests.length > 1 ? (
           <select
             value={state.controls.testName}
             onChange={({ target: { value } }) => {
@@ -397,6 +397,8 @@ export const Chip = () => {
               </option>
             ))}
           </select>
+        ) : (
+          <></>
         )
       }
       tst={[tst, setTst, state.controls.span]}

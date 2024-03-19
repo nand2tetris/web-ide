@@ -287,8 +287,8 @@ const Pin = ({
             style={{
               maxWidth: "3em",
               margin: 0,
-              background: "grey",
-              borderColor: "grey",
+              background: "#b0b0b0",
+              borderColor: "#b0b0b0",
             }}
             onClick={() => toggleBin()}
           >

@@ -300,10 +300,7 @@ export const Memory = forwardRef(
     });
 
     return (
-      <article
-        className={`panel memory ${className ?? name}`}
-        style={{ overflowY: "auto" }}
-      >
+      <article className={`panel memory ${className ?? name}`}>
         <header>
           <div style={{ whiteSpace: "nowrap" }}>{name}</div>
           <fieldset role="group">

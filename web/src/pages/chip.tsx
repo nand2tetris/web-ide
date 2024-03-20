@@ -198,7 +198,7 @@ export const Chip = () => {
               value={chip}
               style={
                 isBuiltinOnly(state.controls.project, chip)
-                  ? { color: "rgb(170, 170, 170)" }
+                  ? { color: "var(--light-grey)" }
                   : {}
               }
             >

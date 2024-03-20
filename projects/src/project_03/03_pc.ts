@@ -10,7 +10,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
  * else              out(t+1) = out(t)
  */
 CHIP PC {
-    IN in[16],inc, load, reset;
+    IN in[16], reset, load, inc;
     OUT out[16];
     
     PARTS:

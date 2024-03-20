@@ -83,7 +83,7 @@ export const BUILTIN_CHIP_PROJECTS: Record<
   "01": ["Nand"],
   "02": [],
   "03": ["DFF"],
-  "05": ["Screen", "Keyboard", "DRegister", "ARegister", "ROM32K"],
+  "05": ["Screen", "Keyboard", "DRegister", "ARegister", "ROM32K", "RAM16K"],
 };
 
 export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
@@ -127,6 +127,7 @@ export const CHIP_ORDER: Partial<Record<"01" | "02" | "03" | "05", string[]>> =
       "DRegister",
       "ARegister",
       "ROM32K",
+      "RAM16K",
     ],
   };
 

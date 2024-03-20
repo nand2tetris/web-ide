@@ -35,6 +35,8 @@ import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { compare } from "../compare.js";
 import { BaseContext } from "./base.context.js";
 
+export const NO_SCREEN = "noScreen";
+
 export const PROJECT_NAMES = [
   ["01", `Project 1`],
   ["02", `Project 2`],
@@ -75,12 +77,15 @@ function makeCmp() {
   return `| in|out|`;
 }
 
-export function isBuiltinOnly(chipName: string) {
-  return Object.values(BUILTIN_CHIP_PROJECTS).flat().includes(chipName);
+export function isBuiltinOnly(
+  project: keyof typeof CHIP_PROJECTS,
+  chipName: string
+) {
+  return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
 function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
-  if (isBuiltinOnly(chipName)) {
+  if (isBuiltinOnly(project, chipName)) {
     return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
       chipName
     ];
@@ -93,7 +98,7 @@ function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
 
 function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   const template = getTemplate(project, chipName);
-  if (isBuiltinOnly(chipName)) {
+  if (isBuiltinOnly(project, chipName)) {
     return template;
   }
   const bodyComment = "//// Replace this comment with your code.";
@@ -131,11 +136,14 @@ export interface ControlsState {
   project: keyof typeof CHIP_PROJECTS;
   chips: string[];
   chipName: string;
+  tests: string[];
+  testName: string;
   hasBuiltin: boolean;
   builtinOnly: boolean;
   runningTest: boolean;
   span?: Span;
   error?: CompilationError;
+  visualizationParameters: Set<string>;
 }
 
 export interface HDLFile {
@@ -172,6 +180,7 @@ export function makeChipStore(
   let { project, chipName } = dropdowns;
   const { chips } = dropdowns;
   let chip = new Low();
+  let tests: string[] = [];
   let test = new ChipTest();
   let usingBuiltin = false;
   let builtinOnly = false;
@@ -230,8 +239,20 @@ export function makeChipStore(
 
     setChip(state: ChipPageState, chipName: string) {
       state.controls.chipName = chipName;
+      state.controls.tests = Array.from(tests);
       state.controls.hasBuiltin = REGISTRY.has(chipName);
-      state.controls.builtinOnly = isBuiltinOnly(chipName);
+      state.controls.builtinOnly = isBuiltinOnly(
+        state.controls.project,
+        chipName
+      );
+    },
+
+    setTest(state: ChipPageState, testName: string) {
+      state.controls.testName = testName;
+    },
+
+    setVisualizationParams(state: ChipPageState, params: Set<string>) {
+      state.controls.visualizationParameters = new Set(params);
     },
 
     testRunning(state: ChipPageState) {
@@ -278,8 +299,10 @@ export function makeChipStore(
 
     async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
       chipName = storage["/chip/chip"] = chip;
-      dispatch.current({ action: "setChip", payload: chipName });
-      builtinOnly = isBuiltinOnly(chipName);
+      builtinOnly = isBuiltinOnly(
+        project as keyof typeof CHIP_PROJECTS,
+        chipName
+      );
 
       if (builtinOnly) {
         dispatch.current({
@@ -287,12 +310,28 @@ export function makeChipStore(
           payload: { hdl: "", tst: "", cmp: "" },
         });
         this.useBuiltin();
-        return;
+      } else {
+        await this.loadChip(project, chipName);
+        if (usingBuiltin) {
+          this.useBuiltin();
+        }
       }
-      await this.loadChip(project, chipName);
-      if (usingBuiltin) {
-        this.useBuiltin();
-      }
+      dispatch.current({ action: "setChip", payload: chipName });
+    },
+
+    setTest(test: string) {
+      dispatch.current({ action: "setTest", payload: test });
+
+      dispatch.current({
+        action: "setVisualizationParams",
+        payload: new Set(
+          test == "ComputerAdd.tst" || test == "ComputerMax.tst"
+            ? [NO_SCREEN]
+            : []
+        ),
+      });
+
+      this.loadTest(test);
     },
 
     reset() {
@@ -369,16 +408,30 @@ export function makeChipStore(
       const fsName = (ext: string) =>
         `/projects/${project}/${name}/${name}.${ext}`;
 
-      const [hdl, tst, cmp] = await Promise.all([
-        fs.readFile(fsName("hdl")).catch(() => makeHdl(name)),
-        fs.readFile(fsName("tst")).catch((e) => {
-          return makeTst();
-        }),
-        fs.readFile(fsName("cmp")).catch(() => makeCmp()),
-      ]);
+      const files = await fs.scandir(`/projects/${project}/${name}`);
+      tests = files
+        .filter((file) => file.name.endsWith(".tst"))
+        .map((file) => file.name);
 
-      dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
+      const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
+
+      dispatch.current({ action: "setFiles", payload: { hdl } });
+      await this.setTest(tests[0]);
       await this.compileChip(hdl);
+    },
+
+    async loadTest(test: string) {
+      const [tst, cmp] = await Promise.all([
+        fs
+          .readFile(`/projects/${project}/${chipName}/${test}`)
+          .catch(() => makeTst()),
+        fs
+          .readFile(
+            `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp")
+          )
+          .catch(() => makeCmp()),
+      ]);
+      dispatch.current({ action: "setFiles", payload: { cmp, tst } });
       this.compileTest(tst);
     },
 
@@ -515,10 +568,13 @@ export function makeChipStore(
       project,
       chips,
       chipName,
+      tests,
+      testName: "",
       hasBuiltin: REGISTRY.has(chipName),
-      builtinOnly: isBuiltinOnly(chipName),
+      builtinOnly: isBuiltinOnly(project, chipName),
       runningTest: false,
       error: undefined,
+      visualizationParameters: new Set(),
     };
 
     const maybeChip = getBuiltinChip(controls.chipName);

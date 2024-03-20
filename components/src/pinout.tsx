@@ -1,13 +1,13 @@
-// import { plural, Trans } from "@lingui/macro";
+import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import {
   Pin as ChipPin,
   Pins,
   Voltage,
 } from "@nand2tetris/simulator/chip/chip.js";
-import { range } from "@davidsouther/jiffies/lib/esm/range.js";
-import { ChipSim } from "./stores/chip.store.js";
 import { createContext, useContext, useEffect, useState } from "react";
 import { ChipDisplayInfo, getDisplayInfo } from "./pin_display.js";
+import "./public/pin.css";
+import { ChipSim } from "./stores/chip.store.js";
 
 export const PinContext = createContext({});
 
@@ -283,10 +283,7 @@ const Pin = ({
       {pin.bits.length > 1 && (
         <>
           <div style={{ width: "1em" }} />
-          <button
-            style={{ maxWidth: "3em", margin: 0 }}
-            onClick={() => toggleBin()}
-          >
+          <button className="pin-control" onClick={() => toggleBin()}>
             {isBin ? "dec" : "bin"}
           </button>
         </>

@@ -72,7 +72,7 @@ export class PC extends ClockedChip {
   bits = 0x00;
 
   constructor(name?: string) {
-    super(["in[16]", "load", "inc", "reset"], ["out[16]"], name);
+    super(["in[16]", "reset", "load", "inc"], ["out[16]"], name);
   }
 
   override tick() {

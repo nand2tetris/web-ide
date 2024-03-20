@@ -76,8 +76,8 @@ export class Keyboard extends Chip implements KeyboardAdapter {
 }
 
 export class Memory extends ClockedChip {
-  private ram = new RAM16K();
-  private screen = new Screen();
+  readonly ram = new RAM16K();
+  readonly screen = new Screen();
   private keyboard = new Keyboard();
   private address = 0;
 
@@ -275,14 +275,14 @@ export class CPU extends ClockedChip {
 }
 
 export class Computer extends Chip {
-  #cpu = new CPU();
-  #ram = new Memory();
-  #rom = new ROM32K();
+  readonly cpu = new CPU();
+  readonly ram = new Memory();
+  readonly rom = new ROM32K();
 
   constructor() {
     super(["reset"], []);
 
-    this.wire(this.#cpu, [
+    this.wire(this.cpu, [
       { from: { name: "reset", start: 0 }, to: { name: "reset", start: 0 } },
       {
         from: { name: "instruction", start: 0 },
@@ -298,7 +298,7 @@ export class Computer extends Chip {
       { from: { name: "pc", start: 0 }, to: { name: "pc", start: 0 } },
     ]);
 
-    this.wire(this.#rom, [
+    this.wire(this.rom, [
       { from: { name: "pc", start: 0 }, to: { name: "address", start: 0 } },
       {
         from: { name: "instruction", start: 0 },
@@ -306,7 +306,7 @@ export class Computer extends Chip {
       },
     ]);
 
-    this.wire(this.#ram, [
+    this.wire(this.ram, [
       { from: { name: "newInM", start: 0 }, to: { name: "in", start: 0 } },
       { from: { name: "writeM", start: 0 }, to: { name: "load", start: 0 } },
       {
@@ -327,15 +327,15 @@ export class Computer extends Chip {
       name.startsWith("ARegister") ||
       name.startsWith("DRegister")
     ) {
-      return this.#cpu.get(name);
+      return this.cpu.get(name);
     }
     if (name.startsWith("RAM16K")) {
-      return this.#ram.get(name, offset);
+      return this.ram.get(name, offset);
     }
     return super.get(name, offset);
   }
 
   override async load(fs: FileSystem, path: string): Promise<void> {
-    return await this.#rom.load(fs, path);
+    return await this.rom.load(fs, path);
   }
 }

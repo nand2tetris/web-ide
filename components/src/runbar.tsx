@@ -44,7 +44,7 @@ export const Runbar = (props: {
   };
 
   return (
-    <div style={{ display: "flex", flexWrap: "wrap" }}>
+    <div className="flex row wrap">
       <fieldset role="group">
         {props.prefix}
         <button

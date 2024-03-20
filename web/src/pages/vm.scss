@@ -2,7 +2,7 @@
 
 .VmPage {
   grid-template-columns:
-    1fr calc(var(--screen-size) * 0.7) calc(var(--screen-size) * 0.7)
+    1fr calc(var(--screen-size) * 0.5) calc(var(--screen-size) * 0.5)
     1fr !important;
   grid-template-rows: auto 1fr 4fr !important;
   grid-template-areas:

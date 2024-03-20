@@ -7,13 +7,13 @@
 
   @media screen and (min-width: 1024px) {
     grid-template-areas: "ROM RAM IO" "test test test";
-    grid-template-columns: 1fr 1fr calc(var(--screen-size) * 1.3) !important;
+    grid-template-columns: 1fr 1fr var(--screen-size) !important;
     grid-template-rows: 1fr 1fr !important;
   }
 
   @media screen and (min-width: 1500px) {
     grid-template-areas: "ROM RAM IO test";
-    grid-template-columns: 350px 350px calc(var(--screen-size) * 1.3) auto !important;
+    grid-template-columns: 350px 350px var(--screen-size) auto !important;
     grid-template-rows: 1fr !important;
     // "IO IO test"
     // "ROM RAM test";

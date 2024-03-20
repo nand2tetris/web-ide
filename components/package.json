@@ -42,8 +42,8 @@
     "typescript": "^4.9.4"
   },
   "scripts": {
-    "copy": "rm -rf build/public && cp -r src/public/ build/public/",
-    "build": "tsc && npm run copy",
+    "build": "tsc",
+    "postbuild": "rm -rf build/public && cp -r src/public/ build/public/",
     "test": "react-scripts test"
   },
   "jest": {

@@ -80,6 +80,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       return Promise.reject("");
     },
     isOpen: false,
+    suffix: undefined,
   } as ReturnType<typeof useFilePicker>,
   settings: {
     close() {

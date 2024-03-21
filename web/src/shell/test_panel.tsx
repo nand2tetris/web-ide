@@ -130,7 +130,7 @@ export const TestPanel = ({
 
   const loadTest = useCallback(async () => {
     try {
-      const path = await filePicker.select();
+      const path = await filePicker.select(".tst");
       setPath?.(path);
       const tst = await fs.readFile(path);
       let cmp: string | undefined = undefined;

@@ -11,20 +11,26 @@ export const Selected = "file selected";
 
 export function useFilePicker() {
   const dialog = useDialog();
+  const [suffix, setSuffix] = useState<string>();
 
   const selected = useRef<(v: string) => void>();
 
-  const select = useCallback(async (): Promise<string> => {
-    dialog.open();
-    return new Promise((resolve) => {
-      selected.current = resolve;
-    });
-  }, [dialog, selected]);
+  const select = useCallback(
+    async (suffix?: string): Promise<string> => {
+      setSuffix(suffix);
+      dialog.open();
+      return new Promise((resolve) => {
+        selected.current = resolve;
+      });
+    },
+    [dialog, selected]
+  );
 
   return {
     ...dialog,
     select,
     [Selected]: selected,
+    suffix,
   };
 }
 
@@ -32,17 +38,22 @@ const FileEntry = ({
   onSelect,
   stats,
   highlighted = false,
+  disabled = false,
 }: {
   stats: Stats;
   highlighted?: boolean;
   onSelect: () => void;
+  disabled?: boolean;
 }) => (
   <div>
     <button
       className={`flex row justify-start outline ${
         highlighted ? "" : "secondary"
       }`}
-      style={{ textAlign: "left" }}
+      style={{
+        textAlign: "left",
+        color: disabled ? "var(--light-grey)" : undefined,
+      }}
       onClick={onSelect}
     >
       <Icon name={stats.isDirectory() ? "folder" : "draft"} />
@@ -133,11 +144,23 @@ export const FilePicker = () => {
               onSelect={() =>
                 file.isDirectory() ? cd(file.name) : select(file.name)
               }
+              disabled={
+                file.name.includes(".") &&
+                filePicker.suffix != undefined &&
+                !file.name.endsWith(filePicker.suffix)
+              }
             />
           ))}
         </main>
         <footer>
-          <button disabled={!chosen} onClick={confirm}>
+          <button
+            disabled={
+              !chosen ||
+              (filePicker.suffix != undefined &&
+                !chosen.endsWith(filePicker.suffix))
+            }
+            onClick={confirm}
+          >
             Select
           </button>
         </footer>

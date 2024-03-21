@@ -64,7 +64,7 @@ export const Asm = () => {
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   const loadAsm = async () => {
-    const path = await filePicker.select();
+    const path = await filePicker.select(".asm");
     actions.loadAsm(path);
     setStatus("Loaded asm file");
   };

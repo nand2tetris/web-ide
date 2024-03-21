@@ -18,7 +18,6 @@ import "./asm.scss";
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { fs } = useContext(BaseContext);
   const { toolStates, filePicker } = useContext(AppContext);
 
   const sourceCursorPos = useRef(0);
@@ -66,8 +65,7 @@ export const Asm = () => {
 
   const loadAsm = async () => {
     const path = await filePicker.select();
-    const source = await fs.readFile(path);
-    actions.setAsm(source, path.split("/").pop());
+    actions.loadAsm(path);
     setStatus("Loaded asm file");
   };
 

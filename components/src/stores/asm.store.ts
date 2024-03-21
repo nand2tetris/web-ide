@@ -1,3 +1,4 @@
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KEYBOARD_OFFSET,
@@ -176,6 +177,7 @@ export type AsmStoreDispatch = Dispatch<{
 }>;
 
 export function makeAsmStore(
+  fs: FileSystem,
   setStatus: (status: string) => void,
   dispatch: MutableRefObject<AsmStoreDispatch>
 ) {
@@ -185,6 +187,7 @@ export function makeAsmStore(
     sourceHighlight: undefined,
     highlightMap: new Map(),
   };
+  let path: string | undefined;
   let animate = true;
   let compiled = false;
   let translating = false;
@@ -253,6 +256,12 @@ export function makeAsmStore(
   };
 
   const actions = {
+    async loadAsm(_path: string) {
+      path = _path;
+      const source = await fs.readFile(_path);
+      actions.setAsm(source, _path.split("/").pop());
+    },
+
     setAsm(asm: string, name?: string) {
       asm = asm.replace(/\r\n/g, "\n");
       dispatch.current({
@@ -260,7 +269,14 @@ export function makeAsmStore(
         payload: { asm, name },
       });
       translating = false;
+      this.saveAsm(asm);
       this.compileAsm(asm);
+    },
+
+    saveAsm(asm: string) {
+      if (path) {
+        fs.writeFile(path, asm);
+      }
     },
 
     compileAsm(asm: string) {
@@ -364,12 +380,12 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, fs } = useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeAsmStore(setStatus, dispatch),
+    () => makeAsmStore(fs, setStatus, dispatch),
     [setStatus, dispatch]
   );
 

@@ -35,32 +35,44 @@ export function useFilePicker() {
 }
 
 const FileEntry = ({
-  onSelect,
+  onClick,
+  onDoubleClick,
   stats,
   highlighted = false,
   disabled = false,
 }: {
   stats: Stats;
   highlighted?: boolean;
-  onSelect: () => void;
   disabled?: boolean;
-}) => (
-  <div>
-    <button
-      className={`flex row justify-start outline ${
-        highlighted ? "" : "secondary"
-      }`}
-      style={{
-        textAlign: "left",
-        color: disabled ? "var(--light-grey)" : undefined,
-      }}
-      onClick={onSelect}
-    >
-      <Icon name={stats.isDirectory() ? "folder" : "draft"} />
-      {stats.name}
-    </button>
-  </div>
-);
+  onClick?: () => void;
+  onDoubleClick?: () => void;
+}) => {
+  const onClickCB = (event: { detail: number }) => {
+    if (event.detail == 1) {
+      onClick?.();
+    } else if (event.detail == 2) {
+      onDoubleClick?.();
+    }
+  };
+
+  return (
+    <div>
+      <button
+        className={`flex row justify-start outline ${
+          highlighted ? "" : "secondary"
+        }`}
+        style={{
+          textAlign: "left",
+          color: disabled ? "var(--light-grey)" : undefined,
+        }}
+        onClick={onClickCB}
+      >
+        <Icon name={stats.isDirectory() ? "folder" : "draft"} />
+        {stats.name}
+      </button>
+    </div>
+  );
+};
 
 export const FilePicker = () => {
   const { fs, setStatus } = useContext(BaseContext);
@@ -133,7 +145,7 @@ export const FilePicker = () => {
                 },
                 name: "..",
               }}
-              onSelect={() => cd("..")}
+              onDoubleClick={() => cd("..")}
             />
           )}
           {files.map((file) => (
@@ -141,9 +153,12 @@ export const FilePicker = () => {
               key={file.name}
               stats={file}
               highlighted={file.name === chosen.split("/").pop()}
-              onSelect={() =>
-                file.isDirectory() ? cd(file.name) : select(file.name)
-              }
+              onClick={() => select(file.name)}
+              onDoubleClick={() => {
+                if (file.isDirectory()) {
+                  cd(file.name);
+                }
+              }}
               disabled={
                 file.name.includes(".") &&
                 filePicker.suffix != undefined &&

@@ -208,6 +208,7 @@ export const FilePicker = () => {
               !chosen ||
               chosen == ".." ||
               (filePicker.suffix != undefined &&
+                chosen.includes(".") &&
                 !chosen.endsWith(filePicker.suffix)) ||
               (!filePicker.allowFolders && !chosen.includes("."))
             }

@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -15,6 +15,7 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
+import { AppContext } from "src/App.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
@@ -47,7 +48,8 @@ interface Rerenderable {
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
-  const { setStatus } = useContext(BaseContext);
+  const { fs, setStatus } = useContext(BaseContext);
+  const { filePicker } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -127,37 +129,28 @@ const VM = () => {
     };
   }, [actions, dispatch]);
 
-  const fileUploadRef = useRef<HTMLInputElement>(null);
-  const dirUploadRef = useRef<HTMLInputElement>(null);
-
-  const loadFile = () => {
-    fileUploadRef.current?.click();
-  };
-
-  const loadDir = () => {
-    dirUploadRef.current?.click();
-  };
-
-  const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) {
-      setStatus("No file selected");
-      return;
-    }
-    setStatus("Loading");
+  const load = async () => {
+    const path = await filePicker.select(".vm", true);
 
     const sources = [];
-    for (const file of event.target.files) {
-      if (file.name.endsWith(".vm")) {
-        sources.push({
-          name: file.name.replace(".vm", ""),
-          content: await file.text(),
-        });
+    if (path.includes(".vm")) {
+      // single file
+      sources.push({
+        name: (path.split("/").pop() ?? path).replace(".vm", ""),
+        content: await fs.readFile(path),
+      });
+    } else {
+      // folder
+      for (const file of await fs.scandir(path)) {
+        if (file.isFile()) {
+          if (file.name.endsWith(".vm")) {
+            sources.push({
+              name: file.name.replace(".vm", ""),
+              content: await fs.readFile(`${path}/${file.name}`),
+            });
+          }
+        }
       }
-    }
-
-    if (sources.length == 0) {
-      setStatus("No .vm file was selected");
-      return;
     }
     const success = actions.loadVm(sources);
     actions.reset();
@@ -186,17 +179,17 @@ const VM = () => {
                 <Runbar
                   prefix={
                     <>
-                      <button
+                      {/* <button
                         className="flex-0"
                         onClick={loadFile}
                         data-tooltip="Load file"
                         data-placement="bottom"
                       >
                         📄
-                      </button>
+                      </button> */}
                       <button
                         className="flex-0"
-                        onClick={loadDir}
+                        onClick={load}
                         data-tooltip="Load directory"
                         data-placement="bottom"
                       >
@@ -210,7 +203,7 @@ const VM = () => {
                 />
               )}
             </div>
-            <input
+            {/* <input
               type="file"
               style={{ display: "none" }}
               ref={fileUploadRef}
@@ -222,7 +215,7 @@ const VM = () => {
               style={{ display: "none" }}
               ref={dirUploadRef}
               onChange={uploadFile}
-            />
+            /> */}
           </>
         }
       >

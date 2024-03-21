@@ -129,7 +129,7 @@ export class VMTest extends Test<VMTestInstruction> {
       const file = await this.fs.readFile(
         `${this.dir ? `${this.dir}/` : ""}${filename}`
       );
-      this.loadAction?.([{ name: filename, content: file.replace(".vm", "") }]);
+      this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
     } else {
       const stats = await this.fs.scandir(this.dir ?? "/");
       const files: VmFile[] = [];

@@ -16,7 +16,7 @@ import "./cpu.scss";
 
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
-  const { toolStates } = useContext(AppContext);
+  const { toolStates, filePicker } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
@@ -126,6 +126,9 @@ export const CPU = () => {
         highlight={state.sim.PC}
         format={romFormat}
         onUpload={onUpload}
+        fileSelect={async () => {
+          return await filePicker.select();
+        }}
       />
       <MemoryComponent
         name="RAM"

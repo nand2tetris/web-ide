@@ -265,7 +265,6 @@ const VM = () => {
         memory={state.vm.RAM}
         initialAddr={256}
         format="dec"
-        showUpload={false}
         showClear={false}
       />
       <Memory
@@ -291,7 +290,6 @@ const VM = () => {
           "R14:",
           "R15:",
         ]}
-        showUpload={false}
         onChange={() => {
           stackRef.current?.rerender();
         }}

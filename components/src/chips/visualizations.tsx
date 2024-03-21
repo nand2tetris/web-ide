@@ -52,7 +52,6 @@ function makeMemoryVisualization(chip: RAM) {
       memory={chip.memory}
       format={chip instanceof ROM32K ? "asm" : "dec"}
       highlight={chip.address}
-      showUpload={false}
       count={5}
     />
   );

@@ -1,13 +1,11 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
 import {
-  ChangeEvent,
   forwardRef,
   ReactNode,
   useCallback,
   useContext,
   useImperativeHandle,
   useMemo,
-  useRef,
   useState,
 } from "react";
 
@@ -196,7 +194,7 @@ export const Memory = forwardRef(
       offset,
       initialAddr,
       cellLabels,
-      showUpload = true,
+      fileSelect,
       showClear = true,
       onUpload = undefined,
       onChange = undefined,
@@ -213,13 +211,14 @@ export const Memory = forwardRef(
       initialAddr?: number;
       format: Format;
       cellLabels?: string[];
-      showUpload?: boolean;
+      fileSelect?: () => Promise<string>;
       showClear?: boolean;
       onUpload?: (fileName: string) => void;
       onChange?: () => void;
     },
     ref
   ) => {
+    const { fs } = useContext(BaseContext);
     const [fmt, setFormat] = useStateInitializer(format);
     const [jmp, setJmp] = useState("");
     const [goto, setGoto] = useState({ value: initialAddr ?? 0 });
@@ -236,43 +235,37 @@ export const Memory = forwardRef(
       rerenderMemoryBlock();
     };
 
-    const fileUploadRef = useRef<HTMLInputElement>(null);
-    const doLoad = useCallback(() => {
+    const doLoad = async () => {
       onChange?.();
-      fileUploadRef.current?.click();
-    }, [fileUploadRef]);
+      if (fileSelect) {
+        const path = await fileSelect();
+        const name = path.split("/").pop() ?? "";
+        onUpload?.(name);
+        const source = await fs.readFile(path);
+        const loader = name.endsWith("hack")
+          ? loadHack
+          : name.endsWith("asm")
+          ? loadAsm
+          : loadBlob;
+        try {
+          const bytes = await loader(source);
+          memory.loadBytes(bytes);
+        } catch (e) {
+          setStatus(`Error loading memory: ${(e as Error).message}`);
+          return;
+        }
+        setFormat(
+          name.endsWith("hack")
+            ? "bin"
+            : name.endsWith("asm")
+            ? "asm"
+            : fmt
+        );
+        jumpTo();
+      }
+    };
 
     const { setStatus } = useContext(BaseContext);
-    const upload = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-      if (!event.target.files?.length) {
-        setStatus("No file selected");
-        return;
-      }
-      const file = event.target.files[0];
-      onUpload?.(file.name);
-      const source = await file.text();
-      const loader = file.name.endsWith("hack")
-        ? loadHack
-        : file.name.endsWith("asm")
-        ? loadAsm
-        : loadBlob;
-      try {
-        const bytes = await loader(source);
-        memory.loadBytes(bytes);
-      } catch (e) {
-        setStatus(`Error loading memory: ${(e as Error).message}`);
-        return;
-      }
-      event.target.value = ""; // Clear the input out
-      setFormat(
-        file.name.endsWith("hack")
-          ? "bin"
-          : file.name.endsWith("asm")
-          ? "asm"
-          : fmt
-      );
-      jumpTo();
-    }, []);
 
     const rerenderMemoryBlock = () => {
       setRenderKey(renderKey + 1);
@@ -304,13 +297,7 @@ export const Memory = forwardRef(
         <header>
           <div style={{ whiteSpace: "nowrap" }}>{name}</div>
           <fieldset role="group">
-            <input
-              type="file"
-              style={{ display: "none" }}
-              ref={fileUploadRef}
-              onChange={upload}
-            />
-            {showUpload && (
+            {fileSelect && (
               <button
                 onClick={doLoad}
                 className="flex-0"

@@ -13,12 +13,14 @@ export const Selected = "file selected";
 export function useFilePicker() {
   const dialog = useDialog();
   const [suffix, setSuffix] = useState<string>();
+  const [allowFolders, setAllowFolders] = useState(false);
 
   const selected = useRef<(v: string) => void>();
 
   const select = useCallback(
-    async (suffix?: string): Promise<string> => {
+    async (suffix?: string, allowFolders = false): Promise<string> => {
       setSuffix(suffix);
+      setAllowFolders(allowFolders);
       dialog.open();
       return new Promise((resolve) => {
         selected.current = resolve;
@@ -32,6 +34,7 @@ export function useFilePicker() {
     select,
     [Selected]: selected,
     suffix,
+    allowFolders,
   };
 }
 
@@ -203,8 +206,10 @@ export const FilePicker = () => {
           <button
             disabled={
               !chosen ||
+              chosen == ".." ||
               (filePicker.suffix != undefined &&
-                !chosen.endsWith(filePicker.suffix))
+                !chosen.endsWith(filePicker.suffix)) ||
+              (!filePicker.allowFolders && !chosen.includes("."))
             }
             onClick={confirm}
           >

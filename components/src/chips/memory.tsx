@@ -255,11 +255,7 @@ export const Memory = forwardRef(
           return;
         }
         setFormat(
-          name.endsWith("hack")
-            ? "bin"
-            : name.endsWith("asm")
-            ? "asm"
-            : fmt
+          name.endsWith("hack") ? "bin" : name.endsWith("asm") ? "asm" : fmt
         );
         jumpTo();
       }

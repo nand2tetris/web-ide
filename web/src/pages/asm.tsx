@@ -6,7 +6,7 @@ import { Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
 import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { Timer } from "@nand2tetris/simulator/timer";
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 
@@ -59,7 +59,6 @@ export const Asm = () => {
     };
   }, [actions, dispatch]);
 
-  const fileUploadRef = useRef<HTMLInputElement>(null);
   const fileDownloadRef = useRef<HTMLAnchorElement>(null);
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
@@ -69,30 +68,7 @@ export const Asm = () => {
     setStatus("Loaded asm file");
   };
 
-  const loadCompare = () => {
-    fileUploadRef.current?.click();
-  };
-
   const { setStatus } = useContext(BaseContext);
-  const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) {
-      setStatus("No file selected");
-      return;
-    }
-    setStatus("Loading");
-    const file = event.target.files[0];
-    const source = await file.text();
-
-    if (!file.name.endsWith(".hack")) {
-      setStatus("File must be .hack file");
-      return;
-    }
-    dispatch.current({
-      action: "setCmp",
-      payload: { cmp: source, name: file.name },
-    });
-    setStatus("Loaded cmp file");
-  };
 
   const download = () => {
     const blob = new Blob([state.result], { type: "text/plain" });
@@ -127,12 +103,6 @@ export const Asm = () => {
               <Trans>Source</Trans>
               {state.asmName && `: ${state.asmName}`}
             </div>
-            <input
-              type="file"
-              style={{ display: "none" }}
-              ref={fileUploadRef}
-              onChange={uploadFile}
-            />
             <div className="flex-1">
               {runnerAssigned && runner.current && (
                 <Runbar
@@ -279,13 +249,6 @@ export const Asm = () => {
             <div>
               <fieldset role="group">
                 <button onClick={compare}>Compare</button>
-                <button
-                  onClick={loadCompare}
-                  data-tooltip="Load file"
-                  data-placement="left"
-                >
-                  📂
-                </button>
               </fieldset>
             </div>
           </>
@@ -294,9 +257,11 @@ export const Asm = () => {
         <Editor
           value={state.compare}
           highlight={state.translating ? state.resultHighlight : undefined}
-          disabled={true}
           onChange={function (source: string): void {
-            return;
+            dispatch.current({
+              action: "setCmp",
+              payload: { cmp: source },
+            });
           }}
           onCursorPositionChange={(index) => {
             if (index == resultCursorPos.current) {

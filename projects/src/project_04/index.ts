@@ -6,10 +6,12 @@ import { resetBySuffix } from "../reset.js";
 
 export const TESTS = {
   Mult: {
+    "Mult.asm": Mult.asm,
     "Mult.tst": Mult.tst,
     "Mult.cmp": Mult.cmp,
   },
   Fill: {
+    "Fill.asm": Fill.asm,
     "Fill.tst": Fill.tst,
     "FillAutomatic.tst": Fill.autoTst,
     "FillAutomatic.cmp": Fill.autoCmp,

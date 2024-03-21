@@ -18,7 +18,8 @@ import "./asm.scss";
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { toolStates } = useContext(AppContext);
+  const { fs } = useContext(BaseContext);
+  const { toolStates, filePicker } = useContext(AppContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -62,15 +63,15 @@ export const Asm = () => {
   const fileUploadRef = useRef<HTMLInputElement>(null);
   const fileDownloadRef = useRef<HTMLAnchorElement>(null);
   const redirectRef = useRef<HTMLAnchorElement>(null);
-  let fileType: "asm" | "cmp" = "asm";
 
-  const loadAsm = () => {
-    fileType = "asm";
-    fileUploadRef.current?.click();
+  const loadAsm = async () => {
+    const path = await filePicker.select();
+    const source = await fs.readFile(path);
+    actions.setAsm(source, path.split("/").pop());
+    setStatus("Loaded asm file");
   };
 
   const loadCompare = () => {
-    fileType = "cmp";
     fileUploadRef.current?.click();
   };
 
@@ -83,24 +84,16 @@ export const Asm = () => {
     setStatus("Loading");
     const file = event.target.files[0];
     const source = await file.text();
-    if (fileType === "asm") {
-      if (!file.name.endsWith(".asm")) {
-        setStatus("File must be .asm file");
-        return;
-      }
-      actions.setAsm(source, file.name);
-      setStatus("Loaded asm file");
-    } else {
-      if (!file.name.endsWith(".hack")) {
-        setStatus("File must be .hack file");
-        return;
-      }
-      dispatch.current({
-        action: "setCmp",
-        payload: { cmp: source, name: file.name },
-      });
-      setStatus("Loaded cmp file");
+
+    if (!file.name.endsWith(".hack")) {
+      setStatus("File must be .hack file");
+      return;
     }
+    dispatch.current({
+      action: "setCmp",
+      payload: { cmp: source, name: file.name },
+    });
+    setStatus("Loaded cmp file");
   };
 
   const download = () => {

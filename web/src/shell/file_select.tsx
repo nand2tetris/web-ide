@@ -1,6 +1,7 @@
-import { Stats } from "@davidsouther/jiffies/lib/esm/fs";
+import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import JSZip from "jszip";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
@@ -74,6 +75,19 @@ const FileEntry = ({
   );
 };
 
+async function buildZip(zip: JSZip, fs: FileSystem, cwd: string) {
+  for (const entry of await fs.scandir(cwd)) {
+    if (entry.isDirectory()) {
+      const folder = zip.folder(entry.name);
+      if (folder) {
+        await buildZip(folder, fs, `${cwd}/${entry.name}`);
+      }
+    } else {
+      zip.file(entry.name, await fs.readFile(`${cwd}/${entry.name}`));
+    }
+  }
+}
+
 export const FilePicker = () => {
   const { fs, setStatus } = useContext(BaseContext);
   const { filePicker } = useContext(AppContext);
@@ -100,7 +114,7 @@ export const FilePicker = () => {
 
   const select = useCallback(
     (basename: string) => {
-      setFile(`${fs.cwd()}/${basename}`);
+      setFile(`${fs.cwd() == "/" ? "" : fs.cwd()}/${basename}`);
     },
     [setFile]
   );
@@ -111,9 +125,26 @@ export const FilePicker = () => {
     filePicker[Selected].current?.(chosen);
   }, [chosen, filePicker, setStatus]);
 
+  const downloadRef = useRef<HTMLAnchorElement>(null);
+  const downloadFolder = async () => {
+    if (!downloadRef.current) {
+      return;
+    }
+
+    const zip = new JSZip();
+    await buildZip(zip, fs, chosen);
+    const blob = await zip.generateAsync({ type: "blob" });
+    const url = URL.createObjectURL(blob);
+    downloadRef.current.href = url;
+    downloadRef.current.download = chosen.split("/").pop() ?? chosen;
+    downloadRef.current.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <dialog open={filePicker.isOpen}>
-      <article style={{ width: "350px" }}>
+      <article style={{ width: "400px" }}>
         <header>
           <p>
             <Trans>Choose file</Trans>
@@ -131,6 +162,7 @@ export const FilePicker = () => {
           </a>
         </header>
         <main>
+          <a ref={downloadRef} style={{ display: "none" }} />
           <div>
             <b>{fs.cwd()}</b>
           </div>
@@ -177,6 +209,13 @@ export const FilePicker = () => {
             onClick={confirm}
           >
             Select
+          </button>
+          <button
+            onClick={downloadFolder}
+            data-tooltip="Download all files in this folder into a zip"
+            disabled={chosen == "" || chosen.includes(".")}
+          >
+            Download
           </button>
         </footer>
       </article>

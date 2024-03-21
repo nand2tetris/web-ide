@@ -43,6 +43,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "postbuild": "rm -rf build/public && cp -r src/public/ build/public/",
     "test": "react-scripts test"
   },
   "jest": {

@@ -151,7 +151,7 @@ export const Chip = () => {
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     downloadRef.current.href = url;
-    downloadRef.current.download = `Project${state.controls.project}`;
+    downloadRef.current.download = `Project${state.controls.project[1]}`;
     downloadRef.current.click();
 
     URL.revokeObjectURL(url);
@@ -196,23 +196,34 @@ export const Chip = () => {
             <option
               key={chip}
               value={chip}
-              style={isBuiltinOnly(chip) ? { color: "rgb(170, 170, 170)" } : {}}
+              style={
+                isBuiltinOnly(state.controls.project, chip)
+                  ? { color: "var(--light-grey)" }
+                  : {}
+              }
             >
-              {`${chip} ${isBuiltinOnly(chip) ? "(given)" : ""}`}
+              {`${chip} ${
+                isBuiltinOnly(state.controls.project, chip) ? "(given)" : ""
+              }`}
             </option>
           ))}
         </select>
         <a ref={downloadRef} style={{ display: "none" }} />
-        {!useBuiltin && !state.controls.builtinOnly && (
-          <>
-            <button className="flex-0" onClick={actions.resetFile}>
-              <Trans>Reset</Trans>
-            </button>
-            <button className="flex-0" onClick={downloadProject}>
-              <Trans>Download</Trans>
-            </button>
-          </>
-        )}
+
+        <button
+          className="flex-0"
+          onClick={actions.resetFile}
+          disabled={state.controls.builtinOnly}
+        >
+          <Trans>Reset</Trans>
+        </button>
+        <button
+          className="flex-0"
+          onClick={downloadProject}
+          disabled={state.controls.builtinOnly}
+        >
+          <Trans>Download</Trans>
+        </button>
       </fieldset>
     </>
   );
@@ -223,17 +234,16 @@ export const Chip = () => {
         <>
           <div tabIndex={0}>HDL</div>
           <fieldset>
-            {state.controls.hasBuiltin && !state.controls.builtinOnly && (
-              <label>
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={useBuiltin}
-                  onChange={toggleUseBuiltin}
-                />
-                <Trans>Builtin</Trans>
-              </label>
-            )}
+            <label>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={state.controls.builtinOnly ? true : useBuiltin}
+                onChange={toggleUseBuiltin}
+                disabled={state.controls.builtinOnly}
+              />
+              <Trans>Builtin</Trans>
+            </label>
           </fieldset>
           {selectors}
         </>
@@ -327,7 +337,8 @@ export const Chip = () => {
     },
     () => {
       dispatch.current({ action: "updateChip" });
-    }
+    },
+    state.controls.visualizationParameters
   );
 
   const pinResetDispatcher = new PinResetDispatcher();
@@ -370,6 +381,26 @@ export const Chip = () => {
     <TestPanel
       runner={runner}
       disabled={state.sim.invalid}
+      showLoad={false}
+      prefix={
+        state.controls.tests.length > 1 ? (
+          <select
+            value={state.controls.testName}
+            onChange={({ target: { value } }) => {
+              actions.setTest(value);
+            }}
+            data-testid="test-picker"
+          >
+            {state.controls.tests.map((test) => (
+              <option key={test} value={test}>
+                {test}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <></>
+        )
+      }
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}

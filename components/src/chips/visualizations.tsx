@@ -1,5 +1,6 @@
 import {
   CPU,
+  Computer,
   Keyboard,
   ROM32K,
   Screen,
@@ -17,6 +18,7 @@ import { Chip, HIGH } from "@nand2tetris/simulator/chip/chip.js";
 import { Flags } from "@nand2tetris/simulator/cpu/alu.js";
 import { decode } from "@nand2tetris/simulator/cpu/cpu.js";
 import { ReactElement } from "react";
+import { NO_SCREEN } from "../stores/chip.store.js";
 import { ALUComponent } from "./alu.js";
 import { Keyboard as KeyboardComponent } from "./keyboard.js";
 import { Memory as MemoryComponent } from "./memory.js";
@@ -43,9 +45,23 @@ export function getBuiltinVisualization(part: Chip): ReactElement | undefined {
   }
 }
 
+function makeMemoryVisualization(chip: RAM) {
+  return (
+    <MemoryComponent
+      name={chip.name}
+      memory={chip.memory}
+      format={chip instanceof ROM32K ? "asm" : "dec"}
+      highlight={chip.address}
+      showUpload={false}
+      count={5}
+    />
+  );
+}
+
 export function makeVisualization(
   chip: Chip,
-  updateAction?: () => void
+  updateAction?: () => void,
+  parameters?: Set<string>
 ): ReactElement | undefined {
   if (chip instanceof ALU) {
     return (
@@ -82,14 +98,7 @@ export function makeVisualization(
     return <ScreenComponent memory={chip.memory} />;
   }
   if (chip instanceof RAM) {
-    return (
-      <MemoryComponent
-        name={chip.name}
-        memory={chip.memory}
-        format={chip instanceof ROM32K ? "asm" : "dec"}
-        highlight={chip.address}
-      />
-    );
+    return makeMemoryVisualization(chip);
   }
   if (chip instanceof RAM8) {
     return <span>RAM {chip.width}</span>;
@@ -111,6 +120,20 @@ export function makeVisualization(
       </>
     );
   }
+  if (chip instanceof Computer) {
+    return (
+      <>
+        <RegisterComponent name={"A"} bits={chip.cpu.state.A} />
+        <RegisterComponent name={"D"} bits={chip.cpu.state.D} />
+        <RegisterComponent name={"PC"} bits={chip.cpu.state.PC} />
+        {!parameters?.has(NO_SCREEN) && (
+          <ScreenComponent memory={chip.ram.screen.memory} />
+        )}
+        {makeMemoryVisualization(chip.rom)}
+        {makeMemoryVisualization(chip.ram.ram)}
+      </>
+    );
+  }
 
   const vis = [...chip.parts]
     .map((chip) => makeVisualization(chip, updateAction))
@@ -122,12 +145,13 @@ export function makeVisualizationsWithId(
   chip: {
     parts: Chip[];
   },
-  updateAction?: () => void
+  updateAction?: () => void,
+  parameters?: Set<string>
 ): [string, ReactElement][] {
   return [...chip.parts]
     .map((part, i): [string, ReactElement | undefined] => [
       `${part.id}_${i}`,
-      makeVisualization(part, updateAction),
+      makeVisualization(part, updateAction, parameters),
     ])
     .filter(([_, v]) => v !== undefined) as [string, ReactElement][];
 }

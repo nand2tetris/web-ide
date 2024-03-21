@@ -12,13 +12,19 @@ export const Selected = "file selected";
 
 export function useFilePicker() {
   const dialog = useDialog();
-  const [suffix, setSuffix] = useState<string>();
+  const [suffix, setSuffix] = useState<string[]>();
   const [allowFolders, setAllowFolders] = useState(false);
 
   const selected = useRef<(v: string) => void>();
 
   const select = useCallback(
-    async (suffix?: string, allowFolders = false): Promise<string> => {
+    async (
+      suffix?: string | string[],
+      allowFolders = false
+    ): Promise<string> => {
+      if (typeof suffix === "string") {
+        suffix = [suffix];
+      }
       setSuffix(suffix);
       setAllowFolders(allowFolders);
       dialog.open();
@@ -33,7 +39,7 @@ export function useFilePicker() {
     ...dialog,
     select,
     [Selected]: selected,
-    suffix,
+    suffix: suffix,
     allowFolders,
   };
 }
@@ -89,6 +95,12 @@ async function buildZip(zip: JSZip, fs: FileSystem, cwd: string) {
       zip.file(entry.name, await fs.readFile(`${cwd}/${entry.name}`));
     }
   }
+}
+
+function isFileValid(filename: string, validSuffixes: string[]) {
+  return validSuffixes
+    .map((suffix) => filename.endsWith(suffix))
+    .reduce((p1, p2) => p1 || p2, false);
 }
 
 export const FilePicker = () => {
@@ -197,7 +209,7 @@ export const FilePicker = () => {
               disabled={
                 file.name.includes(".") &&
                 filePicker.suffix != undefined &&
-                !file.name.endsWith(filePicker.suffix)
+                !isFileValid(file.name, filePicker.suffix)
               }
             />
           ))}
@@ -209,7 +221,7 @@ export const FilePicker = () => {
               chosen == ".." ||
               (filePicker.suffix != undefined &&
                 chosen.includes(".") &&
-                !chosen.endsWith(filePicker.suffix)) ||
+                !isFileValid(chosen, filePicker.suffix)) ||
               (!filePicker.allowFolders && !chosen.includes("."))
             }
             onClick={confirm}

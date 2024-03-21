@@ -127,7 +127,7 @@ export const CPU = () => {
         format={romFormat}
         onUpload={onUpload}
         fileSelect={async () => {
-          return await filePicker.select();
+          return await filePicker.select([".asm", ",hack"]);
         }}
       />
       <MemoryComponent

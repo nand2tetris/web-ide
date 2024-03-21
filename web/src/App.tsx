@@ -48,7 +48,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
+    fs.stat("/projects/1/Not/Not.hdl").catch(async () => {
       await loaders.resetFiles(fs);
     });
     updateVersion(fs);

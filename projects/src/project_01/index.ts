@@ -101,13 +101,13 @@ export const BUILTIN_CHIPS = {
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/01");
+  await fs.pushd("/projects/1");
   await reset(fs, CHIPS);
   await fs.popd();
 }
 
 export async function resetTests(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/01");
+  await fs.pushd("/projects/1");
   await resetBySuffix(fs, CHIPS, ".tst");
   await resetBySuffix(fs, CHIPS, ".cmp");
   await fs.popd();

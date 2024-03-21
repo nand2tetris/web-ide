@@ -40,13 +40,13 @@ export const VMS = {
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/07");
+  await fs.pushd("/projects/7");
   await reset(fs, VMS);
   await fs.popd();
 }
 
 export async function resetTests(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/07");
+  await fs.pushd("/projects/7");
   await resetBySuffix(fs, VMS, ".tst");
   await resetBySuffix(fs, VMS, "VME.tst");
   await resetBySuffix(fs, VMS, ".cmp");

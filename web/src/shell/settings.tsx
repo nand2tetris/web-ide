@@ -36,7 +36,7 @@ export const Settings = () => {
     const version = getVersion();
     localStorage.clear();
     setVersion(version);
-    localStorage["/chip/project"] = "01";
+    localStorage["/chip/project"] = "1";
     localStorage["/chip/chip"] = "Not";
     await loaders.resetFiles(fs);
     setStatus("Reset files in local storage");

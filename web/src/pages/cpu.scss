@@ -20,9 +20,9 @@
   }
 
   &.large-screen {
-    grid-template-columns: 1fr 1fr calc(var(--screen-size) * 2);
-    grid-template-rows: 2fr 1fr;
-    grid-template-areas: "ROM RAM IO" "test test IO";
+    grid-template-columns: 350px calc(var(--screen-size) * 2) 1fr;
+    grid-template-rows: 1fr 1fr;
+    grid-template-areas: "ROM IO test" "RAM IO test";
 
     @media screen and (min-width: 2200px) {
       grid-template-columns: 350px 350px calc(var(--screen-size) * 2) 1fr;

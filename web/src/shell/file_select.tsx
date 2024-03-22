@@ -141,7 +141,6 @@ export const FilePicker = () => {
   );
 
   const confirm = useCallback(() => {
-    setStatus(`Selected ${chosen}`);
     filePicker.close();
     filePicker[Selected].current?.(chosen);
   }, [chosen, filePicker, setStatus]);

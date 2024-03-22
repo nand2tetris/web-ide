@@ -156,7 +156,6 @@ export function makeCpuStore(
         return false;
       }
       valid = true;
-      setStatus(`Parsed tst`);
 
       test = CPUTest.from(Ok(tst), test.cpu.ROM);
       dispatch.current({ action: "update" });

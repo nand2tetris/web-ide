@@ -9,6 +9,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
+import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { AppContext } from "src/App.context";
 import { Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
@@ -16,7 +17,7 @@ import "./cpu.scss";
 
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
-  const { toolStates, filePicker } = useContext(AppContext);
+  const { toolStates, filePicker, setTitle } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
@@ -30,9 +31,12 @@ export const CPU = () => {
     if (toolStates.cpuState.rom) {
       state.sim.ROM.loadBytes(toolStates.cpuState.rom);
       if (toolStates.cpuState.name) {
+        setTitle(toolStates.cpuState.name);
         setFileName(toolStates.cpuState.name);
         if (toolStates.cpuState.name.endsWith(".hack")) setRomFormat("bin");
       }
+    } else {
+      state.sim.ROM.loadBytes(Array.from(HACK));
     }
   }, []);
 
@@ -41,7 +45,7 @@ export const CPU = () => {
       fileName,
       Array.from(state.sim.ROM.map((i, v) => v))
     );
-  }, [state]);
+  });
 
   useEffect(() => {
     actions.compileTest(tst, cmp);
@@ -102,6 +106,7 @@ export const CPU = () => {
 
   const onUpload = (fileName: string) => {
     setFileName(fileName);
+    setTitle(fileName);
     actions.reset();
   };
 
@@ -141,7 +146,6 @@ export const CPU = () => {
         className="IO"
         header={
           <>
-            {fileName && <div className="flex-0">{fileName}</div>}
             <div className="flex-1">
               {runnersAssigned && cpuRunner.current && (
                 <Runbar runner={cpuRunner.current} />

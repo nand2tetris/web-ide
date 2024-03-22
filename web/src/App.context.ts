@@ -49,6 +49,7 @@ export function useToolStates() {
 
 export function useAppContext(fs: FileSystem = new FileSystem()) {
   const [theme, setTheme] = useState<Theme>("system");
+  const [title, setTitle] = useState<string>();
 
   return {
     monaco: useMonaco(),
@@ -58,6 +59,8 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     theme,
     setTheme,
     toolStates: useToolStates(),
+    title,
+    setTitle,
   };
 }
 
@@ -109,6 +112,10 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   },
   theme: "system",
   setTheme() {
+    return undefined;
+  },
+  title: undefined,
+  setTitle() {
     return undefined;
   },
   toolStates: {

@@ -4,6 +4,7 @@ import {
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
+  ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
@@ -106,6 +107,12 @@ export function makeCpuStore(
           ? `Simulation successful: The output file is identical to the compare file`
           : `Simulation error: The output file differs from the compare file`
       );
+    },
+
+    replaceROM(state: CpuPageState, rom: ROM) {
+      test = new CPUTest(rom);
+      test.reset();
+      this.update(state);
     },
   };
 

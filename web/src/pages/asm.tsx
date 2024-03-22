@@ -10,6 +10,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 
+import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
 import { AppContext } from "src/App.context";
 import { useDialog } from "src/shell/dialog";
@@ -202,7 +203,7 @@ export const Asm = () => {
                         const bytes = await loadHack(state.result);
                         toolStates.setCpuState(
                           state.asmName?.replace(".asm", ".hack"),
-                          bytes
+                          new ROM(new Int16Array(bytes))
                         );
                         redirectRef.current?.click();
                       }}

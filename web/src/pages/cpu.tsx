@@ -29,7 +29,10 @@ export const CPU = () => {
 
   useEffect(() => {
     if (toolStates.cpuState.rom) {
-      state.sim.ROM.loadBytes(toolStates.cpuState.rom);
+      dispatch.current({
+        action: "replaceROM",
+        payload: toolStates.cpuState.rom,
+      });
       if (toolStates.cpuState.name) {
         setTitle(toolStates.cpuState.name);
         setFileName(toolStates.cpuState.name);
@@ -41,10 +44,7 @@ export const CPU = () => {
   }, []);
 
   useEffect(() => {
-    toolStates.setCpuState(
-      fileName,
-      Array.from(state.sim.ROM.map((i, v) => v))
-    );
+    toolStates.setCpuState(fileName, state.sim.ROM);
   });
 
   useEffect(() => {

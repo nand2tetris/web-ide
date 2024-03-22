@@ -9,7 +9,7 @@ import * as RAM64 from "./05_ram64.js";
 import * as RAM512 from "./06_ram512.js";
 import * as RAM4k from "./07_ram4k.js";
 import * as RAM16k from "./08_ram16k.js";
-import { resetBySuffix } from "../reset.js";
+import { cleanup, resetBySuffix } from "../reset.js";
 
 export const CHIPS = {
   Bit: {
@@ -68,5 +68,11 @@ export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/3");
   await resetBySuffix(fs, CHIPS, ".tst");
   await resetBySuffix(fs, CHIPS, ".cmp");
+  await fs.popd();
+}
+
+export async function cleanupFiles(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/3");
+  await cleanup(fs, CHIPS);
   await fs.popd();
 }

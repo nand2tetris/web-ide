@@ -1,6 +1,7 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
-import { resetBySuffix } from "../reset.js";
+import * as RAM16K from "../project_03/08_ram16k.js";
+import { cleanup, resetBySuffix } from "../reset.js";
 import * as Memory from "./01_memory.js";
 import * as CPU from "./02_cpu.js";
 import * as Computer from "./03_computer.js";
@@ -9,7 +10,6 @@ import * as Keyboard from "./05_keyboard.js";
 import * as DRegister from "./06_d_register.js";
 import * as ARegister from "./07_a_register.js";
 import * as ROM32K from "./08_rom32k.js";
-import * as RAM16K from "../project_03/08_ram16k.js";
 
 export const CHIPS = {
   Memory: {
@@ -64,5 +64,11 @@ export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/5");
   await resetBySuffix(fs, CHIPS, ".tst");
   await resetBySuffix(fs, CHIPS, ".cmp");
+  await fs.popd();
+}
+
+export async function cleanupFiles(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/5");
+  await cleanup(fs, CHIPS);
   await fs.popd();
 }

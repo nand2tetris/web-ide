@@ -39,41 +39,70 @@ export const VmProjects = {
   "8": project_08,
 };
 
-const Projects = {
-  1: project_01,
-  2: project_02,
-  3: project_03,
-  4: project_04,
-  5: project_05,
-  7: project_07,
-  8: project_08,
+export const Projects = {
+  "1": project_01,
+  "2": project_02,
+  "3": project_03,
+  "4": project_04,
+  "5": project_05,
+  "7": project_07,
+  "8": project_08,
 };
 
-let reset = false;
-export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
-  if (reset) return; // React will double-render a call to resetFiles in useEffect.
-  reset = true;
-  projects ??= [1, 2, 3, 4, 5, 7, 8];
+function getProjects() {
+  return Object.keys(Projects);
+}
+
+let resetLock = false;
+let resetTestsLock = false;
+let cleanupLock = false;
+export const resetFiles = async (fs: FileSystem, projects?: string[]) => {
+  if (resetLock) return; // React will double-render a call to resetFiles in useEffect.
+  resetLock = true;
+  projects ??= getProjects();
   for (const project of projects) {
-    if (!Object.keys(Projects).includes(project.toString())) {
+    if (!Object.keys(Projects).includes(project)) {
       continue;
     }
     await Projects[project as keyof typeof Projects].resetFiles(fs);
   }
-  reset = false;
+  resetLock = false;
 };
 
-export const resetTests = async (fs: FileSystem, projects?: number[]) => {
-  if (reset) return; // React will double-render a call to resetTests in useEffect.
-  reset = true;
-  projects ??= [1, 2, 3, 4, 5, 7, 8];
+export const resetTests = async (fs: FileSystem, projects?: string[]) => {
+  if (resetTestsLock) return; // React will double-render a call to resetTests in useEffect.
+  resetTestsLock = true;
+  projects ??= getProjects();
   for (const project of projects) {
     if (!Object.keys(Projects).includes(project.toString())) {
       continue;
     }
     await Projects[project as keyof typeof Projects].resetTests(fs);
   }
-  reset = false;
+  resetTestsLock = false;
+};
+
+function removePath(path: string) {
+  for (const key of Object.keys(localStorage)) {
+    if (key.startsWith(path)) {
+      localStorage.removeItem(key);
+    }
+  }
+}
+
+export const cleanup = async (fs: FileSystem) => {
+  if (cleanupLock) return; // React will double-render a call to cleanup in useEffect.
+  cleanupLock = true;
+  for (const entry of await fs.scandir("/projects")) {
+    if (!getProjects().includes(entry.name)) {
+      // TODO: this should be done through the file system but currently that doesn't seem to work
+      removePath(`/projects/${entry.name}`);
+    }
+  }
+  for (const project of getProjects()) {
+    await Projects[project as keyof typeof Projects].cleanupFiles(fs);
+  }
+  cleanupLock = false;
 };
 
 export const BUILTIN_CHIP_PROJECTS: Record<

@@ -1,6 +1,6 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
-import { resetBySuffix } from "../reset.js";
+import { cleanup, resetBySuffix } from "../reset.js";
 import * as HalfAdder from "./01_half_adder.js";
 import * as FullAdder from "./02_full_adder.js";
 import * as Add16 from "./03_add16.js";
@@ -49,5 +49,11 @@ export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/2");
   await resetBySuffix(fs, CHIPS, ".tst");
   await resetBySuffix(fs, CHIPS, ".cmp");
+  await fs.popd();
+}
+
+export async function cleanupFiles(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/2");
+  await cleanup(fs, CHIPS);
   await fs.popd();
 }

@@ -1,5 +1,5 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { resetBySuffix } from "../reset.js";
+import { cleanup, resetBySuffix } from "../reset.js";
 import * as simple_add from "./11_simple_add.js";
 import * as stack_test from "./12_stack_test.js";
 import * as basic_test from "./21_basic_test.js";
@@ -50,5 +50,11 @@ export async function resetTests(fs: FileSystem): Promise<void> {
   await resetBySuffix(fs, VMS, ".tst");
   await resetBySuffix(fs, VMS, "VME.tst");
   await resetBySuffix(fs, VMS, ".cmp");
+  await fs.popd();
+}
+
+export async function cleanupFiles(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/7");
+  await cleanup(fs, VMS);
   await fs.popd();
 }

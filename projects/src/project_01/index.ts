@@ -1,6 +1,6 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
 
-import { resetBySuffix } from "../reset.js";
+import { cleanup, resetBySuffix } from "../reset.js";
 import * as Nand from "./00_nand.js";
 import * as Not from "./01_not.js";
 import * as And from "./02_and.js";
@@ -110,5 +110,11 @@ export async function resetTests(fs: FileSystem): Promise<void> {
   await fs.pushd("/projects/1");
   await resetBySuffix(fs, CHIPS, ".tst");
   await resetBySuffix(fs, CHIPS, ".cmp");
+  await fs.popd();
+}
+
+export async function cleanupFiles(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/1");
+  await cleanup(fs, CHIPS);
   await fs.popd();
 }

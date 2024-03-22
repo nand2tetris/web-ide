@@ -21,6 +21,7 @@ import Header from "./shell/header";
 import { Settings } from "./shell/settings";
 import urls from "./urls";
 
+import { cleanup } from "@nand2tetris/projects/index";
 import { ErrorBoundary, RenderError } from "./ErrorBoundary";
 import { Redirect } from "./pages/redirect";
 import "./pico/flex.scss";
@@ -48,10 +49,15 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fs.stat("/projects/1/Not/Not.hdl").catch(async () => {
-      await loaders.resetFiles(fs);
-    });
-    updateVersion(fs);
+    updateVersion(fs)
+      .then(async () => {
+        await cleanup(fs);
+      })
+      .then(() => {
+        fs.stat("/projects/1/Not/Not.hdl").catch(async () => {
+          await loaders.resetFiles(fs);
+        });
+      });
   }, [fs]);
 
   useEffect(() => {

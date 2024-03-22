@@ -112,6 +112,12 @@ export const FilePicker = () => {
   const cwd = fs.cwd();
 
   useEffect(() => {
+    if (fs.cwd() == "/") {
+      cd("projects");
+    }
+  }, [fs]);
+
+  useEffect(() => {
     fs.scandir(fs.cwd()).then((files) => {
       setFiles(files);
     });

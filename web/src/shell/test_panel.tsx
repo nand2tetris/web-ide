@@ -33,6 +33,7 @@ export const TestPanel = ({
   disabled = false,
   defaultTst,
   defaultCmp,
+  showName = false,
   showLoad = true,
   showClear = false,
   onSpeedChange,
@@ -46,6 +47,7 @@ export const TestPanel = ({
   setPath?: Dispatch<string>;
   defaultTst?: string;
   defaultCmp?: string;
+  showName?: boolean;
   showLoad?: boolean;
   showClear?: boolean;
   disabled?: boolean;
@@ -128,10 +130,13 @@ export const TestPanel = ({
     setCmp(savedCmp);
   };
 
+  const [name, setName] = useState("");
+
   const loadTest = useCallback(async () => {
     try {
       const path = await filePicker.select(".tst");
       setPath?.(path);
+      setName(path.split("/").pop() ?? "");
       const tst = await fs.readFile(path);
       let cmp: string | undefined = undefined;
       try {
@@ -197,8 +202,9 @@ export const TestPanel = ({
       className="_test_panel"
       header={
         <>
-          <div className="flex-0">
+          <div>
             <Trans>Test</Trans>
+            {showName && name != "" && `: ${name}`}
           </div>
           {editWarning}
           <div className="flex-1">

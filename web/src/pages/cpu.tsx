@@ -181,6 +181,7 @@ export const CPU = () => {
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
           disabled={!state.test.valid}
+          showName={true}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);
           }}

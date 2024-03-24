@@ -86,17 +86,17 @@ asmSemantics.addAttribute<Asm>("asm", {
 });
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  AInstruction(_at, name): AsmAInstruction {
+  AInstruction(_at, name, _b): AsmAInstruction {
     return A(name.value, span(this.source));
   },
-  CInstruction(assignN, opN, jmpN): AsmCInstruction {
+  CInstruction(assignN, opN, jmpN, _b): AsmCInstruction {
     const assign = (assignN.child(0)?.child(0)?.sourceString ??
       "") as ASSIGN_ASM;
     const op = opN.sourceString as COMMANDS_ASM;
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
     return C(assign, op, jmp, span(this.source));
   },
-  Label(_o, { name }, _c): AsmLabelInstruction {
+  Label(_o, { name }, _c, _a): AsmLabelInstruction {
     return L(name, span(this.source));
   },
 });

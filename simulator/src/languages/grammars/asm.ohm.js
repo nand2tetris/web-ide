@@ -5,9 +5,9 @@ ASM <: Base {
   
   Instruction = Label|AInstruction|CInstruction
   
-  Label = OpenParen identifier closeParen
-  AInstruction = at (identifier | decNumber)
-  CInstruction = assign? op jmp?
+  Label = OpenParen identifier closeParen newline
+  AInstruction = at (identifier | decNumber) newline
+  CInstruction = assign? op jmp? newline
   
   assign = (
       "AMD"

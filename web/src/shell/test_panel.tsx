@@ -204,7 +204,7 @@ export const TestPanel = ({
         <>
           <div>
             <Trans>Test</Trans>
-            {showName && name != "" && `: ${name}`}
+            {showName && name == "" ? ": Default" : `: ${name}`}
           </div>
           {editWarning}
           <div className="flex-1">

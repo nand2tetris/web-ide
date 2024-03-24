@@ -131,7 +131,8 @@ export const CPU = () => {
         name="RAM"
         displayEnabled={displayEnabled}
         memory={state.sim.RAM}
-        format="hex"
+        format="dec"
+        excludedFormats={["asm"]}
         onChange={onMemoryChange}
       />
       <Panel

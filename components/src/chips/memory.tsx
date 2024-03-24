@@ -213,7 +213,7 @@ export const Memory = forwardRef(
       cellLabels?: string[];
       fileSelect?: () => Promise<string>;
       showClear?: boolean;
-      onUpload?: (fileName: string) => void;
+      onUpload?: (path: string) => void;
       onChange?: () => void;
     },
     ref
@@ -240,7 +240,7 @@ export const Memory = forwardRef(
       if (fileSelect) {
         const path = await fileSelect();
         const name = path.split("/").pop() ?? "";
-        onUpload?.(name);
+        onUpload?.(path);
         const source = await fs.readFile(path);
         const loader = name.endsWith("hack")
           ? loadHack

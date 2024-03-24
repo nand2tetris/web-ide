@@ -1,5 +1,8 @@
+import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { Trans } from "@lingui/macro";
 import { DiffDisplay, generateDiffs } from "@nand2tetris/components/compare.js";
+import { loadTestFiles } from "@nand2tetris/components/file_utils";
+import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { Span } from "@nand2tetris/simulator/languages/base";
@@ -29,6 +32,7 @@ export const TestPanel = ({
   tst: [tst, setTst, tstHighlight],
   cmp: [cmp, setCmp],
   out: [out],
+  tstName,
   setPath,
   disabled = false,
   defaultTst,
@@ -44,6 +48,7 @@ export const TestPanel = ({
   tst: [string, Dispatch<string>, Span | undefined];
   cmp: [string, Dispatch<string>];
   out: [string, Dispatch<string>];
+  tstName?: string;
   setPath?: Dispatch<string>;
   defaultTst?: string;
   defaultCmp?: string;
@@ -130,27 +135,20 @@ export const TestPanel = ({
     setCmp(savedCmp);
   };
 
-  const [name, setName] = useState("");
+  const [name, setName] = useStateInitializer(tstName ?? "");
 
   const loadTest = useCallback(async () => {
-    try {
-      const path = await filePicker.select(".tst");
-      setPath?.(path);
-      setName(path.split("/").pop() ?? "");
-      const tst = await fs.readFile(path);
-      let cmp: string | undefined = undefined;
-      try {
-        const cmpName = path.replace("VME.tst", ".tst").replace(".tst", ".cmp");
-        cmp = await fs.readFile(cmpName);
-      } catch (e) {
-        // There doesn't have to be a compare file
-      }
-      setTst?.(tst);
-      setCmp?.(cmp ?? "");
-    } catch (e) {
-      console.error(e);
+    const path = await filePicker.select(".tst");
+    const files = await loadTestFiles(fs, path);
+    if (isErr(files)) {
       setStatus(`Failed to load test`);
+      return;
     }
+    setPath?.(path);
+    setName(path.split("/").pop() ?? "");
+    const { tst, cmp } = unwrap(files);
+    setTst?.(tst);
+    setCmp?.(cmp ?? "");
   }, [filePicker, setStatus, fs]);
 
   const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();
@@ -204,7 +202,7 @@ export const TestPanel = ({
         <>
           <div>
             <Trans>Test</Trans>
-            {showName && name == "" ? ": Default" : `: ${name}`}
+            {showName && (name == "" ? ": Default" : `: ${name}`)}
           </div>
           {editWarning}
           <div className="flex-1">

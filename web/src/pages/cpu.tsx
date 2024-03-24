@@ -104,9 +104,11 @@ export const CPU = () => {
     };
   }, [actions, dispatch]);
 
-  const onUpload = (fileName: string) => {
-    setFileName(fileName);
-    setTitle(fileName);
+  const onUpload = async (path: string) => {
+    const name = path.split("/").pop() ?? "";
+    setFileName(name);
+    setTitle(name);
+    actions.setPath(path);
     actions.reset();
   };
 
@@ -184,11 +186,32 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          tstName={state.test.name}
           disabled={!state.test.valid}
-          showName={true}
+          showLoad={false}
+          showName={state.tests.length < 2}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);
           }}
+          prefix={
+            state.tests.length > 1 ? (
+              <select
+                value={state.test.name}
+                onChange={({ target: { value } }) => {
+                  actions.loadTest(value);
+                }}
+                data-testid="test-picker"
+              >
+                {state.tests.map((test) => (
+                  <option key={test} value={test}>
+                    {test}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <></>
+            )
+          }
         />
       )}
     </div>

@@ -74,7 +74,12 @@ export const Runbar = (props: {
       </button>
       <button
         className="flex-0"
-        onClick={() => runner.actions.reset()}
+        onClick={() => {
+          if (runner.state.running) {
+            runner.actions.stop();
+          }
+          runner.actions.reset();
+        }}
         data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
         data-placement="bottom"
       >

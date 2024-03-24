@@ -1,12 +1,15 @@
 ASM <: Base {
   Root := ASM
-  ASM = Instruction*
+  ASM = IntermediateInstruction* instruction ?
   
-  Instruction = Label|AInstruction|CInstruction
-  
-  Label = OpenParen identifier closeParen newline
-  AInstruction = at (identifier | decNumber) newline
-  CInstruction = assign? op jmp? newline
+  instruction = label|aInstruction|cInstruction
+  IntermediateInstruction = instruction newline+
+
+  space := ~"\\n" "\\x00".."\\x20"
+
+  label = openParen identifier closeParen
+  aInstruction = at (identifier | decNumber)
+  cInstruction = assign? op jmp?
   
   assign = (
       "AMD"

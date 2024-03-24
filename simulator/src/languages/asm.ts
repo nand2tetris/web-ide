@@ -76,27 +76,37 @@ asmSemantics.addAttribute<Asm>("root", {
 });
 
 asmSemantics.addAttribute<Asm>("asm", {
-  Root(asm) {
+  ASM(asm, last) {
+    const instructions =
+      asm.children.map(
+        (node) => node.intermediateInstruction as AsmInstruction
+      ) ?? [];
     return {
-      instructions: asm
-        .child(0)
-        .children.map(({ instruction }) => instruction as AsmInstruction),
+      instructions: last.child(0)
+        ? [...instructions, last.child(0).instruction]
+        : instructions,
     };
   },
 });
 
+asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
+  IntermediateInstruction(inst, _n) {
+    return inst.instruction;
+  },
+});
+
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  AInstruction(_at, name, _b): AsmAInstruction {
+  aInstruction(_at, name): AsmAInstruction {
     return A(name.value, span(this.source));
   },
-  CInstruction(assignN, opN, jmpN, _b): AsmCInstruction {
+  cInstruction(assignN, opN, jmpN): AsmCInstruction {
     const assign = (assignN.child(0)?.child(0)?.sourceString ??
       "") as ASSIGN_ASM;
     const op = opN.sourceString as COMMANDS_ASM;
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
     return C(assign, op, jmp, span(this.source));
   },
-  Label(_o, { name }, _c, _a): AsmLabelInstruction {
+  label(_o, { name }, _c): AsmLabelInstruction {
     return L(name, span(this.source));
   },
 });

@@ -10,6 +10,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 
+import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
 import { AppContext } from "src/App.context";
@@ -65,8 +66,11 @@ export const Asm = () => {
 
   const loadAsm = async () => {
     const path = await filePicker.select(".asm");
-    actions.loadAsm(path);
-    setStatus("Loaded asm file");
+    setStatus(LOADING);
+    requestAnimationFrame(async () => {
+      await actions.loadAsm(path);
+      setStatus("");
+    });
   };
 
   const { setStatus } = useContext(BaseContext);

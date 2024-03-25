@@ -20,6 +20,7 @@ import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
 
 import { useClockReset } from "../clockface.js";
 import InlineEdit from "../inline_edit.js";
+import { LOADING } from "../messages.js";
 import { useStateInitializer } from "../react.js";
 import { BaseContext } from "../stores/base.context.js";
 import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
@@ -239,7 +240,7 @@ export const Memory = forwardRef(
       onChange?.();
       if (fileSelect) {
         const path = await fileSelect();
-        setStatus("Loading in progress...");
+        setStatus(LOADING);
         requestAnimationFrame(async () => {
           const name = path.split("/").pop() ?? "";
           onUpload?.(path);

@@ -270,7 +270,9 @@ export function makeAsmStore(
       });
       translating = false;
       this.saveAsm(asm);
-      this.compileAsm(asm);
+      requestAnimationFrame(() => {
+        this.compileAsm(asm);
+      });
     },
 
     saveAsm(asm: string) {

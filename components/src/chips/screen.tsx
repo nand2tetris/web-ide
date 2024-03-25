@@ -1,6 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
-import { useCallback, useRef } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useClockFrame, useClockReset } from "../clockface.js";
 
 const WHITE = "white";
@@ -50,12 +50,20 @@ function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
 
 export const Screen = ({
   memory,
-  scale = 1,
+  showScaleControls = false,
+  onScale,
 }: {
   memory: ScreenMemory;
-  scale?: number;
+  showScaleControls?: boolean;
+  onScale?: (scale: number) => void;
 }) => {
   const canvas = useRef<HTMLCanvasElement>();
+  const [scale, setScale] = useState(1);
+
+  const onScaleCB = (scale: number) => {
+    onScale?.(scale);
+    setScale(scale);
+  };
 
   const draw = useCallback(() => {
     const ctx = canvas.current?.getContext("2d") ?? undefined;
@@ -82,32 +90,43 @@ export const Screen = ({
 
   return (
     <article className="panel">
-      <header>Screen</header>
-      <main style={{ backgroundColor: "var(--code-background-color)" }}>
-        <figure
-          style={{
-            width: `${512 * scale}px`,
-            height: `${256 * scale}px`,
-            boxSizing: "content-box",
-            marginInline: "auto",
-            margin: "auto",
-            borderTop: "2px solid gray",
-            borderLeft: "2px solid gray",
-            borderBottom: "2px solid lightgray",
-            borderRight: "2px solid lightgray",
-          }}
-        >
-          <canvas
-            ref={ctxRef}
-            width={512}
-            height={256}
+      <header>
+        <div>Screen</div>
+        {showScaleControls && (
+          <fieldset role="group">
+            <button onClick={() => onScaleCB(0)}>x0</button>
+            <button onClick={() => onScaleCB(1)}>x1</button>
+            <button onClick={() => onScaleCB(2)}>x2</button>
+          </fieldset>
+        )}
+      </header>
+      {scale > 0 && (
+        <main style={{ backgroundColor: "var(--code-background-color)" }}>
+          <figure
             style={{
-              transform: `translate(-50%, -50%) scale(${scale}) translate(50%, 50%)`,
-              imageRendering: "pixelated",
+              width: `${512 * scale}px`,
+              height: `${256 * scale}px`,
+              boxSizing: "content-box",
+              marginInline: "auto",
+              margin: "auto",
+              borderTop: "2px solid gray",
+              borderLeft: "2px solid gray",
+              borderBottom: "2px solid lightgray",
+              borderRight: "2px solid lightgray",
             }}
-          ></canvas>
-        </figure>
-      </main>
+          >
+            <canvas
+              ref={ctxRef}
+              width={512}
+              height={256}
+              style={{
+                transform: `translate(-50%, -50%) scale(${scale}) translate(50%, 50%)`,
+                imageRendering: "pixelated",
+              }}
+            ></canvas>
+          </figure>
+        </main>
+      )}
     </article>
   );
 };

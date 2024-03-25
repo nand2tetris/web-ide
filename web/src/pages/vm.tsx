@@ -172,8 +172,17 @@ const VM = () => {
 
   const stackRef = useRef<Rerenderable>();
 
+  const [scale, setScale] = useState(1);
+  const onScale = (scale: number) => {
+    setScale(scale);
+  };
+
   return (
-    <div className="Page VmPage grid">
+    <div
+      className={`Page VmPage grid ${
+        scale == 0 ? "no-screen" : scale == 2 ? "large-screen" : "normal"
+      }`}
+    >
       <Panel
         className="program"
         header={
@@ -256,7 +265,11 @@ const VM = () => {
         )}
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
-        <Screen memory={state.vm.Screen} />
+        <Screen
+          memory={state.vm.Screen}
+          showScaleControls={true}
+          onScale={onScale}
+        />
         <Keyboard keyboard={state.vm.Keyboard} />
       </Panel>
       <Memory

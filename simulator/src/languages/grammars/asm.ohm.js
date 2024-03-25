@@ -1,7 +1,7 @@
 const asm = `
 ASM <: Base {
   Root := ASM
-  ASM = IntermediateInstruction* instruction?
+  ASM = newline* IntermediateInstruction* instruction?
   
   instruction = label|aInstruction|cInstruction
   IntermediateInstruction = instruction newline+

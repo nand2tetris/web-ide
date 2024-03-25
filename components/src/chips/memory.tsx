@@ -239,25 +239,35 @@ export const Memory = forwardRef(
       onChange?.();
       if (fileSelect) {
         const path = await fileSelect();
-        const name = path.split("/").pop() ?? "";
-        onUpload?.(path);
-        const source = await fs.readFile(path);
-        const loader = name.endsWith("hack")
-          ? loadHack
-          : name.endsWith("asm")
-          ? loadAsm
-          : loadBlob;
-        try {
-          const bytes = await loader(source);
-          memory.loadBytes(bytes);
-        } catch (e) {
-          setStatus(`Error loading memory: ${(e as Error).message}`);
-          return;
-        }
-        setFormat(
-          name.endsWith("hack") ? "bin" : name.endsWith("asm") ? "asm" : fmt
-        );
-        jumpTo();
+        setStatus("Loading in progress...");
+        requestAnimationFrame(async () => {
+          const name = path.split("/").pop() ?? "";
+          onUpload?.(path);
+          const source = await fs.readFile(path);
+          const loader = name.endsWith("hack")
+            ? loadHack
+            : name.endsWith("asm")
+            ? loadAsm
+            : loadBlob;
+          requestAnimationFrame(async () => {
+            try {
+              const bytes = await loader(source);
+              memory.loadBytes(bytes);
+              setStatus("");
+              setFormat(
+                name.endsWith("hack")
+                  ? "bin"
+                  : name.endsWith("asm")
+                  ? "asm"
+                  : fmt
+              );
+              jumpTo();
+            } catch (e) {
+              setStatus(`Error loading memory: ${(e as Error).message}`);
+              return;
+            }
+          });
+        });
       }
     };
 

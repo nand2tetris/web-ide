@@ -15,6 +15,8 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
+import { LOADING } from "@nand2tetris/components/messages.js";
+import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { AppContext } from "src/App.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
@@ -131,32 +133,35 @@ const VM = () => {
 
   const load = async () => {
     const path = await filePicker.select(".vm", true);
+    setStatus(LOADING);
 
-    const sources = [];
-    if (path.includes(".vm")) {
-      // single file
-      sources.push({
-        name: (path.split("/").pop() ?? path).replace(".vm", ""),
-        content: await fs.readFile(path),
-      });
-    } else {
-      // folder
-      for (const file of await fs.scandir(path)) {
-        if (file.isFile()) {
-          if (file.name.endsWith(".vm")) {
-            sources.push({
-              name: file.name.replace(".vm", ""),
-              content: await fs.readFile(`${path}/${file.name}`),
-            });
+    requestAnimationFrame(async () => {
+      const sources: VmFile[] = [];
+      if (path.includes(".vm")) {
+        // single file
+        sources.push({
+          name: (path.split("/").pop() ?? path).replace(".vm", ""),
+          content: await fs.readFile(path),
+        });
+      } else {
+        // folder
+        for (const file of await fs.scandir(path)) {
+          if (file.isFile()) {
+            if (file.name.endsWith(".vm")) {
+              sources.push({
+                name: file.name.replace(".vm", ""),
+                content: await fs.readFile(`${path}/${file.name}`),
+              });
+            }
           }
         }
       }
-    }
-    const success = actions.loadVm(sources);
-    actions.reset();
-    if (success) {
-      setStatus("Loaded vm file");
-    }
+      requestAnimationFrame(() => {
+        actions.loadVm(sources);
+        actions.reset();
+        setStatus("");
+      });
+    });
   };
 
   const onSpeedChange = (speed: number) => {

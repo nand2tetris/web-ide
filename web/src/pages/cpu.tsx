@@ -117,8 +117,15 @@ export const CPU = () => {
     dispatch.current({ action: "update" });
   };
 
+  const [scale, setScale] = useState(1);
+  const onScale = (scale: number) => {
+    setScale(scale);
+  };
+
   return (
-    <div className="Page CpuPage grid">
+    <div
+      className={`Page CpuPage grid ${scale == 2 ? "large-screen" : "normal"}`}
+    >
       <MemoryComponent
         name="ROM"
         displayEnabled={displayEnabled}
@@ -131,7 +138,8 @@ export const CPU = () => {
         name="RAM"
         displayEnabled={displayEnabled}
         memory={state.sim.RAM}
-        format="hex"
+        format="dec"
+        excludedFormats={["asm"]}
         onChange={onMemoryChange}
       />
       <Panel
@@ -147,7 +155,12 @@ export const CPU = () => {
           </>
         }
       >
-        <Screen key={screenRenderKey} memory={state.sim.Screen}></Screen>
+        <Screen
+          key={screenRenderKey}
+          memory={state.sim.Screen}
+          showScaleControls={true}
+          onScale={onScale}
+        ></Screen>
         <Keyboard update={onKeyChange} keyboard={state.sim.Keyboard} />
         <label>
           <input

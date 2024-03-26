@@ -214,15 +214,10 @@ export const Chip = () => {
 
         <button
           className="flex-0"
-          onClick={actions.resetFile}
-          disabled={state.controls.builtinOnly}
-        >
-          <Trans>Reset</Trans>
-        </button>
-        <button
-          className="flex-0"
           onClick={downloadProject}
           disabled={state.controls.builtinOnly}
+          data-tooltip={t`Download .hdl files`}
+          data-placement="left"
         >
           <Trans>Download</Trans>
         </button>

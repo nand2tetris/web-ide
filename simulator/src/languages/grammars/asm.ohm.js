@@ -9,6 +9,8 @@ ASM <: Base {
   AInstruction = at (identifier | decNumber)
   CInstruction = assign? op jmp?
   
+  /* The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
+     but since the desktop simulators accept only MD and AMD we have decided to accept both */
   assign = (
       "AMD" | "ADM"
       | "AM"

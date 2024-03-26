@@ -105,10 +105,7 @@ export const cleanup = async (fs: FileSystem) => {
   cleanupLock = false;
 };
 
-export const BUILTIN_CHIP_PROJECTS: Record<
-  "1" | "2" | "3" | "5",
-  string[]
-> = {
+export const BUILTIN_CHIP_PROJECTS: Record<"1" | "2" | "3" | "5", string[]> = {
   "1": ["Nand"],
   "2": [],
   "3": ["DFF"],
@@ -145,20 +142,19 @@ export const CHIP_PROJECTS: Record<"1" | "2" | "3" | "5", string[]> = {
   "5": ["Memory", "CPU", "Computer"],
 };
 
-export const CHIP_ORDER: Partial<Record<"1" | "2" | "3" | "5", string[]>> =
-  {
-    "5": [
-      "Memory",
-      "CPU",
-      "Computer",
-      "Screen",
-      "Keyboard",
-      "DRegister",
-      "ARegister",
-      "ROM32K",
-      "RAM16K",
-    ],
-  };
+export const CHIP_ORDER: Partial<Record<"1" | "2" | "3" | "5", string[]>> = {
+  "5": [
+    "Memory",
+    "CPU",
+    "Computer",
+    "Screen",
+    "Keyboard",
+    "DRegister",
+    "ARegister",
+    "ROM32K",
+    "RAM16K",
+  ],
+};
 
 export const ASM_PROJECTS: Record<"6", string[]> = {
   "6": ["Add", "Max", "Rectangle", "Pong"],

@@ -6,10 +6,10 @@ import * as project_03 from "./project_03/index.js";
 import * as project_05 from "./project_05/index.js";
 
 export const ChipProjects = {
-  "1": project_01,
-  "2": project_02,
-  "3": project_03,
-  "5": project_05,
+  "01": project_01,
+  "02": project_02,
+  "03": project_03,
+  "05": project_05,
 };
 
 let reset = false;

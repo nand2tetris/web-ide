@@ -29,15 +29,15 @@ export interface ParsedPath {
 export type Assignment = ParsedPath;
 
 export const ChipProjects = {
-  "1": project_01,
-  "2": project_02,
-  "3": project_03,
-  "5": project_05,
+  "01": project_01,
+  "02": project_02,
+  "03": project_03,
+  "05": project_05,
 };
 
 export const VmProjects = {
-  "7": project_07,
-  "8": project_08,
+  "07": project_07,
+  "08": project_08,
 };
 
 const Projects = {
@@ -78,15 +78,18 @@ export const resetTests = async (fs: FileSystem, projects?: number[]) => {
   reset = false;
 };
 
-export const BUILTIN_CHIP_PROJECTS: Record<"1" | "2" | "3" | "5", string[]> = {
-  "1": ["Nand"],
-  "2": [],
-  "3": ["DFF"],
-  "5": ["Screen", "Keyboard", "DRegister", "ARegister", "ROM32K", "RAM16K"],
+export const BUILTIN_CHIP_PROJECTS: Record<
+  "01" | "02" | "03" | "05",
+  string[]
+> = {
+  "01": ["Nand"],
+  "02": [],
+  "03": ["DFF"],
+  "05": ["Screen", "Keyboard", "DRegister", "ARegister", "ROM32K", "RAM16K"],
 };
 
-export const CHIP_PROJECTS: Record<"1" | "2" | "3" | "5", string[]> = {
-  "1": [
+export const CHIP_PROJECTS: Record<"01" | "02" | "03" | "05", string[]> = {
+  "01": [
     "Not",
     "And",
     "Or",
@@ -103,7 +106,7 @@ export const CHIP_PROJECTS: Record<"1" | "2" | "3" | "5", string[]> = {
     "DMux4Way",
     "DMux8Way",
   ],
-  "2": [
+  "02": [
     "HalfAdder",
     "FullAdder",
     "Add16",
@@ -111,31 +114,32 @@ export const CHIP_PROJECTS: Record<"1" | "2" | "3" | "5", string[]> = {
     "ALU",
     // "ALUAll", // Special secret undocumented ALU tests
   ],
-  "3": ["Bit", "Register", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K", "PC"],
-  "5": ["Memory", "CPU", "Computer"],
+  "03": ["Bit", "Register", "RAM8", "RAM64", "RAM512", "RAM4K", "RAM16K", "PC"],
+  "05": ["Memory", "CPU", "Computer"],
 };
 
-export const CHIP_ORDER: Partial<Record<"1" | "2" | "3" | "5", string[]>> = {
-  "5": [
-    "Memory",
-    "CPU",
-    "Computer",
-    "Screen",
-    "Keyboard",
-    "DRegister",
-    "ARegister",
-    "ROM32K",
-    "RAM16K",
-  ],
+export const CHIP_ORDER: Partial<Record<"01" | "02" | "03" | "05", string[]>> =
+  {
+    "05": [
+      "Memory",
+      "CPU",
+      "Computer",
+      "Screen",
+      "Keyboard",
+      "DRegister",
+      "ARegister",
+      "ROM32K",
+      "RAM16K",
+    ],
+  };
+
+export const ASM_PROJECTS: Record<"06", string[]> = {
+  "06": ["Add", "Max", "Rectangle", "Pong"],
 };
 
-export const ASM_PROJECTS: Record<"6", string[]> = {
-  "6": ["Add", "Max", "Rectangle", "Pong"],
-};
-
-export const VM_PROJECTS: Record<"7" | "8", string[]> = {
-  "7": ["SimpleAdd", "StackTest", "BasicTest", "PointerTest", "StaticTest"],
-  "8": [
+export const VM_PROJECTS: Record<"07" | "08", string[]> = {
+  "07": ["SimpleAdd", "StackTest", "BasicTest", "PointerTest", "StaticTest"],
+  "08": [
     "BasicLoop",
     "FibonacciSeries",
     "SimpleFunction",

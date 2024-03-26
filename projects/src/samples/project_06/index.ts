@@ -19,7 +19,7 @@ export const ASM_SOLS: Record<keyof typeof FILES, number[]> = {
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/6");
+  await fs.pushd("/projects/06");
   await reset(fs, FILES);
   await fs.popd();
 }

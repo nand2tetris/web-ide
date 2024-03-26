@@ -30,11 +30,11 @@ export const useTestingAppContext = () => ({
   base: useBaseContext(
     new FileSystem(
       new ObjectFileSystemAdapter({
-        "chip/project": "1",
+        "chip/project": "01",
         "chip/chip": "Not",
-        "projects/1/Not/Not.hdl": Not.hdl,
-        "projects/1/Not/Not.tst": Not.tst,
-        "projects/1/Not/Not.cmp": Not.cmp,
+        "projects/01/Not/Not.hdl": Not.hdl,
+        "projects/01/Not/Not.tst": Not.tst,
+        "projects/01/Not/Not.cmp": Not.cmp,
       })
     )
   ),

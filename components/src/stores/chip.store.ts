@@ -38,10 +38,10 @@ import { BaseContext } from "./base.context.js";
 export const NO_SCREEN = "noScreen";
 
 export const PROJECT_NAMES = [
-  ["1", `Project 1`],
-  ["2", `Project 2`],
-  ["3", `Project 3`],
-  ["5", `Project 5`],
+  ["01", `Project 1`],
+  ["02", `Project 2`],
+  ["03", `Project 3`],
+  ["05", `Project 5`],
 ];
 
 function getChips(project: keyof typeof CHIP_PROJECTS) {
@@ -52,7 +52,7 @@ function getChips(project: keyof typeof CHIP_PROJECTS) {
 
 function findDropdowns(storage: Record<string, string>) {
   const project =
-    (storage["/chip/project"] as keyof typeof CHIP_PROJECTS) ?? "1";
+    (storage["/chip/project"] as keyof typeof CHIP_PROJECTS) ?? "01";
   const chips = getChips(project);
   const chipName = storage["/chip/chip"] ?? CHIP_PROJECTS[project][0];
   return { project, chips, chipName };
@@ -297,7 +297,7 @@ export function makeChipStore(
       this.setChip(CHIP_PROJECTS[project][0]);
     },
 
-    async setChip(chip: string, project = storage["/chip/project"] ?? "1") {
+    async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
       chipName = storage["/chip/chip"] = chip;
       builtinOnly = isBuiltinOnly(
         project as keyof typeof CHIP_PROJECTS,

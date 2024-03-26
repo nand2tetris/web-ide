@@ -1,13 +1,14 @@
 const asm = `
 ASM <: Base {
   Root := ASM
-  ASM = Instruction*
+  ASM = intermediateInstruction* instruction?
   
-  Instruction = Label|AInstruction|CInstruction
-  
-  Label = OpenParen identifier closeParen
-  AInstruction = at (identifier | decNumber)
-  CInstruction = assign? op jmp?
+  instruction = label|aInstruction|cInstruction
+  intermediateInstruction = instruction space+
+
+  label = openParen identifier closeParen
+  aInstruction = at (identifier | decNumber)
+  cInstruction = assign? op jmp?
   
   assign = (
       "AMD"

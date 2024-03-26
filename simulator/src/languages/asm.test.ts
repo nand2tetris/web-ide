@@ -10,7 +10,7 @@ describe("asm language", () => {
   });
 
   it("parses an A instruction to a label", () => {
-    const match = grammar.match("@R0", "AInstruction");
+    const match = grammar.match("@R0", "aInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "A",
@@ -21,7 +21,7 @@ describe("asm language", () => {
   });
 
   it("parses an A instruction to a value", () => {
-    const match = grammar.match("@5", "AInstruction");
+    const match = grammar.match("@5", "aInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "A",
@@ -32,7 +32,7 @@ describe("asm language", () => {
   });
 
   it("parses a C instruction", () => {
-    const match = grammar.match("-1", "CInstruction");
+    const match = grammar.match("-1", "cInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
@@ -43,7 +43,7 @@ describe("asm language", () => {
   });
 
   it("parses a C instruction with assignment", () => {
-    const match = grammar.match("D=M", "CInstruction");
+    const match = grammar.match("D=M", "cInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
@@ -55,7 +55,7 @@ describe("asm language", () => {
   });
 
   it("parses a C instruction with operation", () => {
-    const match = grammar.match("M=M+1", "CInstruction");
+    const match = grammar.match("M=M+1", "cInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
@@ -67,7 +67,7 @@ describe("asm language", () => {
   });
 
   it("parses a C instruction with jump", () => {
-    const match = grammar.match("D;JEQ", "CInstruction");
+    const match = grammar.match("D;JEQ", "cInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",
@@ -79,7 +79,7 @@ describe("asm language", () => {
   });
 
   it("parses a C instruction with assignment and jump", () => {
-    const match = grammar.match("A=D;JEQ", "CInstruction");
+    const match = grammar.match("A=D;JEQ", "cInstruction");
     expect(match).toHaveSucceeded();
     expect(asmSemantics(match).instruction).toEqual({
       type: "C",

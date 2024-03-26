@@ -31,20 +31,20 @@ export function useMonaco() {
 
 export function useToolStates() {
   const [rom, setRom] = useState<MemoryAdapter>();
-  const [cpuName, setCpuProgramName] = useState<string>();
+  const [cpuPath, setCpuPath] = useState<string>();
 
   const [asmState, setAsmState] = useState<AsmPageState>();
 
   const setCpuState = (
-    name: string | undefined,
+    path: string | undefined,
     rom: MemoryAdapter | undefined
   ) => {
-    setCpuProgramName(name);
+    setCpuPath(path);
     setRom(rom);
   };
 
   return {
-    cpuState: { rom: rom, name: cpuName },
+    cpuState: { rom: rom, path: cpuPath },
     setCpuState,
     asmState,
     setAsmState,
@@ -123,13 +123,13 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     return undefined;
   },
   toolStates: {
-    cpuState: { rom: undefined, name: undefined },
+    cpuState: { rom: undefined, path: undefined },
     setCpuState() {
       return undefined;
     },
     asmState: {
       asm: "",
-      asmName: undefined,
+      path: undefined,
       translating: false,
       current: -1,
       resultHighlight: undefined,

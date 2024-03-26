@@ -33,10 +33,12 @@ export const CPU = () => {
         action: "replaceROM",
         payload: toolStates.cpuState.rom,
       });
-      if (toolStates.cpuState.name) {
-        setTitle(toolStates.cpuState.name);
-        setFileName(toolStates.cpuState.name);
-        if (toolStates.cpuState.name.endsWith(".hack")) setRomFormat("bin");
+      if (toolStates.cpuState.path) {
+        const name = toolStates.cpuState.path.split("/").pop() ?? "";
+        setTitle(name);
+        setFileName(name);
+        if (toolStates.cpuState.path.endsWith(".hack")) setRomFormat("bin");
+        onUpload(toolStates.cpuState.path);
       }
     } else {
       state.sim.ROM.loadBytes(Array.from(HACK));

@@ -158,7 +158,7 @@ class Translator {
 
 export interface AsmPageState {
   asm: string;
-  asmName: string | undefined;
+  path: string | undefined;
   translating: boolean;
   current: number;
   resultHighlight: Span | undefined;
@@ -195,12 +195,12 @@ export function makeAsmStore(
   const reducers = {
     setAsm(
       state: AsmPageState,
-      { asm, name }: { asm: string; name: string | undefined }
+      { asm, path }: { asm: string; path: string | undefined }
     ) {
       state.asm = asm;
 
-      if (name) {
-        state.asmName = name;
+      if (path) {
+        state.path = path;
       }
     },
 
@@ -258,15 +258,15 @@ export function makeAsmStore(
   const actions = {
     async loadAsm(_path: string) {
       path = _path;
-      const source = await fs.readFile(_path);
-      actions.setAsm(source, _path.split("/").pop());
+      const source = await fs.readFile(path);
+      actions.setAsm(source, path);
     },
 
-    setAsm(asm: string, name?: string) {
+    setAsm(asm: string, path?: string) {
       asm = asm.replace(/\r\n/g, "\n");
       dispatch.current({
         action: "setAsm",
-        payload: { asm, name },
+        payload: { asm, path },
       });
       translating = false;
       this.saveAsm(asm);
@@ -348,7 +348,7 @@ export function makeAsmStore(
 
     overrideState(state: AsmPageState) {
       this.resetHighlightInfo();
-      this.setAsm(state.asm, state.asmName);
+      this.setAsm(state.asm, state.path);
       dispatch.current({
         action: "setCmp",
         payload: { cmp: state.compare, name: state.compareName },
@@ -366,7 +366,7 @@ export function makeAsmStore(
 
   const initialState: AsmPageState = {
     asm: "",
-    asmName: undefined,
+    path: undefined,
     translating: false,
     current: -1,
     resultHighlight: undefined,

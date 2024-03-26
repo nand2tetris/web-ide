@@ -84,7 +84,7 @@ export const Asm = () => {
     }
     fileDownloadRef.current.href = url;
     fileDownloadRef.current.download =
-      state.asmName?.replace(".asm", ".hack") ?? "result.hack";
+      state.path?.split("/").pop()?.replace(".asm", ".hack") ?? "result.hack";
     fileDownloadRef.current.click();
 
     URL.revokeObjectURL(url);
@@ -106,7 +106,7 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Source</Trans>
-              {state.asmName && `: ${state.asmName}`}
+              {state.path && `: ${state.path.split("/").pop()}`}
             </div>
             <div className="flex-1">
               {runnerAssigned && runner.current && (
@@ -206,7 +206,7 @@ export const Asm = () => {
                       onClick={async () => {
                         const bytes = await loadHack(state.result);
                         toolStates.setCpuState(
-                          state.asmName?.replace(".asm", ".hack"),
+                          state.path,
                           new ROM(new Int16Array(bytes))
                         );
                         redirectRef.current?.click();

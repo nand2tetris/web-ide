@@ -82,8 +82,10 @@ export const Chip = () => {
 
   const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
+    const hdlToCompile =
+      useBuiltin || state.controls.builtinOnly ? files.hdl : files.hdl ?? hdl;
     await actions.updateFiles({
-      hdl: files.hdl ?? hdl,
+      hdl: hdlToCompile,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
     });

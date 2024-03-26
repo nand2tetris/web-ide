@@ -83,7 +83,7 @@ export const Chip = () => {
   const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
     await actions.updateFiles({
-      hdl: files.hdl,
+      hdl: files.hdl ?? hdl,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
     });

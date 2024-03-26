@@ -1,11 +1,9 @@
 ASM <: Base {
   Root := ASM
-  ASM = newline* IntermediateInstruction* instruction?
+  ASM = intermediateInstruction* instruction?
   
   instruction = label|aInstruction|cInstruction
-  IntermediateInstruction = instruction newline+
-
-  space := ~"\\n" "\\x00".."\\x20"
+  intermediateInstruction = instruction space+
 
   label = openParen identifier closeParen
   aInstruction = at (identifier | decNumber)

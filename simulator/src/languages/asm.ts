@@ -76,7 +76,7 @@ asmSemantics.addAttribute<Asm>("root", {
 });
 
 asmSemantics.addAttribute<Asm>("asm", {
-  ASM(_, asm, last) {
+  ASM(asm, last) {
     const instructions =
       asm.children.map(
         (node) => node.intermediateInstruction as AsmInstruction
@@ -90,7 +90,7 @@ asmSemantics.addAttribute<Asm>("asm", {
 });
 
 asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
-  IntermediateInstruction(inst, _n) {
+  intermediateInstruction(inst, _n) {
     return inst.instruction;
   },
 });

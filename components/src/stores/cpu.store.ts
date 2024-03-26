@@ -152,7 +152,7 @@ export function makeCpuStore(
       if (tests.length > 0) {
         this.loadTest(tests[0]);
       } else {
-        tstName = "Default"
+        tstName = "Default";
         this.compileTest(makeTst(), "");
       }
 

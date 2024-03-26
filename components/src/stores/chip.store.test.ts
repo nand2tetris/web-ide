@@ -12,9 +12,9 @@ import { ImmPin } from "src/pinout.js";
 
 function testChipStore(
   fs: Record<string, string> = {
-    "projects/01/Not/Not.hdl": not.hdl,
-    "projects/01/Not/Not.tst": not.tst,
-    "projects/01/Not/Not.cmp": not.cmp,
+    "projects/1/Not/Not.hdl": not.hdl,
+    "projects/1/Not/Not.tst": not.tst,
+    "projects/1/Not/Not.cmp": not.cmp,
   },
   storage: Record<string, string> = {}
 ) {
@@ -49,7 +49,7 @@ describe("ChipStore", () => {
     it("starts on project 01 not", async () => {
       const { state } = testChipStore({});
 
-      expect(state.controls.project).toBe("01");
+      expect(state.controls.project).toBe("1");
       expect(state.controls.chipName).toBe("Not");
       expect(state.files.hdl).toBe("");
       expect(state.files.tst).toBe("");
@@ -59,14 +59,14 @@ describe("ChipStore", () => {
 
     it("reloads initial chip not", async () => {
       const store = testChipStore({
-        "projects/01/Not/Not.hdl": not.hdl,
-        "projects/01/Not/Not.tst": not.tst,
-        "projects/01/Not/Not.cmp": not.cmp,
+        "projects/1/Not/Not.hdl": not.hdl,
+        "projects/1/Not/Not.tst": not.tst,
+        "projects/1/Not/Not.cmp": not.cmp,
       });
 
       await store.actions.initialize();
 
-      expect(store.state.controls.project).toBe("01");
+      expect(store.state.controls.project).toBe("1");
       expect(store.state.controls.chipName).toBe("Not");
       expect(store.state.files.hdl).toBe(not.hdl);
       expect(store.state.files.tst).toBe(not.tst);
@@ -77,19 +77,19 @@ describe("ChipStore", () => {
     it("loads saved state", () => {
       const { state } = testChipStore(
         {
-          "projects/01/Not/Not.hdl": not.hdl,
-          "projects/01/Not/Not.tst": not.tst,
-          "projects/01/Not/Not.cmp": not.cmp,
-          "projects/03/Bit/Bit.hdl": bit.hdl,
-          "projects/03/Bit/Bit.tst": bit.tst,
-          "projects/03/Bit/Bit.cmp": bit.cmp,
+          "projects/1/Not/Not.hdl": not.hdl,
+          "projects/1/Not/Not.tst": not.tst,
+          "projects/1/Not/Not.cmp": not.cmp,
+          "projects/3/Bit/Bit.hdl": bit.hdl,
+          "projects/3/Bit/Bit.tst": bit.tst,
+          "projects/3/Bit/Bit.cmp": bit.cmp,
         },
         {
-          "/chip/project": "03",
+          "/chip/project": "3",
           "/chip/chip": "Bit",
         }
       );
-      expect(state.controls.project).toBe("03");
+      expect(state.controls.project).toBe("3");
       expect(state.controls.chipName).toBe("Bit");
     });
   });
@@ -123,9 +123,9 @@ describe("ChipStore", () => {
   describe("execution", () => {
     const state = cleanState(async () => {
       const store = testChipStore({
-        "projects/01/Not/Not.hdl": not.hdl,
-        "projects/01/Not/Not.tst": not.tst,
-        "projects/01/Not/Not.cmp": not.cmp,
+        "projects/1/Not/Not.hdl": not.hdl,
+        "projects/1/Not/Not.tst": not.tst,
+        "projects/1/Not/Not.cmp": not.cmp,
       });
       await store.actions.initialize();
       return { store };

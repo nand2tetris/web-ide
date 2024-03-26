@@ -28,7 +28,7 @@ import { VM } from "../languages/vm.js";
 import { Vm } from "../vm/vm.js";
 import { VMTest } from "../test/vmtst.js";
 
-const PROJECTS = new Set<string>(["01", "03", "07", "08"]);
+const PROJECTS = new Set<string>(["1", "3", "7", "8"]);
 const SKIP = new Set<string>([]);
 const INCLUDE = new Set<string>(["And", "And16", "Mux8Way16", "Bit"]);
 

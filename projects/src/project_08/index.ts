@@ -1,5 +1,5 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { resetBySuffix } from "../reset.js";
+import { cleanup, resetBySuffix } from "../reset.js";
 import * as basic_loop from "./11_basic_loop.js";
 import * as fibonacci_series from "./12_fibonacci_series.js";
 import * as simple_function from "./20_simple_function.js";
@@ -50,15 +50,21 @@ export const VMS = {
 };
 
 export async function resetFiles(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/08");
+  await fs.pushd("/projects/8");
   await reset(fs, VMS);
   await fs.popd();
 }
 
 export async function resetTests(fs: FileSystem): Promise<void> {
-  await fs.pushd("/projects/08");
+  await fs.pushd("/projects/8");
   await resetBySuffix(fs, VMS, ".tst");
   await resetBySuffix(fs, VMS, "VME.tst");
   await resetBySuffix(fs, VMS, ".cmp");
+  await fs.popd();
+}
+
+export async function cleanupFiles(fs: FileSystem): Promise<void> {
+  await fs.pushd("/projects/8");
+  await cleanup(fs, VMS);
   await fs.popd();
 }

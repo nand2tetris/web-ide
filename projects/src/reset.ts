@@ -18,3 +18,23 @@ export async function resetBySuffix(
     }
   }
 }
+
+// Removes all files and directories not in the tree.
+export async function cleanup(fs: FileSystem, tree: Tree) {
+  for (const entry of await fs.scandir(fs.cwd())) {
+    let inTree = false;
+    for (const [name, file] of Object.entries(tree)) {
+      if (entry.name == name) {
+        inTree = true;
+        if (entry.isDirectory()) {
+          fs.cd(entry.name);
+          await cleanup(fs, file as Tree);
+          fs.cd("..");
+        }
+      }
+    }
+    if (!inTree) {
+      fs.rm(entry.name);
+    }
+  }
+}

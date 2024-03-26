@@ -37,6 +37,10 @@
   &.align-end {
     align-items: end;
   }
+
+  &.wrap {
+    flex-wrap: wrap;
+  }
 }
 
 .flex-0 {

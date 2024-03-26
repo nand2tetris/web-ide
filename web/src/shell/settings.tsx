@@ -39,7 +39,7 @@ export const Settings = () => {
     localStorage["/chip/project"] = "1";
     localStorage["/chip/chip"] = "Not";
     await loaders.resetFiles(fs);
-    setStatus("Reset files in local storage");
+    setStatus("Your files were reset");
   };
 
   const resetWarningDialog = (

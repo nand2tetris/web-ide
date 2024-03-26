@@ -190,6 +190,7 @@ export const Memory = forwardRef(
       editable = true,
       memory,
       format = "dec",
+      excludedFormats = [],
       count,
       maxSize,
       offset,
@@ -211,6 +212,7 @@ export const Memory = forwardRef(
       offset?: number;
       initialAddr?: number;
       format: Format;
+      excludedFormats?: Format[];
       cellLabels?: string[];
       fileSelect?: () => Promise<string>;
       showClear?: boolean;
@@ -343,7 +345,9 @@ export const Memory = forwardRef(
               ⤵️
             </button>
             <select value={fmt} onChange={(e) => setFormat(e.target.value)}>
-              {FORMATS.map((option) => (
+              {FORMATS.filter(
+                (option) => !excludedFormats.includes(option)
+              ).map((option) => (
                 <option key={option}>{option}</option>
               ))}
             </select>

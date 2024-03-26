@@ -1,22 +1,34 @@
 @use "./page.scss";
 
 .CpuPage {
-  grid-template-areas: "ROM RAM" "IO IO" "test test";
-  grid-template-columns: 1fr 1fr !important;
-  grid-template-rows: 1fr 1fr 1fr !important;
+  &.normal {
+    grid-template-areas: "ROM RAM" "IO IO" "test test";
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-rows: 1fr 1fr 1fr !important;
 
-  @media screen and (min-width: 1024px) {
-    grid-template-areas: "ROM RAM IO" "test test test";
-    grid-template-columns: 1fr 1fr var(--screen-size) !important;
-    grid-template-rows: 1fr 1fr !important;
+    @media screen and (min-width: 1024px) {
+      grid-template-areas: "ROM RAM IO" "test test test";
+      grid-template-columns: 1fr 1fr var(--screen-size) !important;
+      grid-template-rows: 1fr 1fr !important;
+    }
+
+    @media screen and (min-width: 1500px) {
+      grid-template-areas: "ROM RAM IO test";
+      grid-template-columns: 350px 350px var(--screen-size) auto !important;
+      grid-template-rows: 1fr !important;
+    }
   }
 
-  @media screen and (min-width: 1500px) {
-    grid-template-areas: "ROM RAM IO test";
-    grid-template-columns: 350px 350px var(--screen-size) auto !important;
-    grid-template-rows: 1fr !important;
-    // "IO IO test"
-    // "ROM RAM test";
+  &.large-screen {
+    grid-template-columns: 350px calc(var(--screen-size) * 2) 1fr;
+    grid-template-rows: 1fr 1fr;
+    grid-template-areas: "ROM IO test" "RAM IO test";
+
+    @media screen and (min-width: 2200px) {
+      grid-template-columns: 350px 350px calc(var(--screen-size) * 2) 1fr;
+      grid-template-rows: 1fr;
+      grid-template-areas: "ROM RAM IO test";
+    }
   }
 
   .memory.ROM {

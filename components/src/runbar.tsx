@@ -44,42 +44,51 @@ export const Runbar = (props: {
   };
 
   return (
-    <fieldset role="group">
-      {props.prefix}
-      <button
-        className="flex-0"
-        disabled={props.disabled}
-        onClick={() => runner.actions.frame()}
-        data-tooltip={props.overrideTooltips?.step ?? `Step`}
-        data-placement="bottom"
-      >
-        {/* <Icon name="play_arrow" /> */}
-        ➡️
-      </button>
-      <button
-        className="flex-0"
-        disabled={props.disabled}
-        onClick={() =>
-          runner.state.running ? runner.actions.stop() : runner.actions.start()
-        }
-        data-tooltip={
-          runner.state.running
-            ? props.overrideTooltips?.pause ?? `Pause`
-            : props.overrideTooltips?.run ?? `Run`
-        }
-        data-placement="bottom"
-      >
-        {/* <Icon name={runner.state.running ? "pause" : "fast_forward"} /> */}
-        {runner.state.running ? "⏸" : "️⏩"}
-      </button>
-      <button
-        className="flex-0"
-        onClick={() => runner.actions.reset()}
-        data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
-        data-placement="bottom"
-      >
-        {/* <Icon name="fast_rewind" /> */}⏮
-      </button>
+    <div className="flex row wrap">
+      <fieldset role="group">
+        {props.prefix}
+        <button
+          className="flex-0"
+          disabled={props.disabled}
+          onClick={() => runner.actions.frame()}
+          data-tooltip={props.overrideTooltips?.step ?? `Step`}
+          data-placement="bottom"
+        >
+          {/* <Icon name="play_arrow" /> */}
+          ➡️
+        </button>
+        <button
+          className="flex-0"
+          disabled={props.disabled}
+          onClick={() =>
+            runner.state.running
+              ? runner.actions.stop()
+              : runner.actions.start()
+          }
+          data-tooltip={
+            runner.state.running
+              ? props.overrideTooltips?.pause ?? `Pause`
+              : props.overrideTooltips?.run ?? `Run`
+          }
+          data-placement="bottom"
+        >
+          {/* <Icon name={runner.state.running ? "pause" : "fast_forward"} /> */}
+          {runner.state.running ? "⏸" : "️⏩"}
+        </button>
+        <button
+          className="flex-0"
+          onClick={() => {
+            if (runner.state.running) {
+              runner.actions.stop();
+            }
+            runner.actions.reset();
+          }}
+          data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
+          data-placement="bottom"
+        >
+          {/* <Icon name="fast_rewind" /> */}⏮
+        </button>
+      </fieldset>
       <div
         style={{
           display: "flex",
@@ -105,6 +114,6 @@ export const Runbar = (props: {
         <span style={{ padding: "0.2rem" }}>Fast</span>
       </div>
       {props.children}
-    </fieldset>
+    </div>
   );
 };

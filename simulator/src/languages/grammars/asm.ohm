@@ -9,10 +9,10 @@ ASM <: Base {
   CInstruction = assign? op jmp?
   
   assign = (
-      "AMD"
+      "AMD" | "ADM"
       | "AM"
       | "AD"
-      | "MD"
+      | "MD" | "DM"
       | "M"
       | "D"
       | "A"

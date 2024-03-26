@@ -233,10 +233,14 @@ export class MemoryKeyboard extends SubMemory implements KeyboardAdapter {
 
 export class ROM extends Memory {
   static readonly SIZE = 0x8000;
-  constructor(program: Int16Array) {
-    const arr = new Int16Array(ROM.SIZE);
-    arr.set(program);
-    super(arr);
+  constructor(program?: Int16Array) {
+    if (program) {
+      const arr = new Int16Array(ROM.SIZE);
+      arr.set(program);
+      super(arr);
+    } else {
+      super(ROM.SIZE);
+    }
   }
 }
 

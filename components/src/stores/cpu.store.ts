@@ -4,12 +4,10 @@ import {
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
-  ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
-import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
@@ -76,7 +74,7 @@ export function makeCpuStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>
 ) {
-  let test = new CPUTest(new ROM(HACK));
+  let test = new CPUTest();
   let animate = true;
   let valid = true;
 

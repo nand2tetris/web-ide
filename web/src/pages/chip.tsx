@@ -82,8 +82,10 @@ export const Chip = () => {
 
   const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
   compile.current = async (files: Partial<Files> = {}) => {
+    const hdlToCompile =
+      useBuiltin || state.controls.builtinOnly ? files.hdl : files.hdl ?? hdl;
     await actions.updateFiles({
-      hdl: files.hdl,
+      hdl: hdlToCompile,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
     });
@@ -212,15 +214,10 @@ export const Chip = () => {
 
         <button
           className="flex-0"
-          onClick={actions.resetFile}
-          disabled={state.controls.builtinOnly}
-        >
-          <Trans>Reset</Trans>
-        </button>
-        <button
-          className="flex-0"
           onClick={downloadProject}
           disabled={state.controls.builtinOnly}
+          data-tooltip={t`Download .hdl files`}
+          data-placement="left"
         >
           <Trans>Download</Trans>
         </button>

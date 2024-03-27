@@ -14,7 +14,6 @@ import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
 import { AppContext } from "src/App.context";
-import { useDialog } from "src/shell/dialog";
 import URLs from "src/urls";
 import "./asm.scss";
 
@@ -27,8 +26,6 @@ export const Asm = () => {
 
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
-
-  const dialog = useDialog();
 
   useEffect(() => {
     if (toolStates.asmState) {
@@ -96,6 +93,12 @@ export const Asm = () => {
 
   const onSpeedChange = (speed: number) => {
     actions.setAnimate(speed <= 2);
+  };
+
+  const loadToCpu = async () => {
+    const bytes = await loadHack(state.result);
+    toolStates.setCpuState(state.path, new ROM(new Int16Array(bytes)));
+    redirectRef.current?.click();
   };
 
   return (
@@ -170,53 +173,21 @@ export const Asm = () => {
             </div>
             <div>
               <a ref={fileDownloadRef} style={{ display: "none" }} />
+              <Link
+                ref={redirectRef}
+                style={{ display: "none" }}
+                to={URLs["cpu"].href}
+              />
               <fieldset role="group">
-                <button onClick={dialog.open}>📂</button>
+                <button
+                  data-tooltip="Load to the CPU Emulator"
+                  data-placement="bottom"
+                  onClick={loadToCpu}
+                >
+                  ↩️
+                </button>
+                <button onClick={download}>Download</button>
               </fieldset>
-              <dialog open={dialog.isOpen}>
-                <article>
-                  <header
-                    style={{ display: "flex", flexDirection: "row-reverse" }}
-                  >
-                    <a
-                      style={{ color: "rgba(0, 0, 0, 0)" }}
-                      className="close"
-                      href="#root"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        dialog.close();
-                      }}
-                    />
-                  </header>
-                  <main>
-                    <button
-                      onClick={() => {
-                        download();
-                        dialog.close();
-                      }}
-                    >
-                      Download
-                    </button>
-                    <Link
-                      ref={redirectRef}
-                      style={{ display: "none" }}
-                      to={URLs["cpu"].href}
-                    />
-                    <button
-                      onClick={async () => {
-                        const bytes = await loadHack(state.result);
-                        toolStates.setCpuState(
-                          state.path,
-                          new ROM(new Int16Array(bytes))
-                        );
-                        redirectRef.current?.click();
-                      }}
-                    >
-                      Load in CPU Emulator
-                    </button>
-                  </main>
-                </article>
-              </dialog>
             </div>
           </>
         }

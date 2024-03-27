@@ -14,7 +14,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
     return fill(test, tst);
   }
 
-  constructor(rom: ROM = new ROM(new Int16Array())) {
+  constructor(rom: ROM = new ROM()) {
     super();
     this.cpu = new CPU({ ROM: rom });
     this.reset();

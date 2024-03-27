@@ -27,7 +27,7 @@ import { RAM, RAM16K } from "../sequential/ram.js";
 
 export class ROM32K extends RAM {
   constructor() {
-    super(16, "ROM");
+    super(15, "ROM");
   }
 
   override async load(fs: FileSystem, path: string) {

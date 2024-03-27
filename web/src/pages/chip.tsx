@@ -153,7 +153,7 @@ export const Chip = () => {
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     downloadRef.current.href = url;
-    downloadRef.current.download = `Project${state.controls.project[1]}`;
+    downloadRef.current.download = `${state.controls.project}`;
     downloadRef.current.click();
 
     URL.revokeObjectURL(url);

@@ -1,3 +1,4 @@
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KEYBOARD_OFFSET,
@@ -157,7 +158,7 @@ class Translator {
 
 export interface AsmPageState {
   asm: string;
-  asmName: string | undefined;
+  path: string | undefined;
   translating: boolean;
   current: number;
   resultHighlight: Span | undefined;
@@ -176,6 +177,7 @@ export type AsmStoreDispatch = Dispatch<{
 }>;
 
 export function makeAsmStore(
+  fs: FileSystem,
   setStatus: (status: string) => void,
   dispatch: MutableRefObject<AsmStoreDispatch>
 ) {
@@ -185,6 +187,7 @@ export function makeAsmStore(
     sourceHighlight: undefined,
     highlightMap: new Map(),
   };
+  let path: string | undefined;
   let animate = true;
   let compiled = false;
   let translating = false;
@@ -192,12 +195,12 @@ export function makeAsmStore(
   const reducers = {
     setAsm(
       state: AsmPageState,
-      { asm, name }: { asm: string; name: string | undefined }
+      { asm, path }: { asm: string; path: string | undefined }
     ) {
       state.asm = asm;
 
-      if (name) {
-        state.asmName = name;
+      if (path) {
+        state.path = path;
       }
     },
 
@@ -253,14 +256,29 @@ export function makeAsmStore(
   };
 
   const actions = {
-    setAsm(asm: string, name?: string) {
+    async loadAsm(_path: string) {
+      path = _path;
+      const source = await fs.readFile(path);
+      actions.setAsm(source, path);
+    },
+
+    setAsm(asm: string, path?: string) {
       asm = asm.replace(/\r\n/g, "\n");
       dispatch.current({
         action: "setAsm",
-        payload: { asm, name },
+        payload: { asm, path },
       });
       translating = false;
-      this.compileAsm(asm);
+      this.saveAsm(asm);
+      requestAnimationFrame(() => {
+        this.compileAsm(asm);
+      });
+    },
+
+    saveAsm(asm: string) {
+      if (path) {
+        fs.writeFile(path, asm);
+      }
     },
 
     compileAsm(asm: string) {
@@ -330,7 +348,7 @@ export function makeAsmStore(
 
     overrideState(state: AsmPageState) {
       this.resetHighlightInfo();
-      this.setAsm(state.asm, state.asmName);
+      this.setAsm(state.asm, state.path);
       dispatch.current({
         action: "setCmp",
         payload: { cmp: state.compare, name: state.compareName },
@@ -348,7 +366,7 @@ export function makeAsmStore(
 
   const initialState: AsmPageState = {
     asm: "",
-    asmName: undefined,
+    path: undefined,
     translating: false,
     current: -1,
     resultHighlight: undefined,
@@ -364,12 +382,12 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, fs } = useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeAsmStore(setStatus, dispatch),
+    () => makeAsmStore(fs, setStatus, dispatch),
     [setStatus, dispatch]
   );
 

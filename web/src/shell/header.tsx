@@ -108,6 +108,7 @@ const Header = () => {
               &nbsp;IDE Online
             </strong>
             {TOOLS[pathname] && ` / ${TOOLS[pathname]}`}
+            {appContext.title && ` / ${appContext.title}`}
           </li>
         </ul>
         {/* for guide */}
@@ -127,22 +128,21 @@ const Header = () => {
                   key={icon}
                   data-tooltip={tooltip}
                   data-placement="bottom"
-                  onClick={
-                    onClick
-                      ? () => {
-                          onClick?.(appContext, pathname, redirectRefs);
+                  onClick={() => {
+                    appContext.setTitle(undefined);
+                    setStatus("");
+                    if (onClick) {
+                      onClick?.(appContext, pathname, redirectRefs);
+                    } else {
+                      if (href) {
+                        if (target) {
+                          localStorage.setItem(LAST_ROUTE_KEY, href);
                         }
-                      : () => {
-                          setStatus("");
-                          if (href) {
-                            if (target) {
-                              localStorage.setItem(LAST_ROUTE_KEY, href);
-                            }
 
-                            redirectRefs[href].current?.click();
-                          }
-                        }
-                  }
+                        redirectRefs[href].current?.click();
+                      }
+                    }
+                  }}
                 >
                   <Icon name={icon}></Icon>
                   {href &&

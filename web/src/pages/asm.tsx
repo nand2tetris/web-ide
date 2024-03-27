@@ -6,10 +6,12 @@ import { Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
 import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { Timer } from "@nand2tetris/simulator/timer";
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 
+import { LOADING } from "@nand2tetris/components/messages.js";
+import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
 import { AppContext } from "src/App.context";
 import URLs from "src/urls";
@@ -17,7 +19,7 @@ import "./asm.scss";
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { toolStates } = useContext(AppContext);
+  const { toolStates, filePicker } = useContext(AppContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -56,49 +58,19 @@ export const Asm = () => {
     };
   }, [actions, dispatch]);
 
-  const fileUploadRef = useRef<HTMLInputElement>(null);
   const fileDownloadRef = useRef<HTMLAnchorElement>(null);
   const redirectRef = useRef<HTMLAnchorElement>(null);
-  let fileType: "asm" | "cmp" = "asm";
 
-  const loadAsm = () => {
-    fileType = "asm";
-    fileUploadRef.current?.click();
-  };
-
-  const loadCompare = () => {
-    fileType = "cmp";
-    fileUploadRef.current?.click();
+  const loadAsm = async () => {
+    const path = await filePicker.select(".asm");
+    setStatus(LOADING);
+    requestAnimationFrame(async () => {
+      await actions.loadAsm(path);
+      setStatus("");
+    });
   };
 
   const { setStatus } = useContext(BaseContext);
-  const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) {
-      setStatus("No file selected");
-      return;
-    }
-    setStatus("Loading");
-    const file = event.target.files[0];
-    const source = await file.text();
-    if (fileType === "asm") {
-      if (!file.name.endsWith(".asm")) {
-        setStatus("File must be .asm file");
-        return;
-      }
-      actions.setAsm(source, file.name);
-      setStatus("Loaded asm file");
-    } else {
-      if (!file.name.endsWith(".hack")) {
-        setStatus("File must be .hack file");
-        return;
-      }
-      dispatch.current({
-        action: "setCmp",
-        payload: { cmp: source, name: file.name },
-      });
-      setStatus("Loaded cmp file");
-    }
-  };
 
   const download = () => {
     const blob = new Blob([state.result], { type: "text/plain" });
@@ -109,7 +81,7 @@ export const Asm = () => {
     }
     fileDownloadRef.current.href = url;
     fileDownloadRef.current.download =
-      state.asmName?.replace(".asm", ".hack") ?? "result.hack";
+      state.path?.split("/").pop()?.replace(".asm", ".hack") ?? "result.hack";
     fileDownloadRef.current.click();
 
     URL.revokeObjectURL(url);
@@ -125,7 +97,7 @@ export const Asm = () => {
 
   const loadToCpu = async () => {
     const bytes = await loadHack(state.result);
-    toolStates.setCpuState(state.asmName?.replace(".asm", ".hack"), bytes);
+    toolStates.setCpuState(state.path, new ROM(new Int16Array(bytes)));
     redirectRef.current?.click();
   };
 
@@ -137,14 +109,8 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Source</Trans>
-              {state.asmName && `: ${state.asmName}`}
+              {state.path && `: ${state.path.split("/").pop()}`}
             </div>
-            <input
-              type="file"
-              style={{ display: "none" }}
-              ref={fileUploadRef}
-              onChange={uploadFile}
-            />
             <div className="flex-1">
               {runnerAssigned && runner.current && (
                 <Runbar
@@ -259,13 +225,6 @@ export const Asm = () => {
             <div>
               <fieldset role="group">
                 <button onClick={compare}>Compare</button>
-                <button
-                  onClick={loadCompare}
-                  data-tooltip="Load file"
-                  data-placement="left"
-                >
-                  📂
-                </button>
               </fieldset>
             </div>
           </>
@@ -274,9 +233,11 @@ export const Asm = () => {
         <Editor
           value={state.compare}
           highlight={state.translating ? state.resultHighlight : undefined}
-          disabled={true}
           onChange={function (source: string): void {
-            return;
+            dispatch.current({
+              action: "setCmp",
+              payload: { cmp: source },
+            });
           }}
           onCursorPositionChange={(index) => {
             if (index == resultCursorPos.current) {

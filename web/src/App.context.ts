@@ -1,5 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
+import { MemoryAdapter } from "@nand2tetris/simulator/cpu/memory";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
@@ -29,18 +30,21 @@ export function useMonaco() {
 }
 
 export function useToolStates() {
-  const [rom, setRom] = useState<number[]>();
-  const [cpuName, setCpuProgramName] = useState<string>();
+  const [rom, setRom] = useState<MemoryAdapter>();
+  const [cpuPath, setCpuPath] = useState<string>();
 
   const [asmState, setAsmState] = useState<AsmPageState>();
 
-  const setCpuState = (name: string | undefined, rom: number[] | undefined) => {
-    setCpuProgramName(name);
+  const setCpuState = (
+    path: string | undefined,
+    rom: MemoryAdapter | undefined
+  ) => {
+    setCpuPath(path);
     setRom(rom);
   };
 
   return {
-    cpuState: { rom: rom, name: cpuName },
+    cpuState: { rom: rom, path: cpuPath },
     setCpuState,
     asmState,
     setAsmState,
@@ -49,6 +53,7 @@ export function useToolStates() {
 
 export function useAppContext(fs: FileSystem = new FileSystem()) {
   const [theme, setTheme] = useState<Theme>("system");
+  const [title, setTitle] = useState<string>();
 
   return {
     monaco: useMonaco(),
@@ -58,6 +63,8 @@ export function useAppContext(fs: FileSystem = new FileSystem()) {
     theme,
     setTheme,
     toolStates: useToolStates(),
+    title,
+    setTitle,
   };
 }
 
@@ -80,6 +87,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       return Promise.reject("");
     },
     isOpen: false,
+    suffix: undefined,
   } as ReturnType<typeof useFilePicker>,
   settings: {
     close() {
@@ -110,14 +118,18 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
   setTheme() {
     return undefined;
   },
+  title: undefined,
+  setTitle() {
+    return undefined;
+  },
   toolStates: {
-    cpuState: { rom: undefined, name: undefined },
+    cpuState: { rom: undefined, path: undefined },
     setCpuState() {
       return undefined;
     },
     asmState: {
       asm: "",
-      asmName: undefined,
+      path: undefined,
       translating: false,
       current: -1,
       resultHighlight: undefined,

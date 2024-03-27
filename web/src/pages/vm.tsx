@@ -145,15 +145,13 @@ const VM = () => {
         });
       } else {
         // folder
-        for (const file of await fs.scandir(path)) {
-          if (file.isFile()) {
-            if (file.name.endsWith(".vm")) {
-              sources.push({
-                name: file.name.replace(".vm", ""),
-                content: await fs.readFile(`${path}/${file.name}`),
-              });
-            }
-          }
+        for (const file of (await fs.scandir(path)).filter(
+          (f) => f.isFile() && f.name.endsWith(".vm")
+        )) {
+          sources.push({
+            name: file.name.replace(".vm", ""),
+            content: await fs.readFile(`${path}/${file.name}`),
+          });
         }
       }
       requestAnimationFrame(() => {
@@ -192,24 +190,14 @@ const VM = () => {
               {runnersAssigned && vmRunner.current && (
                 <Runbar
                   prefix={
-                    <>
-                      {/* <button
-                        className="flex-0"
-                        onClick={loadFile}
-                        data-tooltip="Load file"
-                        data-placement="bottom"
-                      >
-                        📄
-                      </button> */}
-                      <button
-                        className="flex-0"
-                        onClick={load}
-                        data-tooltip="Load directory"
-                        data-placement="bottom"
-                      >
-                        📂
-                      </button>
-                    </>
+                    <button
+                      className="flex-0"
+                      onClick={load}
+                      data-tooltip="Load directory"
+                      data-placement="bottom"
+                    >
+                      📂
+                    </button>
                   }
                   runner={vmRunner.current}
                   disabled={!state.controls.valid}
@@ -217,19 +205,6 @@ const VM = () => {
                 />
               )}
             </div>
-            {/* <input
-              type="file"
-              style={{ display: "none" }}
-              ref={fileUploadRef}
-              onChange={uploadFile}
-            />
-            <input
-              type="file"
-              webkitdirectory=""
-              style={{ display: "none" }}
-              ref={dirUploadRef}
-              onChange={uploadFile}
-            /> */}
           </>
         }
       >

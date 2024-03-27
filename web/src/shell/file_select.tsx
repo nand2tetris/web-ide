@@ -164,7 +164,7 @@ export const FilePicker = () => {
 
   return (
     <dialog open={filePicker.isOpen}>
-      <article style={{ width: "400px" }}>
+      <article style={{ width: "var(--file-picker-width)" }}>
         <header>
           <p>
             <Trans>Choose file</Trans>

@@ -9,7 +9,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
-import { HACK } from "@nand2tetris/simulator/testing/mult.js";
 import { AppContext } from "src/App.context";
 import { Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
@@ -40,8 +39,6 @@ export const CPU = () => {
         if (toolStates.cpuState.path.endsWith(".hack")) setRomFormat("bin");
         onUpload(toolStates.cpuState.path);
       }
-    } else {
-      state.sim.ROM.loadBytes(Array.from(HACK));
     }
   }, []);
 

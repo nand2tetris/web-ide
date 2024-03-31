@@ -6,6 +6,7 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
 import { useDialog } from "./dialog";
+import "./file_select.scss";
 
 // export const Selected = Symbol.for("file selected");
 export const Selected = "file selected";
@@ -164,7 +165,7 @@ export const FilePicker = () => {
 
   return (
     <dialog open={filePicker.isOpen}>
-      <article style={{ width: "var(--file-picker-width)" }}>
+      <article className="file-select flex">
         <header>
           <p>
             <Trans>Choose file</Trans>

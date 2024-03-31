@@ -72,7 +72,8 @@ export const Asm = () => {
 
   const { setStatus } = useContext(BaseContext);
 
-  const downloadAsm = () => download(state.asm, state.path?.split("/").pop() ?? "source.asm");
+  const downloadAsm = () =>
+    download(state.asm, state.path?.split("/").pop() ?? "source.asm");
   const downloadHack = () =>
     download(
       state.result,

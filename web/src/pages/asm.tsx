@@ -72,16 +72,22 @@ export const Asm = () => {
 
   const { setStatus } = useContext(BaseContext);
 
-  const download = () => {
-    const blob = new Blob([state.result], { type: "text/plain" });
+  const downloadAsm = () => download(state.asm, state.path?.split("/").pop() ?? "source.asm");
+  const downloadHack = () =>
+    download(
+      state.result,
+      state.path?.split("/").pop()?.replace(".asm", ".hack") ?? "result.hack"
+    );
+
+  const download = (content: string, name: string) => {
+    const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
 
     if (!fileDownloadRef.current) {
       return;
     }
     fileDownloadRef.current.href = url;
-    fileDownloadRef.current.download =
-      state.path?.split("/").pop()?.replace(".asm", ".hack") ?? "result.hack";
+    fileDownloadRef.current.download = name;
     fileDownloadRef.current.click();
 
     URL.revokeObjectURL(url);
@@ -131,6 +137,15 @@ export const Asm = () => {
                 />
               )}
             </div>
+            <fieldset role="group">
+              <button
+                data-tooltip="Download file"
+                data-placement="left"
+                onClick={downloadAsm}
+              >
+                Download
+              </button>
+            </fieldset>
           </>
         }
       >
@@ -186,7 +201,13 @@ export const Asm = () => {
                 >
                   ↩️
                 </button>
-                <button onClick={download}>Download</button>
+                <button
+                  data-tooltip="Download translated file"
+                  data-placement="left"
+                  onClick={downloadHack}
+                >
+                  Download
+                </button>
               </fieldset>
             </div>
           </>

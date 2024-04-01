@@ -193,7 +193,7 @@ const VM = () => {
                     <button
                       className="flex-0"
                       onClick={load}
-                      data-tooltip="Load directory"
+                      data-tooltip="Load files"
                       data-placement="bottom"
                     >
                       📂

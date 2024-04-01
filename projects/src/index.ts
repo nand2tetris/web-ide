@@ -7,6 +7,7 @@ import * as project_04 from "./project_04/index.js";
 import * as project_05 from "./project_05/index.js";
 import * as project_07 from "./project_07/index.js";
 import * as project_08 from "./project_08/index.js";
+import * as project_06 from "./samples/project_06/index.js";
 
 /**
  * Duplicated for web from node:path.
@@ -45,6 +46,7 @@ const Projects = {
   3: project_03,
   4: project_04,
   5: project_05,
+  6: project_06,
   7: project_07,
   8: project_08,
 };
@@ -53,7 +55,7 @@ let reset = false;
 export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
   if (reset) return; // React will double-render a call to resetFiles in useEffect.
   reset = true;
-  projects ??= [1, 2, 3, 4, 5, 7, 8];
+  projects ??= [1, 2, 3, 4, 6, 5, 7, 8];
   for (const project of projects) {
     if (!Object.keys(Projects).includes(project.toString())) {
       continue;

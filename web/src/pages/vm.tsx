@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -15,6 +15,9 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
+import { LOADING } from "@nand2tetris/components/messages.js";
+import { VmFile } from "@nand2tetris/simulator/test/vmtst";
+import { AppContext } from "src/App.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
@@ -47,7 +50,8 @@ interface Rerenderable {
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
-  const { setStatus } = useContext(BaseContext);
+  const { fs, setStatus } = useContext(BaseContext);
+  const { filePicker } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -127,43 +131,35 @@ const VM = () => {
     };
   }, [actions, dispatch]);
 
-  const fileUploadRef = useRef<HTMLInputElement>(null);
-  const dirUploadRef = useRef<HTMLInputElement>(null);
+  const load = async () => {
+    const path = await filePicker.select(".vm", true);
+    setStatus(LOADING);
 
-  const loadFile = () => {
-    fileUploadRef.current?.click();
-  };
-
-  const loadDir = () => {
-    dirUploadRef.current?.click();
-  };
-
-  const uploadFile = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files?.length) {
-      setStatus("No file selected");
-      return;
-    }
-    setStatus("Loading");
-
-    const sources = [];
-    for (const file of event.target.files) {
-      if (file.name.endsWith(".vm")) {
+    requestAnimationFrame(async () => {
+      const sources: VmFile[] = [];
+      if (path.includes(".vm")) {
+        // single file
         sources.push({
-          name: file.name.replace(".vm", ""),
-          content: await file.text(),
+          name: (path.split("/").pop() ?? path).replace(".vm", ""),
+          content: await fs.readFile(path),
         });
+      } else {
+        // folder
+        for (const file of (await fs.scandir(path)).filter(
+          (f) => f.isFile() && f.name.endsWith(".vm")
+        )) {
+          sources.push({
+            name: file.name.replace(".vm", ""),
+            content: await fs.readFile(`${path}/${file.name}`),
+          });
+        }
       }
-    }
-
-    if (sources.length == 0) {
-      setStatus("No .vm file was selected");
-      return;
-    }
-    const success = actions.loadVm(sources);
-    actions.reset();
-    if (success) {
-      setStatus("Loaded vm file");
-    }
+      requestAnimationFrame(() => {
+        actions.loadVm(sources);
+        actions.reset();
+        setStatus("");
+      });
+    });
   };
 
   const onSpeedChange = (speed: number) => {
@@ -194,24 +190,14 @@ const VM = () => {
               {runnersAssigned && vmRunner.current && (
                 <Runbar
                   prefix={
-                    <>
-                      <button
-                        className="flex-0"
-                        onClick={loadFile}
-                        data-tooltip="Load file"
-                        data-placement="bottom"
-                      >
-                        📄
-                      </button>
-                      <button
-                        className="flex-0"
-                        onClick={loadDir}
-                        data-tooltip="Load directory"
-                        data-placement="bottom"
-                      >
-                        📂
-                      </button>
-                    </>
+                    <button
+                      className="flex-0"
+                      onClick={load}
+                      data-tooltip="Load files"
+                      data-placement="bottom"
+                    >
+                      📂
+                    </button>
                   }
                   runner={vmRunner.current}
                   disabled={!state.controls.valid}
@@ -219,19 +205,6 @@ const VM = () => {
                 />
               )}
             </div>
-            <input
-              type="file"
-              style={{ display: "none" }}
-              ref={fileUploadRef}
-              onChange={uploadFile}
-            />
-            <input
-              type="file"
-              webkitdirectory=""
-              style={{ display: "none" }}
-              ref={dirUploadRef}
-              onChange={uploadFile}
-            />
           </>
         }
       >
@@ -278,7 +251,6 @@ const VM = () => {
         memory={state.vm.RAM}
         initialAddr={256}
         format="dec"
-        showUpload={false}
         showClear={false}
       />
       <Memory
@@ -304,7 +276,6 @@ const VM = () => {
           "R14:",
           "R15:",
         ]}
-        showUpload={false}
         onChange={() => {
           stackRef.current?.rerender();
         }}

@@ -1,15 +1,22 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
+import {
+  Err,
+  Ok,
+  isErr,
+  unwrap,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
+  ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
+import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
@@ -31,6 +38,7 @@ export interface CpuSim {
 }
 
 export interface CPUTestSim {
+  name: string;
   tst: string;
   cmp: string;
   out: string;
@@ -41,6 +49,8 @@ export interface CPUTestSim {
 export interface CpuPageState {
   sim: CpuSim;
   test: CPUTestSim;
+  path: string;
+  tests: string[];
 }
 
 function reduceCPUTest(
@@ -77,12 +87,18 @@ export function makeCpuStore(
   let test = new CPUTest();
   let animate = true;
   let valid = true;
+  let path = "";
+  let tests: string[] = [];
+  let tstName = "";
 
   const reducers = {
     update(state: CpuPageState) {
       state.sim = reduceCPUTest(test, dispatch);
       state.test.highlight = test.currentStep?.span;
       state.test.valid = valid;
+      state.path = path;
+      state.tests = Array.from(tests);
+      state.test.name = tstName;
     },
 
     setTest(state: CpuPageState, { tst, cmp }: { tst?: string; cmp?: string }) {
@@ -107,6 +123,12 @@ export function makeCpuStore(
           : `Simulation error: The output file differs from the compare file`
       );
     },
+
+    replaceROM(state: CpuPageState, rom: ROM) {
+      test = new CPUTest(rom);
+      test.reset();
+      this.update(state);
+    },
   };
 
   const actions = {
@@ -116,6 +138,25 @@ export function makeCpuStore(
 
     setAnimate(value: boolean) {
       animate = value;
+    },
+
+    async setPath(_path: string) {
+      path = _path;
+
+      const dir = path.split("/").slice(0, -1).join("/");
+      const files = await fs.scandir(dir);
+      tests = files
+        .filter((file) => file.name.endsWith(".tst"))
+        .map((file) => file.name);
+
+      if (tests.length > 0) {
+        this.loadTest(tests[0]);
+      } else {
+        tstName = "Default";
+        this.compileTest(makeTst(), "");
+      }
+
+      dispatch.current({ action: "update" });
     },
 
     async testStep() {
@@ -156,11 +197,22 @@ export function makeCpuStore(
         return false;
       }
       valid = true;
-      setStatus(`Parsed tst`);
 
       test = CPUTest.from(Ok(tst), test.cpu.ROM);
       dispatch.current({ action: "update" });
       return true;
+    },
+
+    async loadTest(name: string) {
+      const dir = path.split("/").slice(0, -1).join("/");
+      const files = await loadTestFiles(fs, `${dir}/${name}`);
+      if (isErr(files)) {
+        setStatus(`Failed to load test`);
+        return;
+      }
+      tstName = name;
+      const { tst, cmp } = unwrap(files);
+      this.compileTest(tst, cmp ?? "");
     },
   };
 
@@ -168,11 +220,14 @@ export function makeCpuStore(
     sim: reduceCPUTest(test, dispatch),
     test: {
       highlight: test.currentStep?.span,
+      name: "",
       tst: makeTst(),
       cmp: "",
       out: "",
       valid: true,
     },
+    path: "",
+    tests: [],
   };
 
   return { initialState, reducers, actions };

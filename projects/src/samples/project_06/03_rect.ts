@@ -9,37 +9,43 @@ repeat {
 export const RectAsm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/06/rect/Rect.asm
+// File name: projects/6/rect/Rect.asm
 
 // Draws a rectangle at the top-left corner of the screen.
 // The rectangle is 16 pixels wide and R0 pixels high.
+// Usage: Before executing, put a value in R0.
 
-   @0
+   // If (R0 <= 0) goto END else n = R0
+   @R0
    D=M
-   @INFINITE_LOOP
+   @END
    D;JLE 
-   @counter
+   @n
    M=D
+   // addr = base address of first screen row
    @SCREEN
    D=A
-   @address
+   @addr
    M=D
 (LOOP)
-   @address
+   // RAM[addr] = -1
+   @addr
    A=M
    M=-1
-   @address
+   // addr = base address of next screen row
+   @addr
    D=M
    @32
    D=D+A
-   @address
+   @addr
    M=D
-   @counter
+   // decrements n and loops
+   @n
    MD=M-1
    @LOOP
    D;JGT
-(INFINITE_LOOP)
-   @INFINITE_LOOP
+(END)
+   @END
    0;JMP`;
 
 export const RectHack = [

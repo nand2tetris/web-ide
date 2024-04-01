@@ -100,113 +100,113 @@ describe("asm language", () => {
       {
         type: "A",
         label: "R0",
-        span: { line: 4, start: 34, end: 37 },
+        span: { line: 10, start: 319, end: 322 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 5, start: 41, end: 44 },
+        span: { line: 11, start: 325, end: 328 },
       },
       {
         type: "A",
         label: "R1",
-        span: { line: 6, start: 81, end: 84 },
+        span: { line: 12, start: 331, end: 334 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D-M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 7, start: 88, end: 93 },
+        span: { line: 13, start: 337, end: 342 },
       },
       {
         type: "A",
-        label: "OUTPUT_FIRST",
-        span: { line: 8, start: 144, end: 157 },
+        label: "ITSR0",
+        span: { line: 15, start: 372, end: 378 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         jump: JUMP.asm["JGT"],
         isM: false,
-        span: { line: 9, start: 161, end: 166 },
+        span: { line: 16, start: 381, end: 386 },
       },
       {
         type: "A",
         label: "R1",
-        span: { line: 10, start: 228, end: 231 },
+        span: { line: 18, start: 401, end: 404 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 11, start: 235, end: 238 },
+        span: { line: 19, start: 407, end: 410 },
       },
       {
         type: "A",
         label: "OUTPUT_D",
-        span: { line: 12, start: 276, end: 285 },
+        span: { line: 20, start: 413, end: 422 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        span: { line: 13, start: 289, end: 294 },
+        span: { line: 21, start: 425, end: 430 },
       },
       {
         type: "L",
-        label: "OUTPUT_FIRST",
-        span: { line: 14, start: 323, end: 337 },
+        label: "ITSR0",
+        span: { line: 22, start: 431, end: 438 },
       },
       {
         type: "A",
         label: "R0",
-        span: { line: 15, start: 341, end: 344 },
+        span: { line: 23, start: 441, end: 444 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 16, start: 361, end: 364 },
+        span: { line: 24, start: 447, end: 450 },
       },
       {
         type: "L",
         label: "OUTPUT_D",
-        span: { line: 17, start: 398, end: 408 },
+        span: { line: 25, start: 451, end: 461 },
       },
       {
         type: "A",
         label: "R2",
-        span: { line: 18, start: 412, end: 415 },
+        span: { line: 26, start: 464, end: 467 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         store: ASSIGN.asm["M"],
         isM: false,
-        span: { line: 19, start: 419, end: 422 },
+        span: { line: 27, start: 470, end: 473 },
       },
       {
         type: "L",
-        label: "INFINITE_LOOP",
-        span: { line: 20, start: 466, end: 481 },
+        label: "END",
+        span: { line: 28, start: 474, end: 479 },
       },
       {
         type: "A",
-        label: "INFINITE_LOOP",
-        span: { line: 21, start: 485, end: 499 },
+        label: "END",
+        span: { line: 29, start: 482, end: 486 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        span: { line: 22, start: 503, end: 508 },
+        span: { line: 30, start: 489, end: 494 },
       },
     ]);
   });
@@ -223,113 +223,113 @@ describe("asm language", () => {
       {
         type: "A",
         value: 0,
-        span: { line: 4, start: 34, end: 37 },
+        span: { line: 10, start: 319, end: 322 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 5, start: 41, end: 44 },
+        span: { line: 11, start: 325, end: 328 },
       },
       {
         type: "A",
         value: 1,
-        span: { line: 6, start: 81, end: 84 },
+        span: { line: 12, start: 331, end: 334 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D-M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 7, start: 88, end: 93 },
+        span: { line: 13, start: 337, end: 342 },
       },
       {
         type: "A",
         value: 10,
-        span: { line: 8, start: 144, end: 157 },
+        span: { line: 15, start: 372, end: 378 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         jump: JUMP.asm["JGT"],
         isM: false,
-        span: { line: 9, start: 161, end: 166 },
+        span: { line: 16, start: 381, end: 386 },
       },
       {
         type: "A",
         value: 1,
-        span: { line: 10, start: 228, end: 231 },
+        span: { line: 18, start: 401, end: 404 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 11, start: 235, end: 238 },
+        span: { line: 19, start: 407, end: 410 },
       },
       {
         type: "A",
         value: 12,
-        span: { line: 12, start: 276, end: 285 },
+        span: { line: 20, start: 413, end: 422 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        span: { line: 13, start: 289, end: 294 },
+        span: { line: 21, start: 425, end: 430 },
       },
       {
         type: "L",
-        label: "OUTPUT_FIRST",
-        span: { line: 14, start: 323, end: 337 },
+        label: "ITSR0",
+        span: { line: 22, start: 431, end: 438 },
       },
       {
         type: "A",
         value: 0,
-        span: { line: 15, start: 341, end: 344 },
+        span: { line: 23, start: 441, end: 444 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("M"),
         store: ASSIGN.asm["D"],
         isM: true,
-        span: { line: 16, start: 361, end: 364 },
+        span: { line: 24, start: 447, end: 450 },
       },
       {
         type: "L",
         label: "OUTPUT_D",
-        span: { line: 17, start: 398, end: 408 },
+        span: { line: 25, start: 451, end: 461 },
       },
       {
         type: "A",
         value: 2,
-        span: { line: 18, start: 412, end: 415 },
+        span: { line: 26, start: 464, end: 467 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("D"),
         store: ASSIGN.asm["M"],
         isM: false,
-        span: { line: 19, start: 419, end: 422 },
+        span: { line: 27, start: 470, end: 473 },
       },
       {
         type: "L",
-        label: "INFINITE_LOOP",
-        span: { line: 20, start: 466, end: 481 },
+        label: "END",
+        span: { line: 28, start: 474, end: 479 },
       },
       {
         type: "A",
         value: 14,
-        span: { line: 21, start: 485, end: 499 },
+        span: { line: 29, start: 482, end: 486 },
       },
       {
         type: "C",
         op: COMMANDS.getOp("0"),
         jump: JUMP.asm["JMP"],
         isM: false,
-        span: { line: 22, start: 503, end: 508 },
+        span: { line: 30, start: 489, end: 494 },
       },
     ]);
   });
@@ -345,16 +345,16 @@ describe("asm language", () => {
 
     // prettier-ignore
     expect(bin).toEqual([
-      0b0_000000000000000,    // @R0                     0x0000     0
+      0b0_000000000000000,    // @R0                     0x0000
       0b111_1_110000_010_000, // D=M                     0xFE10
       0b0_000000000000001,    // @R1                     0x0001
       0b111_1_010011_010_000, // D=D-M                   0xF8D0
-      0b0_000000000001010,    // @OUTPUT_FIRST#10        0x000A
+      0b0_000000000001010,    // @ITSR0#10               0x000A
       0b111_0_001100_000_001, // D;JGT                   0xE301
       0b0_000000000000001,    // @R1                     0x0001
       0b111_1_110000_010_000, // D=M                     0xFE10
       0b0_000000000001100,    // @OUTPUT_D#12            0x000C
-      0b111_0_101010_000_111, // 0;JMP (OUTPUT_FIRST:10) 0xEA85
+      0b111_0_101010_000_111, // 0;JMP (ITSR0:10)        0xEA85
       0b0_000000000000000,    // @R0                     0x0000
       0b111_1_110000_010_000, // D=M (OUTPUT_D:12)       0x000C
       0b0_000000000000010,    // @R2                     0x0002

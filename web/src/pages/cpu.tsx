@@ -16,7 +16,7 @@ import "./cpu.scss";
 
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
-  const { toolStates } = useContext(AppContext);
+  const { toolStates, filePicker, setTitle } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
@@ -28,20 +28,23 @@ export const CPU = () => {
 
   useEffect(() => {
     if (toolStates.cpuState.rom) {
-      state.sim.ROM.loadBytes(toolStates.cpuState.rom);
-      if (toolStates.cpuState.name) {
-        setFileName(toolStates.cpuState.name);
-        if (toolStates.cpuState.name.endsWith(".hack")) setRomFormat("bin");
+      dispatch.current({
+        action: "replaceROM",
+        payload: toolStates.cpuState.rom,
+      });
+      if (toolStates.cpuState.path) {
+        const name = toolStates.cpuState.path.split("/").pop() ?? "";
+        setTitle(name);
+        setFileName(name);
+        if (toolStates.cpuState.path.endsWith(".hack")) setRomFormat("bin");
+        onUpload(toolStates.cpuState.path);
       }
     }
   }, []);
 
   useEffect(() => {
-    toolStates.setCpuState(
-      fileName,
-      Array.from(state.sim.ROM.map((i, v) => v))
-    );
-  }, [state]);
+    toolStates.setCpuState(fileName, state.sim.ROM);
+  });
 
   useEffect(() => {
     actions.compileTest(tst, cmp);
@@ -100,8 +103,11 @@ export const CPU = () => {
     };
   }, [actions, dispatch]);
 
-  const onUpload = (fileName: string) => {
-    setFileName(fileName);
+  const onUpload = async (path: string) => {
+    const name = path.split("/").pop() ?? "";
+    setFileName(name);
+    setTitle(name);
+    actions.setPath(path);
     actions.reset();
   };
 
@@ -133,6 +139,9 @@ export const CPU = () => {
         highlight={state.sim.PC}
         format={romFormat}
         onUpload={onUpload}
+        fileSelect={async () => {
+          return await filePicker.select([".asm", ".hack"]);
+        }}
       />
       <MemoryComponent
         name="RAM"
@@ -146,7 +155,6 @@ export const CPU = () => {
         className="IO"
         header={
           <>
-            {fileName && <div className="flex-0">{fileName}</div>}
             <div className="flex-1">
               {runnersAssigned && cpuRunner.current && (
                 <Runbar runner={cpuRunner.current} />
@@ -190,10 +198,32 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          tstName={state.test.name}
           disabled={!state.test.valid}
+          showLoad={false}
+          showName={state.tests.length < 2}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);
           }}
+          prefix={
+            state.tests.length > 1 ? (
+              <select
+                value={state.test.name}
+                onChange={({ target: { value } }) => {
+                  actions.loadTest(value);
+                }}
+                data-testid="test-picker"
+              >
+                {state.tests.map((test) => (
+                  <option key={test} value={test}>
+                    {test}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <></>
+            )
+          }
         />
       )}
     </div>

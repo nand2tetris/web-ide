@@ -1,0 +1,14 @@
+@use "./page.scss";
+
+.CompilerPage {
+  grid-template-columns: 1fr 1fr !important;
+  grid-template-areas: "code parsed";
+
+  .code {
+    grid-area: code;
+  }
+
+  .parsed {
+    grid-area: parsed;
+  }
+}

@@ -257,7 +257,7 @@ jackSemantics.addAttribute<Statement>("statement", {
       statementType: "ifStatement",
       condition: condition.expression,
       body: statements(body),
-      else: elseBlock?.else,
+      else: elseBlock.child(0)?.else,
     };
   },
 

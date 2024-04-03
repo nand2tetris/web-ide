@@ -5,7 +5,10 @@
 
 ul.icon-list {
   margin-right: 0.4rem;
-  overflow-x: auto;
+
+  @media (max-width: 576px) {
+    overflow: auto;
+  }
 
   li {
     display: flex;

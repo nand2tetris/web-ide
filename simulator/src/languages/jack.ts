@@ -2,7 +2,7 @@ import ohm from "ohm-js";
 import { baseSemantics, grammars, makeParser } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
-type Type = "int" | "char" | "boolean" | string;
+export type Type = "int" | "char" | "boolean" | string;
 
 export interface Class {
   name: string;
@@ -28,6 +28,7 @@ export type SubroutineType = "constructor" | "function" | "method";
 
 export interface Subroutine {
   type: SubroutineType;
+  name: string;
   returnType: ReturnType;
   parameters: Parameter[];
   body: SubroutineBody;
@@ -51,51 +52,91 @@ export type Statement =
   | ReturnStatement;
 
 export interface LetStatement {
+  statementType: "letStatement";
   name: string;
   arrayIndex?: Expression;
   value: Expression;
 }
 
 export interface IfStatement {
+  statementType: "ifStatement";
   condition: Expression;
   body: Statement[];
   else: Statement[];
 }
 
 export interface WhileStatement {
+  statementType: "whileStatement";
   condition: Expression;
   body: Statement[];
 }
 
 export interface DoStatement {
+  statementType: "doStatement";
   call: SubroutineCall;
 }
 
 export interface ReturnStatement {
+  statementType: "returnStatement";
   value?: Expression;
 }
 
 export type Op = "+" | "-" | "*" | "/" | "&" | "|" | "<" | ">" | "=";
-export type KeywordCOnstant = "true" | "false" | "null" | "this";
+export type KeywordConstant = "true" | "false" | "null" | "this";
 export type UnaryOp = "-" | "~";
 
+export type Term =
+  | NumericLiteral
+  | StringLiteral
+  | Variable
+  | KeywordLiteral
+  | SubroutineCall
+  | ArrayAccess
+  | GroupedExpression
+  | UnaryExpression;
+
+export interface NumericLiteral {
+  termType: "numericLiteral";
+  value: number;
+}
+
 export interface StringLiteral {
+  termType: "stringLiteral";
   value: string;
 }
 
+export interface KeywordLiteral {
+  termType: "keywordLiteral";
+  value: KeywordConstant;
+}
+
 export interface Variable {
+  termType: "variable";
   name: string;
 }
 
-export type Term =
-  | number
-  | StringLiteral
-  | Variable
-  | KeywordCOnstant
-  | SubroutineCall
-  | ArrayAccess
-  | Expression
-  | UnaryExpression;
+export interface GroupedExpression {
+  termType: "groupedExpression";
+  expression: Expression;
+}
+
+export interface UnaryExpression {
+  termType: "unaryExpression";
+  op: UnaryOp;
+  term: Term;
+}
+
+export interface ArrayAccess {
+  termType: "arrayAccess";
+  name: string;
+  index: Expression;
+}
+
+export interface SubroutineCall {
+  termType: "subroutineCall";
+  name: string;
+  parameters: Expression[];
+}
 
 export interface ExpressionPart {
   op: Op;
@@ -105,27 +146,6 @@ export interface ExpressionPart {
 export interface Expression {
   term: Term;
   rest: ExpressionPart[];
-}
-
-export interface UnaryExpression {
-  op: UnaryOp;
-  term: Term;
-}
-
-export interface ArrayAccess {
-  name: string;
-  index: Expression;
-}
-
-export interface CompoundIdentifier {
-  suffix: string;
-  prefix: string;
-}
-
-export type SubroutineName = string | CompoundIdentifier;
-export interface SubroutineCall {
-  name: SubroutineName;
-  parameters: Expression[];
 }
 
 export const grammar = ohm.grammar(jackGrammar, grammars);
@@ -221,18 +241,20 @@ jackSemantics.addAttribute<VarDec>("varDec", {
     };
   },
 });
-
+``;
 jackSemantics.addAttribute<Statement>("statement", {
   LetStatement(_a, name, index, _b, value, _c) {
     return {
+      statementType: "letStatement",
       name: name.sourceString,
-      index: index?.child(1)?.expression,
+      arrayIndex: index?.child(0)?.child(1)?.expression,
       value: value.expression,
     };
   },
 
   IfStatement(_a, _b, condition, _c, _d, body, _e, elseBlock) {
     return {
+      statementType: "ifStatement",
       condition: condition.expression,
       body: statements(body),
       else: elseBlock?.else,
@@ -241,17 +263,19 @@ jackSemantics.addAttribute<Statement>("statement", {
 
   WhileStatement(_a, _b, condition, _c, _d, body, _e) {
     return {
+      statementType: "whileStatement",
       condition: condition.expression,
       body: statements(body),
     };
   },
 
   DoStatement(_a, call, _b) {
-    return { call: call.term as SubroutineCall };
+    return { statementType: "doStatement", call: call.term as SubroutineCall };
   },
 
   ReturnStatement(_a, value, _b) {
     return {
+      statementType: "returnStatement",
       value: value.children.length > 0 ? value.child(0).expression : undefined,
     };
   },
@@ -265,53 +289,59 @@ jackSemantics.addAttribute<Statement[]>("else", {
 
 jackSemantics.addAttribute<Term>("term", {
   integerConstant(node) {
-    return Number(node.sourceString);
+    return {
+      termType: "numericLiteral",
+      value: Number(node.sourceString),
+    };
   },
 
   stringConstant(_a, _b, _c) {
-    return { value: this.sourceString.slice(1, -1) };
+    return { termType: "stringLiteral", value: this.sourceString.slice(1, -1) };
   },
 
   keywordConstant(_) {
-    return this.sourceString as KeywordCOnstant;
+    return {
+      termType: "keywordLiteral",
+      value: this.sourceString as KeywordConstant,
+    };
   },
 
   SubroutineCall(name, _a, expressions, _b) {
     return {
-      name: name.subroutineName,
+      termType: "subroutineCall",
+      name: name.sourceString,
       parameters: expressions.expressionList,
     };
   },
 
   ArrayAccess(name, index) {
     return {
+      termType: "arrayAccess",
       name: name.sourceString,
       index: index.child(1).expression,
     };
   },
 
   jackIdentifier(first, rest) {
-    return { name: `${first.sourceString}${rest.sourceString}` };
+    return {
+      termType: "variable",
+      name: `${first.sourceString}${rest.sourceString}`,
+    };
   },
 
   GroupedExpression(_a, expression, _b) {
-    return expression.expression;
+    return {
+      termType: "groupedExpression",
+      expression: expression.expression,
+    };
   },
 
   UnaryExpression(op, term) {
-    return { op: op.sourceString as UnaryOp, term: term.term };
-  },
-});
-
-jackSemantics.addAttribute<SubroutineName>("subroutineName", {
-  SubroutineName(_) {
-    const parts: string[] = this.sourceString.split(".");
-    return this.sourceString.includes(".")
-      ? {
-          prefix: parts[0],
-          suffix: parts[1],
-        }
-      : this.sourceString;
+    return {
+      termType: "unaryExpression",
+      op: op.sourceString as UnaryOp,
+      term: term.term,
+    };
   },
 });
 
@@ -333,6 +363,7 @@ jackSemantics.addAttribute<Expression[]>("expressions", {
 jackSemantics.addAttribute<Expression>("expression", {
   Expression(first, rest) {
     return {
+      nodeType: "expression",
       term: first.term,
       rest: rest.children.map((n) => n.expressionPart),
     };
@@ -341,7 +372,10 @@ jackSemantics.addAttribute<Expression>("expression", {
 
 jackSemantics.addAttribute<ExpressionPart>("expressionPart", {
   ExpressionPart(op, term) {
-    return { op: op.sourceString as Op, term: term.term };
+    return {
+      op: op.sourceString as Op,
+      term: term.term,
+    };
   },
 });
 

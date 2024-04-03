@@ -1,8 +1,8 @@
 @use "./page.scss";
 
 .CompilerPage {
-  grid-template-columns: 1fr 1fr !important;
-  grid-template-areas: "code parsed";
+  grid-template-columns: 1fr 1fr 1fr !important;
+  grid-template-areas: "code parsed compiled";
 
   .code {
     grid-area: code;

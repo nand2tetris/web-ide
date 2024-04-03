@@ -1,6 +1,6 @@
-import { display } from "@davidsouther/jiffies/lib/esm/display.js";
 import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import { compile } from "@nand2tetris/simulator/jack/compiler";
 import { CompilationError } from "@nand2tetris/simulator/languages/base";
 import { Class, JACK } from "@nand2tetris/simulator/languages/jack";
 import { useContext, useEffect, useState } from "react";
@@ -50,38 +50,74 @@ class Main {
 export const Compiler = () => {
   const { setStatus } = useContext(BaseContext);
 
-  const [code, setCode] = useState(SAMPLE);
+  const [jack, setJack] = useState(SAMPLE);
   const [parsed, setParsed] = useState<Class>();
+  const [vm, setVm] = useState<string>();
   const [error, setError] = useState<CompilationError>();
 
   useEffect(() => {
-    const compiled = JACK.parse(code);
+    const parsed = JACK.parse(jack);
 
-    if (isErr(compiled)) {
+    if (isErr(parsed)) {
       setParsed(undefined);
-      setError(Err(compiled));
-      setStatus(Err(compiled).message);
+      setError(Err(parsed));
+      setStatus(Err(parsed).message);
     } else {
-      setParsed(Ok(compiled));
-      setError(undefined);
-      setStatus("");
+      setParsed(Ok(parsed));
+
+      const vm = compile(jack);
+
+      if (isErr(vm)) {
+        setVm(undefined);
+        setError(Err(vm));
+        setStatus(Err(vm).message);
+      } else {
+        setVm(Ok(vm));
+        setError(undefined);
+        setStatus("");
+      }
     }
-  }, [code]);
+  }, [jack]);
 
   return (
     <div className="Page CompilerPage grid">
       <Panel className="code">
         <Editor
-          value={code}
+          value={jack}
           onChange={(source: string) => {
-            setCode(source);
+            setJack(source);
           }}
           error={error}
           language={""}
         />
       </Panel>
       <Panel className="parsed">
-        <p>{parsed ? display(parsed) : "Syntax errors"}</p>
+        {parsed ? (
+          <Editor
+            value={JSON.stringify(parsed, null, 2)}
+            onChange={(_) => {
+              return;
+            }}
+            disabled={true}
+            language={"json"}
+          ></Editor>
+        ) : (
+          <p>{error?.message}</p>
+        )}
+      </Panel>
+      <Panel className="compiled">
+        {vm ? (
+          <Editor
+            value={vm}
+            onChange={(_) => {
+              return;
+            }}
+            disabled={true}
+            language={"vm"}
+          ></Editor>
+        ) : (
+          <p>{error?.message}</p>
+        )}
       </Panel>
     </div>
   );

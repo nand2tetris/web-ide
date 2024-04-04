@@ -55,8 +55,10 @@ export const Compiler = () => {
     }
     await actions.reset();
     for (const file of event.target.files) {
-      const source = await file.text();
-      actions.addFile(file.name.replace(".jack", ""), source);
+      if (file.name.endsWith(".jack")) {
+        const source = await file.text();
+        actions.addFile(file.name.replace(".jack", ""), source);
+      }
     }
   };
 

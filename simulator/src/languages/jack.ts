@@ -190,7 +190,7 @@ jackSemantics.addAttribute<Subroutine>("subroutineDec", {
       type: type.sourceString as SubroutineType,
       returnType: returnType.sourceString as ReturnType,
       name: name.sourceString,
-      parameters: parameters.parameters,
+      parameters: parameters.parameterList,
       body: body.subroutineBody,
     };
   },
@@ -205,19 +205,15 @@ jackSemantics.addAttribute<Parameter>("parameter", {
   },
 });
 
-jackSemantics.addAttribute<Parameter[]>("parameters", {
+jackSemantics.addAttribute<Expression[]>("parameterList", {
   ParameterList(node) {
-    if (node.children.length > 0) {
-      const [first, rest] = node.children;
-      return [
-        first.parameter,
-        ...rest.children.map((n) => {
-          n.child(1).parameter;
-        }),
-      ];
-    } else {
-      return [];
-    }
+    return node.child(0)?.parameters ?? [];
+  },
+});
+
+jackSemantics.addAttribute<Expression[]>("parameters", {
+  Parameters(first, rest) {
+    return [first.parameter, ...rest.children.map((n) => n.child(1).parameter)];
   },
 });
 
@@ -257,7 +253,7 @@ jackSemantics.addAttribute<Statement>("statement", {
       statementType: "ifStatement",
       condition: condition.expression,
       body: statements(body),
-      else: elseBlock.child(0)?.else,
+      else: elseBlock.child(0)?.else ?? [],
     };
   },
 

@@ -36,6 +36,7 @@ export function compile(source: string): Result<string, CompilationError> {
   try {
     return new Compiler().compile(Ok(parsed));
   } catch (e) {
+    console.error(e);
     return Err(e as Error);
   }
 }

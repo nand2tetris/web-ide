@@ -51,7 +51,7 @@ interface Rerenderable {
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
   const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker } = useContext(AppContext);
+  const { filePicker, toolStates } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -61,6 +61,12 @@ const VM = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+
+  useEffect(() => {
+    if (toolStates.vmState) {
+      actions.loadVm(toolStates.vmState);
+    }
+  }, toolStates.vmState);
 
   useEffect(() => {
     actions.loadTest(path, tst, cmp);

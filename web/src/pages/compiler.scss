@@ -1,14 +1,22 @@
 @use "./page.scss";
 
 .CompilerPage {
-  grid-template-columns: 1fr 1fr 1fr !important;
-  grid-template-areas: "code parsed compiled";
+  grid-template-columns: 1fr 7fr !important;
+  grid-template-areas: "files code";
+
+  .files {
+    grid-area: files;
+  }
 
   .code {
     grid-area: code;
   }
+}
 
-  .parsed {
-    grid-area: parsed;
+.file-entry {
+  border: 1px solid var(--light-grey);
+  
+  .button {
+    background-color: var(--light-grey);
   }
 }

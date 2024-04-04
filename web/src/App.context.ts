@@ -1,6 +1,7 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
 import { MemoryAdapter } from "@nand2tetris/simulator/cpu/memory";
+import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
@@ -34,6 +35,7 @@ export function useToolStates() {
   const [cpuPath, setCpuPath] = useState<string>();
 
   const [asmState, setAsmState] = useState<AsmPageState>();
+  const [vmState, setVmState] = useState<VmFile[]>();
 
   const setCpuState = (
     path: string | undefined,
@@ -48,6 +50,8 @@ export function useToolStates() {
     setCpuState,
     asmState,
     setAsmState,
+    vmState,
+    setVmState,
   };
 }
 
@@ -141,6 +145,10 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       lineNumbers: [],
     },
     setAsmState() {
+      return undefined;
+    },
+    vmState: undefined,
+    setVmState() {
       return undefined;
     },
   },

@@ -143,13 +143,13 @@ class Compiler {
     }
   }
 
-  registerArgs(params: Parameter[]) {
+  registerArgs(params: Parameter[], offset = false) {
     let argNum = 0;
     for (const param of params) {
       this.localSymbolTable[param.name] = {
         type: param.type,
         segment: "argument",
-        index: argNum,
+        index: argNum + (offset ? 1 : 0), // when compiling a method the first argument is this, so we offset the others by 1
       };
       argNum += 1;
     }
@@ -168,10 +168,10 @@ class Compiler {
     }
   }
 
-  compileSubroutineStart(subroutine: Subroutine) {
+  compileSubroutineStart(subroutine: Subroutine, isMethod = false) {
     this.localSymbolTable = {};
     this.localNum = 0;
-    this.registerArgs(subroutine.parameters);
+    this.registerArgs(subroutine.parameters, isMethod);
 
     const localCount = subroutine.body.varDecs
       .map((dec) => dec.names.length)
@@ -188,7 +188,7 @@ class Compiler {
   }
 
   compileMethod(subroutine: Subroutine) {
-    this.compileSubroutineStart(subroutine);
+    this.compileSubroutineStart(subroutine, true);
     this.writeMultiple(["push argument 0", "pop pointer 0"]);
     this.compileStatements(subroutine.body.statements);
   }

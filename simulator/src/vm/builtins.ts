@@ -129,7 +129,7 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       memory.set(address, value);
       return 0;
     },
-    nArgs: 1,
+    nArgs: 2,
   },
   "Memory.alloc": {
     func: (memory, os) => {

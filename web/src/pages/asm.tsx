@@ -19,7 +19,7 @@ import "./asm.scss";
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { toolStates, filePicker } = useContext(AppContext);
+  const { toolStates, filePicker, setTitle } = useContext(AppContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -30,6 +30,9 @@ export const Asm = () => {
   useEffect(() => {
     if (toolStates.asmState) {
       actions.overrideState(toolStates.asmState);
+      if (toolStates.asmState.path) {
+        setTitle(toolStates.asmState.path.split("/").pop() ?? "");
+      }
     }
   }, []);
 
@@ -67,6 +70,7 @@ export const Asm = () => {
     requestAnimationFrame(async () => {
       await actions.loadAsm(path);
       setStatus("");
+      setTitle(path.split("/").pop() ?? "");
     });
   };
 
@@ -116,7 +120,6 @@ export const Asm = () => {
           <>
             <div>
               <Trans>Source</Trans>
-              {state.path && `: ${state.path.split("/").pop()}`}
             </div>
             <div className="flex-1">
               {runnerAssigned && runner.current && (

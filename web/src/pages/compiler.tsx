@@ -133,7 +133,7 @@ export const Compiler = () => {
       isValid={isNameValid}
       onExit={(name?: string) => {
         if (name) {
-          actions.renameFile(current!, name);
+          actions.renameFile(current ?? "", name);
         }
       }}
     />
@@ -155,7 +155,7 @@ export const Compiler = () => {
           </button>
           <button
             onClick={async () => {
-              await actions.deleteFile(current!);
+              await actions.deleteFile(current ?? "");
               deleteDialog.close();
             }}
           >

@@ -156,6 +156,7 @@ export const Asm = () => {
         <Editor
           value={state.asm}
           error={state.error}
+          alwaysRecenter={false}
           onChange={(source: string) => {
             actions.setAsm(source);
           }}
@@ -233,7 +234,7 @@ export const Asm = () => {
           }}
           grammar={undefined}
           language={""}
-          dynamicHeight={true}
+          alwaysRecenter={false}
           lineNumberTransform={(n) => (n - 1).toString()}
         />
         {state.symbols.length > 0 && state.translating && "Symbol Table"}
@@ -258,6 +259,7 @@ export const Asm = () => {
         <Editor
           value={state.compare}
           highlight={state.translating ? state.resultHighlight : undefined}
+          alwaysRecenter={false}
           onChange={function (source: string): void {
             dispatch.current({
               action: "setCmp",

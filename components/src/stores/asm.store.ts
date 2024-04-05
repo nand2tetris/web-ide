@@ -241,7 +241,7 @@ export function makeAsmStore(
       for (let i = 0; i < compareLines.length; i++) {
         for (let j = 0; j < compareLines[i].length; j++) {
           if (resultLines[i][j] !== compareLines[i][j]) {
-            setStatus(`Comparison failed at ${i}:${j}`);
+            setStatus(`Comparison failure: Line ${i}`);
             state.resultHighlight = {
               start: i * 17,
               end: (i + 1) * 17,

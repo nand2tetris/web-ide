@@ -108,7 +108,11 @@ export const Asm = () => {
 
   const loadToCpu = async () => {
     const bytes = await loadHack(state.result);
-    toolStates.setCpuState(state.path, new ROM(new Int16Array(bytes)));
+    toolStates.setCpuState(
+      state.path?.replace(".asm", ".hack"),
+      new ROM(new Int16Array(bytes)),
+      "bin"
+    );
     redirectRef.current?.click();
   };
 

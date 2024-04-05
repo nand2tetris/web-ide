@@ -244,7 +244,7 @@ export const Asm = () => {
         header={
           <>
             <div>
-              <Trans>Compare</Trans>
+              <Trans>Compare Code</Trans>
               {state.compareName && `: ${state.compareName}`}
             </div>
             <div>

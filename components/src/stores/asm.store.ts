@@ -1,5 +1,10 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
+import {
+  Err,
+  Ok,
+  Result,
+  isErr,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KEYBOARD_OFFSET,
   SCREEN_OFFSET,
@@ -61,21 +66,27 @@ class Translator {
     return this.lines.join("\n");
   }
 
-  load(asm: Asm, lineNum: number) {
+  load(asm: Asm, lineNum: number): Result<void, CompilationError> {
     this.symbols = defaultSymbols();
     this.variables.clear();
     this.asm = asm;
-    fillLabel(asm, (name, value, isVar) => {
+
+    const result = fillLabel(asm, (name, value, isVar) => {
       if (isVar) {
         this.variables.set(value, { name: name, isHidden: true });
       } else {
         this.symbols.push({ name: name, value: value.toString() });
       }
     });
+    if (isErr(result)) {
+      return result;
+    }
+
     asm.instructions = asm.instructions.filter(({ type }) => type !== "L");
 
     this.resolveLineNumbers(lineNum);
     this.reset();
+    return Ok();
   }
 
   resolveLineNumbers(lineNum: number) {
@@ -293,7 +304,19 @@ export function makeAsmStore(
         return;
       }
 
-      translator.load(Ok(parseResult), asm.split("\n").length);
+      const loadResult = translator.load(
+        Ok(parseResult),
+        asm.split("\n").length
+      );
+      if (isErr(loadResult)) {
+        dispatch.current({
+          action: "setError",
+          payload: Err(loadResult),
+        });
+        compiled = false;
+        return;
+      }
+
       compiled = translator.asm.instructions.length > 0;
       setStatus("");
       dispatch.current({ action: "setError" });

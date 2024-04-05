@@ -215,8 +215,8 @@ export function fillLabel(
 
     if (instruction.type === "A") {
       if (isALabelInstruction(instruction)) {
-                  unfilled.push(instruction);
-              }
+        unfilled.push(instruction);
+      }
     }
   }
 

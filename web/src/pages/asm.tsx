@@ -99,7 +99,7 @@ export const Asm = () => {
   };
 
   const compare = () => {
-    dispatch.current({ action: "compare" });
+    actions.compare();
   };
 
   const onSpeedChange = (speed: number) => {
@@ -259,6 +259,7 @@ export const Asm = () => {
         <Editor
           value={state.compare}
           highlight={state.translating ? state.resultHighlight : undefined}
+          highlightType={state.compareError ? "error" : "highlight"}
           alwaysRecenter={false}
           onChange={function (source: string): void {
             dispatch.current({

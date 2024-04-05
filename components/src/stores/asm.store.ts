@@ -169,6 +169,7 @@ export interface AsmPageState {
   compareName: string | undefined;
   lineNumbers: number[];
   error?: CompilationError;
+  compareError: boolean;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -182,7 +183,7 @@ export function makeAsmStore(
   dispatch: MutableRefObject<AsmStoreDispatch>
 ) {
   const translator = new Translator();
-  const highlightInfo = {
+  const highlightInfo: HighlightInfo = {
     resultHighlight: undefined,
     sourceHighlight: undefined,
     highlightMap: new Map(),
@@ -191,6 +192,7 @@ export function makeAsmStore(
   let animate = true;
   let compiled = false;
   let translating = false;
+  let failure = false;
 
   const reducers = {
     setAsm(
@@ -225,6 +227,7 @@ export function makeAsmStore(
       state.lineNumbers = Array.from(translator.lineNumbers);
       state.sourceHighlight = highlightInfo.sourceHighlight;
       state.resultHighlight = highlightInfo.resultHighlight;
+      state.compareError = failure;
     },
 
     compare(state: AsmPageState) {
@@ -234,6 +237,7 @@ export function makeAsmStore(
         .filter((line) => line.trim() != "");
 
       if (resultLines.length != compareLines.length) {
+        failure = true;
         setStatus("Comparison failed - different lengths");
         return;
       }
@@ -242,7 +246,9 @@ export function makeAsmStore(
         for (let j = 0; j < compareLines[i].length; j++) {
           if (resultLines[i][j] !== compareLines[i][j]) {
             setStatus(`Comparison failure: Line ${i}`);
-            state.resultHighlight = {
+
+            failure = true;
+            highlightInfo.resultHighlight = {
               start: i * 17,
               end: (i + 1) * 17,
               line: -1,
@@ -318,7 +324,16 @@ export function makeAsmStore(
       return translator.done;
     },
 
+    compare() {
+      dispatch.current({ action: "compare" });
+      this.updateHighlight(highlightInfo.resultHighlight?.start ?? 0, false);
+      dispatch.current({ action: "update" });
+    },
+
     updateHighlight(index: number, fromSource: boolean) {
+      if (failure) {
+        return;
+      }
       for (const [sourceSpan, resultSpan] of highlightInfo.highlightMap) {
         if (
           (fromSource &&
@@ -340,6 +355,7 @@ export function makeAsmStore(
     },
 
     reset() {
+      failure = false;
       setStatus("Reset");
       translator.reset();
       this.resetHighlightInfo();
@@ -376,6 +392,7 @@ export function makeAsmStore(
     compare: "",
     compareName: undefined,
     lineNumbers: [],
+    compareError: false,
   };
 
   return { initialState, reducers, actions };

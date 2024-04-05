@@ -80,12 +80,15 @@ const isRangeVisible = (
   return false;
 };
 
+export type HighlightType = "highlight" | "error";
+
 const makeDecorations = (
   monaco: typeof monacoT | null,
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
   highlight: Span | undefined,
   additionalDecorations: Decoration[],
   decorations: string[],
+  type: HighlightType = "highlight",
   alwaysCenter = true
 ): string[] => {
   if (!(editor && highlight)) return decorations;
@@ -98,7 +101,9 @@ const makeDecorations = (
   if (range) {
     nextDecoration.push({
       range,
-      options: { inlineClassName: "highlight" },
+      options: {
+        inlineClassName: type == "error" ? "error-highlight" : "highlight",
+      },
     });
     if (highlight.start != highlight.end) {
       if (alwaysCenter || !isRangeVisible(editor, range)) {
@@ -130,6 +135,7 @@ const Monaco = ({
   error,
   disabled = false,
   highlight: currentHighlight,
+  highlightType = "highlight",
   customDecorations: currentCustomDecorations = [],
   dynamicHeight = false,
   alwaysRecenter = true,
@@ -142,6 +148,7 @@ const Monaco = ({
   error?: CompilationError;
   disabled?: boolean;
   highlight?: Span | number;
+  highlightType?: HighlightType;
   customDecorations?: Decoration[];
   dynamicHeight?: boolean;
   alwaysRecenter?: boolean;
@@ -196,9 +203,10 @@ const Monaco = ({
       newHighlight ?? { start: 0, end: 0, line: 0 },
       customDecorations.current,
       decorations.current,
+      highlightType,
       alwaysRecenter
     );
-  }, [decorations, monaco, editor, highlight]);
+  }, [decorations, monaco, editor, highlight, highlightType]);
 
   const calculateHeight = () => {
     if (dynamicHeight) {
@@ -323,6 +331,7 @@ export const Editor = ({
   grammar,
   language,
   highlight,
+  highlightType = "highlight",
   customDecorations = [],
   dynamicHeight = false,
   alwaysRecenter = true,
@@ -338,6 +347,7 @@ export const Editor = ({
   grammar?: ohm.Grammar;
   language: string;
   highlight?: Span | number;
+  highlightType?: HighlightType;
   customDecorations?: Decoration[];
   dynamicHeight?: boolean;
   alwaysRecenter?: boolean;
@@ -359,6 +369,7 @@ export const Editor = ({
           error={error}
           disabled={disabled}
           highlight={highlight}
+          highlightType={highlightType}
           customDecorations={customDecorations}
           dynamicHeight={dynamicHeight}
           alwaysRecenter={alwaysRecenter}

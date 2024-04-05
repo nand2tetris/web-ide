@@ -139,6 +139,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       compare: "",
       compareName: undefined,
       lineNumbers: [],
+      compareError: false,
     },
     setAsmState() {
       return undefined;

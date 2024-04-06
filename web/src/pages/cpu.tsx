@@ -32,18 +32,18 @@ export const CPU = () => {
         action: "replaceROM",
         payload: toolStates.cpuState.rom,
       });
+      setRomFormat(toolStates.cpuState.format);
       if (toolStates.cpuState.path) {
         const name = toolStates.cpuState.path.split("/").pop() ?? "";
         setTitle(name);
         setFileName(name);
-        if (toolStates.cpuState.path.endsWith(".hack")) setRomFormat("bin");
         onUpload(toolStates.cpuState.path);
       }
     }
   }, []);
 
   useEffect(() => {
-    toolStates.setCpuState(fileName, state.sim.ROM);
+    toolStates.setCpuState(fileName, state.sim.ROM, romFormat);
   });
 
   useEffect(() => {

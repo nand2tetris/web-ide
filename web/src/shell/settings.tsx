@@ -31,6 +31,7 @@ export const Settings = () => {
   }, [fs, writeLocale]);
 
   const resetWarning = useDialog();
+  const resetConfirm = useDialog();
 
   const resetFiles = async () => {
     const version = getVersion();
@@ -39,7 +40,6 @@ export const Settings = () => {
     localStorage["/chip/project"] = "01";
     localStorage["/chip/chip"] = "Not";
     await loaders.resetFiles(fs);
-    setStatus("Your files were reset");
   };
 
   const resetWarningDialog = (
@@ -63,6 +63,7 @@ export const Settings = () => {
               onClick={async () => {
                 await resetFiles();
                 resetWarning.close();
+                resetConfirm.open();
               }}
             >
               Yes
@@ -76,6 +77,17 @@ export const Settings = () => {
               Cancel
             </button>
           </div>
+        </main>
+      </article>
+    </dialog>
+  );
+
+  const resetConfirmDialog = (
+    <dialog open={resetConfirm.isOpen}>
+      <article>
+        <header>Your files were reset</header>
+        <main>
+          <button onClick={resetConfirm.close}>Ok</button>
         </main>
       </article>
     </dialog>
@@ -140,14 +152,6 @@ export const Settings = () => {
                 >
                   <Trans>Reset</Trans>
                 </button>
-                {/* <button
-                onClick={async () => {
-                  await loaders.loadSolutions(fs);
-                  setStatus("Loaded sample solutions...");
-                }}
-                >
-                <Trans>Solutions</Trans>
-              </button> */}
                 <button
                   onClick={async () => {
                     await loaders.loadSamples(fs);
@@ -248,16 +252,7 @@ export const Settings = () => {
         </article>
       </dialog>
       {resetWarningDialog}
+      {resetConfirmDialog}
     </>
   );
-  // dt("Numeric Format"),
-  // dd(
-  //   ButtonBar({
-  //     value: "B",
-  //     values: ["B", "D", "X", "A"],
-  //     events: {
-  //       onSelect: () => {},
-  //     },
-  //   })
-  // )
 };

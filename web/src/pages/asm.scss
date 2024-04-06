@@ -11,6 +11,10 @@
   grid-template-columns: 2.5fr 1fr 1fr;
   grid-template-rows: 2fr 1fr;
 
+  &.hide-sym {
+    grid-template-rows: 1fr auto;
+  }
+
   .source {
     grid-area: source;
   }

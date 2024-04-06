@@ -241,7 +241,9 @@ export const Asm = () => {
           alwaysRecenter={false}
           lineNumberTransform={(n) => (n - 1).toString()}
         />
-        {state.symbols.length > 0 && state.translating && "Symbol Table"}
+      </Panel>
+      <Panel className="sym" header={<Trans>Symbol Table</Trans>}>
+        {/* {state.symbols.length > 0 && state.translating && "Symbol Table"} */}
         {state.translating && <Table values={state.symbols} />}
       </Panel>
       <Panel

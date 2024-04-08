@@ -27,6 +27,8 @@ export const Asm = () => {
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
 
+  const [showSymbolTable, setShowSymbolTable] = useState(true);
+
   useEffect(() => {
     if (toolStates.asmState) {
       actions.overrideState(toolStates.asmState);
@@ -117,7 +119,7 @@ export const Asm = () => {
   };
 
   return (
-    <div className="AsmPage grid">
+    <div className={`AsmPage grid ${showSymbolTable ? "" : "hide-sym"}`}>
       <Panel
         className="source"
         header={
@@ -242,9 +244,25 @@ export const Asm = () => {
           lineNumberTransform={(n) => (n - 1).toString()}
         />
       </Panel>
-      <Panel className="sym" header={<Trans>Symbol Table</Trans>}>
-        {/* {state.symbols.length > 0 && state.translating && "Symbol Table"} */}
-        {state.translating && <Table values={state.symbols} />}
+      <Panel
+        className="sym"
+        header={
+          <>
+            <div className="flex-1">
+              <Trans>Symbol Table</Trans>
+            </div>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={showSymbolTable}
+              onChange={() => setShowSymbolTable(!showSymbolTable)}
+            />
+          </>
+        }
+      >
+        {state.translating && showSymbolTable && (
+          <Table values={state.symbols} />
+        )}
       </Panel>
       <Panel
         className="compare"

@@ -1,5 +1,5 @@
 import { KeyboardAdapter } from "@nand2tetris/simulator/cpu/memory.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RegisterComponent } from "./register.js";
 
 const KeyMap: Record<string, number | undefined> = {
@@ -69,6 +69,8 @@ export const Keyboard = ({
   const [bits, setBits] = useState(keyboard.getKey());
   let currentKey = 0;
 
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
   const toggleEnabled = () => {
     setEnabled(!enabled);
   };
@@ -79,6 +81,7 @@ export const Keyboard = ({
     }
 
     setCharacter(getKeyDisplay(event.key));
+    toggleRef.current?.blur();
     const key = keyPressToHackCharacter(event);
     if (key === currentKey) {
       return;
@@ -88,6 +91,7 @@ export const Keyboard = ({
   };
 
   const onKeyUp = (event: KeyboardEvent) => {
+    toggleRef.current?.blur();
     if (!enabled) {
       return;
     }
@@ -129,7 +133,7 @@ export const Keyboard = ({
         <RegisterComponent name="Char code" bits={bits} />
       </div>
       <div className="flex-3">
-        <button onClick={toggleEnabled}>
+        <button onClick={toggleEnabled} ref={toggleRef}>
           {/* <Icon name="keyboard" /> */}
           {`${enabled ? "Disable" : "Enable"} Keyboard`}
         </button>

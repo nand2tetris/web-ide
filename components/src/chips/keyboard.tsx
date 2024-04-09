@@ -124,10 +124,10 @@ export const Keyboard = ({
 
   return (
     <div className="flex row align-baseline">
+      <div className="flex-2">Key: {character}</div>
       <div className="flex-2">
-        <RegisterComponent name="Key" bits={bits} />
+        <RegisterComponent name="Char code" bits={bits} />
       </div>
-      <div className="flex-2">Char: {character}</div>
       <div className="flex-3">
         <button onClick={toggleEnabled}>
           {/* <Icon name="keyboard" /> */}

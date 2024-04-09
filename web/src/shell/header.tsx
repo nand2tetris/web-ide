@@ -85,7 +85,7 @@ const Header = () => {
     guideRefs[path] = useRef<HTMLAnchorElement>(null);
   }
 
-  const pathname = useLocation().pathname.replace("/", "");
+  const pathname = useLocation().pathname.replaceAll("/", "");
 
   return (
     <header>

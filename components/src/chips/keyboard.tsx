@@ -127,17 +127,19 @@ export const Keyboard = ({
   });
 
   return (
-    <div className="flex row align-baseline">
-      <div className="flex-2">Key: {character}</div>
-      <div className="flex-2">
-        <RegisterComponent name="Char code" bits={bits} />
+    <article className="panel">
+      <div className="flex row align-baseline">
+        <div className="flex-2">Key: {character}</div>
+        <div className="flex-2">
+          <RegisterComponent name="Char code" bits={bits} />
+        </div>
+        <div className="flex-3">
+          <button onClick={toggleEnabled} ref={toggleRef}>
+            {/* <Icon name="keyboard" /> */}
+            {`${enabled ? "Disable" : "Enable"} Keyboard`}
+          </button>
+        </div>
       </div>
-      <div className="flex-3">
-        <button onClick={toggleEnabled} ref={toggleRef}>
-          {/* <Icon name="keyboard" /> */}
-          {`${enabled ? "Disable" : "Enable"} Keyboard`}
-        </button>
-      </div>
-    </div>
+    </article>
   );
 };

@@ -11,11 +11,13 @@ interface HeaderButton {
   href?: string;
   tool?: string;
   target?: JSX.Element;
-  onClick?: (
-    context: ReturnType<typeof useAppContext>,
-    pathname: string,
-    redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
-  ) => void;
+  onClick?: (context: HeaderButtonContext) => void;
+}
+
+interface HeaderButtonContext {
+  appContext: ReturnType<typeof useAppContext>;
+  pathname: string;
+  guideRefs: Record<string, RefObject<HTMLAnchorElement>>;
 }
 
 function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
@@ -32,17 +34,8 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
   };
 }
 
-function openGuide(
-  context: ReturnType<typeof useAppContext>,
-  pathname: string,
-  redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
-) {
-  if (pathname == "chip") {
-    redirectRefs[URLs["chipGuide"].href].current?.click();
-  } else {
-    redirectRefs[URLs["placeholder"].href].current?.click();
-  }
-  return;
+function openGuide(context: HeaderButtonContext) {
+  context.guideRefs[context.pathname]?.current?.click();
 }
 
 const headerButtons: HeaderButton[] = [
@@ -63,18 +56,18 @@ const headerButtons: HeaderButton[] = [
     tooltip: "Bug Report",
   },
   {
-    onClick: (
-      context: ReturnType<typeof useAppContext>,
-      pathname: string,
-      redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
-    ) => {
-      context.settings.open();
+    onClick: (context) => {
+      context.appContext.settings.open();
     },
     icon: "settings",
     tooltip: "Settings",
   },
   headerButtonFromURL(URLs["about"], "info", "About"),
 ];
+
+const guideLinks: Record<string, string> = {
+  chip: "https://drive.google.com/file/d/15unXGgTfQySMr1V39xTCLTgGfCOr6iG9/view",
+};
 
 const Header = () => {
   const appContext = useContext(AppContext);
@@ -86,9 +79,11 @@ const Header = () => {
       redirectRefs[button.href] = useRef<HTMLAnchorElement>(null);
     }
   }
-  // for user guides
-  redirectRefs[URLs["chipGuide"].href] = useRef<HTMLAnchorElement>(null);
-  redirectRefs[URLs["placeholder"].href] = useRef<HTMLAnchorElement>(null);
+
+  const guideRefs: Record<string, RefObject<HTMLAnchorElement>> = {};
+  for (const path of Object.keys(guideLinks)) {
+    guideRefs[path] = useRef<HTMLAnchorElement>(null);
+  }
 
   const pathname = useLocation().pathname.replace("/", "");
 
@@ -111,14 +106,15 @@ const Header = () => {
             {appContext.title && ` / ${appContext.title}`}
           </li>
         </ul>
-        {/* for guide */}
-        {[URLs["chipGuide"].href, URLs["placeholder"].href].map((href) => (
-          <Link
-            key={href}
-            to={href}
-            ref={redirectRefs[href]}
+        {Object.entries(guideLinks).map(([path, guideLink]) => (
+          <a
+            key={path}
             style={{ display: "none" }}
-          />
+            href={guideLink}
+            ref={guideRefs[path]}
+            target="_blank"
+            rel="noreferrer"
+          ></a>
         ))}
         <ul className="icon-list">
           {headerButtons.map(
@@ -132,7 +128,7 @@ const Header = () => {
                     appContext.setTitle(undefined);
                     setStatus("");
                     if (onClick) {
-                      onClick?.(appContext, pathname, redirectRefs);
+                      onClick?.({ appContext, pathname, guideRefs });
                     } else {
                       if (href) {
                         if (target) {

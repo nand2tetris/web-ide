@@ -1,4 +1,7 @@
-import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import {
+  BaseContext,
+  useBaseContext,
+} from "@nand2tetris/components/stores/base.context";
 import { RefObject, useContext, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AppContext, useAppContext } from "src/App.context";
@@ -11,11 +14,13 @@ interface HeaderButton {
   href?: string;
   tool?: string;
   target?: JSX.Element;
-  onClick?: (
-    context: ReturnType<typeof useAppContext>,
-    pathname: string,
-    redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
-  ) => void;
+  onClick?: (context: HeaderButtonContext) => void;
+}
+
+interface HeaderButtonContext {
+  appContext: ReturnType<typeof useAppContext>;
+  baseContext: ReturnType<typeof useBaseContext>;
+  pathname: string;
 }
 
 function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
@@ -32,17 +37,18 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
   };
 }
 
-function openGuide(
-  context: ReturnType<typeof useAppContext>,
-  pathname: string,
-  redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
-) {
-  if (pathname == "chip") {
-    redirectRefs[URLs["chipGuide"].href].current?.click();
-  } else {
-    redirectRefs[URLs["placeholder"].href].current?.click();
+async function openGuide(context: HeaderButtonContext) {
+  const pdfLink = `https://raw.githubusercontent.com/nand2tetris/web-ide/user-guide/${context.pathname}.pdf`;
+  const response = await fetch(pdfLink);
+  if (response.status === 404) {
+    context.baseContext.setStatus("Guide not available for this tool");
+    return;
   }
-  return;
+  window.open(
+    `https://docs.google.com/viewer?url=${pdfLink}`,
+    "_blank",
+    "width=1000,height=800"
+  );
 }
 
 const headerButtons: HeaderButton[] = [
@@ -63,12 +69,8 @@ const headerButtons: HeaderButton[] = [
     tooltip: "Bug Report",
   },
   {
-    onClick: (
-      context: ReturnType<typeof useAppContext>,
-      pathname: string,
-      redirectRefs: Record<string, RefObject<HTMLAnchorElement>>
-    ) => {
-      context.settings.open();
+    onClick: (context) => {
+      context.appContext.settings.open();
     },
     icon: "settings",
     tooltip: "Settings",
@@ -78,6 +80,7 @@ const headerButtons: HeaderButton[] = [
 
 const Header = () => {
   const appContext = useContext(AppContext);
+  const baseContext = useContext(BaseContext);
   const { setStatus } = useContext(BaseContext);
 
   const redirectRefs: Record<string, RefObject<HTMLAnchorElement>> = {};
@@ -86,11 +89,8 @@ const Header = () => {
       redirectRefs[button.href] = useRef<HTMLAnchorElement>(null);
     }
   }
-  // for user guides
-  redirectRefs[URLs["chipGuide"].href] = useRef<HTMLAnchorElement>(null);
-  redirectRefs[URLs["placeholder"].href] = useRef<HTMLAnchorElement>(null);
 
-  const pathname = useLocation().pathname.replace("/", "");
+  const pathname = useLocation().pathname.replaceAll("/", "");
 
   return (
     <header>
@@ -111,15 +111,6 @@ const Header = () => {
             {appContext.title && ` / ${appContext.title}`}
           </li>
         </ul>
-        {/* for guide */}
-        {[URLs["chipGuide"].href, URLs["placeholder"].href].map((href) => (
-          <Link
-            key={href}
-            to={href}
-            ref={redirectRefs[href]}
-            style={{ display: "none" }}
-          />
-        ))}
         <ul className="icon-list">
           {headerButtons.map(
             ({ href, icon, onClick, tooltip, target, tool }) => {
@@ -132,7 +123,7 @@ const Header = () => {
                     appContext.setTitle(undefined);
                     setStatus("");
                     if (onClick) {
-                      onClick?.(appContext, pathname, redirectRefs);
+                      onClick?.({ appContext, baseContext, pathname });
                     } else {
                       if (href) {
                         if (target) {

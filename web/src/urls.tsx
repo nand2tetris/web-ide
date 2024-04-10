@@ -6,7 +6,6 @@ const ASM = lazy(() => import("./pages/asm"));
 const BITMAP = lazy(() => import("./pages/bitmap"));
 const VM = lazy(() => import("./pages/vm"));
 const Util = lazy(() => import("./pages/util"));
-const ChipGuide = lazy(() => import("./pages/guides/chip_guide"));
 const About = lazy(() => import("./pages/about"));
 
 export const LAST_ROUTE_KEY = "lastRoute";
@@ -55,12 +54,7 @@ const URLs: Record<string, URL> = {
     href: "/util",
     target: <Util />,
   },
-  chipGuide: {
-    href: "/chip_guide",
-    target: <ChipGuide />,
-  },
   about: { href: "/about", target: <About /> },
-  placeholder: { href: "/placeholder", target: <span>To be added later</span> },
 };
 
 export default URLs;

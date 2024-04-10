@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-    <g style="transform: translate(20%, 10%) scale(80%)">
-        <g style="stroke: #777; fill:none; stroke-width: 20px; stroke-linejoin: round; stroke-linecap: round">
-            <path d="M10,10 H500 V500 H10 z M10,120 H500 M10,240 H500 M10,370 H500 M170,120 V500 M340,120 V500" />
-        </g>
-    </g>
-</svg>

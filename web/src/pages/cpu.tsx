@@ -2,7 +2,7 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
-import { Screen } from "@nand2tetris/components/chips/screen.js";
+import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
 import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
 import { useContext, useEffect, useRef, useState } from "react";
 
@@ -118,8 +118,8 @@ export const CPU = () => {
     dispatch.current({ action: "update" });
   };
 
-  const [scale, setScale] = useState(1);
-  const onScale = (scale: number) => {
+  const [scale, setScale] = useState<ScreenScales>(1);
+  const onScale = (scale: ScreenScales) => {
     setScale(scale);
   };
 
@@ -160,6 +160,7 @@ export const CPU = () => {
           key={screenRenderKey}
           memory={state.sim.Screen}
           showScaleControls={true}
+          scale={scale}
           onScale={onScale}
         ></Screen>
         <Keyboard update={onKeyChange} keyboard={state.sim.Keyboard} />

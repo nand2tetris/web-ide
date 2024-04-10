@@ -48,21 +48,25 @@ function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
   ctx.putImageData(image, 0, 0);
 }
 
+export type ScreenScales = 0 | 1 | 2;
+
 export const Screen = ({
   memory,
   showScaleControls = false,
+  scale = 1,
   onScale,
 }: {
   memory: ScreenMemory;
   showScaleControls?: boolean;
-  onScale?: (scale: number) => void;
+  scale?: ScreenScales;
+  onScale?: (scale: ScreenScales) => void;
 }) => {
   const canvas = useRef<HTMLCanvasElement>();
-  const [scale, setScale] = useState(1);
+  const [screenScale, setScreenScale] = useState<ScreenScales>(scale);
 
-  const onScaleCB = (scale: number) => {
+  const onScaleCB = (scale: ScreenScales) => {
     onScale?.(scale);
-    setScale(scale);
+    setScreenScale(scale);
   };
 
   const draw = useCallback(() => {
@@ -100,12 +104,12 @@ export const Screen = ({
           </fieldset>
         )}
       </header>
-      {scale > 0 && (
+      {screenScale > 0 && (
         <main style={{ backgroundColor: "var(--code-background-color)" }}>
           <figure
             style={{
-              width: `${512 * scale}px`,
-              height: `${256 * scale}px`,
+              width: `${512 * screenScale}px`,
+              height: `${256 * screenScale}px`,
               boxSizing: "content-box",
               marginInline: "auto",
               margin: "auto",
@@ -120,7 +124,7 @@ export const Screen = ({
               width={512}
               height={256}
               style={{
-                transform: `translate(-50%, -50%) scale(${scale}) translate(50%, 50%)`,
+                transform: `translate(-50%, -50%) scale(${screenScale}) translate(50%, 50%)`,
                 imageRendering: "pixelated",
               }}
             ></canvas>

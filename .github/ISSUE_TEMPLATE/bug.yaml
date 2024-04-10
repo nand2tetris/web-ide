@@ -16,9 +16,9 @@ body:
       description: Which NAND2Tetris program were you using?
       options:
         - Hardware Simulator
-        - CPU Emulator (coming soon)
-        - Assembler (coming soon)
-        - VM Emulator (coming soon)
+        - CPU Emulator
+        - Assembler
+        - VM Emulator
   - type: dropdown
     id: interface
     attributes:

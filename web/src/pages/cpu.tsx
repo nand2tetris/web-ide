@@ -10,7 +10,7 @@ import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { AppContext } from "src/App.context";
-import { Panel } from "src/shell/panel";
+import { Accordian, Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
 import "./cpu.scss";
 
@@ -23,7 +23,6 @@ export const CPU = () => {
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
   const [fileName, setFileName] = useState<string>();
   const [romFormat, setRomFormat] = useState("asm");
-  const [displayEnabled, setDisplayEnabled] = useState(true);
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
@@ -50,10 +49,6 @@ export const CPU = () => {
     actions.compileTest(tst, cmp);
     actions.reset();
   }, [tst, cmp]);
-
-  const toggleDisplayEnabled = () => {
-    setDisplayEnabled(!displayEnabled);
-  };
 
   const cpuRunner = useRef<Timer>();
   const testRunner = useRef<Timer>();
@@ -134,7 +129,6 @@ export const CPU = () => {
     >
       <MemoryComponent
         name="ROM"
-        displayEnabled={displayEnabled}
         memory={state.sim.ROM}
         highlight={state.sim.PC}
         format={romFormat}
@@ -145,7 +139,6 @@ export const CPU = () => {
       />
       <MemoryComponent
         name="RAM"
-        displayEnabled={displayEnabled}
         memory={state.sim.RAM}
         format="dec"
         excludedFormats={["asm"]}
@@ -170,27 +163,20 @@ export const CPU = () => {
           onScale={onScale}
         ></Screen>
         <Keyboard update={onKeyChange} keyboard={state.sim.Keyboard} />
-        <label>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={displayEnabled}
-            onChange={toggleDisplayEnabled}
-          />
-          <Trans>{displayEnabled ? "Disable display" : "Enable display"}</Trans>
-        </label>
-        {displayEnabled && (
-          <div>
-            <dl>
-              <dt>PC</dt>
-              <dd>{state.sim.PC}</dd>
-              <dt>A</dt>
-              <dd>{state.sim.A}</dd>
-              <dt>D</dt>
-              <dd>{state.sim.D}</dd>
-            </dl>
-          </div>
-        )}
+        <Accordian summary={<Trans>Registers</Trans>} open={true}>
+          <main>
+            <div>
+              <dl>
+                <dt>PC</dt>
+                <dd>{state.sim.PC}</dd>
+                <dt>A</dt>
+                <dd>{state.sim.A}</dd>
+                <dt>D</dt>
+                <dd>{state.sim.D}</dd>
+              </dl>
+            </div>
+          </main>
+        </Accordian>
       </Panel>
       {runnersAssigned && (
         <TestPanel

@@ -1,5 +1,5 @@
 import { KeyboardAdapter } from "@nand2tetris/simulator/cpu/memory.js";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RegisterComponent } from "./register.js";
 
 const KeyMap: Record<string, number | undefined> = {
@@ -69,6 +69,8 @@ export const Keyboard = ({
   const [bits, setBits] = useState(keyboard.getKey());
   let currentKey = 0;
 
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
   const toggleEnabled = () => {
     setEnabled(!enabled);
   };
@@ -79,6 +81,7 @@ export const Keyboard = ({
     }
 
     setCharacter(getKeyDisplay(event.key));
+    toggleRef.current?.blur();
     const key = keyPressToHackCharacter(event);
     if (key === currentKey) {
       return;
@@ -88,6 +91,7 @@ export const Keyboard = ({
   };
 
   const onKeyUp = (event: KeyboardEvent) => {
+    toggleRef.current?.blur();
     if (!enabled) {
       return;
     }
@@ -123,17 +127,19 @@ export const Keyboard = ({
   });
 
   return (
-    <div className="flex row align-baseline">
-      <div className="flex-2">
-        <RegisterComponent name="Key" bits={bits} />
+    <article className="panel">
+      <div className="flex row align-baseline">
+        <div className="flex-2">Key: {character}</div>
+        <div className="flex-2">
+          <RegisterComponent name="Char code" bits={bits} />
+        </div>
+        <div className="flex-3">
+          <button onClick={toggleEnabled} ref={toggleRef}>
+            {/* <Icon name="keyboard" /> */}
+            {`${enabled ? "Disable" : "Enable"} Keyboard`}
+          </button>
+        </div>
       </div>
-      <div className="flex-2">Char: {character}</div>
-      <div className="flex-3">
-        <button onClick={toggleEnabled}>
-          {/* <Icon name="keyboard" /> */}
-          {`${enabled ? "Disable" : "Enable"} Keyboard`}
-        </button>
-      </div>
-    </div>
+    </article>
   );
 };

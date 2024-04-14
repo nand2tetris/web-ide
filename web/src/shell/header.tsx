@@ -37,18 +37,26 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
   };
 }
 
+const guideLinks: Record<string, string> = {
+  chip: "https://drive.google.com/file/d/15unXGgTfQySMr1V39xTCLTgGfCOr6iG9/view",
+  cpu: "https://drive.google.com/file/d/16eHIj78Cpeb0uxXBAvxUPUaIwkrj3NIu/view",
+  asm: "https://drive.google.com/file/d/16gy2EDqUqrPIzy-vyX0-M8ObN5HyQa3Y/view",
+};
+
+const GUIDE_NOT_AVAILABLE_MESSAGE = "Guide not available for this tool";
+
 async function openGuide(context: HeaderButtonContext) {
-  const pdfLink = `https://raw.githubusercontent.com/nand2tetris/web-ide/user-guide/${context.pathname}.pdf`;
-  const response = await fetch(pdfLink);
-  if (response.status === 404) {
-    context.baseContext.setStatus("Guide not available for this tool");
+  if (!guideLinks[context.pathname]) {
+    context.baseContext.setStatus(GUIDE_NOT_AVAILABLE_MESSAGE);
     return;
   }
-  window.open(
-    `https://docs.google.com/viewer?url=${pdfLink}`,
-    "_blank",
-    "width=1000,height=800"
-  );
+  const pdfLink = guideLinks[context.pathname];
+  const response = await fetch(pdfLink);
+  if (response.status === 404) {
+    context.baseContext.setStatus(GUIDE_NOT_AVAILABLE_MESSAGE);
+    return;
+  }
+  window.open(pdfLink, "_blank", "width=1000,height=800");
 }
 
 const headerButtons: HeaderButton[] = [

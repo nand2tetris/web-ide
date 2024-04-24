@@ -406,7 +406,7 @@ class ChipBuilder {
         return Err(
           createError(
             name.toLowerCase() == "true" || name.toLowerCase() == "false"
-              ? `The constants ${name.toLowerCase()} must be in lower-case`
+              ? `The constant bus ${name.toLowerCase()} must be in lower-case`
               : `Undefined internal pin name: ${name}`,
             pinData.firstUse
           )

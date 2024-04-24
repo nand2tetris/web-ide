@@ -81,8 +81,8 @@ interface InternalPin {
   width?: number;
 }
 
-interface Wire {
-  chip: Chip;
+interface WireData {
+  partChip: Chip;
   lhs: PinParts;
   rhs: PinParts;
 }
@@ -110,7 +110,7 @@ function display(pin: PinParts): string {
   return pin.pin;
 }
 
-function createWire(
+function createConnection(
   lhs: PinParts,
   rhs: PinParts
 ): Result<Connection, CompilationError> {
@@ -192,7 +192,7 @@ class ChipBuilder {
   private internalPins: Map<string, InternalPin> = new Map();
   private inPins: Map<string, Set<number>> = new Map();
   private outPins: Map<string, Set<number>> = new Map();
-  private wires: Wire[] = [];
+  private wires: WireData[] = [];
 
   constructor(parts: HdlParse, fs?: FileSystem, name?: string) {
     this.parts = parts;
@@ -259,25 +259,36 @@ class ChipBuilder {
   }
 
   private wirePart(part: Part, partChip: Chip): Result<void, CompilationError> {
-    const wires: Connection[] = [];
+    const connections: Connection[] = [];
     this.inPins.clear();
     for (const { lhs, rhs } of part.wires) {
       const result = this.validateWire(partChip, lhs, rhs);
       if (isErr(result)) {
         return result;
       }
-      const wire = createWire(lhs, rhs);
-      if (isErr(wire)) {
-        return wire;
+      const connection = createConnection(lhs, rhs);
+      if (isErr(connection)) {
+        return connection;
       }
-      wires.push(Ok(wire));
+      connections.push(Ok(connection));
     }
 
     try {
-      this.chip.wire(partChip, wires);
+      const result = this.chip.wire(partChip, connections);
+      if (isErr(result)) {
+        const error = Err(result);
+        return Err(
+          createError(
+            error.message,
+            error.lhs
+              ? part.wires[error.wireIndex].lhs.span
+              : part.wires[error.wireIndex].rhs.span
+          )
+        );
+      }
       return Ok();
     } catch (e) {
-      return Err(e as CompilationError);
+      return Err(createError((e as Error).message, part.span));
     }
   }
 
@@ -302,7 +313,7 @@ class ChipBuilder {
       );
     }
     if (!isConstant(rhs.pin)) {
-      this.wires.push({ chip: partChip, lhs, rhs });
+      this.wires.push({ partChip: partChip, lhs, rhs });
     }
     return Ok();
   }
@@ -438,7 +449,7 @@ class ChipBuilder {
   private validateWireWidths(): Result<void, CompilationError> {
     for (const wire of this.wires) {
       const lhsWidth =
-        getSubBusWidth(wire.lhs) ?? wire.chip.get(wire.lhs.pin)?.width;
+        getSubBusWidth(wire.lhs) ?? wire.partChip.get(wire.lhs.pin)?.width;
       const rhsWidth =
         getSubBusWidth(wire.rhs) ??
         this.chip.get(wire.rhs.pin)?.width ??

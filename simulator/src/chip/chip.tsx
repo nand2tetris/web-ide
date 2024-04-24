@@ -239,6 +239,13 @@ export class Pins {
   }
 }
 
+function validateWidth(start: number, width: number, pin: Pin) {
+  assert(
+    start + width <= pin.width,
+    `Sub bus index out of range (${pin.name} has width ${pin.width})`
+  );
+}
+
 let id = 0;
 export class Chip {
   readonly id = id++;
@@ -410,11 +417,13 @@ export class Chip {
 
     // Wrap the chipPin in an InBus when the chip side is dimensioned
     if (from.start > 0 || from.width !== chipPin.width) {
+      validateWidth(from.start, from.width, chipPin);
       chipPin = new InSubBus(chipPin, from.start, from.width);
     }
 
     // Wrap the chipPin in an OutBus when the part side is dimensioned
     if (to.start > 0 || to.width !== partPin.width) {
+      validateWidth(to.start, to.width, partPin);
       chipPin = new OutSubBus(chipPin, to.start, to.width);
     }
 
@@ -434,12 +443,14 @@ export class Chip {
 
     // Wrap the partPin in an InBus when the part side is dimensioned
     if (to.start > 0 || to.width !== partPin.width) {
+      validateWidth(to.start, to.width, partPin);
       partPin = new InSubBus(partPin, to.start, to.width);
     }
 
     // Wrap the partPin in an OutBus when the chip side is dimensioned
     if (!["true", "false"].includes(chipPin.name)) {
       if (from.start > 0 || from.width !== chipPin.width) {
+        validateWidth(from.start, from.width, chipPin);
         partPin = new OutSubBus(partPin, from.start, from.width);
       }
     }

@@ -11,17 +11,23 @@ import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
 
-function pinWidth(start: number, end: number | undefined): number | undefined {
-  if (end === undefined) {
-    return undefined;
+function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
+  const start = pin.start ?? 0;
+  if (pin.end === undefined) {
+    return Ok(undefined);
   }
-  if (end >= start) {
-    return end - start + 1;
+  if (pin.end >= start) {
+    return Ok(pin.end - start + 1);
   }
-  if (start > 0 && end === 0) {
-    return 1;
+  if (start > 0 && pin.end === 0) {
+    return Ok(1);
   }
-  throw new Error(`Bus specification has start > end (${start} > ${end})`);
+  return Err(
+    createError(
+      `Bus start index should be less then or equal to bus end index`,
+      pin.span
+    )
+  );
 }
 
 export async function parse(
@@ -107,19 +113,31 @@ function display(pin: PinParts): string {
   return pin.pin;
 }
 
-function createWire(lhs: PinParts, rhs: PinParts): Connection {
-  return {
+function createWire(
+  lhs: PinParts,
+  rhs: PinParts
+): Result<Connection, CompilationError> {
+  const lhsWidth = pinWidth(lhs);
+  const rhsWidth = pinWidth(rhs);
+  if (isErr(lhsWidth)) {
+    return lhsWidth;
+  }
+  if (isErr(rhsWidth)) {
+    return rhsWidth;
+  }
+
+  return Ok({
     to: {
       name: lhs.pin.toString(),
       start: lhs.start ?? 0,
-      width: pinWidth(lhs.start ?? 0, lhs.end),
+      width: Ok(lhsWidth),
     },
     from: {
       name: rhs.pin.toString(),
       start: rhs.start ?? 0,
-      width: pinWidth(rhs.start ?? 0, rhs.end),
+      width: Ok(rhsWidth),
     },
-  };
+  });
 }
 
 function getIndices(pin: PinParts): number[] {
@@ -251,7 +269,11 @@ class ChipBuilder {
       if (isErr(result)) {
         return result;
       }
-      wires.push(createWire(lhs, rhs));
+      const wire = createWire(lhs, rhs);
+      if (isErr(wire)) {
+        return wire;
+      }
+      wires.push(Ok(wire));
     }
 
     try {

@@ -391,8 +391,8 @@ class ChipBuilder {
       return Err(
         createError(
           isConstant(rhs.pin)
-            ? `Cannot use sub bus of constant bus`
-            : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+            ? `Constant bus cannot be subscripted`
+            : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted`,
           rhs.span
         )
       );

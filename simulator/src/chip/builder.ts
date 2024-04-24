@@ -19,9 +19,6 @@ function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
   if (pin.end >= start) {
     return Ok(pin.end - start + 1);
   }
-  if (start > 0 && pin.end === 0) {
-    return Ok(1);
-  }
   return Err(
     createError(
       `Bus start index should be less then or equal to bus end index`,

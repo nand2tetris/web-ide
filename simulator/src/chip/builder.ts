@@ -460,7 +460,11 @@ class ChipBuilder {
             `Different bus widths: ${display(
               wire.lhs
             )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
-            wire.lhs.span
+            {
+              start: wire.lhs.span.start,
+              end: wire.rhs.span.end,
+              line: wire.lhs.span.line,
+            }
           )
         );
       }

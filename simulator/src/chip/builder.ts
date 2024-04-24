@@ -345,7 +345,7 @@ class ChipBuilder {
       if (rhs.start !== undefined || rhs.end !== undefined) {
         return Err(
           createError(
-            `Cannot write to sub bus of internal pin ${rhs.pin}`,
+            `Internal pins (in this case: ${rhs.pin}) cannot be subscripted`,
             rhs.span
           )
         );

@@ -435,8 +435,6 @@ export class Chip {
     to: PinSide,
     from: PinSide
   ): Result<void, WireError> {
-    if (part.outs.get(to.name)) {
-    }
     const partPin = assertExists(
       part.outs.get(to.name),
       () => `Cannot wire to missing pin ${to.name}`

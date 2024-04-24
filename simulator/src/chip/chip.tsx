@@ -2,6 +2,12 @@
 import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
+import {
+  Err,
+  Ok,
+  Result,
+  isErr,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
 
@@ -239,7 +245,28 @@ export class Pins {
   }
 }
 
+function validateWidth(
+  start: number,
+  width: number,
+  pin: Pin
+): Result<void, string> {
+  return start + width <= pin.width
+    ? Ok()
+    : Err(`Sub bus index out of range (${pin.name} has width ${pin.width})`);
+}
+
 let id = 0;
+
+export interface PartWireError {
+  wireIndex: number;
+  lhs: boolean;
+  message: string;
+}
+
+export interface WireError {
+  message: string;
+  lhs: boolean;
+}
 export class Chip {
   readonly id = id++;
   ins = new Pins();
@@ -360,15 +387,31 @@ export class Chip {
     return this.outs.has(pin);
   }
 
-  wire(part: Chip, connections: Connection[]) {
+  wire(part: Chip, connections: Connection[]): Result<void, PartWireError> {
     this.parts.add(part);
-    for (const { to, from } of connections) {
+    for (let i = 0; i < connections.length; i++) {
+      const { from, to } = connections[i];
       if (part.isOutPin(to.name)) {
-        this.wireOutPin(part, to, from);
+        const result = this.wireOutPin(part, to, from);
+        if (isErr(result)) {
+          return Err({
+            wireIndex: i,
+            lhs: Err(result).lhs,
+            message: Err(result).message,
+          });
+        }
       } else {
-        this.wireInPin(part, to, from);
+        const result = this.wireInPin(part, to, from);
+        if (isErr(result)) {
+          return Err({
+            wireIndex: i,
+            lhs: Err(result).lhs,
+            message: Err(result).message,
+          });
+        }
       }
     }
+    return Ok();
   }
 
   private findPin(from: string, minWidth?: number): Pin {
@@ -387,7 +430,11 @@ export class Chip {
     return this.pins.emplace(from, minWidth);
   }
 
-  private wireOutPin(part: Chip, to: PinSide, from: PinSide) {
+  private wireOutPin(
+    part: Chip,
+    to: PinSide,
+    from: PinSide
+  ): Result<void, WireError> {
     const partPin = assertExists(
       part.outs.get(to.name),
       () => `Cannot wire to missing pin ${to.name}`
@@ -400,7 +447,10 @@ export class Chip {
     from.width ??= chipPin.width;
 
     if (chipPin instanceof ConstantBus) {
-      throw new Error(`Cannot wire to constant bus`);
+      return Err({
+        message: `Cannot wire to constant bus`,
+        lhs: true,
+      });
     }
 
     // Widen internal pins
@@ -410,18 +460,37 @@ export class Chip {
 
     // Wrap the chipPin in an InBus when the chip side is dimensioned
     if (from.start > 0 || from.width !== chipPin.width) {
+      const result = validateWidth(from.start, from.width, chipPin);
+      if (isErr(result)) {
+        return Err({
+          message: Err(result),
+          lhs: true,
+        });
+      }
       chipPin = new InSubBus(chipPin, from.start, from.width);
     }
 
     // Wrap the chipPin in an OutBus when the part side is dimensioned
     if (to.start > 0 || to.width !== partPin.width) {
+      const result = validateWidth(to.start, to.width, partPin);
+      if (isErr(result)) {
+        return Err({
+          message: Err(result),
+          lhs: false,
+        });
+      }
       chipPin = new OutSubBus(chipPin, to.start, to.width);
     }
 
     partPin.connect(chipPin);
+    return Ok();
   }
 
-  private wireInPin(part: Chip, to: PinSide, from: PinSide) {
+  private wireInPin(
+    part: Chip,
+    to: PinSide,
+    from: PinSide
+  ): Result<void, WireError> {
     let partPin = assertExists(
       part.ins.get(to.name),
       () => `Cannot wire to missing pin ${to.name}`
@@ -434,16 +503,31 @@ export class Chip {
 
     // Wrap the partPin in an InBus when the part side is dimensioned
     if (to.start > 0 || to.width !== partPin.width) {
+      const result = validateWidth(to.start, to.width, partPin);
+      if (isErr(result)) {
+        return Err({
+          message: Err(result),
+          lhs: true,
+        });
+      }
       partPin = new InSubBus(partPin, to.start, to.width);
     }
 
     // Wrap the partPin in an OutBus when the chip side is dimensioned
     if (!["true", "false"].includes(chipPin.name)) {
       if (from.start > 0 || from.width !== chipPin.width) {
+        const result = validateWidth(from.start, from.width, chipPin);
+        if (isErr(result)) {
+          return Err({
+            message: Err(result),
+            lhs: false,
+          });
+        }
         partPin = new OutSubBus(partPin, from.start, from.width);
       }
     }
     chipPin.connect(partPin);
+    return Ok();
   }
 
   eval() {

@@ -6,3 +6,5 @@ for F in chip cpu asm vm bitmap guide util about; do
   mkdir build/$F
   cp build/index.html build/$F
 done
+
+ln -s build web-ide

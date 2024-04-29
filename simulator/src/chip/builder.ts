@@ -375,7 +375,7 @@ class ChipBuilder {
       if (rhs.start !== undefined || rhs.end !== undefined) {
         return Err(
           createError(
-            `Internal pins (in this case: ${rhs.pin}) cannot be subscripted / indexed`,
+            `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
             rhs.span
           )
         );
@@ -422,7 +422,7 @@ class ChipBuilder {
         createError(
           isConstant(rhs.pin)
             ? `Constant bus cannot be subscripted / indexed`
-            : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted / indexed`,
+            : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
           rhs.span
         )
       );

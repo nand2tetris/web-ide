@@ -37,6 +37,7 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
   };
 }
 
+// When updating these, also edit service-worker.ts
 const guideLinks: Record<string, string> = {
   chip: "https://drive.google.com/file/d/15unXGgTfQySMr1V39xTCLTgGfCOr6iG9/view",
   cpu: "https://drive.google.com/file/d/16eHIj78Cpeb0uxXBAvxUPUaIwkrj3NIu/view",

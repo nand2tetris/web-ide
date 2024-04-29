@@ -54,6 +54,23 @@ precacheAndRoute([
     url: "https://cdn.jsdelivr.net/npm/monaco-editor@0.43.0/min/vs/editor/editor.main.nls.js",
     revision: null,
   },
+
+  {
+    url: "https://drive.google.com/file/d/15unXGgTfQySMr1V39xTCLTgGfCOr6iG9/view",
+    revision: null,
+  },
+  {
+    url: "https://drive.google.com/file/d/16eHIj78Cpeb0uxXBAvxUPUaIwkrj3NIu/view",
+    revision: null,
+  },
+  {
+    url: "https://drive.google.com/file/d/16gy2EDqUqrPIzy-vyX0-M8ObN5HyQa3Y/view",
+    revision: null,
+  },
+  {
+    url: "https://drive.google.com/file/d/1IMKD_khjO7iQ673kH9j8qMkyIlMSOtUG/view",
+    revision: null,
+  },
 ]);
 
 // Set up App Shell-style routing, so that all navigation requests

@@ -1,7 +1,6 @@
 import { i18n } from "@lingui/core";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import loaders from "@nand2tetris/projects/loader.js";
 import { useContext, useEffect, useMemo } from "react";
 import { AppContext } from "../App.context";
 
@@ -39,7 +38,14 @@ export const Settings = () => {
     setVersion(version);
     localStorage["/chip/project"] = "01";
     localStorage["/chip/chip"] = "Not";
+    const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
+  };
+
+  const loadSamples = async () => {
+    const loaders = await import("@nand2tetris/projects/loader.js");
+    await loaders.loadSamples(fs);
+    setStatus("Loaded sample files...");
   };
 
   const resetWarningDialog = (
@@ -152,12 +158,7 @@ export const Settings = () => {
                 >
                   <Trans>Reset</Trans>
                 </button>
-                <button
-                  onClick={async () => {
-                    await loaders.loadSamples(fs);
-                    setStatus("Loaded sample files...");
-                  }}
-                >
+                <button onClick={loadSamples}>
                   <Trans>Samples</Trans>
                 </button>
               </dd>

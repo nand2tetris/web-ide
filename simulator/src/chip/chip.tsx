@@ -252,7 +252,7 @@ function validateWidth(
 ): Result<void, string> {
   return start + width <= pin.width
     ? Ok()
-    : Err(`Sub bus index out of range (${pin.name} has width ${pin.width})`);
+    : Err(`Sub-bus index out of range (${pin.name} has width ${pin.width})`);
 }
 
 let id = 0;

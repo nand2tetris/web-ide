@@ -21,9 +21,10 @@ export class VMTest extends Test<VMTestInstruction> {
   static from(
     tst: Tst,
     path?: string,
-    loadAction?: (files: VmFile[]) => void
+    loadAction?: (files: VmFile[]) => void,
+    doEcho?: (status: string) => void
   ): VMTest {
-    const test = new VMTest();
+    const test = new VMTest(doEcho);
     test.dir = path?.split("/").slice(0, -1).join("/");
     test.loadAction = loadAction;
     return fill(test, tst);

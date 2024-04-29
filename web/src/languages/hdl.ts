@@ -115,3 +115,55 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
     ...base.tokenizer,
   },
 };
+
+const HdlSignatures = {
+  Add16: "Add16(a = , b = , out = );",
+  ALU: "ALU(x= ,y= ,zx= ,nx= ,zy= ,ny= ,f= ,no= ,out= ,zr= ,ng= );",
+  And: "And(a= ,b= ,out= );",
+  And16: "And16(a= ,b= ,out= );",
+  ARegister: "ARegister(in= ,load= ,out= );",
+  Bit: "Bit(in= ,load= ,out= );",
+  CPU: "CPU(inM= ,instruction= ,reset= ,outM= ,writeM= ,addressM= ,pc= );",
+  DFF: "DFF(in= ,out= );",
+  DMux: "DMux(in= ,sel= ,a= ,b= );",
+  DMux4Way: "DMux4Way(in= ,sel= ,a= ,b= ,c= ,d= );",
+  DMux8Way: "DMux8Way(in= ,sel= ,a= ,b= ,c= ,d= ,e= ,f= ,g= ,h= );",
+  DRegister: "DRegister(in= ,load= ,out= );",
+  HalfAdder: "HalfAdder(a= ,b= ,sum= , carry= );",
+  FullAdder: "FullAdder(a= ,b= ,c= ,sum= ,carry= );",
+  Inc16: "Inc16(in= ,out= );",
+  Keyboard: "Keyboard(out= );",
+  Memory: "Memory(in= ,load= ,address= ,out= );",
+  Mux: "Mux(a= ,b= ,sel= ,out= );",
+  Mux16: "Mux16(a= ,b= ,sel= ,out= );",
+  Mux4Way16: "Mux4Way16(a= ,b= ,c= ,d= ,sel= ,out= );",
+  Mux8Way16: "Mux8Way16(a= ,b= ,c= ,d= ,e= ,f= ,g= ,h= ,sel= ,out= );",
+  Nand: "Nand(a= ,b= ,out= );",
+  Not16: "Not16(in= ,out= );",
+  Not: "Not(in= ,out= );",
+  Or: "Or(a= ,b= ,out= );",
+  Or8Way: "Or8Way(in= ,out= );",
+  Or16: "Or16(a= ,b= ,out= );",
+  PC: "PC(in= ,load= ,inc= ,reset= ,out= );",
+  RAM8: "RAM8(in= ,load= ,address= ,out= );",
+  RAM64: "RAM64(in= ,load= ,address= ,out= );",
+  RAM512: "RAM512(in= ,load= ,address= ,out= );",
+  RAM4K: "RAM4K(in= ,load= ,address= ,out= );",
+  RAM16K: "RAM16K(in= ,load= ,address= ,out= );",
+  Register: "Register(in= ,load= ,out= );",
+  ROM32K: "ROM32K(address= ,out= );",
+  Screen: "Screen(in= ,load= ,address= ,out= );",
+  Xor: "Xor(a = , b = , out = );",
+};
+
+export const HdlSnippets = {
+  provideCompletionItems: () => {
+    return {
+      suggestions: Object.entries(HdlSignatures).map(([name, signature]) => ({
+        label: name,
+        kind: monaco.languages.CompletionItemKind.Function,
+        insertText: signature,
+      })),
+    };
+  },
+};

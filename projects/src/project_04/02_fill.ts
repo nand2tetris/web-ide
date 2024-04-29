@@ -17,7 +17,7 @@ export const tst = `// This file is part of www.nand2tetris.org
 
 // Tests the Fill.hack program in the CPU emulator.
 
-echo "Make sure the highest speed is selected. Then, select the keyboard, press any key for some time, and inspect the screen.";
+echo "Select the highest speed and 'enable keyboard'. Then press any key for some time, and inspect the screen.";
 
 repeat {
   ticktock;

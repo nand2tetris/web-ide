@@ -308,9 +308,7 @@ class ChipBuilder {
         return result;
       }
     } else {
-      return Err(
-        createError(`Undefined pin name: ${lhs.pin}`, lhs.span)
-      );
+      return Err(createError(`Undefined pin name: ${lhs.pin}`, lhs.span));
     }
     if (!isConstant(rhs.pin)) {
       this.wires.push({ partChip: partChip, lhs, rhs });

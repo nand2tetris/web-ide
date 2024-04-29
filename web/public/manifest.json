@@ -1,25 +1,42 @@
 {
   "short_name": "NAND2Tetris",
-  "name": "NAND2Tetris Web IDE",
+  "name": "NAND2Tetris",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "favicon.svg",
+      "sizes": "32x32",
+      "type": "image/svg+xml"
     },
     {
-      "src": "logo192.png",
+      "src": "logo_192.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "logo_512.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
+  "screenshots": [
+    {
+      "src": "user_guide/01_chip_empty.png",
+      "sizes": "2660x2076",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Empty Chip"
+    },
+    {
+      "src": "user_guide/01_chip_empty_mobile.png",
+      "sizes": "782x1692",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Empty Chip (Mobile)"
+    }
+  ],
   "start_url": ".",
+  "id": "/web-ide/",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "rgb(16, 149, 193)",
   "background_color": "#ffffff"
 }

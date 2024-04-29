@@ -114,7 +114,6 @@ const Header = () => {
               >
                 NAND2Tetris
               </a>
-              &nbsp;IDE Online
             </strong>
             {TOOLS[pathname] && ` / ${TOOLS[pathname]}`}
             {appContext.title && ` / ${appContext.title}`}

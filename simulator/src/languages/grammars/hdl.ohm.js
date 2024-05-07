@@ -1,6 +1,8 @@
 const hdl = `
 Hdl <: Base{
   Root := Chip
+  identifier := (letter|underscore) (alnum|underscore)*
+  Name := identifier
   Chip = "CHIP" Name OpenBrace ChipBody CloseBrace
   ChipBody = InList? OutList? PartList ClockedList?
   InList = "IN" PinList Semi

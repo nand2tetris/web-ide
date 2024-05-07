@@ -52,7 +52,7 @@ Base {
   false = "false"
 
   Name = identifier
-  identifier = (letter|underscore) (alnum|underscore|dot|dollar)*
+  identifier = (letter|underscore|dot|dollar) (alnum|underscore|dot|dollar)*
 
   Number = number
   number = hexNumber | decNumber | binNumber

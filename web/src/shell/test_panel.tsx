@@ -226,7 +226,12 @@ export const TestPanel = ({
                       </button>
                     )}
                     {showLoad && (
-                      <button className="flex-0" onClick={loadTest}>
+                      <button
+                        className="flex-0"
+                        onClick={loadTest}
+                        data-tooltip="Load a test script"
+                        data-placement="bottom"
+                      >
                         📂
                       </button>
                     )}

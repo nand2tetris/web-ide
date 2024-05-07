@@ -195,7 +195,9 @@ export class Vm {
     return Ok();
   }
 
-  private static validateFunctions(instructions: VmInstruction[]) {
+  private static validateFunctions(
+    instructions: VmInstruction[]
+  ): Result<void, CompilationError> {
     const functions: Set<string> = new Set();
     const calls = [];
 
@@ -229,10 +231,11 @@ export class Vm {
         if (VM_BUILTINS[call.name]) {
           if (VM_BUILTINS[call.name].nArgs != call.nArgs) {
             return Err(
-              new Error(
+              createError(
                 `OS function ${call.name} expects ${
                   VM_BUILTINS[call.name].nArgs
-                } arguments, not ${call.nArgs}`
+                } arguments, not ${call.nArgs}`,
+                call.span
               )
             );
           }

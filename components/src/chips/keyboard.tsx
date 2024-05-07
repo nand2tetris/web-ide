@@ -129,15 +129,18 @@ export const Keyboard = ({
   return (
     <article className="panel">
       <div className="flex row align-baseline">
-        <div className="flex-2">Key: {character}</div>
-        <div className="flex-2">
+        <button
+          onClick={toggleEnabled}
+          ref={toggleRef}
+          className="flex-0"
+          style={{ whiteSpace: "pre" }}
+        >
+          {`${enabled ? "Disable" : "Enable"} Keyboard`}
+        </button>
+        <div className="flex-1"></div> {/* padding */}
+        <div className="flex-4">Key: {character}</div>
+        <div className="flex-4">
           <RegisterComponent name="Char code" bits={bits} />
-        </div>
-        <div className="flex-3">
-          <button onClick={toggleEnabled} ref={toggleRef}>
-            {/* <Icon name="keyboard" /> */}
-            {`${enabled ? "Disable" : "Enable"} Keyboard`}
-          </button>
         </div>
       </div>
     </article>

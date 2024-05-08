@@ -51,7 +51,7 @@ interface Rerenderable {
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
   const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker, toolStates } = useContext(AppContext);
+  const { filePicker, toolStates, setTitle } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -63,10 +63,14 @@ const VM = () => {
   }, [actions]);
 
   useEffect(() => {
-    if (toolStates.vmState) {
-      actions.loadVm(toolStates.vmState);
+    setTitle(toolStates.vm.title);
+  });
+
+  useEffect(() => {
+    if (toolStates.vm.files) {
+      actions.loadVm(toolStates.vm.files);
     }
-  }, toolStates.vmState);
+  }, [toolStates.vm.files]);
 
   useEffect(() => {
     actions.loadTest(path, tst, cmp);
@@ -145,12 +149,15 @@ const VM = () => {
       const sources: VmFile[] = [];
       if (path.includes(".vm")) {
         // single file
+        const name = path.split("/").pop() ?? path;
+        toolStates.vm.setTitle(name);
         sources.push({
-          name: (path.split("/").pop() ?? path).replace(".vm", ""),
+          name: name.replace(".vm", ""),
           content: await fs.readFile(path),
         });
       } else {
         // folder
+        toolStates.vm.setTitle(`Folder name: ${path.split("/").pop()}`);
         for (const file of (await fs.scandir(path)).filter(
           (f) => f.isFile() && f.name.endsWith(".vm")
         )) {

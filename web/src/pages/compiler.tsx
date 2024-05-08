@@ -13,7 +13,6 @@ import {
   useRef,
 } from "react";
 import { Link } from "react-router-dom";
-import { useDialog } from "src/shell/dialog";
 import URLs from "src/urls";
 import { AppContext } from "../App.context";
 import { Editor } from "../shell/editor";
@@ -21,7 +20,7 @@ import { Panel } from "../shell/panel";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { tracking, toolStates } = useContext(AppContext);
+  const { tracking, toolStates, setTitle } = useContext(AppContext);
   const { state, dispatch, actions } = useCompilerPageStore();
 
   const uploadRef = useRef<HTMLInputElement>(null);
@@ -31,6 +30,10 @@ export const Compiler = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+
+  useEffect(() => {
+    setTitle(toolStates.compiler.title);
+  });
 
   const selectTab = useCallback(
     (tab: string) => {
@@ -45,7 +48,7 @@ export const Compiler = () => {
   };
 
   const loadFiles = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files) {
+    if (!event.target.files || event.target.files.length == 0) {
       return;
     }
     await actions.reset();
@@ -55,6 +58,9 @@ export const Compiler = () => {
         actions.addFile(file.name.replace(".jack", ""), source);
       }
     }
+
+    const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
+    toolStates.compiler.setTitle(`Folder name: ${dirName}`);
   };
 
   const valid = () =>
@@ -92,7 +98,8 @@ export const Compiler = () => {
   };
 
   const runInVm = () => {
-    toolStates.setVmState(compileAll());
+    toolStates.vm.setTitle(toolStates.compiler.title);
+    toolStates.vm.setFiles(compileAll());
     redirectRef.current?.click();
   };
 

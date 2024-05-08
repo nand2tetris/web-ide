@@ -43,6 +43,10 @@ export const CPU = () => {
 
   useEffect(() => {
     toolStates.setCpuState(fileName, state.sim.ROM, romFormat);
+    if (fileName) {
+      const name = fileName.split("/").pop() ?? "";
+      setTitle(name);
+    }
   });
 
   useEffect(() => {

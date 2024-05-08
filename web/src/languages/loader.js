@@ -1,9 +1,10 @@
 import { loader } from "@monaco-editor/react";
+import { AsmLanguage } from "./asm";
 import { CmpLanguage } from "./cmp";
 import { HdlLanguage } from "./hdl";
+import { JackLanguage } from "./jack";
 import { TstLanguage } from "./tst";
 import { VmLanguage } from "./vm";
-import { AsmLanguage } from "./asm";
 
 const LANGUAGES = {
   hdl: HdlLanguage,
@@ -11,6 +12,7 @@ const LANGUAGES = {
   tst: TstLanguage,
   vm: VmLanguage,
   asm: AsmLanguage,
+  jack: JackLanguage,
 };
 
 export async function registerLanguages() {

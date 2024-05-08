@@ -196,7 +196,7 @@ export const Compiler = () => {
                     return;
                   }}
                   error={state.files[file].error}
-                  language={""}
+                  language={"jack"}
                 />
               </div>
             </>

@@ -40,7 +40,7 @@ export const Compiler = () => {
   useEffect(() => {
     setStatus(
       valid()
-        ? "Jack code is valid"
+        ? "Compiled successfully"
         : state.files[state.selected].error?.message ?? ""
     );
   });

@@ -122,29 +122,29 @@ export class VMTest extends Test<VMTestInstruction> {
     this.vm.step();
   }
 
-  override async load(filename?: string) {
-    if (!this.loadAction) {
-      return;
-    }
-    if (filename) {
-      const file = await this.fs.readFile(
-        `${this.dir ? `${this.dir}/` : ""}${filename}`
-      );
-      this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
-    } else {
-      const stats = await this.fs.scandir(this.dir ?? "/");
-      const files: VmFile[] = [];
-      for (const stat of stats) {
-        if (stat.isFile() && stat.name.endsWith(".vm")) {
-          const file = await this.fs.readFile(
-            `${this.dir ? `${this.dir}/` : ""}${stat.name}`
-          );
-          files.push({ name: stat.name.replace(".vm", ""), content: file });
-        }
-      }
-      this.loadAction(files);
-    }
-  }
+  // override async load(filename?: string) {
+  //   if (!this.loadAction) {
+  //     return;
+  //   }
+  //   if (filename) {
+  //     const file = await this.fs.readFile(
+  //       `${this.dir ? `${this.dir}/` : ""}${filename}`
+  //     );
+  //     this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
+  //   } else {
+  //     const stats = await this.fs.scandir(this.dir ?? "/");
+  //     const files: VmFile[] = [];
+  //     for (const stat of stats) {
+  //       if (stat.isFile() && stat.name.endsWith(".vm")) {
+  //         const file = await this.fs.readFile(
+  //           `${this.dir ? `${this.dir}/` : ""}${stat.name}`
+  //         );
+  //         files.push({ name: stat.name.replace(".vm", ""), content: file });
+  //       }
+  //     }
+  //     this.loadAction(files);
+  //   }
+  // }
 }
 
 export interface VMTestInstruction extends TestInstruction {

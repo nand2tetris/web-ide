@@ -127,7 +127,7 @@ export function makeCompilerStore(
         fs.mkdir("/jack");
         fs.writeFile("/jack/Main.jack", "");
       }
-      await this._loadFiles();
+      // await this._loadFiles();
     },
   };
 

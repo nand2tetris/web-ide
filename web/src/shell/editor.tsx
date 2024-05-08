@@ -246,6 +246,7 @@ const Monaco = ({
         readOnly: disabled,
         lineNumbers: lineNumberTransform ?? "on",
         folding: false,
+        renderValidationDecorations: "on",
       });
       doDecorations();
       calculateHeight();
@@ -273,7 +274,10 @@ const Monaco = ({
   // Prevent editing disabled editors
   useEffect(() => {
     if (editor.current === undefined) return;
-    editor.current.updateOptions({ readOnly: disabled });
+    editor.current.updateOptions({
+      readOnly: disabled,
+      renderValidationDecorations: "on",
+    });
   }, [editor, disabled]);
 
   // Add error markers on parse failure

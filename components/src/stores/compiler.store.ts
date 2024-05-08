@@ -81,6 +81,7 @@ export function makeCompilerStore(
     async addFile(name: string, content?: string) {
       dispatch.current({ action: "setFile", payload: { name, content } });
       await fs.writeFile(`/jack/${name}.jack`, content ?? "");
+      dispatch.current({ action: "setSelected", payload: name });
     },
 
     async deleteFile(name: string) {

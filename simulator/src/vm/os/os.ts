@@ -15,6 +15,8 @@ export class OS {
   keyboard: KeyboardLib;
   sys: SysLib;
 
+  paused = false;
+
   constructor(memory: VmMemory) {
     this.vmMemory = memory;
     this.screen = new ScreenLib(this.vmMemory, this);

@@ -70,7 +70,7 @@ export const Compiler = () => {
     }
 
     const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
-    toolStates.compiler.setTitle(`Folder name: ${dirName}`);
+    toolStates.compiler.setTitle(`${dirName} / *.jack`);
   };
 
   const valid = () =>
@@ -109,7 +109,7 @@ export const Compiler = () => {
   };
 
   const runInVm = () => {
-    toolStates.vm.setTitle(toolStates.compiler.title);
+    toolStates.vm.setTitle(toolStates.compiler.title?.replace("jack", "vm"));
     toolStates.vm.setFiles(compileAll());
     redirectRef.current?.click();
   };

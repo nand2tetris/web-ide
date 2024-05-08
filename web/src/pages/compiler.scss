@@ -1,8 +1,7 @@
 @use "./page.scss";
 
 .CompilerPage {
-  grid-template-columns: 1fr 7fr !important;
-  grid-template-areas: "files code";
+  grid-template-areas: "code";
 
   .files {
     grid-area: files;

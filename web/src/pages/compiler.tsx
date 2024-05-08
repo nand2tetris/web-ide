@@ -102,7 +102,7 @@ export const Compiler = () => {
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     downloadRef.current.href = url;
-    downloadRef.current.download = `VmCode`;
+    downloadRef.current.download = `VMcode`;
     downloadRef.current.click();
 
     URL.revokeObjectURL(url);

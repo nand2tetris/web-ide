@@ -69,7 +69,7 @@ class Compiler {
   private globalSymbolTable: Record<string, VariableData> = {};
   private localSymbolTable: Record<string, VariableData> = {};
 
-  private className: string = "";
+  private className = "";
 
   private labelNum = 0;
   private fieldNum = 0;
@@ -251,9 +251,9 @@ class Compiler {
   }
 
   compileSubroutineCall(call: SubroutineCall) {
-    let object: string = "";
-    let className: string = "";
-    let subroutineName: string = "";
+    let object = "";
+    let className = "";
+    let subroutineName = "";
     let isMethod = true;
 
     if (call.name.includes(".")) {

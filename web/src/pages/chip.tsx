@@ -302,21 +302,6 @@ export const Chip = () => {
             showCannotTestError();
             return;
           }
-          clockActions.toggle();
-        }}
-        onBlur={recompile}
-        style={{ maxWidth: "initial" }}
-        disabled={!state.sim.clocked}
-      >
-        <Trans>Clock</Trans>:{"\u00a0"}
-        <Clockface />
-      </button>
-      <button
-        onClick={() => {
-          if (state.sim.invalid) {
-            showCannotTestError();
-            return;
-          }
           clockActions.reset();
         }}
         onBlur={recompile}
@@ -324,6 +309,21 @@ export const Chip = () => {
         disabled={!state.sim.clocked}
       >
         <Trans>Reset</Trans>
+      </button>
+      <button
+        onClick={() => {
+          if (state.sim.invalid) {
+            showCannotTestError();
+            return;
+          }
+          clockActions.toggle();
+        }}
+        onBlur={recompile}
+        style={{ minWidth: "7em", textAlign: "start" }}
+        disabled={!state.sim.clocked}
+      >
+        <Trans>Clock</Trans>:{"\u00a0"}
+        <Clockface />
       </button>
     </fieldset>
   );

@@ -19,7 +19,7 @@ import "./asm.scss";
 
 export const Asm = () => {
   const { state, actions, dispatch } = useAsmPageStore();
-  const { toolStates, filePicker } = useContext(AppContext);
+  const { toolStates, filePicker, setTitle } = useContext(AppContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -27,9 +27,14 @@ export const Asm = () => {
   const runner = useRef<Timer>();
   const [runnerAssigned, setRunnerAssigned] = useState(false);
 
+  const [showSymbolTable, setShowSymbolTable] = useState(true);
+
   useEffect(() => {
     if (toolStates.asmState) {
       actions.overrideState(toolStates.asmState);
+      if (toolStates.asmState.path) {
+        setTitle(toolStates.asmState.path.split("/").pop() ?? "");
+      }
     }
   }, []);
 
@@ -67,6 +72,7 @@ export const Asm = () => {
     requestAnimationFrame(async () => {
       await actions.loadAsm(path);
       setStatus("");
+      setTitle(path.split("/").pop() ?? "");
     });
   };
 
@@ -95,7 +101,7 @@ export const Asm = () => {
   };
 
   const compare = () => {
-    dispatch.current({ action: "compare" });
+    actions.compare();
   };
 
   const onSpeedChange = (speed: number) => {
@@ -104,19 +110,22 @@ export const Asm = () => {
 
   const loadToCpu = async () => {
     const bytes = await loadHack(state.result);
-    toolStates.setCpuState(state.path, new ROM(new Int16Array(bytes)));
+    toolStates.setCpuState(
+      state.path?.replace(".asm", ".hack"),
+      new ROM(new Int16Array(bytes)),
+      "bin"
+    );
     redirectRef.current?.click();
   };
 
   return (
-    <div className="AsmPage grid">
+    <div className={`AsmPage grid ${showSymbolTable ? "" : "hide-sym"}`}>
       <Panel
         className="source"
         header={
           <>
             <div>
               <Trans>Source</Trans>
-              {state.path && `: ${state.path.split("/").pop()}`}
             </div>
             <div className="flex-1">
               {runnerAssigned && runner.current && (
@@ -153,6 +162,7 @@ export const Asm = () => {
         <Editor
           value={state.asm}
           error={state.error}
+          alwaysRecenter={false}
           onChange={(source: string) => {
             actions.setAsm(source);
           }}
@@ -230,18 +240,36 @@ export const Asm = () => {
           }}
           grammar={undefined}
           language={""}
-          dynamicHeight={true}
+          alwaysRecenter={false}
           lineNumberTransform={(n) => (n - 1).toString()}
         />
-        {state.symbols.length > 0 && state.translating && "Symbol Table"}
-        {state.translating && <Table values={state.symbols} />}
+      </Panel>
+      <Panel
+        className="sym"
+        header={
+          <>
+            <div className="flex-1">
+              <Trans>Symbol Table</Trans>
+            </div>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={showSymbolTable}
+              onChange={() => setShowSymbolTable(!showSymbolTable)}
+            />
+          </>
+        }
+      >
+        {state.translating && showSymbolTable && (
+          <Table values={state.symbols} />
+        )}
       </Panel>
       <Panel
         className="compare"
         header={
           <>
             <div>
-              <Trans>Compare</Trans>
+              <Trans>Compare Code</Trans>
               {state.compareName && `: ${state.compareName}`}
             </div>
             <div>
@@ -255,6 +283,8 @@ export const Asm = () => {
         <Editor
           value={state.compare}
           highlight={state.translating ? state.resultHighlight : undefined}
+          highlightType={state.compareError ? "error" : "highlight"}
+          alwaysRecenter={false}
           onChange={function (source: string): void {
             dispatch.current({
               action: "setCmp",

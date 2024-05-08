@@ -68,12 +68,28 @@ export interface Decoration {
   cssClass: string;
 }
 
+const isRangeVisible = (
+  editor: monacoT.editor.IStandaloneCodeEditor | undefined,
+  range: monacoT.Range
+) => {
+  for (const visibleRange of editor?.getVisibleRanges() ?? []) {
+    if (visibleRange.containsRange(range)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+export type HighlightType = "highlight" | "error";
+
 const makeDecorations = (
   monaco: typeof monacoT | null,
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
   highlight: Span | undefined,
   additionalDecorations: Decoration[],
-  decorations: string[]
+  decorations: string[],
+  type: HighlightType = "highlight",
+  alwaysCenter = true
 ): string[] => {
   if (!(editor && highlight)) return decorations;
   const model = editor.getModel();
@@ -85,15 +101,20 @@ const makeDecorations = (
   if (range) {
     nextDecoration.push({
       range,
-      options: { inlineClassName: "highlight" },
+      options: {
+        inlineClassName: type == "error" ? "error-highlight" : "highlight",
+      },
     });
     if (highlight.start != highlight.end) {
-      editor.revealRangeInCenter(range);
+      if (alwaysCenter || !isRangeVisible(editor, range)) {
+        editor.revealRangeInCenter(range);
+      }
     }
   }
   for (const decoration of additionalDecorations) {
     const range = monaco?.Range.fromPositions(
       model.getPositionAt(decoration.span.start),
+      // editor.getSc
       model.getPositionAt(decoration.span.end)
     );
     if (range) {
@@ -114,8 +135,10 @@ const Monaco = ({
   error,
   disabled = false,
   highlight: currentHighlight,
+  highlightType = "highlight",
   customDecorations: currentCustomDecorations = [],
   dynamicHeight = false,
+  alwaysRecenter = true,
   lineNumberTransform,
 }: {
   value: string;
@@ -125,8 +148,10 @@ const Monaco = ({
   error?: CompilationError;
   disabled?: boolean;
   highlight?: Span | number;
+  highlightType?: HighlightType;
   customDecorations?: Decoration[];
   dynamicHeight?: boolean;
+  alwaysRecenter?: boolean;
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
@@ -177,9 +202,11 @@ const Monaco = ({
       // either.
       newHighlight ?? { start: 0, end: 0, line: 0 },
       customDecorations.current,
-      decorations.current
+      decorations.current,
+      highlightType,
+      alwaysRecenter
     );
-  }, [decorations, monaco, editor, highlight]);
+  }, [decorations, monaco, editor, highlight, highlightType]);
 
   const calculateHeight = () => {
     if (dynamicHeight) {
@@ -304,8 +331,10 @@ export const Editor = ({
   grammar,
   language,
   highlight,
+  highlightType = "highlight",
   customDecorations = [],
   dynamicHeight = false,
+  alwaysRecenter = true,
   lineNumberTransform,
 }: {
   className?: string;
@@ -318,8 +347,10 @@ export const Editor = ({
   grammar?: ohm.Grammar;
   language: string;
   highlight?: Span | number;
+  highlightType?: HighlightType;
   customDecorations?: Decoration[];
   dynamicHeight?: boolean;
+  alwaysRecenter?: boolean;
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { monaco } = useContext(AppContext);
@@ -338,8 +369,10 @@ export const Editor = ({
           error={error}
           disabled={disabled}
           highlight={highlight}
+          highlightType={highlightType}
           customDecorations={customDecorations}
           dynamicHeight={dynamicHeight}
+          alwaysRecenter={alwaysRecenter}
           lineNumberTransform={lineNumberTransform}
         />
       ) : (

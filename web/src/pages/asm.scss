@@ -7,13 +7,16 @@
   margin: 0px;
   gap: 0;
 
-  grid-template-areas: "source result compare";
+  grid-template-areas: "source result compare" "source sym compare";
   grid-template-columns: 2.5fr 1fr 1fr;
-  grid-template-rows: 1fr;
+  grid-template-rows: 2fr 1fr;
+
+  &.hide-sym {
+    grid-template-rows: 1fr auto;
+  }
 
   .source {
     grid-area: source;
-    // min-height: calc(var(--line-height) * 10rem);
   }
 
   .result {
@@ -22,5 +25,9 @@
 
   .compare {
     grid-area: compare;
+  }
+
+  .sym {
+    grid-area: sym;
   }
 }

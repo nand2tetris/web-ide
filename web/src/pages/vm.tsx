@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
-import { Screen } from "@nand2tetris/components/chips/screen.js";
+import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
@@ -174,8 +174,8 @@ const VM = () => {
 
   const stackRef = useRef<Rerenderable>();
 
-  const [scale, setScale] = useState(1);
-  const onScale = (scale: number) => {
+  const [scale, setScale] = useState<ScreenScales>(1);
+  const onScale = (scale: ScreenScales) => {
     setScale(scale);
   };
 
@@ -247,6 +247,7 @@ const VM = () => {
         <Screen
           memory={state.vm.Screen}
           showScaleControls={true}
+          scale={scale}
           onScale={onScale}
         />
         <Keyboard keyboard={state.vm.Keyboard} />

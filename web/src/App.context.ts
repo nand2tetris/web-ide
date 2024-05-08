@@ -1,7 +1,7 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
-import { MemoryAdapter } from "@nand2tetris/simulator/cpu/memory";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
+import { Format, MemoryAdapter } from "@nand2tetris/simulator/cpu/memory";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
@@ -33,20 +33,23 @@ export function useMonaco() {
 export function useToolStates() {
   const [rom, setRom] = useState<MemoryAdapter>();
   const [cpuPath, setCpuPath] = useState<string>();
+  const [cpuFormat, setCpuFormat] = useState<Format>("asm");
 
   const [asmState, setAsmState] = useState<AsmPageState>();
   const [vmState, setVmState] = useState<VmFile[]>();
 
   const setCpuState = (
     path: string | undefined,
-    rom: MemoryAdapter | undefined
+    rom: MemoryAdapter | undefined,
+    format: Format
   ) => {
     setCpuPath(path);
     setRom(rom);
+    setCpuFormat(format);
   };
 
   return {
-    cpuState: { rom: rom, path: cpuPath },
+    cpuState: { rom: rom, path: cpuPath, format: cpuFormat },
     setCpuState,
     asmState,
     setAsmState,
@@ -127,7 +130,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     return undefined;
   },
   toolStates: {
-    cpuState: { rom: undefined, path: undefined },
+    cpuState: { rom: undefined, path: undefined, format: "asm" },
     setCpuState() {
       return undefined;
     },
@@ -143,6 +146,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       compare: "",
       compareName: undefined,
       lineNumbers: [],
+      compareError: false,
     },
     setAsmState() {
       return undefined;

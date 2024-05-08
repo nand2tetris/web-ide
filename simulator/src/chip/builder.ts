@@ -11,17 +11,20 @@ import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection } from "./chip.js";
 
-function pinWidth(start: number, end: number | undefined): number | undefined {
-  if (end === undefined) {
-    return undefined;
+function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
+  const start = pin.start ?? 0;
+  if (pin.end === undefined) {
+    return Ok(undefined);
   }
-  if (end >= start) {
-    return end - start + 1;
+  if (pin.end >= start) {
+    return Ok(pin.end - start + 1);
   }
-  if (start > 0 && end === 0) {
-    return 1;
-  }
-  throw new Error(`Bus specification has start > end (${start} > ${end})`);
+  return Err(
+    createError(
+      `Bus start index should be less than or equal to bus end index`,
+      pin.span
+    )
+  );
 }
 
 export async function parse(
@@ -78,8 +81,8 @@ interface InternalPin {
   width?: number;
 }
 
-interface Wire {
-  chip: Chip;
+interface WireData {
+  partChip: Chip;
   lhs: PinParts;
   rhs: PinParts;
 }
@@ -107,19 +110,31 @@ function display(pin: PinParts): string {
   return pin.pin;
 }
 
-function createWire(lhs: PinParts, rhs: PinParts): Connection {
-  return {
+function createConnection(
+  lhs: PinParts,
+  rhs: PinParts
+): Result<Connection, CompilationError> {
+  const lhsWidth = pinWidth(lhs);
+  const rhsWidth = pinWidth(rhs);
+  if (isErr(lhsWidth)) {
+    return lhsWidth;
+  }
+  if (isErr(rhsWidth)) {
+    return rhsWidth;
+  }
+
+  return Ok({
     to: {
       name: lhs.pin.toString(),
       start: lhs.start ?? 0,
-      width: pinWidth(lhs.start ?? 0, lhs.end),
+      width: Ok(lhsWidth),
     },
     from: {
       name: rhs.pin.toString(),
       start: rhs.start ?? 0,
-      width: pinWidth(rhs.start ?? 0, rhs.end),
+      width: Ok(rhsWidth),
     },
-  };
+  });
 }
 
 function getIndices(pin: PinParts): number[] {
@@ -177,7 +192,7 @@ class ChipBuilder {
   private internalPins: Map<string, InternalPin> = new Map();
   private inPins: Map<string, Set<number>> = new Map();
   private outPins: Map<string, Set<number>> = new Map();
-  private wires: Wire[] = [];
+  private wires: WireData[] = [];
 
   constructor(parts: HdlParse, fs?: FileSystem, name?: string) {
     this.parts = parts;
@@ -244,21 +259,36 @@ class ChipBuilder {
   }
 
   private wirePart(part: Part, partChip: Chip): Result<void, CompilationError> {
-    const wires: Connection[] = [];
+    const connections: Connection[] = [];
     this.inPins.clear();
     for (const { lhs, rhs } of part.wires) {
       const result = this.validateWire(partChip, lhs, rhs);
       if (isErr(result)) {
         return result;
       }
-      wires.push(createWire(lhs, rhs));
+      const connection = createConnection(lhs, rhs);
+      if (isErr(connection)) {
+        return connection;
+      }
+      connections.push(Ok(connection));
     }
 
     try {
-      this.chip.wire(partChip, wires);
+      const result = this.chip.wire(partChip, connections);
+      if (isErr(result)) {
+        const error = Err(result);
+        return Err(
+          createError(
+            error.message,
+            error.lhs
+              ? part.wires[error.wireIndex].lhs.span
+              : part.wires[error.wireIndex].rhs.span
+          )
+        );
+      }
       return Ok();
     } catch (e) {
-      return Err(e as CompilationError);
+      return Err(createError((e as Error).message, part.span));
     }
   }
 
@@ -278,12 +308,10 @@ class ChipBuilder {
         return result;
       }
     } else {
-      return Err(
-        createError(`Undefined input/output pin name: ${lhs.pin}`, lhs.span)
-      );
+      return Err(createError(`Undefined pin name: ${lhs.pin}`, lhs.span));
     }
     if (!isConstant(rhs.pin)) {
-      this.wires.push({ chip: partChip, lhs, rhs });
+      this.wires.push({ partChip: partChip, lhs, rhs });
     }
     return Ok();
   }
@@ -345,7 +373,7 @@ class ChipBuilder {
       if (rhs.start !== undefined || rhs.end !== undefined) {
         return Err(
           createError(
-            `Cannot write to sub bus of internal pin ${rhs.pin}`,
+            `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
             rhs.span
           )
         );
@@ -378,7 +406,7 @@ class ChipBuilder {
     }
     if (isConstant(rhs.pin)) {
       return Err(
-        createError(`Illegal internal pin name: ${rhs.pin}`, rhs.span)
+        createError(`Internal pin name cannot be "true" or "false"`, rhs.span)
       );
     }
     return Ok();
@@ -391,8 +419,8 @@ class ChipBuilder {
       return Err(
         createError(
           isConstant(rhs.pin)
-            ? `Cannot use sub bus of constant bus`
-            : `Cannot use sub bus of internal pin ${rhs.pin} as input`,
+            ? `Constant bus cannot be subscripted or indexed`
+            : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
           rhs.span
         )
       );
@@ -406,7 +434,7 @@ class ChipBuilder {
         return Err(
           createError(
             name.toLowerCase() == "true" || name.toLowerCase() == "false"
-              ? `The constants ${name.toLowerCase()} must be in lower-case`
+              ? `The constant bus ${name.toLowerCase()} must be in lower-case`
               : `Undefined internal pin name: ${name}`,
             pinData.firstUse
           )
@@ -419,7 +447,7 @@ class ChipBuilder {
   private validateWireWidths(): Result<void, CompilationError> {
     for (const wire of this.wires) {
       const lhsWidth =
-        getSubBusWidth(wire.lhs) ?? wire.chip.get(wire.lhs.pin)?.width;
+        getSubBusWidth(wire.lhs) ?? wire.partChip.get(wire.lhs.pin)?.width;
       const rhsWidth =
         getSubBusWidth(wire.rhs) ??
         this.chip.get(wire.rhs.pin)?.width ??
@@ -430,7 +458,11 @@ class ChipBuilder {
             `Different bus widths: ${display(
               wire.lhs
             )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
-            wire.lhs.span
+            {
+              start: wire.lhs.span.start,
+              end: wire.rhs.span.end,
+              line: wire.lhs.span.line,
+            }
           )
         );
       }

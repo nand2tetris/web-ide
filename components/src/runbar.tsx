@@ -1,5 +1,5 @@
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { ChangeEvent, ReactNode, useEffect, useState } from "react";
+import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
 import { useTimer } from "./timer.js";
 
 interface RunbarTooltipOverrides {
@@ -43,6 +43,22 @@ export const Runbar = (props: {
     props.onSpeedChange?.(Number(e.target.value));
   };
 
+  const toggleRef = useRef<HTMLButtonElement>(null);
+
+  const onKeyPress = (event: KeyboardEvent) => {
+    toggleRef.current?.blur();
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", onKeyPress);
+    window.addEventListener("keyup", onKeyPress);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyPress);
+      window.removeEventListener("keyup", onKeyPress);
+    };
+  });
+
   return (
     <div className="flex row wrap">
       <fieldset role="group">
@@ -59,6 +75,7 @@ export const Runbar = (props: {
         </button>
         <button
           className="flex-0"
+          ref={toggleRef}
           disabled={props.disabled}
           onClick={() =>
             runner.state.running

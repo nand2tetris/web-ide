@@ -1,5 +1,10 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Err, Ok, isErr } from "@davidsouther/jiffies/lib/esm/result.js";
+import {
+  Err,
+  Ok,
+  Result,
+  isErr,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KEYBOARD_OFFSET,
   SCREEN_OFFSET,
@@ -61,21 +66,27 @@ class Translator {
     return this.lines.join("\n");
   }
 
-  load(asm: Asm, lineNum: number) {
+  load(asm: Asm, lineNum: number): Result<void, CompilationError> {
     this.symbols = defaultSymbols();
     this.variables.clear();
     this.asm = asm;
-    fillLabel(asm, (name, value, isVar) => {
+
+    const result = fillLabel(asm, (name, value, isVar) => {
       if (isVar) {
         this.variables.set(value, { name: name, isHidden: true });
       } else {
         this.symbols.push({ name: name, value: value.toString() });
       }
     });
+    if (isErr(result)) {
+      return result;
+    }
+
     asm.instructions = asm.instructions.filter(({ type }) => type !== "L");
 
     this.resolveLineNumbers(lineNum);
     this.reset();
+    return Ok();
   }
 
   resolveLineNumbers(lineNum: number) {
@@ -169,6 +180,7 @@ export interface AsmPageState {
   compareName: string | undefined;
   lineNumbers: number[];
   error?: CompilationError;
+  compareError: boolean;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -182,7 +194,7 @@ export function makeAsmStore(
   dispatch: MutableRefObject<AsmStoreDispatch>
 ) {
   const translator = new Translator();
-  const highlightInfo = {
+  const highlightInfo: HighlightInfo = {
     resultHighlight: undefined,
     sourceHighlight: undefined,
     highlightMap: new Map(),
@@ -191,6 +203,7 @@ export function makeAsmStore(
   let animate = true;
   let compiled = false;
   let translating = false;
+  let failure = false;
 
   const reducers = {
     setAsm(
@@ -225,6 +238,7 @@ export function makeAsmStore(
       state.lineNumbers = Array.from(translator.lineNumbers);
       state.sourceHighlight = highlightInfo.sourceHighlight;
       state.resultHighlight = highlightInfo.resultHighlight;
+      state.compareError = failure;
     },
 
     compare(state: AsmPageState) {
@@ -234,6 +248,7 @@ export function makeAsmStore(
         .filter((line) => line.trim() != "");
 
       if (resultLines.length != compareLines.length) {
+        failure = true;
         setStatus("Comparison failed - different lengths");
         return;
       }
@@ -241,8 +256,10 @@ export function makeAsmStore(
       for (let i = 0; i < compareLines.length; i++) {
         for (let j = 0; j < compareLines[i].length; j++) {
           if (resultLines[i][j] !== compareLines[i][j]) {
-            setStatus(`Comparison failed at ${i}:${j}`);
-            state.resultHighlight = {
+            setStatus(`Comparison failure: Line ${i}`);
+
+            failure = true;
+            highlightInfo.resultHighlight = {
               start: i * 17,
               end: (i + 1) * 17,
               line: -1,
@@ -293,7 +310,19 @@ export function makeAsmStore(
         return;
       }
 
-      translator.load(Ok(parseResult), asm.split("\n").length);
+      const loadResult = translator.load(
+        Ok(parseResult),
+        asm.split("\n").length
+      );
+      if (isErr(loadResult)) {
+        dispatch.current({
+          action: "setError",
+          payload: Err(loadResult),
+        });
+        compiled = false;
+        return;
+      }
+
       compiled = translator.asm.instructions.length > 0;
       setStatus("");
       dispatch.current({ action: "setError" });
@@ -318,7 +347,16 @@ export function makeAsmStore(
       return translator.done;
     },
 
+    compare() {
+      dispatch.current({ action: "compare" });
+      this.updateHighlight(highlightInfo.resultHighlight?.start ?? 0, false);
+      dispatch.current({ action: "update" });
+    },
+
     updateHighlight(index: number, fromSource: boolean) {
+      if (failure) {
+        return;
+      }
       for (const [sourceSpan, resultSpan] of highlightInfo.highlightMap) {
         if (
           (fromSource &&
@@ -340,6 +378,8 @@ export function makeAsmStore(
     },
 
     reset() {
+      failure = false;
+      translating = false;
       setStatus("Reset");
       translator.reset();
       this.resetHighlightInfo();
@@ -376,6 +416,7 @@ export function makeAsmStore(
     compare: "",
     compareName: undefined,
     lineNumbers: [],
+    compareError: false,
   };
 
   return { initialState, reducers, actions };

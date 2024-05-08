@@ -114,7 +114,7 @@ export function makeVmStore(
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
   let vm = unwrap(Vm.build(parsed.instructions));
-  let test = new VMTest().with(vm);
+  let test = new VMTest(setStatus).with(vm);
   let useTest = false;
   let animate = true;
   let vmSource = "";
@@ -279,9 +279,14 @@ export function makeVmStore(
       setStatus(`Parsed tst`);
 
       vm.reset();
-      test = VMTest.from(unwrap(tst), path, (files) => {
-        this.loadVm(files);
-      }).using(fs);
+      test = VMTest.from(
+        unwrap(tst),
+        path,
+        (files) => {
+          this.loadVm(files);
+        },
+        setStatus
+      ).using(fs);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;

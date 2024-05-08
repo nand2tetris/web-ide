@@ -13,8 +13,17 @@ import {
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
-import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
+import {
+  CompilationError,
+  Span,
+  baseSemantics,
+  createError,
+  grammars,
+  makeParser,
+  span,
+} from "./base.js";
 
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import asmGrammar from "./grammars/asm.ohm.js";
 
 export const grammar = ohm.grammar(asmGrammar, grammars);
@@ -144,7 +153,7 @@ export type Pointer =
 export function fillLabel(
   asm: Asm,
   symbolCallback?: (name: string, value: number, isVar: boolean) => void
-) {
+): Result<void, CompilationError> {
   let nextLabel = 16;
   const symbols = new Map<Pointer | string, number>([
     ["R0", 0],
@@ -192,7 +201,9 @@ export function fillLabel(
   for (const instruction of asm.instructions) {
     if (instruction.type === "L") {
       if (symbols.has(instruction.label)) {
-        throw new Error(`ASM Duplicate label ${instruction.label}`);
+        return Err(
+          createError(`Duplicate label ${instruction.label}`, instruction.span)
+        );
       } else {
         symbols.set(instruction.label, line);
         symbolCallback?.(instruction.label, line, false);
@@ -210,6 +221,7 @@ export function fillLabel(
   }
 
   unfilled.forEach(transmuteAInstruction);
+  return Ok();
 }
 
 function writeCInst(inst: AsmCInstruction): string {

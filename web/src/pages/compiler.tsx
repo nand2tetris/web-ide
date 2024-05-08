@@ -131,26 +131,26 @@ export const Compiler = () => {
                 <button className="flex-0" onClick={uploadFiles}>
                   📂
                 </button>
+                <button
+                  className="flex-0"
+                  disabled={!valid()}
+                  data-tooltip="Compiles into VM code and invokes the VM emulator"
+                  data-placement="right"
+                  onClick={runInVm}
+                >
+                  Compile
+                </button>
+                <button
+                  className="flex-0"
+                  disabled={!valid()}
+                  data-tooltip="Downloads the compiled VM code"
+                  data-placement="bottom"
+                  onClick={compileAndDownload}
+                >
+                  Download
+                </button>
               </fieldset>
             </div>
-            <fieldset role="group">
-              <button
-                disabled={!valid()}
-                data-tooltip="Run in VM Emulator"
-                data-placement="left"
-                onClick={runInVm}
-              >
-                ▶️
-              </button>
-              <button
-                disabled={!valid()}
-                data-tooltip="Download compiled code"
-                data-placement="left"
-                onClick={compileAndDownload}
-              >
-                ⬇️
-              </button>
-            </fieldset>
           </>
         }
       >

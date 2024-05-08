@@ -12,6 +12,7 @@ import {
   useContext,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import { Link } from "react-router-dom";
 import URLs from "src/urls";
@@ -37,12 +38,15 @@ export const Compiler = () => {
     setTitle(toolStates.compiler.title);
   });
 
+  const [compiled, setCompiled] = useState(false);
   useEffect(() => {
-    setStatus(
-      valid()
-        ? "Compiled successfully"
-        : state.files[state.selected].error?.message ?? ""
-    );
+    if (compiled) {
+      setStatus(
+        valid()
+          ? "Compiled successfully"
+          : state.files[state.selected].error?.message ?? ""
+      );
+    }
   });
 
   const selectTab = useCallback(
@@ -86,6 +90,10 @@ export const Compiler = () => {
       files.push({ name: file, content: compiled });
     }
     return files;
+  };
+
+  const compileFiles = () => {
+    setCompiled(true);
   };
 
   const compileAndDownload = async () => {
@@ -142,7 +150,15 @@ export const Compiler = () => {
               </button>
               <button
                 className="flex-0"
-                disabled={!valid()}
+                data-tooltip="Compiles into VM code"
+                data-placement="bottom"
+                onClick={compileFiles}
+              >
+                Compile
+              </button>
+              <button
+                className="flex-0"
+                disabled={!compiled || !valid()}
                 data-tooltip="Loads the compiled code into the VM emulators"
                 data-placement="right"
                 onClick={runInVm}
@@ -151,7 +167,7 @@ export const Compiler = () => {
               </button>
               <button
                 className="flex-0"
-                disabled={!valid()}
+                disabled={!compiled || !valid()}
                 data-tooltip="Downloads the compiled VM code"
                 data-placement="bottom"
                 onClick={compileAndDownload}
@@ -179,9 +195,10 @@ export const Compiler = () => {
                 aria-controls={`jack-tabpanel-${file}`}
                 aria-selected={state.selected === file}
                 style={{
-                  backgroundColor: state.files[file].valid
-                    ? undefined
-                    : "#ffaaaa",
+                  backgroundColor:
+                    compiled && !state.files[file].valid
+                      ? "#ffaaaa"
+                      : undefined,
                 }}
               >
                 <label>
@@ -208,7 +225,7 @@ export const Compiler = () => {
                   onChange={(source: string) => {
                     return;
                   }}
-                  error={state.files[file].error}
+                  error={compiled ? state.files[file].error : undefined}
                   language={"jack"}
                 />
               </div>

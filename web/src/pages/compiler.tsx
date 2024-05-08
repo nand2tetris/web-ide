@@ -1,5 +1,6 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { Trans } from "@lingui/macro";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
@@ -20,6 +21,7 @@ import { Panel } from "../shell/panel";
 import "./compiler.scss";
 
 export const Compiler = () => {
+  const { setStatus } = useContext(BaseContext);
   const { tracking, toolStates, setTitle } = useContext(AppContext);
   const { state, dispatch, actions } = useCompilerPageStore();
 
@@ -33,6 +35,14 @@ export const Compiler = () => {
 
   useEffect(() => {
     setTitle(toolStates.compiler.title);
+  });
+
+  useEffect(() => {
+    setStatus(
+      valid()
+        ? "Jack code is valid"
+        : state.files[state.selected].error?.message ?? ""
+    );
   });
 
   const selectTab = useCallback(
@@ -55,7 +65,7 @@ export const Compiler = () => {
     for (const file of event.target.files) {
       if (file.name.endsWith(".jack")) {
         const source = await file.text();
-        actions.addFile(file.name.replace(".jack", ""), source);
+        await actions.addFile(file.name.replace(".jack", ""), source);
       }
     }
 
@@ -134,11 +144,11 @@ export const Compiler = () => {
                 <button
                   className="flex-0"
                   disabled={!valid()}
-                  data-tooltip="Compiles into VM code and invokes the VM emulator"
+                  data-tooltip="Loads the compiled code into the VM emulators"
                   data-placement="right"
                   onClick={runInVm}
                 >
-                  Compile
+                  Run
                 </button>
                 <button
                   className="flex-0"
@@ -170,6 +180,11 @@ export const Compiler = () => {
                 id={`jack-tab-${file}`}
                 aria-controls={`jack-tabpanel-${file}`}
                 aria-selected={state.selected === file}
+                style={{
+                  backgroundColor: state.files[file].valid
+                    ? undefined
+                    : "#ffaaaa",
+                }}
               >
                 <label>
                   <input

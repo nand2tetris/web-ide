@@ -71,7 +71,8 @@ export const Compiler = () => {
   const compileAll = (): VmFile[] => {
     const files = [];
     for (const file of Object.keys(state.files)) {
-      const compiled = unwrap(compile(state.files[file].content));
+      let compiled = unwrap(compile(state.files[file].content));
+      compiled = `// Compiled ${file}.jack:\n`.concat(compiled);
       files.push({ name: file, content: compiled });
     }
     return files;

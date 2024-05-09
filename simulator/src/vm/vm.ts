@@ -615,6 +615,10 @@ export class Vm {
     }
   }
 
+  setPaused(paused = true) {
+    this.os.paused = paused;
+  }
+
   step(): number | undefined {
     if (this.os.sys.halted) {
       return this.os.sys.exitCode;

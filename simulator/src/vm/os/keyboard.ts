@@ -29,13 +29,15 @@ export class KeyboardLib {
 
       let exit = false;
 
-      if (!pressed && this.keyPressed() !== 0) {
-        pressed = true;
-        c = this.keyPressed();
-      }
-      if (pressed && this.keyPressed() === 0) {
-        exit = true;
-        resolve(c);
+      if (!this.os.paused) {
+        if (!pressed && this.keyPressed() !== 0) {
+          pressed = true;
+          c = this.keyPressed();
+        }
+        if (pressed && this.keyPressed() === 0) {
+          exit = true;
+          resolve(c);
+        }
       }
 
       if (!exit) {
@@ -73,34 +75,38 @@ export class KeyboardLib {
 
       let exit = false;
 
-      if (!pressed && this.keyPressed() != 0) {
-        pressed = true;
-        c = this.keyPressed();
-      }
-      if (pressed && this.keyPressed() == 0) {
-        pressed = false;
-        // key was released
-        if (c == BACKSPACE) {
-          if (this.os.string.length(str) > 0) {
-            this.os.output.backspace();
+      if (!this.os.paused) {
+        if (!pressed && this.keyPressed() != 0) {
+          pressed = true;
+          c = this.keyPressed();
+        }
+        if (pressed && this.keyPressed() == 0) {
+          pressed = false;
+          // key was released
+          if (c == BACKSPACE) {
+            if (this.os.string.length(str) > 0) {
+              this.os.output.backspace();
+            }
+            this.os.string.eraseLastChar(str);
+          } else if (c == NEW_LINE) {
+            resolve(str);
+            exit = true;
+          } else {
+            this.os.string.appendChar(str, c);
+            if (this.os.sys.halted) {
+              resolve(0);
+            }
+            this.os.output.printChar(c);
+            this.os.output.drawCursor();
           }
-          this.os.string.eraseLastChar(str);
-        } else if (c == NEW_LINE) {
-          resolve(str);
-          exit = true;
-        } else {
-          this.os.string.appendChar(str, c);
-          if (this.os.sys.halted) {
-            resolve(0);
-          }
-          this.os.output.printChar(c);
-          this.os.output.drawCursor();
         }
       }
+
       if (!exit) {
         this.animationFrameId = requestAnimationFrame(loop);
       }
     };
+
     loop();
   }
 

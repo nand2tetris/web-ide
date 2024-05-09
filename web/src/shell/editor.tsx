@@ -247,6 +247,9 @@ const Monaco = ({
         lineNumbers: lineNumberTransform ?? "on",
         folding: false,
         renderValidationDecorations: "on",
+        quickSuggestions: {
+          other: "inline",
+        },
       });
       doDecorations();
       calculateHeight();

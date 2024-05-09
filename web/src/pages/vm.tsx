@@ -109,6 +109,7 @@ const VM = () => {
       }
 
       override toggle() {
+        actions.setPaused(!this.running);
         dispatch.current({ action: "update" });
       }
     })();
@@ -128,6 +129,7 @@ const VM = () => {
       }
 
       override toggle() {
+        actions.setPaused(!this.running);
         dispatch.current({ action: "update" });
       }
     })();

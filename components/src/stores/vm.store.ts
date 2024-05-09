@@ -314,6 +314,9 @@ export function makeVmStore(
         return true;
       }
     },
+    setPaused(paused = true) {
+      vm.setPaused(paused);
+    },
     step() {
       showHighlight = true;
       try {

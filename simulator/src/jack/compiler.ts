@@ -64,17 +64,21 @@ const unaryOps: Record<UnaryOp, string> = {
   "~": "not",
 };
 
-class Compiler {
+export class Compiler {
   private instructions: string[] = [];
-  private globalSymbolTable: Record<string, VariableData> = {};
-  private localSymbolTable: Record<string, VariableData> = {};
+  globalSymbolTable: Record<string, VariableData> = {};
+  localSymbolTable: Record<string, VariableData> = {};
 
-  private className = "";
+  className = "";
 
   private labelNum = 0;
   private fieldNum = 0;
   private staticNum = 0;
   private localNum = 0;
+
+  get output(): string[] {
+    return Array.from(this.instructions);
+  }
 
   varData(name: string): VariableData | undefined {
     return this.localSymbolTable[name] || this.globalSymbolTable[name];

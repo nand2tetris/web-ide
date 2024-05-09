@@ -47,11 +47,11 @@ const URLs: Record<string, URL> = {
     tool: `vm`,
     target: <VM />,
   },
-  compiler: {
-    href: "/compiler",
-    tool: "compiler",
-    target: <Compiler />,
-  },
+  // compiler: {
+  //   href: "/compiler",
+  //   tool: "compiler",
+  //   target: <Compiler />,
+  // },
   bitmap: {
     href: "/bitmap",
     tool: "bitmap",

@@ -1,7 +1,7 @@
 import { i18n } from "@lingui/core";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
 
 import "../pico/button-group.scss";
@@ -11,9 +11,11 @@ import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
 export const Settings = () => {
-  const { fs, setStatus } = useContext(BaseContext);
+  const { fs, setStatus, upgradeFs, upgraded } = useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
+
+  const [upgrading, setUpgrading] = useState(false);
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -151,6 +153,15 @@ export const Settings = () => {
                 <Trans>Files</Trans>
               </dt>
               <dd>
+                <button
+                  disabled={upgraded || upgrading}
+                  onClick={async () => {
+                    setUpgrading(true);
+                    await upgradeFs();
+                  }}
+                >
+                  <Trans>Use Local FileSystem</Trans>
+                </button>
                 <button
                   onClick={async () => {
                     resetWarning.open();

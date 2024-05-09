@@ -6,7 +6,6 @@ import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import JSZip from "jszip";
 import {
-  CSSProperties,
   ChangeEvent,
   useCallback,
   useContext,
@@ -15,9 +14,10 @@ import {
   useState,
 } from "react";
 import { Link } from "react-router-dom";
+import { Editor } from "src/shell/editor";
+import { Tab, TabList } from "src/shell/tabs";
 import URLs from "src/urls";
 import { AppContext } from "../App.context";
-import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import "./compiler.scss";
 
@@ -178,60 +178,29 @@ export const Compiler = () => {
           </>
         }
       >
-        <div
-          role="tablist"
-          style={
-            {
-              "--tab-count": `${Object.keys(state.files).length}`,
-            } as CSSProperties
-          }
-        >
+        <TabList>
           {Object.keys(state.files).map((file) => (
-            <>
-              <div
-                key={`tab-${file}`}
-                role="tab"
-                id={`jack-tab-${file}`}
-                aria-controls={`jack-tabpanel-${file}`}
-                aria-selected={state.selected === file}
-                style={{
-                  backgroundColor:
-                    compiled && !state.files[file].valid
-                      ? "#ffaaaa"
-                      : undefined,
+            <Tab
+              title={`${file}.jack`}
+              key={file}
+              onSelect={() => selectTab(file)}
+              style={{
+                backgroundColor:
+                  compiled && !state.files[file].valid ? "#ffaaaa" : undefined,
+              }}
+            >
+              <Editor
+                value={state.files[file].content}
+                disabled={true}
+                onChange={(source: string) => {
+                  return;
                 }}
-              >
-                <label>
-                  <input
-                    type="radio"
-                    name="tabs"
-                    aria-controls={`jack-tabpanel-${file}`}
-                    value={file}
-                    checked={state.selected === file}
-                    onChange={() => selectTab(file)}
-                  />
-                  {file}.jack
-                </label>
-              </div>
-              <div
-                key={`tabpanel-${file}`}
-                role="tabpanel"
-                aria-labelledby={`jack-tab-${file}`}
-                id={`jack-tabpanel-${file}`}
-              >
-                <Editor
-                  value={state.files[file].content}
-                  disabled={true}
-                  onChange={(source: string) => {
-                    return;
-                  }}
-                  error={compiled ? state.files[file].error : undefined}
-                  language={"jack"}
-                />
-              </div>
-            </>
+                error={compiled ? state.files[file].error : undefined}
+                language={"jack"}
+              />
+            </Tab>
           ))}
-        </div>
+        </TabList>
       </Panel>
     </div>
   );

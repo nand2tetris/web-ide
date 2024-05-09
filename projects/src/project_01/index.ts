@@ -19,6 +19,10 @@ import * as DMux8Way from "./14_dmux8way.js";
 import * as Or8Way from "./15_or8way.js";
 
 export const CHIPS = {
+  Nand: {
+    "Nand.tst": Nand.tst,
+    "Nand.cmp": Nand.cmp,
+  },
   Not: {
     "Not.hdl": Not.hdl,
     "Not.tst": Not.tst,

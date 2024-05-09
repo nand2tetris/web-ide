@@ -1,4 +1,7 @@
-import { useBaseContext } from "@nand2tetris/components/stores/base.context.js";
+import {
+  BaseContext,
+  useBaseContext,
+} from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import {
   FileSystem,
@@ -8,7 +11,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { render, RenderOptions, RenderResult } from "@testing-library/react";
 import ue from "@testing-library/user-event";
-import { ReactElement } from "react";
+import { ReactElement, createContext } from "react";
 import { useAppContext } from "../App.context";
 
 export const userEvent = ue;
@@ -27,8 +30,8 @@ const i18nRender: (
   render(ui, { wrapper: I18nWrapper, ...options });
 
 export const useTestingAppContext = () => ({
-  base: useBaseContext(
-    new FileSystem(
+  base: {
+    fs: new FileSystem(
       new ObjectFileSystemAdapter({
         "chip/project": "01",
         "chip/chip": "Not",
@@ -36,7 +39,12 @@ export const useTestingAppContext = () => ({
         "projects/01/Not/Not.tst": Not.tst,
         "projects/01/Not/Not.cmp": Not.cmp,
       })
-    )
-  ),
+    ),
+    upgradeFs() {},
+    upgraded: true,
+    status: "",
+    setStatus() {},
+    storage: {},
+  },
   app: useAppContext(),
 });

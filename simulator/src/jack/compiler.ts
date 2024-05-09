@@ -85,14 +85,8 @@ class Compiler {
     return `${data?.segment} ${data?.index}`;
   }
 
-  write(line: string) {
-    this.instructions.push(line);
-  }
-
-  writeMultiple(lines: string[]) {
-    for (const line of lines) {
-      this.write(line);
-    }
+  write(...lines: string[]) {
+    this.instructions.push(...lines);
   }
 
   getLabel() {
@@ -189,17 +183,17 @@ class Compiler {
 
   compileMethod(subroutine: Subroutine) {
     this.compileSubroutineStart(subroutine, true);
-    this.writeMultiple(["push argument 0", "pop pointer 0"]);
+    this.write("push argument 0", "pop pointer 0");
     this.compileStatements(subroutine.body.statements);
   }
 
   compileConstructor(subroutine: Subroutine) {
     this.compileSubroutineStart(subroutine);
-    this.writeMultiple([
+    this.write(
       `push constant ${this.fieldNum}`,
       "call Memory.alloc 1",
-      "pop pointer 0",
-    ]);
+      "pop pointer 0"
+    );
     this.compileStatements(subroutine.body.statements);
   }
 
@@ -234,12 +228,12 @@ class Compiler {
         break;
       case "arrayAccess":
         this.compileExpression(term.index);
-        this.writeMultiple([
+        this.write(
           `push ${this.var(term.name)}`,
           "add",
           "pop pointer 1",
-          "push that 0",
-        ]);
+          "push that 0"
+        );
         break;
       case "groupedExpression":
         this.compileExpression(term.expression);
@@ -257,7 +251,7 @@ class Compiler {
     let isMethod = true;
 
     if (call.name.includes(".")) {
-      const [prefix, suffix] = call.name.split(".");
+      const [prefix, suffix] = call.name.split(".", 2);
       subroutineName = suffix;
       const varData = this.varData(prefix);
       if (varData) {
@@ -288,12 +282,12 @@ class Compiler {
   }
 
   compileStringLiteral(str: string) {
-    this.writeMultiple([`push constant ${str.length}`, `call String.new 1`]);
+    this.write(`push constant ${str.length}`, `call String.new 1`);
     for (let i = 0; i < str.length; i++) {
-      this.writeMultiple([
+      this.write(
         `push constant ${str.charCodeAt(i)}`,
-        `call String.appendChar 2`,
-      ]);
+        `call String.appendChar 2`
+      );
     }
   }
 
@@ -350,14 +344,9 @@ class Compiler {
   compileLet(statement: LetStatement) {
     if (statement.arrayIndex) {
       this.compileExpression(statement.arrayIndex);
-      this.writeMultiple([`push ${this.var(statement.name)}`, "add"]);
+      this.write(`push ${this.var(statement.name)}`, "add");
       this.compileExpression(statement.value);
-      this.writeMultiple([
-        "pop temp 0",
-        "pop pointer 1",
-        "push temp 0",
-        "pop that 0",
-      ]);
+      this.write("pop temp 0", "pop pointer 1", "push temp 0", "pop that 0");
     } else {
       this.compileExpression(statement.value);
       this.write(`pop ${this.var(statement.name)}`);
@@ -374,9 +363,9 @@ class Compiler {
     const condFalse = this.getLabel();
 
     this.compileExpression(statement.condition);
-    this.writeMultiple(["not", `if-goto ${condFalse}`]);
+    this.write("not", `if-goto ${condFalse}`);
     this.compileStatements(statement.body);
-    this.writeMultiple([`goto ${condTrue}`, `label ${condFalse}`]);
+    this.write(`goto ${condTrue}`, `label ${condFalse}`);
     this.compileStatements(statement.else);
     this.write(`label ${condTrue}`);
   }
@@ -387,8 +376,8 @@ class Compiler {
 
     this.write(`label ${loop}`);
     this.compileExpression(statement.condition);
-    this.writeMultiple([`not`, `if-goto ${exit}`]);
+    this.write(`not`, `if-goto ${exit}`);
     this.compileStatements(statement.body);
-    this.writeMultiple([`goto ${loop}`, `label ${exit}`]);
+    this.write(`goto ${loop}`, `label ${exit}`);
   }
 }

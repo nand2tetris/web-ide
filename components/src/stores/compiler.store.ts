@@ -14,6 +14,10 @@ function deleteFile(path: string) {
   }
 }
 
+function makeJackFilename(name: string) {
+  return `/jack/${name}.jack`;
+}
+
 export interface FileData {
   content: string;
   valid: boolean;
@@ -75,19 +79,19 @@ export function makeCompilerStore(
   const actions = {
     async editFile(name: string, content: string) {
       dispatch.current({ action: "setFile", payload: { name, content } });
-      await fs.writeFile(`/jack/${name}.jack`, content);
+      await fs.writeFile(makeJackFilename(name), content);
     },
 
     async addFile(name: string, content?: string) {
       dispatch.current({ action: "setFile", payload: { name, content } });
-      await fs.writeFile(`/jack/${name}.jack`, content ?? "");
+      await fs.writeFile(makeJackFilename(name), content ?? "");
       dispatch.current({ action: "setSelected", payload: name });
     },
 
     async deleteFile(name: string) {
       dispatch.current({ action: "deleteFile", payload: name });
       // TODO: this should be done through the file system but currently that doesn't seem to work
-      deleteFile(`/jack/${name}.jack`);
+      deleteFile(makeJackFilename(name));
     },
 
     async reset() {
@@ -98,8 +102,8 @@ export function makeCompilerStore(
 
     async renameFile(oldName: string, newName: string) {
       dispatch.current({ action: "copyFile", payload: { oldName, newName } });
-      const content = await fs.readFile(`/jack/${oldName}.jack`);
-      await fs.writeFile(`/jack/${newName}.jack`, content);
+      const content = await fs.readFile(makeJackFilename(oldName));
+      await fs.writeFile(makeJackFilename(newName), content);
       await this.deleteFile(oldName);
     },
 
@@ -126,7 +130,7 @@ export function makeCompilerStore(
       const files = await fs.scandir("/jack");
       if (files.length == 0) {
         fs.mkdir("/jack");
-        fs.writeFile("/jack/Main.jack", "");
+        fs.writeFile(makeJackFilename("Main"), "");
       }
       await this._loadFiles();
     },

@@ -1,11 +1,11 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
+import { Programs } from "@nand2tetris/projects/project_11/index.js";
 import { JACK } from "./jack";
-import { files, parsedFiles } from "./jackSamples";
 
 describe("compiler", () => {
-  it.each(Object.keys(files))("%s", (file) => {
-    const parsed = JACK.parse(files[file]);
+  it.each(Object.keys(Programs))("%s", (program) => {
+    const parsed = JACK.parse(Programs[program].jack);
     expect(parsed).toBeOk();
-    expect(unwrap(parsed)).toEqual(parsedFiles[file]);
+    expect(unwrap(parsed)).toEqual(Programs[program].parsed);
   });
 });

@@ -1,6 +1,7 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
+import { Programs } from "@nand2tetris/projects/project_11/index.js";
 import { JACK } from "../languages/jack";
-import { compiledFiles, files } from "../languages/jackSamples";
+
 import { Compiler, compile } from "./compiler";
 
 function parse(code: string, rule: string) {
@@ -109,9 +110,9 @@ describe("jack language", () => {
     ]);
   });
 
-  it.each(Object.keys(files))("%s", (file) => {
-    const compiled = compile(files[file]);
+  it.each(Object.keys(Programs))("%s", (program) => {
+    const compiled = compile(Programs[program].jack);
     expect(compiled).toBeOk();
-    expect(unwrap(compiled)).toEqual(compiledFiles[file]);
+    expect(unwrap(compiled)).toEqual(Programs[program].compiled);
   });
 });

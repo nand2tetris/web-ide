@@ -154,14 +154,26 @@ export const Settings = () => {
               </dt>
               <dd>
                 <button
-                  disabled={upgraded || upgrading}
+                  disabled={upgrading}
                   onClick={async () => {
                     setUpgrading(true);
                     await upgradeFs();
+                    setUpgrading(false);
                   }}
                 >
-                  <Trans>Use Local FileSystem</Trans>
+                  {!upgraded ? (
+                    <Trans>Use Local FileSystem</Trans>
+                  ) : (
+                    <Trans>Change Local FileSystem</Trans>
+                  )}
                 </button>
+                {upgraded ? (
+                  <p>
+                    <Trans>Using {upgraded}</Trans>
+                  </p>
+                ) : (
+                  <></>
+                )}
                 <button
                   onClick={async () => {
                     resetWarning.open();

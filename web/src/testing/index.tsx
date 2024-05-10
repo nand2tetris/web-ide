@@ -41,7 +41,6 @@ export const useTestingAppContext = () => ({
       })
     ),
     upgradeFs() {},
-    upgraded: true,
     status: "",
     setStatus() {},
     storage: {},

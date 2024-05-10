@@ -23,9 +23,9 @@ function openIndexedDb(): Promise<IDBDatabase> {
     };
   });
 }
-export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemAdapter | void> {
+export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemDirectoryHandle | void> {
   const db = await openIndexedDb();
-  return new Promise<FileSystemAdapter | void>((resolve, reject) => {
+  return new Promise<FileSystemDirectoryHandle | void>((resolve, reject) => {
     const transaction = db.transaction(
       [IDB_FS_ADAPTER_OBJECT_STORE],
       "readonly"
@@ -37,8 +37,11 @@ export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemAdapt
       if (handle === undefined) {
         resolve();
       } else {
-        assert(handle instanceof FileSystemDirectoryHandle);
-        resolve(new FileSystemAccessFileSystemAdapter(handle));
+        assert(
+          handle instanceof FileSystemDirectoryHandle,
+          `Retrieved ${IDB_FS_ADAPTER_KEY} in ${IDB_FS_ADAPTER_OBJECT_STORE} in ${IDB_NAME} is not a FileSystemDirectoryHandle`
+        );
+        resolve(handle);
       }
     };
     transaction.onerror = () => {
@@ -55,9 +58,9 @@ export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemAdapt
     };
   });
 }
-export async function createAndStoreLocalAdapterInIndexedDB(): Promise<FileSystemAdapter> {
+export async function createAndStoreLocalAdapterInIndexedDB(): Promise<FileSystemDirectoryHandle> {
   const db = await openIndexedDb();
-  return new Promise<FileSystemAdapter>(async (resolve, reject) => {
+  return new Promise<FileSystemDirectoryHandle>(async (resolve, reject) => {
     try {
       const handle = await openNand2TetrisDirectory();
       const transaction = db.transaction(
@@ -69,7 +72,7 @@ export async function createAndStoreLocalAdapterInIndexedDB(): Promise<FileSyste
         .add(handle, IDB_FS_ADAPTER_KEY);
       transaction.commit();
       transaction.oncomplete = () => {
-        resolve(new FileSystemAccessFileSystemAdapter(handle));
+        resolve(handle);
       };
       transaction.onerror = () => {
         reject(transaction.error);

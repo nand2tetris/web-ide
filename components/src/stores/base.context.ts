@@ -10,7 +10,10 @@ import {
   useMemo,
   useState,
 } from "react";
-import { ChainedFileSystemAdapter } from "./base/fs.js";
+import {
+  ChainedFileSystemAdapter,
+  FileSystemAccessFileSystemAdapter,
+} from "./base/fs.js";
 import {
   attemptLoadAdapterFromIndexedDb,
   createAndStoreLocalAdapterInIndexedDB,
@@ -19,7 +22,7 @@ import {
 export interface BaseContext {
   fs: FileSystem;
   upgradeFs: () => void;
-  upgraded: boolean;
+  upgraded?: string;
   status: string;
   setStatus: (status: string) => void;
   storage: Record<string, string>;
@@ -28,16 +31,19 @@ export interface BaseContext {
 export function useBaseContext(): BaseContext {
   const localAdapter = useMemo(() => new LocalStorageFileSystemAdapter(), []);
   const [fs, setFs] = useState(new FileSystem(localAdapter));
-  const [upgraded, setUpgraded] = useState(false);
+  const [upgraded, setUpgraded] = useState<string | undefined>();
 
   const replaceFs = useCallback(
-    (adapter: FileSystemAdapter) => {
+    (handle: FileSystemDirectoryHandle) => {
       const newFs = new FileSystem(
-        new ChainedFileSystemAdapter(adapter, localAdapter)
+        new ChainedFileSystemAdapter(
+          new FileSystemAccessFileSystemAdapter(handle),
+          localAdapter
+        )
       );
       newFs.cd(fs.cwd());
       setFs(newFs);
-      setUpgraded(true);
+      setUpgraded(handle.name);
     },
     [setFs, setUpgraded]
   );
@@ -74,7 +80,6 @@ export function useBaseContext(): BaseContext {
 export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   upgradeFs() {},
-  upgraded: false,
   status: "",
   setStatus() {},
   storage: {},

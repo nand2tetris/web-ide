@@ -9,17 +9,16 @@ function dirname(path: string): string {
   return path.split(SEP).slice(0, -1).join(SEP);
 }
 
-export class FileSystemAccessFileSystemAdapter implements FileSystemAdapter {
-  static async initialize(): Promise<FileSystemAccessFileSystemAdapter> {
-    const baseDir = await window.showDirectoryPicker({
-      id: "nand2tetris",
-      mode: "readwrite",
-      startIn: "documents",
-    });
-    return new FileSystemAccessFileSystemAdapter(baseDir);
-  }
+export function openNand2TetrisDirectory(): Promise<FileSystemDirectoryHandle> {
+  return window.showDirectoryPicker({
+    id: "nand2tetris",
+    mode: "readwrite",
+    startIn: "documents",
+  });
+}
 
-  private constructor(private baseDir: FileSystemDirectoryHandle) {}
+export class FileSystemAccessFileSystemAdapter implements FileSystemAdapter {
+  constructor(private baseDir: FileSystemDirectoryHandle) {}
 
   async getFolder(
     path: string,

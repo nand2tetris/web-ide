@@ -1,12 +1,20 @@
 import {
   FileSystem,
+  FileSystemAdapter,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { createContext, useCallback, useMemo, useState } from "react";
 import {
-  ChainedFileSystemAdapter,
-  FileSystemAccessFileSystemAdapter,
-} from "./fs.js";
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { ChainedFileSystemAdapter } from "./base/fs.js";
+import {
+  attemptLoadAdapterFromIndexedDb,
+  createAndStoreLocalAdapterInIndexedDB,
+} from "./base/indexDb.js";
 
 export interface BaseContext {
   fs: FileSystem;
@@ -22,18 +30,34 @@ export function useBaseContext(): BaseContext {
   const [fs, setFs] = useState(new FileSystem(localAdapter));
   const [upgraded, setUpgraded] = useState(false);
 
-  const upgradeFs = useCallback(async () => {
+  const replaceFs = useCallback(
+    (adapter: FileSystemAdapter) => {
+      const newFs = new FileSystem(
+        new ChainedFileSystemAdapter(adapter, localAdapter)
+      );
+      newFs.cd(fs.cwd());
+      setFs(newFs);
+      setUpgraded(true);
+    },
+    [setFs, setUpgraded]
+  );
+
+  useEffect(() => {
     if (upgraded) return;
-    const newFs = new FileSystem(
-      new ChainedFileSystemAdapter(
-        await FileSystemAccessFileSystemAdapter.initialize(),
-        localAdapter
-      )
-    );
-    newFs.cd(fs.cwd());
-    setFs(newFs);
-    setUpgraded(true);
-  }, [fs, setFs]);
+    attemptLoadAdapterFromIndexedDb().then((adapter) => {
+      if (!adapter) return;
+      replaceFs(adapter);
+    });
+  }, [upgraded, replaceFs]);
+
+  const upgradeFs = useCallback(
+    async (force = false) => {
+      if (upgraded && !force) return;
+      const adapter = await createAndStoreLocalAdapterInIndexedDB();
+      replaceFs(adapter);
+    },
+    [replaceFs]
+  );
 
   const [status, setStatus] = useState("");
 

@@ -48,6 +48,40 @@ export const RectAsm = `// This file is part of www.nand2tetris.org
    @END
    0;JMP`;
 
+export const RectLAsm = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: projects/6/rect/RectL.asm
+
+// Symbol-less version of the Rect.asm program.
+// Designed for testing the basic version of the assembler.
+
+@0
+D=M
+@23
+D;JLE 
+@16
+M=D
+@16384
+D=A
+@17
+M=D
+@17
+A=M
+M=-1
+@17
+D=M
+@32
+D=D+A
+@17
+M=D
+@16
+MD=M-1
+@10
+D;JGT
+@23
+0;JMP`;
+
 export const RectHack = [
   0, 64528, 23, 58118, 16, 58120, 16384, 60432, 17, 58120, 17, 64544, 61064, 17,
   64528, 32, 57488, 17, 58120, 16, 64664, 10, 58113, 23, 60039,

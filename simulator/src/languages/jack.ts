@@ -28,7 +28,7 @@ export type SubroutineType = "constructor" | "function" | "method";
 
 export interface Subroutine {
   type: SubroutineType;
-  name: string;
+  name: { value: string; span: Span };
   returnType: ReturnType;
   parameters: Parameter[];
   body: SubroutineBody;
@@ -193,7 +193,7 @@ jackSemantics.addAttribute<Subroutine>("subroutineDec", {
     return {
       type: type.sourceString as SubroutineType,
       returnType: returnType.sourceString as ReturnType,
-      name: name.sourceString,
+      name: { value: name.sourceString, span: span(name.source) },
       parameters: parameters.parameterList,
       body: body.subroutineBody,
     };

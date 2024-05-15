@@ -49,9 +49,12 @@ export function compile(
       classes[name] = Err(parsed);
     } else {
       const cls = Ok(parsed);
+      const result = validateClass(cls);
       classes[name] =
         cls.name.value == name
-          ? cls
+          ? isErr(result)
+            ? Err(result)
+            : cls
           : createError(
               `Class name ${cls.name.value} doesn't match file name ${name}`,
               cls.name.span
@@ -81,6 +84,22 @@ export function compile(
     }
   }
   return vms;
+}
+
+function validateClass(cls: Class): Result<void, CompilationError> {
+  const subroutineNames = new Set<string>();
+  for (const subroutine of cls.subroutines) {
+    if (subroutineNames.has(subroutine.name.value)) {
+      return Err(
+        createError(
+          `Subroutine ${subroutine.name.value} already declared`,
+          subroutine.name.span
+        )
+      );
+    }
+    subroutineNames.add(subroutine.name.value);
+  }
+  return Ok();
 }
 
 export function compileFile(
@@ -363,7 +382,7 @@ export class Compiler {
   ) {
     if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
-        if (subroutine.name == subroutineName) {
+        if (subroutine.name.value == subroutineName) {
           if (subroutine.type == "method" && !isMethod) {
             throw createError(
               `Method ${className}.${subroutineName} was called as a function/constructor`,
@@ -373,7 +392,7 @@ export class Compiler {
           if (subroutine.type != "method" && isMethod) {
             throw createError(
               `${capitalize(
-                subroutine.name
+                subroutine.name.value
               )} ${className}.${subroutineName} was called as a method`,
               call.name.span
             );

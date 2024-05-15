@@ -27,13 +27,13 @@ class Main {
 }`;
 
 export const parsed = {
-  name: "Main",
+  name: { value: "Main", span: { start: 234, end: 238, line: 7 } },
   varDecs: [],
   subroutines: [
     {
       type: "function",
       returnType: "void",
-      name: "main",
+      name: { value: "main", span: { start: 258, end: 262, line: 8 } },
       parameters: [],
       body: {
         varDecs: [
@@ -44,12 +44,15 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "length",
+            name: { value: "length", span: { start: 342, end: 348, line: 13 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Keyboard.readInt",
+                name: {
+                  value: "Keyboard.readInt",
+                  span: { start: 351, end: 367, line: 13 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
@@ -60,61 +63,91 @@ export const parsed = {
                     rest: [],
                   },
                 ],
+                span: { start: 351, end: 389, line: 13 },
               },
               rest: [],
             },
+            span: { start: 338, end: 390, line: 13 },
           },
           {
             statementType: "letStatement",
-            name: "a",
+            name: { value: "a", span: { start: 401, end: 402, line: 14 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Array.new",
+                name: {
+                  value: "Array.new",
+                  span: { start: 405, end: 414, line: 14 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "length" },
+                    term: {
+                      termType: "variable",
+                      name: "length",
+                      span: { start: 415, end: 421, line: 14 },
+                    },
                     rest: [],
                   },
                 ],
+                span: { start: 405, end: 422, line: 14 },
               },
               rest: [],
             },
+            span: { start: 397, end: 423, line: 14 },
           },
           {
             statementType: "letStatement",
-            name: "i",
+            name: { value: "i", span: { start: 464, end: 465, line: 16 } },
             value: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 0 },
               rest: [],
             },
+            span: { start: 460, end: 470, line: 16 },
           },
           {
             statementType: "whileStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "i" },
+              term: {
+                termType: "variable",
+                name: "i",
+                span: { start: 484, end: 485, line: 17 },
+              },
               rest: [
-                { op: "<", term: { termType: "variable", name: "length" } },
+                {
+                  op: "<",
+                  term: {
+                    termType: "variable",
+                    name: "length",
+                    span: { start: 488, end: 494, line: 17 },
+                  },
+                },
               ],
             },
             body: [
               {
                 statementType: "letStatement",
-                name: "a",
+                name: { value: "a", span: { start: 511, end: 512, line: 18 } },
                 arrayIndex: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "i" },
+                  term: {
+                    termType: "variable",
+                    name: "i",
+                    span: { start: 513, end: 514, line: 18 },
+                  },
                   rest: [],
                 },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "subroutineCall",
-                    name: "Keyboard.readInt",
+                    name: {
+                      value: "Keyboard.readInt",
+                      span: { start: 518, end: 534, line: 18 },
+                    },
                     parameters: [
                       {
                         nodeType: "expression",
@@ -125,45 +158,65 @@ export const parsed = {
                         rest: [],
                       },
                     ],
+                    span: { start: 518, end: 554, line: 18 },
                   },
                   rest: [],
                 },
+                span: { start: 507, end: 555, line: 18 },
               },
               {
                 statementType: "letStatement",
-                name: "sum",
+                name: {
+                  value: "sum",
+                  span: { start: 569, end: 572, line: 19 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "sum" },
+                  term: {
+                    termType: "variable",
+                    name: "sum",
+                    span: { start: 575, end: 578, line: 19 },
+                  },
                   rest: [
                     {
                       op: "+",
                       term: {
                         termType: "arrayAccess",
-                        name: "a",
+                        name: {
+                          value: "a",
+                          span: { start: 581, end: 582, line: 19 },
+                        },
                         index: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "i" },
+                          term: {
+                            termType: "variable",
+                            name: "i",
+                            span: { start: 583, end: 584, line: 19 },
+                          },
                           rest: [],
                         },
+                        span: { start: 581, end: 585, line: 19 },
                       },
                     },
                   ],
                 },
+                span: { start: 565, end: 586, line: 19 },
               },
               {
                 statementType: "letStatement",
-                name: "i",
+                name: { value: "i", span: { start: 600, end: 601, line: 20 } },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "i" },
+                  term: {
+                    termType: "variable",
+                    name: "i",
+                    span: { start: 604, end: 605, line: 20 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 1 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 1 } },
                   ],
                 },
+                span: { start: 596, end: 610, line: 20 },
               },
             ],
           },
@@ -171,36 +224,49 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printString",
+              name: {
+                value: "Output.printString",
+                span: { start: 629, end: 647, line: 23 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: {
-                    termType: "stringLiteral",
-                    value: "The average is ",
-                  },
+                  term: { termType: "stringLiteral", value: "The average is " },
                   rest: [],
                 },
               ],
+              span: { start: 629, end: 666, line: 23 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 677, end: 692, line: 24 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "sum" },
+                  term: {
+                    termType: "variable",
+                    name: "sum",
+                    span: { start: 693, end: 696, line: 24 },
+                  },
                   rest: [
                     {
                       op: "/",
-                      term: { termType: "variable", name: "length" },
+                      term: {
+                        termType: "variable",
+                        name: "length",
+                        span: { start: 699, end: 705, line: 24 },
+                      },
                     },
                   ],
                 },
               ],
+              span: { start: 677, end: 706, line: 24 },
             },
           },
           { statementType: "returnStatement" },

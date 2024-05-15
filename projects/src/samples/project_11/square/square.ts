@@ -113,7 +113,7 @@ class Square {
 }`;
 
 export const parsed = {
-  name: "Square",
+  name: { value: "Square", span: { start: 284, end: 290, line: 8 } },
   varDecs: [
     { varType: "field", type: "int", names: ["x", "y"] },
     { varType: "field", type: "int", names: ["size"] },
@@ -122,7 +122,7 @@ export const parsed = {
     {
       type: "constructor",
       returnType: "Square",
-      name: "new",
+      name: { value: "new", span: { start: 524, end: 527, line: 14 } },
       parameters: [
         { type: "int", name: "ax" },
         { type: "int", name: "ay" },
@@ -133,37 +133,53 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "x",
+            name: { value: "x", span: { start: 567, end: 568, line: 15 } },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "ax" },
+              term: {
+                termType: "variable",
+                name: "ax",
+                span: { start: 571, end: 573, line: 15 },
+              },
               rest: [],
             },
+            span: { start: 563, end: 574, line: 15 },
           },
           {
             statementType: "letStatement",
-            name: "y",
+            name: { value: "y", span: { start: 585, end: 586, line: 16 } },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "ay" },
+              term: {
+                termType: "variable",
+                name: "ay",
+                span: { start: 589, end: 591, line: 16 },
+              },
               rest: [],
             },
+            span: { start: 581, end: 592, line: 16 },
           },
           {
             statementType: "letStatement",
-            name: "size",
+            name: { value: "size", span: { start: 603, end: 607, line: 17 } },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "asize" },
+              term: {
+                termType: "variable",
+                name: "asize",
+                span: { start: 610, end: 615, line: 17 },
+              },
               rest: [],
             },
+            span: { start: 599, end: 616, line: 17 },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "draw",
+              name: { value: "draw", span: { start: 626, end: 630, line: 18 } },
               parameters: [],
+              span: { start: 626, end: 632, line: 18 },
             },
           },
           {
@@ -180,7 +196,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "dispose",
+      name: { value: "dispose", span: { start: 706, end: 713, line: 23 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -189,7 +205,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Memory.deAlloc",
+              name: {
+                value: "Memory.deAlloc",
+                span: { start: 727, end: 741, line: 24 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -197,6 +216,7 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 727, end: 747, line: 24 },
             },
           },
           { statementType: "returnStatement" },
@@ -206,7 +226,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "draw",
+      name: { value: "draw", span: { start: 842, end: 846, line: 29 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -215,7 +235,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.setColor",
+              name: {
+                value: "Screen.setColor",
+                span: { start: 908, end: 923, line: 31 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -223,39 +246,74 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 908, end: 929, line: 31 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.drawRectangle",
+              name: {
+                value: "Screen.drawRectangle",
+                span: { start: 940, end: 960, line: 32 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 961, end: 962, line: 32 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 964, end: 965, line: 32 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 967, end: 968, line: 32 },
+                  },
                   rest: [
-                    { op: "+", term: { termType: "variable", name: "size" } },
+                    {
+                      op: "+",
+                      term: {
+                        termType: "variable",
+                        name: "size",
+                        span: { start: 971, end: 975, line: 32 },
+                      },
+                    },
                   ],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 977, end: 978, line: 32 },
+                  },
                   rest: [
-                    { op: "+", term: { termType: "variable", name: "size" } },
+                    {
+                      op: "+",
+                      term: {
+                        termType: "variable",
+                        name: "size",
+                        span: { start: 981, end: 985, line: 32 },
+                      },
+                    },
                   ],
                 },
               ],
+              span: { start: 940, end: 986, line: 32 },
             },
           },
           { statementType: "returnStatement" },
@@ -265,7 +323,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "erase",
+      name: { value: "erase", span: { start: 1053, end: 1058, line: 37 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -274,7 +332,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.setColor",
+              name: {
+                value: "Screen.setColor",
+                span: { start: 1139, end: 1154, line: 39 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -282,39 +343,74 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1139, end: 1161, line: 39 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.drawRectangle",
+              name: {
+                value: "Screen.drawRectangle",
+                span: { start: 1172, end: 1192, line: 40 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 1193, end: 1194, line: 40 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 1196, end: 1197, line: 40 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 1199, end: 1200, line: 40 },
+                  },
                   rest: [
-                    { op: "+", term: { termType: "variable", name: "size" } },
+                    {
+                      op: "+",
+                      term: {
+                        termType: "variable",
+                        name: "size",
+                        span: { start: 1203, end: 1207, line: 40 },
+                      },
+                    },
                   ],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 1209, end: 1210, line: 40 },
+                  },
                   rest: [
-                    { op: "+", term: { termType: "variable", name: "size" } },
+                    {
+                      op: "+",
+                      term: {
+                        termType: "variable",
+                        name: "size",
+                        span: { start: 1213, end: 1217, line: 40 },
+                      },
+                    },
                   ],
                 },
               ],
+              span: { start: 1172, end: 1218, line: 40 },
             },
           },
           { statementType: "returnStatement" },
@@ -324,7 +420,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "incSize",
+      name: { value: "incSize", span: { start: 1320, end: 1327, line: 45 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -341,11 +437,19 @@ export const parsed = {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 1344, end: 1345, line: 46 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 1348, end: 1352, line: 46 },
+                          },
                         },
                       ],
                     },
@@ -369,11 +473,19 @@ export const parsed = {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 1365, end: 1366, line: 46 },
+                          },
                           rest: [
                             {
                               op: "+",
-                              term: { termType: "variable", name: "size" },
+                              term: {
+                                termType: "variable",
+                                name: "size",
+                                span: { start: 1369, end: 1373, line: 46 },
+                              },
                             },
                           ],
                         },
@@ -394,30 +506,43 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "erase",
+                  name: {
+                    value: "erase",
+                    span: { start: 1397, end: 1402, line: 47 },
+                  },
                   parameters: [],
+                  span: { start: 1397, end: 1404, line: 47 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "size",
+                name: {
+                  value: "size",
+                  span: { start: 1419, end: 1423, line: 48 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "size" },
+                  term: {
+                    termType: "variable",
+                    name: "size",
+                    span: { start: 1426, end: 1430, line: 48 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
+                span: { start: 1415, end: 1435, line: 48 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "draw",
+                  name: {
+                    value: "draw",
+                    span: { start: 1448, end: 1452, line: 49 },
+                  },
                   parameters: [],
+                  span: { start: 1448, end: 1454, line: 49 },
                 },
               },
             ],
@@ -430,7 +555,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "decSize",
+      name: { value: "decSize", span: { start: 1563, end: 1570, line: 55 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -439,7 +564,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "size" },
+              term: {
+                termType: "variable",
+                name: "size",
+                span: { start: 1585, end: 1589, line: 56 },
+              },
               rest: [
                 { op: ">", term: { termType: "numericLiteral", value: 2 } },
               ],
@@ -449,30 +578,43 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "erase",
+                  name: {
+                    value: "erase",
+                    span: { start: 1609, end: 1614, line: 57 },
+                  },
                   parameters: [],
+                  span: { start: 1609, end: 1616, line: 57 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "size",
+                name: {
+                  value: "size",
+                  span: { start: 1631, end: 1635, line: 58 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "size" },
+                  term: {
+                    termType: "variable",
+                    name: "size",
+                    span: { start: 1638, end: 1642, line: 58 },
+                  },
                   rest: [
-                    {
-                      op: "-",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "-", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
+                span: { start: 1627, end: 1647, line: 58 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "draw",
+                  name: {
+                    value: "draw",
+                    span: { start: 1660, end: 1664, line: 59 },
+                  },
                   parameters: [],
+                  span: { start: 1660, end: 1666, line: 59 },
                 },
               },
             ],
@@ -485,7 +627,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "moveUp",
+      name: { value: "moveUp", span: { start: 1769, end: 1775, line: 65 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -494,7 +636,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "y" },
+              term: {
+                termType: "variable",
+                name: "y",
+                span: { start: 1790, end: 1791, line: 66 },
+              },
               rest: [
                 { op: ">", term: { termType: "numericLiteral", value: 1 } },
               ],
@@ -504,7 +650,10 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 1889, end: 1904, line: 68 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -512,17 +661,25 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 1889, end: 1911, line: 68 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 1925, end: 1945, line: 69 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 1946, end: 1947, line: 69 },
+                      },
                       rest: [],
                     },
                     {
@@ -531,11 +688,19 @@ export const parsed = {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "y" },
+                          term: {
+                            termType: "variable",
+                            name: "y",
+                            span: { start: 1950, end: 1951, line: 69 },
+                          },
                           rest: [
                             {
                               op: "+",
-                              term: { termType: "variable", name: "size" },
+                              term: {
+                                termType: "variable",
+                                name: "size",
+                                span: { start: 1954, end: 1958, line: 69 },
+                              },
                             },
                           ],
                         },
@@ -549,46 +714,71 @@ export const parsed = {
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 1965, end: 1966, line: 69 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 1969, end: 1973, line: 69 },
+                          },
                         },
                       ],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 1975, end: 1976, line: 69 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 1979, end: 1983, line: 69 },
+                          },
                         },
                       ],
                     },
                   ],
+                  span: { start: 1925, end: 1984, line: 69 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "y",
+                name: {
+                  value: "y",
+                  span: { start: 1999, end: 2000, line: 70 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 2003, end: 2004, line: 70 },
+                  },
                   rest: [
-                    {
-                      op: "-",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "-", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
+                span: { start: 1995, end: 2009, line: 70 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 2092, end: 2107, line: 72 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -596,37 +786,61 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 2092, end: 2113, line: 72 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 2127, end: 2147, line: 73 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2148, end: 2149, line: 73 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2151, end: 2152, line: 73 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2154, end: 2155, line: 73 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2158, end: 2162, line: 73 },
+                          },
                         },
                       ],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2164, end: 2165, line: 73 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -635,6 +849,7 @@ export const parsed = {
                       ],
                     },
                   ],
+                  span: { start: 2127, end: 2170, line: 73 },
                 },
               },
             ],
@@ -647,7 +862,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "moveDown",
+      name: { value: "moveDown", span: { start: 2274, end: 2282, line: 79 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -660,9 +875,20 @@ export const parsed = {
                 termType: "groupedExpression",
                 expression: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 2298, end: 2299, line: 80 },
+                  },
                   rest: [
-                    { op: "+", term: { termType: "variable", name: "size" } },
+                    {
+                      op: "+",
+                      term: {
+                        termType: "variable",
+                        name: "size",
+                        span: { start: 2302, end: 2306, line: 80 },
+                      },
+                    },
                   ],
                 },
               },
@@ -675,7 +901,10 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 2329, end: 2344, line: 81 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -683,37 +912,61 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 2329, end: 2351, line: 81 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 2365, end: 2385, line: 82 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2386, end: 2387, line: 82 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2389, end: 2390, line: 82 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2392, end: 2393, line: 82 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2396, end: 2400, line: 82 },
+                          },
                         },
                       ],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2402, end: 2403, line: 82 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -722,27 +975,36 @@ export const parsed = {
                       ],
                     },
                   ],
+                  span: { start: 2365, end: 2408, line: 82 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "y",
+                name: {
+                  value: "y",
+                  span: { start: 2423, end: 2424, line: 83 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 2427, end: 2428, line: 83 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
+                span: { start: 2419, end: 2433, line: 83 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 2446, end: 2461, line: 84 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -750,17 +1012,25 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 2446, end: 2467, line: 84 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 2481, end: 2501, line: 85 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2502, end: 2503, line: 85 },
+                      },
                       rest: [],
                     },
                     {
@@ -769,11 +1039,19 @@ export const parsed = {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "y" },
+                          term: {
+                            termType: "variable",
+                            name: "y",
+                            span: { start: 2506, end: 2507, line: 85 },
+                          },
                           rest: [
                             {
                               op: "+",
-                              term: { termType: "variable", name: "size" },
+                              term: {
+                                termType: "variable",
+                                name: "size",
+                                span: { start: 2510, end: 2514, line: 85 },
+                              },
                             },
                           ],
                         },
@@ -787,25 +1065,42 @@ export const parsed = {
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2521, end: 2522, line: 85 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2525, end: 2529, line: 85 },
+                          },
                         },
                       ],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2531, end: 2532, line: 85 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2535, end: 2539, line: 85 },
+                          },
                         },
                       ],
                     },
                   ],
+                  span: { start: 2481, end: 2540, line: 85 },
                 },
               },
             ],
@@ -818,7 +1113,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "moveLeft",
+      name: { value: "moveLeft", span: { start: 2644, end: 2652, line: 91 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -827,7 +1122,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "x" },
+              term: {
+                termType: "variable",
+                name: "x",
+                span: { start: 2667, end: 2668, line: 92 },
+              },
               rest: [
                 { op: ">", term: { termType: "numericLiteral", value: 1 } },
               ],
@@ -837,7 +1136,10 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 2688, end: 2703, line: 93 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -845,13 +1147,17 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 2688, end: 2710, line: 93 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 2724, end: 2744, line: 94 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -859,11 +1165,19 @@ export const parsed = {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 2746, end: 2747, line: 94 },
+                          },
                           rest: [
                             {
                               op: "+",
-                              term: { termType: "variable", name: "size" },
+                              term: {
+                                termType: "variable",
+                                name: "size",
+                                span: { start: 2750, end: 2754, line: 94 },
+                              },
                             },
                           ],
                         },
@@ -877,51 +1191,80 @@ export const parsed = {
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2761, end: 2762, line: 94 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2764, end: 2765, line: 94 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2768, end: 2772, line: 94 },
+                          },
                         },
                       ],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2774, end: 2775, line: 94 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2778, end: 2782, line: 94 },
+                          },
                         },
                       ],
                     },
                   ],
+                  span: { start: 2724, end: 2783, line: 94 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "x",
+                name: {
+                  value: "x",
+                  span: { start: 2798, end: 2799, line: 95 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 2802, end: 2803, line: 95 },
+                  },
                   rest: [
-                    {
-                      op: "-",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "-", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
+                span: { start: 2794, end: 2808, line: 95 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 2821, end: 2836, line: 96 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -929,27 +1272,43 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 2821, end: 2842, line: 96 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 2856, end: 2876, line: 97 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2877, end: 2878, line: 97 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2880, end: 2881, line: 97 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2883, end: 2884, line: 97 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -959,15 +1318,24 @@ export const parsed = {
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2890, end: 2891, line: 97 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 2894, end: 2898, line: 97 },
+                          },
                         },
                       ],
                     },
                   ],
+                  span: { start: 2856, end: 2899, line: 97 },
                 },
               },
             ],
@@ -980,7 +1348,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "moveRight",
+      name: { value: "moveRight", span: { start: 3004, end: 3013, line: 103 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -993,9 +1361,20 @@ export const parsed = {
                 termType: "groupedExpression",
                 expression: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 3029, end: 3030, line: 104 },
+                  },
                   rest: [
-                    { op: "+", term: { termType: "variable", name: "size" } },
+                    {
+                      op: "+",
+                      term: {
+                        termType: "variable",
+                        name: "size",
+                        span: { start: 3033, end: 3037, line: 104 },
+                      },
+                    },
                   ],
                 },
               },
@@ -1008,7 +1387,10 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 3060, end: 3075, line: 105 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -1016,27 +1398,43 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 3060, end: 3082, line: 105 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 3096, end: 3116, line: 106 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 3117, end: 3118, line: 106 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 3120, end: 3121, line: 106 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 3123, end: 3124, line: 106 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -1046,36 +1444,53 @@ export const parsed = {
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 3130, end: 3131, line: 106 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 3134, end: 3138, line: 106 },
+                          },
                         },
                       ],
                     },
                   ],
+                  span: { start: 3096, end: 3139, line: 106 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "x",
+                name: {
+                  value: "x",
+                  span: { start: 3154, end: 3155, line: 107 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 3158, end: 3159, line: 107 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
+                span: { start: 3150, end: 3164, line: 107 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.setColor",
+                  name: {
+                    value: "Screen.setColor",
+                    span: { start: 3177, end: 3192, line: 108 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -1083,13 +1498,17 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 3177, end: 3198, line: 108 },
                 },
               },
               {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Screen.drawRectangle",
+                  name: {
+                    value: "Screen.drawRectangle",
+                    span: { start: 3212, end: 3232, line: 109 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
@@ -1097,11 +1516,19 @@ export const parsed = {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 3234, end: 3235, line: 109 },
+                          },
                           rest: [
                             {
                               op: "+",
-                              term: { termType: "variable", name: "size" },
+                              term: {
+                                termType: "variable",
+                                name: "size",
+                                span: { start: 3238, end: 3242, line: 109 },
+                              },
                             },
                           ],
                         },
@@ -1115,30 +1542,51 @@ export const parsed = {
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 3249, end: 3250, line: 109 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 3252, end: 3253, line: 109 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 3256, end: 3260, line: 109 },
+                          },
                         },
                       ],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 3262, end: 3263, line: 109 },
+                      },
                       rest: [
                         {
                           op: "+",
-                          term: { termType: "variable", name: "size" },
+                          term: {
+                            termType: "variable",
+                            name: "size",
+                            span: { start: 3266, end: 3270, line: 109 },
+                          },
                         },
                       ],
                     },
                   ],
+                  span: { start: 3212, end: 3271, line: 109 },
                 },
               },
             ],

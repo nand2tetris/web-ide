@@ -16,13 +16,13 @@ class Main {
 }`;
 
 export const parsed = {
-  name: "Main",
+  name: { value: "Main", span: { start: 284, end: 288, line: 9 } },
   varDecs: [],
   subroutines: [
     {
       type: "function",
       returnType: "void",
-      name: "main",
+      name: { value: "main", span: { start: 309, end: 313, line: 11 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -31,7 +31,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 327, end: 342, line: 12 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -56,6 +59,7 @@ export const parsed = {
                   ],
                 },
               ],
+              span: { start: 327, end: 355, line: 12 },
             },
           },
           { statementType: "returnStatement" },

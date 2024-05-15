@@ -15,44 +15,57 @@ class Main {
 }`;
 
 export const parsed = {
-  name: "Main",
+  name: { value: "Main", span: { start: 243, end: 247, line: 7 } },
   varDecs: [],
   subroutines: [
     {
       type: "function",
       returnType: "void",
-      name: "main",
+      name: { value: "main", span: { start: 268, end: 272, line: 8 } },
       parameters: [],
       body: {
         varDecs: [{ type: "SquareGame", names: ["game"] }],
         statements: [
           {
             statementType: "letStatement",
-            name: "game",
+            name: { value: "game", span: { start: 318, end: 322, line: 10 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "SquareGame.new",
+                name: {
+                  value: "SquareGame.new",
+                  span: { start: 325, end: 339, line: 10 },
+                },
                 parameters: [],
+                span: { start: 325, end: 341, line: 10 },
               },
               rest: [],
             },
+            span: { start: 314, end: 342, line: 10 },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "game.run",
+              name: {
+                value: "game.run",
+                span: { start: 354, end: 362, line: 11 },
+              },
               parameters: [],
+              span: { start: 354, end: 364, line: 11 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "game.dispose",
+              name: {
+                value: "game.dispose",
+                span: { start: 377, end: 389, line: 12 },
+              },
               parameters: [],
+              span: { start: 377, end: 391, line: 12 },
             },
           },
           { statementType: "returnStatement" },

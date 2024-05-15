@@ -81,13 +81,13 @@ class Main {
 }`;
 
 export const parsed = {
-  name: "Main",
+  name: { value: "Main", span: { start: 831, end: 835, line: 20 } },
   varDecs: [],
   subroutines: [
     {
       type: "function",
       returnType: "void",
-      name: "main",
+      name: { value: "main", span: { start: 978, end: 982, line: 26 } },
       parameters: [],
       body: {
         varDecs: [{ type: "int", names: ["value"] }],
@@ -96,7 +96,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Main.fillMemory",
+              name: {
+                value: "Main.fillMemory",
+                span: { start: 1019, end: 1034, line: 28 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -118,16 +121,23 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1019, end: 1048, line: 28 },
             },
           },
           {
             statementType: "letStatement",
-            name: "value",
+            name: {
+              value: "value",
+              span: { start: 1097, end: 1102, line: 29 },
+            },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Memory.peek",
+                name: {
+                  value: "Memory.peek",
+                  span: { start: 1105, end: 1116, line: 29 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
@@ -135,22 +145,32 @@ export const parsed = {
                     rest: [],
                   },
                 ],
+                span: { start: 1105, end: 1122, line: 29 },
               },
               rest: [],
             },
+            span: { start: 1093, end: 1123, line: 29 },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Main.convert",
+              name: {
+                value: "Main.convert",
+                span: { start: 1178, end: 1190, line: 30 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "value" },
+                  term: {
+                    termType: "variable",
+                    name: "value",
+                    span: { start: 1191, end: 1196, line: 30 },
+                  },
                   rest: [],
                 },
               ],
+              span: { start: 1178, end: 1197, line: 30 },
             },
           },
           { statementType: "returnStatement" },
@@ -160,7 +180,7 @@ export const parsed = {
     {
       type: "function",
       returnType: "void",
-      name: "convert",
+      name: { value: "convert", span: { start: 1398, end: 1405, line: 36 } },
       parameters: [{ type: "int", name: "value" }],
       body: {
         varDecs: [
@@ -170,53 +190,75 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "loop",
+            name: { value: "loop", span: { start: 1490, end: 1494, line: 40 } },
             value: {
               nodeType: "expression",
               term: { termType: "keywordLiteral", value: "true" },
               rest: [],
             },
+            span: { start: 1486, end: 1502, line: 40 },
           },
           {
             statementType: "whileStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "loop" },
+              term: {
+                termType: "variable",
+                name: "loop",
+                span: { start: 1516, end: 1520, line: 41 },
+              },
               rest: [],
             },
             body: [
               {
                 statementType: "letStatement",
-                name: "position",
+                name: {
+                  value: "position",
+                  span: { start: 1538, end: 1546, line: 42 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "position" },
+                  term: {
+                    termType: "variable",
+                    name: "position",
+                    span: { start: 1549, end: 1557, line: 42 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 1 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 1 } },
                   ],
                 },
+                span: { start: 1534, end: 1562, line: 42 },
               },
               {
                 statementType: "letStatement",
-                name: "mask",
+                name: {
+                  value: "mask",
+                  span: { start: 1577, end: 1581, line: 43 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "subroutineCall",
-                    name: "Main.nextMask",
+                    name: {
+                      value: "Main.nextMask",
+                      span: { start: 1584, end: 1597, line: 43 },
+                    },
                     parameters: [
                       {
                         nodeType: "expression",
-                        term: { termType: "variable", name: "mask" },
+                        term: {
+                          termType: "variable",
+                          name: "mask",
+                          span: { start: 1598, end: 1602, line: 43 },
+                        },
                         rest: [],
                       },
                     ],
+                    span: { start: 1584, end: 1603, line: 43 },
                   },
                   rest: [],
                 },
+                span: { start: 1573, end: 1604, line: 43 },
               },
               {
                 statementType: "ifStatement",
@@ -229,7 +271,11 @@ export const parsed = {
                       termType: "groupedExpression",
                       expression: {
                         nodeType: "expression",
-                        term: { termType: "variable", name: "position" },
+                        term: {
+                          termType: "variable",
+                          name: "position",
+                          span: { start: 1628, end: 1636, line: 45 },
+                        },
                         rest: [
                           {
                             op: ">",
@@ -257,13 +303,22 @@ export const parsed = {
                               termType: "groupedExpression",
                               expression: {
                                 nodeType: "expression",
-                                term: { termType: "variable", name: "value" },
+                                term: {
+                                  termType: "variable",
+                                  name: "value",
+                                  span: { start: 1674, end: 1679, line: 47 },
+                                },
                                 rest: [
                                   {
                                     op: "&",
                                     term: {
                                       termType: "variable",
                                       name: "mask",
+                                      span: {
+                                        start: 1682,
+                                        end: 1686,
+                                        line: 47,
+                                      },
                                     },
                                   },
                                 ],
@@ -272,10 +327,7 @@ export const parsed = {
                             rest: [
                               {
                                 op: "=",
-                                term: {
-                                  termType: "numericLiteral",
-                                  value: 0,
-                                },
+                                term: { termType: "numericLiteral", value: 0 },
                               },
                             ],
                           },
@@ -288,20 +340,21 @@ export const parsed = {
                         statementType: "doStatement",
                         call: {
                           termType: "subroutineCall",
-                          name: "Memory.poke",
+                          name: {
+                            value: "Memory.poke",
+                            span: { start: 1717, end: 1728, line: 48 },
+                          },
                           parameters: [
                             {
                               nodeType: "expression",
-                              term: {
-                                termType: "numericLiteral",
-                                value: 8000,
-                              },
+                              term: { termType: "numericLiteral", value: 8000 },
                               rest: [
                                 {
                                   op: "+",
                                   term: {
                                     termType: "variable",
                                     name: "position",
+                                    span: { start: 1736, end: 1744, line: 48 },
                                   },
                                 },
                               ],
@@ -312,6 +365,7 @@ export const parsed = {
                               rest: [],
                             },
                           ],
+                          span: { start: 1717, end: 1748, line: 48 },
                         },
                       },
                     ],
@@ -320,20 +374,21 @@ export const parsed = {
                         statementType: "doStatement",
                         call: {
                           termType: "subroutineCall",
-                          name: "Memory.poke",
+                          name: {
+                            value: "Memory.poke",
+                            span: { start: 1811, end: 1822, line: 51 },
+                          },
                           parameters: [
                             {
                               nodeType: "expression",
-                              term: {
-                                termType: "numericLiteral",
-                                value: 8000,
-                              },
+                              term: { termType: "numericLiteral", value: 8000 },
                               rest: [
                                 {
                                   op: "+",
                                   term: {
                                     termType: "variable",
                                     name: "position",
+                                    span: { start: 1830, end: 1838, line: 51 },
                                   },
                                 },
                               ],
@@ -344,6 +399,7 @@ export const parsed = {
                               rest: [],
                             },
                           ],
+                          span: { start: 1811, end: 1842, line: 51 },
                         },
                       },
                     ],
@@ -352,12 +408,16 @@ export const parsed = {
                 else: [
                   {
                     statementType: "letStatement",
-                    name: "loop",
+                    name: {
+                      value: "loop",
+                      span: { start: 1913, end: 1917, line: 55 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "keywordLiteral", value: "false" },
                       rest: [],
                     },
+                    span: { start: 1909, end: 1926, line: 55 },
                   },
                 ],
               },
@@ -370,7 +430,7 @@ export const parsed = {
     {
       type: "function",
       returnType: "int",
-      name: "nextMask",
+      name: { value: "nextMask", span: { start: 2065, end: 2073, line: 62 } },
       parameters: [{ type: "int", name: "mask" }],
       body: {
         varDecs: [],
@@ -379,7 +439,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "mask" },
+              term: {
+                termType: "variable",
+                name: "mask",
+                span: { start: 2096, end: 2100, line: 63 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 0 } },
               ],
@@ -399,12 +463,13 @@ export const parsed = {
                 statementType: "returnStatement",
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "mask" },
+                  term: {
+                    termType: "variable",
+                    name: "mask",
+                    span: { start: 2162, end: 2166, line: 67 },
+                  },
                   rest: [
-                    {
-                      op: "*",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "*", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
               },
@@ -416,7 +481,7 @@ export const parsed = {
     {
       type: "function",
       returnType: "void",
-      name: "fillMemory",
+      name: { value: "fillMemory", span: { start: 2309, end: 2319, line: 73 } },
       parameters: [
         { type: "int", name: "address" },
         { type: "int", name: "length" },
@@ -429,7 +494,11 @@ export const parsed = {
             statementType: "whileStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "length" },
+              term: {
+                termType: "variable",
+                name: "length",
+                span: { start: 2373, end: 2379, line: 74 },
+              },
               rest: [
                 { op: ">", term: { termType: "numericLiteral", value: 0 } },
               ],
@@ -439,48 +508,70 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Memory.poke",
+                  name: {
+                    value: "Memory.poke",
+                    span: { start: 2402, end: 2413, line: 75 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "address" },
+                      term: {
+                        termType: "variable",
+                        name: "address",
+                        span: { start: 2414, end: 2421, line: 75 },
+                      },
                       rest: [],
                     },
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "value" },
+                      term: {
+                        termType: "variable",
+                        name: "value",
+                        span: { start: 2423, end: 2428, line: 75 },
+                      },
                       rest: [],
                     },
                   ],
+                  span: { start: 2402, end: 2429, line: 75 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "length",
+                name: {
+                  value: "length",
+                  span: { start: 2447, end: 2453, line: 76 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "length" },
+                  term: {
+                    termType: "variable",
+                    name: "length",
+                    span: { start: 2456, end: 2462, line: 76 },
+                  },
                   rest: [
-                    {
-                      op: "-",
-                      term: { termType: "numericLiteral", value: 1 },
-                    },
+                    { op: "-", term: { termType: "numericLiteral", value: 1 } },
                   ],
                 },
+                span: { start: 2443, end: 2467, line: 76 },
               },
               {
                 statementType: "letStatement",
-                name: "address",
+                name: {
+                  value: "address",
+                  span: { start: 2484, end: 2491, line: 77 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "address" },
+                  term: {
+                    termType: "variable",
+                    name: "address",
+                    span: { start: 2494, end: 2501, line: 77 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 1 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 1 } },
                   ],
                 },
+                span: { start: 2480, end: 2506, line: 77 },
               },
             ],
           },

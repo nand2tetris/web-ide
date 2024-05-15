@@ -10,16 +10,16 @@ import * as square_main from "./square/main.js";
 import * as square from "./square/square.js";
 import * as square_game from "./square/square_game.js";
 
-export const Programs: Record<string, any> = {
-  average: average,
-  complex_arrays: complex_arrays,
-  convert_to_bin: convert_to_bin,
-  pong_ball: pong_ball,
-  pong_bat: pong_bat,
-  pong_main: pong_main,
-  pong_game: pong_game,
-  seven: seven,
-  square: square,
-  square_main: square_main,
-  square_game: square_game,
+export const Programs: Record<string, Record<string, any>> = {
+  average: { Main: average },
+  complex_arrays: { Main: complex_arrays },
+  convert_to_bin: { Main: convert_to_bin },
+  pong: {
+    Ball: pong_ball,
+    Bat: pong_bat,
+    PongGame: pong_game,
+    Main: pong_main,
+  },
+  seven: { Main: seven },
+  square: { Square: square, Main: square_main, SquareGame: square_game },
 };

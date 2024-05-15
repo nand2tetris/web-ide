@@ -69,25 +69,28 @@ class Main {
 }`;
 
 export const parsed = {
-  name: "Main",
+  name: { value: "Main", span: { start: 379, end: 383, line: 10 } },
   varDecs: [],
   subroutines: [
     {
       type: "function",
       returnType: "void",
-      name: "main",
+      name: { value: "main", span: { start: 405, end: 409, line: 12 } },
       parameters: [],
       body: {
         varDecs: [{ type: "Array", names: ["a", "b", "c"] }],
         statements: [
           {
             statementType: "letStatement",
-            name: "a",
+            name: { value: "a", span: { start: 462, end: 463, line: 15 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Array.new",
+                name: {
+                  value: "Array.new",
+                  span: { start: 466, end: 475, line: 15 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
@@ -95,18 +98,23 @@ export const parsed = {
                     rest: [],
                   },
                 ],
+                span: { start: 466, end: 479, line: 15 },
               },
               rest: [],
             },
+            span: { start: 458, end: 480, line: 15 },
           },
           {
             statementType: "letStatement",
-            name: "b",
+            name: { value: "b", span: { start: 493, end: 494, line: 16 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Array.new",
+                name: {
+                  value: "Array.new",
+                  span: { start: 497, end: 506, line: 16 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
@@ -114,18 +122,23 @@ export const parsed = {
                     rest: [],
                   },
                 ],
+                span: { start: 497, end: 509, line: 16 },
               },
               rest: [],
             },
+            span: { start: 489, end: 510, line: 16 },
           },
           {
             statementType: "letStatement",
-            name: "c",
+            name: { value: "c", span: { start: 523, end: 524, line: 17 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Array.new",
+                name: {
+                  value: "Array.new",
+                  span: { start: 527, end: 536, line: 17 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
@@ -133,13 +146,15 @@ export const parsed = {
                     rest: [],
                   },
                 ],
+                span: { start: 527, end: 539, line: 17 },
               },
               rest: [],
             },
+            span: { start: 519, end: 540, line: 17 },
           },
           {
             statementType: "letStatement",
-            name: "a",
+            name: { value: "a", span: { start: 562, end: 563, line: 19 } },
             arrayIndex: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 3 },
@@ -150,10 +165,11 @@ export const parsed = {
               term: { termType: "numericLiteral", value: 2 },
               rest: [],
             },
+            span: { start: 558, end: 571, line: 19 },
           },
           {
             statementType: "letStatement",
-            name: "a",
+            name: { value: "a", span: { start: 584, end: 585, line: 20 } },
             arrayIndex: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 4 },
@@ -164,10 +180,11 @@ export const parsed = {
               term: { termType: "numericLiteral", value: 8 },
               rest: [],
             },
+            span: { start: 580, end: 593, line: 20 },
           },
           {
             statementType: "letStatement",
-            name: "a",
+            name: { value: "a", span: { start: 606, end: 607, line: 21 } },
             arrayIndex: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 5 },
@@ -178,20 +195,22 @@ export const parsed = {
               term: { termType: "numericLiteral", value: 4 },
               rest: [],
             },
+            span: { start: 602, end: 615, line: 21 },
           },
           {
             statementType: "letStatement",
-            name: "b",
+            name: { value: "b", span: { start: 628, end: 629, line: 22 } },
             arrayIndex: {
               nodeType: "expression",
               term: {
                 termType: "arrayAccess",
-                name: "a",
+                name: { value: "a", span: { start: 630, end: 631, line: 22 } },
                 index: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 3 },
                   rest: [],
                 },
+                span: { start: 630, end: 634, line: 22 },
               },
               rest: [],
             },
@@ -199,39 +218,46 @@ export const parsed = {
               nodeType: "expression",
               term: {
                 termType: "arrayAccess",
-                name: "a",
+                name: { value: "a", span: { start: 638, end: 639, line: 22 } },
                 index: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 3 },
                   rest: [],
                 },
+                span: { start: 638, end: 642, line: 22 },
               },
               rest: [
                 { op: "+", term: { termType: "numericLiteral", value: 3 } },
               ],
             },
+            span: { start: 624, end: 647, line: 22 },
           },
           {
             statementType: "letStatement",
-            name: "a",
+            name: { value: "a", span: { start: 673, end: 674, line: 23 } },
             arrayIndex: {
               nodeType: "expression",
               term: {
                 termType: "arrayAccess",
-                name: "b",
+                name: { value: "b", span: { start: 675, end: 676, line: 23 } },
                 index: {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "a",
+                    name: {
+                      value: "a",
+                      span: { start: 677, end: 678, line: 23 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 3 },
                       rest: [],
                     },
+                    span: { start: 677, end: 681, line: 23 },
                   },
                   rest: [],
                 },
+                span: { start: 675, end: 682, line: 23 },
               },
               rest: [],
             },
@@ -239,27 +265,35 @@ export const parsed = {
               nodeType: "expression",
               term: {
                 termType: "arrayAccess",
-                name: "a",
+                name: { value: "a", span: { start: 686, end: 687, line: 23 } },
                 index: {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "a",
+                    name: {
+                      value: "a",
+                      span: { start: 688, end: 689, line: 23 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 5 },
                       rest: [],
                     },
+                    span: { start: 688, end: 692, line: 23 },
                   },
                   rest: [],
                 },
+                span: { start: 686, end: 693, line: 23 },
               },
               rest: [
                 {
                   op: "*",
                   term: {
                     termType: "arrayAccess",
-                    name: "b",
+                    name: {
+                      value: "b",
+                      span: { start: 696, end: 697, line: 23 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: {
@@ -276,7 +310,10 @@ export const parsed = {
                                   op: "-",
                                   term: {
                                     termType: "arrayAccess",
-                                    name: "a",
+                                    name: {
+                                      value: "a",
+                                      span: { start: 704, end: 705, line: 23 },
+                                    },
                                     index: {
                                       nodeType: "expression",
                                       term: {
@@ -285,6 +322,7 @@ export const parsed = {
                                       },
                                       rest: [],
                                     },
+                                    span: { start: 704, end: 708, line: 23 },
                                   },
                                 },
                               ],
@@ -295,7 +333,10 @@ export const parsed = {
                               op: "-",
                               term: {
                                 termType: "subroutineCall",
-                                name: "Main.double",
+                                name: {
+                                  value: "Main.double",
+                                  span: { start: 712, end: 723, line: 23 },
+                                },
                                 parameters: [
                                   {
                                     nodeType: "expression",
@@ -306,6 +347,7 @@ export const parsed = {
                                     rest: [],
                                   },
                                 ],
+                                span: { start: 712, end: 726, line: 23 },
                               },
                             },
                           ],
@@ -318,14 +360,16 @@ export const parsed = {
                         },
                       ],
                     },
+                    span: { start: 696, end: 732, line: 23 },
                   },
                 },
               ],
             },
+            span: { start: 669, end: 733, line: 23 },
           },
           {
             statementType: "letStatement",
-            name: "c",
+            name: { value: "c", span: { start: 768, end: 769, line: 24 } },
             arrayIndex: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 0 },
@@ -336,29 +380,35 @@ export const parsed = {
               term: { termType: "keywordLiteral", value: "null" },
               rest: [],
             },
+            span: { start: 764, end: 780, line: 24 },
           },
           {
             statementType: "letStatement",
-            name: "c",
+            name: { value: "c", span: { start: 793, end: 794, line: 25 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "arrayAccess",
-                name: "c",
+                name: { value: "c", span: { start: 797, end: 798, line: 25 } },
                 index: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 0 },
                   rest: [],
                 },
+                span: { start: 797, end: 801, line: 25 },
               },
               rest: [],
             },
+            span: { start: 789, end: 802, line: 25 },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printString",
+              name: {
+                value: "Output.printString",
+                span: { start: 823, end: 841, line: 27 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -369,43 +419,59 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 823, end: 888, line: 27 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 901, end: 916, line: 28 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "b",
+                    name: {
+                      value: "b",
+                      span: { start: 917, end: 918, line: 28 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 2 },
                       rest: [],
                     },
+                    span: { start: 917, end: 921, line: 28 },
                   },
                   rest: [],
                 },
               ],
+              span: { start: 901, end: 922, line: 28 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.println",
+              name: {
+                value: "Output.println",
+                span: { start: 935, end: 949, line: 29 },
+              },
               parameters: [],
+              span: { start: 935, end: 951, line: 29 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printString",
+              name: {
+                value: "Output.printString",
+                span: { start: 964, end: 982, line: 30 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -416,43 +482,59 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 964, end: 1030, line: 30 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 1043, end: 1058, line: 31 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "a",
+                    name: {
+                      value: "a",
+                      span: { start: 1059, end: 1060, line: 31 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 5 },
                       rest: [],
                     },
+                    span: { start: 1059, end: 1063, line: 31 },
                   },
                   rest: [],
                 },
               ],
+              span: { start: 1043, end: 1064, line: 31 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.println",
+              name: {
+                value: "Output.println",
+                span: { start: 1077, end: 1091, line: 32 },
+              },
               parameters: [],
+              span: { start: 1077, end: 1093, line: 32 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printString",
+              name: {
+                value: "Output.printString",
+                span: { start: 1106, end: 1124, line: 33 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -463,44 +545,62 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1106, end: 1171, line: 33 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 1184, end: 1199, line: 34 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "c" },
+                  term: {
+                    termType: "variable",
+                    name: "c",
+                    span: { start: 1200, end: 1201, line: 34 },
+                  },
                   rest: [],
                 },
               ],
+              span: { start: 1184, end: 1202, line: 34 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.println",
+              name: {
+                value: "Output.println",
+                span: { start: 1215, end: 1229, line: 35 },
+              },
               parameters: [],
+              span: { start: 1215, end: 1231, line: 35 },
             },
           },
           {
             statementType: "letStatement",
-            name: "c",
+            name: { value: "c", span: { start: 1254, end: 1255, line: 37 } },
             value: {
               nodeType: "expression",
               term: { termType: "keywordLiteral", value: "null" },
               rest: [],
             },
+            span: { start: 1250, end: 1263, line: 37 },
           },
           {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "c" },
+              term: {
+                termType: "variable",
+                name: "c",
+                span: { start: 1277, end: 1278, line: 39 },
+              },
               rest: [
                 {
                   op: "=",
@@ -513,11 +613,18 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "Main.fill",
+                  name: {
+                    value: "Main.fill",
+                    span: { start: 1304, end: 1313, line: 40 },
+                  },
                   parameters: [
                     {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "a" },
+                      term: {
+                        termType: "variable",
+                        name: "a",
+                        span: { start: 1314, end: 1315, line: 40 },
+                      },
                       rest: [],
                     },
                     {
@@ -526,28 +633,40 @@ export const parsed = {
                       rest: [],
                     },
                   ],
+                  span: { start: 1304, end: 1320, line: 40 },
                 },
               },
               {
                 statementType: "letStatement",
-                name: "c",
+                name: {
+                  value: "c",
+                  span: { start: 1338, end: 1339, line: 41 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "a",
+                    name: {
+                      value: "a",
+                      span: { start: 1342, end: 1343, line: 41 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 3 },
                       rest: [],
                     },
+                    span: { start: 1342, end: 1346, line: 41 },
                   },
                   rest: [],
                 },
+                span: { start: 1334, end: 1347, line: 41 },
               },
               {
                 statementType: "letStatement",
-                name: "c",
+                name: {
+                  value: "c",
+                  span: { start: 1364, end: 1365, line: 42 },
+                },
                 arrayIndex: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 1 },
@@ -558,27 +677,39 @@ export const parsed = {
                   term: { termType: "numericLiteral", value: 33 },
                   rest: [],
                 },
+                span: { start: 1360, end: 1374, line: 42 },
               },
               {
                 statementType: "letStatement",
-                name: "c",
+                name: {
+                  value: "c",
+                  span: { start: 1391, end: 1392, line: 43 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "a",
+                    name: {
+                      value: "a",
+                      span: { start: 1395, end: 1396, line: 43 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 7 },
                       rest: [],
                     },
+                    span: { start: 1395, end: 1399, line: 43 },
                   },
                   rest: [],
                 },
+                span: { start: 1387, end: 1400, line: 43 },
               },
               {
                 statementType: "letStatement",
-                name: "c",
+                name: {
+                  value: "c",
+                  span: { start: 1417, end: 1418, line: 44 },
+                },
                 arrayIndex: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 1 },
@@ -589,27 +720,39 @@ export const parsed = {
                   term: { termType: "numericLiteral", value: 77 },
                   rest: [],
                 },
+                span: { start: 1413, end: 1427, line: 44 },
               },
               {
                 statementType: "letStatement",
-                name: "b",
+                name: {
+                  value: "b",
+                  span: { start: 1444, end: 1445, line: 45 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "a",
+                    name: {
+                      value: "a",
+                      span: { start: 1448, end: 1449, line: 45 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 3 },
                       rest: [],
                     },
+                    span: { start: 1448, end: 1452, line: 45 },
                   },
                   rest: [],
                 },
+                span: { start: 1440, end: 1453, line: 45 },
               },
               {
                 statementType: "letStatement",
-                name: "b",
+                name: {
+                  value: "b",
+                  span: { start: 1470, end: 1471, line: 46 },
+                },
                 arrayIndex: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 1 },
@@ -619,28 +762,37 @@ export const parsed = {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "b",
+                    name: {
+                      value: "b",
+                      span: { start: 1477, end: 1478, line: 46 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 1 },
                       rest: [],
                     },
+                    span: { start: 1477, end: 1481, line: 46 },
                   },
                   rest: [
                     {
                       op: "+",
                       term: {
                         termType: "arrayAccess",
-                        name: "c",
+                        name: {
+                          value: "c",
+                          span: { start: 1484, end: 1485, line: 46 },
+                        },
                         index: {
                           nodeType: "expression",
                           term: { termType: "numericLiteral", value: 1 },
                           rest: [],
                         },
+                        span: { start: 1484, end: 1488, line: 46 },
                       },
                     },
                   ],
                 },
+                span: { start: 1466, end: 1489, line: 46 },
               },
             ],
             else: [],
@@ -649,7 +801,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printString",
+              name: {
+                value: "Output.printString",
+                span: { start: 1538, end: 1556, line: 49 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -660,43 +815,59 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1538, end: 1604, line: 49 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 1617, end: 1632, line: 50 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "c",
+                    name: {
+                      value: "c",
+                      span: { start: 1633, end: 1634, line: 50 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 1 },
                       rest: [],
                     },
+                    span: { start: 1633, end: 1637, line: 50 },
                   },
                   rest: [],
                 },
               ],
+              span: { start: 1617, end: 1638, line: 50 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.println",
+              name: {
+                value: "Output.println",
+                span: { start: 1651, end: 1665, line: 51 },
+              },
               parameters: [],
+              span: { start: 1651, end: 1667, line: 51 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printString",
+              name: {
+                value: "Output.printString",
+                span: { start: 1680, end: 1698, line: 52 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -707,36 +878,49 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1680, end: 1747, line: 52 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.printInt",
+              name: {
+                value: "Output.printInt",
+                span: { start: 1760, end: 1775, line: 53 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
                   term: {
                     termType: "arrayAccess",
-                    name: "b",
+                    name: {
+                      value: "b",
+                      span: { start: 1776, end: 1777, line: 53 },
+                    },
                     index: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 1 },
                       rest: [],
                     },
+                    span: { start: 1776, end: 1780, line: 53 },
                   },
                   rest: [],
                 },
               ],
+              span: { start: 1760, end: 1781, line: 53 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Output.println",
+              name: {
+                value: "Output.println",
+                span: { start: 1794, end: 1808, line: 54 },
+              },
               parameters: [],
+              span: { start: 1794, end: 1810, line: 54 },
             },
           },
           { statementType: "returnStatement" },
@@ -746,7 +930,7 @@ export const parsed = {
     {
       type: "function",
       returnType: "int",
-      name: "double",
+      name: { value: "double", span: { start: 1856, end: 1862, line: 58 } },
       parameters: [{ type: "int", name: "a" }],
       body: {
         varDecs: [],
@@ -755,7 +939,11 @@ export const parsed = {
             statementType: "returnStatement",
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "a" },
+              term: {
+                termType: "variable",
+                name: "a",
+                span: { start: 1885, end: 1886, line: 59 },
+              },
               rest: [
                 { op: "*", term: { termType: "numericLiteral", value: 2 } },
               ],
@@ -767,7 +955,7 @@ export const parsed = {
     {
       type: "function",
       returnType: "void",
-      name: "fill",
+      name: { value: "fill", span: { start: 1921, end: 1925, line: 62 } },
       parameters: [
         { type: "Array", name: "a" },
         { type: "int", name: "size" },
@@ -779,7 +967,11 @@ export const parsed = {
             statementType: "whileStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "size" },
+              term: {
+                termType: "variable",
+                name: "size",
+                span: { start: 1962, end: 1966, line: 63 },
+              },
               rest: [
                 { op: ">", term: { termType: "numericLiteral", value: 0 } },
               ],
@@ -787,31 +979,46 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "size",
+                name: {
+                  value: "size",
+                  span: { start: 1990, end: 1994, line: 64 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "size" },
+                  term: {
+                    termType: "variable",
+                    name: "size",
+                    span: { start: 1997, end: 2001, line: 64 },
+                  },
                   rest: [
-                    {
-                      op: "-",
-                      term: { termType: "numericLiteral", value: 1 },
-                    },
+                    { op: "-", term: { termType: "numericLiteral", value: 1 } },
                   ],
                 },
+                span: { start: 1986, end: 2006, line: 64 },
               },
               {
                 statementType: "letStatement",
-                name: "a",
+                name: {
+                  value: "a",
+                  span: { start: 2023, end: 2024, line: 65 },
+                },
                 arrayIndex: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "size" },
+                  term: {
+                    termType: "variable",
+                    name: "size",
+                    span: { start: 2025, end: 2029, line: 65 },
+                  },
                   rest: [],
                 },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "subroutineCall",
-                    name: "Array.new",
+                    name: {
+                      value: "Array.new",
+                      span: { start: 2033, end: 2042, line: 65 },
+                    },
                     parameters: [
                       {
                         nodeType: "expression",
@@ -819,9 +1026,11 @@ export const parsed = {
                         rest: [],
                       },
                     ],
+                    span: { start: 2033, end: 2045, line: 65 },
                   },
                   rest: [],
                 },
+                span: { start: 2019, end: 2046, line: 65 },
               },
             ],
           },

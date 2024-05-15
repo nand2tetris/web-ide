@@ -203,7 +203,7 @@ class Ball {
 }`;
 
 export const parsed = {
-  name: "Ball",
+  name: { value: "Ball", span: { start: 459, end: 463, line: 11 } },
   varDecs: [
     { varType: "field", type: "int", names: ["x", "y"] },
     { varType: "field", type: "int", names: ["lengthx", "lengthy"] },
@@ -224,7 +224,7 @@ export const parsed = {
     {
       type: "constructor",
       returnType: "Ball",
-      name: "new",
+      name: { value: "new", span: { start: 1028, end: 1031, line: 24 } },
       parameters: [
         { type: "int", name: "Ax" },
         { type: "int", name: "Ay" },
@@ -238,77 +238,124 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "x",
+            name: { value: "x", span: { start: 1152, end: 1153, line: 26 } },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "Ax" },
+              term: {
+                termType: "variable",
+                name: "Ax",
+                span: { start: 1156, end: 1158, line: 26 },
+              },
               rest: [],
             },
+            span: { start: 1148, end: 1159, line: 26 },
           },
           {
             statementType: "letStatement",
-            name: "y",
+            name: { value: "y", span: { start: 1172, end: 1173, line: 27 } },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "Ay" },
+              term: {
+                termType: "variable",
+                name: "Ay",
+                span: { start: 1176, end: 1178, line: 27 },
+              },
               rest: [],
             },
+            span: { start: 1168, end: 1179, line: 27 },
           },
           {
             statementType: "letStatement",
-            name: "leftWall",
+            name: {
+              value: "leftWall",
+              span: { start: 1190, end: 1198, line: 28 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "AleftWall" },
+              term: {
+                termType: "variable",
+                name: "AleftWall",
+                span: { start: 1201, end: 1210, line: 28 },
+              },
               rest: [],
             },
+            span: { start: 1186, end: 1211, line: 28 },
           },
           {
             statementType: "letStatement",
-            name: "rightWall",
+            name: {
+              value: "rightWall",
+              span: { start: 1222, end: 1231, line: 29 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "ArightWall" },
+              term: {
+                termType: "variable",
+                name: "ArightWall",
+                span: { start: 1234, end: 1244, line: 29 },
+              },
               rest: [
                 { op: "-", term: { termType: "numericLiteral", value: 6 } },
               ],
             },
+            span: { start: 1218, end: 1249, line: 29 },
           },
           {
             statementType: "letStatement",
-            name: "topWall",
+            name: {
+              value: "topWall",
+              span: { start: 1283, end: 1290, line: 30 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "AtopWall" },
+              term: {
+                termType: "variable",
+                name: "AtopWall",
+                span: { start: 1293, end: 1301, line: 30 },
+              },
               rest: [],
             },
+            span: { start: 1279, end: 1302, line: 30 },
           },
           {
             statementType: "letStatement",
-            name: "bottomWall",
+            name: {
+              value: "bottomWall",
+              span: { start: 1314, end: 1324, line: 31 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "AbottomWall" },
+              term: {
+                termType: "variable",
+                name: "AbottomWall",
+                span: { start: 1327, end: 1338, line: 31 },
+              },
               rest: [
                 { op: "-", term: { termType: "numericLiteral", value: 6 } },
               ],
             },
+            span: { start: 1310, end: 1343, line: 31 },
           },
           {
             statementType: "letStatement",
-            name: "wall",
+            name: { value: "wall", span: { start: 1375, end: 1379, line: 32 } },
             value: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 0 },
               rest: [],
             },
+            span: { start: 1371, end: 1384, line: 32 },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "show",
+              name: {
+                value: "show",
+                span: { start: 1396, end: 1400, line: 33 },
+              },
               parameters: [],
+              span: { start: 1396, end: 1402, line: 33 },
             },
           },
           {
@@ -325,7 +372,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "dispose",
+      name: { value: "dispose", span: { start: 1490, end: 1497, line: 38 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -334,7 +381,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Memory.deAlloc",
+              name: {
+                value: "Memory.deAlloc",
+                span: { start: 1513, end: 1527, line: 39 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -342,6 +392,7 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1513, end: 1533, line: 39 },
             },
           },
           { statementType: "returnStatement" },
@@ -351,7 +402,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "show",
+      name: { value: "show", span: { start: 1601, end: 1605, line: 44 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -360,7 +411,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.setColor",
+              name: {
+                value: "Screen.setColor",
+                span: { start: 1621, end: 1636, line: 45 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -368,14 +422,19 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1621, end: 1642, line: 45 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "draw",
+              name: {
+                value: "draw",
+                span: { start: 1655, end: 1659, line: 46 },
+              },
               parameters: [],
+              span: { start: 1655, end: 1661, line: 46 },
             },
           },
           { statementType: "returnStatement" },
@@ -385,7 +444,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "hide",
+      name: { value: "hide", span: { start: 1729, end: 1733, line: 51 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -394,7 +453,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.setColor",
+              name: {
+                value: "Screen.setColor",
+                span: { start: 1749, end: 1764, line: 52 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -402,14 +464,19 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1749, end: 1771, line: 52 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "draw",
+              name: {
+                value: "draw",
+                span: { start: 1782, end: 1786, line: 53 },
+              },
               parameters: [],
+              span: { start: 1782, end: 1788, line: 53 },
             },
           },
           { statementType: "returnStatement" },
@@ -419,7 +486,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "draw",
+      name: { value: "draw", span: { start: 1856, end: 1860, line: 58 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -428,39 +495,53 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Screen.drawRectangle",
+              name: {
+                value: "Screen.drawRectangle",
+                span: { start: 1874, end: 1894, line: 59 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 1895, end: 1896, line: 59 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 1898, end: 1899, line: 59 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "x" },
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 1901, end: 1902, line: 59 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 5 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 5 } },
                   ],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 1908, end: 1909, line: 59 },
+                  },
                   rest: [
-                    {
-                      op: "+",
-                      term: { termType: "numericLiteral", value: 5 },
-                    },
+                    { op: "+", term: { termType: "numericLiteral", value: 5 } },
                   ],
                 },
               ],
+              span: { start: 1874, end: 1914, line: 59 },
             },
           },
           { statementType: "returnStatement" },
@@ -470,7 +551,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "int",
-      name: "getLeft",
+      name: { value: "getLeft", span: { start: 1993, end: 2000, line: 64 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -479,7 +560,11 @@ export const parsed = {
             statementType: "returnStatement",
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "x" },
+              term: {
+                termType: "variable",
+                name: "x",
+                span: { start: 2020, end: 2021, line: 65 },
+              },
               rest: [],
             },
           },
@@ -489,7 +574,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "int",
-      name: "getRight",
+      name: { value: "getRight", span: { start: 2087, end: 2095, line: 69 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -498,7 +583,11 @@ export const parsed = {
             statementType: "returnStatement",
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "x" },
+              term: {
+                termType: "variable",
+                name: "x",
+                span: { start: 2115, end: 2116, line: 70 },
+              },
               rest: [
                 { op: "+", term: { termType: "numericLiteral", value: 5 } },
               ],
@@ -510,7 +599,10 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "setDestination",
+      name: {
+        value: "setDestination",
+        span: { start: 2198, end: 2212, line: 74 },
+      },
       parameters: [
         { type: "int", name: "destx" },
         { type: "int", name: "desty" },
@@ -520,204 +612,347 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "lengthx",
+            name: {
+              value: "lengthx",
+              span: { start: 2279, end: 2286, line: 76 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "destx" },
-              rest: [{ op: "-", term: { termType: "variable", name: "x" } }],
+              term: {
+                termType: "variable",
+                name: "destx",
+                span: { start: 2289, end: 2294, line: 76 },
+              },
+              rest: [
+                {
+                  op: "-",
+                  term: {
+                    termType: "variable",
+                    name: "x",
+                    span: { start: 2297, end: 2298, line: 76 },
+                  },
+                },
+              ],
             },
+            span: { start: 2275, end: 2299, line: 76 },
           },
           {
             statementType: "letStatement",
-            name: "lengthy",
+            name: {
+              value: "lengthy",
+              span: { start: 2310, end: 2317, line: 77 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "desty" },
-              rest: [{ op: "-", term: { termType: "variable", name: "y" } }],
+              term: {
+                termType: "variable",
+                name: "desty",
+                span: { start: 2320, end: 2325, line: 77 },
+              },
+              rest: [
+                {
+                  op: "-",
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 2328, end: 2329, line: 77 },
+                  },
+                },
+              ],
             },
+            span: { start: 2306, end: 2330, line: 77 },
           },
           {
             statementType: "letStatement",
-            name: "dx",
+            name: { value: "dx", span: { start: 2343, end: 2345, line: 78 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Math.abs",
+                name: {
+                  value: "Math.abs",
+                  span: { start: 2348, end: 2356, line: 78 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "lengthx" },
+                    term: {
+                      termType: "variable",
+                      name: "lengthx",
+                      span: { start: 2357, end: 2364, line: 78 },
+                    },
                     rest: [],
                   },
                 ],
+                span: { start: 2348, end: 2365, line: 78 },
               },
               rest: [],
             },
+            span: { start: 2339, end: 2366, line: 78 },
           },
           {
             statementType: "letStatement",
-            name: "dy",
+            name: { value: "dy", span: { start: 2379, end: 2381, line: 79 } },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Math.abs",
+                name: {
+                  value: "Math.abs",
+                  span: { start: 2384, end: 2392, line: 79 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "lengthy" },
+                    term: {
+                      termType: "variable",
+                      name: "lengthy",
+                      span: { start: 2393, end: 2400, line: 79 },
+                    },
                     rest: [],
                   },
                 ],
+                span: { start: 2384, end: 2401, line: 79 },
               },
               rest: [],
             },
+            span: { start: 2375, end: 2402, line: 79 },
           },
           {
             statementType: "letStatement",
-            name: "invert",
+            name: {
+              value: "invert",
+              span: { start: 2415, end: 2421, line: 80 },
+            },
             value: {
               nodeType: "expression",
               term: {
                 termType: "groupedExpression",
                 expression: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "dx" },
+                  term: {
+                    termType: "variable",
+                    name: "dx",
+                    span: { start: 2425, end: 2427, line: 80 },
+                  },
                   rest: [
-                    { op: "<", term: { termType: "variable", name: "dy" } },
+                    {
+                      op: "<",
+                      term: {
+                        termType: "variable",
+                        name: "dy",
+                        span: { start: 2430, end: 2432, line: 80 },
+                      },
+                    },
                   ],
                 },
               },
               rest: [],
             },
+            span: { start: 2411, end: 2434, line: 80 },
           },
           {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "invert" },
+              term: {
+                termType: "variable",
+                name: "invert",
+                span: { start: 2448, end: 2454, line: 82 },
+              },
               rest: [],
             },
             body: [
               {
                 statementType: "letStatement",
-                name: "temp",
+                name: {
+                  value: "temp",
+                  span: { start: 2474, end: 2478, line: 83 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "dx" },
+                  term: {
+                    termType: "variable",
+                    name: "dx",
+                    span: { start: 2481, end: 2483, line: 83 },
+                  },
                   rest: [],
                 },
+                span: { start: 2470, end: 2484, line: 83 },
               },
               {
                 statementType: "letStatement",
-                name: "dx",
+                name: {
+                  value: "dx",
+                  span: { start: 2516, end: 2518, line: 84 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "dy" },
+                  term: {
+                    termType: "variable",
+                    name: "dy",
+                    span: { start: 2521, end: 2523, line: 84 },
+                  },
                   rest: [],
                 },
+                span: { start: 2512, end: 2524, line: 84 },
               },
               {
                 statementType: "letStatement",
-                name: "dy",
+                name: {
+                  value: "dy",
+                  span: { start: 2541, end: 2543, line: 85 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "temp" },
+                  term: {
+                    termType: "variable",
+                    name: "temp",
+                    span: { start: 2546, end: 2550, line: 85 },
+                  },
                   rest: [],
                 },
+                span: { start: 2537, end: 2551, line: 85 },
               },
               {
                 statementType: "letStatement",
-                name: "positivex",
+                name: {
+                  value: "positivex",
+                  span: { start: 2569, end: 2578, line: 86 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2582, end: 2583, line: 86 },
+                      },
                       rest: [
                         {
                           op: "<",
-                          term: { termType: "variable", name: "desty" },
+                          term: {
+                            termType: "variable",
+                            name: "desty",
+                            span: { start: 2586, end: 2591, line: 86 },
+                          },
                         },
                       ],
                     },
                   },
                   rest: [],
                 },
+                span: { start: 2565, end: 2593, line: 86 },
               },
               {
                 statementType: "letStatement",
-                name: "positivey",
+                name: {
+                  value: "positivey",
+                  span: { start: 2610, end: 2619, line: 87 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2623, end: 2624, line: 87 },
+                      },
                       rest: [
                         {
                           op: "<",
-                          term: { termType: "variable", name: "destx" },
+                          term: {
+                            termType: "variable",
+                            name: "destx",
+                            span: { start: 2627, end: 2632, line: 87 },
+                          },
                         },
                       ],
                     },
                   },
                   rest: [],
                 },
+                span: { start: 2606, end: 2634, line: 87 },
               },
             ],
             else: [
               {
                 statementType: "letStatement",
-                name: "positivex",
+                name: {
+                  value: "positivex",
+                  span: { start: 2674, end: 2683, line: 90 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 2687, end: 2688, line: 90 },
+                      },
                       rest: [
                         {
                           op: "<",
-                          term: { termType: "variable", name: "destx" },
+                          term: {
+                            termType: "variable",
+                            name: "destx",
+                            span: { start: 2691, end: 2696, line: 90 },
+                          },
                         },
                       ],
                     },
                   },
                   rest: [],
                 },
+                span: { start: 2670, end: 2698, line: 90 },
               },
               {
                 statementType: "letStatement",
-                name: "positivey",
+                name: {
+                  value: "positivey",
+                  span: { start: 2715, end: 2724, line: 91 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 2728, end: 2729, line: 91 },
+                      },
                       rest: [
                         {
                           op: "<",
-                          term: { termType: "variable", name: "desty" },
+                          term: {
+                            termType: "variable",
+                            name: "desty",
+                            span: { start: 2732, end: 2737, line: 91 },
+                          },
                         },
                       ],
                     },
                   },
                   rest: [],
                 },
+                span: { start: 2711, end: 2739, line: 91 },
               },
             ],
           },
           {
             statementType: "letStatement",
-            name: "d",
+            name: { value: "d", span: { start: 2763, end: 2764, line: 94 } },
             value: {
               nodeType: "expression",
               term: {
@@ -726,25 +961,58 @@ export const parsed = {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 2 },
                   rest: [
-                    { op: "*", term: { termType: "variable", name: "dy" } },
+                    {
+                      op: "*",
+                      term: {
+                        termType: "variable",
+                        name: "dy",
+                        span: { start: 2772, end: 2774, line: 94 },
+                      },
+                    },
                   ],
                 },
               },
-              rest: [{ op: "-", term: { termType: "variable", name: "dx" } }],
+              rest: [
+                {
+                  op: "-",
+                  term: {
+                    termType: "variable",
+                    name: "dx",
+                    span: { start: 2778, end: 2780, line: 94 },
+                  },
+                },
+              ],
             },
+            span: { start: 2759, end: 2781, line: 94 },
           },
           {
             statementType: "letStatement",
-            name: "straightD",
+            name: {
+              value: "straightD",
+              span: { start: 2794, end: 2803, line: 95 },
+            },
             value: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 2 },
-              rest: [{ op: "*", term: { termType: "variable", name: "dy" } }],
+              rest: [
+                {
+                  op: "*",
+                  term: {
+                    termType: "variable",
+                    name: "dy",
+                    span: { start: 2810, end: 2812, line: 95 },
+                  },
+                },
+              ],
             },
+            span: { start: 2790, end: 2813, line: 95 },
           },
           {
             statementType: "letStatement",
-            name: "diagonalD",
+            name: {
+              value: "diagonalD",
+              span: { start: 2826, end: 2835, line: 96 },
+            },
             value: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 2 },
@@ -755,11 +1023,19 @@ export const parsed = {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "dy" },
+                      term: {
+                        termType: "variable",
+                        name: "dy",
+                        span: { start: 2843, end: 2845, line: 96 },
+                      },
                       rest: [
                         {
                           op: "-",
-                          term: { termType: "variable", name: "dx" },
+                          term: {
+                            termType: "variable",
+                            name: "dx",
+                            span: { start: 2848, end: 2850, line: 96 },
+                          },
                         },
                       ],
                     },
@@ -767,6 +1043,7 @@ export const parsed = {
                 },
               ],
             },
+            span: { start: 2822, end: 2852, line: 96 },
           },
           { statementType: "returnStatement" },
         ],
@@ -775,7 +1052,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "int",
-      name: "move",
+      name: { value: "move", span: { start: 3133, end: 3137, line: 107 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -784,15 +1061,23 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "hide",
+              name: {
+                value: "hide",
+                span: { start: 3152, end: 3156, line: 109 },
+              },
               parameters: [],
+              span: { start: 3152, end: 3158, line: 109 },
             },
           },
           {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "d" },
+              term: {
+                termType: "variable",
+                name: "d",
+                span: { start: 3173, end: 3174, line: 111 },
+              },
               rest: [
                 { op: "<", term: { termType: "numericLiteral", value: 0 } },
               ],
@@ -800,39 +1085,67 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "d",
+                name: {
+                  value: "d",
+                  span: { start: 3186, end: 3187, line: 111 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "d" },
+                  term: {
+                    termType: "variable",
+                    name: "d",
+                    span: { start: 3190, end: 3191, line: 111 },
+                  },
                   rest: [
                     {
                       op: "+",
-                      term: { termType: "variable", name: "straightD" },
+                      term: {
+                        termType: "variable",
+                        name: "straightD",
+                        span: { start: 3194, end: 3203, line: 111 },
+                      },
                     },
                   ],
                 },
+                span: { start: 3182, end: 3204, line: 111 },
               },
             ],
             else: [
               {
                 statementType: "letStatement",
-                name: "d",
+                name: {
+                  value: "d",
+                  span: { start: 3238, end: 3239, line: 113 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "d" },
+                  term: {
+                    termType: "variable",
+                    name: "d",
+                    span: { start: 3242, end: 3243, line: 113 },
+                  },
                   rest: [
                     {
                       op: "+",
-                      term: { termType: "variable", name: "diagonalD" },
+                      term: {
+                        termType: "variable",
+                        name: "diagonalD",
+                        span: { start: 3246, end: 3255, line: 113 },
+                      },
                     },
                   ],
                 },
+                span: { start: 3234, end: 3256, line: 113 },
               },
               {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "positivey" },
+                  term: {
+                    termType: "variable",
+                    name: "positivey",
+                    span: { start: 3274, end: 3283, line: 115 },
+                  },
                   rest: [],
                 },
                 body: [
@@ -840,16 +1153,27 @@ export const parsed = {
                     statementType: "ifStatement",
                     condition: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "invert" },
+                      term: {
+                        termType: "variable",
+                        name: "invert",
+                        span: { start: 3307, end: 3313, line: 116 },
+                      },
                       rest: [],
                     },
                     body: [
                       {
                         statementType: "letStatement",
-                        name: "x",
+                        name: {
+                          value: "x",
+                          span: { start: 3321, end: 3322, line: 116 },
+                        },
                         value: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 3325, end: 3326, line: 116 },
+                          },
                           rest: [
                             {
                               op: "+",
@@ -857,15 +1181,23 @@ export const parsed = {
                             },
                           ],
                         },
+                        span: { start: 3317, end: 3331, line: 116 },
                       },
                     ],
                     else: [
                       {
                         statementType: "letStatement",
-                        name: "y",
+                        name: {
+                          value: "y",
+                          span: { start: 3361, end: 3362, line: 117 },
+                        },
                         value: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "y" },
+                          term: {
+                            termType: "variable",
+                            name: "y",
+                            span: { start: 3365, end: 3366, line: 117 },
+                          },
                           rest: [
                             {
                               op: "+",
@@ -873,6 +1205,7 @@ export const parsed = {
                             },
                           ],
                         },
+                        span: { start: 3357, end: 3371, line: 117 },
                       },
                     ],
                   },
@@ -882,16 +1215,27 @@ export const parsed = {
                     statementType: "ifStatement",
                     condition: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "invert" },
+                      term: {
+                        termType: "variable",
+                        name: "invert",
+                        span: { start: 3427, end: 3433, line: 120 },
+                      },
                       rest: [],
                     },
                     body: [
                       {
                         statementType: "letStatement",
-                        name: "x",
+                        name: {
+                          value: "x",
+                          span: { start: 3441, end: 3442, line: 120 },
+                        },
                         value: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 3445, end: 3446, line: 120 },
+                          },
                           rest: [
                             {
                               op: "-",
@@ -899,15 +1243,23 @@ export const parsed = {
                             },
                           ],
                         },
+                        span: { start: 3437, end: 3451, line: 120 },
                       },
                     ],
                     else: [
                       {
                         statementType: "letStatement",
-                        name: "y",
+                        name: {
+                          value: "y",
+                          span: { start: 3481, end: 3482, line: 121 },
+                        },
                         value: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "y" },
+                          term: {
+                            termType: "variable",
+                            name: "y",
+                            span: { start: 3485, end: 3486, line: 121 },
+                          },
                           rest: [
                             {
                               op: "-",
@@ -915,6 +1267,7 @@ export const parsed = {
                             },
                           ],
                         },
+                        span: { start: 3477, end: 3491, line: 121 },
                       },
                     ],
                   },
@@ -926,7 +1279,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "positivex" },
+              term: {
+                termType: "variable",
+                name: "positivex",
+                span: { start: 3529, end: 3538, line: 125 },
+              },
               rest: [],
             },
             body: [
@@ -934,16 +1291,27 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "invert" },
+                  term: {
+                    termType: "variable",
+                    name: "invert",
+                    span: { start: 3558, end: 3564, line: 126 },
+                  },
                   rest: [],
                 },
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "y",
+                    name: {
+                      value: "y",
+                      span: { start: 3572, end: 3573, line: 126 },
+                    },
                     value: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 3576, end: 3577, line: 126 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -951,15 +1319,23 @@ export const parsed = {
                         },
                       ],
                     },
+                    span: { start: 3568, end: 3582, line: 126 },
                   },
                 ],
                 else: [
                   {
                     statementType: "letStatement",
-                    name: "x",
+                    name: {
+                      value: "x",
+                      span: { start: 3608, end: 3609, line: 127 },
+                    },
                     value: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 3612, end: 3613, line: 127 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -967,6 +1343,7 @@ export const parsed = {
                         },
                       ],
                     },
+                    span: { start: 3604, end: 3618, line: 127 },
                   },
                 ],
               },
@@ -976,16 +1353,27 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "invert" },
+                  term: {
+                    termType: "variable",
+                    name: "invert",
+                    span: { start: 3658, end: 3664, line: 130 },
+                  },
                   rest: [],
                 },
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "y",
+                    name: {
+                      value: "y",
+                      span: { start: 3672, end: 3673, line: 130 },
+                    },
                     value: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 3676, end: 3677, line: 130 },
+                      },
                       rest: [
                         {
                           op: "-",
@@ -993,15 +1381,23 @@ export const parsed = {
                         },
                       ],
                     },
+                    span: { start: 3668, end: 3682, line: 130 },
                   },
                 ],
                 else: [
                   {
                     statementType: "letStatement",
-                    name: "x",
+                    name: {
+                      value: "x",
+                      span: { start: 3708, end: 3709, line: 131 },
+                    },
                     value: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "x" },
+                      term: {
+                        termType: "variable",
+                        name: "x",
+                        span: { start: 3712, end: 3713, line: 131 },
+                      },
                       rest: [
                         {
                           op: "-",
@@ -1009,6 +1405,7 @@ export const parsed = {
                         },
                       ],
                     },
+                    span: { start: 3704, end: 3718, line: 131 },
                   },
                 ],
               },
@@ -1025,11 +1422,19 @@ export const parsed = {
                   termType: "groupedExpression",
                   expression: {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "x" },
+                    term: {
+                      termType: "variable",
+                      name: "x",
+                      span: { start: 3742, end: 3743, line: 134 },
+                    },
                     rest: [
                       {
                         op: ">",
-                        term: { termType: "variable", name: "leftWall" },
+                        term: {
+                          termType: "variable",
+                          name: "leftWall",
+                          span: { start: 3746, end: 3754, line: 134 },
+                        },
                       },
                     ],
                   },
@@ -1040,21 +1445,33 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "wall",
+                name: {
+                  value: "wall",
+                  span: { start: 3773, end: 3777, line: 135 },
+                },
                 value: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 1 },
                   rest: [],
                 },
+                span: { start: 3769, end: 3782, line: 135 },
               },
               {
                 statementType: "letStatement",
-                name: "x",
+                name: {
+                  value: "x",
+                  span: { start: 3801, end: 3802, line: 136 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "leftWall" },
+                  term: {
+                    termType: "variable",
+                    name: "leftWall",
+                    span: { start: 3805, end: 3813, line: 136 },
+                  },
                   rest: [],
                 },
+                span: { start: 3797, end: 3814, line: 136 },
               },
             ],
             else: [],
@@ -1070,11 +1487,19 @@ export const parsed = {
                   termType: "groupedExpression",
                   expression: {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "x" },
+                    term: {
+                      termType: "variable",
+                      name: "x",
+                      span: { start: 3837, end: 3838, line: 138 },
+                    },
                     rest: [
                       {
                         op: "<",
-                        term: { termType: "variable", name: "rightWall" },
+                        term: {
+                          termType: "variable",
+                          name: "rightWall",
+                          span: { start: 3841, end: 3850, line: 138 },
+                        },
                       },
                     ],
                   },
@@ -1085,21 +1510,33 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "wall",
+                name: {
+                  value: "wall",
+                  span: { start: 3869, end: 3873, line: 139 },
+                },
                 value: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 2 },
                   rest: [],
                 },
+                span: { start: 3865, end: 3878, line: 139 },
               },
               {
                 statementType: "letStatement",
-                name: "x",
+                name: {
+                  value: "x",
+                  span: { start: 3897, end: 3898, line: 140 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "rightWall" },
+                  term: {
+                    termType: "variable",
+                    name: "rightWall",
+                    span: { start: 3901, end: 3910, line: 140 },
+                  },
                   rest: [],
                 },
+                span: { start: 3893, end: 3911, line: 140 },
               },
             ],
             else: [],
@@ -1115,11 +1552,19 @@ export const parsed = {
                   termType: "groupedExpression",
                   expression: {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "y" },
+                    term: {
+                      termType: "variable",
+                      name: "y",
+                      span: { start: 3934, end: 3935, line: 142 },
+                    },
                     rest: [
                       {
                         op: ">",
-                        term: { termType: "variable", name: "topWall" },
+                        term: {
+                          termType: "variable",
+                          name: "topWall",
+                          span: { start: 3938, end: 3945, line: 142 },
+                        },
                       },
                     ],
                   },
@@ -1130,21 +1575,33 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "wall",
+                name: {
+                  value: "wall",
+                  span: { start: 3966, end: 3970, line: 143 },
+                },
                 value: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 3 },
                   rest: [],
                 },
+                span: { start: 3962, end: 3975, line: 143 },
               },
               {
                 statementType: "letStatement",
-                name: "y",
+                name: {
+                  value: "y",
+                  span: { start: 3994, end: 3995, line: 144 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "topWall" },
+                  term: {
+                    termType: "variable",
+                    name: "topWall",
+                    span: { start: 3998, end: 4005, line: 144 },
+                  },
                   rest: [],
                 },
+                span: { start: 3990, end: 4006, line: 144 },
               },
             ],
             else: [],
@@ -1160,11 +1617,19 @@ export const parsed = {
                   termType: "groupedExpression",
                   expression: {
                     nodeType: "expression",
-                    term: { termType: "variable", name: "y" },
+                    term: {
+                      termType: "variable",
+                      name: "y",
+                      span: { start: 4031, end: 4032, line: 146 },
+                    },
                     rest: [
                       {
                         op: "<",
-                        term: { termType: "variable", name: "bottomWall" },
+                        term: {
+                          termType: "variable",
+                          name: "bottomWall",
+                          span: { start: 4035, end: 4045, line: 146 },
+                        },
                       },
                     ],
                   },
@@ -1175,21 +1640,33 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "wall",
+                name: {
+                  value: "wall",
+                  span: { start: 4066, end: 4070, line: 147 },
+                },
                 value: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 4 },
                   rest: [],
                 },
+                span: { start: 4062, end: 4075, line: 147 },
               },
               {
                 statementType: "letStatement",
-                name: "y",
+                name: {
+                  value: "y",
+                  span: { start: 4094, end: 4095, line: 148 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "bottomWall" },
+                  term: {
+                    termType: "variable",
+                    name: "bottomWall",
+                    span: { start: 4098, end: 4108, line: 148 },
+                  },
                   rest: [],
                 },
+                span: { start: 4090, end: 4109, line: 148 },
               },
             ],
             else: [],
@@ -1198,15 +1675,23 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "show",
+              name: {
+                value: "show",
+                span: { start: 4130, end: 4134, line: 151 },
+              },
               parameters: [],
+              span: { start: 4130, end: 4136, line: 151 },
             },
           },
           {
             statementType: "returnStatement",
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "wall" },
+              term: {
+                termType: "variable",
+                name: "wall",
+                span: { start: 4152, end: 4156, line: 153 },
+              },
               rest: [],
             },
           },
@@ -1216,7 +1701,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "bounce",
+      name: { value: "bounce", span: { start: 4394, end: 4400, line: 161 } },
       parameters: [{ type: "int", name: "bouncingDirection" }],
       body: {
         varDecs: [
@@ -1228,31 +1713,51 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "divLengthx",
+            name: {
+              value: "divLengthx",
+              span: { start: 4549, end: 4559, line: 165 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "lengthx" },
+              term: {
+                termType: "variable",
+                name: "lengthx",
+                span: { start: 4562, end: 4569, line: 165 },
+              },
               rest: [
                 { op: "/", term: { termType: "numericLiteral", value: 10 } },
               ],
             },
+            span: { start: 4545, end: 4575, line: 165 },
           },
           {
             statementType: "letStatement",
-            name: "divLengthy",
+            name: {
+              value: "divLengthy",
+              span: { start: 4588, end: 4598, line: 166 },
+            },
             value: {
               nodeType: "expression",
-              term: { termType: "variable", name: "lengthy" },
+              term: {
+                termType: "variable",
+                name: "lengthy",
+                span: { start: 4601, end: 4608, line: 166 },
+              },
               rest: [
                 { op: "/", term: { termType: "numericLiteral", value: 10 } },
               ],
             },
+            span: { start: 4584, end: 4614, line: 166 },
           },
           {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "bouncingDirection" },
+              term: {
+                termType: "variable",
+                name: "bouncingDirection",
+                span: { start: 4625, end: 4642, line: 167 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 0 } },
               ],
@@ -1260,12 +1765,16 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "factor",
+                name: {
+                  value: "factor",
+                  span: { start: 4654, end: 4660, line: 167 },
+                },
                 value: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 10 },
                   rest: [],
                 },
+                span: { start: 4650, end: 4666, line: 167 },
               },
             ],
             else: [
@@ -1291,6 +1800,7 @@ export const parsed = {
                                 term: {
                                   termType: "variable",
                                   name: "lengthx",
+                                  span: { start: 4700, end: 4707, line: 169 },
                                 },
                                 rest: [
                                   {
@@ -1317,6 +1827,7 @@ export const parsed = {
                               term: {
                                 termType: "variable",
                                 name: "bouncingDirection",
+                                span: { start: 4717, end: 4734, line: 169 },
                               },
                               rest: [
                                 {
@@ -1344,7 +1855,11 @@ export const parsed = {
                             termType: "groupedExpression",
                             expression: {
                               nodeType: "expression",
-                              term: { termType: "variable", name: "lengthx" },
+                              term: {
+                                termType: "variable",
+                                name: "lengthx",
+                                span: { start: 4745, end: 4752, line: 169 },
+                              },
                               rest: [
                                 {
                                   op: "<",
@@ -1366,6 +1881,7 @@ export const parsed = {
                                   term: {
                                     termType: "variable",
                                     name: "bouncingDirection",
+                                    span: { start: 4761, end: 4778, line: 169 },
                                   },
                                   rest: [
                                     {
@@ -1399,23 +1915,31 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "factor",
+                    name: {
+                      value: "factor",
+                      span: { start: 4811, end: 4817, line: 170 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 20 },
                       rest: [],
                     },
+                    span: { start: 4807, end: 4823, line: 170 },
                   },
                 ],
                 else: [
                   {
                     statementType: "letStatement",
-                    name: "factor",
+                    name: {
+                      value: "factor",
+                      span: { start: 4900, end: 4906, line: 172 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 5 },
                       rest: [],
                     },
+                    span: { start: 4896, end: 4911, line: 172 },
                   },
                 ],
               },
@@ -1425,7 +1949,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "wall" },
+              term: {
+                termType: "variable",
+                name: "wall",
+                span: { start: 4979, end: 4983, line: 175 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 1 } },
               ],
@@ -1433,23 +1961,34 @@ export const parsed = {
             body: [
               {
                 statementType: "letStatement",
-                name: "newx",
+                name: {
+                  value: "newx",
+                  span: { start: 5005, end: 5009, line: 176 },
+                },
                 value: {
                   nodeType: "expression",
                   term: { termType: "numericLiteral", value: 506 },
                   rest: [],
                 },
+                span: { start: 5001, end: 5016, line: 176 },
               },
               {
                 statementType: "letStatement",
-                name: "newy",
+                name: {
+                  value: "newy",
+                  span: { start: 5031, end: 5035, line: 177 },
+                },
                 value: {
                   nodeType: "expression",
                   term: {
                     termType: "groupedExpression",
                     expression: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "divLengthy" },
+                      term: {
+                        termType: "variable",
+                        name: "divLengthy",
+                        span: { start: 5039, end: 5049, line: 177 },
+                      },
                       rest: [
                         {
                           op: "*",
@@ -1460,10 +1999,7 @@ export const parsed = {
                               term: {
                                 termType: "unaryExpression",
                                 op: "-",
-                                term: {
-                                  termType: "numericLiteral",
-                                  value: 50,
-                                },
+                                term: { termType: "numericLiteral", value: 50 },
                               },
                               rest: [],
                             },
@@ -1475,17 +2011,29 @@ export const parsed = {
                   rest: [
                     {
                       op: "/",
-                      term: { termType: "variable", name: "divLengthx" },
+                      term: {
+                        termType: "variable",
+                        name: "divLengthx",
+                        span: { start: 5061, end: 5071, line: 177 },
+                      },
                     },
                   ],
                 },
+                span: { start: 5027, end: 5072, line: 177 },
               },
               {
                 statementType: "letStatement",
-                name: "newy",
+                name: {
+                  value: "newy",
+                  span: { start: 5089, end: 5093, line: 178 },
+                },
                 value: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "y" },
+                  term: {
+                    termType: "variable",
+                    name: "y",
+                    span: { start: 5096, end: 5097, line: 178 },
+                  },
                   rest: [
                     {
                       op: "+",
@@ -1493,11 +2041,19 @@ export const parsed = {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "newy" },
+                          term: {
+                            termType: "variable",
+                            name: "newy",
+                            span: { start: 5101, end: 5105, line: 178 },
+                          },
                           rest: [
                             {
                               op: "*",
-                              term: { termType: "variable", name: "factor" },
+                              term: {
+                                termType: "variable",
+                                name: "factor",
+                                span: { start: 5108, end: 5114, line: 178 },
+                              },
                             },
                           ],
                         },
@@ -1505,6 +2061,7 @@ export const parsed = {
                     },
                   ],
                 },
+                span: { start: 5085, end: 5116, line: 178 },
               },
             ],
             else: [
@@ -1512,34 +2069,46 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "wall" },
+                  term: {
+                    termType: "variable",
+                    name: "wall",
+                    span: { start: 5156, end: 5160, line: 181 },
+                  },
                   rest: [
-                    {
-                      op: "=",
-                      term: { termType: "numericLiteral", value: 2 },
-                    },
+                    { op: "=", term: { termType: "numericLiteral", value: 2 } },
                   ],
                 },
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "newx",
+                    name: {
+                      value: "newx",
+                      span: { start: 5188, end: 5192, line: 182 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 0 },
                       rest: [],
                     },
+                    span: { start: 5184, end: 5197, line: 182 },
                   },
                   {
                     statementType: "letStatement",
-                    name: "newy",
+                    name: {
+                      value: "newy",
+                      span: { start: 5218, end: 5222, line: 183 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: {
                         termType: "groupedExpression",
                         expression: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "divLengthy" },
+                          term: {
+                            termType: "variable",
+                            name: "divLengthy",
+                            span: { start: 5226, end: 5236, line: 183 },
+                          },
                           rest: [
                             {
                               op: "*",
@@ -1551,17 +2120,29 @@ export const parsed = {
                       rest: [
                         {
                           op: "/",
-                          term: { termType: "variable", name: "divLengthx" },
+                          term: {
+                            termType: "variable",
+                            name: "divLengthx",
+                            span: { start: 5245, end: 5255, line: 183 },
+                          },
                         },
                       ],
                     },
+                    span: { start: 5214, end: 5256, line: 183 },
                   },
                   {
                     statementType: "letStatement",
-                    name: "newy",
+                    name: {
+                      value: "newy",
+                      span: { start: 5277, end: 5281, line: 184 },
+                    },
                     value: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "y" },
+                      term: {
+                        termType: "variable",
+                        name: "y",
+                        span: { start: 5284, end: 5285, line: 184 },
+                      },
                       rest: [
                         {
                           op: "+",
@@ -1569,13 +2150,18 @@ export const parsed = {
                             termType: "groupedExpression",
                             expression: {
                               nodeType: "expression",
-                              term: { termType: "variable", name: "newy" },
+                              term: {
+                                termType: "variable",
+                                name: "newy",
+                                span: { start: 5289, end: 5293, line: 184 },
+                              },
                               rest: [
                                 {
                                   op: "*",
                                   term: {
                                     termType: "variable",
                                     name: "factor",
+                                    span: { start: 5296, end: 5302, line: 184 },
                                   },
                                 },
                               ],
@@ -1584,6 +2170,7 @@ export const parsed = {
                         },
                       ],
                     },
+                    span: { start: 5273, end: 5304, line: 184 },
                   },
                 ],
                 else: [
@@ -1591,7 +2178,11 @@ export const parsed = {
                     statementType: "ifStatement",
                     condition: {
                       nodeType: "expression",
-                      term: { termType: "variable", name: "wall" },
+                      term: {
+                        termType: "variable",
+                        name: "wall",
+                        span: { start: 5354, end: 5358, line: 187 },
+                      },
                       rest: [
                         {
                           op: "=",
@@ -1602,16 +2193,23 @@ export const parsed = {
                     body: [
                       {
                         statementType: "letStatement",
-                        name: "newy",
+                        name: {
+                          value: "newy",
+                          span: { start: 5386, end: 5390, line: 188 },
+                        },
                         value: {
                           nodeType: "expression",
                           term: { termType: "numericLiteral", value: 250 },
                           rest: [],
                         },
+                        span: { start: 5382, end: 5397, line: 188 },
                       },
                       {
                         statementType: "letStatement",
-                        name: "newx",
+                        name: {
+                          value: "newx",
+                          span: { start: 5418, end: 5422, line: 189 },
+                        },
                         value: {
                           nodeType: "expression",
                           term: {
@@ -1621,6 +2219,7 @@ export const parsed = {
                               term: {
                                 termType: "variable",
                                 name: "divLengthx",
+                                span: { start: 5426, end: 5436, line: 189 },
                               },
                               rest: [
                                 {
@@ -1650,17 +2249,26 @@ export const parsed = {
                               term: {
                                 termType: "variable",
                                 name: "divLengthy",
+                                span: { start: 5448, end: 5458, line: 189 },
                               },
                             },
                           ],
                         },
+                        span: { start: 5414, end: 5459, line: 189 },
                       },
                       {
                         statementType: "letStatement",
-                        name: "newx",
+                        name: {
+                          value: "newx",
+                          span: { start: 5484, end: 5488, line: 190 },
+                        },
                         value: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 5491, end: 5492, line: 190 },
+                          },
                           rest: [
                             {
                               op: "+",
@@ -1671,6 +2279,7 @@ export const parsed = {
                                   term: {
                                     termType: "variable",
                                     name: "newx",
+                                    span: { start: 5496, end: 5500, line: 190 },
                                   },
                                   rest: [
                                     {
@@ -1678,6 +2287,11 @@ export const parsed = {
                                       term: {
                                         termType: "variable",
                                         name: "factor",
+                                        span: {
+                                          start: 5503,
+                                          end: 5509,
+                                          line: 190,
+                                        },
                                       },
                                     },
                                   ],
@@ -1686,21 +2300,29 @@ export const parsed = {
                             },
                           ],
                         },
+                        span: { start: 5480, end: 5511, line: 190 },
                       },
                     ],
                     else: [
                       {
                         statementType: "letStatement",
-                        name: "newy",
+                        name: {
+                          value: "newy",
+                          span: { start: 5589, end: 5593, line: 193 },
+                        },
                         value: {
                           nodeType: "expression",
                           term: { termType: "numericLiteral", value: 0 },
                           rest: [],
                         },
+                        span: { start: 5585, end: 5598, line: 193 },
                       },
                       {
                         statementType: "letStatement",
-                        name: "newx",
+                        name: {
+                          value: "newx",
+                          span: { start: 5619, end: 5623, line: 194 },
+                        },
                         value: {
                           nodeType: "expression",
                           term: {
@@ -1710,6 +2332,7 @@ export const parsed = {
                               term: {
                                 termType: "variable",
                                 name: "divLengthx",
+                                span: { start: 5627, end: 5637, line: 194 },
                               },
                               rest: [
                                 {
@@ -1728,17 +2351,26 @@ export const parsed = {
                               term: {
                                 termType: "variable",
                                 name: "divLengthy",
+                                span: { start: 5646, end: 5656, line: 194 },
                               },
                             },
                           ],
                         },
+                        span: { start: 5615, end: 5657, line: 194 },
                       },
                       {
                         statementType: "letStatement",
-                        name: "newx",
+                        name: {
+                          value: "newx",
+                          span: { start: 5682, end: 5686, line: 195 },
+                        },
                         value: {
                           nodeType: "expression",
-                          term: { termType: "variable", name: "x" },
+                          term: {
+                            termType: "variable",
+                            name: "x",
+                            span: { start: 5689, end: 5690, line: 195 },
+                          },
                           rest: [
                             {
                               op: "+",
@@ -1749,6 +2381,7 @@ export const parsed = {
                                   term: {
                                     termType: "variable",
                                     name: "newx",
+                                    span: { start: 5694, end: 5698, line: 195 },
                                   },
                                   rest: [
                                     {
@@ -1756,6 +2389,11 @@ export const parsed = {
                                       term: {
                                         termType: "variable",
                                         name: "factor",
+                                        span: {
+                                          start: 5701,
+                                          end: 5707,
+                                          line: 195,
+                                        },
                                       },
                                     },
                                   ],
@@ -1764,6 +2402,7 @@ export const parsed = {
                             },
                           ],
                         },
+                        span: { start: 5678, end: 5709, line: 195 },
                       },
                     ],
                   },
@@ -1775,19 +2414,31 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "setDestination",
+              name: {
+                value: "setDestination",
+                span: { start: 5760, end: 5774, line: 200 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "newx" },
+                  term: {
+                    termType: "variable",
+                    name: "newx",
+                    span: { start: 5775, end: 5779, line: 200 },
+                  },
                   rest: [],
                 },
                 {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "newy" },
+                  term: {
+                    termType: "variable",
+                    name: "newy",
+                    span: { start: 5781, end: 5785, line: 200 },
+                  },
                   rest: [],
                 },
               ],
+              span: { start: 5760, end: 5786, line: 200 },
             },
           },
           { statementType: "returnStatement" },

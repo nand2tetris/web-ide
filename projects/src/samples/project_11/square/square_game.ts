@@ -76,7 +76,7 @@ class SquareGame {
 `;
 
 export const parsed = {
-  name: "SquareGame",
+  name: { value: "SquareGame", span: { start: 712, end: 722, line: 15 } },
   varDecs: [
     { varType: "field", type: "Square", names: ["square"] },
     { varType: "field", type: "int", names: ["direction"] },
@@ -85,19 +85,25 @@ export const parsed = {
     {
       type: "constructor",
       returnType: "SquareGame",
-      name: "new",
+      name: { value: "new", span: { start: 968, end: 971, line: 21 } },
       parameters: [],
       body: {
         varDecs: [],
         statements: [
           {
             statementType: "letStatement",
-            name: "square",
+            name: {
+              value: "square",
+              span: { start: 1067, end: 1073, line: 23 },
+            },
             value: {
               nodeType: "expression",
               term: {
                 termType: "subroutineCall",
-                name: "Square.new",
+                name: {
+                  value: "Square.new",
+                  span: { start: 1076, end: 1086, line: 23 },
+                },
                 parameters: [
                   {
                     nodeType: "expression",
@@ -115,18 +121,24 @@ export const parsed = {
                     rest: [],
                   },
                 ],
+                span: { start: 1076, end: 1096, line: 23 },
               },
               rest: [],
             },
+            span: { start: 1063, end: 1097, line: 23 },
           },
           {
             statementType: "letStatement",
-            name: "direction",
+            name: {
+              value: "direction",
+              span: { start: 1108, end: 1117, line: 24 },
+            },
             value: {
               nodeType: "expression",
               term: { termType: "numericLiteral", value: 0 },
               rest: [],
             },
+            span: { start: 1104, end: 1122, line: 24 },
           },
           {
             statementType: "returnStatement",
@@ -142,7 +154,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "dispose",
+      name: { value: "dispose", span: { start: 1193, end: 1200, line: 29 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -151,15 +163,22 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "square.dispose",
+              name: {
+                value: "square.dispose",
+                span: { start: 1214, end: 1228, line: 30 },
+              },
               parameters: [],
+              span: { start: 1214, end: 1230, line: 30 },
             },
           },
           {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Memory.deAlloc",
+              name: {
+                value: "Memory.deAlloc",
+                span: { start: 1241, end: 1255, line: 31 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -167,6 +186,7 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1241, end: 1261, line: 31 },
             },
           },
           { statementType: "returnStatement" },
@@ -176,7 +196,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "moveSquare",
+      name: { value: "moveSquare", span: { start: 1351, end: 1361, line: 36 } },
       parameters: [],
       body: {
         varDecs: [],
@@ -185,7 +205,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "direction" },
+              term: {
+                termType: "variable",
+                name: "direction",
+                span: { start: 1376, end: 1385, line: 37 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 1 } },
               ],
@@ -195,8 +219,12 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "square.moveUp",
+                  name: {
+                    value: "square.moveUp",
+                    span: { start: 1396, end: 1409, line: 37 },
+                  },
                   parameters: [],
+                  span: { start: 1396, end: 1411, line: 37 },
                 },
               },
             ],
@@ -206,7 +234,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "direction" },
+              term: {
+                termType: "variable",
+                name: "direction",
+                span: { start: 1425, end: 1434, line: 38 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 2 } },
               ],
@@ -216,8 +248,12 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "square.moveDown",
+                  name: {
+                    value: "square.moveDown",
+                    span: { start: 1445, end: 1460, line: 38 },
+                  },
                   parameters: [],
+                  span: { start: 1445, end: 1462, line: 38 },
                 },
               },
             ],
@@ -227,7 +263,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "direction" },
+              term: {
+                termType: "variable",
+                name: "direction",
+                span: { start: 1476, end: 1485, line: 39 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 3 } },
               ],
@@ -237,8 +277,12 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "square.moveLeft",
+                  name: {
+                    value: "square.moveLeft",
+                    span: { start: 1496, end: 1511, line: 39 },
+                  },
                   parameters: [],
+                  span: { start: 1496, end: 1513, line: 39 },
                 },
               },
             ],
@@ -248,7 +292,11 @@ export const parsed = {
             statementType: "ifStatement",
             condition: {
               nodeType: "expression",
-              term: { termType: "variable", name: "direction" },
+              term: {
+                termType: "variable",
+                name: "direction",
+                span: { start: 1527, end: 1536, line: 40 },
+              },
               rest: [
                 { op: "=", term: { termType: "numericLiteral", value: 4 } },
               ],
@@ -258,8 +306,12 @@ export const parsed = {
                 statementType: "doStatement",
                 call: {
                   termType: "subroutineCall",
-                  name: "square.moveRight",
+                  name: {
+                    value: "square.moveRight",
+                    span: { start: 1547, end: 1563, line: 40 },
+                  },
                   parameters: [],
+                  span: { start: 1547, end: 1565, line: 40 },
                 },
               },
             ],
@@ -269,7 +321,10 @@ export const parsed = {
             statementType: "doStatement",
             call: {
               termType: "subroutineCall",
-              name: "Sys.wait",
+              name: {
+                value: "Sys.wait",
+                span: { start: 1578, end: 1586, line: 41 },
+              },
               parameters: [
                 {
                   nodeType: "expression",
@@ -277,6 +332,7 @@ export const parsed = {
                   rest: [],
                 },
               ],
+              span: { start: 1578, end: 1589, line: 41 },
             },
           },
           { statementType: "returnStatement" },
@@ -286,7 +342,7 @@ export const parsed = {
     {
       type: "method",
       returnType: "void",
-      name: "run",
+      name: { value: "run", span: { start: 1739, end: 1742, line: 46 } },
       parameters: [],
       body: {
         varDecs: [
@@ -296,12 +352,13 @@ export const parsed = {
         statements: [
           {
             statementType: "letStatement",
-            name: "exit",
+            name: { value: "exit", span: { start: 1843, end: 1847, line: 49 } },
             value: {
               nodeType: "expression",
               term: { termType: "keywordLiteral", value: "false" },
               rest: [],
             },
+            span: { start: 1839, end: 1856, line: 49 },
           },
           {
             statementType: "whileStatement",
@@ -310,7 +367,11 @@ export const parsed = {
               term: {
                 termType: "unaryExpression",
                 op: "~",
-                term: { termType: "variable", name: "exit" },
+                term: {
+                  termType: "variable",
+                  name: "exit",
+                  span: { start: 1878, end: 1882, line: 51 },
+                },
               },
               rest: [],
             },
@@ -319,34 +380,47 @@ export const parsed = {
                 statementType: "whileStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 1944, end: 1947, line: 53 },
+                  },
                   rest: [
-                    {
-                      op: "=",
-                      term: { termType: "numericLiteral", value: 0 },
-                    },
+                    { op: "=", term: { termType: "numericLiteral", value: 0 } },
                   ],
                 },
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "key",
+                    name: {
+                      value: "key",
+                      span: { start: 1971, end: 1974, line: 54 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: {
                         termType: "subroutineCall",
-                        name: "Keyboard.keyPressed",
+                        name: {
+                          value: "Keyboard.keyPressed",
+                          span: { start: 1977, end: 1996, line: 54 },
+                        },
                         parameters: [],
+                        span: { start: 1977, end: 1998, line: 54 },
                       },
                       rest: [],
                     },
+                    span: { start: 1967, end: 1999, line: 54 },
                   },
                   {
                     statementType: "doStatement",
                     call: {
                       termType: "subroutineCall",
-                      name: "moveSquare",
+                      name: {
+                        value: "moveSquare",
+                        span: { start: 2015, end: 2025, line: 55 },
+                      },
                       parameters: [],
+                      span: { start: 2015, end: 2027, line: 55 },
                     },
                   },
                 ],
@@ -355,7 +429,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2053, end: 2056, line: 57 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -366,12 +444,16 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "exit",
+                    name: {
+                      value: "exit",
+                      span: { start: 2070, end: 2074, line: 57 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "keywordLiteral", value: "true" },
                       rest: [],
                     },
+                    span: { start: 2066, end: 2082, line: 57 },
                   },
                 ],
                 else: [],
@@ -380,7 +462,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2111, end: 2114, line: 58 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -393,8 +479,12 @@ export const parsed = {
                     statementType: "doStatement",
                     call: {
                       termType: "subroutineCall",
-                      name: "square.decSize",
+                      name: {
+                        value: "square.decSize",
+                        span: { start: 2127, end: 2141, line: 58 },
+                      },
                       parameters: [],
+                      span: { start: 2127, end: 2143, line: 58 },
                     },
                   },
                 ],
@@ -404,7 +494,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2169, end: 2172, line: 59 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -417,8 +511,12 @@ export const parsed = {
                     statementType: "doStatement",
                     call: {
                       termType: "subroutineCall",
-                      name: "square.incSize",
+                      name: {
+                        value: "square.incSize",
+                        span: { start: 2185, end: 2199, line: 59 },
+                      },
                       parameters: [],
+                      span: { start: 2185, end: 2201, line: 59 },
                     },
                   },
                 ],
@@ -428,7 +526,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2227, end: 2230, line: 60 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -439,12 +541,16 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "direction",
+                    name: {
+                      value: "direction",
+                      span: { start: 2244, end: 2253, line: 60 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 1 },
                       rest: [],
                     },
+                    span: { start: 2240, end: 2258, line: 60 },
                   },
                 ],
                 else: [],
@@ -453,7 +559,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2288, end: 2291, line: 61 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -464,12 +574,16 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "direction",
+                    name: {
+                      value: "direction",
+                      span: { start: 2305, end: 2314, line: 61 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 2 },
                       rest: [],
                     },
+                    span: { start: 2301, end: 2319, line: 61 },
                   },
                 ],
                 else: [],
@@ -478,7 +592,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2351, end: 2354, line: 62 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -489,12 +607,16 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "direction",
+                    name: {
+                      value: "direction",
+                      span: { start: 2368, end: 2377, line: 62 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 3 },
                       rest: [],
                     },
+                    span: { start: 2364, end: 2382, line: 62 },
                   },
                 ],
                 else: [],
@@ -503,7 +625,11 @@ export const parsed = {
                 statementType: "ifStatement",
                 condition: {
                   nodeType: "expression",
-                  term: { termType: "variable", name: "key" },
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2414, end: 2417, line: 63 },
+                  },
                   rest: [
                     {
                       op: "=",
@@ -514,12 +640,16 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "direction",
+                    name: {
+                      value: "direction",
+                      span: { start: 2431, end: 2440, line: 63 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 4 },
                       rest: [],
                     },
+                    span: { start: 2427, end: 2445, line: 63 },
                   },
                 ],
                 else: [],
@@ -535,7 +665,11 @@ export const parsed = {
                       termType: "groupedExpression",
                       expression: {
                         nodeType: "expression",
-                        term: { termType: "variable", name: "key" },
+                        term: {
+                          termType: "variable",
+                          name: "key",
+                          span: { start: 2529, end: 2532, line: 66 },
+                        },
                         rest: [
                           {
                             op: "=",
@@ -550,23 +684,35 @@ export const parsed = {
                 body: [
                   {
                     statementType: "letStatement",
-                    name: "key",
+                    name: {
+                      value: "key",
+                      span: { start: 2557, end: 2560, line: 67 },
+                    },
                     value: {
                       nodeType: "expression",
                       term: {
                         termType: "subroutineCall",
-                        name: "Keyboard.keyPressed",
+                        name: {
+                          value: "Keyboard.keyPressed",
+                          span: { start: 2563, end: 2582, line: 67 },
+                        },
                         parameters: [],
+                        span: { start: 2563, end: 2584, line: 67 },
                       },
                       rest: [],
                     },
+                    span: { start: 2553, end: 2585, line: 67 },
                   },
                   {
                     statementType: "doStatement",
                     call: {
                       termType: "subroutineCall",
-                      name: "moveSquare",
+                      name: {
+                        value: "moveSquare",
+                        span: { start: 2601, end: 2611, line: 68 },
+                      },
                       parameters: [],
+                      span: { start: 2601, end: 2613, line: 68 },
                     },
                   },
                 ],

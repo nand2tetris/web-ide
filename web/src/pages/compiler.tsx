@@ -1,8 +1,6 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
-import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import JSZip from "jszip";
 import { ChangeEvent, useCallback, useContext, useEffect, useRef } from "react";
@@ -36,7 +34,7 @@ export const Compiler = () => {
       setStatus(
         valid()
           ? "Compiled successfully"
-          : state.files[state.selected].error?.message ?? ""
+          : state.compiled[state.selected].error?.message ?? ""
       );
     }
   });
@@ -80,13 +78,13 @@ export const Compiler = () => {
 
   const valid = () =>
     Object.keys(state.files)
-      .map((file) => state.files[file].valid)
+      .map((file) => state.compiled[file].valid)
       .reduce((a, b) => a && b, true);
 
   const compileAll = (): VmFile[] => {
     const files = [];
     for (const file of Object.keys(state.files)) {
-      let compiled = unwrap(compile(state.files[file].content));
+      let compiled = state.compiled[file].vm ?? "";
       compiled = `// Compiled ${file}.jack:\n`.concat(compiled);
       files.push({ name: file, content: compiled });
     }
@@ -188,20 +186,20 @@ export const Compiler = () => {
               onSelect={() => selectTab(file)}
               style={{
                 backgroundColor:
-                  toolStates.compiler.compiled && !state.files[file].valid
+                  toolStates.compiler.compiled && !state.compiled[file].valid
                     ? "#ffaaaa"
                     : undefined,
               }}
             >
               <Editor
-                value={state.files[file].content}
+                value={state.files[file]}
                 disabled={true}
                 onChange={(source: string) => {
                   return;
                 }}
                 error={
                   toolStates.compiler.compiled
-                    ? state.files[file].error
+                    ? state.compiled[file].error
                     : undefined
                 }
                 language={"jack"}

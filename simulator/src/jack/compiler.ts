@@ -21,6 +21,7 @@ import {
   Statement,
   Subroutine,
   SubroutineCall,
+  SubroutineType,
   Term,
   Type,
   UnaryOp,
@@ -30,7 +31,59 @@ import {
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
 
+function isError(value: unknown): value is CompilationError {
+  return (value as any).message != undefined;
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 export function compile(
+  files: Record<string, string>
+): Record<string, string | CompilationError> {
+  const classes: Record<string, Class | CompilationError> = {};
+  for (const [name, content] of Object.entries(files)) {
+    const parsed = JACK.parse(content);
+    if (isErr(parsed)) {
+      classes[name] = Err(parsed);
+    } else {
+      const cls = Ok(parsed);
+      classes[name] =
+        cls.name.value == name
+          ? cls
+          : createError(
+              `Class name ${cls.name.value} doesn't match file name ${name}`,
+              cls.name.span
+            );
+    }
+  }
+
+  const validClasses: Record<string, Class> = Object.fromEntries(
+    Object.entries(classes).filter(([_, parsed]) => !isError(parsed))
+  ) as Record<string, Class>;
+
+  const vms: Record<string, string | CompilationError> = {};
+  for (const [name, parsed] of Object.entries(classes)) {
+    if (isError(parsed)) {
+      vms[name] = parsed;
+    } else {
+      try {
+        const compiled = new Compiler().compile(parsed, validClasses);
+        if (isErr(compiled)) {
+          vms[name] = Err(compiled);
+        } else {
+          vms[name] = Ok(compiled);
+        }
+      } catch (e) {
+        vms[name] = e as CompilationError;
+      }
+    }
+  }
+  return vms;
+}
+
+export function compileFile(
   source: string,
   name?: string
 ): Result<string, CompilationError> {
@@ -83,6 +136,7 @@ export class Compiler {
   localSymbolTable: Record<string, VariableData> = {};
 
   className = "";
+  private classes: Record<string, Class> = {};
 
   private labelNum = 0;
   private fieldNum = 0;
@@ -125,8 +179,12 @@ export class Compiler {
     return label;
   }
 
-  compile(cls: Class): Result<string, CompilationError> {
+  compile(
+    cls: Class,
+    other?: Record<string, Class>
+  ): Result<string, CompilationError> {
     this.className = cls.name.value;
+    this.classes = other ?? {};
     for (const varDec of cls.varDecs) {
       this.compileClassVarDec(varDec);
     }
@@ -274,30 +332,78 @@ export class Compiler {
     }
   }
 
+  validateFunctionCall(className: string, functionName: string, span: Span) {
+    if (this.classes[className]) {
+      for (const subroutine of this.classes[className].subroutines) {
+        if (subroutine.name == functionName) {
+          if (subroutine.type == "method") {
+            throw createError(
+              `Method ${className}.${functionName} was called as a function/constructor`,
+              span
+            );
+          }
+          return;
+        }
+      }
+      throw createError(
+        `Class ${className} doesn't contain a function/constructor ${functionName}`,
+        span
+      );
+    } else {
+      throw createError(`Class ${className} doesn't exist`, span);
+    }
+  }
+
+  validateMethodCall(className: string, methodName: string, span: Span) {
+    if (this.classes[className]) {
+      for (const subroutine of this.classes[className].subroutines) {
+        if (subroutine.name == methodName) {
+          if (subroutine.type != "method") {
+            throw createError(
+              `${capitalize(
+                subroutine.name
+              )} ${className}.${methodName} was called as a method`,
+              span
+            );
+          }
+          return;
+        }
+      }
+      throw createError(
+        `Class ${className} doesn't contain a method ${methodName}`,
+        span
+      );
+    }
+  }
+
   compileSubroutineCall(call: SubroutineCall) {
     let object = "";
     let className = "";
     let subroutineName = "";
     let isMethod = true;
 
-    if (call.name.includes(".")) {
-      const [prefix, suffix] = call.name.split(".", 2);
+    if (call.name.value.includes(".")) {
+      const [prefix, suffix] = call.name.value.split(".", 2);
       subroutineName = suffix;
       const varData = this.varData(prefix);
       if (varData) {
-        // method call
+        // external method call
         object = this.var(prefix);
         className = varData.type;
+        this.validateMethodCall(className, subroutineName, call.name.span);
       } else {
-        // function call
+        // function / constructor call
         isMethod = false;
         className = prefix;
+        this.validateFunctionCall(className, subroutineName, call.name.span);
       }
     } else {
       object = "pointer 0"; // this
       className = this.className;
-      subroutineName = call.name;
+      subroutineName = call.name.value;
+      this.validateMethodCall(className, subroutineName, call.name.span);
     }
+
     if (isMethod) {
       this.write(`push ${object}`);
     }

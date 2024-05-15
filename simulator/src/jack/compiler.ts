@@ -158,15 +158,22 @@ export class Compiler {
   }
 
   var(name: string): string;
-  var(variable: Variable | ArrayAccess | LetStatement): string;
+  var(variable: Variable): string;
+  var(variable: ArrayAccess): string;
+  var(variable: LetStatement): string;
   var(arg: string | Variable | ArrayAccess | LetStatement): string {
     let name: string;
     let span: Span | undefined;
     if (typeof arg == "string") {
       name = arg;
     } else {
-      name = arg.name;
-      span = arg.span;
+      if (typeof arg.name == "string") {
+        name = arg.name;
+        span = arg.span;
+      } else {
+        name = arg.name.value;
+        span = arg.name.span;
+      }
     }
     const data = this.varData(name);
     if (!data) {

@@ -53,7 +53,7 @@ export type Statement =
 
 export interface LetStatement {
   statementType: "letStatement";
-  name: string;
+  name: { value: string; span: Span };
   arrayIndex?: Expression;
   value: Expression;
   span: Span;
@@ -130,7 +130,7 @@ export interface UnaryExpression {
 
 export interface ArrayAccess {
   termType: "arrayAccess";
-  name: string;
+  name: { value: string; span: Span };
   index: Expression;
   span: Span;
 }
@@ -246,7 +246,7 @@ jackSemantics.addAttribute<Statement>("statement", {
   LetStatement(_a, name, index, _b, value, _c) {
     return {
       statementType: "letStatement",
-      name: name.sourceString,
+      name: { value: name.sourceString, span: span(name.source) },
       arrayIndex: index?.child(0)?.child(1)?.expression,
       value: value.expression,
       span: span(this.source),
@@ -319,7 +319,7 @@ jackSemantics.addAttribute<Term>("term", {
   ArrayAccess(name, index) {
     return {
       termType: "arrayAccess",
-      name: name.sourceString,
+      name: { value: name.sourceString, span: span(name.source) },
       index: index.child(1).expression,
       span: span(this.source),
     };

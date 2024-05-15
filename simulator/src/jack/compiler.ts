@@ -130,6 +130,12 @@ const unaryOps: Record<UnaryOp, string> = {
   "~": "not",
 };
 
+interface SubroutineCallAttributes {
+  className: string;
+  subroutineName: string;
+  object?: string; // object being acted upon if this is a method (undefined if function / constructor)
+}
+
 export class Compiler {
   private instructions: string[] = [];
   globalSymbolTable: Record<string, VariableData> = {};
@@ -332,61 +338,60 @@ export class Compiler {
     }
   }
 
-  validateFunctionCall(className: string, functionName: string, span: Span) {
-    if (VM_BUILTINS[`${className}.${functionName}`]) {
-      return;
-    }
-    if (this.classes[className]) {
-      for (const subroutine of this.classes[className].subroutines) {
-        if (subroutine.name == functionName) {
-          if (subroutine.type == "method") {
-            throw createError(
-              `Method ${className}.${functionName} was called as a function/constructor`,
-              span
-            );
-          }
-          return;
-        }
-      }
+  validateArgNum(name: string, expected: number, call: SubroutineCall) {
+    const received = call.parameters.length;
+    if (expected != received) {
       throw createError(
-        `Class ${className} doesn't contain a function/constructor ${functionName}`,
-        span
+        `${name} expected ${expected} arguments, got ${received}`,
+        call.span
       );
-    } else {
-      throw createError(`Class ${className} doesn't exist`, span);
     }
   }
 
-  validateMethodCall(className: string, methodName: string, span: Span) {
-    if (VM_BUILTINS[`${className}.${methodName}`]) {
-      return;
-    }
+  validateSubroutineCall(
+    className: string,
+    subroutineName: string,
+    call: SubroutineCall,
+    isMethod: boolean
+  ) {
     if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
-        if (subroutine.name == methodName) {
-          if (subroutine.type != "method") {
+        if (subroutine.name == subroutineName) {
+          if (subroutine.type == "method" && !isMethod) {
+            throw createError(
+              `Method ${className}.${subroutineName} was called as a function/constructor`,
+              call.name.span
+            );
+          }
+          if (subroutine.type != "method" && isMethod) {
             throw createError(
               `${capitalize(
                 subroutine.name
-              )} ${className}.${methodName} was called as a method`,
-              span
+              )} ${className}.${subroutineName} was called as a method`,
+              call.name.span
             );
           }
+          this.validateArgNum(
+            `${className}.${subroutineName}`,
+            subroutine.parameters.length,
+            call
+          );
           return;
         }
       }
       throw createError(
-        `Class ${className} doesn't contain a method ${methodName}`,
-        span
+        `Class ${className} doesn't contain a function/constructor ${subroutineName}`,
+        call.name.span
       );
+    } else {
+      throw createError(`Class ${className} doesn't exist`, call.name.span);
     }
   }
 
-  compileSubroutineCall(call: SubroutineCall) {
-    let object = "";
+  classifySubroutineCall(call: SubroutineCall): SubroutineCallAttributes {
+    let object: string | undefined;
     let className = "";
     let subroutineName = "";
-    let isMethod = true;
 
     if (call.name.value.includes(".")) {
       const [prefix, suffix] = call.name.value.split(".", 2);
@@ -396,29 +401,47 @@ export class Compiler {
         // external method call
         object = this.var(prefix);
         className = varData.type;
-        this.validateMethodCall(className, subroutineName, call.name.span);
       } else {
         // function / constructor call
-        isMethod = false;
         className = prefix;
-        this.validateFunctionCall(className, subroutineName, call.name.span);
       }
     } else {
       object = "pointer 0"; // this
       className = this.className;
       subroutineName = call.name.value;
-      this.validateMethodCall(className, subroutineName, call.name.span);
     }
 
-    if (isMethod) {
-      this.write(`push ${object}`);
+    const builtin = VM_BUILTINS[`${className}.${subroutineName}`];
+    if (builtin) {
+      this.validateArgNum(
+        `${className}.${subroutineName}`,
+        builtin.nArgs,
+        call
+      );
+    } else {
+      this.validateSubroutineCall(
+        className,
+        subroutineName,
+        call,
+        object != undefined
+      );
+    }
+
+    return { className, subroutineName, object };
+  }
+
+  compileSubroutineCall(call: SubroutineCall) {
+    const attributes = this.classifySubroutineCall(call);
+
+    if (attributes.object) {
+      this.write(`push ${attributes.object}`);
     }
     for (const param of call.parameters) {
       this.compileExpression(param);
     }
     this.write(
-      `call ${className}.${subroutineName} ${
-        call.parameters.length + (isMethod ? 1 : 0)
+      `call ${attributes.className}.${attributes.subroutineName} ${
+        call.parameters.length + (attributes.object ? 1 : 0)
       }`
     );
   }

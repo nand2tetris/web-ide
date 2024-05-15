@@ -138,6 +138,7 @@ export interface ArrayAccess {
 export interface SubroutineCall {
   termType: "subroutineCall";
   name: { value: string; span: Span };
+  span: Span;
   parameters: Expression[];
 }
 
@@ -311,6 +312,7 @@ jackSemantics.addAttribute<Term>("term", {
       termType: "subroutineCall",
       name: { value: name.sourceString, span: span(name.source) },
       parameters: expressions.expressionList,
+      span: span(this.source),
     };
   },
 

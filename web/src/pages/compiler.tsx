@@ -58,7 +58,10 @@ export const Compiler = () => {
   );
 
   const uploadFiles = () => {
-    uploadRef.current?.click();
+    if (uploadRef.current) {
+      uploadRef.current.value = "";
+      uploadRef.current.click();
+    }
   };
 
   const loadFiles = async (event: ChangeEvent<HTMLInputElement>) => {

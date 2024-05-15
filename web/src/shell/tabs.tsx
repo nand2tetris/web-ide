@@ -55,7 +55,10 @@ export const TabList = (props: { children: ReturnType<typeof Tab>[] }) => {
           checked: index === selectedIndex,
           parent: id,
           idx: index,
-          onSelect: () => setSelectedIndex(index),
+          onSelect: () => {
+            setSelectedIndex(index);
+            child.props?.onSelect?.();
+          },
         })
       )}
     </section>

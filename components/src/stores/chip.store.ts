@@ -316,6 +316,7 @@ export function makeChipStore(
           this.useBuiltin();
         }
       }
+      await this.initializeTest(chip);
       dispatch.current({ action: "setChip", payload: chipName });
     },
 
@@ -408,16 +409,19 @@ export function makeChipStore(
       const fsName = (ext: string) =>
         `/projects/${project}/${name}/${name}.${ext}`;
 
-      const files = await fs.scandir(`/projects/${project}/${name}`);
-      tests = files
-        .filter((file) => file.name.endsWith(".tst"))
-        .map((file) => file.name);
-
       const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
 
       dispatch.current({ action: "setFiles", payload: { hdl } });
-      await this.setTest(tests[0]);
       await this.compileChip(hdl);
+    },
+
+    async initializeTest(name: string) {
+      tests = (await fs.scandir(`/projects/${project}/${name}`))
+        .filter((file) => file.name.endsWith(".tst"))
+        .map((file) => file.name);
+      if (tests.length > 0) {
+        await this.setTest(tests[0]);
+      }
     },
 
     async loadTest(test: string) {

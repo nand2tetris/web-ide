@@ -290,7 +290,9 @@ export class Compiler {
     const localCount = subroutine.body.varDecs
       .map((dec) => dec.names.length)
       .reduce((a, b) => a + b, 0);
-    this.write(`function ${this.className}.${subroutine.name} ${localCount}`);
+    this.write(
+      `function ${this.className}.${subroutine.name.value} ${localCount}`
+    );
     for (const varDec of subroutine.body.varDecs) {
       this.compileVarDec(varDec);
     }

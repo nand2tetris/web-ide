@@ -4,8 +4,9 @@ import {
   Result,
   isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { CompilationError } from "../languages/base.js";
+import { CompilationError, Span, createError } from "../languages/base.js";
 import {
+  ArrayAccess,
   Class,
   ClassVarDec,
   DoStatement,
@@ -24,6 +25,7 @@ import {
   Type,
   UnaryOp,
   VarDec,
+  Variable,
   WhileStatement,
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
@@ -36,8 +38,7 @@ export function compile(source: string): Result<string, CompilationError> {
   try {
     return new Compiler().compile(Ok(parsed));
   } catch (e) {
-    console.error(e);
-    return Err(e as Error);
+    return Err(e as CompilationError);
   }
 }
 
@@ -84,9 +85,22 @@ export class Compiler {
     return this.localSymbolTable[name] || this.globalSymbolTable[name];
   }
 
-  var(name: string) {
+  var(name: string): string;
+  var(variable: Variable | ArrayAccess | LetStatement): string;
+  var(arg: string | Variable | ArrayAccess | LetStatement): string {
+    let name: string;
+    let span: Span | undefined;
+    if (typeof arg == "string") {
+      name = arg;
+    } else {
+      name = arg.name;
+      span = arg.span;
+    }
     const data = this.varData(name);
-    return `${data?.segment} ${data?.index}`;
+    if (!data) {
+      throw createError(`Undeclared variable ${name}`, span);
+    }
+    return `${data.segment} ${data.index}`;
   }
 
   write(...lines: string[]) {
@@ -222,7 +236,7 @@ export class Compiler {
         this.compileStringLiteral(term.value);
         break;
       case "variable":
-        this.write(`push ${this.var(term.name)}`);
+        this.write(`push ${this.var(term)}`);
         break;
       case "keywordLiteral":
         this.compileKeywordLiteral(term.value);
@@ -233,7 +247,7 @@ export class Compiler {
       case "arrayAccess":
         this.compileExpression(term.index);
         this.write(
-          `push ${this.var(term.name)}`,
+          `push ${this.var(term)}`,
           "add",
           "pop pointer 1",
           "push that 0"
@@ -348,12 +362,12 @@ export class Compiler {
   compileLet(statement: LetStatement) {
     if (statement.arrayIndex) {
       this.compileExpression(statement.arrayIndex);
-      this.write(`push ${this.var(statement.name)}`, "add");
+      this.write(`push ${this.var(statement)}`, "add");
       this.compileExpression(statement.value);
       this.write("pop temp 0", "pop pointer 1", "push temp 0", "pop that 0");
     } else {
       this.compileExpression(statement.value);
-      this.write(`pop ${this.var(statement.name)}`);
+      this.write(`pop ${this.var(statement)}`);
     }
   }
 

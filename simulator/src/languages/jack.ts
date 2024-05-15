@@ -1,5 +1,5 @@
 import ohm from "ohm-js";
-import { baseSemantics, grammars, makeParser } from "./base.js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
 export type Type = "int" | "char" | "boolean" | string;
@@ -56,6 +56,7 @@ export interface LetStatement {
   name: string;
   arrayIndex?: Expression;
   value: Expression;
+  span: Span;
 }
 
 export interface IfStatement {
@@ -113,6 +114,7 @@ export interface KeywordLiteral {
 export interface Variable {
   termType: "variable";
   name: string;
+  span: Span;
 }
 
 export interface GroupedExpression {
@@ -130,6 +132,7 @@ export interface ArrayAccess {
   termType: "arrayAccess";
   name: string;
   index: Expression;
+  span: Span;
 }
 
 export interface SubroutineCall {
@@ -245,6 +248,7 @@ jackSemantics.addAttribute<Statement>("statement", {
       name: name.sourceString,
       arrayIndex: index?.child(0)?.child(1)?.expression,
       value: value.expression,
+      span: span(this.source),
     };
   },
 
@@ -315,6 +319,7 @@ jackSemantics.addAttribute<Term>("term", {
       termType: "arrayAccess",
       name: name.sourceString,
       index: index.child(1).expression,
+      span: span(this.source),
     };
   },
 
@@ -322,6 +327,7 @@ jackSemantics.addAttribute<Term>("term", {
     return {
       termType: "variable",
       name: `${first.sourceString}${rest.sourceString}`,
+      span: span(this.source),
     };
   },
 

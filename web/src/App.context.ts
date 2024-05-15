@@ -72,6 +72,11 @@ export function useToolStates() {
       setFiles: setJackFiles,
       compiled: jackCompiled,
       setCompiled: setJackCompiled,
+      reset: () => {
+        setJackTitle(undefined);
+        setJackFiles({});
+        setJackCompiled(false);
+      },
     },
   };
 }
@@ -182,6 +187,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       setFiles: () => undefined,
       compiled: false,
       setCompiled: () => false,
+      reset: () => undefined,
     },
   },
 });

@@ -13,6 +13,7 @@ import { useDialog } from "./dialog";
 
 export const Settings = () => {
   const { fs, setStatus } = useContext(BaseContext);
+  const { toolStates } = useContext(AppContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
 
@@ -40,6 +41,7 @@ export const Settings = () => {
     localStorage["/chip/project"] = "01";
     localStorage["/chip/chip"] = "Not";
     await loaders.resetFiles(fs);
+    toolStates.compiler.reset();
   };
 
   const resetWarningDialog = (

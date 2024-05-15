@@ -75,6 +75,7 @@ export const Compiler = () => {
     toolStates.compiler.setTitle(`${dirName} / *.jack`);
     toolStates.compiler.setCompiled(false);
     toolStates.compiler.setFiles(files);
+    setStatus("");
   };
 
   const valid = () =>

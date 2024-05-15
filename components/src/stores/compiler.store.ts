@@ -42,7 +42,7 @@ export function makeCompilerStore(
       }
     ) {
       content ??= "";
-      const compiled = compile(content);
+      const compiled = compile(content, name);
 
       state.files[name] = {
         content: content,

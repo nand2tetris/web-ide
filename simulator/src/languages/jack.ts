@@ -5,7 +5,7 @@ import jackGrammar from "./grammars/jack.ohm.js";
 export type Type = "int" | "char" | "boolean" | string;
 
 export interface Class {
-  name: string;
+  name: { value: string; span: Span };
   varDecs: ClassVarDec[];
   subroutines: Subroutine[];
 }
@@ -167,7 +167,7 @@ jackSemantics.addAttribute<Class>("Root", {
 jackSemantics.addAttribute<Class>("class", {
   Class(_a, name, _b, varDecs, subroutines, _c) {
     return {
-      name: name.sourceString,
+      name: { value: name.sourceString, span: span(name.source) },
       varDecs: varDecs.children.map((n) => n.classVarDec),
       subroutines: subroutines.children.map((n) => n.subroutineDec),
     };

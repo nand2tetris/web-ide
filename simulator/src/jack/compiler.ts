@@ -30,10 +30,22 @@ import {
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
 
-export function compile(source: string): Result<string, CompilationError> {
+export function compile(
+  source: string,
+  name?: string
+): Result<string, CompilationError> {
   const parsed = JACK.parse(source);
   if (isErr(parsed)) {
     return parsed;
+  }
+  const cls = Ok(parsed);
+  if (name && cls.name.value != name) {
+    return Err(
+      createError(
+        `Class name ${cls.name.value} doesn't match file name ${name}`,
+        cls.name.span
+      )
+    );
   }
   try {
     return new Compiler().compile(Ok(parsed));
@@ -114,7 +126,7 @@ export class Compiler {
   }
 
   compile(cls: Class): Result<string, CompilationError> {
-    this.className = cls.name;
+    this.className = cls.name.value;
     for (const varDec of cls.varDecs) {
       this.compileClassVarDec(varDec);
     }

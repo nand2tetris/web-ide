@@ -1,7 +1,6 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
-import { Programs } from "@nand2tetris/projects/project_11/index.js";
+import { Programs } from "@nand2tetris/projects/samples/project_11/index.js";
 import { JACK } from "../languages/jack";
-
 import { Compiler, compile } from "./compiler";
 
 function parse(code: string, rule: string) {

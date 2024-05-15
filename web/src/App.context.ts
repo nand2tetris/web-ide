@@ -51,6 +51,8 @@ export function useToolStates() {
   const [vmFiles, setVmFiles] = useState<VmFile[]>();
 
   const [jackTitle, setJackTitle] = useState<string>();
+  const [jackFiles, setJackFiles] = useState<Record<string, string>>({});
+  const [jackCompiled, setJackCompiled] = useState(false);
 
   return {
     cpuState: { rom: rom, path: cpuPath, format: cpuFormat },
@@ -63,7 +65,14 @@ export function useToolStates() {
       setFiles: setVmFiles,
       setTitle: setVmTitle,
     },
-    compiler: { title: jackTitle, setTitle: setJackTitle },
+    compiler: {
+      title: jackTitle,
+      setTitle: setJackTitle,
+      files: jackFiles,
+      setFiles: setJackFiles,
+      compiled: jackCompiled,
+      setCompiled: setJackCompiled,
+    },
   };
 }
 
@@ -166,6 +175,13 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
       setFiles: () => undefined,
       setTitle: () => undefined,
     },
-    compiler: { title: undefined, setTitle: () => undefined },
+    compiler: {
+      title: undefined,
+      setTitle: () => undefined,
+      files: {},
+      setFiles: () => undefined,
+      compiled: false,
+      setCompiled: () => false,
+    },
   },
 });

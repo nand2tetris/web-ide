@@ -6,18 +6,6 @@ import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 
-function deleteFile(path: string) {
-  for (const key of Object.keys(localStorage)) {
-    if (key.startsWith(path)) {
-      localStorage.removeItem(key);
-    }
-  }
-}
-
-function makeJackFilename(name: string) {
-  return `/jack/${name}.jack`;
-}
-
 export interface FileData {
   content: string;
   valid: boolean;
@@ -40,6 +28,9 @@ export function makeCompilerStore(
   dispatch: MutableRefObject<CompilerStoreDispatch>
 ) {
   const reducers = {
+    reset(state: CompilerPageState) {
+      state.files = {};
+    },
     setFile(
       state: CompilerPageState,
       {
@@ -60,79 +51,22 @@ export function makeCompilerStore(
       };
     },
 
-    deleteFile(state: CompilerPageState, name: string) {
-      delete state.files[name];
-    },
-
-    copyFile(
-      state: CompilerPageState,
-      { oldName, newName }: { oldName: string; newName: string }
-    ) {
-      state.files[newName] = state.files[oldName];
-    },
-
     setSelected(state: CompilerPageState, selected: string) {
       state.selected = selected;
     },
   };
 
   const actions = {
-    async editFile(name: string, content: string) {
-      dispatch.current({ action: "setFile", payload: { name, content } });
-      await fs.writeFile(makeJackFilename(name), content);
-    },
-
-    async addFile(name: string, content?: string) {
-      dispatch.current({ action: "setFile", payload: { name, content } });
-      await fs.writeFile(makeJackFilename(name), content ?? "");
-      dispatch.current({ action: "setSelected", payload: name });
-    },
-
-    async deleteFile(name: string) {
-      dispatch.current({ action: "deleteFile", payload: name });
-      // TODO: this should be done through the file system but currently that doesn't seem to work
-      deleteFile(makeJackFilename(name));
+    async loadFiles(files: Record<string, string>) {
+      this.reset();
+      for (const [name, content] of Object.entries(files)) {
+        dispatch.current({ action: "setFile", payload: { name, content } });
+        dispatch.current({ action: "setSelected", payload: name });
+      }
     },
 
     async reset() {
-      for (const file of await fs.scandir("/jack")) {
-        await this.deleteFile(file.name.replace(".jack", ""));
-      }
-    },
-
-    async renameFile(oldName: string, newName: string) {
-      dispatch.current({ action: "copyFile", payload: { oldName, newName } });
-      const content = await fs.readFile(makeJackFilename(oldName));
-      await fs.writeFile(makeJackFilename(newName), content);
-      await this.deleteFile(oldName);
-    },
-
-    async _loadFiles() {
-      const files = (await fs.scandir("/jack")).filter(
-        (entry) => entry.isFile() && entry.name.endsWith(".jack")
-      );
-      for (const file of files) {
-        dispatch.current({
-          action: "setFile",
-          payload: {
-            name: file.name.replace(".jack", ""),
-            content: await fs.readFile(`/jack/${file.name}`),
-          },
-        });
-      }
-      dispatch.current({
-        action: "setSelected",
-        payload: files[0].name.replace(".jack", ""),
-      });
-    },
-
-    async initialize() {
-      const files = await fs.scandir("/jack");
-      if (files.length == 0) {
-        fs.mkdir("/jack");
-        fs.writeFile(makeJackFilename("Main"), "");
-      }
-      await this._loadFiles();
+      dispatch.current({ action: "reset" });
     },
   };
 

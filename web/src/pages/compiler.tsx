@@ -5,14 +5,7 @@ import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.st
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import JSZip from "jszip";
-import {
-  ChangeEvent,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { ChangeEvent, useCallback, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Editor } from "src/shell/editor";
 import { Tab, TabList } from "src/shell/tabs";
@@ -31,16 +24,15 @@ export const Compiler = () => {
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    actions.initialize();
-  }, [actions]);
-
-  useEffect(() => {
     setTitle(toolStates.compiler.title);
   });
 
-  const [compiled, setCompiled] = useState(false);
   useEffect(() => {
-    if (compiled) {
+    actions.loadFiles(toolStates.compiler.files);
+  }, [actions, toolStates.compiler.files]);
+
+  useEffect(() => {
+    if (toolStates.compiler.compiled) {
       setStatus(
         valid()
           ? "Compiled successfully"
@@ -69,15 +61,20 @@ export const Compiler = () => {
       return;
     }
     await actions.reset();
+    const files: Record<string, string> = {};
     for (const file of event.target.files) {
       if (file.name.endsWith(".jack")) {
         const source = await file.text();
-        await actions.addFile(file.name.replace(".jack", ""), source);
+        const name = file.name.replace(".jack", "");
+        files[name] = source;
       }
     }
+    await actions.loadFiles(files);
 
     const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
     toolStates.compiler.setTitle(`${dirName} / *.jack`);
+    toolStates.compiler.setCompiled(false);
+    toolStates.compiler.setFiles(files);
   };
 
   const valid = () =>
@@ -96,7 +93,7 @@ export const Compiler = () => {
   };
 
   const compileFiles = () => {
-    setCompiled(true);
+    toolStates.compiler.setCompiled(true);
   };
 
   const compileAndDownload = async () => {
@@ -156,12 +153,13 @@ export const Compiler = () => {
                 data-tooltip="Compiles into VM code"
                 data-placement="bottom"
                 onClick={compileFiles}
+                disabled={Object.keys(state.files).length == 0}
               >
                 Compile
               </button>
               <button
                 className="flex-0"
-                disabled={!compiled || !valid()}
+                disabled={!toolStates.compiler.compiled || !valid()}
                 data-tooltip="Loads the compiled code into the VM emulators"
                 data-placement="right"
                 onClick={runInVm}
@@ -170,7 +168,7 @@ export const Compiler = () => {
               </button>
               <button
                 className="flex-0"
-                disabled={!compiled || !valid()}
+                disabled={!toolStates.compiler.compiled || !valid()}
                 data-tooltip="Downloads the compiled VM code"
                 data-placement="bottom"
                 onClick={compileAndDownload}
@@ -189,7 +187,9 @@ export const Compiler = () => {
               onSelect={() => selectTab(file)}
               style={{
                 backgroundColor:
-                  compiled && !state.files[file].valid ? "#ffaaaa" : undefined,
+                  toolStates.compiler.compiled && !state.files[file].valid
+                    ? "#ffaaaa"
+                    : undefined,
               }}
             >
               <Editor
@@ -198,7 +198,11 @@ export const Compiler = () => {
                 onChange={(source: string) => {
                   return;
                 }}
-                error={compiled ? state.files[file].error : undefined}
+                error={
+                  toolStates.compiler.compiled
+                    ? state.files[file].error
+                    : undefined
+                }
                 language={"jack"}
               />
             </Tab>

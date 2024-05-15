@@ -21,7 +21,6 @@ import {
   Statement,
   Subroutine,
   SubroutineCall,
-  SubroutineType,
   Term,
   Type,
   UnaryOp,
@@ -30,6 +29,7 @@ import {
   WhileStatement,
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
+import { VM_BUILTINS } from "../vm/builtins.js";
 
 function isError(value: unknown): value is CompilationError {
   return (value as any).message != undefined;
@@ -333,6 +333,9 @@ export class Compiler {
   }
 
   validateFunctionCall(className: string, functionName: string, span: Span) {
+    if (VM_BUILTINS[`${className}.${functionName}`]) {
+      return;
+    }
     if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
         if (subroutine.name == functionName) {
@@ -355,6 +358,9 @@ export class Compiler {
   }
 
   validateMethodCall(className: string, methodName: string, span: Span) {
+    if (VM_BUILTINS[`${className}.${methodName}`]) {
+      return;
+    }
     if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
         if (subroutine.name == methodName) {

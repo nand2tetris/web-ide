@@ -57,6 +57,7 @@ export const Compiler = () => {
     toolStates.compiler.setFs(fs);
     toolStates.compiler.setCompiled(false);
     toolStates.compiler.setTitle(`${handle.name} / *.jack`);
+    setStatus("");
     actions.loadProject(fs);
   };
 

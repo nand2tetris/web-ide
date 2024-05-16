@@ -12,7 +12,7 @@ const baseContext: BaseContext = {
   fs: new FileSystem(
     new ObjectFileSystemAdapter({ "projects/01/Not.hdl": Not.hdl })
   ),
-  upgraded: true,
+  upgraded: "true",
   upgradeFs() {},
   storage: {},
   status: "",

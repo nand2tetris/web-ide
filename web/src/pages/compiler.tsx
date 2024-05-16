@@ -1,9 +1,13 @@
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import {
+  FileSystemAccessFileSystemAdapter,
+  openNand2TetrisDirectory,
+} from "@nand2tetris/components/stores/base/fs.js";
 import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
-import JSZip from "jszip";
-import { ChangeEvent, useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Editor } from "src/shell/editor";
 import { Tab, TabList } from "src/shell/tabs";
@@ -17,8 +21,6 @@ export const Compiler = () => {
   const { tracking, toolStates, setTitle } = useContext(AppContext);
   const { state, dispatch, actions } = useCompilerPageStore();
 
-  const uploadRef = useRef<HTMLInputElement>(null);
-  const downloadRef = useRef<HTMLAnchorElement>(null);
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -26,8 +28,10 @@ export const Compiler = () => {
   });
 
   useEffect(() => {
-    actions.loadFiles(toolStates.compiler.files);
-  }, [actions, toolStates.compiler.files]);
+    if (toolStates.compiler.fs) {
+      actions.loadProject(toolStates.compiler.fs);
+    }
+  }, [actions, toolStates.compiler.fs]);
 
   useEffect(() => {
     if (toolStates.compiler.compiled) {
@@ -47,33 +51,13 @@ export const Compiler = () => {
     [tracking]
   );
 
-  const uploadFiles = () => {
-    if (uploadRef.current) {
-      uploadRef.current.value = "";
-      uploadRef.current.click();
-    }
-  };
-
-  const loadFiles = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length == 0) {
-      return;
-    }
-    await actions.reset();
-    const files: Record<string, string> = {};
-    for (const file of event.target.files) {
-      if (file.name.endsWith(".jack")) {
-        const source = await file.text();
-        const name = file.name.replace(".jack", "");
-        files[name] = source;
-      }
-    }
-    await actions.loadFiles(files);
-
-    const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
-    toolStates.compiler.setTitle(`${dirName} / *.jack`);
+  const uploadFiles = async () => {
+    const handle = await openNand2TetrisDirectory();
+    const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
+    toolStates.compiler.setFs(fs);
     toolStates.compiler.setCompiled(false);
-    toolStates.compiler.setFiles(files);
-    setStatus("");
+    toolStates.compiler.setTitle(`${handle.name} / *.jack`);
+    actions.loadProject(fs);
   };
 
   const valid = () =>
@@ -92,27 +76,8 @@ export const Compiler = () => {
   };
 
   const compileFiles = () => {
+    actions.compile();
     toolStates.compiler.setCompiled(true);
-  };
-
-  const compileAndDownload = async () => {
-    if (!downloadRef.current) {
-      return;
-    }
-
-    const zip = new JSZip();
-
-    for (const file of compileAll()) {
-      zip.file(`${file.name}.vm`, file.content);
-    }
-
-    const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
-    downloadRef.current.href = url;
-    downloadRef.current.download = `VMcode`;
-    downloadRef.current.click();
-
-    URL.revokeObjectURL(url);
   };
 
   const runInVm = () => {
@@ -123,14 +88,6 @@ export const Compiler = () => {
 
   return (
     <div className="Page CompilerPage grid">
-      <a style={{ display: "none" }} ref={downloadRef}></a>
-      <input
-        style={{ display: "none" }}
-        ref={uploadRef}
-        type="file"
-        webkitdirectory=""
-        onChange={loadFiles}
-      />
       <Link
         ref={redirectRef}
         to={URLs["vm"].href}
@@ -165,15 +122,6 @@ export const Compiler = () => {
               >
                 Run
               </button>
-              <button
-                className="flex-0"
-                disabled={!toolStates.compiler.compiled || !valid()}
-                data-tooltip="Downloads the compiled VM code"
-                data-placement="bottom"
-                onClick={compileAndDownload}
-              >
-                Download
-              </button>
             </div>
           </>
         }
@@ -193,9 +141,10 @@ export const Compiler = () => {
             >
               <Editor
                 value={state.files[file]}
-                disabled={true}
+                // disabled={true}
                 onChange={(source: string) => {
-                  return;
+                  toolStates.compiler.setCompiled(false);
+                  actions.editFile(file, source);
                 }}
                 error={
                   toolStates.compiler.compiled

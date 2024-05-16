@@ -23,18 +23,31 @@ export type CompilerStoreDispatch = Dispatch<{
 }>;
 
 export function makeCompilerStore(
-  fs: FileSystem,
   setStatus: (status: string) => void,
   dispatch: MutableRefObject<CompilerStoreDispatch>
 ) {
+  let fs: FileSystem | undefined;
+
   const reducers = {
     reset(state: CompilerPageState) {
       state.files = {};
     },
+
+    setFile(
+      state: CompilerPageState,
+      { name, content }: { name: string; content: string }
+    ) {
+      state.files[name] = content;
+      this.compile(state);
+    },
+
     setFiles(state: CompilerPageState, files: Record<string, string>) {
       state.files = files;
+      this.compile(state);
+    },
 
-      const compiledFiles = compile(files);
+    compile(state: CompilerPageState) {
+      const compiledFiles = compile(state.files);
       state.compiled = {};
       for (const [name, compiled] of Object.entries(compiledFiles)) {
         if (typeof compiled === "string") {
@@ -51,14 +64,36 @@ export function makeCompilerStore(
       }
     },
 
+    writeCompiled(state: CompilerPageState) {
+      if (Object.values(state.compiled).every((compiled) => compiled.valid)) {
+        for (const [name, compiled] of Object.entries(state.compiled)) {
+          if (compiled.vm) {
+            fs?.writeFile(`${name}.vm`, compiled.vm);
+          }
+        }
+      }
+    },
+
     setSelected(state: CompilerPageState, selected: string) {
       state.selected = selected;
     },
   };
 
   const actions = {
-    async loadFiles(files: Record<string, string>) {
+    async loadProject(_fs: FileSystem) {
       this.reset();
+      fs = _fs;
+
+      const files: Record<string, string> = {};
+      for (const file of (await fs.scandir("/")).filter(
+        (entry) => entry.isFile() && entry.name.endsWith(".jack")
+      )) {
+        files[file.name.replace(".jack", "")] = await fs.readFile(file.name);
+      }
+      this.loadFiles(files);
+    },
+
+    async loadFiles(files: Record<string, string>) {
       dispatch.current({ action: "setFiles", payload: files });
       if (Object.entries(files).length > 0) {
         dispatch.current({
@@ -68,8 +103,21 @@ export function makeCompilerStore(
       }
     },
 
+    async editFile(name: string, content: string) {
+      dispatch.current({ action: "setFile", payload: { name, content } });
+      if (fs) {
+        console.log("writing");
+        await fs.writeFile(`${name}.jack`, content);
+      }
+    },
+
     async reset() {
+      fs = undefined;
       dispatch.current({ action: "reset" });
+    },
+
+    async compile() {
+      dispatch.current({ action: "writeCompiled" });
     },
   };
 
@@ -88,7 +136,7 @@ export function useCompilerPageStore() {
   const dispatch = useRef<CompilerStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeCompilerStore(fs, setStatus, dispatch),
+    () => makeCompilerStore(setStatus, dispatch),
     [setStatus, dispatch]
   );
 

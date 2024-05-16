@@ -51,7 +51,7 @@ export function useToolStates() {
   const [vmFiles, setVmFiles] = useState<VmFile[]>();
 
   const [jackTitle, setJackTitle] = useState<string>();
-  const [jackFiles, setJackFiles] = useState<Record<string, string>>({});
+  const [jackFs, setJackFs] = useState<FileSystem>();
   const [jackCompiled, setJackCompiled] = useState(false);
 
   return {
@@ -68,13 +68,13 @@ export function useToolStates() {
     compiler: {
       title: jackTitle,
       setTitle: setJackTitle,
-      files: jackFiles,
-      setFiles: setJackFiles,
+      fs: jackFs,
+      setFs: setJackFs,
       compiled: jackCompiled,
       setCompiled: setJackCompiled,
       reset: () => {
         setJackTitle(undefined);
-        setJackFiles({});
+        setJackFs(undefined);
         setJackCompiled(false);
       },
     },
@@ -183,8 +183,8 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     compiler: {
       title: undefined,
       setTitle: () => undefined,
-      files: {},
-      setFiles: () => undefined,
+      fs: undefined,
+      setFs: () => undefined,
       compiled: false,
       setCompiled: () => false,
       reset: () => undefined,

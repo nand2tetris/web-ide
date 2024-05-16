@@ -26,7 +26,7 @@ export class FileSystemAccessFileSystemAdapter implements FileSystemAdapter {
   ): Promise<FileSystemDirectoryHandle> {
     let folder = this.baseDir;
     const parts = path.split(SEP).slice(1);
-    for (const part of parts) {
+    for (const part of parts.filter((part) => part.trim() != "")) {
       folder = await folder.getDirectoryHandle(part, { create });
     }
     return folder;

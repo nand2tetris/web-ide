@@ -70,7 +70,9 @@ export const Screen = ({
   };
 
   const draw = useCallback(() => {
-    const ctx = canvas.current?.getContext("2d") ?? undefined;
+    const ctx =
+      canvas.current?.getContext("2d", { willReadFrequently: true }) ??
+      undefined;
 
     if (ctx) {
       drawImage(ctx, memory);

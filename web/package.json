@@ -53,11 +53,15 @@
     "analyze": "source-map-explorer 'build/static/js/*.js'",
     "start": "react-scripts start",
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "map-build": "react-scripts build",
+    "postbuild": "./scripts/predeploy.sh",
+    "preserve-pwa": "npm run build",
+    "serve-pwa": "python3 -m http.server",
     "test": "react-scripts test",
     "prebuild": "npm run extract && npm run lingui",
     "extract": "lingui extract",
     "lingui": "lingui compile --namespace es",
-    "predeploy": "npm run build ; ./scripts/predeploy.sh",
+    "predeploy": "npm run build",
     "deploy": "gh-pages -d build"
   },
   "browserslist": {

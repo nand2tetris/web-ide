@@ -1,5 +1,5 @@
 import { i18n } from "@lingui/core";
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import loaders from "@nand2tetris/projects/loader.js";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -12,7 +12,8 @@ import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
 export const Settings = () => {
-  const { fs, setStatus, upgradeFs, upgraded } = useContext(BaseContext);
+  const { fs, setStatus, upgradeFs, closeFs, upgraded } =
+    useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
 
@@ -151,7 +152,12 @@ export const Settings = () => {
                   disabled={upgrading}
                   onClick={async () => {
                     setUpgrading(true);
-                    await upgradeFs();
+                    try {
+                      await upgradeFs();
+                    } catch (err) {
+                      console.error("Failed to upgrade FS", { err });
+                      setStatus(t`Failed to load local file system.`);
+                    }
                     setUpgrading(false);
                   }}
                 >
@@ -162,9 +168,18 @@ export const Settings = () => {
                   )}
                 </button>
                 {upgraded ? (
-                  <p>
-                    <Trans>Using {upgraded}</Trans>
-                  </p>
+                  <>
+                    <p>
+                      <Trans>Using {upgraded}</Trans>
+                    </p>
+                    <button
+                      onClick={async () => {
+                        await closeFs();
+                      }}
+                    >
+                      Close Local FileSystem
+                    </button>
+                  </>
                 ) : (
                   <></>
                 )}

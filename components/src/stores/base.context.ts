@@ -1,6 +1,5 @@
 import {
   FileSystem,
-  FileSystemAdapter,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
@@ -13,15 +12,18 @@ import {
 import {
   ChainedFileSystemAdapter,
   FileSystemAccessFileSystemAdapter,
+  openNand2TetrisDirectory,
 } from "./base/fs.js";
 import {
   attemptLoadAdapterFromIndexedDb,
   createAndStoreLocalAdapterInIndexedDB,
+  removeLocalAdapterFromIndexedDB,
 } from "./base/indexDb.js";
 
 export interface BaseContext {
   fs: FileSystem;
-  upgradeFs: () => void;
+  upgradeFs: (force?: boolean) => void;
+  closeFs: () => void;
   upgraded?: string;
   status: string;
   setStatus: (status: string) => void;
@@ -59,11 +61,19 @@ export function useBaseContext(): BaseContext {
   const upgradeFs = useCallback(
     async (force = false) => {
       if (upgraded && !force) return;
-      const adapter = await createAndStoreLocalAdapterInIndexedDB();
+      const handler = await openNand2TetrisDirectory();
+      const adapter = await createAndStoreLocalAdapterInIndexedDB(handler);
       replaceFs(adapter);
     },
-    [replaceFs]
+    [upgraded, replaceFs]
   );
+
+  const closeFs = useCallback(async () => {
+    if (!upgraded) return;
+    await removeLocalAdapterFromIndexedDB();
+    setFs(new FileSystem(localAdapter));
+    setUpgraded(undefined);
+  }, [upgraded, localAdapter]);
 
   const [status, setStatus] = useState("");
 
@@ -73,14 +83,19 @@ export function useBaseContext(): BaseContext {
     setStatus,
     storage: localStorage,
     upgradeFs,
+    closeFs,
     upgraded,
   };
 }
 
 export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   upgradeFs() {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  closeFs() {},
   status: "",
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   setStatus() {},
   storage: {},
 });

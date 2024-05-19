@@ -1,4 +1,5 @@
-import { VM_PROJECTS, resetFiles } from "@nand2tetris/projects/index.js";
+import { VM_PROJECTS } from "@nand2tetris/projects/base.js";
+import { resetFiles } from "@nand2tetris/projects/full.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,

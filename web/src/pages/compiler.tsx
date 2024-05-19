@@ -42,7 +42,7 @@ export const Compiler = () => {
 
   useEffect(() => {
     showStatus();
-  }, [state.selected]);
+  }, [state.selected, state.files]);
 
   const selectTab = useCallback(
     (tab: string) => {

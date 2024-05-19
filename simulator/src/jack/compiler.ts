@@ -27,6 +27,7 @@ import {
   VarDec,
   Variable,
   WhileStatement,
+  isPrimitive,
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
 import { VM_BUILTINS } from "../vm/builtins.js";
@@ -202,7 +203,11 @@ export class Compiler {
   }
 
   write(...lines: string[]) {
-    this.instructions.push(...lines);
+    this.instructions.push(
+      ...lines.map((line) =>
+        line.startsWith("function") ? line : "    ".concat(line)
+      )
+    );
   }
 
   getLabel() {
@@ -226,7 +231,22 @@ export class Compiler {
     return Ok(this.instructions.join("\n"));
   }
 
+  validateType(type: string, span?: Span) {
+    if (isPrimitive(type) || this.classes[type]) {
+      return;
+    }
+    throw createError(`Unknown type ${type}`, span);
+  }
+
+  validateReturnType(returnType: string, span?: Span) {
+    if (returnType == "void") {
+      return;
+    }
+    this.validateType(returnType, span);
+  }
+
   compileClassVarDec(dec: ClassVarDec) {
+    this.validateType(dec.type);
     for (const name of dec.names) {
       if (dec.varType == "field") {
         this.globalSymbolTable[name] = {
@@ -247,6 +267,7 @@ export class Compiler {
   }
 
   compileVarDec(dec: VarDec) {
+    this.validateType(dec.type);
     for (const name of dec.names) {
       this.localSymbolTable[name] = {
         type: dec.type,
@@ -260,6 +281,7 @@ export class Compiler {
   registerArgs(params: Parameter[], offset = false) {
     let argNum = 0;
     for (const param of params) {
+      this.validateType(param.type);
       this.localSymbolTable[param.name] = {
         type: param.type,
         segment: "argument",
@@ -270,6 +292,7 @@ export class Compiler {
   }
 
   compileSubroutineDec(subroutine: Subroutine) {
+    this.validateReturnType(subroutine.returnType);
     switch (subroutine.type) {
       case "method":
         this.compileMethod(subroutine);

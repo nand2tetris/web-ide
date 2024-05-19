@@ -2,7 +2,15 @@ import ohm from "ohm-js";
 import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
-export type Type = "int" | "char" | "boolean" | string;
+const primitives = new Set(["int", "boolean", "char"] as const);
+
+export type Primitive = typeof primitives extends Set<infer S> ? S : never;
+
+export function isPrimitive(value: string): value is Primitive {
+  return primitives.has(value as Primitive);
+}
+
+export type Type = Primitive | string;
 
 export interface Class {
   name: { value: string; span: Span };

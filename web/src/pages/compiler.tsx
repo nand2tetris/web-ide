@@ -147,6 +147,7 @@ export const Compiler = () => {
               <button className="flex-0" onClick={uploadFiles}>
                 📂
               </button>
+              <Padding />
               <button
                 className="flex-0"
                 data-tooltip="Compiles into VM code"
@@ -156,6 +157,7 @@ export const Compiler = () => {
               >
                 Compile
               </button>
+              <Padding />
               <button
                 className="flex-0"
                 disabled={!toolStates.compiler.compiled || !valid()}
@@ -165,6 +167,7 @@ export const Compiler = () => {
               >
                 Run
               </button>
+              <Padding />
               <button
                 className="flex-0"
                 disabled={!toolStates.compiler.compiled || !valid()}
@@ -213,3 +216,7 @@ export const Compiler = () => {
 };
 
 export default Compiler;
+
+function Padding() {
+  return <div style={{ width: "0.25vw" }} />;
+}

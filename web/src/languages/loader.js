@@ -1,4 +1,3 @@
-import { loader } from "@monaco-editor/react";
 import { AsmLanguage } from "./asm";
 import { CmpLanguage } from "./cmp";
 import { HdlLanguage, HdlSnippets } from "./hdl";
@@ -22,6 +21,7 @@ export async function registerLanguages() {
   if (lock) return;
   lock = true;
   lock = true;
+  const { loader } = await import("@monaco-editor/react");
   const { languages } = await loader.init();
   for (const [id, language] of Object.entries(LANGUAGES)) {
     languages.register({ id });

@@ -1,4 +1,4 @@
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import type * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import { base } from "./base";
 
 export const HdlLanguage: monaco.languages.IMonarchLanguage = {
@@ -161,7 +161,8 @@ export const HdlSnippets = {
     return {
       suggestions: Object.entries(HdlSignatures).map(([name, signature]) => ({
         label: name,
-        kind: monaco.languages.CompletionItemKind.Function,
+        // kind: languages.CompletionItemKind.Function,
+        kind: 1,
         insertText: signature,
       })),
     };

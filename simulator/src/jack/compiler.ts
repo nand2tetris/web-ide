@@ -203,7 +203,11 @@ export class Compiler {
   }
 
   write(...lines: string[]) {
-    this.instructions.push(...lines);
+    this.instructions.push(
+      ...lines.map((line) =>
+        line.startsWith("function") ? line : "    ".concat(line)
+      )
+    );
   }
 
   getLabel() {

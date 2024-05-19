@@ -29,15 +29,16 @@ export const Compiler = () => {
     actions.loadFiles(toolStates.compiler.files);
   }, [actions, toolStates.compiler.files]);
 
-  useEffect(() => {
-    if (toolStates.compiler.compiled) {
-      setStatus(
-        valid()
-          ? "Compiled successfully"
-          : state.compiled[state.selected].error?.message ?? ""
-      );
+  const showStatus = () => {
+    const current = state.compiled[state.selected];
+    if (current) {
+      setStatus(current.valid ? "" : current.error?.message ?? "");
     }
-  });
+  };
+
+  useEffect(() => {
+    showStatus();
+  }, [state.selected]);
 
   const selectTab = useCallback(
     (tab: string) => {
@@ -77,6 +78,7 @@ export const Compiler = () => {
   };
 
   const valid = () =>
+    Object.keys(state.files).length == 0 ||
     Object.keys(state.files)
       .map((file) => state.compiled[file].valid)
       .reduce((a, b) => a && b, true);
@@ -92,7 +94,10 @@ export const Compiler = () => {
   };
 
   const compileFiles = () => {
-    toolStates.compiler.setCompiled(true);
+    if (valid()) {
+      toolStates.compiler.setCompiled(true);
+      setStatus("Compiled successfully");
+    }
   };
 
   const compileAndDownload = async () => {
@@ -153,14 +158,14 @@ export const Compiler = () => {
                 data-tooltip="Compiles into VM code"
                 data-placement="bottom"
                 onClick={compileFiles}
-                disabled={Object.keys(state.files).length == 0}
+                disabled={!valid()}
               >
                 Compile
               </button>
               <Padding />
               <button
                 className="flex-0"
-                disabled={!toolStates.compiler.compiled || !valid()}
+                disabled={!toolStates.compiler.compiled}
                 data-tooltip="Loads the compiled code into the VM emulators"
                 data-placement="right"
                 onClick={runInVm}
@@ -170,7 +175,7 @@ export const Compiler = () => {
               <Padding />
               <button
                 className="flex-0"
-                disabled={!toolStates.compiler.compiled || !valid()}
+                disabled={!toolStates.compiler.compiled}
                 data-tooltip="Downloads the compiled VM code"
                 data-placement="bottom"
                 onClick={compileAndDownload}
@@ -188,10 +193,9 @@ export const Compiler = () => {
               key={file}
               onSelect={() => selectTab(file)}
               style={{
-                backgroundColor:
-                  toolStates.compiler.compiled && !state.compiled[file].valid
-                    ? "#ffaaaa"
-                    : undefined,
+                backgroundColor: !state.compiled[file].valid
+                  ? "#ffaaaa"
+                  : undefined,
               }}
             >
               <Editor
@@ -200,11 +204,7 @@ export const Compiler = () => {
                 onChange={(source: string) => {
                   return;
                 }}
-                error={
-                  toolStates.compiler.compiled
-                    ? state.compiled[file].error
-                    : undefined
-                }
+                error={state.compiled[file].error}
                 language={"jack"}
               />
             </Tab>

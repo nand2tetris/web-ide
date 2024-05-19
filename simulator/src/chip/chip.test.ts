@@ -380,7 +380,7 @@ describe("Chip", () => {
         readonly not8 = new Not8();
         constructor() {
           super([], []);
-          this.parts.add(this.not8);
+          this.parts.push(this.not8);
           this.pins.insert(new ConstantBus("pal", 0b1010_1100_0011_0101));
           this.pins.get("pal")?.connect(new OutSubBus(this.not8.in(), 4, 8));
           this.pins.emplace("out1", 5);
@@ -401,7 +401,7 @@ describe("Chip", () => {
         readonly not8 = new Not8();
         constructor() {
           super([], []);
-          this.parts.add(this.not8);
+          this.parts.push(this.not8);
           this.pins.insert(new ConstantBus("six", 0b110));
           // in[0..1] = true
           TRUE_BUS.connect(new InSubBus(this.not8.in(), 0, 2));
@@ -609,5 +609,69 @@ describe("Chip", () => {
         expect(out.busVoltage).toBe(0);
       });
     });
+  });
+
+  it("sorts parts before eval", () => {
+    class FooA extends Chip {
+      readonly notA = new Not();
+      readonly notB = new Not();
+      constructor() {
+        super([], ["out"], "Foo", ["x"]);
+        this.wire(this.notA, [
+          {
+            from: { name: "x", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "out", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.wire(this.notB, [
+          {
+            from: { name: "true", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "x", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+      }
+    }
+
+    const fooA = new FooA();
+    expect(fooA.parts).toEqual([fooA.notB, fooA.notA]);
+
+    class FooB extends Chip {
+      readonly notA = new Not();
+      readonly notB = new Not();
+      constructor() {
+        super([], ["out"], "Foo", ["x"]);
+        this.wire(this.notA, [
+          {
+            from: { name: "true", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "x", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.wire(this.notB, [
+          {
+            from: { name: "x", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "out", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+      }
+    }
+
+    const fooB = new FooB();
+    expect(fooB.parts).toEqual([fooB.notA, fooB.notB]);
   });
 });

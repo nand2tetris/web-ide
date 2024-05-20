@@ -107,30 +107,6 @@ function validateClass(cls: Class): Result<void, CompilationError> {
   return Ok();
 }
 
-export function compileFile(
-  source: string,
-  name?: string
-): Result<string, CompilationError> {
-  const parsed = JACK.parse(source);
-  if (isErr(parsed)) {
-    return parsed;
-  }
-  const cls = Ok(parsed);
-  if (name && cls.name.value != name) {
-    return Err(
-      createError(
-        `Class name ${cls.name.value} doesn't match file name ${name}`,
-        cls.name.span
-      )
-    );
-  }
-  try {
-    return new Compiler().compile(Ok(parsed));
-  } catch (e) {
-    return Err(e as CompilationError);
-  }
-}
-
 interface VariableData {
   type: Type;
   segment: Segment;

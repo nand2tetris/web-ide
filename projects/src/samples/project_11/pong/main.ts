@@ -25,11 +25,19 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 338, end: 343, line: 12 } },
       name: { value: "main", span: { start: 343, end: 347, line: 12 } },
       parameters: [],
       body: {
-        varDecs: [{ type: "PongGame", names: ["game"] }],
+        varDecs: [
+          {
+            type: {
+              value: "PongGame",
+              span: { start: 364, end: 373, line: 13 },
+            },
+            names: ["game"],
+          },
+        ],
         statements: [
           {
             statementType: "doStatement",
@@ -93,15 +101,15 @@ export const parsed = {
 };
 
 export const compiled = `function Main.main 1
-call PongGame.newInstance 0
-pop temp 0
-call PongGame.getInstance 0
-pop local 0
-push local 0
-call PongGame.run 1
-pop temp 0
-push local 0
-call PongGame.dispose 1
-pop temp 0
-push constant 0
-return`;
+    call PongGame.newInstance 0
+    pop temp 0
+    call PongGame.getInstance 0
+    pop local 0
+    push local 0
+    call PongGame.run 1
+    pop temp 0
+    push local 0
+    call PongGame.dispose 1
+    pop temp 0
+    push constant 0
+    return`;

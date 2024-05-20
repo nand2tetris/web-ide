@@ -21,7 +21,7 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 304, end: 309, line: 11 } },
       name: { value: "main", span: { start: 309, end: 313, line: 11 } },
       parameters: [],
       body: {
@@ -70,12 +70,12 @@ export const parsed = {
 };
 
 export const compiled = `function Main.main 0
-push constant 1
-push constant 2
-push constant 3
-call Math.multiply 2
-add
-call Output.printInt 1
-pop temp 0
-push constant 0
-return`;
+    push constant 1
+    push constant 2
+    push constant 3
+    call Math.multiply 2
+    add
+    call Output.printInt 1
+    pop temp 0
+    push constant 0
+    return`;

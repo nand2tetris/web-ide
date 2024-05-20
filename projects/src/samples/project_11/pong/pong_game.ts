@@ -139,19 +139,54 @@ class PongGame {
 export const parsed = {
   name: { value: "PongGame", span: { start: 262, end: 270, line: 9 } },
   varDecs: [
-    { varType: "static", type: "PongGame", names: ["instance"] },
-    { varType: "field", type: "Bat", names: ["bat"] },
-    { varType: "field", type: "Ball", names: ["ball"] },
-    { varType: "field", type: "int", names: ["wall"] },
-    { varType: "field", type: "boolean", names: ["exit"] },
-    { varType: "field", type: "int", names: ["score"] },
-    { varType: "field", type: "int", names: ["lastWall"] },
-    { varType: "field", type: "int", names: ["batWidth"] },
+    {
+      varType: "static",
+      type: { value: "PongGame", span: { start: 285, end: 294, line: 11 } },
+      names: ["instance"],
+    },
+    {
+      varType: "field",
+      type: { value: "Bat", span: { start: 334, end: 338, line: 12 } },
+      names: ["bat"],
+    },
+    {
+      varType: "field",
+      type: { value: "Ball", span: { start: 371, end: 376, line: 13 } },
+      names: ["ball"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 409, end: 413, line: 14 } },
+      names: ["wall"],
+    },
+    {
+      varType: "field",
+      type: { value: "boolean", span: { start: 488, end: 496, line: 15 } },
+      names: ["exit"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 548, end: 552, line: 16 } },
+      names: ["score"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 595, end: 599, line: 17 } },
+      names: ["lastWall"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 704, end: 708, line: 20 } },
+      names: ["batWidth"],
+    },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: "PongGame",
+      returnType: {
+        value: "PongGame",
+        span: { start: 774, end: 783, line: 23 },
+      },
       name: { value: "new", span: { start: 783, end: 786, line: 23 } },
       parameters: [],
       body: {
@@ -430,7 +465,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1316, end: 1321, line: 42 } },
       name: { value: "dispose", span: { start: 1321, end: 1328, line: 42 } },
       parameters: [],
       body: {
@@ -484,7 +519,7 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1500, end: 1505, line: 50 } },
       name: {
         value: "newInstance",
         span: { start: 1505, end: 1516, line: 50 },
@@ -520,7 +555,10 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "PongGame",
+      returnType: {
+        value: "PongGame",
+        span: { start: 1635, end: 1644, line: 56 },
+      },
       name: {
         value: "getInstance",
         span: { start: 1644, end: 1655, line: 56 },
@@ -546,11 +584,16 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1815, end: 1820, line: 62 } },
       name: { value: "run", span: { start: 1820, end: 1823, line: 62 } },
       parameters: [],
       body: {
-        varDecs: [{ type: "char", names: ["key"] }],
+        varDecs: [
+          {
+            type: { value: "char", span: { start: 1840, end: 1845, line: 63 } },
+            names: ["key"],
+          },
+        ],
         statements: [
           {
             statementType: "whileStatement",
@@ -975,13 +1018,16 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: {
+        value: "void",
+        span: { start: 3046, end: 3051, line: 105 },
+      },
       name: { value: "moveBall", span: { start: 3051, end: 3059, line: 105 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: "int",
+            type: { value: "int", span: { start: 3076, end: 3080, line: 106 } },
             names: [
               "bouncingDirection",
               "batLeft",
@@ -1538,322 +1584,322 @@ export const parsed = {
 };
 
 export const compiled = `function PongGame.new 0
-push constant 7
-call Memory.alloc 1
-pop pointer 0
-call Screen.clearScreen 0
-pop temp 0
-push constant 50
-pop this 6
-push constant 230
-push constant 229
-push this 6
-push constant 7
-call Bat.new 4
-pop this 0
-push constant 253
-push constant 222
-push constant 0
-push constant 511
-push constant 0
-push constant 229
-call Ball.new 6
-pop this 1
-push this 1
-push constant 400
-push constant 0
-call Ball.setDestination 3
-pop temp 0
-push constant 0
-push constant 238
-push constant 511
-push constant 240
-call Screen.drawRectangle 4
-pop temp 0
-push constant 22
-push constant 0
-call Output.moveCursor 2
-pop temp 0
-push constant 8
-call String.new 1
-push constant 83
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 111
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 48
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push constant 0
-pop this 3
-push constant 0
-pop this 4
-push constant 0
-pop this 2
-push constant 0
-pop this 5
-push pointer 0
-return
+    push constant 7
+    call Memory.alloc 1
+    pop pointer 0
+    call Screen.clearScreen 0
+    pop temp 0
+    push constant 50
+    pop this 6
+    push constant 230
+    push constant 229
+    push this 6
+    push constant 7
+    call Bat.new 4
+    pop this 0
+    push constant 253
+    push constant 222
+    push constant 0
+    push constant 511
+    push constant 0
+    push constant 229
+    call Ball.new 6
+    pop this 1
+    push this 1
+    push constant 400
+    push constant 0
+    call Ball.setDestination 3
+    pop temp 0
+    push constant 0
+    push constant 238
+    push constant 511
+    push constant 240
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 22
+    push constant 0
+    call Output.moveCursor 2
+    pop temp 0
+    push constant 8
+    call String.new 1
+    push constant 83
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 111
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 48
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    push constant 0
+    pop this 3
+    push constant 0
+    pop this 4
+    push constant 0
+    pop this 2
+    push constant 0
+    pop this 5
+    push pointer 0
+    return
 function PongGame.dispose 0
-push argument 0
-pop pointer 0
-push this 0
-call Bat.dispose 1
-pop temp 0
-push this 1
-call Ball.dispose 1
-pop temp 0
-push pointer 0
-call Memory.deAlloc 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    call Bat.dispose 1
+    pop temp 0
+    push this 1
+    call Ball.dispose 1
+    pop temp 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return
 function PongGame.newInstance 0
-call PongGame.new 0
-pop static 0
-push constant 0
-return
+    call PongGame.new 0
+    pop static 0
+    push constant 0
+    return
 function PongGame.getInstance 0
-push static 0
-return
+    push static 0
+    return
 function PongGame.run 1
-push argument 0
-pop pointer 0
-label L0
-push this 3
-not
-not
-if-goto L1
-label L2
-push local 0
-push constant 0
-eq
-push this 3
-not
-and
-not
-if-goto L3
-call Keyboard.keyPressed 0
-pop local 0
-push this 0
-call Bat.move 1
-pop temp 0
-push pointer 0
-call PongGame.moveBall 1
-pop temp 0
-push constant 50
-call Sys.wait 1
-pop temp 0
-goto L2
-label L3
-push local 0
-push constant 130
-eq
-not
-if-goto L5
-push this 0
-push constant 1
-call Bat.setDirection 2
-pop temp 0
-goto L4
-label L5
-push local 0
-push constant 132
-eq
-not
-if-goto L7
-push this 0
-push constant 2
-call Bat.setDirection 2
-pop temp 0
-goto L6
-label L7
-push local 0
-push constant 140
-eq
-not
-if-goto L9
-push constant 1
-pop this 3
-goto L8
-label L9
-label L8
-label L6
-label L4
-label L10
-push local 0
-push constant 0
-eq
-not
-push this 3
-not
-and
-not
-if-goto L11
-call Keyboard.keyPressed 0
-pop local 0
-push this 0
-call Bat.move 1
-pop temp 0
-push pointer 0
-call PongGame.moveBall 1
-pop temp 0
-push constant 50
-call Sys.wait 1
-pop temp 0
-goto L10
-label L11
-goto L0
-label L1
-push this 3
-not
-if-goto L13
-push constant 10
-push constant 27
-call Output.moveCursor 2
-pop temp 0
-push constant 9
-call String.new 1
-push constant 71
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 109
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 79
-call String.appendChar 2
-push constant 118
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-goto L12
-label L13
-label L12
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    label L0
+    push this 3
+    not
+    not
+    if-goto L1
+    label L2
+    push local 0
+    push constant 0
+    eq
+    push this 3
+    not
+    and
+    not
+    if-goto L3
+    call Keyboard.keyPressed 0
+    pop local 0
+    push this 0
+    call Bat.move 1
+    pop temp 0
+    push pointer 0
+    call PongGame.moveBall 1
+    pop temp 0
+    push constant 50
+    call Sys.wait 1
+    pop temp 0
+    goto L2
+    label L3
+    push local 0
+    push constant 130
+    eq
+    not
+    if-goto L5
+    push this 0
+    push constant 1
+    call Bat.setDirection 2
+    pop temp 0
+    goto L4
+    label L5
+    push local 0
+    push constant 132
+    eq
+    not
+    if-goto L7
+    push this 0
+    push constant 2
+    call Bat.setDirection 2
+    pop temp 0
+    goto L6
+    label L7
+    push local 0
+    push constant 140
+    eq
+    not
+    if-goto L9
+    push constant 1
+    pop this 3
+    goto L8
+    label L9
+    label L8
+    label L6
+    label L4
+    label L10
+    push local 0
+    push constant 0
+    eq
+    not
+    push this 3
+    not
+    and
+    not
+    if-goto L11
+    call Keyboard.keyPressed 0
+    pop local 0
+    push this 0
+    call Bat.move 1
+    pop temp 0
+    push pointer 0
+    call PongGame.moveBall 1
+    pop temp 0
+    push constant 50
+    call Sys.wait 1
+    pop temp 0
+    goto L10
+    label L11
+    goto L0
+    label L1
+    push this 3
+    not
+    if-goto L13
+    push constant 10
+    push constant 27
+    call Output.moveCursor 2
+    pop temp 0
+    push constant 9
+    call String.new 1
+    push constant 71
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 109
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 79
+    call String.appendChar 2
+    push constant 118
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    goto L12
+    label L13
+    label L12
+    push constant 0
+    return
 function PongGame.moveBall 5
-push argument 0
-pop pointer 0
-push this 1
-call Ball.move 1
-pop this 2
-push this 2
-push constant 0
-gt
-push this 2
-push this 5
-eq
-not
-and
-not
-if-goto L15
-push this 2
-pop this 5
-push constant 0
-pop local 0
-push this 0
-call Bat.getLeft 1
-pop local 1
-push this 0
-call Bat.getRight 1
-pop local 2
-push this 1
-call Ball.getLeft 1
-pop local 3
-push this 1
-call Ball.getRight 1
-pop local 4
-push this 2
-push constant 4
-eq
-not
-if-goto L17
-push local 1
-push local 4
-gt
-push local 2
-push local 3
-lt
-or
-pop this 3
-push this 3
-not
-not
-if-goto L19
-push local 4
-push local 1
-push constant 10
-add
-lt
-not
-if-goto L21
-push constant 1
-neg
-pop local 0
-goto L20
-label L21
-push local 3
-push local 2
-push constant 10
-sub
-gt
-not
-if-goto L23
-push constant 1
-pop local 0
-goto L22
-label L23
-label L22
-label L20
-push this 6
-push constant 2
-sub
-pop this 6
-push this 0
-push this 6
-call Bat.setWidth 2
-pop temp 0
-push this 4
-push constant 1
-add
-pop this 4
-push constant 22
-push constant 7
-call Output.moveCursor 2
-pop temp 0
-push this 4
-call Output.printInt 1
-pop temp 0
-goto L18
-label L19
-label L18
-goto L16
-label L17
-label L16
-push this 1
-push local 0
-call Ball.bounce 2
-pop temp 0
-goto L14
-label L15
-label L14
-push constant 0
-return`;
+    push argument 0
+    pop pointer 0
+    push this 1
+    call Ball.move 1
+    pop this 2
+    push this 2
+    push constant 0
+    gt
+    push this 2
+    push this 5
+    eq
+    not
+    and
+    not
+    if-goto L15
+    push this 2
+    pop this 5
+    push constant 0
+    pop local 0
+    push this 0
+    call Bat.getLeft 1
+    pop local 1
+    push this 0
+    call Bat.getRight 1
+    pop local 2
+    push this 1
+    call Ball.getLeft 1
+    pop local 3
+    push this 1
+    call Ball.getRight 1
+    pop local 4
+    push this 2
+    push constant 4
+    eq
+    not
+    if-goto L17
+    push local 1
+    push local 4
+    gt
+    push local 2
+    push local 3
+    lt
+    or
+    pop this 3
+    push this 3
+    not
+    not
+    if-goto L19
+    push local 4
+    push local 1
+    push constant 10
+    add
+    lt
+    not
+    if-goto L21
+    push constant 1
+    neg
+    pop local 0
+    goto L20
+    label L21
+    push local 3
+    push local 2
+    push constant 10
+    sub
+    gt
+    not
+    if-goto L23
+    push constant 1
+    pop local 0
+    goto L22
+    label L23
+    label L22
+    label L20
+    push this 6
+    push constant 2
+    sub
+    pop this 6
+    push this 0
+    push this 6
+    call Bat.setWidth 2
+    pop temp 0
+    push this 4
+    push constant 1
+    add
+    pop this 4
+    push constant 22
+    push constant 7
+    call Output.moveCursor 2
+    pop temp 0
+    push this 4
+    call Output.printInt 1
+    pop temp 0
+    goto L18
+    label L19
+    label L18
+    goto L16
+    label L17
+    label L16
+    push this 1
+    push local 0
+    call Ball.bounce 2
+    pop temp 0
+    goto L14
+    label L15
+    label L14
+    push constant 0
+    return`;

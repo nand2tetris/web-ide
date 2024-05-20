@@ -106,20 +106,44 @@ class Bat {
 export const parsed = {
   name: { value: "Bat", span: { start: 660, end: 663, line: 16 } },
   varDecs: [
-    { varType: "field", type: "int", names: ["x", "y"] },
-    { varType: "field", type: "int", names: ["width", "height"] },
-    { varType: "field", type: "int", names: ["direction"] },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 677, end: 681, line: 18 } },
+      names: ["x", "y"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 736, end: 740, line: 19 } },
+      names: ["width", "height"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 796, end: 800, line: 20 } },
+      names: ["direction"],
+    },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: "Bat",
+      returnType: { value: "Bat", span: { start: 991, end: 995, line: 24 } },
       name: { value: "new", span: { start: 995, end: 998, line: 24 } },
       parameters: [
-        { type: "int", name: "Ax" },
-        { type: "int", name: "Ay" },
-        { type: "int", name: "Awidth" },
-        { type: "int", name: "Aheight" },
+        {
+          type: { value: "int", span: { start: 999, end: 1003, line: 24 } },
+          name: "Ax",
+        },
+        {
+          type: { value: "int", span: { start: 1007, end: 1011, line: 24 } },
+          name: "Ay",
+        },
+        {
+          type: { value: "int", span: { start: 1015, end: 1019, line: 24 } },
+          name: "Awidth",
+        },
+        {
+          type: { value: "int", span: { start: 1027, end: 1031, line: 24 } },
+          name: "Aheight",
+        },
       ],
       body: {
         varDecs: [],
@@ -224,7 +248,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1269, end: 1274, line: 35 } },
       name: { value: "dispose", span: { start: 1274, end: 1281, line: 35 } },
       parameters: [],
       body: {
@@ -254,7 +278,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1379, end: 1384, line: 41 } },
       name: { value: "show", span: { start: 1384, end: 1388, line: 41 } },
       parameters: [],
       body: {
@@ -296,7 +320,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1506, end: 1511, line: 48 } },
       name: { value: "hide", span: { start: 1511, end: 1515, line: 48 } },
       parameters: [],
       body: {
@@ -338,7 +362,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1634, end: 1639, line: 55 } },
       name: { value: "draw", span: { start: 1639, end: 1643, line: 55 } },
       parameters: [],
       body: {
@@ -417,12 +441,17 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1807, end: 1812, line: 61 } },
       name: {
         value: "setDirection",
         span: { start: 1812, end: 1824, line: 61 },
       },
-      parameters: [{ type: "int", name: "Adirection" }],
+      parameters: [
+        {
+          type: { value: "int", span: { start: 1825, end: 1829, line: 61 } },
+          name: "Adirection",
+        },
+      ],
       body: {
         varDecs: [],
         statements: [
@@ -449,7 +478,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 1953, end: 1957, line: 67 } },
       name: { value: "getLeft", span: { start: 1957, end: 1964, line: 67 } },
       parameters: [],
       body: {
@@ -472,7 +501,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 2046, end: 2050, line: 72 } },
       name: { value: "getRight", span: { start: 2050, end: 2058, line: 72 } },
       parameters: [],
       body: {
@@ -504,9 +533,14 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 2140, end: 2145, line: 77 } },
       name: { value: "setWidth", span: { start: 2145, end: 2153, line: 77 } },
-      parameters: [{ type: "int", name: "Awidth" }],
+      parameters: [
+        {
+          type: { value: "int", span: { start: 2154, end: 2158, line: 77 } },
+          name: "Awidth",
+        },
+      ],
       body: {
         varDecs: [],
         statements: [
@@ -557,7 +591,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 2326, end: 2331, line: 85 } },
       name: { value: "move", span: { start: 2331, end: 2335, line: 85 } },
       parameters: [],
       body: {
@@ -1106,207 +1140,207 @@ export const parsed = {
 };
 
 export const compiled = `function Bat.new 0
-push constant 5
-call Memory.alloc 1
-pop pointer 0
-push argument 0
-pop this 0
-push argument 1
-pop this 1
-push argument 2
-pop this 2
-push argument 3
-pop this 3
-push constant 2
-pop this 4
-push pointer 0
-call Bat.show 1
-pop temp 0
-push pointer 0
-return
+    push constant 5
+    call Memory.alloc 1
+    pop pointer 0
+    push argument 0
+    pop this 0
+    push argument 1
+    pop this 1
+    push argument 2
+    pop this 2
+    push argument 3
+    pop this 3
+    push constant 2
+    pop this 4
+    push pointer 0
+    call Bat.show 1
+    pop temp 0
+    push pointer 0
+    return
 function Bat.dispose 0
-push argument 0
-pop pointer 0
-push pointer 0
-call Memory.deAlloc 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return
 function Bat.show 0
-push argument 0
-pop pointer 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push pointer 0
-call Bat.draw 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push pointer 0
+    call Bat.draw 1
+    pop temp 0
+    push constant 0
+    return
 function Bat.hide 0
-push argument 0
-pop pointer 0
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push pointer 0
-call Bat.draw 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push pointer 0
+    call Bat.draw 1
+    pop temp 0
+    push constant 0
+    return
 function Bat.draw 0
-push argument 0
-pop pointer 0
-push this 0
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push this 3
-add
-call Screen.drawRectangle 4
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 3
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 0
+    return
 function Bat.setDirection 0
-push argument 0
-pop pointer 0
-push argument 1
-pop this 4
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push argument 1
+    pop this 4
+    push constant 0
+    return
 function Bat.getLeft 0
-push argument 0
-pop pointer 0
-push this 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    return
 function Bat.getRight 0
-push argument 0
-pop pointer 0
-push this 0
-push this 2
-add
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    push this 2
+    add
+    return
 function Bat.setWidth 0
-push argument 0
-pop pointer 0
-push pointer 0
-call Bat.hide 1
-pop temp 0
-push argument 1
-pop this 2
-push pointer 0
-call Bat.show 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Bat.hide 1
+    pop temp 0
+    push argument 1
+    pop this 2
+    push pointer 0
+    call Bat.show 1
+    pop temp 0
+    push constant 0
+    return
 function Bat.move 0
-push argument 0
-pop pointer 0
-push this 4
-push constant 1
-eq
-not
-if-goto L1
-push this 0
-push constant 4
-sub
-pop this 0
-push this 0
-push constant 0
-lt
-not
-if-goto L3
-push constant 0
-pop this 0
-goto L2
-label L3
-label L2
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 2
-add
-push constant 1
-add
-push this 1
-push this 0
-push this 2
-add
-push constant 4
-add
-push this 1
-push this 3
-add
-call Screen.drawRectangle 4
-pop temp 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push constant 3
-add
-push this 1
-push this 3
-add
-call Screen.drawRectangle 4
-pop temp 0
-goto L0
-label L1
-push this 0
-push constant 4
-add
-pop this 0
-push this 0
-push this 2
-add
-push constant 511
-gt
-not
-if-goto L5
-push constant 511
-push this 2
-sub
-pop this 0
-goto L4
-label L5
-label L4
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push constant 4
-sub
-push this 1
-push this 0
-push constant 1
-sub
-push this 1
-push this 3
-add
-call Screen.drawRectangle 4
-pop temp 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 2
-add
-push constant 3
-sub
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push this 3
-add
-call Screen.drawRectangle 4
-pop temp 0
-label L0
-push constant 0
-return`;
+    push argument 0
+    pop pointer 0
+    push this 4
+    push constant 1
+    eq
+    not
+    if-goto L1
+    push this 0
+    push constant 4
+    sub
+    pop this 0
+    push this 0
+    push constant 0
+    lt
+    not
+    if-goto L3
+    push constant 0
+    pop this 0
+    goto L2
+    label L3
+    label L2
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 2
+    add
+    push constant 1
+    add
+    push this 1
+    push this 0
+    push this 2
+    add
+    push constant 4
+    add
+    push this 1
+    push this 3
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push constant 3
+    add
+    push this 1
+    push this 3
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    goto L0
+    label L1
+    push this 0
+    push constant 4
+    add
+    pop this 0
+    push this 0
+    push this 2
+    add
+    push constant 511
+    gt
+    not
+    if-goto L5
+    push constant 511
+    push this 2
+    sub
+    pop this 0
+    goto L4
+    label L5
+    label L4
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push constant 4
+    sub
+    push this 1
+    push this 0
+    push constant 1
+    sub
+    push this 1
+    push this 3
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 2
+    add
+    push constant 3
+    sub
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 3
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    label L0
+    push constant 0
+    return`;

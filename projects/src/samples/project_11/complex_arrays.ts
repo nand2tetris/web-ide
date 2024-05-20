@@ -74,11 +74,16 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 400, end: 405, line: 12 } },
       name: { value: "main", span: { start: 405, end: 409, line: 12 } },
       parameters: [],
       body: {
-        varDecs: [{ type: "Array", names: ["a", "b", "c"] }],
+        varDecs: [
+          {
+            type: { value: "Array", span: { start: 426, end: 432, line: 13 } },
+            names: ["a", "b", "c"],
+          },
+        ],
         statements: [
           {
             statementType: "letStatement",
@@ -929,9 +934,14 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 1852, end: 1856, line: 58 } },
       name: { value: "double", span: { start: 1856, end: 1862, line: 58 } },
-      parameters: [{ type: "int", name: "a" }],
+      parameters: [
+        {
+          type: { value: "int", span: { start: 1863, end: 1867, line: 58 } },
+          name: "a",
+        },
+      ],
       body: {
         varDecs: [],
         statements: [
@@ -954,11 +964,17 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1916, end: 1921, line: 62 } },
       name: { value: "fill", span: { start: 1921, end: 1925, line: 62 } },
       parameters: [
-        { type: "Array", name: "a" },
-        { type: "int", name: "size" },
+        {
+          type: { value: "Array", span: { start: 1926, end: 1932, line: 62 } },
+          name: "a",
+        },
+        {
+          type: { value: "int", span: { start: 1935, end: 1939, line: 62 } },
+          name: "size",
+        },
       ],
       body: {
         varDecs: [],
@@ -1042,705 +1058,705 @@ export const parsed = {
 };
 
 export const compiled = `function Main.main 3
-push constant 10
-call Array.new 1
-pop local 0
-push constant 5
-call Array.new 1
-pop local 1
-push constant 1
-call Array.new 1
-pop local 2
-push constant 3
-push local 0
-add
-push constant 2
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 4
-push local 0
-add
-push constant 8
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 5
-push local 0
-add
-push constant 4
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 3
-push local 0
-add
-pop pointer 1
-push that 0
-push local 1
-add
-push constant 3
-push local 0
-add
-pop pointer 1
-push that 0
-push constant 3
-add
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 3
-push local 0
-add
-pop pointer 1
-push that 0
-push local 1
-add
-pop pointer 1
-push that 0
-push local 0
-add
-push constant 5
-push local 0
-add
-pop pointer 1
-push that 0
-push local 0
-add
-pop pointer 1
-push that 0
-push constant 7
-push constant 3
-push local 0
-add
-pop pointer 1
-push that 0
-sub
-push constant 2
-call Main.double 1
-sub
-push constant 1
-add
-push local 1
-add
-pop pointer 1
-push that 0
-call Math.multiply 2
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 0
-push local 2
-add
-push constant 0
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 0
-push local 2
-add
-pop pointer 1
-push that 0
-pop local 2
-push constant 43
-call String.new 1
-push constant 84
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 49
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 120
-call String.appendChar 2
-push constant 112
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 100
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 53
-call String.appendChar 2
-push constant 59
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push constant 2
-push local 1
-add
-pop pointer 1
-push that 0
-call Output.printInt 1
-pop temp 0
-call Output.println 0
-pop temp 0
-push constant 44
-call String.new 1
-push constant 84
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 50
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 120
-call String.appendChar 2
-push constant 112
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 100
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 52
-call String.appendChar 2
-push constant 48
-call String.appendChar 2
-push constant 59
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push constant 5
-push local 0
-add
-pop pointer 1
-push that 0
-call Output.printInt 1
-pop temp 0
-call Output.println 0
-pop temp 0
-push constant 43
-call String.new 1
-push constant 84
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 51
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 120
-call String.appendChar 2
-push constant 112
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 100
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 48
-call String.appendChar 2
-push constant 59
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push local 2
-call Output.printInt 1
-pop temp 0
-call Output.println 0
-pop temp 0
-push constant 0
-pop local 2
-push local 2
-push constant 0
-eq
-not
-if-goto L1
-push local 0
-push constant 10
-call Main.fill 2
-pop temp 0
-push constant 3
-push local 0
-add
-pop pointer 1
-push that 0
-pop local 2
-push constant 1
-push local 2
-add
-push constant 33
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 7
-push local 0
-add
-pop pointer 1
-push that 0
-pop local 2
-push constant 1
-push local 2
-add
-push constant 77
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-push constant 3
-push local 0
-add
-pop pointer 1
-push that 0
-pop local 1
-push constant 1
-push local 1
-add
-push constant 1
-push local 1
-add
-pop pointer 1
-push that 0
-push constant 1
-push local 2
-add
-pop pointer 1
-push that 0
-add
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-goto L0
-label L1
-label L0
-push constant 44
-call String.new 1
-push constant 84
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 52
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 120
-call String.appendChar 2
-push constant 112
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 100
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 55
-call String.appendChar 2
-push constant 55
-call String.appendChar 2
-push constant 59
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push constant 1
-push local 2
-add
-pop pointer 1
-push that 0
-call Output.printInt 1
-pop temp 0
-call Output.println 0
-pop temp 0
-push constant 45
-call String.new 1
-push constant 84
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 53
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 120
-call String.appendChar 2
-push constant 112
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 100
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 49
-call String.appendChar 2
-push constant 49
-call String.appendChar 2
-push constant 48
-call String.appendChar 2
-push constant 59
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 99
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 97
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-push constant 114
-call String.appendChar 2
-push constant 101
-call String.appendChar 2
-push constant 115
-call String.appendChar 2
-push constant 117
-call String.appendChar 2
-push constant 108
-call String.appendChar 2
-push constant 116
-call String.appendChar 2
-push constant 58
-call String.appendChar 2
-push constant 32
-call String.appendChar 2
-call Output.printString 1
-pop temp 0
-push constant 1
-push local 1
-add
-pop pointer 1
-push that 0
-call Output.printInt 1
-pop temp 0
-call Output.println 0
-pop temp 0
-push constant 0
-return
+    push constant 10
+    call Array.new 1
+    pop local 0
+    push constant 5
+    call Array.new 1
+    pop local 1
+    push constant 1
+    call Array.new 1
+    pop local 2
+    push constant 3
+    push local 0
+    add
+    push constant 2
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 4
+    push local 0
+    add
+    push constant 8
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 5
+    push local 0
+    add
+    push constant 4
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 3
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    push local 1
+    add
+    push constant 3
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    push constant 3
+    add
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 3
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    push local 1
+    add
+    pop pointer 1
+    push that 0
+    push local 0
+    add
+    push constant 5
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    push constant 7
+    push constant 3
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    sub
+    push constant 2
+    call Main.double 1
+    sub
+    push constant 1
+    add
+    push local 1
+    add
+    pop pointer 1
+    push that 0
+    call Math.multiply 2
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 0
+    push local 2
+    add
+    push constant 0
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 0
+    push local 2
+    add
+    pop pointer 1
+    push that 0
+    pop local 2
+    push constant 43
+    call String.new 1
+    push constant 84
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 49
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 120
+    call String.appendChar 2
+    push constant 112
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 100
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 53
+    call String.appendChar 2
+    push constant 59
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    push constant 2
+    push local 1
+    add
+    pop pointer 1
+    push that 0
+    call Output.printInt 1
+    pop temp 0
+    call Output.println 0
+    pop temp 0
+    push constant 44
+    call String.new 1
+    push constant 84
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 50
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 120
+    call String.appendChar 2
+    push constant 112
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 100
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 52
+    call String.appendChar 2
+    push constant 48
+    call String.appendChar 2
+    push constant 59
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    push constant 5
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    call Output.printInt 1
+    pop temp 0
+    call Output.println 0
+    pop temp 0
+    push constant 43
+    call String.new 1
+    push constant 84
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 51
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 120
+    call String.appendChar 2
+    push constant 112
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 100
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 48
+    call String.appendChar 2
+    push constant 59
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    push local 2
+    call Output.printInt 1
+    pop temp 0
+    call Output.println 0
+    pop temp 0
+    push constant 0
+    pop local 2
+    push local 2
+    push constant 0
+    eq
+    not
+    if-goto L1
+    push local 0
+    push constant 10
+    call Main.fill 2
+    pop temp 0
+    push constant 3
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    pop local 2
+    push constant 1
+    push local 2
+    add
+    push constant 33
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 7
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    pop local 2
+    push constant 1
+    push local 2
+    add
+    push constant 77
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    push constant 3
+    push local 0
+    add
+    pop pointer 1
+    push that 0
+    pop local 1
+    push constant 1
+    push local 1
+    add
+    push constant 1
+    push local 1
+    add
+    pop pointer 1
+    push that 0
+    push constant 1
+    push local 2
+    add
+    pop pointer 1
+    push that 0
+    add
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    goto L0
+    label L1
+    label L0
+    push constant 44
+    call String.new 1
+    push constant 84
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 52
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 120
+    call String.appendChar 2
+    push constant 112
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 100
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 55
+    call String.appendChar 2
+    push constant 55
+    call String.appendChar 2
+    push constant 59
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    push constant 1
+    push local 2
+    add
+    pop pointer 1
+    push that 0
+    call Output.printInt 1
+    pop temp 0
+    call Output.println 0
+    pop temp 0
+    push constant 45
+    call String.new 1
+    push constant 84
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 53
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 120
+    call String.appendChar 2
+    push constant 112
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 100
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 49
+    call String.appendChar 2
+    push constant 49
+    call String.appendChar 2
+    push constant 48
+    call String.appendChar 2
+    push constant 59
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 99
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 97
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    push constant 114
+    call String.appendChar 2
+    push constant 101
+    call String.appendChar 2
+    push constant 115
+    call String.appendChar 2
+    push constant 117
+    call String.appendChar 2
+    push constant 108
+    call String.appendChar 2
+    push constant 116
+    call String.appendChar 2
+    push constant 58
+    call String.appendChar 2
+    push constant 32
+    call String.appendChar 2
+    call Output.printString 1
+    pop temp 0
+    push constant 1
+    push local 1
+    add
+    pop pointer 1
+    push that 0
+    call Output.printInt 1
+    pop temp 0
+    call Output.println 0
+    pop temp 0
+    push constant 0
+    return
 function Main.double 0
-push argument 0
-push constant 2
-call Math.multiply 2
-return
+    push argument 0
+    push constant 2
+    call Math.multiply 2
+    return
 function Main.fill 0
-label L2
-push argument 1
-push constant 0
-gt
-not
-if-goto L3
-push argument 1
-push constant 1
-sub
-pop argument 1
-push argument 1
-push argument 0
-add
-push constant 3
-call Array.new 1
-pop temp 0
-pop pointer 1
-push temp 0
-pop that 0
-goto L2
-label L3
-push constant 0
-return`;
+    label L2
+    push argument 1
+    push constant 0
+    gt
+    not
+    if-goto L3
+    push argument 1
+    push constant 1
+    sub
+    pop argument 1
+    push argument 1
+    push argument 0
+    add
+    push constant 3
+    call Array.new 1
+    pop temp 0
+    pop pointer 1
+    push temp 0
+    pop that 0
+    goto L2
+    label L3
+    push constant 0
+    return`;

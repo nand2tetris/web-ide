@@ -86,11 +86,16 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 973, end: 978, line: 26 } },
       name: { value: "main", span: { start: 978, end: 982, line: 26 } },
       parameters: [],
       body: {
-        varDecs: [{ type: "int", names: ["value"] }],
+        varDecs: [
+          {
+            type: { value: "int", span: { start: 997, end: 1001, line: 27 } },
+            names: ["value"],
+          },
+        ],
         statements: [
           {
             statementType: "doStatement",
@@ -179,13 +184,27 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1393, end: 1398, line: 36 } },
       name: { value: "convert", span: { start: 1398, end: 1405, line: 36 } },
-      parameters: [{ type: "int", name: "value" }],
+      parameters: [
+        {
+          type: { value: "int", span: { start: 1406, end: 1410, line: 36 } },
+          name: "value",
+        },
+      ],
       body: {
         varDecs: [
-          { type: "int", names: ["mask", "position"] },
-          { type: "boolean", names: ["loop"] },
+          {
+            type: { value: "int", span: { start: 1429, end: 1433, line: 37 } },
+            names: ["mask", "position"],
+          },
+          {
+            type: {
+              value: "boolean",
+              span: { start: 1459, end: 1467, line: 38 },
+            },
+            names: ["loop"],
+          },
         ],
         statements: [
           {
@@ -429,9 +448,14 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 2061, end: 2065, line: 62 } },
       name: { value: "nextMask", span: { start: 2065, end: 2073, line: 62 } },
-      parameters: [{ type: "int", name: "mask" }],
+      parameters: [
+        {
+          type: { value: "int", span: { start: 2074, end: 2078, line: 62 } },
+          name: "mask",
+        },
+      ],
       body: {
         varDecs: [],
         statements: [
@@ -480,12 +504,21 @@ export const parsed = {
     },
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 2304, end: 2309, line: 73 } },
       name: { value: "fillMemory", span: { start: 2309, end: 2319, line: 73 } },
       parameters: [
-        { type: "int", name: "address" },
-        { type: "int", name: "length" },
-        { type: "int", name: "value" },
+        {
+          type: { value: "int", span: { start: 2320, end: 2324, line: 73 } },
+          name: "address",
+        },
+        {
+          type: { value: "int", span: { start: 2333, end: 2337, line: 73 } },
+          name: "length",
+        },
+        {
+          type: { value: "int", span: { start: 2345, end: 2349, line: 73 } },
+          name: "value",
+        },
       ],
       body: {
         varDecs: [],
@@ -583,107 +616,107 @@ export const parsed = {
 };
 
 export const compiled = `function Main.main 1
-push constant 8001
-push constant 16
-push constant 1
-neg
-call Main.fillMemory 3
-pop temp 0
-push constant 8000
-call Memory.peek 1
-pop local 0
-push local 0
-call Main.convert 1
-pop temp 0
-push constant 0
-return
+    push constant 8001
+    push constant 16
+    push constant 1
+    neg
+    call Main.fillMemory 3
+    pop temp 0
+    push constant 8000
+    call Memory.peek 1
+    pop local 0
+    push local 0
+    call Main.convert 1
+    pop temp 0
+    push constant 0
+    return
 function Main.convert 3
-push constant 1
-pop local 2
-label L0
-push local 2
-not
-if-goto L1
-push local 1
-push constant 1
-add
-pop local 1
-push local 0
-call Main.nextMask 1
-pop local 0
-push local 1
-push constant 16
-gt
-not
-not
-if-goto L3
-push argument 0
-push local 0
-and
-push constant 0
-eq
-not
-not
-if-goto L5
-push constant 8000
-push local 1
-add
-push constant 1
-call Memory.poke 2
-pop temp 0
-goto L4
-label L5
-push constant 8000
-push local 1
-add
-push constant 0
-call Memory.poke 2
-pop temp 0
-label L4
-goto L2
-label L3
-push constant 0
-pop local 2
-label L2
-goto L0
-label L1
-push constant 0
-return
+    push constant 1
+    pop local 2
+    label L0
+    push local 2
+    not
+    if-goto L1
+    push local 1
+    push constant 1
+    add
+    pop local 1
+    push local 0
+    call Main.nextMask 1
+    pop local 0
+    push local 1
+    push constant 16
+    gt
+    not
+    not
+    if-goto L3
+    push argument 0
+    push local 0
+    and
+    push constant 0
+    eq
+    not
+    not
+    if-goto L5
+    push constant 8000
+    push local 1
+    add
+    push constant 1
+    call Memory.poke 2
+    pop temp 0
+    goto L4
+    label L5
+    push constant 8000
+    push local 1
+    add
+    push constant 0
+    call Memory.poke 2
+    pop temp 0
+    label L4
+    goto L2
+    label L3
+    push constant 0
+    pop local 2
+    label L2
+    goto L0
+    label L1
+    push constant 0
+    return
 function Main.nextMask 0
-push argument 0
-push constant 0
-eq
-not
-if-goto L7
-push constant 1
-return
-goto L6
-label L7
-push argument 0
-push constant 2
-call Math.multiply 2
-return
-label L6
+    push argument 0
+    push constant 0
+    eq
+    not
+    if-goto L7
+    push constant 1
+    return
+    goto L6
+    label L7
+    push argument 0
+    push constant 2
+    call Math.multiply 2
+    return
+    label L6
 function Main.fillMemory 0
-label L8
-push argument 1
-push constant 0
-gt
-not
-if-goto L9
-push argument 0
-push argument 2
-call Memory.poke 2
-pop temp 0
-push argument 1
-push constant 1
-sub
-pop argument 1
-push argument 0
-push constant 1
-add
-pop argument 0
-goto L8
-label L9
-push constant 0
-return`;
+    label L8
+    push argument 1
+    push constant 0
+    gt
+    not
+    if-goto L9
+    push argument 0
+    push argument 2
+    call Memory.poke 2
+    pop temp 0
+    push argument 1
+    push constant 1
+    sub
+    pop argument 1
+    push argument 0
+    push constant 1
+    add
+    pop argument 0
+    goto L8
+    label L9
+    push constant 0
+    return`;

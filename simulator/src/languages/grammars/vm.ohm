@@ -1,8 +1,12 @@
 Vm <: Base {
   Root := Vm
 
-  Vm = VmInstruction*
+  Vm = VmInstructionLine*
 
+  space := comment | " " | "\t"
+  whitespace = lineComment | comment | space
+
+  VmInstructionLine = VmInstruction newline
   VmInstruction =
     | StackInstruction
     | OpInstruction
@@ -12,33 +16,33 @@ Vm <: Base {
     | GotoInstruction
     | LabelInstruction
   
-  StackInstruction = (Push | Pop) MemorySegment Number
+  StackInstruction = (push | pop) MemorySegment Number
   OpInstruction = Add | Sub | Neg | Lt | Gt | Eq | And | Or | Not
-  FunctionInstruction = Function Name Number 
-  CallInstruction =  Call Name Number
-  ReturnInstruction = Return
-  LabelInstruction = Label Name
-  GotoInstruction = (Goto | IfGoto) Name
+  FunctionInstruction = function Name Number 
+  CallInstruction =  call Name Number
+  ReturnInstruction = return
+  LabelInstruction = label Name
+  GotoInstruction = (goto | ifGoto) Name
 
-  MemorySegment = Argument | Local | Static | Constant | This | That | Pointer | Temp
+  MemorySegment = argument | local | static | constant | this | that | pointer | temp
 
-  Push = "push"
-  Pop = "pop"
-  Function = "function"
-  Call = "call"
-  Return = "return"
-  Goto = "goto"
-  IfGoto = "if-goto"
-  Label = "label"
+  push = "push" whitespace+
+  pop = "pop" whitespace+
+  function = "function" whitespace+
+  call = "call" whitespace+
+  return = "return"
+  goto = "goto" whitespace+
+  ifGoto = "if-goto" whitespace+
+  label = "label" whitespace+
 
-  Argument = "argument"
-  Local = "local"
-  Static = "static"
-  Constant = "constant"
-  This = "this"
-  That = "that"
-  Pointer = "pointer"
-  Temp = "temp"
+  argument = "argument" whitespace+
+  local = "local" whitespace+
+  static = "static" whitespace+
+  constant = "constant" whitespace+
+  this = "this" whitespace+
+  that = "that" whitespace+
+  pointer = "pointer" whitespace+
+  temp = "temp" whitespace+
 
   Add = "add" 
   Sub = "sub" 

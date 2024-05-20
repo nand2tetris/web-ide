@@ -22,12 +22,12 @@ export type ClassVarType = "static" | "field";
 
 export interface ClassVarDec {
   varType: ClassVarType;
-  type: Type;
+  type: { value: Type; span: Span };
   names: string[];
 }
 
 export interface Parameter {
-  type: Type;
+  type: { value: Type; span: Span };
   name: string;
 }
 
@@ -37,7 +37,7 @@ export type SubroutineType = "constructor" | "function" | "method";
 export interface Subroutine {
   type: SubroutineType;
   name: { value: string; span: Span };
-  returnType: ReturnType;
+  returnType: { value: ReturnType; span: Span };
   parameters: Parameter[];
   body: SubroutineBody;
 }
@@ -48,7 +48,7 @@ export interface SubroutineBody {
 }
 
 export interface VarDec {
-  type: Type;
+  type: { value: Type; span: Span };
   names: string[];
 }
 
@@ -187,7 +187,10 @@ jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
   ClassVarDec(varType, type, name, rest, _) {
     return {
       varType: varType.sourceString.trim() as ClassVarType,
-      type: type.sourceString.trim() as Type,
+      type: {
+        value: type.sourceString.trim() as Type,
+        span: span(type.source),
+      },
       names: [
         name.sourceString,
         ...rest.children.map((n) => n.child(1).sourceString),
@@ -200,7 +203,10 @@ jackSemantics.addAttribute<Subroutine>("subroutineDec", {
   SubroutineDec(type, returnType, name, _a, parameters, _b, body) {
     return {
       type: type.sourceString.trim() as SubroutineType,
-      returnType: returnType.sourceString.trim() as ReturnType,
+      returnType: {
+        value: returnType.sourceString.trim() as ReturnType,
+        span: span(returnType.source),
+      },
       name: { value: name.sourceString, span: span(name.source) },
       parameters: parameters.parameterList,
       body: body.subroutineBody,
@@ -211,7 +217,10 @@ jackSemantics.addAttribute<Subroutine>("subroutineDec", {
 jackSemantics.addAttribute<Parameter>("parameter", {
   Parameter(type, name) {
     return {
-      type: type.sourceString.trim() as Type,
+      type: {
+        value: type.sourceString.trim() as Type,
+        span: span(type.source),
+      },
       name: name.sourceString,
     };
   },
@@ -241,7 +250,10 @@ jackSemantics.addAttribute<SubroutineBody>("subroutineBody", {
 jackSemantics.addAttribute<VarDec>("varDec", {
   VarDec(_a, type, name, rest, _b) {
     return {
-      type: type.sourceString.trim() as Type,
+      type: {
+        value: type.sourceString.trim() as Type,
+        span: span(type.source),
+      },
       names: [
         name.sourceString,
         ...rest.children.map((n) => n.child(1).sourceString),
@@ -281,7 +293,6 @@ jackSemantics.addAttribute<Statement>("statement", {
   DoStatement(_a, call, _b) {
     return { statementType: "doStatement", call: call.term as SubroutineCall };
   },
-
 
   EmptyReturn(_a, _b) {
     return { statementType: "returnStatement" };

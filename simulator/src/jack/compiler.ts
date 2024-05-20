@@ -246,18 +246,18 @@ export class Compiler {
   }
 
   compileClassVarDec(dec: ClassVarDec) {
-    this.validateType(dec.type);
+    this.validateType(dec.type.value, dec.type.span);
     for (const name of dec.names) {
       if (dec.varType == "field") {
         this.globalSymbolTable[name] = {
-          type: dec.type,
+          type: dec.type.value,
           segment: "this",
           index: this.fieldNum,
         };
         this.fieldNum += 1;
       } else {
         this.globalSymbolTable[name] = {
-          type: dec.type,
+          type: dec.type.value,
           segment: "static",
           index: this.staticNum,
         };
@@ -267,10 +267,10 @@ export class Compiler {
   }
 
   compileVarDec(dec: VarDec) {
-    this.validateType(dec.type);
+    this.validateType(dec.type.value, dec.type.span);
     for (const name of dec.names) {
       this.localSymbolTable[name] = {
-        type: dec.type,
+        type: dec.type.value,
         segment: "local",
         index: this.localNum,
       };
@@ -281,9 +281,9 @@ export class Compiler {
   registerArgs(params: Parameter[], offset = false) {
     let argNum = 0;
     for (const param of params) {
-      this.validateType(param.type);
+      this.validateType(param.type.value, param.type.span);
       this.localSymbolTable[param.name] = {
-        type: param.type,
+        type: param.type.value,
         segment: "argument",
         index: argNum + (offset ? 1 : 0), // when compiling a method the first argument is this, so we offset the others by 1
       };
@@ -292,7 +292,10 @@ export class Compiler {
   }
 
   compileSubroutineDec(subroutine: Subroutine) {
-    this.validateReturnType(subroutine.returnType);
+    this.validateReturnType(
+      subroutine.returnType.value,
+      subroutine.returnType.span
+    );
     switch (subroutine.type) {
       case "method":
         this.compileMethod(subroutine);

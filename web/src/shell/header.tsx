@@ -42,6 +42,8 @@ const guideLinks: Record<string, string> = {
   cpu: "https://drive.google.com/file/d/16eHIj78Cpeb0uxXBAvxUPUaIwkrj3NIu/view",
   asm: "https://drive.google.com/file/d/16gy2EDqUqrPIzy-vyX0-M8ObN5HyQa3Y/view",
   vm: "https://drive.google.com/file/d/1IMKD_khjO7iQ673kH9j8qMkyIlMSOtUG/view",
+  compiler:
+    "https://drive.google.com/file/d/1KIxNH148mZET5JGE8Y0fPYVYKesgCH8V/view",
 };
 
 const GUIDE_NOT_AVAILABLE_MESSAGE = "Guide not available for this tool";

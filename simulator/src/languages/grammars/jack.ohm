@@ -1,39 +1,52 @@
 Jack <: Base {
     Root := Class
 
-    Class = "class" jackIdentifier OpenBrace ClassVarDec* SubroutineDec* CloseBrace
+    whitespace = (lineComment | comment | space)
 
-    Type = "int" | "char" | "boolean" | jackIdentifier
+    class = "class" whitespace+
+    Class = class jackIdentifier OpenBrace ClassVarDec* SubroutineDec* CloseBrace
 
-    ClassVarType = "static" | "field"
-    ClassVarDec = ClassVarType Type jackIdentifier TrailingIdentifier* Semi
+    type = ("int" | "char" | "boolean" | jackIdentifier) whitespace+
+
+    classVarType = ("static" | "field") whitespace+
+    ClassVarDec = classVarType type jackIdentifier TrailingIdentifier* Semi
     TrailingIdentifier = Comma jackIdentifier
 
-    ReturnType = Type | "void"
-    SubroutineType = "constructor" | "function" | "method" 
-    SubroutineDec = SubroutineType ReturnType jackIdentifier OpenParen ParameterList CloseParen SubroutineBody
+    void = "void" whitespace+
+    returnType = (type | void) 
+    subroutineType = ("constructor" | "function" | "method") whitespace+
+    SubroutineDec = subroutineType returnType jackIdentifier OpenParen ParameterList CloseParen SubroutineBody
 
 
-    Parameter = Type jackIdentifier
+    Parameter = type jackIdentifier
     Parameters = Parameter TrailingParameter*
     TrailingParameter = Comma Parameter
     ParameterList = Parameters?
 
     SubroutineBody = OpenBrace VarDec* Statement* CloseBrace
 
-    VarDec = "var" Type jackIdentifier TrailingIdentifier* Semi
+    var = "var" whitespace+
+    VarDec = var type jackIdentifier TrailingIdentifier* Semi
 
     Statement = LetStatement | IfStatement | WhileStatement | DoStatement | ReturnStatement
 
-    LetStatement = "let" jackIdentifier ArrayIndex? Equal Expression Semi
+    let = "let" whitespace+
+    LetStatement = let jackIdentifier ArrayIndex? Equal Expression Semi
     ArrayIndex = OpenSquare Expression CloseSquare
 
     IfStatement = "if" OpenParen Expression CloseParen OpenBrace Statement* CloseBrace ElseBlock?
     ElseBlock = "else" OpenBrace Statement* CloseBrace
 
     WhileStatement = "while" OpenParen Expression CloseParen OpenBrace Statement* CloseBrace
-    DoStatement = "do" SubroutineCall Semi
-    ReturnStatement = "return" Expression? Semi
+
+    do = "do" whitespace+
+    DoStatement = do SubroutineCall Semi
+
+    return = "return"
+    returnWithSpace = "return" whitespace+
+    ReturnStatement = EmptyReturn | ReturnValue
+    EmptyReturn = return Semi
+    ReturnValue = returnWithSpace Expression Semi
 
     op = "+" | "-" | "*" | "/" | "&" | "|" | "<" | ">" | "="
     ExpressionPart = op Term

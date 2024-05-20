@@ -186,8 +186,8 @@ jackSemantics.addAttribute<Class>("class", {
 jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
   ClassVarDec(varType, type, name, rest, _) {
     return {
-      varType: varType.sourceString as ClassVarType,
-      type: type.sourceString as Type,
+      varType: varType.sourceString.trim() as ClassVarType,
+      type: type.sourceString.trim() as Type,
       names: [
         name.sourceString,
         ...rest.children.map((n) => n.child(1).sourceString),
@@ -199,8 +199,8 @@ jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
 jackSemantics.addAttribute<Subroutine>("subroutineDec", {
   SubroutineDec(type, returnType, name, _a, parameters, _b, body) {
     return {
-      type: type.sourceString as SubroutineType,
-      returnType: returnType.sourceString as ReturnType,
+      type: type.sourceString.trim() as SubroutineType,
+      returnType: returnType.sourceString.trim() as ReturnType,
       name: { value: name.sourceString, span: span(name.source) },
       parameters: parameters.parameterList,
       body: body.subroutineBody,
@@ -211,7 +211,7 @@ jackSemantics.addAttribute<Subroutine>("subroutineDec", {
 jackSemantics.addAttribute<Parameter>("parameter", {
   Parameter(type, name) {
     return {
-      type: type.sourceString as Type,
+      type: type.sourceString.trim() as Type,
       name: name.sourceString,
     };
   },
@@ -241,7 +241,7 @@ jackSemantics.addAttribute<SubroutineBody>("subroutineBody", {
 jackSemantics.addAttribute<VarDec>("varDec", {
   VarDec(_a, type, name, rest, _b) {
     return {
-      type: type.sourceString as Type,
+      type: type.sourceString.trim() as Type,
       names: [
         name.sourceString,
         ...rest.children.map((n) => n.child(1).sourceString),
@@ -249,7 +249,7 @@ jackSemantics.addAttribute<VarDec>("varDec", {
     };
   },
 });
-``;
+
 jackSemantics.addAttribute<Statement>("statement", {
   LetStatement(_a, name, index, _b, value, _c) {
     return {
@@ -282,10 +282,15 @@ jackSemantics.addAttribute<Statement>("statement", {
     return { statementType: "doStatement", call: call.term as SubroutineCall };
   },
 
-  ReturnStatement(_a, value, _b) {
+
+  EmptyReturn(_a, _b) {
+    return { statementType: "returnStatement" };
+  },
+
+  ReturnValue(_a, value, _b) {
     return {
       statementType: "returnStatement",
-      value: value.children.length > 0 ? value.child(0).expression : undefined,
+      value: value.expression,
     };
   },
 });

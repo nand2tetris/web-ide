@@ -2624,7 +2624,7 @@ function Ball.setDestination 3
     lt
     pop this 9
     goto L0
-    label L1
+label L1
     push this 0
     push argument 1
     lt
@@ -2633,7 +2633,7 @@ function Ball.setDestination 3
     push argument 2
     lt
     pop this 9
-    label L0
+label L0
     push constant 2
     push local 1
     call Math.multiply 2
@@ -2668,7 +2668,7 @@ function Ball.move 0
     add
     pop this 4
     goto L2
-    label L3
+label L3
     push this 4
     push this 6
     add
@@ -2684,14 +2684,14 @@ function Ball.move 0
     add
     pop this 0
     goto L6
-    label L7
+label L7
     push this 1
     push constant 4
     add
     pop this 1
-    label L6
+label L6
     goto L4
-    label L5
+label L5
     push this 7
     not
     if-goto L9
@@ -2700,14 +2700,14 @@ function Ball.move 0
     sub
     pop this 0
     goto L8
-    label L9
+label L9
     push this 1
     push constant 4
     sub
     pop this 1
-    label L8
-    label L4
-    label L2
+label L8
+label L4
+label L2
     push this 8
     not
     if-goto L11
@@ -2719,14 +2719,14 @@ function Ball.move 0
     add
     pop this 1
     goto L12
-    label L13
+label L13
     push this 0
     push constant 4
     add
     pop this 0
-    label L12
+label L12
     goto L10
-    label L11
+label L11
     push this 7
     not
     if-goto L15
@@ -2735,13 +2735,13 @@ function Ball.move 0
     sub
     pop this 1
     goto L14
-    label L15
+label L15
     push this 0
     push constant 4
     sub
     pop this 0
-    label L14
-    label L10
+label L14
+label L10
     push this 0
     push this 10
     gt
@@ -2753,8 +2753,8 @@ function Ball.move 0
     push this 10
     pop this 0
     goto L16
-    label L17
-    label L16
+label L17
+label L16
     push this 0
     push this 11
     lt
@@ -2766,8 +2766,8 @@ function Ball.move 0
     push this 11
     pop this 0
     goto L18
-    label L19
-    label L18
+label L19
+label L18
     push this 1
     push this 12
     gt
@@ -2779,8 +2779,8 @@ function Ball.move 0
     push this 12
     pop this 1
     goto L20
-    label L21
-    label L20
+label L21
+label L20
     push this 1
     push this 13
     lt
@@ -2792,8 +2792,8 @@ function Ball.move 0
     push this 13
     pop this 1
     goto L22
-    label L23
-    label L22
+label L23
+label L22
     push pointer 0
     call Ball.show 1
     pop temp 0
@@ -2818,7 +2818,7 @@ function Ball.bounce 5
     push constant 10
     pop local 4
     goto L24
-    label L25
+label L25
     push this 2
     push constant 0
     lt
@@ -2841,11 +2841,11 @@ function Ball.bounce 5
     push constant 20
     pop local 4
     goto L26
-    label L27
+label L27
     push constant 5
     pop local 4
-    label L26
-    label L24
+label L26
+label L24
     push this 14
     push constant 1
     eq
@@ -2867,7 +2867,7 @@ function Ball.bounce 5
     add
     pop local 1
     goto L28
-    label L29
+label L29
     push this 14
     push constant 2
     eq
@@ -2888,7 +2888,7 @@ function Ball.bounce 5
     add
     pop local 1
     goto L30
-    label L31
+label L31
     push this 14
     push constant 3
     eq
@@ -2910,7 +2910,7 @@ function Ball.bounce 5
     add
     pop local 0
     goto L32
-    label L33
+label L33
     push constant 0
     pop local 1
     push local 2
@@ -2925,9 +2925,9 @@ function Ball.bounce 5
     call Math.multiply 2
     add
     pop local 0
-    label L32
-    label L30
-    label L28
+label L32
+label L30
+label L28
     push pointer 0
     push local 0
     push local 1

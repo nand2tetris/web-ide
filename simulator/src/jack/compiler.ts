@@ -107,30 +107,6 @@ function validateClass(cls: Class): Result<void, CompilationError> {
   return Ok();
 }
 
-export function compileFile(
-  source: string,
-  name?: string
-): Result<string, CompilationError> {
-  const parsed = JACK.parse(source);
-  if (isErr(parsed)) {
-    return parsed;
-  }
-  const cls = Ok(parsed);
-  if (name && cls.name.value != name) {
-    return Err(
-      createError(
-        `Class name ${cls.name.value} doesn't match file name ${name}`,
-        cls.name.span
-      )
-    );
-  }
-  try {
-    return new Compiler().compile(Ok(parsed));
-  } catch (e) {
-    return Err(e as CompilationError);
-  }
-}
-
 interface VariableData {
   type: Type;
   segment: Segment;
@@ -207,11 +183,7 @@ export class Compiler {
   }
 
   write(...lines: string[]) {
-    this.instructions.push(
-      ...lines.map((line) =>
-        line.startsWith("function") ? line : "    ".concat(line)
-      )
-    );
+    this.instructions.push(...lines);
   }
 
   getLabel() {
@@ -232,7 +204,15 @@ export class Compiler {
     for (const subroutine of cls.subroutines) {
       this.compileSubroutineDec(subroutine);
     }
-    return Ok(this.instructions.join("\n"));
+    return Ok(
+      this.instructions
+        .map((inst) =>
+          inst.startsWith("function") || inst.startsWith("label")
+            ? inst
+            : "    ".concat(inst)
+        )
+        .join("\n")
+    );
   }
 
   validateType(type: string, span?: Span) {

@@ -633,7 +633,7 @@ export const compiled = `function Main.main 1
 function Main.convert 3
     push constant 1
     pop local 2
-    label L0
+label L0
     push local 2
     not
     if-goto L1
@@ -665,21 +665,21 @@ function Main.convert 3
     call Memory.poke 2
     pop temp 0
     goto L4
-    label L5
+label L5
     push constant 8000
     push local 1
     add
     push constant 0
     call Memory.poke 2
     pop temp 0
-    label L4
+label L4
     goto L2
-    label L3
+label L3
     push constant 0
     pop local 2
-    label L2
+label L2
     goto L0
-    label L1
+label L1
     push constant 0
     return
 function Main.nextMask 0
@@ -691,14 +691,14 @@ function Main.nextMask 0
     push constant 1
     return
     goto L6
-    label L7
+label L7
     push argument 0
     push constant 2
     call Math.multiply 2
     return
-    label L6
+label L6
 function Main.fillMemory 0
-    label L8
+label L8
     push argument 1
     push constant 0
     gt
@@ -717,6 +717,6 @@ function Main.fillMemory 0
     add
     pop argument 0
     goto L8
-    label L9
+label L9
     push constant 0
     return`;

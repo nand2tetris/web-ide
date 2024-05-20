@@ -1705,8 +1705,8 @@ function Square.incSize 0
     call Square.draw 1
     pop temp 0
     goto L0
-    label L1
-    label L0
+label L1
+label L0
     push constant 0
     return
 function Square.decSize 0
@@ -1728,8 +1728,8 @@ function Square.decSize 0
     call Square.draw 1
     pop temp 0
     goto L2
-    label L3
-    label L2
+label L3
+label L2
     push constant 0
     return
 function Square.moveUp 0
@@ -1775,8 +1775,8 @@ function Square.moveUp 0
     call Screen.drawRectangle 4
     pop temp 0
     goto L4
-    label L5
-    label L4
+label L5
+label L4
     push constant 0
     return
 function Square.moveDown 0
@@ -1824,8 +1824,8 @@ function Square.moveDown 0
     call Screen.drawRectangle 4
     pop temp 0
     goto L6
-    label L7
-    label L6
+label L7
+label L6
     push constant 0
     return
 function Square.moveLeft 0
@@ -1871,8 +1871,8 @@ function Square.moveLeft 0
     call Screen.drawRectangle 4
     pop temp 0
     goto L8
-    label L9
-    label L8
+label L9
+label L8
     push constant 0
     return
 function Square.moveRight 0
@@ -1920,7 +1920,7 @@ function Square.moveRight 0
     call Screen.drawRectangle 4
     pop temp 0
     goto L10
-    label L11
-    label L10
+label L11
+label L10
     push constant 0
     return`;

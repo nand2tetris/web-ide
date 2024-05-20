@@ -34,7 +34,7 @@ const jack = `Jack <: Base {
     ArrayAccess = arrayAccessStart Expression CloseSquare
 
     let = "let" whitespace+
-    LetTarget = jackIdentifier | ArrayAccess
+    LetTarget = ArrayAccess | jackIdentifier
     LetStatement = let LetTarget Equal Expression Semi
 
     IfStatement = "if" OpenParen Expression CloseParen OpenBrace Statement* CloseBrace ElseBlock?

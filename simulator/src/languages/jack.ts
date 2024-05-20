@@ -3,7 +3,6 @@ import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
 const primitives = new Set(["int", "boolean", "char"] as const);
-
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
 
 export function isPrimitive(value: string): value is Primitive {
@@ -262,15 +261,33 @@ jackSemantics.addAttribute<VarDec>("varDec", {
   },
 });
 
+// jackSemantics.addAttribute<string | ArrayAccess>("letTarget", {
+//   LetTarget() {
+//     jackI
+//   }
+// })
+
 jackSemantics.addAttribute<Statement>("statement", {
-  LetStatement(_a, name, index, _b, value, _c) {
-    return {
-      statementType: "letStatement",
-      name: { value: name.sourceString, span: span(name.source) },
-      arrayIndex: index?.child(0)?.child(1)?.expression,
-      value: value.expression,
-      span: span(this.source),
-    };
+  LetStatement(_a, target, _b, value, _c) {
+    if (target.term.termType == "variable") {
+      return {
+        statementType: "letStatement",
+        name: {
+          value: (target.term as Variable).name,
+          span: (target.term as Variable).span,
+        },
+        value: value.expression,
+        span: span(this.source),
+      };
+    } else {
+      return {
+        statementType: "letStatement",
+        name: (target.term as ArrayAccess).name,
+        arrayIndex: (target.term as ArrayAccess).index,
+        value: value.expression,
+        span: span(this.source),
+      };
+    }
   },
 
   IfStatement(_a, _b, condition, _c, _d, body, _e, elseBlock) {
@@ -340,11 +357,12 @@ jackSemantics.addAttribute<Term>("term", {
     };
   },
 
-  ArrayAccess(name, index) {
+  ArrayAccess(start, index, _) {
+    const name = start.child(0);
     return {
       termType: "arrayAccess",
       name: { value: name.sourceString, span: span(name.source) },
-      index: index.child(1).expression,
+      index: index.expression,
       span: span(this.source),
     };
   },

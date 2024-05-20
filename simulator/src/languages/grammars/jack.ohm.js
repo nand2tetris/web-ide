@@ -30,9 +30,12 @@ const jack = `Jack <: Base {
 
     Statement = LetStatement | IfStatement | WhileStatement | DoStatement | ReturnStatement
 
+    arrayAccessStart = jackIdentifier openSquare
+    ArrayAccess = arrayAccessStart Expression CloseSquare
+
     let = "let" whitespace+
-    LetStatement = let jackIdentifier ArrayIndex? Equal Expression Semi
-    ArrayIndex = OpenSquare Expression CloseSquare
+    LetTarget = jackIdentifier | ArrayAccess
+    LetStatement = let LetTarget Equal Expression Semi
 
     IfStatement = "if" OpenParen Expression CloseParen OpenBrace Statement* CloseBrace ElseBlock?
     ElseBlock = "else" OpenBrace Statement* CloseBrace
@@ -56,7 +59,6 @@ const jack = `Jack <: Base {
     stringConstant = doubleQuote (~doubleQuote ~newline any)* doubleQuote
     keywordConstant = "true" | "false" | "null" | "this"
 
-    ArrayAccess = jackIdentifier ArrayIndex
     GroupedExpression = OpenParen Expression CloseParen
 
     unaryOp = "-" | "~"
@@ -64,8 +66,8 @@ const jack = `Jack <: Base {
 
     Term = integerConstant | stringConstant | keywordConstant | SubroutineCall  | ArrayAccess | jackIdentifier | GroupedExpression | UnaryExpression
 
-    CompoundIdentifier = jackIdentifier Dot jackIdentifier
-    SubroutineName = CompoundIdentifier | jackIdentifier
+    compoundIdentifier = jackIdentifier dot jackIdentifier
+    SubroutineName = compoundIdentifier | jackIdentifier
     SubroutineCall = SubroutineName OpenParen ExpressionList CloseParen
 
     ExpressionList = Expressions?

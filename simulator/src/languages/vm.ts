@@ -236,9 +236,12 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
 });
 
 vmSemantics.addAttribute<Vm>("vm", {
-  Vm(lines) {
+  Vm(_, lines, last) {
+    const instructions = lines.children.map((node) => node.instruction) ?? [];
     return {
-      instructions: lines.children.map((n) => n.instruction),
+      instructions: last.child(0)
+        ? [...instructions, last.child(0).instruction]
+        : instructions,
     };
   },
 });

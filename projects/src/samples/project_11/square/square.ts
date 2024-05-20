@@ -115,18 +115,35 @@ class Square {
 export const parsed = {
   name: { value: "Square", span: { start: 284, end: 290, line: 8 } },
   varDecs: [
-    { varType: "field", type: "int", names: ["x", "y"] },
-    { varType: "field", type: "int", names: ["size"] },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 303, end: 307, line: 10 } },
+      names: ["x", "y"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 379, end: 383, line: 11 } },
+      names: ["size"],
+    },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: "Square",
+      returnType: { value: "Square", span: { start: 517, end: 524, line: 14 } },
       name: { value: "new", span: { start: 524, end: 527, line: 14 } },
       parameters: [
-        { type: "int", name: "ax" },
-        { type: "int", name: "ay" },
-        { type: "int", name: "asize" },
+        {
+          type: { value: "int", span: { start: 528, end: 532, line: 14 } },
+          name: "ax",
+        },
+        {
+          type: { value: "int", span: { start: 536, end: 540, line: 14 } },
+          name: "ay",
+        },
+        {
+          type: { value: "int", span: { start: 544, end: 548, line: 14 } },
+          name: "asize",
+        },
       ],
       body: {
         varDecs: [],
@@ -195,7 +212,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 701, end: 706, line: 23 } },
       name: { value: "dispose", span: { start: 706, end: 713, line: 23 } },
       parameters: [],
       body: {
@@ -225,7 +242,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 837, end: 842, line: 29 } },
       name: { value: "draw", span: { start: 842, end: 846, line: 29 } },
       parameters: [],
       body: {
@@ -322,7 +339,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1048, end: 1053, line: 37 } },
       name: { value: "erase", span: { start: 1053, end: 1058, line: 37 } },
       parameters: [],
       body: {
@@ -419,7 +436,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1315, end: 1320, line: 45 } },
       name: { value: "incSize", span: { start: 1320, end: 1327, line: 45 } },
       parameters: [],
       body: {
@@ -554,7 +571,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1558, end: 1563, line: 55 } },
       name: { value: "decSize", span: { start: 1563, end: 1570, line: 55 } },
       parameters: [],
       body: {
@@ -626,7 +643,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1764, end: 1769, line: 65 } },
       name: { value: "moveUp", span: { start: 1769, end: 1775, line: 65 } },
       parameters: [],
       body: {
@@ -861,7 +878,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 2269, end: 2274, line: 79 } },
       name: { value: "moveDown", span: { start: 2274, end: 2282, line: 79 } },
       parameters: [],
       body: {
@@ -1112,7 +1129,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 2639, end: 2644, line: 91 } },
       name: { value: "moveLeft", span: { start: 2644, end: 2652, line: 91 } },
       parameters: [],
       body: {
@@ -1347,7 +1364,10 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: {
+        value: "void",
+        span: { start: 2999, end: 3004, line: 103 },
+      },
       name: { value: "moveRight", span: { start: 3004, end: 3013, line: 103 } },
       parameters: [],
       body: {
@@ -1600,307 +1620,307 @@ export const parsed = {
 };
 
 export const compiled = `function Square.new 0
-push constant 3
-call Memory.alloc 1
-pop pointer 0
-push argument 0
-pop this 0
-push argument 1
-pop this 1
-push argument 2
-pop this 2
-push pointer 0
-call Square.draw 1
-pop temp 0
-push pointer 0
-return
+    push constant 3
+    call Memory.alloc 1
+    pop pointer 0
+    push argument 0
+    pop this 0
+    push argument 1
+    pop this 1
+    push argument 2
+    pop this 2
+    push pointer 0
+    call Square.draw 1
+    pop temp 0
+    push pointer 0
+    return
 function Square.dispose 0
-push argument 0
-pop pointer 0
-push pointer 0
-call Memory.deAlloc 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return
 function Square.draw 0
-push argument 0
-pop pointer 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 0
+    return
 function Square.erase 0
-push argument 0
-pop pointer 0
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 0
+    return
 function Square.incSize 0
-push argument 0
-pop pointer 0
-push this 1
-push this 2
-add
-push constant 254
-lt
-push this 0
-push this 2
-add
-push constant 510
-lt
-and
-not
-if-goto L1
-push pointer 0
-call Square.erase 1
-pop temp 0
-push this 2
-push constant 2
-add
-pop this 2
-push pointer 0
-call Square.draw 1
-pop temp 0
-goto L0
-label L1
-label L0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 1
+    push this 2
+    add
+    push constant 254
+    lt
+    push this 0
+    push this 2
+    add
+    push constant 510
+    lt
+    and
+    not
+    if-goto L1
+    push pointer 0
+    call Square.erase 1
+    pop temp 0
+    push this 2
+    push constant 2
+    add
+    pop this 2
+    push pointer 0
+    call Square.draw 1
+    pop temp 0
+    goto L0
+    label L1
+    label L0
+    push constant 0
+    return
 function Square.decSize 0
-push argument 0
-pop pointer 0
-push this 2
-push constant 2
-gt
-not
-if-goto L3
-push pointer 0
-call Square.erase 1
-pop temp 0
-push this 2
-push constant 2
-sub
-pop this 2
-push pointer 0
-call Square.draw 1
-pop temp 0
-goto L2
-label L3
-label L2
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 2
+    push constant 2
+    gt
+    not
+    if-goto L3
+    push pointer 0
+    call Square.erase 1
+    pop temp 0
+    push this 2
+    push constant 2
+    sub
+    pop this 2
+    push pointer 0
+    call Square.draw 1
+    pop temp 0
+    goto L2
+    label L3
+    label L2
+    push constant 0
+    return
 function Square.moveUp 0
-push argument 0
-pop pointer 0
-push this 1
-push constant 1
-gt
-not
-if-goto L5
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 2
-add
-push constant 1
-sub
-push this 0
-push this 2
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-push this 1
-push constant 2
-sub
-pop this 1
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push constant 1
-add
-call Screen.drawRectangle 4
-pop temp 0
-goto L4
-label L5
-label L4
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 1
+    push constant 1
+    gt
+    not
+    if-goto L5
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 2
+    add
+    push constant 1
+    sub
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push this 1
+    push constant 2
+    sub
+    pop this 1
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push constant 1
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    goto L4
+    label L5
+    label L4
+    push constant 0
+    return
 function Square.moveDown 0
-push argument 0
-pop pointer 0
-push this 1
-push this 2
-add
-push constant 254
-lt
-not
-if-goto L7
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push constant 1
-add
-call Screen.drawRectangle 4
-pop temp 0
-push this 1
-push constant 2
-add
-pop this 1
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 2
-add
-push constant 1
-sub
-push this 0
-push this 2
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-goto L6
-label L7
-label L6
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 1
+    push this 2
+    add
+    push constant 254
+    lt
+    not
+    if-goto L7
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push constant 1
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push this 1
+    push constant 2
+    add
+    pop this 1
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 2
+    add
+    push constant 1
+    sub
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    goto L6
+    label L7
+    label L6
+    push constant 0
+    return
 function Square.moveLeft 0
-push argument 0
-pop pointer 0
-push this 0
-push constant 1
-gt
-not
-if-goto L9
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 2
-add
-push constant 1
-sub
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-push this 0
-push constant 2
-sub
-pop this 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push constant 1
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-goto L8
-label L9
-label L8
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    push constant 1
+    gt
+    not
+    if-goto L9
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 2
+    add
+    push constant 1
+    sub
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push this 0
+    push constant 2
+    sub
+    pop this 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push constant 1
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    goto L8
+    label L9
+    label L8
+    push constant 0
+    return
 function Square.moveRight 0
-push argument 0
-pop pointer 0
-push this 0
-push this 2
-add
-push constant 510
-lt
-not
-if-goto L11
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 1
-push this 0
-push constant 1
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-push this 0
-push constant 2
-add
-pop this 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push this 0
-push this 2
-add
-push constant 1
-sub
-push this 1
-push this 0
-push this 2
-add
-push this 1
-push this 2
-add
-call Screen.drawRectangle 4
-pop temp 0
-goto L10
-label L11
-label L10
-push constant 0
-return`;
+    push argument 0
+    pop pointer 0
+    push this 0
+    push this 2
+    add
+    push constant 510
+    lt
+    not
+    if-goto L11
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 1
+    push this 0
+    push constant 1
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push this 0
+    push constant 2
+    add
+    pop this 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push this 0
+    push this 2
+    add
+    push constant 1
+    sub
+    push this 1
+    push this 0
+    push this 2
+    add
+    push this 1
+    push this 2
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    goto L10
+    label L11
+    label L10
+    push constant 0
+    return`;

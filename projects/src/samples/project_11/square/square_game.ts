@@ -78,13 +78,24 @@ class SquareGame {
 export const parsed = {
   name: { value: "SquareGame", span: { start: 712, end: 722, line: 15 } },
   varDecs: [
-    { varType: "field", type: "Square", names: ["square"] },
-    { varType: "field", type: "int", names: ["direction"] },
+    {
+      varType: "field",
+      type: { value: "Square", span: { start: 734, end: 741, line: 16 } },
+      names: ["square"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 785, end: 789, line: 17 } },
+      names: ["direction"],
+    },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: "SquareGame",
+      returnType: {
+        value: "SquareGame",
+        span: { start: 957, end: 968, line: 21 },
+      },
       name: { value: "new", span: { start: 968, end: 971, line: 21 } },
       parameters: [],
       body: {
@@ -153,7 +164,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1188, end: 1193, line: 29 } },
       name: { value: "dispose", span: { start: 1193, end: 1200, line: 29 } },
       parameters: [],
       body: {
@@ -195,7 +206,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1346, end: 1351, line: 36 } },
       name: { value: "moveSquare", span: { start: 1351, end: 1361, line: 36 } },
       parameters: [],
       body: {
@@ -341,13 +352,22 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1734, end: 1739, line: 46 } },
       name: { value: "run", span: { start: 1739, end: 1742, line: 46 } },
       parameters: [],
       body: {
         varDecs: [
-          { type: "char", names: ["key"] },
-          { type: "boolean", names: ["exit"] },
+          {
+            type: { value: "char", span: { start: 1757, end: 1762, line: 47 } },
+            names: ["key"],
+          },
+          {
+            type: {
+              value: "boolean",
+              span: { start: 1819, end: 1827, line: 48 },
+            },
+            names: ["exit"],
+          },
         ],
         statements: [
           {
@@ -727,191 +747,191 @@ export const parsed = {
 };
 
 export const compiled = `function SquareGame.new 0
-push constant 2
-call Memory.alloc 1
-pop pointer 0
-push constant 0
-push constant 0
-push constant 30
-call Square.new 3
-pop this 0
-push constant 0
-pop this 1
-push pointer 0
-return
+    push constant 2
+    call Memory.alloc 1
+    pop pointer 0
+    push constant 0
+    push constant 0
+    push constant 30
+    call Square.new 3
+    pop this 0
+    push constant 0
+    pop this 1
+    push pointer 0
+    return
 function SquareGame.dispose 0
-push argument 0
-pop pointer 0
-push this 0
-call Square.dispose 1
-pop temp 0
-push pointer 0
-call Memory.deAlloc 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    call Square.dispose 1
+    pop temp 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return
 function SquareGame.moveSquare 0
-push argument 0
-pop pointer 0
-push this 1
-push constant 1
-eq
-not
-if-goto L1
-push this 0
-call Square.moveUp 1
-pop temp 0
-goto L0
-label L1
-label L0
-push this 1
-push constant 2
-eq
-not
-if-goto L3
-push this 0
-call Square.moveDown 1
-pop temp 0
-goto L2
-label L3
-label L2
-push this 1
-push constant 3
-eq
-not
-if-goto L5
-push this 0
-call Square.moveLeft 1
-pop temp 0
-goto L4
-label L5
-label L4
-push this 1
-push constant 4
-eq
-not
-if-goto L7
-push this 0
-call Square.moveRight 1
-pop temp 0
-goto L6
-label L7
-label L6
-push constant 5
-call Sys.wait 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 1
+    push constant 1
+    eq
+    not
+    if-goto L1
+    push this 0
+    call Square.moveUp 1
+    pop temp 0
+    goto L0
+    label L1
+    label L0
+    push this 1
+    push constant 2
+    eq
+    not
+    if-goto L3
+    push this 0
+    call Square.moveDown 1
+    pop temp 0
+    goto L2
+    label L3
+    label L2
+    push this 1
+    push constant 3
+    eq
+    not
+    if-goto L5
+    push this 0
+    call Square.moveLeft 1
+    pop temp 0
+    goto L4
+    label L5
+    label L4
+    push this 1
+    push constant 4
+    eq
+    not
+    if-goto L7
+    push this 0
+    call Square.moveRight 1
+    pop temp 0
+    goto L6
+    label L7
+    label L6
+    push constant 5
+    call Sys.wait 1
+    pop temp 0
+    push constant 0
+    return
 function SquareGame.run 2
-push argument 0
-pop pointer 0
-push constant 0
-pop local 1
-label L8
-push local 1
-not
-not
-if-goto L9
-label L10
-push local 0
-push constant 0
-eq
-not
-if-goto L11
-call Keyboard.keyPressed 0
-pop local 0
-push pointer 0
-call SquareGame.moveSquare 1
-pop temp 0
-goto L10
-label L11
-push local 0
-push constant 81
-eq
-not
-if-goto L13
-push constant 1
-pop local 1
-goto L12
-label L13
-label L12
-push local 0
-push constant 90
-eq
-not
-if-goto L15
-push this 0
-call Square.decSize 1
-pop temp 0
-goto L14
-label L15
-label L14
-push local 0
-push constant 88
-eq
-not
-if-goto L17
-push this 0
-call Square.incSize 1
-pop temp 0
-goto L16
-label L17
-label L16
-push local 0
-push constant 131
-eq
-not
-if-goto L19
-push constant 1
-pop this 1
-goto L18
-label L19
-label L18
-push local 0
-push constant 133
-eq
-not
-if-goto L21
-push constant 2
-pop this 1
-goto L20
-label L21
-label L20
-push local 0
-push constant 130
-eq
-not
-if-goto L23
-push constant 3
-pop this 1
-goto L22
-label L23
-label L22
-push local 0
-push constant 132
-eq
-not
-if-goto L25
-push constant 4
-pop this 1
-goto L24
-label L25
-label L24
-label L26
-push local 0
-push constant 0
-eq
-not
-not
-if-goto L27
-call Keyboard.keyPressed 0
-pop local 0
-push pointer 0
-call SquareGame.moveSquare 1
-pop temp 0
-goto L26
-label L27
-goto L8
-label L9
-push constant 0
-return`;
+    push argument 0
+    pop pointer 0
+    push constant 0
+    pop local 1
+    label L8
+    push local 1
+    not
+    not
+    if-goto L9
+    label L10
+    push local 0
+    push constant 0
+    eq
+    not
+    if-goto L11
+    call Keyboard.keyPressed 0
+    pop local 0
+    push pointer 0
+    call SquareGame.moveSquare 1
+    pop temp 0
+    goto L10
+    label L11
+    push local 0
+    push constant 81
+    eq
+    not
+    if-goto L13
+    push constant 1
+    pop local 1
+    goto L12
+    label L13
+    label L12
+    push local 0
+    push constant 90
+    eq
+    not
+    if-goto L15
+    push this 0
+    call Square.decSize 1
+    pop temp 0
+    goto L14
+    label L15
+    label L14
+    push local 0
+    push constant 88
+    eq
+    not
+    if-goto L17
+    push this 0
+    call Square.incSize 1
+    pop temp 0
+    goto L16
+    label L17
+    label L16
+    push local 0
+    push constant 131
+    eq
+    not
+    if-goto L19
+    push constant 1
+    pop this 1
+    goto L18
+    label L19
+    label L18
+    push local 0
+    push constant 133
+    eq
+    not
+    if-goto L21
+    push constant 2
+    pop this 1
+    goto L20
+    label L21
+    label L20
+    push local 0
+    push constant 130
+    eq
+    not
+    if-goto L23
+    push constant 3
+    pop this 1
+    goto L22
+    label L23
+    label L22
+    push local 0
+    push constant 132
+    eq
+    not
+    if-goto L25
+    push constant 4
+    pop this 1
+    goto L24
+    label L25
+    label L24
+    label L26
+    push local 0
+    push constant 0
+    eq
+    not
+    not
+    if-goto L27
+    call Keyboard.keyPressed 0
+    pop local 0
+    push pointer 0
+    call SquareGame.moveSquare 1
+    pop temp 0
+    goto L26
+    label L27
+    goto L8
+    label L9
+    push constant 0
+    return`;

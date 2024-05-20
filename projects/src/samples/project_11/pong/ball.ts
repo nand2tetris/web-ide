@@ -205,33 +205,67 @@ class Ball {
 export const parsed = {
   name: { value: "Ball", span: { start: 459, end: 463, line: 11 } },
   varDecs: [
-    { varType: "field", type: "int", names: ["x", "y"] },
-    { varType: "field", type: "int", names: ["lengthx", "lengthy"] },
-    { varType: "field", type: "int", names: ["d", "straightD", "diagonalD"] },
     {
       varType: "field",
-      type: "boolean",
+      type: { value: "int", span: { start: 477, end: 481, line: 13 } },
+      names: ["x", "y"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 553, end: 557, line: 14 } },
+      names: ["lengthx", "lengthy"],
+    },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 632, end: 636, line: 16 } },
+      names: ["d", "straightD", "diagonalD"],
+    },
+    {
+      varType: "field",
+      type: { value: "boolean", span: { start: 720, end: 728, line: 17 } },
       names: ["invert", "positivex", "positivey"],
     },
     {
       varType: "field",
-      type: "int",
+      type: { value: "int", span: { start: 784, end: 788, line: 19 } },
       names: ["leftWall", "rightWall", "topWall", "bottomWall"],
     },
-    { varType: "field", type: "int", names: ["wall"] },
+    {
+      varType: "field",
+      type: { value: "int", span: { start: 863, end: 867, line: 21 } },
+      names: ["wall"],
+    },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: "Ball",
+      returnType: { value: "Ball", span: { start: 1023, end: 1028, line: 24 } },
       name: { value: "new", span: { start: 1028, end: 1031, line: 24 } },
       parameters: [
-        { type: "int", name: "Ax" },
-        { type: "int", name: "Ay" },
-        { type: "int", name: "AleftWall" },
-        { type: "int", name: "ArightWall" },
-        { type: "int", name: "AtopWall" },
-        { type: "int", name: "AbottomWall" },
+        {
+          type: { value: "int", span: { start: 1032, end: 1036, line: 24 } },
+          name: "Ax",
+        },
+        {
+          type: { value: "int", span: { start: 1040, end: 1044, line: 24 } },
+          name: "Ay",
+        },
+        {
+          type: { value: "int", span: { start: 1073, end: 1077, line: 25 } },
+          name: "AleftWall",
+        },
+        {
+          type: { value: "int", span: { start: 1088, end: 1092, line: 25 } },
+          name: "ArightWall",
+        },
+        {
+          type: { value: "int", span: { start: 1104, end: 1108, line: 25 } },
+          name: "AtopWall",
+        },
+        {
+          type: { value: "int", span: { start: 1118, end: 1122, line: 25 } },
+          name: "AbottomWall",
+        },
       ],
       body: {
         varDecs: [],
@@ -371,7 +405,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1485, end: 1490, line: 38 } },
       name: { value: "dispose", span: { start: 1490, end: 1497, line: 38 } },
       parameters: [],
       body: {
@@ -401,7 +435,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1596, end: 1601, line: 44 } },
       name: { value: "show", span: { start: 1601, end: 1605, line: 44 } },
       parameters: [],
       body: {
@@ -443,7 +477,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1724, end: 1729, line: 51 } },
       name: { value: "hide", span: { start: 1729, end: 1733, line: 51 } },
       parameters: [],
       body: {
@@ -485,7 +519,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 1851, end: 1856, line: 58 } },
       name: { value: "draw", span: { start: 1856, end: 1860, line: 58 } },
       parameters: [],
       body: {
@@ -550,7 +584,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 1989, end: 1993, line: 64 } },
       name: { value: "getLeft", span: { start: 1993, end: 2000, line: 64 } },
       parameters: [],
       body: {
@@ -573,7 +607,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 2083, end: 2087, line: 69 } },
       name: { value: "getRight", span: { start: 2087, end: 2095, line: 69 } },
       parameters: [],
       body: {
@@ -598,17 +632,28 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 2193, end: 2198, line: 74 } },
       name: {
         value: "setDestination",
         span: { start: 2198, end: 2212, line: 74 },
       },
       parameters: [
-        { type: "int", name: "destx" },
-        { type: "int", name: "desty" },
+        {
+          type: { value: "int", span: { start: 2213, end: 2217, line: 74 } },
+          name: "destx",
+        },
+        {
+          type: { value: "int", span: { start: 2224, end: 2228, line: 74 } },
+          name: "desty",
+        },
       ],
       body: {
-        varDecs: [{ type: "int", names: ["dx", "dy", "temp"] }],
+        varDecs: [
+          {
+            type: { value: "int", span: { start: 2249, end: 2253, line: 75 } },
+            names: ["dx", "dy", "temp"],
+          },
+        ],
         statements: [
           {
             statementType: "letStatement",
@@ -1051,7 +1096,7 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "int",
+      returnType: { value: "int", span: { start: 3129, end: 3133, line: 107 } },
       name: { value: "move", span: { start: 3133, end: 3137, line: 107 } },
       parameters: [],
       body: {
@@ -1700,13 +1745,21 @@ export const parsed = {
     },
     {
       type: "method",
-      returnType: "void",
+      returnType: {
+        value: "void",
+        span: { start: 4389, end: 4394, line: 161 },
+      },
       name: { value: "bounce", span: { start: 4394, end: 4400, line: 161 } },
-      parameters: [{ type: "int", name: "bouncingDirection" }],
+      parameters: [
+        {
+          type: { value: "int", span: { start: 4401, end: 4405, line: 161 } },
+          name: "bouncingDirection",
+        },
+      ],
       body: {
         varDecs: [
           {
-            type: "int",
+            type: { value: "int", span: { start: 4438, end: 4442, line: 162 } },
             names: ["newx", "newy", "divLengthx", "divLengthy", "factor"],
           },
         ],
@@ -2449,436 +2502,436 @@ export const parsed = {
 };
 
 export const compiled = `function Ball.new 0
-push constant 15
-call Memory.alloc 1
-pop pointer 0
-push argument 0
-pop this 0
-push argument 1
-pop this 1
-push argument 2
-pop this 10
-push argument 3
-push constant 6
-sub
-pop this 11
-push argument 4
-pop this 12
-push argument 5
-push constant 6
-sub
-pop this 13
-push constant 0
-pop this 14
-push pointer 0
-call Ball.show 1
-pop temp 0
-push pointer 0
-return
+    push constant 15
+    call Memory.alloc 1
+    pop pointer 0
+    push argument 0
+    pop this 0
+    push argument 1
+    pop this 1
+    push argument 2
+    pop this 10
+    push argument 3
+    push constant 6
+    sub
+    pop this 11
+    push argument 4
+    pop this 12
+    push argument 5
+    push constant 6
+    sub
+    pop this 13
+    push constant 0
+    pop this 14
+    push pointer 0
+    call Ball.show 1
+    pop temp 0
+    push pointer 0
+    return
 function Ball.dispose 0
-push argument 0
-pop pointer 0
-push pointer 0
-call Memory.deAlloc 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Memory.deAlloc 1
+    pop temp 0
+    push constant 0
+    return
 function Ball.show 0
-push argument 0
-pop pointer 0
-push constant 1
-call Screen.setColor 1
-pop temp 0
-push pointer 0
-call Ball.draw 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push constant 1
+    call Screen.setColor 1
+    pop temp 0
+    push pointer 0
+    call Ball.draw 1
+    pop temp 0
+    push constant 0
+    return
 function Ball.hide 0
-push argument 0
-pop pointer 0
-push constant 0
-call Screen.setColor 1
-pop temp 0
-push pointer 0
-call Ball.draw 1
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push constant 0
+    call Screen.setColor 1
+    pop temp 0
+    push pointer 0
+    call Ball.draw 1
+    pop temp 0
+    push constant 0
+    return
 function Ball.draw 0
-push argument 0
-pop pointer 0
-push this 0
-push this 1
-push this 0
-push constant 5
-add
-push this 1
-push constant 5
-add
-call Screen.drawRectangle 4
-pop temp 0
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    push this 1
+    push this 0
+    push constant 5
+    add
+    push this 1
+    push constant 5
+    add
+    call Screen.drawRectangle 4
+    pop temp 0
+    push constant 0
+    return
 function Ball.getLeft 0
-push argument 0
-pop pointer 0
-push this 0
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    return
 function Ball.getRight 0
-push argument 0
-pop pointer 0
-push this 0
-push constant 5
-add
-return
+    push argument 0
+    pop pointer 0
+    push this 0
+    push constant 5
+    add
+    return
 function Ball.setDestination 3
-push argument 0
-pop pointer 0
-push argument 1
-push this 0
-sub
-pop this 2
-push argument 2
-push this 1
-sub
-pop this 3
-push this 2
-call Math.abs 1
-pop local 0
-push this 3
-call Math.abs 1
-pop local 1
-push local 0
-push local 1
-lt
-pop this 7
-push this 7
-not
-if-goto L1
-push local 0
-pop local 2
-push local 1
-pop local 0
-push local 2
-pop local 1
-push this 1
-push argument 2
-lt
-pop this 8
-push this 0
-push argument 1
-lt
-pop this 9
-goto L0
-label L1
-push this 0
-push argument 1
-lt
-pop this 8
-push this 1
-push argument 2
-lt
-pop this 9
-label L0
-push constant 2
-push local 1
-call Math.multiply 2
-push local 0
-sub
-pop this 4
-push constant 2
-push local 1
-call Math.multiply 2
-pop this 5
-push constant 2
-push local 1
-push local 0
-sub
-call Math.multiply 2
-pop this 6
-push constant 0
-return
+    push argument 0
+    pop pointer 0
+    push argument 1
+    push this 0
+    sub
+    pop this 2
+    push argument 2
+    push this 1
+    sub
+    pop this 3
+    push this 2
+    call Math.abs 1
+    pop local 0
+    push this 3
+    call Math.abs 1
+    pop local 1
+    push local 0
+    push local 1
+    lt
+    pop this 7
+    push this 7
+    not
+    if-goto L1
+    push local 0
+    pop local 2
+    push local 1
+    pop local 0
+    push local 2
+    pop local 1
+    push this 1
+    push argument 2
+    lt
+    pop this 8
+    push this 0
+    push argument 1
+    lt
+    pop this 9
+    goto L0
+    label L1
+    push this 0
+    push argument 1
+    lt
+    pop this 8
+    push this 1
+    push argument 2
+    lt
+    pop this 9
+    label L0
+    push constant 2
+    push local 1
+    call Math.multiply 2
+    push local 0
+    sub
+    pop this 4
+    push constant 2
+    push local 1
+    call Math.multiply 2
+    pop this 5
+    push constant 2
+    push local 1
+    push local 0
+    sub
+    call Math.multiply 2
+    pop this 6
+    push constant 0
+    return
 function Ball.move 0
-push argument 0
-pop pointer 0
-push pointer 0
-call Ball.hide 1
-pop temp 0
-push this 4
-push constant 0
-lt
-not
-if-goto L3
-push this 4
-push this 5
-add
-pop this 4
-goto L2
-label L3
-push this 4
-push this 6
-add
-pop this 4
-push this 9
-not
-if-goto L5
-push this 7
-not
-if-goto L7
-push this 0
-push constant 4
-add
-pop this 0
-goto L6
-label L7
-push this 1
-push constant 4
-add
-pop this 1
-label L6
-goto L4
-label L5
-push this 7
-not
-if-goto L9
-push this 0
-push constant 4
-sub
-pop this 0
-goto L8
-label L9
-push this 1
-push constant 4
-sub
-pop this 1
-label L8
-label L4
-label L2
-push this 8
-not
-if-goto L11
-push this 7
-not
-if-goto L13
-push this 1
-push constant 4
-add
-pop this 1
-goto L12
-label L13
-push this 0
-push constant 4
-add
-pop this 0
-label L12
-goto L10
-label L11
-push this 7
-not
-if-goto L15
-push this 1
-push constant 4
-sub
-pop this 1
-goto L14
-label L15
-push this 0
-push constant 4
-sub
-pop this 0
-label L14
-label L10
-push this 0
-push this 10
-gt
-not
-not
-if-goto L17
-push constant 1
-pop this 14
-push this 10
-pop this 0
-goto L16
-label L17
-label L16
-push this 0
-push this 11
-lt
-not
-not
-if-goto L19
-push constant 2
-pop this 14
-push this 11
-pop this 0
-goto L18
-label L19
-label L18
-push this 1
-push this 12
-gt
-not
-not
-if-goto L21
-push constant 3
-pop this 14
-push this 12
-pop this 1
-goto L20
-label L21
-label L20
-push this 1
-push this 13
-lt
-not
-not
-if-goto L23
-push constant 4
-pop this 14
-push this 13
-pop this 1
-goto L22
-label L23
-label L22
-push pointer 0
-call Ball.show 1
-pop temp 0
-push this 14
-return
+    push argument 0
+    pop pointer 0
+    push pointer 0
+    call Ball.hide 1
+    pop temp 0
+    push this 4
+    push constant 0
+    lt
+    not
+    if-goto L3
+    push this 4
+    push this 5
+    add
+    pop this 4
+    goto L2
+    label L3
+    push this 4
+    push this 6
+    add
+    pop this 4
+    push this 9
+    not
+    if-goto L5
+    push this 7
+    not
+    if-goto L7
+    push this 0
+    push constant 4
+    add
+    pop this 0
+    goto L6
+    label L7
+    push this 1
+    push constant 4
+    add
+    pop this 1
+    label L6
+    goto L4
+    label L5
+    push this 7
+    not
+    if-goto L9
+    push this 0
+    push constant 4
+    sub
+    pop this 0
+    goto L8
+    label L9
+    push this 1
+    push constant 4
+    sub
+    pop this 1
+    label L8
+    label L4
+    label L2
+    push this 8
+    not
+    if-goto L11
+    push this 7
+    not
+    if-goto L13
+    push this 1
+    push constant 4
+    add
+    pop this 1
+    goto L12
+    label L13
+    push this 0
+    push constant 4
+    add
+    pop this 0
+    label L12
+    goto L10
+    label L11
+    push this 7
+    not
+    if-goto L15
+    push this 1
+    push constant 4
+    sub
+    pop this 1
+    goto L14
+    label L15
+    push this 0
+    push constant 4
+    sub
+    pop this 0
+    label L14
+    label L10
+    push this 0
+    push this 10
+    gt
+    not
+    not
+    if-goto L17
+    push constant 1
+    pop this 14
+    push this 10
+    pop this 0
+    goto L16
+    label L17
+    label L16
+    push this 0
+    push this 11
+    lt
+    not
+    not
+    if-goto L19
+    push constant 2
+    pop this 14
+    push this 11
+    pop this 0
+    goto L18
+    label L19
+    label L18
+    push this 1
+    push this 12
+    gt
+    not
+    not
+    if-goto L21
+    push constant 3
+    pop this 14
+    push this 12
+    pop this 1
+    goto L20
+    label L21
+    label L20
+    push this 1
+    push this 13
+    lt
+    not
+    not
+    if-goto L23
+    push constant 4
+    pop this 14
+    push this 13
+    pop this 1
+    goto L22
+    label L23
+    label L22
+    push pointer 0
+    call Ball.show 1
+    pop temp 0
+    push this 14
+    return
 function Ball.bounce 5
-push argument 0
-pop pointer 0
-push this 2
-push constant 10
-call Math.divide 2
-pop local 2
-push this 3
-push constant 10
-call Math.divide 2
-pop local 3
-push argument 1
-push constant 0
-eq
-not
-if-goto L25
-push constant 10
-pop local 4
-goto L24
-label L25
-push this 2
-push constant 0
-lt
-not
-push argument 1
-push constant 1
-eq
-and
-push this 2
-push constant 0
-lt
-push argument 1
-push constant 1
-neg
-eq
-and
-or
-not
-if-goto L27
-push constant 20
-pop local 4
-goto L26
-label L27
-push constant 5
-pop local 4
-label L26
-label L24
-push this 14
-push constant 1
-eq
-not
-if-goto L29
-push constant 506
-pop local 0
-push local 3
-push constant 50
-neg
-call Math.multiply 2
-push local 2
-call Math.divide 2
-pop local 1
-push this 1
-push local 1
-push local 4
-call Math.multiply 2
-add
-pop local 1
-goto L28
-label L29
-push this 14
-push constant 2
-eq
-not
-if-goto L31
-push constant 0
-pop local 0
-push local 3
-push constant 50
-call Math.multiply 2
-push local 2
-call Math.divide 2
-pop local 1
-push this 1
-push local 1
-push local 4
-call Math.multiply 2
-add
-pop local 1
-goto L30
-label L31
-push this 14
-push constant 3
-eq
-not
-if-goto L33
-push constant 250
-pop local 1
-push local 2
-push constant 25
-neg
-call Math.multiply 2
-push local 3
-call Math.divide 2
-pop local 0
-push this 0
-push local 0
-push local 4
-call Math.multiply 2
-add
-pop local 0
-goto L32
-label L33
-push constant 0
-pop local 1
-push local 2
-push constant 25
-call Math.multiply 2
-push local 3
-call Math.divide 2
-pop local 0
-push this 0
-push local 0
-push local 4
-call Math.multiply 2
-add
-pop local 0
-label L32
-label L30
-label L28
-push pointer 0
-push local 0
-push local 1
-call Ball.setDestination 3
-pop temp 0
-push constant 0
-return`;
+    push argument 0
+    pop pointer 0
+    push this 2
+    push constant 10
+    call Math.divide 2
+    pop local 2
+    push this 3
+    push constant 10
+    call Math.divide 2
+    pop local 3
+    push argument 1
+    push constant 0
+    eq
+    not
+    if-goto L25
+    push constant 10
+    pop local 4
+    goto L24
+    label L25
+    push this 2
+    push constant 0
+    lt
+    not
+    push argument 1
+    push constant 1
+    eq
+    and
+    push this 2
+    push constant 0
+    lt
+    push argument 1
+    push constant 1
+    neg
+    eq
+    and
+    or
+    not
+    if-goto L27
+    push constant 20
+    pop local 4
+    goto L26
+    label L27
+    push constant 5
+    pop local 4
+    label L26
+    label L24
+    push this 14
+    push constant 1
+    eq
+    not
+    if-goto L29
+    push constant 506
+    pop local 0
+    push local 3
+    push constant 50
+    neg
+    call Math.multiply 2
+    push local 2
+    call Math.divide 2
+    pop local 1
+    push this 1
+    push local 1
+    push local 4
+    call Math.multiply 2
+    add
+    pop local 1
+    goto L28
+    label L29
+    push this 14
+    push constant 2
+    eq
+    not
+    if-goto L31
+    push constant 0
+    pop local 0
+    push local 3
+    push constant 50
+    call Math.multiply 2
+    push local 2
+    call Math.divide 2
+    pop local 1
+    push this 1
+    push local 1
+    push local 4
+    call Math.multiply 2
+    add
+    pop local 1
+    goto L30
+    label L31
+    push this 14
+    push constant 3
+    eq
+    not
+    if-goto L33
+    push constant 250
+    pop local 1
+    push local 2
+    push constant 25
+    neg
+    call Math.multiply 2
+    push local 3
+    call Math.divide 2
+    pop local 0
+    push this 0
+    push local 0
+    push local 4
+    call Math.multiply 2
+    add
+    pop local 0
+    goto L32
+    label L33
+    push constant 0
+    pop local 1
+    push local 2
+    push constant 25
+    call Math.multiply 2
+    push local 3
+    call Math.divide 2
+    pop local 0
+    push this 0
+    push local 0
+    push local 4
+    call Math.multiply 2
+    add
+    pop local 0
+    label L32
+    label L30
+    label L28
+    push pointer 0
+    push local 0
+    push local 1
+    call Ball.setDestination 3
+    pop temp 0
+    push constant 0
+    return`;

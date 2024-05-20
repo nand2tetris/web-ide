@@ -20,11 +20,19 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: "void",
+      returnType: { value: "void", span: { start: 263, end: 268, line: 8 } },
       name: { value: "main", span: { start: 268, end: 272, line: 8 } },
       parameters: [],
       body: {
-        varDecs: [{ type: "SquareGame", names: ["game"] }],
+        varDecs: [
+          {
+            type: {
+              value: "SquareGame",
+              span: { start: 289, end: 300, line: 9 },
+            },
+            names: ["game"],
+          },
+        ],
         statements: [
           {
             statementType: "letStatement",
@@ -76,13 +84,13 @@ export const parsed = {
 };
 
 export const compiled = `function Main.main 1
-call SquareGame.new 0
-pop local 0
-push local 0
-call SquareGame.run 1
-pop temp 0
-push local 0
-call SquareGame.dispose 1
-pop temp 0
-push constant 0
-return`;
+    call SquareGame.new 0
+    pop local 0
+    push local 0
+    call SquareGame.run 1
+    pop temp 0
+    push local 0
+    call SquareGame.dispose 1
+    pop temp 0
+    push constant 0
+    return`;

@@ -26,7 +26,7 @@ import {
   isBuiltinOnly,
   useChipPageStore,
 } from "@nand2tetris/components/stores/chip.store.js";
-import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
+import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import JSZip from "jszip";

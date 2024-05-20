@@ -1,14 +1,15 @@
 import { useBaseContext } from "@nand2tetris/components/stores/base.context";
 import { DiffTable } from "@nand2tetris/components/difftable";
-import { Assignments, ParsedPath } from "@nand2tetris/projects/index.js";
 import { runTests } from "@nand2tetris/simulator/projects/runner.js";
 import { Trans } from "@lingui/macro";
 import { ChangeEventHandler, useCallback, useState } from "react";
+import { AssignmentStubs } from "@nand2tetris/projects/base.js";
+import type { ParsedPath } from "path";
 // import { parse, ParsedPath } from "node:path";
 
 function hasTest({ name, ext }: { name: string; ext: string }) {
   return (
-    Assignments[name as keyof typeof Assignments] !== undefined &&
+    AssignmentStubs[name as keyof typeof AssignmentStubs] !== undefined &&
     ext === ".hdl"
   );
 }
@@ -38,6 +39,7 @@ const TestResult = (props: {
 );
 
 async function loadAssignment(file: ParsedPath & { file?: File }) {
+  const { Assignments } = await import("@nand2tetris/projects/full.js");
   const assignment = Assignments[file.name as keyof typeof Assignments];
   const hdl = (await file.file?.text()) ?? "";
   const tst = assignment[

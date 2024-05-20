@@ -5,7 +5,7 @@ import {
   isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { FIBONACCI } from "@nand2tetris/projects/samples/vm.js";
+import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,

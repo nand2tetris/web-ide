@@ -32,6 +32,10 @@ import {
 import { Segment } from "../languages/vm.js";
 import { VM_BUILTINS } from "../vm/builtins.js";
 
+function isOsType(name: string): boolean {
+  return name == "String" || name == "Array";
+}
+
 function isError(value: unknown): value is CompilationError {
   return (value as any).message != undefined;
 }
@@ -232,7 +236,7 @@ export class Compiler {
   }
 
   validateType(type: string, span?: Span) {
-    if (isPrimitive(type) || this.classes[type]) {
+    if (isPrimitive(type) || isOsType(type) || this.classes[type]) {
       return;
     }
     throw createError(`Unknown type ${type}`, span);

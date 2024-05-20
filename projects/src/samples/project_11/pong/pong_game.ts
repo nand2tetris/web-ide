@@ -1675,12 +1675,12 @@ function PongGame.getInstance 0
 function PongGame.run 1
     push argument 0
     pop pointer 0
-    label L0
+label L0
     push this 3
     not
     not
     if-goto L1
-    label L2
+label L2
     push local 0
     push constant 0
     eq
@@ -1701,7 +1701,7 @@ function PongGame.run 1
     call Sys.wait 1
     pop temp 0
     goto L2
-    label L3
+label L3
     push local 0
     push constant 130
     eq
@@ -1712,7 +1712,7 @@ function PongGame.run 1
     call Bat.setDirection 2
     pop temp 0
     goto L4
-    label L5
+label L5
     push local 0
     push constant 132
     eq
@@ -1723,7 +1723,7 @@ function PongGame.run 1
     call Bat.setDirection 2
     pop temp 0
     goto L6
-    label L7
+label L7
     push local 0
     push constant 140
     eq
@@ -1732,11 +1732,11 @@ function PongGame.run 1
     push constant 1
     pop this 3
     goto L8
-    label L9
-    label L8
-    label L6
-    label L4
-    label L10
+label L9
+label L8
+label L6
+label L4
+label L10
     push local 0
     push constant 0
     eq
@@ -1758,9 +1758,9 @@ function PongGame.run 1
     call Sys.wait 1
     pop temp 0
     goto L10
-    label L11
+label L11
     goto L0
-    label L1
+label L1
     push this 3
     not
     if-goto L13
@@ -1791,8 +1791,8 @@ function PongGame.run 1
     call Output.printString 1
     pop temp 0
     goto L12
-    label L13
-    label L12
+label L13
+label L12
     push constant 0
     return
 function PongGame.moveBall 5
@@ -1855,7 +1855,7 @@ function PongGame.moveBall 5
     neg
     pop local 0
     goto L20
-    label L21
+label L21
     push local 3
     push local 2
     push constant 10
@@ -1866,9 +1866,9 @@ function PongGame.moveBall 5
     push constant 1
     pop local 0
     goto L22
-    label L23
-    label L22
-    label L20
+label L23
+label L22
+label L20
     push this 6
     push constant 2
     sub
@@ -1889,17 +1889,17 @@ function PongGame.moveBall 5
     call Output.printInt 1
     pop temp 0
     goto L18
-    label L19
-    label L18
+label L19
+label L18
     goto L16
-    label L17
-    label L16
+label L17
+label L16
     push this 1
     push local 0
     call Ball.bounce 2
     pop temp 0
     goto L14
-    label L15
-    label L14
+label L15
+label L14
     push constant 0
     return`;

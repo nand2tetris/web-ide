@@ -1255,8 +1255,8 @@ function Bat.move 0
     push constant 0
     pop this 0
     goto L2
-    label L3
-    label L2
+label L3
+label L2
     push constant 0
     call Screen.setColor 1
     pop temp 0
@@ -1290,7 +1290,7 @@ function Bat.move 0
     call Screen.drawRectangle 4
     pop temp 0
     goto L0
-    label L1
+label L1
     push this 0
     push constant 4
     add
@@ -1307,8 +1307,8 @@ function Bat.move 0
     sub
     pop this 0
     goto L4
-    label L5
-    label L4
+label L5
+label L4
     push constant 0
     call Screen.setColor 1
     pop temp 0
@@ -1341,6 +1341,6 @@ function Bat.move 0
     add
     call Screen.drawRectangle 4
     pop temp 0
-    label L0
+label L0
     push constant 0
     return`;

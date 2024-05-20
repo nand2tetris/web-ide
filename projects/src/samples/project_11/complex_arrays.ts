@@ -1523,8 +1523,8 @@ export const compiled = `function Main.main 3
     push temp 0
     pop that 0
     goto L0
-    label L1
-    label L0
+label L1
+label L0
     push constant 44
     call String.new 1
     push constant 84
@@ -1737,7 +1737,7 @@ function Main.double 0
     call Math.multiply 2
     return
 function Main.fill 0
-    label L2
+label L2
     push argument 1
     push constant 0
     gt
@@ -1757,6 +1757,6 @@ function Main.fill 0
     push temp 0
     pop that 0
     goto L2
-    label L3
+label L3
     push constant 0
     return`;

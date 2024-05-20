@@ -331,7 +331,7 @@ export const compiled = `function Main.main 4
     pop local 0
     push constant 0
     pop local 2
-    label L0
+label L0
     push local 2
     push local 1
     lt
@@ -392,7 +392,7 @@ export const compiled = `function Main.main 4
     add
     pop local 2
     goto L0
-    label L1
+label L1
     push constant 15
     call String.new 1
     push constant 84

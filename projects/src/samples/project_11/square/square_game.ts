@@ -782,8 +782,8 @@ function SquareGame.moveSquare 0
     call Square.moveUp 1
     pop temp 0
     goto L0
-    label L1
-    label L0
+label L1
+label L0
     push this 1
     push constant 2
     eq
@@ -793,8 +793,8 @@ function SquareGame.moveSquare 0
     call Square.moveDown 1
     pop temp 0
     goto L2
-    label L3
-    label L2
+label L3
+label L2
     push this 1
     push constant 3
     eq
@@ -804,8 +804,8 @@ function SquareGame.moveSquare 0
     call Square.moveLeft 1
     pop temp 0
     goto L4
-    label L5
-    label L4
+label L5
+label L4
     push this 1
     push constant 4
     eq
@@ -815,8 +815,8 @@ function SquareGame.moveSquare 0
     call Square.moveRight 1
     pop temp 0
     goto L6
-    label L7
-    label L6
+label L7
+label L6
     push constant 5
     call Sys.wait 1
     pop temp 0
@@ -827,12 +827,12 @@ function SquareGame.run 2
     pop pointer 0
     push constant 0
     pop local 1
-    label L8
+label L8
     push local 1
     not
     not
     if-goto L9
-    label L10
+label L10
     push local 0
     push constant 0
     eq
@@ -844,7 +844,7 @@ function SquareGame.run 2
     call SquareGame.moveSquare 1
     pop temp 0
     goto L10
-    label L11
+label L11
     push local 0
     push constant 81
     eq
@@ -853,8 +853,8 @@ function SquareGame.run 2
     push constant 1
     pop local 1
     goto L12
-    label L13
-    label L12
+label L13
+label L12
     push local 0
     push constant 90
     eq
@@ -864,8 +864,8 @@ function SquareGame.run 2
     call Square.decSize 1
     pop temp 0
     goto L14
-    label L15
-    label L14
+label L15
+label L14
     push local 0
     push constant 88
     eq
@@ -875,8 +875,8 @@ function SquareGame.run 2
     call Square.incSize 1
     pop temp 0
     goto L16
-    label L17
-    label L16
+label L17
+label L16
     push local 0
     push constant 131
     eq
@@ -885,8 +885,8 @@ function SquareGame.run 2
     push constant 1
     pop this 1
     goto L18
-    label L19
-    label L18
+label L19
+label L18
     push local 0
     push constant 133
     eq
@@ -895,8 +895,8 @@ function SquareGame.run 2
     push constant 2
     pop this 1
     goto L20
-    label L21
-    label L20
+label L21
+label L20
     push local 0
     push constant 130
     eq
@@ -905,8 +905,8 @@ function SquareGame.run 2
     push constant 3
     pop this 1
     goto L22
-    label L23
-    label L22
+label L23
+label L22
     push local 0
     push constant 132
     eq
@@ -915,9 +915,9 @@ function SquareGame.run 2
     push constant 4
     pop this 1
     goto L24
-    label L25
-    label L24
-    label L26
+label L25
+label L24
+label L26
     push local 0
     push constant 0
     eq
@@ -930,8 +930,8 @@ function SquareGame.run 2
     call SquareGame.moveSquare 1
     pop temp 0
     goto L26
-    label L27
+label L27
     goto L8
-    label L9
+label L9
     push constant 0
     return`;

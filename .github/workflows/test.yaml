@@ -2,7 +2,7 @@ name: Run Workspace Tests
 
 on:
   pull_request:
-    branches: [main]
+    branches: ["main", "pwa-main"]
 
 jobs:
   all:

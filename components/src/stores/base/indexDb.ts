@@ -58,27 +58,44 @@ export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemDirec
     };
   });
 }
-export async function createAndStoreLocalAdapterInIndexedDB(): Promise<FileSystemDirectoryHandle> {
+
+export async function createAndStoreLocalAdapterInIndexedDB(
+  handle: FileSystemDirectoryHandle
+): Promise<FileSystemDirectoryHandle> {
   const db = await openIndexedDb();
-  return new Promise<FileSystemDirectoryHandle>(async (resolve, reject) => {
-    try {
-      const handle = await openNand2TetrisDirectory();
-      const transaction = db.transaction(
-        [IDB_FS_ADAPTER_OBJECT_STORE],
-        "readwrite"
-      );
-      transaction
-        .objectStore(IDB_FS_ADAPTER_OBJECT_STORE)
-        .add(handle, IDB_FS_ADAPTER_KEY);
-      transaction.commit();
-      transaction.oncomplete = () => {
-        resolve(handle);
-      };
-      transaction.onerror = () => {
-        reject(transaction.error);
-      };
-    } catch (e) {
-      reject(e);
-    }
+  const transaction = db.transaction(
+    [IDB_FS_ADAPTER_OBJECT_STORE],
+    "readwrite"
+  );
+  transaction
+    .objectStore(IDB_FS_ADAPTER_OBJECT_STORE)
+    .add(handle, IDB_FS_ADAPTER_KEY);
+  transaction.commit();
+  return new Promise<FileSystemDirectoryHandle>((resolve, reject) => {
+    transaction.oncomplete = () => {
+      resolve(handle);
+    };
+    transaction.onerror = () => {
+      reject(transaction.error);
+    };
+  });
+}
+
+export async function removeLocalAdapterFromIndexedDB() {
+  const db = await openIndexedDb();
+  const transaction = db.transaction(
+    [IDB_FS_ADAPTER_OBJECT_STORE],
+    "readwrite"
+  );
+  transaction
+    .objectStore(IDB_FS_ADAPTER_OBJECT_STORE)
+    .delete(IDB_FS_ADAPTER_KEY);
+  return new Promise<void>((resolve, reject) => {
+    transaction.oncomplete = () => {
+      resolve();
+    };
+    transaction.onerror = () => {
+      reject(transaction.error);
+    };
   });
 }

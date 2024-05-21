@@ -1,13 +1,12 @@
-import MonacoEditor, { type OnMount, useMonaco } from "@monaco-editor/react";
-import type * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
-import { AppContext } from "../App.context";
+import MonacoEditor, { useMonaco, type OnMount } from "@monaco-editor/react";
 import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
-import { Decoration } from "./editor";
-import { HighlightType } from "./editor";
+import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import { AppContext } from "../App.context";
+import { Decoration, HighlightType } from "./editor";
 
 const isRangeVisible = (
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
@@ -199,6 +198,8 @@ export const Monaco = ({
           onCursorPositionChange?.(index);
         }
       });
+      const model = editor.current?.getModel();
+      model?.setEOL(monacoT.editor.EndOfLineSequence.LF);
     },
     [codeTheme]
   );

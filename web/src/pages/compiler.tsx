@@ -7,8 +7,9 @@ import {
 } from "@nand2tetris/components/stores/base/fs.js";
 import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
-import { useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useDialog } from "src/shell/dialog";
 import { Editor } from "src/shell/editor";
 import { Tab, TabList } from "src/shell/tabs";
 import URLs from "src/urls";
@@ -92,6 +93,39 @@ export const Compiler = () => {
     redirectRef.current?.click();
   };
 
+  const isNameValid = (name: string) => {
+    return (
+      (name?.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) &&
+        !Object.keys(state.files).includes(name)) ??
+      false
+    );
+  };
+
+  const newFileDialog = useDialog();
+
+  const createFile = () => {
+    if (!state.fs) {
+      setStatus("No project folder loaded");
+      return;
+    }
+    newFileDialog.open();
+  };
+
+  const newFileDialogComponent = (
+    <NameDialog
+      title="Create New File"
+      buttonText={"Create"}
+      dialog={newFileDialog}
+      isValid={isNameValid}
+      onExit={async (name?: string) => {
+        if (name) {
+          await actions.writeFile(name);
+          dispatch.current({ action: "setSelected", payload: name });
+        }
+      }}
+    />
+  );
+
   return (
     <div className="Page CompilerPage grid">
       <Link
@@ -99,6 +133,7 @@ export const Compiler = () => {
         to={URLs["vm"].href}
         style={{ display: "none" }}
       />
+      {newFileDialogComponent}
       <Panel
         className="code"
         header={
@@ -109,6 +144,10 @@ export const Compiler = () => {
             <div className="flex row flex-1">
               <button className="flex-0" onClick={uploadFiles}>
                 📂
+              </button>
+              <Padding />
+              <button className="flex-0" onClick={createFile}>
+                +
               </button>
               <Padding />
               <button
@@ -148,10 +187,9 @@ export const Compiler = () => {
             >
               <Editor
                 value={state.files[file]}
-                // disabled={true}
                 onChange={(source: string) => {
                   toolStates.compiler.setCompiled(false);
-                  actions.editFile(file, source);
+                  actions.writeFile(file, source);
                 }}
                 error={state.compiled[file].error}
                 language={"jack"}
@@ -169,3 +207,60 @@ export default Compiler;
 function Padding() {
   return <div style={{ width: "0.25vw" }} />;
 }
+
+const NameDialog = ({
+  title,
+  buttonText,
+  dialog,
+  isValid,
+  onExit,
+}: {
+  title: string;
+  buttonText: string;
+  dialog: ReturnType<typeof useDialog>;
+  isValid: (value: string) => boolean;
+  onExit: (value?: string) => void;
+}) => {
+  const [value, setValue] = useState<string>();
+
+  return (
+    <dialog open={dialog.isOpen}>
+      <article>
+        <header>
+          <Trans>{title}</Trans>
+          <a
+            style={{ color: "rgba(0, 0, 0, 0)" }}
+            className="close"
+            href="#root"
+            onClick={(e) => {
+              e.preventDefault();
+              onExit();
+              dialog.close();
+            }}
+          >
+            close
+          </a>
+        </header>
+        <main>
+          <div className="flex row">
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            ></input>
+            <span>.jack</span>
+          </div>
+          <button
+            disabled={!isValid(value ?? "")}
+            onClick={() => {
+              dialog.close();
+              setValue("");
+              onExit(value);
+            }}
+          >
+            {buttonText}
+          </button>
+        </main>
+      </article>
+    </dialog>
+  );
+};

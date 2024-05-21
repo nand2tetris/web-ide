@@ -12,6 +12,7 @@ export interface CompiledFile {
 }
 
 export interface CompilerPageState {
+  fs?: FileSystem;
   files: Record<string, string>;
   compiled: Record<string, CompiledFile>;
   selected: string;
@@ -22,6 +23,12 @@ export type CompilerStoreDispatch = Dispatch<{
   payload?: unknown;
 }>;
 
+function classTemplate(name: string) {
+  return `class ${name} {
+
+}`;
+}
+
 export function makeCompilerStore(
   setStatus: (status: string) => void,
   dispatch: MutableRefObject<CompilerStoreDispatch>
@@ -29,6 +36,9 @@ export function makeCompilerStore(
   let fs: FileSystem | undefined;
 
   const reducers = {
+    setFs(state: CompilerPageState, fs: FileSystem) {
+      state.fs = fs;
+    },
     reset(state: CompilerPageState) {
       state.files = {};
     },
@@ -83,6 +93,7 @@ export function makeCompilerStore(
     async loadProject(_fs: FileSystem) {
       this.reset();
       fs = _fs;
+      dispatch.current({ action: "setFs", payload: fs });
 
       const files: Record<string, string> = {};
       for (const file of (await fs.scandir("/")).filter(
@@ -103,10 +114,10 @@ export function makeCompilerStore(
       }
     },
 
-    async editFile(name: string, content: string) {
+    async writeFile(name: string, content?: string) {
+      content ??= classTemplate(name);
       dispatch.current({ action: "setFile", payload: { name, content } });
       if (fs) {
-        console.log("writing");
         await fs.writeFile(`${name}.jack`, content);
       }
     },

@@ -1,4 +1,4 @@
-import { Assignment } from "@nand2tetris/projects";
+import type { Assignment } from "@nand2tetris/projects/base.js";
 
 export interface RunResult {
   code: number;

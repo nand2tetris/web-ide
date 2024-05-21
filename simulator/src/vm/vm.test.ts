@@ -1,10 +1,10 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { FIBONACCI } from "@nand2tetris/projects/samples/vm/fibonnaci.js";
 import {
-  FIBONACCI,
   NESTED_FUNCTION,
   SIMPLE_FUNCTION,
   STATIC,
-} from "@nand2tetris/projects/samples/vm.js";
+} from "@nand2tetris/projects/samples/vm/vm.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "./vm.js";
 

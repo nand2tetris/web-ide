@@ -272,7 +272,9 @@ export class Chip {
   ins = new Pins();
   outs = new Pins();
   pins = new Pins();
-  parts = new Set<Chip>();
+  insToPart = new Map<string, Set<Chip>>();
+  partToOuts = new Map<Chip, Set<string>>();
+  parts: Chip[] = [];
   clockedPins: Set<string>;
 
   get clocked() {
@@ -388,7 +390,6 @@ export class Chip {
   }
 
   wire(part: Chip, connections: Connection[]): Result<void, PartWireError> {
-    this.parts.add(part);
     for (let i = 0; i < connections.length; i++) {
       const { from, to } = connections[i];
       if (part.isOutPin(to.name)) {
@@ -411,6 +412,26 @@ export class Chip {
         }
       }
     }
+
+    // Topological insertion sort for where this part should go. It should go
+    // before the first chip that it has an output to, otherwise at the end of
+    // the list of parts (that is, stable insertion order).
+    const index = this.parts.findIndex((other) =>
+      [...(this.partToOuts.get(part) ?? [])].some((pin) =>
+        this.insToPart.get(pin)?.has(other)
+      )
+    );
+    if (index < 0) {
+      // Not found, so add to the end of the parts list
+      this.parts.push(part);
+    } else if (index > 0) {
+      // Insert before, that is, splice to index - 1
+      this.parts.splice(index - 1, 0, part);
+    } else {
+      // splice at -1 counts from the end of the array, so special case to unshift.
+      this.parts.unshift(part);
+    }
+
     return Ok();
   }
 
@@ -483,6 +504,11 @@ export class Chip {
     }
 
     partPin.connect(chipPin);
+
+    const partToOuts = this.partToOuts.get(part) ?? new Set();
+    partToOuts.add(chipPin.name);
+    this.partToOuts.set(part, partToOuts);
+
     return Ok();
   }
 
@@ -527,17 +553,19 @@ export class Chip {
       }
     }
     chipPin.connect(partPin);
+
+    const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
+    pinsToPart.add(part);
+    this.insToPart.set(chipPin.name, pinsToPart);
+
     return Ok();
   }
 
   eval() {
     for (const chip of this.parts) {
-      // TODO topological sort
-      // eval chip input busses
       TRUE_BUS.next.forEach((pin) => (pin.busVoltage = TRUE_BUS.busVoltage));
       FALSE_BUS.next.forEach((pin) => (pin.busVoltage = FALSE_BUS.busVoltage));
       chip.eval();
-      // eval output busses
     }
   }
 

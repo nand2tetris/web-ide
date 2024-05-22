@@ -1,5 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
-import { resetFiles, resetTests } from "@nand2tetris/projects/index";
+import { resetFiles, resetTests } from "@nand2tetris/projects/loader.js";
 
 const VERSION_KEY = "version";
 const CURRENT_VERSION = 9;

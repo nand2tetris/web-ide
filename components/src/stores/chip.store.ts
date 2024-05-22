@@ -7,8 +7,7 @@ import {
   BUILTIN_CHIP_PROJECTS,
   CHIP_ORDER,
   CHIP_PROJECTS,
-  ChipProjects,
-} from "@nand2tetris/projects/index.js";
+} from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
@@ -84,7 +83,11 @@ export function isBuiltinOnly(
   return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
-function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
+async function getTemplate(
+  project: keyof typeof CHIP_PROJECTS,
+  chipName: string
+) {
+  const { ChipProjects } = await import("@nand2tetris/projects/full.js");
   if (isBuiltinOnly(project, chipName)) {
     return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
       chipName
@@ -96,8 +99,11 @@ function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   )[chipName][`${chipName}.hdl`] as string;
 }
 
-function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
-  const template = getTemplate(project, chipName);
+async function getBuiltinCode(
+  project: keyof typeof CHIP_PROJECTS,
+  chipName: string
+) {
+  const template = await getTemplate(project, chipName);
   if (isBuiltinOnly(project, chipName)) {
     return template;
   }
@@ -500,7 +506,7 @@ export function makeChipStore(
         await this.saveChip(oldHdl, project, chipName);
       }
 
-      const hdl = getBuiltinCode(project, builtinName);
+      const hdl = await getBuiltinCode(project, builtinName);
       dispatch.current({ action: "setFiles", payload: { hdl } });
       this.replaceChip(Ok(nextChip));
     },
@@ -553,7 +559,8 @@ export function makeChipStore(
       return done;
     },
 
-    resetFile() {
+    async resetFile() {
+      const { ChipProjects } = await import("@nand2tetris/projects/full.js");
       const template = (
         ChipProjects[project].CHIPS as Record<string, Record<string, string>>
       )[chipName][`${chipName}.hdl`];

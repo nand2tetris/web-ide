@@ -11,12 +11,11 @@ import { Cmp, CMP } from "../languages/cmp.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
 import {
-  ChipProjects,
-  VmProjects,
   ASM_PROJECTS,
   CHIP_PROJECTS,
   VM_PROJECTS,
-} from "@nand2tetris/projects/index.js";
+} from "@nand2tetris/projects/base.js";
+import { ChipProjects, VmProjects } from "@nand2tetris/projects/full.js";
 import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/index.js";
 import {
   ASM_SOLS,

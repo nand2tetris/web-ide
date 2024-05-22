@@ -26,10 +26,10 @@ import {
   isBuiltinOnly,
   useChipPageStore,
 } from "@nand2tetris/components/stores/chip.store.js";
-import { CHIP_PROJECTS } from "@nand2tetris/projects/index.js";
+import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import JSZip from "jszip";
+import { zip } from "../shell/zip";
 import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
 import { Editor } from "../shell/editor";
@@ -145,13 +145,7 @@ export const Chip = () => {
     }
 
     const files = await actions.getProjectFiles();
-    const zip = new JSZip();
-
-    for (const file of files) {
-      zip.file(file.name, file.content);
-    }
-    const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
+    const url = await zip(files);
     downloadRef.current.href = url;
     downloadRef.current.download = `${state.controls.project}`;
     downloadRef.current.click();

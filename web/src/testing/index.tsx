@@ -1,4 +1,4 @@
-import { useBaseContext } from "@nand2tetris/components/stores/base.context.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import {
   FileSystem,
@@ -27,8 +27,8 @@ const i18nRender: (
   render(ui, { wrapper: I18nWrapper, ...options });
 
 export const useTestingAppContext = () => ({
-  base: useBaseContext(
-    new FileSystem(
+  base: {
+    fs: new FileSystem(
       new ObjectFileSystemAdapter({
         "chip/project": "01",
         "chip/chip": "Not",
@@ -36,7 +36,15 @@ export const useTestingAppContext = () => ({
         "projects/01/Not/Not.tst": Not.tst,
         "projects/01/Not/Not.cmp": Not.cmp,
       })
-    )
-  ),
+    ),
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    upgradeFs() {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    closeFs(force?: boolean) {},
+    status: "",
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    setStatus() {},
+    storage: {},
+  } satisfies BaseContext,
   app: useAppContext(),
 });

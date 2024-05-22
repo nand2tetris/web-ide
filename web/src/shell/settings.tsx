@@ -43,8 +43,15 @@ export const Settings = () => {
     setVersion(version);
     localStorage["/chip/project"] = "01";
     localStorage["/chip/chip"] = "Not";
+    const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
     toolStates.compiler.reset();
+  };
+
+  const loadSamples = async () => {
+    const loaders = await import("@nand2tetris/projects/loader.js");
+    await loaders.loadSamples(fs);
+    setStatus("Loaded sample files...");
   };
 
   const resetWarningDialog = (
@@ -168,6 +175,7 @@ export const Settings = () => {
                   ) : (
                     <Trans>Change Local FileSystem</Trans>
                   )}
+                  <Trans>Beta</Trans>
                 </button>
                 {upgraded ? (
                   <>
@@ -192,12 +200,7 @@ export const Settings = () => {
                 >
                   <Trans>Reset</Trans>
                 </button>
-                <button
-                  onClick={async () => {
-                    await loaders.loadSamples(fs);
-                    setStatus("Loaded sample files...");
-                  }}
-                >
+                <button onClick={loadSamples}>
                   <Trans>Samples</Trans>
                 </button>
               </dd>

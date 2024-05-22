@@ -1,8 +1,3 @@
-import { FileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs.js";
-import {
-  FileSystemAccessFileSystemAdapter,
-  openNand2TetrisDirectory,
-} from "./fs.js";
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 const IDB_NAME = "NAND2TetrisIndexedDB";

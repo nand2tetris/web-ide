@@ -1,6 +1,5 @@
 import {
   FileSystem,
-  FileSystemAdapter,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {

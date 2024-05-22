@@ -87,6 +87,7 @@ export interface DoStatement {
 export interface ReturnStatement {
   statementType: "returnStatement";
   value?: Expression;
+  span: Span;
 }
 
 export type Op = "+" | "-" | "*" | "/" | "&" | "|" | "<" | ">" | "=";
@@ -312,13 +313,17 @@ jackSemantics.addAttribute<Statement>("statement", {
   },
 
   EmptyReturn(_a, _b) {
-    return { statementType: "returnStatement" };
+    return {
+      statementType: "returnStatement",
+      span: span(this.source),
+    };
   },
 
   ReturnValue(_a, value, _b) {
     return {
       statementType: "returnStatement",
       value: value.expression,
+      span: span(this.source),
     };
   },
 });

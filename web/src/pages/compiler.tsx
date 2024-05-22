@@ -229,7 +229,6 @@ const NameDialog = ({
         <header>
           <Trans>{title}</Trans>
           <a
-            style={{ color: "rgba(0, 0, 0, 0)" }}
             className="close"
             href="#root"
             onClick={(e) => {
@@ -237,9 +236,7 @@ const NameDialog = ({
               onExit();
               dialog.close();
             }}
-          >
-            close
-          </a>
+          />
         </header>
         <main>
           <div className="flex row">

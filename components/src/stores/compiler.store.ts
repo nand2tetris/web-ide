@@ -24,9 +24,7 @@ export type CompilerStoreDispatch = Dispatch<{
 }>;
 
 function classTemplate(name: string) {
-  return `class ${name} {
-
-}`;
+  return `class ${name} {\n\n}\n`;
 }
 
 export function makeCompilerStore(
@@ -51,6 +49,7 @@ export function makeCompilerStore(
       this.compile(state);
     },
 
+    // the keys of 'files' have to be the full file path, not basename
     setFiles(state: CompilerPageState, files: Record<string, string>) {
       state.files = files;
       this.compile(state);

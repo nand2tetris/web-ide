@@ -142,7 +142,7 @@ export function makeCompilerStore(
 }
 
 export function useCompilerPageStore() {
-  const { setStatus, fs } = useContext(BaseContext);
+  const { setStatus } = useContext(BaseContext);
 
   const dispatch = useRef<CompilerStoreDispatch>(() => undefined);
 

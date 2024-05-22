@@ -1,5 +1,6 @@
 import { AsmLanguage } from "./asm";
 import { CmpLanguage } from "./cmp";
+import { JackLanguage } from "./jack";
 import { HdlLanguage, HdlSnippets } from "./hdl";
 import { TstLanguage } from "./tst";
 import { VmLanguage } from "./vm";
@@ -10,6 +11,7 @@ const LANGUAGES = {
   tst: TstLanguage,
   vm: VmLanguage,
   asm: AsmLanguage,
+  jack: JackLanguage,
 };
 
 const SNIPPETS = {

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -15,9 +15,8 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
-import { LOADING } from "@nand2tetris/components/messages.js";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
-import { AppContext } from "src/App.context";
+import { AppContext } from "../App.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
@@ -50,8 +49,8 @@ interface Rerenderable {
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
-  const { fs, setStatus } = useContext(BaseContext);
-  const { filePicker } = useContext(AppContext);
+  const { setStatus } = useContext(BaseContext);
+  const { toolStates, setTitle } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -61,6 +60,16 @@ const VM = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+
+  useEffect(() => {
+    setTitle(toolStates.vm.title);
+  });
+
+  useEffect(() => {
+    if (toolStates.vm.files) {
+      actions.loadVm(toolStates.vm.files);
+    }
+  }, [toolStates.vm.files]);
 
   useEffect(() => {
     actions.loadTest(path, tst, cmp);
@@ -133,35 +142,33 @@ const VM = () => {
     };
   }, [actions, dispatch]);
 
-  const load = async () => {
-    const path = await filePicker.select(".vm", true);
-    setStatus(LOADING);
+  const uploadRef = useRef<HTMLInputElement>(null);
 
-    requestAnimationFrame(async () => {
-      const sources: VmFile[] = [];
-      if (path.includes(".vm")) {
-        // single file
+  const load = () => {
+    uploadRef.current?.click();
+  };
+
+  const onLoad = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length == 0) {
+      return;
+    }
+
+    const sources: VmFile[] = [];
+    for (const file of event.target.files) {
+      if (file.name.endsWith(".vm")) {
         sources.push({
-          name: (path.split("/").pop() ?? path).replace(".vm", ""),
-          content: await fs.readFile(path),
+          name: file.name.replace(".vm", ""),
+          content: await file.text(),
         });
-      } else {
-        // folder
-        for (const file of (await fs.scandir(path)).filter(
-          (f) => f.isFile() && f.name.endsWith(".vm")
-        )) {
-          sources.push({
-            name: file.name.replace(".vm", ""),
-            content: await fs.readFile(`${path}/${file.name}`),
-          });
-        }
       }
-      requestAnimationFrame(() => {
-        actions.loadVm(sources);
-        actions.reset();
-        setStatus("");
-      });
-    });
+    }
+
+    const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
+    toolStates.vm.setTitle(`${dirName} / *.vm`);
+
+    actions.loadVm(sources);
+    actions.reset();
+    setStatus("");
   };
 
   const onSpeedChange = (speed: number) => {
@@ -185,6 +192,13 @@ const VM = () => {
         className="program"
         header={
           <>
+            <input
+              style={{ display: "none" }}
+              ref={uploadRef}
+              type="file"
+              webkitdirectory=""
+              onChange={onLoad}
+            />
             <div className="flex-0" style={{ whiteSpace: "nowrap" }}>
               <Trans>VM Code</Trans>
             </div>

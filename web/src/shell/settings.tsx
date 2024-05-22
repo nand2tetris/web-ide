@@ -11,6 +11,7 @@ import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
 export const Settings = () => {
+  const { toolStates } = useContext(AppContext);
   const { fs, setStatus, upgradeFs, closeFs, upgraded } =
     useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
@@ -43,6 +44,7 @@ export const Settings = () => {
     localStorage["/chip/chip"] = "Not";
     const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
+    toolStates.compiler.reset();
   };
 
   const loadSamples = async () => {

@@ -31,6 +31,7 @@ import {
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
 import { VM_BUILTINS } from "../vm/builtins.js";
+import { validateSubroutine } from "./controlFlow.js";
 
 const osClasses = new Set([
   "Sys",
@@ -114,6 +115,10 @@ function validateClass(cls: Class): Result<void, CompilationError> {
       );
     }
     subroutineNames.add(subroutine.name.value);
+    const result = validateSubroutine(subroutine);
+    if (isErr(result)) {
+      return result;
+    }
   }
   return Ok();
 }

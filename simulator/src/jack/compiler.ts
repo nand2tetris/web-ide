@@ -32,8 +32,19 @@ import {
 import { Segment } from "../languages/vm.js";
 import { VM_BUILTINS } from "../vm/builtins.js";
 
-function isOsType(name: string): boolean {
-  return name == "String" || name == "Array";
+const osClasses = new Set([
+  "Sys",
+  "Screen",
+  "Output",
+  "Keyboard",
+  "String",
+  "Array",
+  "Memory",
+  "Math",
+]);
+
+function isOsClass(name: string): boolean {
+  return osClasses.has(name);
 }
 
 function isError(value: unknown): value is CompilationError {
@@ -216,7 +227,7 @@ export class Compiler {
   }
 
   validateType(type: string, span?: Span) {
-    if (isPrimitive(type) || isOsType(type) || this.classes[type]) {
+    if (isPrimitive(type) || isOsClass(type) || this.classes[type]) {
       return;
     }
     throw createError(`Unknown type ${type}`, span);
@@ -392,7 +403,34 @@ export class Compiler {
     call: SubroutineCall,
     isMethod: boolean
   ) {
-    if (this.classes[className]) {
+    const builtin = VM_BUILTINS[`${className}.${subroutineName}`];
+    if (builtin) {
+      if (builtin.type == "method" && !isMethod) {
+        throw createError(
+          `Method ${className}.${subroutineName} was called as a function/constructor`,
+          call.name.span
+        );
+      }
+      if (builtin.type != "method" && isMethod) {
+        throw createError(
+          `${capitalize(
+            builtin.type
+          )} ${className}.${subroutineName} was called as a method`,
+          call.name.span
+        );
+      }
+      this.validateArgNum(
+        `${className}.${subroutineName}`,
+        isMethod ? builtin.nArgs - 1 : builtin.nArgs,
+        call
+      );
+      return;
+    } else if (isOsClass(className)) {
+      throw createError(
+        `Class ${className} doesn't contain a subroutine ${subroutineName}`,
+        call.span
+      );
+    } else if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
         if (subroutine.name.value == subroutineName) {
           if (subroutine.type == "method" && !isMethod) {
@@ -449,21 +487,12 @@ export class Compiler {
       subroutineName = call.name.value;
     }
 
-    const builtin = VM_BUILTINS[`${className}.${subroutineName}`];
-    if (builtin) {
-      this.validateArgNum(
-        `${className}.${subroutineName}`,
-        builtin.nArgs,
-        call
-      );
-    } else {
-      this.validateSubroutineCall(
-        className,
-        subroutineName,
-        call,
-        object != undefined
-      );
-    }
+    this.validateSubroutineCall(
+      className,
+      subroutineName,
+      call,
+      object != undefined
+    );
 
     return { className, subroutineName, object };
   }

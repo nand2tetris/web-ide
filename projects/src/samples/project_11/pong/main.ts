@@ -93,7 +93,10 @@ export const parsed = {
               span: { start: 491, end: 505, line: 17 },
             },
           },
-          { statementType: "returnStatement" },
+          {
+            statementType: "returnStatement",
+            span: { start: 515, end: 522, line: 18 },
+          },
         ],
       },
     },

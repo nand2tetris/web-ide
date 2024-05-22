@@ -14,13 +14,13 @@ const baseContext: BaseContext = {
   ),
   upgraded: "true",
   upgradeFs() {},
+  closeFs() {},
   storage: {},
   status: "",
   setStatus: (status: string): void => {
     // api.postMessage({ nand2tetris: true, showMessage: status });
     console.log(status);
   },
-  closeFs() {},
 };
 
 const root = ReactDOM.createRoot(

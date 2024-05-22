@@ -421,7 +421,7 @@ export class Compiler {
       }
       this.validateArgNum(
         `${className}.${subroutineName}`,
-        builtin.nArgs,
+        isMethod ? builtin.nArgs - 1 : builtin.nArgs,
         call
       );
       return;

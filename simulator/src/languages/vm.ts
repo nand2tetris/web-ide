@@ -86,28 +86,28 @@ vmSemantics.addAttribute<
   | "or"
   | "not"
 >("op", {
-  Push(_) {
+  push(_a, _b) {
     return "push";
   },
-  Pop(_) {
+  pop(_a, _b) {
     return "pop";
   },
-  Function(_) {
+  function(_a, _b) {
     return "function";
   },
-  Call(_) {
+  call(_a, _b) {
     return "call";
   },
-  Return(_) {
+  return(_a) {
     return "return";
   },
-  Goto(_) {
+  goto(_a, _b) {
     return "goto";
   },
-  IfGoto(_) {
+  ifGoto(_a, _b) {
     return "if-goto";
   },
-  Label(_) {
+  label(_a, _b) {
     return "label";
   },
   Add(_) {
@@ -149,28 +149,28 @@ vmSemantics.addAttribute<
   | "pointer"
   | "temp"
 >("segment", {
-  Argument(_) {
+  argument(_a, _b) {
     return "argument";
   },
-  Local(_) {
+  local(_a, _b) {
     return "local";
   },
-  Static(_) {
+  static(_a, _b) {
     return "static";
   },
-  Constant(_) {
+  constant(_a, _b) {
     return "constant";
   },
-  This(_) {
+  this(_a, _b) {
     return "this";
   },
-  That(_) {
+  that(_a, _b) {
     return "that";
   },
-  Pointer(_) {
+  pointer(_a, _b) {
     return "pointer";
   },
-  Temp(_) {
+  temp(_a, _b) {
     return "temp";
   },
 });
@@ -230,12 +230,18 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       span: span(this.source),
     };
   },
+  VmInstructionLine(inst, _) {
+    return inst.instruction;
+  },
 });
 
 vmSemantics.addAttribute<Vm>("vm", {
-  Vm(lines) {
+  Vm(_, lines, last) {
+    const instructions = lines.children.map((node) => node.instruction) ?? [];
     return {
-      instructions: lines.children.map((n) => n.instruction),
+      instructions: last.child(0)
+        ? [...instructions, last.child(0).instruction]
+        : instructions,
     };
   },
 });

@@ -1,7 +1,8 @@
 import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import JSZip from "jszip";
+import type JSZip from "jszip";
+import { newZip } from "./zip";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
@@ -152,7 +153,7 @@ export const FilePicker = () => {
       return;
     }
 
-    const zip = new JSZip();
+    const zip = await newZip();
     await buildZip(zip, fs, chosen);
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);

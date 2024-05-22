@@ -6,7 +6,10 @@ import {
   isErr,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Assignments, Assignment } from "@nand2tetris/projects/index.js";
+import {
+  AssignmentStubs,
+  type Assignment,
+} from "@nand2tetris/projects/base.js";
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
@@ -44,7 +47,7 @@ export const hasTest = ({
   name: string;
   ext: string;
 }): boolean =>
-  Assignments[name as keyof typeof Assignments] !== undefined &&
+  AssignmentStubs[name as keyof typeof AssignmentStubs] !== undefined &&
   [".hdl", ".tst"].includes(ext);
 
 /** Try parsing the loaded files. */

@@ -2,7 +2,7 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { resetFiles } from "@nand2tetris/projects/index.js";
+import { resetFiles } from "@nand2tetris/projects/full.js";
 import { TST, grammar } from "./tst.js";
 
 const NOT_TST = `

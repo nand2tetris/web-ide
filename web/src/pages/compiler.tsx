@@ -1,10 +1,15 @@
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import {
+  FileSystemAccessFileSystemAdapter,
+  openNand2TetrisDirectory,
+} from "@nand2tetris/components/stores/base/fs.js";
 import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
-import JSZip from "jszip";
-import { ChangeEvent, useCallback, useContext, useEffect, useRef } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { useDialog } from "src/shell/dialog";
 import { Editor } from "src/shell/editor";
 import { Tab, TabList } from "src/shell/tabs";
 import URLs from "src/urls";
@@ -17,8 +22,6 @@ export const Compiler = () => {
   const { tracking, toolStates, setTitle } = useContext(AppContext);
   const { state, dispatch, actions } = useCompilerPageStore();
 
-  const uploadRef = useRef<HTMLInputElement>(null);
-  const downloadRef = useRef<HTMLAnchorElement>(null);
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -26,8 +29,10 @@ export const Compiler = () => {
   });
 
   useEffect(() => {
-    actions.loadFiles(toolStates.compiler.files);
-  }, [actions, toolStates.compiler.files]);
+    if (toolStates.compiler.fs) {
+      actions.loadProject(toolStates.compiler.fs);
+    }
+  }, [actions, toolStates.compiler.fs]);
 
   const showStatus = () => {
     const current = state.compiled[state.selected];
@@ -38,7 +43,7 @@ export const Compiler = () => {
 
   useEffect(() => {
     showStatus();
-  }, [state.selected]);
+  }, [state.selected, state.files]);
 
   const selectTab = useCallback(
     (tab: string) => {
@@ -48,33 +53,14 @@ export const Compiler = () => {
     [tracking]
   );
 
-  const uploadFiles = () => {
-    if (uploadRef.current) {
-      uploadRef.current.value = "";
-      uploadRef.current.click();
-    }
-  };
-
-  const loadFiles = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length == 0) {
-      return;
-    }
-    await actions.reset();
-    const files: Record<string, string> = {};
-    for (const file of event.target.files) {
-      if (file.name.endsWith(".jack")) {
-        const source = await file.text();
-        const name = file.name.replace(".jack", "");
-        files[name] = source;
-      }
-    }
-    await actions.loadFiles(files);
-
-    const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
-    toolStates.compiler.setTitle(`${dirName} / *.jack`);
+  const uploadFiles = async () => {
+    const handle = await openNand2TetrisDirectory();
+    const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
+    toolStates.compiler.setFs(fs);
     toolStates.compiler.setCompiled(false);
-    toolStates.compiler.setFiles(files);
+    toolStates.compiler.setTitle(`${handle.name} / *.jack`);
     setStatus("");
+    actions.loadProject(fs);
   };
 
   const valid = () =>
@@ -95,29 +81,10 @@ export const Compiler = () => {
 
   const compileFiles = () => {
     if (valid()) {
+      actions.compile();
       toolStates.compiler.setCompiled(true);
       setStatus("Compiled successfully");
     }
-  };
-
-  const compileAndDownload = async () => {
-    if (!downloadRef.current) {
-      return;
-    }
-
-    const zip = new JSZip();
-
-    for (const file of compileAll()) {
-      zip.file(`${file.name}.vm`, file.content);
-    }
-
-    const blob = await zip.generateAsync({ type: "blob" });
-    const url = URL.createObjectURL(blob);
-    downloadRef.current.href = url;
-    downloadRef.current.download = `VMcode`;
-    downloadRef.current.click();
-
-    URL.revokeObjectURL(url);
   };
 
   const runInVm = () => {
@@ -126,21 +93,47 @@ export const Compiler = () => {
     redirectRef.current?.click();
   };
 
+  const isNameValid = (name: string) => {
+    return (
+      (name?.match(/^[a-zA-Z_][a-zA-Z0-9_]*$/) &&
+        !Object.keys(state.files).includes(name)) ??
+      false
+    );
+  };
+
+  const newFileDialog = useDialog();
+
+  const createFile = () => {
+    if (!state.fs) {
+      setStatus("No project folder loaded");
+      return;
+    }
+    newFileDialog.open();
+  };
+
+  const newFileDialogComponent = (
+    <NameDialog
+      title="Create New File"
+      buttonText={"Create"}
+      dialog={newFileDialog}
+      isValid={isNameValid}
+      onExit={async (name?: string) => {
+        if (name) {
+          await actions.writeFile(name);
+          dispatch.current({ action: "setSelected", payload: name });
+        }
+      }}
+    />
+  );
+
   return (
     <div className="Page CompilerPage grid">
-      <a style={{ display: "none" }} ref={downloadRef}></a>
-      <input
-        style={{ display: "none" }}
-        ref={uploadRef}
-        type="file"
-        webkitdirectory=""
-        onChange={loadFiles}
-      />
       <Link
         ref={redirectRef}
         to={URLs["vm"].href}
         style={{ display: "none" }}
       />
+      {newFileDialogComponent}
       <Panel
         className="code"
         header={
@@ -151,6 +144,10 @@ export const Compiler = () => {
             <div className="flex row flex-1">
               <button className="flex-0" onClick={uploadFiles}>
                 📂
+              </button>
+              <Padding />
+              <button className="flex-0" onClick={createFile}>
+                +
               </button>
               <Padding />
               <button
@@ -172,16 +169,6 @@ export const Compiler = () => {
               >
                 Run
               </button>
-              <Padding />
-              <button
-                className="flex-0"
-                disabled={!toolStates.compiler.compiled}
-                data-tooltip="Downloads the compiled VM code"
-                data-placement="bottom"
-                onClick={compileAndDownload}
-              >
-                Download
-              </button>
             </div>
           </>
         }
@@ -200,9 +187,9 @@ export const Compiler = () => {
             >
               <Editor
                 value={state.files[file]}
-                disabled={true}
                 onChange={(source: string) => {
-                  return;
+                  toolStates.compiler.setCompiled(false);
+                  actions.writeFile(file, source);
                 }}
                 error={state.compiled[file].error}
                 language={"jack"}
@@ -220,3 +207,57 @@ export default Compiler;
 function Padding() {
   return <div style={{ width: "0.25vw" }} />;
 }
+
+const NameDialog = ({
+  title,
+  buttonText,
+  dialog,
+  isValid,
+  onExit,
+}: {
+  title: string;
+  buttonText: string;
+  dialog: ReturnType<typeof useDialog>;
+  isValid: (value: string) => boolean;
+  onExit: (value?: string) => void;
+}) => {
+  const [value, setValue] = useState<string>();
+
+  return (
+    <dialog open={dialog.isOpen}>
+      <article>
+        <header>
+          <Trans>{title}</Trans>
+          <a
+            className="close"
+            href="#root"
+            onClick={(e) => {
+              e.preventDefault();
+              onExit();
+              dialog.close();
+            }}
+          />
+        </header>
+        <main>
+          <div className="flex row">
+            <input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+            ></input>
+            <span>.jack</span>
+          </div>
+          <button
+            disabled={!isValid(value ?? "")}
+            onClick={() => {
+              dialog.close();
+              setValue("");
+              onExit(value);
+            }}
+          >
+            {buttonText}
+          </button>
+        </main>
+      </article>
+    </dialog>
+  );
+};

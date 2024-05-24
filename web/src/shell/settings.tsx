@@ -113,16 +113,13 @@ export const Settings = () => {
               <Trans>Settings</Trans>
             </p>
             <a
-              style={{ color: "rgba(0, 0, 0, 0)" }}
               className="close"
               href="#root"
               onClick={(e) => {
                 e.preventDefault();
                 settings.close();
               }}
-            >
-              close
-            </a>
+            />
           </header>
           <main>
             <dl>

@@ -29,11 +29,11 @@ import {
 import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { zip } from "../shell/zip";
 import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
+import { zip } from "../shell/zip";
 
 export const Chip = () => {
   const { setStatus } = useContext(BaseContext);
@@ -266,12 +266,6 @@ export const Chip = () => {
     setStatus(t`Cannot test a chip that has syntax errors`);
   };
 
-  const recompile = () => {
-    compile.current(
-      useBuiltin || state.controls.builtinOnly ? {} : { hdl: hdl }
-    );
-  };
-
   const evalIfCan = () => {
     if (state.sim.invalid) {
       showCannotTestError();
@@ -285,7 +279,6 @@ export const Chip = () => {
       <button
         onClick={evalIfCan}
         onKeyDown={evalIfCan}
-        onBlur={recompile}
         disabled={!state.sim.pending || !inputValid}
       >
         <Trans>Eval</Trans>
@@ -298,7 +291,6 @@ export const Chip = () => {
           }
           clockActions.reset();
         }}
-        onBlur={recompile}
         style={{ maxWidth: "initial" }}
         disabled={!state.sim.clocked}
       >
@@ -312,7 +304,6 @@ export const Chip = () => {
           }
           clockActions.toggle();
         }}
-        onBlur={recompile}
         style={{ minWidth: "7em", textAlign: "start" }}
         disabled={!state.sim.clocked}
       >

@@ -23,8 +23,11 @@ export type COMMANDS_ASM = typeof commandASMValues extends Set<infer S>
   ? S
   : never;
 
-export function isCommandAsm(command: unknown): command is COMMANDS_ASM {
-  return commandASMValues.has(command as COMMANDS_ASM);
+export function isCommandAsm(command: string): command is COMMANDS_ASM {
+  return (
+    commandASMValues.has(command as COMMANDS_ASM) ||
+    commandASMValues.has(command.replace("M", "A") as COMMANDS_ASM)
+  );
 }
 
 export type COMMANDS_OP =

@@ -10,6 +10,8 @@ import {
   JUMP,
   JUMP_ASM,
   JUMP_OP,
+  isAssignAsm,
+  isCommandAsm,
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
@@ -104,19 +106,56 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
   },
 });
 
+function getAsmAssign(assignN: ohm.Node) {
+  let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
+
+  // The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
+  // but since the desktop simulators accept only MD and AMD we have decided to accept both */
+  if (assign == "DM") {
+    assign = "MD";
+  }
+  if (assign == "ADM") {
+    assign = "AMD";
+  }
+  if (assign != "" && !isAssignAsm(assign)) {
+    const reversed = assign.split("").reverse().join("");
+    const suggestion = isAssignAsm(reversed)
+      ? `. Did you mean ${reversed}?`
+      : "";
+    throw createError(
+      `Invalid ASM target: ${assign}${suggestion}`,
+      span(assignN.source)
+    );
+  }
+
+  return assign;
+}
+
+function getAsmOp(opN: ohm.Node) {
+  const op = opN.sourceString;
+
+  if (!isCommandAsm(op)) {
+    const reversed = op.split("").reverse().join("");
+    const suggestion = isCommandAsm(reversed)
+      ? `. Did you mean ${reversed}?`
+      : "";
+    throw createError(
+      `Invalid ASM value: ${opN.sourceString}${suggestion}`,
+      span(opN.source)
+    );
+  }
+
+  return op;
+}
+
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
   aInstruction(_at, name): AsmAInstruction {
     return A(name.value, span(this.source));
   },
   cInstruction(assignN, opN, jmpN): AsmCInstruction {
-    let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
-    if (assign == "DM") {
-      assign = "MD";
-    }
-    if (assign == "ADM") {
-      assign = "AMD";
-    }
-    const op = opN.sourceString as COMMANDS_ASM;
+    const assign = getAsmAssign(assignN);
+
+    const op = getAsmOp(opN) as COMMANDS_ASM;
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
     return C(assign as ASSIGN_ASM, op, jmp, span(this.source));
   },

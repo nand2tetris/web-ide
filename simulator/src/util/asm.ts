@@ -87,7 +87,7 @@ function cop(asm: string): number {
     parts?.[0] != asm || // match is not exhaustive
     !isAssignAsm(assign) ||
     !isJumpAsm(jump) ||
-    (!isCommandAsm(operation) && !isCommandAsm(operation.replace("M", "A")))
+    !isCommandAsm(operation)
   ) {
     // TODO: This should return Result<> instead of throw
     throw new Error("Invalid c instruction");

@@ -220,6 +220,11 @@ class ChipBuilder {
     if (isErr(result)) {
       return result;
     }
+
+    this.chip.sortParts();
+    for (const part of this.chip.parts) {
+      part.subscribeToClock();
+    }
     return Ok(this.chip);
   }
 

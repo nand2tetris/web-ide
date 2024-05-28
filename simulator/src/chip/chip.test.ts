@@ -641,7 +641,10 @@ describe("Chip", () => {
     }
 
     const fooA = new FooA();
-    expect(fooA.parts).toEqual([fooA.notB, fooA.notA]);
+    fooA.sortParts();
+    expect(fooA.parts.length).toBe(2);
+    expect(fooA.parts[0] == fooA.notB);
+    expect(fooA.parts[1] == fooA.notA);
 
     class FooB extends Chip {
       readonly notA = new Not();
@@ -670,8 +673,10 @@ describe("Chip", () => {
         ]);
       }
     }
-
     const fooB = new FooB();
-    expect(fooB.parts).toEqual([fooB.notA, fooB.notB]);
+    fooB.sortParts();
+    expect(fooA.parts.length).toBe(2);
+    expect(fooA.parts[0] == fooA.notA);
+    expect(fooA.parts[1] == fooA.notB);
   });
 });

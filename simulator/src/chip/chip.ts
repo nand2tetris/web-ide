@@ -8,8 +8,10 @@ import {
   Result,
   isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Subscription } from "rxjs";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
+import { sortParts } from "./sort.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -276,6 +278,7 @@ export class Chip {
   partToOuts = new Map<Chip, Set<string>>();
   parts: Chip[] = [];
   clockedPins: Set<string>;
+  subscription?: Subscription;
 
   get clocked() {
     if (this.clockedPins.size > 0) {
@@ -320,7 +323,14 @@ export class Chip {
 
     this.clockedPins = new Set(clocked);
 
-    Clock.get().$.subscribe(() => this.eval());
+    this.subscribeToClock();
+  }
+
+  subscribeToClock() {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
+    this.subscription = Clock.get().$.subscribe(() => this.eval());
   }
 
   reset() {
@@ -389,7 +399,13 @@ export class Chip {
     return this.outs.has(pin);
   }
 
+  isInternalPin(pin: string): boolean {
+    return !this.isInPin(pin) && !this.isOutPin(pin);
+  }
+
   wire(part: Chip, connections: Connection[]): Result<void, PartWireError> {
+    this.parts.push(part);
+
     for (let i = 0; i < connections.length; i++) {
       const { from, to } = connections[i];
       if (part.isOutPin(to.name)) {
@@ -413,26 +429,11 @@ export class Chip {
       }
     }
 
-    // Topological insertion sort for where this part should go. It should go
-    // before the first chip that it has an output to, otherwise at the end of
-    // the list of parts (that is, stable insertion order).
-    const index = this.parts.findIndex((other) =>
-      [...(this.partToOuts.get(part) ?? [])].some((pin) =>
-        this.insToPart.get(pin)?.has(other)
-      )
-    );
-    if (index < 0) {
-      // Not found, so add to the end of the parts list
-      this.parts.push(part);
-    } else if (index > 0) {
-      // Insert before, that is, splice to index - 1
-      this.parts.splice(index - 1, 0, part);
-    } else {
-      // splice at -1 counts from the end of the array, so special case to unshift.
-      this.parts.unshift(part);
-    }
-
     return Ok();
+  }
+
+  sortParts() {
+    sortParts(this);
   }
 
   private findPin(from: string, minWidth?: number): Pin {
@@ -578,6 +579,7 @@ export class Chip {
   }
 
   remove() {
+    this.subscription?.unsubscribe();
     for (const part of this.parts) {
       part.remove();
     }
@@ -612,16 +614,21 @@ export class ClockedChip extends Chip {
     return true;
   }
 
-  #subscription = Clock.get().$.subscribe(({ level }) => {
-    if (level === LOW) {
-      this.tock();
-    } else {
-      this.tick();
+  override subscribeToClock(): void {
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
-  });
+    this.subscription = Clock.get().$.subscribe(({ level }) => {
+      if (level === LOW) {
+        this.tock();
+      } else {
+        this.tick();
+      }
+    });
+  }
 
   override remove() {
-    this.#subscription.unsubscribe();
+    this.subscription?.unsubscribe();
     super.remove();
   }
 

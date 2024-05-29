@@ -1,5 +1,5 @@
 import { i18n } from "@lingui/core";
-import { Trans, t } from "@lingui/macro";
+import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
@@ -153,7 +153,7 @@ export const Settings = () => {
                 <Trans>Files</Trans>
               </dt>
               <dd>
-                <button
+                {/* <button
                   disabled={upgrading}
                   onClick={async () => {
                     setUpgrading(true);
@@ -188,7 +188,7 @@ export const Settings = () => {
                   </>
                 ) : (
                   <></>
-                )}
+                )} */}
                 <button
                   onClick={async () => {
                     resetWarning.open();

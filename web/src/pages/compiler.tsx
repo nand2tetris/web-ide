@@ -22,6 +22,8 @@ export const Compiler = () => {
   const { tracking, toolStates, setTitle } = useContext(AppContext);
   const { state, dispatch, actions } = useCompilerPageStore();
 
+  const [selected, setSelected] = useState(0);
+
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -45,13 +47,17 @@ export const Compiler = () => {
     showStatus();
   }, [state.selected, state.files]);
 
-  const selectTab = useCallback(
+  const onSelect = useCallback(
     (tab: string) => {
       dispatch.current({ action: "setSelected", payload: tab });
       tracking.trackEvent("tab", "change", tab);
     },
     [tracking]
   );
+
+  useEffect(() => {
+    setSelected(Object.keys(state.files).indexOf(state.selected));
+  }, [state.selected]);
 
   const uploadFiles = async () => {
     const handle = await openNand2TetrisDirectory();
@@ -111,18 +117,20 @@ export const Compiler = () => {
     newFileDialog.open();
   };
 
+  const onCreateFile = async (name?: string) => {
+    if (name) {
+      await actions.writeFile(name);
+      onSelect(name);
+    }
+  };
+
   const newFileDialogComponent = (
     <NameDialog
       title="Create New File"
       buttonText={"Create"}
       dialog={newFileDialog}
       isValid={isNameValid}
-      onExit={async (name?: string) => {
-        if (name) {
-          await actions.writeFile(name);
-          dispatch.current({ action: "setSelected", payload: name });
-        }
-      }}
+      onExit={onCreateFile}
     />
   );
 
@@ -173,12 +181,12 @@ export const Compiler = () => {
           </>
         }
       >
-        <TabList>
+        <TabList tabIndex={{ value: selected, set: setSelected }}>
           {Object.keys(state.files).map((file) => (
             <Tab
               title={`${file}.jack`}
               key={file}
-              onSelect={() => selectTab(file)}
+              onSelect={() => onSelect(file)}
               style={{
                 backgroundColor: !state.compiled[file].valid
                   ? "#ffaaaa"

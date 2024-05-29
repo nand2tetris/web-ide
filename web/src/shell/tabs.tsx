@@ -1,8 +1,10 @@
 import {
   CSSProperties,
   Children,
+  Dispatch,
   PropsWithChildren,
   ReactNode,
+  SetStateAction,
   cloneElement,
   useId,
   useState,
@@ -42,9 +44,16 @@ export const Tab = (
   );
 };
 
-export const TabList = (props: { children: ReturnType<typeof Tab>[] }) => {
+export const TabList = (props: {
+  children: ReturnType<typeof Tab>[];
+  tabIndex?: { value: number; set: Dispatch<SetStateAction<number>> };
+}) => {
   const id = useId();
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [localSelectedIndex, localSetSelectedIndex] = useState(0);
+
+  const selectedIndex = props.tabIndex?.value ?? localSelectedIndex;
+  const setSelectedIndex = props.tabIndex?.set ?? localSetSelectedIndex;
+
   return (
     <section
       role="tablist"

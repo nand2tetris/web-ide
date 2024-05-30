@@ -11,7 +11,7 @@ import {
 import { Subscription } from "rxjs";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
-import { sortParts } from "./sort.js";
+import { Graph } from "./graph.js";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -269,6 +269,11 @@ export interface WireError {
   message: string;
   lhs: boolean;
 }
+
+export function isConstant(pin: string): boolean {
+  return pin === "false" || pin === "true" || pin === "0" || pin === "1";
+}
+
 export class Chip {
   readonly id = id++;
   ins = new Pins();
@@ -327,10 +332,8 @@ export class Chip {
   }
 
   subscribeToClock() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-    this.subscription = Clock.get().$.subscribe(() => this.eval());
+    this.subscription?.unsubscribe();
+    this.subscription = Clock.subscribe(() => this.eval());
   }
 
   reset() {
@@ -400,7 +403,7 @@ export class Chip {
   }
 
   isInternalPin(pin: string): boolean {
-    return !this.isInPin(pin) && !this.isOutPin(pin);
+    return !this.isInPin(pin) && !this.isOutPin(pin) && !isConstant(pin);
   }
 
   wire(part: Chip, connections: Connection[]): Result<void, PartWireError> {
@@ -430,10 +433,6 @@ export class Chip {
     }
 
     return Ok();
-  }
-
-  sortParts() {
-    sortParts(this);
   }
 
   private findPin(from: string, minWidth?: number): Pin {
@@ -593,6 +592,60 @@ export class Chip {
       }
     }
   }
+
+  hasConnection(from: Chip, to: Chip) {
+    const outs = Array.from(this.partToOuts.get(from) ?? []);
+    return outs.some(
+      (pin) =>
+        this.insToPart.get(pin)?.has(to) &&
+        // edges are not created between internal nodes and clocked part inputs.
+        // source: https://github.com/nand2tetris/nand2tetris_simulator/blob/master/SimulatorsPackageSource/Hack/Gates/CompositeGateClass.java#L413
+        !(this.isInternalPin(pin) && to.clocked)
+    );
+  }
+
+  // Topological sort of the parts
+  sortParts() {
+    const partToId: Map<Chip, number> = new Map();
+    const idToPart: Chip[] = Array(this.parts.length);
+
+    for (let i = 0; i < this.parts.length; i++) {
+      partToId.set(this.parts[i], i);
+      idToPart[i] = this.parts[i];
+    }
+
+    const g = new Graph();
+
+    for (const part of this.parts) {
+      for (const other of this.parts) {
+        if (part == other) {
+          continue;
+        }
+        const n1 = partToId.get(part);
+        const n2 = partToId.get(other);
+        if (n1 != undefined && n2 != undefined) {
+          if (this.hasConnection(part, other)) {
+            g.addEdge(n2, n1);
+          }
+          if (this.hasConnection(other, part)) {
+            g.addEdge(n1, n2);
+          }
+        }
+      }
+    }
+
+    for (const part of this.parts) {
+      const n = partToId.get(part);
+      if (n != undefined) {
+        g.addEdge(-1, n);
+      }
+    }
+
+    const sorted = g.sort(-1);
+    sorted.pop(); // remove (-1) node we added for sorting
+    const sortedParts = sorted.map((id) => idToPart[id]);
+    this.parts = sortedParts;
+  }
 }
 
 export class Low extends Chip {
@@ -615,10 +668,8 @@ export class ClockedChip extends Chip {
   }
 
   override subscribeToClock(): void {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-    }
-    this.subscription = Clock.get().$.subscribe(({ level }) => {
+    this.subscription?.unsubscribe();
+    this.subscription = Clock.subscribe(({ level }) => {
       if (level === LOW) {
         this.tock();
       } else {

@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { bin } from "../util/twos.js";
-import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
+import { And, Inc16, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
-import { Bit, PC } from "./builtins/sequential/bit.js";
+import { Bit, PC, Register } from "./builtins/sequential/bit.js";
 import { DFF } from "./builtins/sequential/dff.js";
 import {
   Bus,
@@ -642,9 +642,7 @@ describe("Chip", () => {
 
     const fooA = new FooA();
     fooA.sortParts();
-    expect(fooA.parts.length).toBe(2);
-    expect(fooA.parts[0] == fooA.notB);
-    expect(fooA.parts[1] == fooA.notA);
+    expect(fooA.parts).toEqual([fooA.notB, fooA.notA]);
 
     class FooB extends Chip {
       readonly notA = new Not();
@@ -675,8 +673,41 @@ describe("Chip", () => {
     }
     const fooB = new FooB();
     fooB.sortParts();
-    expect(fooA.parts.length).toBe(2);
-    expect(fooA.parts[0] == fooA.notA);
-    expect(fooA.parts[1] == fooA.notB);
+    expect(fooB.parts).toEqual([fooB.notA, fooB.notB]);
   });
+
+  class FooC extends Chip {
+    readonly register = new Register();
+    readonly inc16 = new Inc16();
+    constructor() {
+      super([], [], "Foo", []);
+      this.wire(this.inc16, [
+        {
+          from: { name: "a", start: 0, width: 16 },
+          to: { name: "in", start: 0, width: 16 },
+        },
+        {
+          from: { name: "b", start: 0, width: 16 },
+          to: { name: "out", start: 0, width: 16 },
+        },
+      ]);
+      this.wire(this.register, [
+        {
+          from: { name: "b", start: 0, width: 16 },
+          to: { name: "in", start: 0, width: 16 },
+        },
+        {
+          from: { name: "true", start: 0, width: 1 },
+          to: { name: "load", start: 0, width: 1 },
+        },
+        {
+          from: { name: "a", start: 0, width: 16 },
+          to: { name: "out", start: 0, width: 16 },
+        },
+      ]);
+    }
+  }
+  const fooC = new FooC();
+  fooC.sortParts();
+  expect(fooC.parts).toEqual([fooC.register, fooC.inc16]);
 });

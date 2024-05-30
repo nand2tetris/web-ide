@@ -9,7 +9,7 @@ import {
 import { CompilationError, createError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
-import { Chip, Connection } from "./chip.js";
+import { Chip, Connection, isConstant } from "./chip.js";
 
 function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
   const start = pin.start ?? 0;
@@ -85,15 +85,6 @@ interface WireData {
   partChip: Chip;
   lhs: PinParts;
   rhs: PinParts;
-}
-
-function isConstant(pinName: string): boolean {
-  return (
-    pinName === "false" ||
-    pinName === "true" ||
-    pinName === "0" ||
-    pinName === "1"
-  );
 }
 
 function getSubBusWidth(pin: PinParts): number | undefined {

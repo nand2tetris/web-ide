@@ -8,7 +8,6 @@ import {
   Result,
   isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Subscription } from "rxjs";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
 import { Graph } from "./graph.js";
@@ -283,7 +282,6 @@ export class Chip {
   partToOuts = new Map<Chip, Set<string>>();
   parts: Chip[] = [];
   clockedPins: Set<string>;
-  subscription?: Subscription;
 
   get clocked() {
     if (this.clockedPins.size > 0) {
@@ -328,12 +326,7 @@ export class Chip {
 
     this.clockedPins = new Set(clocked);
 
-    this.subscribeToClock();
-  }
-
-  subscribeToClock() {
-    this.subscription?.unsubscribe();
-    this.subscription = Clock.subscribe(() => this.eval());
+    Clock.get().$.subscribe(() => this.eval());
   }
 
   reset() {
@@ -578,7 +571,6 @@ export class Chip {
   }
 
   remove() {
-    this.subscription?.unsubscribe();
     for (const part of this.parts) {
       part.remove();
     }
@@ -667,19 +659,16 @@ export class ClockedChip extends Chip {
     return true;
   }
 
-  override subscribeToClock(): void {
-    this.subscription?.unsubscribe();
-    this.subscription = Clock.subscribe(({ level }) => {
-      if (level === LOW) {
-        this.tock();
-      } else {
-        this.tick();
-      }
-    });
-  }
+  #subscription = Clock.get().$.subscribe(({ level }) => {
+    if (level === LOW) {
+      this.tock();
+    } else {
+      this.tick();
+    }
+  });
 
   override remove() {
-    this.subscription?.unsubscribe();
+    this.#subscription.unsubscribe();
     super.remove();
   }
 

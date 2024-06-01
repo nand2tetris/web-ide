@@ -213,9 +213,6 @@ class ChipBuilder {
     }
 
     this.chip.sortParts();
-    for (const part of this.chip.parts) {
-      part.subscribeToClock();
-    }
     return Ok(this.chip);
   }
 

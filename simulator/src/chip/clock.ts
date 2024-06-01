@@ -1,5 +1,5 @@
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
+import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { HIGH, LOW, Voltage } from "./chip.js";
 
 interface Tick {
@@ -17,10 +17,6 @@ export class Clock {
       clock = new Clock();
     }
     return clock;
-  }
-
-  static subscribe(observer: (value: Tick) => void) {
-    return Clock.get().$.subscribe(observer);
   }
 
   get isHigh(): boolean {

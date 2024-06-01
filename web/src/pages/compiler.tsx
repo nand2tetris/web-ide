@@ -1,5 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import {
   FileSystemAccessFileSystemAdapter,
@@ -143,7 +143,7 @@ export const Compiler = () => {
             </div>
             <div className="flex row flex-1">
               <button
-                data-tooltip="Open a folder containing Jack file(s)"
+                data-tooltip={t`Open a folder containing Jack file(s)`}
                 data-placement="right"
                 className="flex-0"
                 onClick={uploadFiles}
@@ -152,7 +152,7 @@ export const Compiler = () => {
               </button>
               <Padding />
               <button
-                data-tooltip="Create a new file in the currently opened folder"
+                data-tooltip={t`Create a new file in the currently opened folder`}
                 data-placement="right"
                 className="flex-0"
                 onClick={createFile}
@@ -162,7 +162,7 @@ export const Compiler = () => {
               <Padding />
               <button
                 className="flex-0"
-                data-tooltip="Compile all the opened Jack files"
+                data-tooltip={`Compile all the opened Jack files`}
                 data-placement="bottom"
                 onClick={compileFiles}
                 disabled={!valid()}
@@ -173,7 +173,7 @@ export const Compiler = () => {
               <button
                 className="flex-0"
                 disabled={!toolStates.compiler.compiled}
-                data-tooltip="Load the compiled code into the VM emulator"
+                data-tooltip={t`Load the compiled code into the VM emulator`}
                 data-placement="bottom"
                 onClick={runInVm}
               >

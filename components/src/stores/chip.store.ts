@@ -7,8 +7,7 @@ import {
   BUILTIN_CHIP_PROJECTS,
   CHIP_ORDER,
   CHIP_PROJECTS,
-  ChipProjects,
-} from "@nand2tetris/projects/index.js";
+} from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
   getBuiltinChip,
@@ -84,7 +83,11 @@ export function isBuiltinOnly(
   return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
-function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
+async function getTemplate(
+  project: keyof typeof CHIP_PROJECTS,
+  chipName: string
+) {
+  const { ChipProjects } = await import("@nand2tetris/projects/full.js");
   if (isBuiltinOnly(project, chipName)) {
     return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
       chipName
@@ -96,8 +99,11 @@ function getTemplate(project: keyof typeof CHIP_PROJECTS, chipName: string) {
   )[chipName][`${chipName}.hdl`] as string;
 }
 
-function getBuiltinCode(project: keyof typeof CHIP_PROJECTS, chipName: string) {
-  const template = getTemplate(project, chipName);
+async function getBuiltinCode(
+  project: keyof typeof CHIP_PROJECTS,
+  chipName: string
+) {
+  const template = await getTemplate(project, chipName);
   if (isBuiltinOnly(project, chipName)) {
     return template;
   }
@@ -262,11 +268,14 @@ export function makeChipStore(
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
       const passed = compare(state.files.cmp.trim(), state.files.out.trim());
-      setStatus(
-        passed
-          ? `Simulation successful: The output file is identical to the compare file`
-          : `Simulation error: The output file differs from the compare file`
-      );
+      // For some reason, this is happening during a render but I can't track it down.
+      Promise.resolve().then(() => {
+        setStatus(
+          passed
+            ? `Simulation successful: The output file is identical to the compare file`
+            : `Simulation error: The output file differs from the compare file`
+        );
+      });
     },
 
     updateTestStep(state: ChipPageState) {
@@ -316,6 +325,7 @@ export function makeChipStore(
           this.useBuiltin();
         }
       }
+      await this.initializeTest(chip);
       dispatch.current({ action: "setChip", payload: chipName });
     },
 
@@ -408,16 +418,19 @@ export function makeChipStore(
       const fsName = (ext: string) =>
         `/projects/${project}/${name}/${name}.${ext}`;
 
-      const files = await fs.scandir(`/projects/${project}/${name}`);
-      tests = files
-        .filter((file) => file.name.endsWith(".tst"))
-        .map((file) => file.name);
-
       const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
 
       dispatch.current({ action: "setFiles", payload: { hdl } });
-      await this.setTest(tests[0]);
       await this.compileChip(hdl);
+    },
+
+    async initializeTest(name: string) {
+      tests = (await fs.scandir(`/projects/${project}/${name}`))
+        .filter((file) => file.name.endsWith(".tst"))
+        .map((file) => file.name);
+      if (tests.length > 0) {
+        await this.setTest(tests[0]);
+      }
     },
 
     async loadTest(test: string) {
@@ -493,7 +506,7 @@ export function makeChipStore(
         await this.saveChip(oldHdl, project, chipName);
       }
 
-      const hdl = getBuiltinCode(project, builtinName);
+      const hdl = await getBuiltinCode(project, builtinName);
       dispatch.current({ action: "setFiles", payload: { hdl } });
       this.replaceChip(Ok(nextChip));
     },
@@ -546,7 +559,8 @@ export function makeChipStore(
       return done;
     },
 
-    resetFile() {
+    async resetFile() {
+      const { ChipProjects } = await import("@nand2tetris/projects/full.js");
       const template = (
         ChipProjects[project].CHIPS as Record<string, Record<string, string>>
       )[chipName][`${chipName}.hdl`];

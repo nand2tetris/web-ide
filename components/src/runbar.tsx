@@ -18,7 +18,7 @@ export const Runbar = (props: {
   onSpeedChange?: (speed: number) => void;
 }) => {
   const runner = useTimer(props.runner);
-  const [speedValue, setSpeed] = useState(0);
+  const [speedValue, setSpeed] = useState(2);
 
   const speedValues: Record<number, [number, number]> = {
     0: [1000, 1],

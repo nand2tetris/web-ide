@@ -10,7 +10,6 @@ import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import {
-  CSSProperties,
   Dispatch,
   ReactNode,
   RefObject,
@@ -24,6 +23,7 @@ import { AppContext } from "../App.context";
 import { useDialog } from "./dialog";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
+import { Tab, TabList } from "./tabs";
 
 const WARNING_KEY = "skipTestEditWarning";
 
@@ -246,30 +246,8 @@ export const TestPanel = ({
         </>
       }
     >
-      <div role="tablist" style={{ "--tab-count": "3" } as CSSProperties}>
-        <div
-          role="tab"
-          id="test-tab-tst"
-          aria-controls="test-tabpanel-tst"
-          aria-selected={selectedTestTab === "tst"}
-        >
-          <label>
-            <input
-              type="radio"
-              name="test-tabs"
-              aria-controls="test-tabpanel-tst"
-              value="tst"
-              checked={selectedTestTab === "tst"}
-              onChange={() => setSelectedTestTab("tst")}
-            />
-            Test Script
-          </label>
-        </div>
-        <div
-          role="tabpanel"
-          aria-labelledby="test-tab-tst"
-          id="test-tabpanel-tst"
-        >
+      <TabList>
+        <Tab title="Test Script" onSelect={() => setSelectedTestTab("tst")}>
           <Editor
             value={tst}
             onChange={onChange}
@@ -278,31 +256,8 @@ export const TestPanel = ({
             disabled={!editMode}
             highlight={showHighlight ? tstHighlight : undefined}
           />
-        </div>
-        <div
-          role="tab"
-          id="test-tab-cmp"
-          aria-controls="test-tablpanel-cmp"
-          aria-selected={selectedTestTab === "cmp"}
-        >
-          <label>
-            <input
-              type="radio"
-              name="test-tabs"
-              aria-controls="test-tabpanel-cmp"
-              value="cmp"
-              checked={selectedTestTab === "cmp"}
-              onChange={() => setSelectedTestTab("cmp")}
-            />
-            Compare File
-          </label>
-        </div>
-        <div
-          role="tabpanel"
-          aria-labelledby="test-tab-cmp"
-          id="test-tabpanel-cmp"
-          style={{ position: "relative" }}
-        >
+        </Tab>
+        <Tab title="Compare File" onSelect={() => setSelectedTestTab("cmp")}>
           <Editor
             value={cmp}
             onChange={setCmp}
@@ -311,30 +266,8 @@ export const TestPanel = ({
             lineNumberTransform={(_) => ""}
             disabled={!editMode}
           />
-        </div>
-        <div
-          role="tab"
-          id="test-tab-out"
-          aria-controls="test-tabpanel-out"
-          aria-selected={selectedTestTab === "out"}
-        >
-          <label>
-            <input
-              type="radio"
-              name="test-tabs"
-              aria-controls="test-tabpanel-out"
-              value="out"
-              checked={selectedTestTab === "out"}
-              onChange={() => setSelectedTestTab("out")}
-            />
-            Output File
-          </label>
-        </div>
-        <div
-          role="tabpanel"
-          id="test-tabpanel-out"
-          aria-labelledby="test-tab-out"
-        >
+        </Tab>
+        <Tab title="Output File" onSelect={() => setSelectedTestTab("out")}>
           {out == "" && <p>Execute test script to compare output.</p>}
           {(diffDisplay?.failureNum ?? 0) > 0 && (
             <p>
@@ -361,8 +294,8 @@ export const TestPanel = ({
                 })
               )}
           />
-        </div>
-      </div>
+        </Tab>
+      </TabList>
     </Panel>
   );
 };

@@ -5,7 +5,7 @@ import {
   isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { FIBONACCI } from "@nand2tetris/projects/samples/vm.js";
+import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
   KeyboardAdapter,
   MemoryAdapter,
@@ -313,6 +313,9 @@ export function makeVmStore(
         dispatch.current({ action: "setValid", payload: false });
         return true;
       }
+    },
+    setPaused(paused = true) {
+      vm.setPaused(paused);
     },
     step() {
       showHighlight = true;

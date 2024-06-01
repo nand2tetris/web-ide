@@ -1,4 +1,5 @@
-import { Assignment, Assignments } from "@nand2tetris/projects/index.js";
+import type { Assignment } from "@nand2tetris/projects/base.js";
+import { Assignments } from "@nand2tetris/projects/full.js";
 import { JavaRunner } from "@nand2tetris/runner/index.js";
 import {
   AssignmentFiles,

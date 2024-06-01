@@ -70,7 +70,9 @@ export const Screen = ({
   };
 
   const draw = useCallback(() => {
-    const ctx = canvas.current?.getContext("2d") ?? undefined;
+    const ctx =
+      canvas.current?.getContext("2d", { willReadFrequently: true }) ??
+      undefined;
 
     if (ctx) {
       drawImage(ctx, memory);
@@ -98,9 +100,24 @@ export const Screen = ({
         <div>Screen</div>
         {showScaleControls && (
           <fieldset role="group">
-            <button onClick={() => onScaleCB(0)}>x0</button>
-            <button onClick={() => onScaleCB(1)}>x1</button>
-            <button onClick={() => onScaleCB(2)}>x2</button>
+            <button
+              aria-current={screenScale === 0}
+              onClick={() => onScaleCB(0)}
+            >
+              x0
+            </button>
+            <button
+              aria-current={screenScale === 1}
+              onClick={() => onScaleCB(1)}
+            >
+              x1
+            </button>
+            <button
+              aria-current={screenScale === 2}
+              onClick={() => onScaleCB(2)}
+            >
+              x2
+            </button>
           </fieldset>
         )}
       </header>

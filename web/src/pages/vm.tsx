@@ -16,6 +16,7 @@ import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
+import { AppContext } from "../App.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
@@ -51,7 +52,8 @@ interface Rerenderable {
 
 const VM = () => {
   const { state, actions, dispatch } = useVmPageStore();
-  const { fs, setStatus } = useContext(BaseContext);
+  const { setStatus } = useContext(BaseContext);
+  const { toolStates, setTitle } = useContext(AppContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -61,6 +63,16 @@ const VM = () => {
   useEffect(() => {
     actions.initialize();
   }, [actions]);
+
+  useEffect(() => {
+    setTitle(toolStates.vm.title);
+  });
+
+  useEffect(() => {
+    if (toolStates.vm.files) {
+      actions.loadVm(toolStates.vm.files);
+    }
+  }, [toolStates.vm.files]);
 
   useEffect(() => {
     actions.loadTest(path, tst, cmp);
@@ -100,6 +112,7 @@ const VM = () => {
       }
 
       override toggle() {
+        actions.setPaused(!this.running);
         dispatch.current({ action: "update" });
       }
     })();
@@ -119,6 +132,7 @@ const VM = () => {
       }
 
       override toggle() {
+        actions.setPaused(!this.running);
         dispatch.current({ action: "update" });
       }
     })();
@@ -157,6 +171,8 @@ const VM = () => {
     setStatus("");
 
     const dirname = event.target.files[0].webkitRelativePath.split("/")[0];
+    toolStates.vm.setTitle(`${dirname} / *.vm`);
+
     if (dirname) {
       let vms: Record<string, Record<string, string>> | undefined;
 

@@ -30,11 +30,14 @@ export const Asm = () => {
   const [showSymbolTable, setShowSymbolTable] = useState(true);
 
   useEffect(() => {
+    if (state?.path) {
+      setTitle(state.path.split("/").pop() ?? "");
+    }
+  });
+
+  useEffect(() => {
     if (toolStates.asmState) {
       actions.overrideState(toolStates.asmState);
-      if (toolStates.asmState.path) {
-        setTitle(toolStates.asmState.path.split("/").pop() ?? "");
-      }
     }
   }, []);
 

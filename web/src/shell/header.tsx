@@ -68,7 +68,7 @@ const headerButtons: HeaderButton[] = [
   headerButtonFromURL(URLs["cpu"], "developer_board"),
   headerButtonFromURL(URLs["asm"], "list_alt"),
   headerButtonFromURL(URLs["vm"], "computer"),
-  // headerButtonFromURL(URLs["compiler"], "code"),
+  headerButtonFromURL(URLs["compiler"], "code"),
   headerButtonFromURL(URLs["bitmap"], "grid_on"),
   headerButtonFromURL(URLs["util"], "function", "Converter Tool"),
   {

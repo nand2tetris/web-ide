@@ -28,8 +28,6 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the base addresses of some of the memory segments, 
 // and sets some values in the argument segment.
 
-load SimpleFunction.vm,
-
 set sp 317,
 set local 317,
 set argument 310,

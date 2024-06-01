@@ -61,7 +61,6 @@ export const vm_tst = `// Tests and illustrates how the VM implementation handle
 // by executing the functions in Sys.vm in the VM emulator.
 // In particular, loads and runs the functions in Sys.vm.
 
-load Sys.vm,
 output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
 
 set RAM[0] 261,

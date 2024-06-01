@@ -55,8 +55,6 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // and sets argument[0] to n and argument [1] to the base address
 // of the generated series.
 
-load FibonacciSeries.vm,
-
 set sp 256,
 set local 300,
 set argument 400,

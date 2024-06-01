@@ -30,8 +30,6 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 
 // Tests and illustrates PointerTest.vm on the VM simulator.
 
-load PointerTest.vm,
-
 set RAM[0] 256,   // initializes the stack pointer
 
 repeat 15 {       // PointerTest.vm has 15 VM commands

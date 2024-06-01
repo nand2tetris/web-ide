@@ -69,8 +69,6 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 
 // Tests and illustrates the statics test on the VM emulator.
 
-load,
-
 set sp 261,
 
 repeat 36 {

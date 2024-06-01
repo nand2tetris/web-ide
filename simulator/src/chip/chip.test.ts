@@ -676,38 +676,51 @@ describe("Chip", () => {
     expect(fooB.parts).toEqual([fooB.notA, fooB.notB]);
   });
 
-  class FooC extends Chip {
-    readonly register = new Register();
-    readonly inc16 = new Inc16();
-    constructor() {
-      super([], [], "Foo", []);
-      this.wire(this.inc16, [
-        {
-          from: { name: "a", start: 0, width: 16 },
-          to: { name: "in", start: 0, width: 16 },
-        },
-        {
-          from: { name: "b", start: 0, width: 16 },
-          to: { name: "out", start: 0, width: 16 },
-        },
-      ]);
-      this.wire(this.register, [
-        {
-          from: { name: "b", start: 0, width: 16 },
-          to: { name: "in", start: 0, width: 16 },
-        },
-        {
-          from: { name: "true", start: 0, width: 1 },
-          to: { name: "load", start: 0, width: 1 },
-        },
-        {
-          from: { name: "a", start: 0, width: 16 },
-          to: { name: "out", start: 0, width: 16 },
-        },
-      ]);
+  it("sorts clocked chips", () => {
+    class FooC extends Chip {
+      readonly register = new Register();
+      readonly inc16A = new Inc16();
+      readonly inc16B = new Inc16();
+      constructor() {
+        super([], [], "Foo", []);
+        this.wire(this.inc16B, [
+          {
+            from: { name: "b", start: 0, width: 16 },
+            to: { name: "in", start: 0, width: 16 },
+          },
+          {
+            from: { name: "c", start: 0, width: 16 },
+            to: { name: "out", start: 0, width: 16 },
+          },
+        ]);
+        this.wire(this.register, [
+          {
+            from: { name: "c", start: 0, width: 16 },
+            to: { name: "in", start: 0, width: 16 },
+          },
+          {
+            from: { name: "true", start: 0, width: 1 },
+            to: { name: "load", start: 0, width: 1 },
+          },
+          {
+            from: { name: "a", start: 0, width: 16 },
+            to: { name: "out", start: 0, width: 16 },
+          },
+        ]);
+        this.wire(this.inc16A, [
+          {
+            from: { name: "a", start: 0, width: 16 },
+            to: { name: "in", start: 0, width: 16 },
+          },
+          {
+            from: { name: "b", start: 0, width: 16 },
+            to: { name: "out", start: 0, width: 16 },
+          },
+        ]);
+      }
     }
-  }
-  const fooC = new FooC();
-  fooC.sortParts();
-  expect(fooC.parts).toEqual([fooC.register, fooC.inc16]);
+    const fooC = new FooC();
+    fooC.sortParts();
+    expect(fooC.parts).toEqual([fooC.register, fooC.inc16A, fooC.inc16B]);
+  });
 });

@@ -1,5 +1,5 @@
 import { i18n } from "@lingui/core";
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
@@ -9,6 +9,8 @@ import "../pico/property.scss";
 import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
+
+const showUpgradeFs = false;
 
 export const Settings = () => {
   const { toolStates } = useContext(AppContext);
@@ -153,42 +155,46 @@ export const Settings = () => {
                 <Trans>Files</Trans>
               </dt>
               <dd>
-                {/* <button
-                  disabled={upgrading}
-                  onClick={async () => {
-                    setUpgrading(true);
-                    try {
-                      await upgradeFs();
-                    } catch (err) {
-                      console.error("Failed to upgrade FS", { err });
-                      setStatus(t`Failed to load local file system.`);
-                    }
-                    setUpgrading(false);
-                  }}
-                >
-                  {!upgraded ? (
-                    <Trans>Use Local FileSystem</Trans>
-                  ) : (
-                    <Trans>Change Local FileSystem</Trans>
-                  )}
-                  <Trans>Beta</Trans>
-                </button>
-                {upgraded ? (
+                {showUpgradeFs && (
                   <>
-                    <p>
-                      <Trans>Using {upgraded}</Trans>
-                    </p>
                     <button
+                      disabled={upgrading}
                       onClick={async () => {
-                        await closeFs();
+                        setUpgrading(true);
+                        try {
+                          await upgradeFs();
+                        } catch (err) {
+                          console.error("Failed to upgrade FS", { err });
+                          setStatus(t`Failed to load local file system.`);
+                        }
+                        setUpgrading(false);
                       }}
                     >
-                      Close Local FileSystem
+                      {!upgraded ? (
+                        <Trans>Use Local FileSystem</Trans>
+                      ) : (
+                        <Trans>Change Local FileSystem</Trans>
+                      )}
+                      <Trans>Beta</Trans>
                     </button>
+                    {upgraded ? (
+                      <>
+                        <p>
+                          <Trans>Using {upgraded}</Trans>
+                        </p>
+                        <button
+                          onClick={async () => {
+                            await closeFs();
+                          }}
+                        >
+                          Close Local FileSystem
+                        </button>
+                      </>
+                    ) : (
+                      <></>
+                    )}
                   </>
-                ) : (
-                  <></>
-                )} */}
+                )}
                 <button
                   onClick={async () => {
                     resetWarning.open();

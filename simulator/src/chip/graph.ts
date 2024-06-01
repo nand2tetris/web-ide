@@ -1,3 +1,5 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+
 interface NodeState {
   node: number;
   isReturning: boolean;
@@ -20,7 +22,7 @@ export class Graph {
     const stack: NodeState[] = [{ node: start, isReturning: false }];
 
     while (stack.length > 0) {
-      const { node, isReturning } = stack.pop()!;
+      const { node, isReturning } = assertExists(stack.pop());
 
       if (isReturning) {
         // If we are returning to this node, we can safely add it to the sorted list

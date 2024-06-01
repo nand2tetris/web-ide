@@ -19,6 +19,10 @@ export class Clock {
     return clock;
   }
 
+  static subscribe(observer: (value: Tick) => void) {
+    return Clock.get().$.subscribe(observer);
+  }
+
   get isHigh(): boolean {
     return this.level === HIGH;
   }

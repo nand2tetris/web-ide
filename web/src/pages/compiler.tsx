@@ -142,17 +142,27 @@ export const Compiler = () => {
               <Trans>Source</Trans>
             </div>
             <div className="flex row flex-1">
-              <button className="flex-0" onClick={uploadFiles}>
+              <button
+                data-tooltip="Open a folder containing Jack file(s)"
+                data-placement="right"
+                className="flex-0"
+                onClick={uploadFiles}
+              >
                 📂
               </button>
               <Padding />
-              <button className="flex-0" onClick={createFile}>
+              <button
+                data-tooltip="Create a new file in the currently opened folder"
+                data-placement="right"
+                className="flex-0"
+                onClick={createFile}
+              >
                 +
               </button>
               <Padding />
               <button
                 className="flex-0"
-                data-tooltip="Compiles into VM code"
+                data-tooltip="Compile all the opened Jack files"
                 data-placement="bottom"
                 onClick={compileFiles}
                 disabled={!valid()}
@@ -163,8 +173,8 @@ export const Compiler = () => {
               <button
                 className="flex-0"
                 disabled={!toolStates.compiler.compiled}
-                data-tooltip="Loads the compiled code into the VM emulators"
-                data-placement="right"
+                data-tooltip="Load the compiled code into the VM emulator"
+                data-placement="bottom"
                 onClick={runInVm}
               >
                 Run

@@ -10,6 +10,8 @@ import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
+const showUpgradeFs = false;
+
 export const Settings = () => {
   const { toolStates } = useContext(AppContext);
   const { fs, setStatus, upgradeFs, closeFs, upgraded } =
@@ -153,41 +155,45 @@ export const Settings = () => {
                 <Trans>Files</Trans>
               </dt>
               <dd>
-                <button
-                  disabled={upgrading}
-                  onClick={async () => {
-                    setUpgrading(true);
-                    try {
-                      await upgradeFs();
-                    } catch (err) {
-                      console.error("Failed to upgrade FS", { err });
-                      setStatus(t`Failed to load local file system.`);
-                    }
-                    setUpgrading(false);
-                  }}
-                >
-                  {!upgraded ? (
-                    <Trans>Use Local FileSystem</Trans>
-                  ) : (
-                    <Trans>Change Local FileSystem</Trans>
-                  )}
-                  <Trans>Beta</Trans>
-                </button>
-                {upgraded ? (
+                {showUpgradeFs && (
                   <>
-                    <p>
-                      <Trans>Using {upgraded}</Trans>
-                    </p>
                     <button
+                      disabled={upgrading}
                       onClick={async () => {
-                        await closeFs();
+                        setUpgrading(true);
+                        try {
+                          await upgradeFs();
+                        } catch (err) {
+                          console.error("Failed to upgrade FS", { err });
+                          setStatus(t`Failed to load local file system.`);
+                        }
+                        setUpgrading(false);
                       }}
                     >
-                      Close Local FileSystem
+                      {!upgraded ? (
+                        <Trans>Use Local FileSystem</Trans>
+                      ) : (
+                        <Trans>Change Local FileSystem</Trans>
+                      )}
+                      <Trans>Beta</Trans>
                     </button>
+                    {upgraded ? (
+                      <>
+                        <p>
+                          <Trans>Using {upgraded}</Trans>
+                        </p>
+                        <button
+                          onClick={async () => {
+                            await closeFs();
+                          }}
+                        >
+                          Close Local FileSystem
+                        </button>
+                      </>
+                    ) : (
+                      <></>
+                    )}
                   </>
-                ) : (
-                  <></>
                 )}
                 <button
                   onClick={async () => {

@@ -2,33 +2,40 @@ import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
 import { Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import type JSZip from "jszip";
-import { newZip } from "./zip";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
 import { useDialog } from "./dialog";
 import "./file_select.scss";
+import { newZip } from "./zip";
 
-// export const Selected = Symbol.for("file selected");
 export const Selected = "file selected";
+
+export interface FilePickerOptions {
+  suffix?: string | string[];
+  allowFolders?: boolean;
+}
+
+export interface LocalFile {
+  name: string;
+  content: string;
+}
 
 export function useFilePicker() {
   const dialog = useDialog();
   const [suffix, setSuffix] = useState<string[]>();
   const [allowFolders, setAllowFolders] = useState(false);
+  const [allowLocal, setAllowLocal] = useState(false);
 
-  const selected = useRef<(v: string) => void>();
+  const selected = useRef<(v: string | LocalFile) => void>();
 
-  const select = useCallback(
-    async (
-      suffix?: string | string[],
-      allowFolders = false
-    ): Promise<string> => {
-      if (typeof suffix === "string") {
-        suffix = [suffix];
+  const _select = useCallback(
+    async (options: FilePickerOptions): Promise<string | LocalFile> => {
+      if (typeof options.suffix === "string") {
+        options.suffix = [options.suffix];
       }
-      setSuffix(suffix);
-      setAllowFolders(allowFolders);
+      setSuffix(options.suffix);
+      setAllowFolders(options.allowFolders ?? false);
       dialog.open();
       return new Promise((resolve) => {
         selected.current = resolve;
@@ -37,12 +44,24 @@ export function useFilePicker() {
     [dialog, selected]
   );
 
+  const select = async (options: FilePickerOptions) => {
+    setAllowLocal(false);
+    return (await _select(options)) as string;
+  };
+
+  const selectAllowLocal = async (options: FilePickerOptions) => {
+    setAllowLocal(true);
+    return _select(options);
+  };
+
   return {
     ...dialog,
     select,
+    selectAllowLocal,
     [Selected]: selected,
     suffix: suffix,
     allowFolders,
+    allowLocal,
   };
 }
 
@@ -147,6 +166,22 @@ export const FilePicker = () => {
     filePicker[Selected].current?.(chosen);
   }, [chosen, filePicker, setStatus]);
 
+  const loadRef = useRef<HTMLInputElement>(null);
+  const loadLocal = () => {
+    loadRef.current?.click();
+  };
+
+  const onLoadLocal = async () => {
+    if (loadRef.current && loadRef.current.files) {
+      const file = loadRef.current.files[0];
+      filePicker[Selected].current?.({
+        name: file.name,
+        content: await file.text(),
+      });
+      filePicker.close();
+    }
+  };
+
   const downloadRef = useRef<HTMLAnchorElement>(null);
   const downloadFolder = async () => {
     if (!downloadRef.current) {
@@ -166,6 +201,12 @@ export const FilePicker = () => {
 
   return (
     <dialog open={filePicker.isOpen}>
+      <input
+        type="file"
+        ref={loadRef}
+        onChange={onLoadLocal}
+        style={{ display: "none" }}
+      ></input>
       <article className="file-select flex">
         <header>
           <p>
@@ -235,6 +276,9 @@ export const FilePicker = () => {
           >
             Select
           </button>
+          {filePicker.allowLocal && (
+            <button onClick={loadLocal}>Select local file</button>
+          )}
           <button
             onClick={downloadFolder}
             data-tooltip="Download all files in this folder into a zip"

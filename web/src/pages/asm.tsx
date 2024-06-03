@@ -70,7 +70,7 @@ export const Asm = () => {
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   const loadAsm = async () => {
-    const path = await filePicker.select(".asm");
+    const path = await filePicker.select({ suffix: ".asm" });
     setStatus(LOADING);
     requestAnimationFrame(async () => {
       await actions.loadAsm(path);

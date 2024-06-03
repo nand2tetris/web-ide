@@ -9,7 +9,10 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { AppContext } from "src/App.context";
+import { LocalFile } from "src/shell/file_select";
 import { Accordian, Panel } from "src/shell/panel";
 import { TestPanel } from "src/shell/test_panel";
 import "./cpu.scss";
@@ -17,35 +20,34 @@ import "./cpu.scss";
 export const CPU = () => {
   const { state, actions, dispatch } = useCpuPageStore();
   const { toolStates, filePicker, setTitle } = useContext(AppContext);
+  const { fs } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
-  const [fileName, setFileName] = useState<string>();
+  const [file, setFile] = useState<string | LocalFile>();
   const [romFormat, setRomFormat] = useState("asm");
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
     if (toolStates.cpuState.rom) {
-      dispatch.current({
-        action: "replaceROM",
-        payload: toolStates.cpuState.rom,
-      });
+      actions.replaceROM(toolStates.cpuState.rom);
       setRomFormat(toolStates.cpuState.format);
-      if (toolStates.cpuState.path) {
-        const name = toolStates.cpuState.path.split("/").pop() ?? "";
-        setTitle(name);
-        setFileName(name);
-        onUpload(toolStates.cpuState.path);
+      if (toolStates.cpuState.file) {
+        setFile(toolStates.cpuState.file);
+        if (typeof toolStates.cpuState.file == "string") {
+          setPath(toolStates.cpuState.file);
+        }
       }
     }
   }, []);
 
   useEffect(() => {
-    toolStates.setCpuState(fileName, state.sim.ROM, romFormat);
-    if (fileName) {
-      const name = fileName.split("/").pop() ?? "";
-      setTitle(name);
+    toolStates.setCpuState(file, state.sim.ROM as ROM, romFormat);
+    if (file) {
+      setTitle(
+        typeof file == "string" ? file.split("/").pop() ?? "" : file.name
+      );
     }
   });
 
@@ -102,11 +104,8 @@ export const CPU = () => {
     };
   }, [actions, dispatch]);
 
-  const onUpload = async (path: string) => {
-    const name = path.split("/").pop() ?? "";
-    setFileName(name);
-    setTitle(name);
-    actions.setPath(path);
+  const setPath = async (fullPath: string) => {
+    actions.setPath(fullPath);
     actions.reset();
   };
 
@@ -136,9 +135,21 @@ export const CPU = () => {
         memory={state.sim.ROM}
         highlight={state.sim.PC}
         format={romFormat}
-        onUpload={onUpload}
         fileSelect={async () => {
-          return await filePicker.select([".asm", ".hack"]);
+          const file = await filePicker.selectAllowLocal({
+            suffix: [".asm", ".hack"],
+          });
+          setFile(file);
+          if (typeof file === "string") {
+            setPath(file);
+            return {
+              name: file.split("/").pop() ?? "",
+              content: await fs.readFile(file),
+            };
+          } else {
+            actions.clearTest();
+            return file;
+          }
         }}
       />
       <MemoryComponent
@@ -191,7 +202,6 @@ export const CPU = () => {
           cmp={[cmp, setCmp]}
           tstName={state.test.name}
           disabled={!state.test.valid}
-          showLoad={false}
           showName={state.tests.length < 2}
           onSpeedChange={(speed) => {
             actions.setAnimate(speed <= 2);

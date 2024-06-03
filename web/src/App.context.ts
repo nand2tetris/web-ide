@@ -1,9 +1,13 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
-import { Format, MemoryAdapter } from "@nand2tetris/simulator/cpu/memory";
+import { Format, MemoryAdapter, ROM } from "@nand2tetris/simulator/cpu/memory";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
-import { useFilePicker } from "./shell/file_select";
+import {
+  FilePickerOptions,
+  LocalFile,
+  useFilePicker,
+} from "./shell/file_select";
 import { useTracking } from "./tracking";
 
 export type Theme = "light" | "dark" | "system";
@@ -30,24 +34,24 @@ export function useMonaco() {
 }
 
 export function useToolStates() {
-  const [rom, setRom] = useState<MemoryAdapter>();
-  const [cpuPath, setCpuPath] = useState<string>();
+  const [rom, setRom] = useState<ROM>();
+  const [cpuFile, setCpuFile] = useState<string | LocalFile>();
   const [cpuFormat, setCpuFormat] = useState<Format>("asm");
 
   const [asmState, setAsmState] = useState<AsmPageState>();
 
   const setCpuState = (
-    path: string | undefined,
-    rom: MemoryAdapter | undefined,
+    path: string | LocalFile | undefined,
+    rom: ROM | undefined,
     format: Format
   ) => {
-    setCpuPath(path);
+    setCpuFile(path);
     setRom(rom);
     setCpuFormat(format);
   };
 
   return {
-    cpuState: { rom: rom, path: cpuPath, format: cpuFormat },
+    cpuState: { rom: rom, file: cpuFile, format: cpuFormat },
     setCpuState,
     asmState,
     setAsmState,
@@ -86,7 +90,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     open() {
       return undefined;
     },
-    select() {
+    select(options: FilePickerOptions) {
       return Promise.reject("");
     },
     isOpen: false,
@@ -126,7 +130,7 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     return undefined;
   },
   toolStates: {
-    cpuState: { rom: undefined, path: undefined, format: "asm" },
+    cpuState: { rom: undefined, file: undefined, format: "asm" },
     setCpuState() {
       return undefined;
     },

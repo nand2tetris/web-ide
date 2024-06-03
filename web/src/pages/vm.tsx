@@ -134,7 +134,7 @@ const VM = () => {
   }, [actions, dispatch]);
 
   const load = async () => {
-    const path = await filePicker.select(".vm", true);
+    const path = await filePicker.select({ suffix: ".vm", allowFolders: true });
     setStatus(LOADING);
 
     requestAnimationFrame(async () => {

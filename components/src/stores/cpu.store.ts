@@ -123,12 +123,6 @@ export function makeCpuStore(
           : `Simulation error: The output file differs from the compare file`
       );
     },
-
-    replaceROM(state: CpuPageState, rom: ROM) {
-      test = new CPUTest(rom);
-      test.reset();
-      this.update(state);
-    },
   };
 
   const actions = {
@@ -182,8 +176,17 @@ export function makeCpuStore(
 
     reset() {
       test.reset();
-      dispatch.current({ action: "setTest", payload: {} });
       dispatch.current({ action: "update" });
+    },
+
+    clearTest() {
+      this.compileTest(makeTst(), "");
+      dispatch.current({ action: "update" });
+    },
+
+    replaceROM(rom: ROM) {
+      test = new CPUTest(rom);
+      this.clearTest();
     },
 
     compileTest(file: string, cmp?: string) {

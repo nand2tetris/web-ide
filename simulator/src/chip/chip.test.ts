@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { bin } from "../util/twos.js";
-import { And, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
+import { And, Inc16, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
-import { Bit, PC } from "./builtins/sequential/bit.js";
+import { Bit, PC, Register } from "./builtins/sequential/bit.js";
 import { DFF } from "./builtins/sequential/dff.js";
 import {
   Bus,
@@ -673,5 +673,53 @@ describe("Chip", () => {
 
     const fooB = new FooB();
     expect(fooB.parts).toEqual([fooB.notA, fooB.notB]);
+  });
+
+  it("sorts clocked chips", () => {
+    class FooC extends Chip {
+      readonly register = new Register();
+      readonly inc16A = new Inc16();
+      readonly inc16B = new Inc16();
+      constructor() {
+        super([], [], "Foo", []);
+        this.wire(this.inc16B, [
+          {
+            from: { name: "b", start: 0, width: 16 },
+            to: { name: "in", start: 0, width: 16 },
+          },
+          {
+            from: { name: "c", start: 0, width: 16 },
+            to: { name: "out", start: 0, width: 16 },
+          },
+        ]);
+        this.wire(this.register, [
+          {
+            from: { name: "c", start: 0, width: 16 },
+            to: { name: "in", start: 0, width: 16 },
+          },
+          {
+            from: { name: "true", start: 0, width: 1 },
+            to: { name: "load", start: 0, width: 1 },
+          },
+          {
+            from: { name: "a", start: 0, width: 16 },
+            to: { name: "out", start: 0, width: 16 },
+          },
+        ]);
+        this.wire(this.inc16A, [
+          {
+            from: { name: "a", start: 0, width: 16 },
+            to: { name: "in", start: 0, width: 16 },
+          },
+          {
+            from: { name: "b", start: 0, width: 16 },
+            to: { name: "out", start: 0, width: 16 },
+          },
+        ]);
+      }
+    }
+    const fooC = new FooC();
+    const parts = fooC.parts.map((chip) => chip.id);
+    expect(parts).toEqual([fooC.register.id, fooC.inc16A.id, fooC.inc16B.id]);
   });
 });

@@ -9,7 +9,7 @@ import {
 import { CompilationError, createError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
-import { Chip, Connection } from "./chip.js";
+import { Chip, Connection, isConstantPin } from "./chip.js";
 
 function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
   const start = pin.start ?? 0;
@@ -85,15 +85,6 @@ interface WireData {
   partChip: Chip;
   lhs: PinParts;
   rhs: PinParts;
-}
-
-function isConstant(pinName: string): boolean {
-  return (
-    pinName === "false" ||
-    pinName === "true" ||
-    pinName === "0" ||
-    pinName === "1"
-  );
 }
 
 function getSubBusWidth(pin: PinParts): number | undefined {
@@ -220,9 +211,12 @@ class ChipBuilder {
     if (isErr(result)) {
       return result;
     }
+
+    // Reset clock order after wiring sub-pins
     for (const part of this.chip.parts) {
       part.subscribeToClock();
     }
+
     return Ok(this.chip);
   }
 
@@ -313,18 +307,10 @@ class ChipBuilder {
     } else {
       return Err(createError(`Undefined pin name: ${lhs.pin}`, lhs.span));
     }
-    if (!isConstant(rhs.pin)) {
+    if (!isConstantPin(rhs.pin)) {
       this.wires.push({ partChip: partChip, lhs, rhs });
     }
     return Ok();
-  }
-
-  private isInternal(pinName: string): boolean {
-    return !(
-      this.chip.isInPin(pinName) ||
-      this.chip.isOutPin(pinName) ||
-      isConstant(pinName)
-    );
   }
 
   private validateInputWire(
@@ -341,7 +327,7 @@ class ChipBuilder {
     }
 
     // track internal pin use to detect undefined pins
-    if (this.isInternal(rhs.pin)) {
+    if (this.chip.isInternalPin(rhs.pin)) {
       const pinData = this.internalPins.get(rhs.pin);
       if (pinData == undefined) {
         this.internalPins.set(rhs.pin, {
@@ -407,7 +393,7 @@ class ChipBuilder {
     if (this.chip.isInPin(rhs.pin)) {
       return Err(createError(`Cannot write to input pin ${rhs.pin}`, rhs.span));
     }
-    if (isConstant(rhs.pin)) {
+    if (isConstantPin(rhs.pin)) {
       return Err(
         createError(`Internal pin name cannot be "true" or "false"`, rhs.span)
       );
@@ -421,7 +407,7 @@ class ChipBuilder {
     } else if (!this.chip.isInPin(rhs.pin) && rhs.start != undefined) {
       return Err(
         createError(
-          isConstant(rhs.pin)
+          isConstantPin(rhs.pin)
             ? `Constant bus cannot be subscripted or indexed`
             : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
           rhs.span

@@ -10,7 +10,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
-import { Subscription } from "rxjs";
+import type { Subscription } from "rxjs";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -24,6 +24,15 @@ export interface Pin {
   toggle(bit?: number): void;
   voltage(bit?: number): Voltage;
   connect(pin: Pin): void;
+}
+
+export function isConstantPin(pinName: string): boolean {
+  return (
+    pinName === "false" ||
+    pinName === "true" ||
+    pinName === "0" ||
+    pinName === "1"
+  );
 }
 
 export class Bus implements Pin {
@@ -277,7 +286,7 @@ export class Chip {
   partToOuts = new Map<Chip, Set<string>>();
   parts: Chip[] = [];
   clockedPins: Set<string>;
-  subscription?: Subscription;
+  clockSubscription?: Subscription;
 
   get clocked() {
     if (this.clockedPins.size > 0) {
@@ -326,8 +335,8 @@ export class Chip {
   }
 
   subscribeToClock() {
-    this.subscription?.unsubscribe();
-    this.subscription = Clock.subscribe(() => this.eval());
+    this.clockSubscription?.unsubscribe();
+    this.clockSubscription = Clock.subscribe(() => this.eval());
   }
 
   reset() {
@@ -396,6 +405,22 @@ export class Chip {
     return this.outs.has(pin);
   }
 
+  isExternalPin(pin: string): boolean {
+    return this.isInPin(pin) || this.isOutPin(pin) || isConstantPin(pin);
+  }
+
+  isInternalPin(pin: string): boolean {
+    return !this.isExternalPin(pin);
+  }
+
+  hasConnection(from: Chip, to: Chip): boolean {
+    return [...(this.partToOuts.get(from) ?? [])].some(
+      (pin) =>
+        this.insToPart.get(pin)?.has(to) &&
+        !(this.isInternalPin(pin) && to.clocked)
+    );
+  }
+
   wire(part: Chip, connections: Connection[]): Result<void, PartWireError> {
     for (let i = 0; i < connections.length; i++) {
       const { from, to } = connections[i];
@@ -424,9 +449,7 @@ export class Chip {
     // before the first chip that it has an output to, otherwise at the end of
     // the list of parts (that is, stable insertion order).
     const index = this.parts.findIndex((other) =>
-      [...(this.partToOuts.get(part) ?? [])].some((pin) =>
-        this.insToPart.get(pin)?.has(other)
-      )
+      this.hasConnection(part, other)
     );
     if (index < 0) {
       // Not found, so add to the end of the parts list
@@ -585,7 +608,7 @@ export class Chip {
   }
 
   remove() {
-    this.subscription?.unsubscribe();
+    this.clockSubscription?.unsubscribe();
     for (const part of this.parts) {
       part.remove();
     }
@@ -621,8 +644,8 @@ export class ClockedChip extends Chip {
   }
 
   override subscribeToClock(): void {
-    this.subscription?.unsubscribe();
-    this.subscription = Clock.subscribe(({ level }) => {
+    this.clockSubscription?.unsubscribe();
+    this.clockSubscription = Clock.subscribe(({ level }) => {
       if (level === LOW) {
         this.tock();
       } else {
@@ -632,7 +655,7 @@ export class ClockedChip extends Chip {
   }
 
   override remove() {
-    this.subscription?.unsubscribe();
+    this.clockSubscription?.unsubscribe();
     super.remove();
   }
 

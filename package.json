@@ -31,17 +31,23 @@
     "web": "npm run start -w web",
     "start": "npm run web",
     "preinstall-cli": "npm run build -w projects && npm run build -w runner && npm run build -w simulator && npm run build -w cli",
-    "install-cli": "npm i -g cli"
+    "install-cli": "npm i -g cli",
+    "pree2e": "BROWSER=none npm run web &",
+    "e2e": "npx -w integration cypress run",
+    "poste2e": "kill-port 3000"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@typescript-eslint/eslint-plugin": "^5.47.1",
     "@typescript-eslint/parser": "^5.47.1",
+    "concurrently": "^7.6.0",
     "esbuild": "^0.15.18",
     "eslint": "^8.31.0",
     "eslint-plugin-react": "^7.31.11",
+    "kill-port": "^2.0.1",
     "prettier": "^2.8.1",
     "typescript": "^4.9.4",
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "wait-on": "^7.0.1"
   },
   "workspaces": [
     "cli",
@@ -51,6 +57,7 @@
     "projects",
     "runner",
     "simulator",
+    "integration",
     "web"
   ],
   "engines": {

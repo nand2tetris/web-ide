@@ -445,22 +445,20 @@ export class Chip {
       }
     }
 
-    // Topological insertion sort for where this part should go. It should go
-    // before the first chip that it has an output to, otherwise at the end of
-    // the list of parts (that is, stable insertion order).
-    const index = this.parts.findIndex((other) =>
-      this.hasConnection(part, other)
-    );
-    if (index < 0) {
-      // Not found, so add to the end of the parts list
-      this.parts.push(part);
-    } else if (index > 0) {
-      // Insert before, that is, splice to index - 1
-      this.parts.splice(index - 1, 0, part);
-    } else {
-      // splice at -1 counts from the end of the array, so special case to unshift.
-      this.parts.unshift(part);
-    }
+    // Topological insertion sort for where this part should go.
+    // It should go at the lower of:
+    //     before the first chip that it has an output to, or at the end
+    //     after the last chip it has an input from, or at the beginning
+    const before = this.parts
+      .map((other, i) => ({ other, i }))
+      .filter(({ other }) => this.hasConnection(part, other));
+    const beforeIdx = before.at(0)?.i ?? this.parts.length;
+    const after = this.parts
+      .map((other, i) => ({ other, i }))
+      .filter(({ other }) => this.hasConnection(other, part));
+    const afterIdx = (after.at(-1)?.i ?? -1) + 1;
+    const index = Math.min(beforeIdx, afterIdx);
+    this.parts.splice(index, 0, part);
 
     return Ok();
   }

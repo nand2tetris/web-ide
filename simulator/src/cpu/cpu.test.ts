@@ -131,7 +131,7 @@ describe("CPU", () => {
 
       const [output, outState] = cpu(input, inState);
 
-      expect(output).toEqual({ outM: 13, writeM: false, addressM: 0 });
+      expect(output).toEqual({ outM: 8, writeM: false, addressM: 0 });
       expect(outState).toEqual({
         A: 0,
         D: 8,
@@ -180,5 +180,23 @@ describe("CPU", () => {
     }
 
     expect(RAM.get(2)).toBe(6);
+  });
+
+  // https://github.com/nand2tetris/web-ide/issues/337
+  it("MD=D+1 does not double-update on tock", () => {
+    const RAM = new Memory(1);
+    const ROM = new Memory(
+      new Int16Array([
+        0x0000, // @0
+        0xefc8, // M=1 // init RAM[0]=1
+        0xefd0, // D=1
+        0xe7d8, // MD=D+1
+      ])
+    );
+
+    const cpu = new CPU({ RAM, ROM });
+    for (let i = 0; i < 4; i++) cpu.tick();
+
+    expect(RAM.get(0)).toBe(2);
   });
 });

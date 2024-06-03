@@ -104,17 +104,17 @@ export function cpuTock(
     A = ALU;
   }
 
-  const a = bits.am ? inM : A;
-  const alu2 = alu(bits.op, D, a);
-
-  ALU = alu2[0];
-  flag = alu2[1];
-
   const output: CPUOutput = {
     addressM: A,
     outM: ALU,
     writeM: bits.d3,
   };
+
+  const a = bits.am ? inM : A;
+  const alu2 = alu(bits.op, D, a);
+
+  ALU = alu2[0];
+  flag = alu2[1];
 
   const state: CPUState = {
     A,

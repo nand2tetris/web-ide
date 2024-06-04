@@ -56,19 +56,23 @@ precacheAndRoute([
   },
 
   {
-    url: "https://drive.google.com/file/d/15unXGgTfQySMr1V39xTCLTgGfCOr6iG9/view",
+    url: "user_guide/chip.pdf",
     revision: null,
   },
   {
-    url: "https://drive.google.com/file/d/16eHIj78Cpeb0uxXBAvxUPUaIwkrj3NIu/view",
+    url: "user_guide/cpu.pdf",
     revision: null,
   },
   {
-    url: "https://drive.google.com/file/d/16gy2EDqUqrPIzy-vyX0-M8ObN5HyQa3Y/view",
+    url: "user_guide/asm.pdf",
     revision: null,
   },
   {
-    url: "https://drive.google.com/file/d/1IMKD_khjO7iQ673kH9j8qMkyIlMSOtUG/view",
+    url: "user_guide/vm.pdf",
+    revision: null,
+  },
+  {
+    url: "user_guide/compiler.pdf",
     revision: null,
   },
 ]);

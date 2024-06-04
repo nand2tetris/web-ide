@@ -5,6 +5,7 @@ const CPU = lazy(() => import("./pages/cpu"));
 const ASM = lazy(() => import("./pages/asm"));
 const BITMAP = lazy(() => import("./pages/bitmap"));
 const VM = lazy(() => import("./pages/vm"));
+const Compiler = lazy(() => import("./pages/compiler"));
 const Util = lazy(() => import("./pages/util"));
 const About = lazy(() => import("./pages/about"));
 
@@ -16,6 +17,7 @@ export const TOOLS: Record<string, string> = {
   asm: "Assembler",
   vm: "VM Emulator",
   bitmap: "Bitmap Editor",
+  compiler: "Jack Compiler",
 };
 
 export interface URL {
@@ -44,6 +46,11 @@ const URLs: Record<string, URL> = {
     href: "/vm",
     tool: `vm`,
     target: <VM />,
+  },
+  compiler: {
+    href: "/compiler",
+    tool: "compiler",
+    target: <Compiler />,
   },
   bitmap: {
     href: "/bitmap",

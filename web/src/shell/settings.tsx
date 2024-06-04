@@ -1,8 +1,7 @@
 import { i18n } from "@lingui/core";
-import { Trans } from "@lingui/macro";
+import { Trans, t } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import loaders from "@nand2tetris/projects/loader.js";
-import { useContext, useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
 
 import "../pico/button-group.scss";
@@ -11,10 +10,16 @@ import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
+const showUpgradeFs = false;
+
 export const Settings = () => {
-  const { fs, setStatus } = useContext(BaseContext);
+  const { toolStates } = useContext(AppContext);
+  const { fs, setStatus, upgradeFs, closeFs, upgraded } =
+    useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
+
+  const [upgrading, setUpgrading] = useState(false);
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -39,7 +44,15 @@ export const Settings = () => {
     setVersion(version);
     localStorage["/chip/project"] = "01";
     localStorage["/chip/chip"] = "Not";
+    const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
+    toolStates.compiler.reset();
+  };
+
+  const loadSamples = async () => {
+    const loaders = await import("@nand2tetris/projects/loader.js");
+    await loaders.loadSamples(fs);
+    setStatus("Loaded sample files...");
   };
 
   const resetWarningDialog = (
@@ -102,16 +115,13 @@ export const Settings = () => {
               <Trans>Settings</Trans>
             </p>
             <a
-              style={{ color: "rgba(0, 0, 0, 0)" }}
               className="close"
               href="#root"
               onClick={(e) => {
                 e.preventDefault();
                 settings.close();
               }}
-            >
-              close
-            </a>
+            />
           </header>
           <main>
             <dl>
@@ -145,6 +155,46 @@ export const Settings = () => {
                 <Trans>Files</Trans>
               </dt>
               <dd>
+                {showUpgradeFs && (
+                  <>
+                    <button
+                      disabled={upgrading}
+                      onClick={async () => {
+                        setUpgrading(true);
+                        try {
+                          await upgradeFs();
+                        } catch (err) {
+                          console.error("Failed to upgrade FS", { err });
+                          setStatus(t`Failed to load local file system.`);
+                        }
+                        setUpgrading(false);
+                      }}
+                    >
+                      {!upgraded ? (
+                        <Trans>Use Local FileSystem</Trans>
+                      ) : (
+                        <Trans>Change Local FileSystem</Trans>
+                      )}
+                      <Trans>Beta</Trans>
+                    </button>
+                    {upgraded ? (
+                      <>
+                        <p>
+                          <Trans>Using {upgraded}</Trans>
+                        </p>
+                        <button
+                          onClick={async () => {
+                            await closeFs();
+                          }}
+                        >
+                          Close Local FileSystem
+                        </button>
+                      </>
+                    ) : (
+                      <></>
+                    )}
+                  </>
+                )}
                 <button
                   onClick={async () => {
                     resetWarning.open();
@@ -152,12 +202,7 @@ export const Settings = () => {
                 >
                   <Trans>Reset</Trans>
                 </button>
-                <button
-                  onClick={async () => {
-                    await loaders.loadSamples(fs);
-                    setStatus("Loaded sample files...");
-                  }}
-                >
+                <button onClick={loadSamples}>
                   <Trans>Samples</Trans>
                 </button>
               </dd>

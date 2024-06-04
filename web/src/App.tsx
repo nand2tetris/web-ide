@@ -1,7 +1,3 @@
-import {
-  FileSystem,
-  LocalStorageFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import {
@@ -37,11 +33,12 @@ i18n.loadLocaleData({
   "en-PL": { plurals: en },
 });
 i18n.activate(navigator.language);
-const fs = new FileSystem(new LocalStorageFileSystemAdapter());
 
 function App() {
-  const baseContext = useBaseContext(fs);
+  const baseContext = useBaseContext();
   const appContext = useAppContext();
+
+  const fs = baseContext.fs;
 
   useEffect(() => {
     registerLanguages();

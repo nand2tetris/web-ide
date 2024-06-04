@@ -1,0 +1,21 @@
+@use "./page.scss";
+
+.CompilerPage {
+  grid-template-areas: "code";
+
+  .files {
+    grid-area: files;
+  }
+
+  .code {
+    grid-area: code;
+  }
+}
+
+.file-entry {
+  border: 1px solid var(--light-grey);
+
+  .button {
+    background-color: var(--light-grey);
+  }
+}

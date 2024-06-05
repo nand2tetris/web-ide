@@ -71,7 +71,7 @@ export function decode(instruction: number) {
 export function cpuTick(
   { inM, instruction }: CPUInput,
   { A, D, PC }: CPUState
-): [CPUState, boolean] {
+): [CPUState, boolean, number] {
   const bits = decode(instruction);
   const a = bits.am ? inM : A;
   const [ALU, flag] = alu(bits.op, D, a);
@@ -82,7 +82,7 @@ export function cpuTick(
     D = ALU;
   }
 
-  return [{ A, D, PC: PC + 1, ALU, flag }, bits.d3];
+  return [{ A, D, PC: PC + 1, ALU, flag }, bits.d3, ALU];
 }
 
 export function cpuTock(
@@ -195,27 +195,27 @@ export class CPU {
 
   tick() {
     const addressM = this.#a;
-    const [{ outM, writeM }, { A, D, PC }] = cpu(
-      {
-        inM: this.RAM.get(this.#a),
-        instruction: this.ROM.get(this.#pc),
-        reset: false,
-      },
-      {
-        A: this.#a,
-        D: this.#d,
-        PC: this.#pc,
-        ALU: this.#d,
-        flag: Flags.Zero,
-      }
-    );
+    const input = {
+      inM: this.RAM.get(this.#a),
+      instruction: this.ROM.get(this.#pc),
+      reset: false,
+    };
 
-    this.#a = A;
-    this.#d = D;
-    this.#pc = PC;
+    const [tickState, writeM, outM] = cpuTick(input, {
+      A: this.#a,
+      D: this.#d,
+      PC: this.#pc,
+      ALU: this.#d,
+      flag: Flags.Zero,
+    });
 
     if (writeM) {
       this.RAM.set(addressM, outM);
     }
+
+    const [_, { A, D, PC }] = cpuTock(input, tickState);
+    this.#a = A;
+    this.#d = D;
+    this.#pc = PC;
   }
 }

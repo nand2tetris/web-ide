@@ -1,7 +1,7 @@
-import { cpu, CPU, CPUInput, CPUState } from "./cpu.js";
-import { Memory } from "./memory.js";
 import { HACK } from "../testing/mult.js";
 import { Flags } from "./alu.js";
+import { cpu, CPU, CPUInput, CPUState } from "./cpu.js";
+import { Memory } from "./memory.js";
 
 describe("CPU", () => {
   describe("cpu step function", () => {
@@ -180,5 +180,23 @@ describe("CPU", () => {
     }
 
     expect(RAM.get(2)).toBe(6);
+  });
+
+  // https://github.com/nand2tetris/web-ide/issues/337
+  it("MD=D+1 does not double-update on tock", () => {
+    const RAM = new Memory(1);
+    const ROM = new Memory(
+      new Int16Array([
+        0x0000, // @0
+        0xefc8, // M=1 // init RAM[0]=1
+        0xefd0, // D=1
+        0xe7d8, // MD=D+1
+      ])
+    );
+
+    const cpu = new CPU({ RAM, ROM });
+    for (let i = 0; i < 4; i++) cpu.tick();
+
+    expect(RAM.get(0)).toBe(2);
   });
 });

@@ -41,7 +41,6 @@ export const TestPanel = ({
   showLoad = true,
   showClear = false,
   onSpeedChange,
-  compileTest,
   prefix,
 }: {
   runner: RefObject<Timer | undefined>;
@@ -57,7 +56,6 @@ export const TestPanel = ({
   showClear?: boolean;
   disabled?: boolean;
   onSpeedChange?: (speed: number) => void;
-  compileTest?: (tst: string, cmp: string) => void;
   prefix?: ReactNode;
 }) => {
   const { fs, setStatus } = useContext(BaseContext);
@@ -138,7 +136,7 @@ export const TestPanel = ({
   const [name, setName] = useStateInitializer(tstName ?? "");
 
   const loadTest = useCallback(async () => {
-    const path = await filePicker.select(".tst");
+    const path = await filePicker.select({ suffix: ".tst" });
     const files = await loadTestFiles(fs, path);
     if (isErr(files)) {
       setStatus(`Failed to load test`);

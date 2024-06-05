@@ -198,7 +198,6 @@ export const Memory = forwardRef(
       cellLabels,
       fileSelect,
       showClear = true,
-      onUpload = undefined,
       onChange = undefined,
     }: {
       name?: string;
@@ -214,14 +213,12 @@ export const Memory = forwardRef(
       format: Format;
       excludedFormats?: Format[];
       cellLabels?: string[];
-      fileSelect?: () => Promise<string>;
+      fileSelect?: () => Promise<{ name: string; content: string }>;
       showClear?: boolean;
-      onUpload?: (path: string) => void;
       onChange?: () => void;
     },
     ref
   ) => {
-    const { fs } = useContext(BaseContext);
     const [fmt, setFormat] = useStateInitializer(format);
     const [jmp, setJmp] = useState("");
     const [goto, setGoto] = useState({ value: initialAddr ?? 0 });
@@ -241,12 +238,9 @@ export const Memory = forwardRef(
     const doLoad = async () => {
       onChange?.();
       if (fileSelect) {
-        const path = await fileSelect();
+        const { name, content } = await fileSelect();
         setStatus(LOADING);
         requestAnimationFrame(async () => {
-          const name = path.split("/").pop() ?? "";
-          onUpload?.(path);
-          const source = await fs.readFile(path);
           const loader = name.endsWith("hack")
             ? loadHack
             : name.endsWith("asm")
@@ -254,7 +248,7 @@ export const Memory = forwardRef(
             : loadBlob;
           requestAnimationFrame(async () => {
             try {
-              const bytes = await loader(source);
+              const bytes = await loader(content);
               memory.loadBytes(bytes);
               setStatus("");
               setFormat(

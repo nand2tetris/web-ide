@@ -22,7 +22,7 @@ const I18nWrapper = ({ children }: { children: ReactElement }) => (
 
 const i18nRender: (
   ui: ReactElement,
-  options?: RenderOptions
+  options?: RenderOptions,
 ) => RenderResult = (ui: ReactElement, options: RenderOptions = {}) =>
   render(ui, { wrapper: I18nWrapper, ...options });
 
@@ -35,7 +35,7 @@ export const useTestingAppContext = () => ({
         "projects/01/Not/Not.hdl": Not.hdl,
         "projects/01/Not/Not.tst": Not.tst,
         "projects/01/Not/Not.cmp": Not.cmp,
-      })
+      }),
     ),
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     upgradeFs() {},

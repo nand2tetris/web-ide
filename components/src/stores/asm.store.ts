@@ -125,7 +125,7 @@ class Translator {
       if (highlightInfo.sourceHighlight) {
         highlightInfo.highlightMap.set(
           highlightInfo.sourceHighlight,
-          highlightInfo.resultHighlight
+          highlightInfo.resultHighlight,
         );
       }
 
@@ -152,10 +152,10 @@ class Translator {
     }
 
     const variableNames = new Set(
-      Array.from(this.variables.values()).map((v) => v.name)
+      Array.from(this.variables.values()).map((v) => v.name),
     );
     this.symbols = this.symbols.filter(
-      (symbol) => !variableNames.has(symbol.name)
+      (symbol) => !variableNames.has(symbol.name),
     );
   }
 
@@ -191,7 +191,7 @@ export type AsmStoreDispatch = Dispatch<{
 export function makeAsmStore(
   fs: FileSystem,
   setStatus: (status: string) => void,
-  dispatch: MutableRefObject<AsmStoreDispatch>
+  dispatch: MutableRefObject<AsmStoreDispatch>,
 ) {
   const translator = new Translator();
   const highlightInfo: HighlightInfo = {
@@ -208,7 +208,7 @@ export function makeAsmStore(
   const reducers = {
     setAsm(
       state: AsmPageState,
-      { asm, path }: { asm: string; path: string | undefined }
+      { asm, path }: { asm: string; path: string | undefined },
     ) {
       state.asm = asm;
 
@@ -310,7 +310,7 @@ export function makeAsmStore(
 
       const loadResult = translator.load(
         Ok(parseResult),
-        asm.split("\n").length
+        asm.split("\n").length,
       );
       if (isErr(loadResult)) {
         dispatch.current({
@@ -427,7 +427,7 @@ export function useAsmPageStore() {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeAsmStore(fs, setStatus, dispatch),
-    [setStatus, dispatch]
+    [setStatus, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

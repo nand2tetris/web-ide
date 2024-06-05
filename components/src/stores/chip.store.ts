@@ -78,14 +78,14 @@ function makeCmp() {
 
 export function isBuiltinOnly(
   project: keyof typeof CHIP_PROJECTS,
-  chipName: string
+  chipName: string,
 ) {
   return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
 async function getTemplate(
   project: keyof typeof CHIP_PROJECTS,
-  chipName: string
+  chipName: string,
 ) {
   const { ChipProjects } = await import("@nand2tetris/projects/full.js");
   if (isBuiltinOnly(project, chipName)) {
@@ -101,7 +101,7 @@ async function getTemplate(
 
 async function getBuiltinCode(
   project: keyof typeof CHIP_PROJECTS,
-  chipName: string
+  chipName: string,
 ) {
   const template = await getTemplate(project, chipName);
   if (isBuiltinOnly(project, chipName)) {
@@ -180,7 +180,7 @@ export function makeChipStore(
   fs: FileSystem,
   setStatus: (status: string) => void,
   storage: Record<string, string>,
-  dispatch: MutableRefObject<ChipStoreDispatch>
+  dispatch: MutableRefObject<ChipStoreDispatch>,
 ) {
   const dropdowns = findDropdowns(storage);
   let { project, chipName } = dropdowns;
@@ -205,7 +205,7 @@ export function makeChipStore(
         tst?: string;
         cmp?: string;
         out?: string;
-      }
+      },
     ) {
       state.files.hdl = hdl;
       state.files.tst = tst;
@@ -220,12 +220,12 @@ export function makeChipStore(
         invalid?: boolean;
         chipName?: string;
         error?: CompilationError | undefined;
-      }
+      },
     ) {
       state.sim = reduceChip(
         chip,
         payload?.pending ?? state.sim.pending,
-        payload?.invalid ?? state.sim.invalid
+        payload?.invalid ?? state.sim.invalid,
       );
       state.controls.error = state.sim.invalid
         ? payload?.error ?? state.controls.error
@@ -249,7 +249,7 @@ export function makeChipStore(
       state.controls.hasBuiltin = REGISTRY.has(chipName);
       state.controls.builtinOnly = isBuiltinOnly(
         state.controls.project,
-        chipName
+        chipName,
       );
     },
 
@@ -273,7 +273,7 @@ export function makeChipStore(
         setStatus(
           passed
             ? `Simulation successful: The output file is identical to the compare file`
-            : `Simulation error: The output file differs from the compare file`
+            : `Simulation error: The output file differs from the compare file`,
         );
       });
     },
@@ -310,7 +310,7 @@ export function makeChipStore(
       chipName = storage["/chip/chip"] = chip;
       builtinOnly = isBuiltinOnly(
         project as keyof typeof CHIP_PROJECTS,
-        chipName
+        chipName,
       );
 
       if (builtinOnly) {
@@ -333,7 +333,7 @@ export function makeChipStore(
         payload: new Set(
           test == "ComputerAdd.tst" || test == "ComputerMax.tst"
             ? [NO_SCREEN]
-            : []
+            : [],
         ),
       });
 
@@ -436,7 +436,7 @@ export function makeChipStore(
           .catch(() => makeTst()),
         fs
           .readFile(
-            `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp")
+            `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp"),
           )
           .catch(() => makeCmp()),
       ]);
@@ -492,7 +492,7 @@ export function makeChipStore(
       const nextChip = getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
         setStatus(
-          `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`
+          `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
         );
         return;
       }
@@ -568,7 +568,7 @@ export function makeChipStore(
         CHIP_PROJECTS[project].map((chip) => ({
           name: `${chip}.hdl`,
           content: fs.readFile(`/projects/${project}/${chip}/${chip}.hdl`),
-        }))
+        })),
       );
     },
   };
@@ -619,7 +619,7 @@ export function useChipPageStore() {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeChipStore(fs, setStatus, storage, dispatch),
-    [fs, setStatus, storage, dispatch]
+    [fs, setStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

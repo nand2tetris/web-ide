@@ -29,7 +29,7 @@ function classTemplate(name: string) {
 
 export function makeCompilerStore(
   setStatus: (status: string) => void,
-  dispatch: MutableRefObject<CompilerStoreDispatch>
+  dispatch: MutableRefObject<CompilerStoreDispatch>,
 ) {
   let fs: FileSystem | undefined;
 
@@ -43,7 +43,7 @@ export function makeCompilerStore(
 
     setFile(
       state: CompilerPageState,
-      { name, content }: { name: string; content: string }
+      { name, content }: { name: string; content: string },
     ) {
       state.files[name] = content;
       this.compile(state);
@@ -96,7 +96,7 @@ export function makeCompilerStore(
 
       const files: Record<string, string> = {};
       for (const file of (await fs.scandir("/")).filter(
-        (entry) => entry.isFile() && entry.name.endsWith(".jack")
+        (entry) => entry.isFile() && entry.name.endsWith(".jack"),
       )) {
         files[file.name.replace(".jack", "")] = await fs.readFile(file.name);
       }
@@ -147,7 +147,7 @@ export function useCompilerPageStore() {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeCompilerStore(setStatus, dispatch),
-    [setStatus, dispatch]
+    [setStatus, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

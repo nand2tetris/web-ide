@@ -76,7 +76,7 @@ function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
   setStatus: (status: string) => void,
-  showHighlight: boolean
+  showHighlight: boolean,
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
   const Screen = new ImmMemory(vmTest.vm.Screen, dispatch);
@@ -110,7 +110,7 @@ export function makeVmStore(
   fs: FileSystem,
   setStatus: (status: string) => void,
   storage: Record<string, string>,
-  dispatch: MutableRefObject<VmStoreDispatch>
+  dispatch: MutableRefObject<VmStoreDispatch>,
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
   let vm = unwrap(Vm.build(parsed.instructions));
@@ -163,7 +163,7 @@ export function makeVmStore(
       setStatus(
         passed
           ? `Simulation successful: The output file is identical to the compare file`
-          : `Simulation error: The output file differs from the compare file`
+          : `Simulation error: The output file differs from the compare file`,
       );
     },
   };
@@ -285,7 +285,7 @@ export function makeVmStore(
         (files) => {
           this.loadVm(files);
         },
-        setStatus
+        setStatus,
       ).using(fs);
       test.vm = vm;
       dispatch.current({ action: "update" });
@@ -365,7 +365,7 @@ export function useVmPageStore() {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeVmStore(fs, setStatus, storage, dispatch),
-    [fs, setStatus, storage, dispatch]
+    [fs, setStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

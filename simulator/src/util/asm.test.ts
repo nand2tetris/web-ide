@@ -15,16 +15,16 @@ describe("asm", () => {
 
   it("makes C instruction", () => {
     expect(
-      makeC(true, COMMANDS.getOp("D"), ASSIGN.asm["M"], JUMP.asm[""])
+      makeC(true, COMMANDS.getOp("D"), ASSIGN.asm["M"], JUMP.asm[""]),
     ).toBe(0b111_1_001100_001_000);
     expect(
-      makeC(true, COMMANDS.getOp("D-M"), ASSIGN.asm["D"], JUMP.asm[""])
+      makeC(true, COMMANDS.getOp("D-M"), ASSIGN.asm["D"], JUMP.asm[""]),
     ).toBe(0b111_1_010011_010_000);
     expect(
-      makeC(false, COMMANDS.getOp("D"), ASSIGN.asm[""], JUMP.asm["JGT"])
+      makeC(false, COMMANDS.getOp("D"), ASSIGN.asm[""], JUMP.asm["JGT"]),
     ).toBe(0b111_0_001100_000_001);
     expect(
-      makeC(false, COMMANDS.getOp("0"), ASSIGN.asm[""], JUMP.asm["JMP"])
+      makeC(false, COMMANDS.getOp("0"), ASSIGN.asm[""], JUMP.asm["JMP"]),
     ).toBe(0b111_0_101010_000_111);
   });
 });

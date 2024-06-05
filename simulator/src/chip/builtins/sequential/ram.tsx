@@ -14,7 +14,10 @@ export class RAM extends ClockedChip {
     return this._address;
   }
 
-  constructor(readonly width: number, name?: string) {
+  constructor(
+    readonly width: number,
+    name?: string,
+  ) {
     super(["in[16]", "load", `address[${width}]`], [`out[16]`], name);
     this._memory = new MemoryChip(Math.pow(2, this.width));
   }
@@ -40,7 +43,7 @@ export class RAM extends ClockedChip {
   at(idx: number): Pin {
     assert(
       idx < this._memory.size,
-      () => `Request out of bounds (${idx} >= ${this._memory.size})`
+      () => `Request out of bounds (${idx} >= ${this._memory.size})`,
     );
     return new RamBus(`${this.name}[${idx}]`, idx, this._memory);
   }
@@ -59,7 +62,7 @@ export class RamBus extends Bus {
   constructor(
     name: string,
     private readonly index: number,
-    private ram: Memory
+    private ram: Memory,
   ) {
     super(name);
   }

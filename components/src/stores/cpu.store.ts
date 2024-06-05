@@ -55,7 +55,7 @@ export interface CpuPageState {
 
 function reduceCPUTest(
   cpuTest: CPUTest,
-  dispatch: MutableRefObject<CpuStoreDispatch>
+  dispatch: MutableRefObject<CpuStoreDispatch>,
 ): CpuSim {
   const RAM = new ImmMemory(cpuTest.cpu.RAM, dispatch);
   const ROM = new ImmMemory(cpuTest.cpu.ROM, dispatch);
@@ -82,7 +82,7 @@ export function makeCpuStore(
   fs: FileSystem,
   setStatus: (status: string) => void,
   storage: Record<string, string>,
-  dispatch: MutableRefObject<CpuStoreDispatch>
+  dispatch: MutableRefObject<CpuStoreDispatch>,
 ) {
   let test = new CPUTest();
   let animate = true;
@@ -120,7 +120,7 @@ export function makeCpuStore(
       setStatus(
         passed
           ? `Simulation successful: The output file is identical to the compare file`
-          : `Simulation error: The output file differs from the compare file`
+          : `Simulation error: The output file differs from the compare file`,
       );
     },
   };
@@ -243,7 +243,7 @@ export function useCpuPageStore() {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeCpuStore(fs, setStatus, storage, dispatch),
-    [fs, setStatus, storage, dispatch]
+    [fs, setStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

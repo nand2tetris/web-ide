@@ -57,7 +57,7 @@ function capitalize(s: string) {
 }
 
 export function compile(
-  files: Record<string, string>
+  files: Record<string, string>,
 ): Record<string, string | CompilationError> {
   const classes: Record<string, Class | CompilationError> = {};
   for (const [name, content] of Object.entries(files)) {
@@ -74,13 +74,13 @@ export function compile(
             : cls
           : createError(
               `Class name ${cls.name.value} doesn't match file name ${name}`,
-              cls.name.span
+              cls.name.span,
             );
     }
   }
 
   const validClasses: Record<string, Class> = Object.fromEntries(
-    Object.entries(classes).filter(([_, parsed]) => !isError(parsed))
+    Object.entries(classes).filter(([_, parsed]) => !isError(parsed)),
   ) as Record<string, Class>;
 
   const vms: Record<string, string | CompilationError> = {};
@@ -110,8 +110,8 @@ function validateClass(cls: Class): Result<void, CompilationError> {
       return Err(
         createError(
           `Subroutine ${subroutine.name.value} already declared`,
-          subroutine.name.span
-        )
+          subroutine.name.span,
+        ),
       );
     }
     subroutineNames.add(subroutine.name.value);
@@ -210,7 +210,7 @@ export class Compiler {
 
   compile(
     cls: Class,
-    other?: Record<string, Class>
+    other?: Record<string, Class>,
   ): Result<string, CompilationError> {
     this.className = cls.name.value;
     this.classes = other ?? {};
@@ -225,9 +225,9 @@ export class Compiler {
         .map((inst) =>
           inst.startsWith("function") || inst.startsWith("label")
             ? inst
-            : "    ".concat(inst)
+            : "    ".concat(inst),
         )
-        .join("\n")
+        .join("\n"),
     );
   }
 
@@ -294,7 +294,7 @@ export class Compiler {
   compileSubroutineDec(subroutine: Subroutine) {
     this.validateReturnType(
       subroutine.returnType.value,
-      subroutine.returnType.span
+      subroutine.returnType.span,
     );
     switch (subroutine.type) {
       case "method":
@@ -317,7 +317,7 @@ export class Compiler {
       .map((dec) => dec.names.length)
       .reduce((a, b) => a + b, 0);
     this.write(
-      `function ${this.className}.${subroutine.name.value} ${localCount}`
+      `function ${this.className}.${subroutine.name.value} ${localCount}`,
     );
     for (const varDec of subroutine.body.varDecs) {
       this.compileVarDec(varDec);
@@ -340,7 +340,7 @@ export class Compiler {
     this.write(
       `push constant ${this.fieldNum}`,
       "call Memory.alloc 1",
-      "pop pointer 0"
+      "pop pointer 0",
     );
     this.compileStatements(subroutine.body.statements);
   }
@@ -380,7 +380,7 @@ export class Compiler {
           `push ${this.var(term)}`,
           "add",
           "pop pointer 1",
-          "push that 0"
+          "push that 0",
         );
         break;
       case "groupedExpression":
@@ -397,7 +397,7 @@ export class Compiler {
     if (expected != received) {
       throw createError(
         `${name} expected ${expected} arguments, got ${received}`,
-        call.span
+        call.span,
       );
     }
   }
@@ -406,34 +406,34 @@ export class Compiler {
     className: string,
     subroutineName: string,
     call: SubroutineCall,
-    isMethod: boolean
+    isMethod: boolean,
   ) {
     const builtin = VM_BUILTINS[`${className}.${subroutineName}`];
     if (builtin) {
       if (builtin.type == "method" && !isMethod) {
         throw createError(
           `Method ${className}.${subroutineName} was called as a function/constructor`,
-          call.name.span
+          call.name.span,
         );
       }
       if (builtin.type != "method" && isMethod) {
         throw createError(
           `${capitalize(
-            builtin.type
+            builtin.type,
           )} ${className}.${subroutineName} was called as a method`,
-          call.name.span
+          call.name.span,
         );
       }
       this.validateArgNum(
         `${className}.${subroutineName}`,
         isMethod ? builtin.nArgs - 1 : builtin.nArgs,
-        call
+        call,
       );
       return;
     } else if (isOsClass(className)) {
       throw createError(
         `Class ${className} doesn't contain a subroutine ${subroutineName}`,
-        call.span
+        call.span,
       );
     } else if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
@@ -441,28 +441,28 @@ export class Compiler {
           if (subroutine.type == "method" && !isMethod) {
             throw createError(
               `Method ${className}.${subroutineName} was called as a function/constructor`,
-              call.name.span
+              call.name.span,
             );
           }
           if (subroutine.type != "method" && isMethod) {
             throw createError(
               `${capitalize(
-                subroutine.name.value
+                subroutine.name.value,
               )} ${className}.${subroutineName} was called as a method`,
-              call.name.span
+              call.name.span,
             );
           }
           this.validateArgNum(
             `${className}.${subroutineName}`,
             subroutine.parameters.length,
-            call
+            call,
           );
           return;
         }
       }
       throw createError(
         `Class ${className} doesn't contain a function/constructor ${subroutineName}`,
-        call.name.span
+        call.name.span,
       );
     } else {
       throw createError(`Class ${className} doesn't exist`, call.name.span);
@@ -496,7 +496,7 @@ export class Compiler {
       className,
       subroutineName,
       call,
-      object != undefined
+      object != undefined,
     );
 
     return { className, subroutineName, object };
@@ -514,7 +514,7 @@ export class Compiler {
     this.write(
       `call ${attributes.className}.${attributes.subroutineName} ${
         call.parameters.length + (attributes.object ? 1 : 0)
-      }`
+      }`,
     );
   }
 
@@ -523,7 +523,7 @@ export class Compiler {
     for (let i = 0; i < str.length; i++) {
       this.write(
         `push constant ${str.charCodeAt(i)}`,
-        `call String.appendChar 2`
+        `call String.appendChar 2`,
       );
     }
   }

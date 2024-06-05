@@ -26,7 +26,7 @@ yargs(hideBin(process.argv))
     (argv) => {
       console.log("grade", argv.directory, "nand2tetris grader!");
       main(argv.directory, argv.java_ide);
-    }
+    },
   )
   .command(
     "run <file>",
@@ -68,7 +68,7 @@ yargs(hideBin(process.argv))
           console.log("unknown", ext);
           break;
       }
-    }
+    },
   )
   .help()
   .demandCommand(1)

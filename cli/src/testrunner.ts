@@ -15,12 +15,12 @@ async function loadAssignment(fs: FileSystem, file: Assignment) {
   const tst = await fs
     .readFile(`${file.name}.tst`)
     .catch(
-      () => assignment[`${file.name}.tst` as keyof typeof assignment] as string
+      () => assignment[`${file.name}.tst` as keyof typeof assignment] as string,
     );
   const cmp = await fs
     .readFile(`${file.name}.cmp`)
     .catch(
-      () => assignment[`${file.name}.cmp` as keyof typeof assignment] as string
+      () => assignment[`${file.name}.cmp` as keyof typeof assignment] as string,
     );
 
   return { ...file, hdl, tst, cmp };

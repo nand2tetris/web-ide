@@ -15,7 +15,7 @@ export type TimerStoreDispatch = Dispatch<{
 
 const makeTimerStore = (
   timer: Timer,
-  dispatch: MutableRefObject<TimerStoreDispatch>
+  dispatch: MutableRefObject<TimerStoreDispatch>,
 ) => {
   const initialState: TimerStoreState = {
     running: timer.running,
@@ -71,7 +71,7 @@ export function useTimer(timer: Timer) {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeTimerStore(timer, dispatch),
-    [timer, dispatch]
+    [timer, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

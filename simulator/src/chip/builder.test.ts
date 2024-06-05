@@ -13,8 +13,8 @@ describe("Chip Builder", () => {
   it("builds a chip from a string", async () => {
     const nand = unwrap(
       await parse(
-        `CHIP Not { IN in; OUT out; PARTS: Nand(a=in, b=in, out=out); }`
-      )
+        `CHIP Not { IN in; OUT out; PARTS: Nand(a=in, b=in, out=out); }`,
+      ),
     );
 
     nand.in().pull(LOW);
@@ -39,8 +39,8 @@ describe("Chip Builder", () => {
             in[3..5] = six,
             in[7] = true,
             );
-          }`
-        )
+          }`,
+        ),
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -69,7 +69,7 @@ describe("Chip Builder", () => {
           Not(in=in[0], out=out[0]);
           Not(in=in[1], out=out[1]);
         }
-      `)
+      `),
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -98,8 +98,8 @@ describe("Chip Builder", () => {
             // in[8..15] = false,
             out[3..5] = out[1..3],
             );
-          }`
-        )
+          }`,
+        ),
       );
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -116,7 +116,7 @@ describe("Chip Builder", () => {
 
   it("looks up unknown chips in fs", async () => {
     const fs = new FileSystem(
-      new ObjectFileSystemAdapter({ "Copy.hdl": COPY_HDL })
+      new ObjectFileSystemAdapter({ "Copy.hdl": COPY_HDL }),
     );
 
     let foo: Chip;
@@ -145,7 +145,7 @@ describe("Chip Builder", () => {
         HDL.parse(`CHIP Foo {
         IN in[3]; OUT out;
         PARTS: Or8Way(in=in, out=out);
-      }`)
+      }`),
       );
       const foo = await build(chip);
       expect(foo).toBeErr();
@@ -162,7 +162,7 @@ describe("Chip Builder", () => {
         HDL.parse(`CHIP Foo {
         IN in; OUT out[5];
         PARTS: Not(in=in, out=out);
-      }`)
+      }`),
       );
       const foo = await build(chip);
       expect(foo).toBeErr();

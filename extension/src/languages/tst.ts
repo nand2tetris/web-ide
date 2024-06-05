@@ -12,7 +12,7 @@ async function getTst(): Promise<typeof TST> {
 }
 
 export async function getDiagnostics(
-  document: TextDocument
+  document: TextDocument,
 ): Promise<[Uri, Diagnostic[]][]> {
   try {
     const { parser } = await getTst();

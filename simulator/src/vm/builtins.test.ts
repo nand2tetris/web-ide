@@ -9,7 +9,7 @@ describe("builtins", () => {
           { op: "push", segment: "constant", offset: 7 },
           { op: "push", segment: "constant", offset: 8 },
           { op: "call", name: "Math.multiply", nArgs: 2 },
-        ])
+        ]),
       );
 
       vm.step();
@@ -23,7 +23,7 @@ describe("builtins", () => {
           { op: "push", segment: "constant", offset: 10 },
           { op: "push", segment: "constant", offset: 5 },
           { op: "call", name: "Math.divide", nArgs: 2 },
-        ])
+        ]),
       );
 
       vm.step();
@@ -37,7 +37,7 @@ describe("builtins", () => {
           { op: "push", segment: "constant", offset: 11 },
           { op: "push", segment: "constant", offset: 4 },
           { op: "call", name: "Math.min", nArgs: 2 },
-        ])
+        ]),
       );
 
       vm.step();
@@ -51,7 +51,7 @@ describe("builtins", () => {
           { op: "push", segment: "constant", offset: 11 },
           { op: "push", segment: "constant", offset: 4 },
           { op: "call", name: "Math.max", nArgs: 2 },
-        ])
+        ]),
       );
 
       vm.step();
@@ -64,7 +64,7 @@ describe("builtins", () => {
         Vm.build([
           { op: "push", segment: "constant", offset: 36 },
           { op: "call", name: "Math.sqrt", nArgs: 1 },
-        ])
+        ]),
       );
 
       vm.step();

@@ -66,7 +66,7 @@ export const MemoryBlock = ({
       itemHeight: ITEM_HEIGHT,
       startIndex: jmp.value,
     }),
-    [memory.size, jmp]
+    [memory.size, jmp],
   );
   const get = useCallback(
     (pos: number, count: number): [number, CellData][] =>
@@ -76,7 +76,7 @@ export const MemoryBlock = ({
           i + pos + offset,
           { value: v, wasChanged: memory.wasChanged(i + pos + offset) },
         ]),
-    [memory]
+    [memory],
   );
 
   const row = useCallback(
@@ -85,7 +85,7 @@ export const MemoryBlock = ({
         index={i}
         value={v.wasChanged ? format(v.value) : ""}
         label={(cellLabels?.[i] ?? "").padStart(
-          cellLabels ? Math.max(...cellLabels.map((label) => label.length)) : 0
+          cellLabels ? Math.max(...cellLabels.map((label) => label.length)) : 0,
         )}
         showLabel={cellLabels != undefined}
         size={memory.size}
@@ -96,7 +96,7 @@ export const MemoryBlock = ({
         onFocus={onFocus}
       />
     ),
-    [format, editable, highlight, onChange]
+    [format, editable, highlight, onChange],
   );
 
   return (
@@ -217,7 +217,7 @@ export const Memory = forwardRef(
       showClear?: boolean;
       onChange?: () => void;
     },
-    ref
+    ref,
   ) => {
     const [fmt, setFormat] = useStateInitializer(format);
     const [jmp, setJmp] = useState("");
@@ -244,8 +244,8 @@ export const Memory = forwardRef(
           const loader = name.endsWith("hack")
             ? loadHack
             : name.endsWith("asm")
-            ? loadAsm
-            : loadBlob;
+              ? loadAsm
+              : loadBlob;
           requestAnimationFrame(async () => {
             try {
               const bytes = await loader(content);
@@ -255,8 +255,8 @@ export const Memory = forwardRef(
                 name.endsWith("hack")
                   ? "bin"
                   : name.endsWith("asm")
-                  ? "asm"
-                  : fmt
+                    ? "asm"
+                    : fmt,
               );
               jumpTo();
             } catch (e) {
@@ -340,7 +340,7 @@ export const Memory = forwardRef(
             </button>
             <select value={fmt} onChange={(e) => setFormat(e.target.value)}>
               {FORMATS.filter(
-                (option) => !excludedFormats.includes(option)
+                (option) => !excludedFormats.includes(option),
               ).map((option) => (
                 <option key={option}>{option}</option>
               ))}
@@ -368,7 +368,7 @@ export const Memory = forwardRef(
         )}
       </article>
     );
-  }
+  },
 );
 Memory.displayName = "Memory";
 

@@ -70,7 +70,7 @@ export function decode(instruction: number) {
 
 export function cpuTick(
   { inM, instruction }: CPUInput,
-  { A, D, PC }: CPUState
+  { A, D, PC }: CPUState,
 ): [CPUState, boolean, number] {
   const bits = decode(instruction);
   const a = bits.am ? inM : A;
@@ -87,7 +87,7 @@ export function cpuTick(
 
 export function cpuTock(
   { inM, instruction, reset }: CPUInput,
-  { A, D, PC, ALU, flag }: CPUState
+  { A, D, PC, ALU, flag }: CPUState,
 ): [CPUOutput, CPUState] {
   const bits = decode(instruction);
 

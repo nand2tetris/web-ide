@@ -16,7 +16,7 @@ export function compare(as: string[][], bs: string[][]): Diff[] {
       diff(a, b).map((diff) => {
         diff.row = row;
         return diff;
-      })
+      }),
     );
   }
 

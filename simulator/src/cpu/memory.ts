@@ -27,7 +27,7 @@ export interface MemoryAdapter {
   map<T>(
     fn: (index: number, value: number) => T,
     start?: number,
-    end?: number
+    end?: number,
   ): Iterable<T>;
   [Symbol.iterator](): Iterable<number>;
 }
@@ -134,7 +134,7 @@ export class Memory implements MemoryAdapter {
   *map<T>(
     fn: (index: number, value: number) => T,
     start = 0,
-    end = this.size
+    end = this.size,
   ): Iterable<T> {
     assert(start <= end);
     for (let i = start; i < end; i++) {
@@ -151,7 +151,7 @@ export class SubMemory implements MemoryAdapter {
   constructor(
     private readonly parent: MemoryAdapter,
     readonly size: number,
-    private readonly offset: number
+    private readonly offset: number,
   ) {}
 
   get(index: number): number {
@@ -203,7 +203,7 @@ export class SubMemory implements MemoryAdapter {
   map<T>(
     fn: (index: number, value: number) => T,
     start = 0,
-    end: number = this.size
+    end: number = this.size,
   ): Iterable<T> {
     return this.parent.map(fn, start + this.offset, end + this.offset);
   }

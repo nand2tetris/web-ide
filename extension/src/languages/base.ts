@@ -10,14 +10,14 @@ import type ohm from "ohm-js";
 
 export async function getDiagnostics(
   document: TextDocument,
-  parser: ohm.Grammar
+  parser: ohm.Grammar,
 ): Promise<[Uri, Diagnostic[]][]> {
   const parsed = parser.match(document.getText());
   if (!parsed.failed()) return [];
 
   const { line, column, message } =
     /Line (?<line>\d+), col (?<column>\d+): (?<message>.*)/.exec(
-      parsed.shortMessage ?? ""
+      parsed.shortMessage ?? "",
     )?.groups ?? { line: 1, column: 1, message: "could not parse error" };
 
   const startLineNumber = Number(line);
@@ -34,7 +34,7 @@ export async function getDiagnostics(
     startLineNumber - 1,
     startColumn - 1,
     endLineNumber - 1,
-    endColumn - 1
+    endColumn - 1,
   );
   const diagnostic = new Diagnostic(range, message, DiagnosticSeverity.Error);
   return [[document.uri, [diagnostic]]];

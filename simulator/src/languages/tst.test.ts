@@ -58,7 +58,7 @@ describe("tst language", () => {
   it("parses an output list", () => {
     const match = grammar.match(
       "output-list a%B1.1.1 out%X2.3.4",
-      "TstOutputListOperation"
+      "TstOutputListOperation",
     );
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).operation).toStrictEqual({
@@ -84,7 +84,7 @@ describe("tst language", () => {
   it("parses an output list with junk", () => {
     const match = grammar.match(
       "\n/// A list\noutput-list a%B1.1.1 /* the output */ out%X2.3.4",
-      "TstOutputListOperation"
+      "TstOutputListOperation",
     );
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).operation).toStrictEqual({
@@ -109,7 +109,7 @@ describe("tst language", () => {
   it("parses an output list with builtins", () => {
     const match = grammar.match(
       "output-list PC[]%D0.4.0 RAM16K[0]%D1.7.1",
-      "TstOutputListOperation"
+      "TstOutputListOperation",
     );
     expect(match).toHaveSucceeded();
     expect(TST.semantics(match).operation).toStrictEqual({
@@ -133,7 +133,7 @@ describe("tst language", () => {
 
   it("parses file ops", () => {
     const match = grammar.match(
-      "load A.hdl, output-file A.out, compare-to A.cmp, output-list a%B1.1.1;"
+      "load A.hdl, output-file A.out, compare-to A.cmp, output-list a%B1.1.1;",
     );
     expect(match).toHaveSucceeded();
   });

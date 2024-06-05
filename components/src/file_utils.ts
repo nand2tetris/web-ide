@@ -8,7 +8,7 @@ interface TestFiles {
 
 export async function loadTestFiles(
   fs: FileSystem,
-  tstPath: string
+  tstPath: string,
 ): Promise<Result<TestFiles>> {
   try {
     const tst = await fs.readFile(tstPath);

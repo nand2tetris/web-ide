@@ -91,7 +91,7 @@ expect.extend({
   },
   toHaveNoDiff(diffs: Diff[]) {
     expect(
-      diffs.map(({ a, b, col, row }) => `${a} <> ${b} (${row}:${col})`)
+      diffs.map(({ a, b, col, row }) => `${a} <> ${b} (${row}:${col})`),
     ).toEqual([]);
     return {
       pass: true,

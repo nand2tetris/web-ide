@@ -105,7 +105,7 @@ hdlSemantics.addAttribute<string[]>("Clocked", {
       clocked
         .asIteration()
         .children.map(
-          ({ sourceString }: { sourceString: string }) => sourceString
+          ({ sourceString }: { sourceString: string }) => sourceString,
         ) ?? []
     );
   },

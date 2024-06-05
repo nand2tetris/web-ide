@@ -50,7 +50,7 @@ export async function main(folder = process.cwd(), java_ide = "") {
 
   for (const test of tests) {
     console.log(
-      `Test ${test.name}: ${test.pass ? `Passed` : `Failed (${test.out})`}`
+      `Test ${test.name}: ${test.pass ? `Passed` : `Failed (${test.out})`}`,
     );
     if (test.shadow) {
       console.log(
@@ -58,7 +58,7 @@ export async function main(folder = process.cwd(), java_ide = "") {
           test.shadow.code === 0
             ? `Passed`
             : `Errored (${test.shadow.stderr.trim()})`
-        }`
+        }`,
       );
     } else {
       console.log("\tNo shadow");

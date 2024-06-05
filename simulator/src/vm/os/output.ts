@@ -33,7 +33,7 @@ export class OutputLib {
       this.col * 8,
       this.row * 11,
       (this.col + 1) * 8,
-      (this.row + 1) * 11
+      (this.row + 1) * 11,
     );
     this.restoreColor();
   }
@@ -60,7 +60,7 @@ export class OutputLib {
       this.col * 8 + 2,
       this.row * 11 + 2,
       (this.col + 1) * 8 - 2,
-      (this.row + 1) * 11 - 2
+      (this.row + 1) * 11 - 2,
     );
     this.restoreColor();
   }

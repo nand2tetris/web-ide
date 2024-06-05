@@ -71,12 +71,12 @@ function aop(asm: string): number {
 
 function cop(asm: string): number {
   const firstPass = asm.match(
-    /(?:(?<assignExists>.+)=)?(.+)(?:;(?<jumpExists>.+))?/
+    /(?:(?<assignExists>.+)=)?(.+)(?:;(?<jumpExists>.+))?/,
   );
   const { assignExists, jumpExists } = firstPass?.groups ?? {};
 
   const parts = asm.match(
-    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/
+    /(?:(?<assign>[AMD]{1,3})=)?(?<operation>[-+!01ADM&|]{1,3})(?:;(?<jump>JGT|JLT|JGE|JLE|JEQ|JMP))?/,
   );
   let { assign, jump } = parts?.groups ?? {};
   const { operation } = parts?.groups ?? {};
@@ -105,7 +105,7 @@ export function makeC(
   isM: boolean,
   op: COMMANDS_OP,
   assign: ASSIGN_OP,
-  jmp: JUMP_OP
+  jmp: JUMP_OP,
 ): number {
   const C = 0xe000;
   const A = isM ? 0x1000 : 0;

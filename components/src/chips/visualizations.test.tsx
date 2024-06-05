@@ -21,7 +21,7 @@ describe("visualizations", () => {
         {vis.map(([k, v]) => (
           <div key={k}>{v}</div>
         ))}
-      </>
+      </>,
     );
     const rendered = await screen.findAllByText(/ALU/);
     expect(rendered).toBeDefined();

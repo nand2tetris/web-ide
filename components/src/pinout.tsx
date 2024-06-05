@@ -101,7 +101,7 @@ export const PinoutBlock = (
     enableEdit?: boolean;
     setInputValid?: (valid: boolean) => void;
     displayInfo: ChipDisplayInfo;
-  }
+  },
 ) => (
   <>
     {props.pins.length > 0 && (

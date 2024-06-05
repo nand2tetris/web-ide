@@ -99,7 +99,7 @@ export const TestPanel = ({
       doSetSelectedTestTab(tab);
       tracking.trackEvent("tab", "change", tab);
     },
-    [tracking]
+    [tracking],
   );
 
   const [editMode, setEditMode] = useState(false);
@@ -289,7 +289,7 @@ export const TestPanel = ({
               .concat(
                 diffDisplay?.incorrectCellSpans.map((span) => {
                   return { span, cssClass: "red" };
-                })
+                }),
               )}
           />
         </Tab>

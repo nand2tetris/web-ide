@@ -119,7 +119,7 @@ export class ScreenLib {
         x - Math.floor(Math.sqrt(r * r - dy * dy)),
         y + dy,
         x + Math.floor(Math.sqrt(r * r - dy * dy)),
-        y + dy
+        y + dy,
       );
     }
   }

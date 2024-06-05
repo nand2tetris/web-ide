@@ -14,7 +14,7 @@ test("Simple Adder VM", () => {
       { op: "push", segment: "constant", offset: 7 },
       { op: "push", segment: "constant", offset: 8 },
       { op: "add" },
-    ])
+    ]),
   );
 
   expect(vm.read([0])).toEqual([256]);

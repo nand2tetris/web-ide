@@ -105,7 +105,7 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
           start: span.start + lineStart,
           end: span.end + lineStart,
           line: span.line,
-        }))
+        })),
       );
       lineStart += diffLine.expectedLine.length + 1; // +1 for the newline character
       finalLines.push(diffLine.givenLine);
@@ -114,7 +114,7 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
           start: span.start + lineStart,
           end: span.end + lineStart,
           line: span.line,
-        }))
+        })),
       );
       lineStart += diffLine.givenLine.length + 1;
     } else {

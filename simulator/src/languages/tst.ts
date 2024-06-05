@@ -128,7 +128,7 @@ tstSemantics.addAttribute<TstOutputFormat>("formatSpec", {
     _b,
     { value: width },
     _c,
-    { value: rpad }
+    { value: rpad },
   ) {
     return {
       style: style as TstOutputFormat["style"],

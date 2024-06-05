@@ -39,7 +39,7 @@ describe("Ohm Base", () => {
           Rep = List<"A", ",">
           Block = OpenParen Rep CloseParen
         }`,
-        grammars
+        grammars,
       );
       return { repGrammar };
     }, beforeEach);

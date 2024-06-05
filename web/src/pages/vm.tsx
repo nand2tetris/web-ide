@@ -85,7 +85,7 @@ const VM = () => {
               isSysError(state.controls.exitCode)
                 ? `: ${ERROR_MESSAGES[state.controls.exitCode]}`
                 : ""
-            }`
+            }`,
       );
     }
   }, [state.controls.exitCode]);
@@ -343,7 +343,7 @@ function callStack(frames: VmFrame[], addedSysInit: boolean) {
         ? addedSysInit
           ? `${SYS_INIT.name} (built-in)`
           : SYS_INIT.name
-        : frame.fn?.name ?? UNKNOWN
+        : frame.fn?.name ?? UNKNOWN,
     );
 
   for (const name of Object.keys(nameCounts)) {

@@ -26,7 +26,7 @@ export const Settings = () => {
       i18n.activate(locale);
       fs.writeFile("/locale", locale);
     },
-    [fs]
+    [fs],
   );
 
   useEffect(() => {

@@ -24,7 +24,10 @@ export class Bit extends ClockedChip {
 }
 
 class RegisterBus extends Bus {
-  constructor(name: string, private register: { bits: number }) {
+  constructor(
+    name: string,
+    private register: { bits: number },
+  ) {
     super(name);
   }
 

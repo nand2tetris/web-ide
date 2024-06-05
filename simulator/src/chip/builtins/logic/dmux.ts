@@ -8,7 +8,7 @@ export function dmux(inn: Voltage, sel: Voltage): [Voltage, Voltage] {
 
 export function dmux4way(
   inn: Voltage,
-  sel: number
+  sel: number,
 ): [Voltage, Voltage, Voltage, Voltage] {
   const a = sel === 0b00 && inn === HIGH ? HIGH : LOW;
   const b = sel === 0b01 && inn === HIGH ? HIGH : LOW;
@@ -19,7 +19,7 @@ export function dmux4way(
 
 export function dmux8way(
   inn: Voltage,
-  sel: number
+  sel: number,
 ): [Voltage, Voltage, Voltage, Voltage, Voltage, Voltage, Voltage, Voltage] {
   const a = sel === 0b000 && inn === HIGH ? HIGH : LOW;
   const b = sel === 0b001 && inn === HIGH ? HIGH : LOW;

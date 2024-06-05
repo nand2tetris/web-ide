@@ -72,7 +72,7 @@ class CFGNode {
 function processIf(
   statement: IfStatement,
   returnType: ReturnType,
-  current: CFGNode
+  current: CFGNode,
 ): Result<CFGNode, CompilationError> {
   const ifStart = new CFGNode();
   current.children.push(ifStart);
@@ -99,7 +99,7 @@ function processIf(
 function processWhile(
   statement: WhileStatement,
   returnType: ReturnType,
-  current: CFGNode
+  current: CFGNode,
 ): Result<CFGNode, CompilationError> {
   const whileStart = new CFGNode();
   current.children.push(whileStart);
@@ -120,7 +120,7 @@ function processWhile(
 
 function buildCFG(
   statements: Statement[],
-  returnType: ReturnType
+  returnType: ReturnType,
 ): Result<CFGNode, CompilationError> {
   const root = new CFGNode();
   let current = root;
@@ -136,8 +136,8 @@ function buildCFG(
           return Err(
             createError(
               `A non void subroutine must return a value`,
-              statement.span
-            )
+              statement.span,
+            ),
           );
         }
         current.hasReturn = true;
@@ -162,7 +162,7 @@ function buildCFG(
 }
 
 export function validateSubroutine(
-  subroutine: Subroutine
+  subroutine: Subroutine,
 ): Result<void, CompilationError> {
   const cfg = buildCFG(subroutine.body.statements, subroutine.returnType.value);
   if (isErr(cfg)) {
@@ -172,8 +172,8 @@ export function validateSubroutine(
     return Err(
       createError(
         `Subroutine ${subroutine.name.value}: not all code paths return a value`,
-        subroutine.name.span
-      )
+        subroutine.name.span,
+      ),
     );
   }
   return Ok();

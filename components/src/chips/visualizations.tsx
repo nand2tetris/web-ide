@@ -60,7 +60,7 @@ function makeMemoryVisualization(chip: RAM) {
 export function makeVisualization(
   chip: Chip,
   updateAction?: () => void,
-  parameters?: Set<string>
+  parameters?: Set<string>,
 ): ReactElement | undefined {
   if (chip instanceof ALU) {
     return (
@@ -73,8 +73,8 @@ export function makeVisualization(
           (chip.out("zr").voltage() === HIGH
             ? Flags.Zero
             : chip.out("ng").voltage() === HIGH
-            ? Flags.Negative
-            : Flags.Positive) as keyof typeof Flags
+              ? Flags.Negative
+              : Flags.Positive) as keyof typeof Flags
         }
       />
     );
@@ -145,7 +145,7 @@ export function makeVisualizationsWithId(
     parts: Chip[];
   },
   updateAction?: () => void,
-  parameters?: Set<string>
+  parameters?: Set<string>,
 ): [string, ReactElement][] {
   return [...chip.parts]
     .map((part, i): [string, ReactElement | undefined] => [

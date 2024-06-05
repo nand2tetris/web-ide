@@ -22,7 +22,7 @@ export class FileSystemAccessFileSystemAdapter implements FileSystemAdapter {
 
   async getFolder(
     path: string,
-    create = false
+    create = false,
   ): Promise<FileSystemDirectoryHandle> {
     let folder = this.baseDir;
     const parts = path
@@ -37,7 +37,7 @@ export class FileSystemAccessFileSystemAdapter implements FileSystemAdapter {
 
   async copyFile(from: string, to: string): Promise<void> {
     throw new Error(
-      "unimplemented: FileSystemAccessFileSystemAdapter::copyFile"
+      "unimplemented: FileSystemAccessFileSystemAdapter::copyFile",
     );
   }
 
@@ -121,7 +121,7 @@ export class FileSystemAccessFileSystemAdapter implements FileSystemAdapter {
 export class ChainedFileSystemAdapter implements FileSystemAdapter {
   constructor(
     protected adapter: FileSystemAdapter,
-    private nextAdapter?: FileSystemAdapter | undefined
+    private nextAdapter?: FileSystemAdapter | undefined,
   ) {}
 
   stat(path: string): Promise<Stats> {

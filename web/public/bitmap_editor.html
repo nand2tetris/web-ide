@@ -520,7 +520,7 @@
                 GenerateJackCodeLine(
                   coordinates[0] - baseI + baseRow,
                   value,
-                  parseInt(col)
+                  parseInt(col),
                 );
             }
           }
@@ -557,7 +557,7 @@
               hackCode = GenerateHackAssemblyCode(
                 addrIncrement,
                 value,
-                dHoldsAddr
+                dHoldsAddr,
               );
               dHoldsAddr = hackCode["dHoldsAddr"];
               generateCode.value += hackCode["code"];
@@ -619,7 +619,7 @@
       function GenerateHackAssemblyCode(
         addrIncrement,
         pixels_value,
-        dHoldsAddr
+        dHoldsAddr,
       ) {
         // returns {code: str, dHoldsAddr: bool}
         let str = "";
@@ -771,7 +771,7 @@
         if (document.getElementById("fitToDrawing").checked) {
           document.getElementById("marginSaveFramestd").hidden = false;
           marginSaveFrames = parseInt(
-            document.getElementById("marginSaveFrames").value
+            document.getElementById("marginSaveFrames").value,
           );
           if (marginSaveFrames < 1) {
             marginSaveFrames = 1;
@@ -1142,7 +1142,9 @@
     <style>
       .fileButton label {
         display: block;
-        font: 1rem "Fira Sans", sans-serif;
+        font:
+          1rem "Fira Sans",
+          sans-serif;
       }
 
       .fileButton input,

@@ -42,7 +42,7 @@ export function useFilePicker() {
         selected.current = resolve;
       });
     },
-    [dialog, selected]
+    [dialog, selected],
   );
 
   const select = async (options: FilePickerOptions) => {
@@ -152,14 +152,14 @@ export const FilePicker = () => {
         setFiles(files);
       });
     },
-    [fs, setFile, setFiles]
+    [fs, setFile, setFiles],
   );
 
   const select = useCallback(
     (basename: string) => {
       setFile(`${fs.cwd() == "/" ? "" : fs.cwd()}/${basename}`);
     },
-    [setFile]
+    [setFile],
   );
 
   const confirm = useCallback(() => {

@@ -150,7 +150,7 @@ describe("HDL w/ Ohm", () => {
         out[3..7] = out1,
         address=address[0..13],
         out[2..3]=address[5..6]);`,
-        "Part"
+        "Part",
       );
       expect(not8).toHaveSucceeded();
       expect<Part>(hdlSemantics(not8).Part).toEqual({

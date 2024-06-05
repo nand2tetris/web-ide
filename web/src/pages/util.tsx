@@ -74,8 +74,8 @@ export const FormattedInput = (props: {
         selected
           ? rawValue
           : props.value !== undefined
-          ? props.format(props.value)
-          : ""
+            ? props.format(props.value)
+            : ""
       }
       onChange={onChange}
       onFocus={() => {

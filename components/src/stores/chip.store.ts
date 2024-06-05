@@ -314,10 +314,6 @@ export function makeChipStore(
       );
 
       if (builtinOnly) {
-        dispatch.current({
-          action: "setFiles",
-          payload: { hdl: "", tst: "", cmp: "" },
-        });
         this.useBuiltin();
       } else {
         await this.loadChip(project, chipName);

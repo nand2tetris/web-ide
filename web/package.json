@@ -56,7 +56,7 @@
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "map-build": "react-scripts build",
     "postbuild": "./scripts/predeploy.sh",
-    "preserve-pwa": "npm run build",
+    "preserve-pwa": "npm run build ; ln -s build web-ide",
     "serve-pwa": "python3 -m http.server",
     "test": "react-scripts test",
     "prebuild": "npm run extract && npm run lingui",

@@ -1,10 +1,9 @@
 #!/bin/bash
 
 cd "$(dirname "$(readlink -f "$0")")/.."
+cd build
 
 for F in chip cpu asm vm compiler bitmap guide util about; do
-  mkdir build/$F
-  cp build/index.html build/$F
+  mkdir $F
+  cp index.html $F/index.html
 done
-
-ln -s build web-ide

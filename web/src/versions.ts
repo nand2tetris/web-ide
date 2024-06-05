@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { resetFiles, resetTests } from "@nand2tetris/projects/loader.js";
 
 const VERSION_KEY = "version";

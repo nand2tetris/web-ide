@@ -268,11 +268,14 @@ export function makeChipStore(
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
       const passed = compare(state.files.cmp.trim(), state.files.out.trim());
-      setStatus(
-        passed
-          ? `Simulation successful: The output file is identical to the compare file`
-          : `Simulation error: The output file differs from the compare file`
-      );
+      // For some reason, this is happening during a render but I can't track it down.
+      Promise.resolve().then(() => {
+        setStatus(
+          passed
+            ? `Simulation successful: The output file is identical to the compare file`
+            : `Simulation error: The output file differs from the compare file`
+        );
+      });
     },
 
     updateTestStep(state: ChipPageState) {

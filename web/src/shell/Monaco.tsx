@@ -185,6 +185,7 @@ export const Monaco = ({
         scrollBeyondLastLine: false,
         readOnly: disabled,
         lineNumbers: lineNumberTransform ?? "on",
+        renderValidationDecorations: "on",
         folding: false,
         quickSuggestions: {
           other: "inline",
@@ -218,7 +219,10 @@ export const Monaco = ({
   // Prevent editing disabled editors
   useEffect(() => {
     if (editor.current === undefined) return;
-    editor.current.updateOptions({ readOnly: disabled });
+    editor.current.updateOptions({
+      readOnly: disabled,
+      renderValidationDecorations: "on",
+    });
   }, [editor, disabled]);
 
   // Add error markers on parse failure

@@ -37,11 +37,13 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
   };
 }
 
+// When updating these, also edit service-worker.ts
 const guideLinks: Record<string, string> = {
-  chip: "https://drive.google.com/file/d/15unXGgTfQySMr1V39xTCLTgGfCOr6iG9/view",
-  cpu: "https://drive.google.com/file/d/16eHIj78Cpeb0uxXBAvxUPUaIwkrj3NIu/view",
-  asm: "https://drive.google.com/file/d/16gy2EDqUqrPIzy-vyX0-M8ObN5HyQa3Y/view",
-  vm: "https://drive.google.com/file/d/1IMKD_khjO7iQ673kH9j8qMkyIlMSOtUG/view",
+  chip: "user_guide/chip.pdf",
+  cpu: "user_guide/cpu.pdf",
+  asm: "user_guide/asm.pdf",
+  vm: "user_guide/vm.pdf",
+  compiler: "user_guide/compiler.pdf",
 };
 
 const GUIDE_NOT_AVAILABLE_MESSAGE = "Guide not available for this tool";
@@ -65,6 +67,7 @@ const headerButtons: HeaderButton[] = [
   headerButtonFromURL(URLs["cpu"], "developer_board"),
   headerButtonFromURL(URLs["asm"], "list_alt"),
   headerButtonFromURL(URLs["vm"], "computer"),
+  headerButtonFromURL(URLs["compiler"], "code"),
   headerButtonFromURL(URLs["bitmap"], "grid_on"),
   headerButtonFromURL(URLs["util"], "function", "Converter Tool"),
   {
@@ -114,7 +117,6 @@ const Header = () => {
               >
                 NAND2Tetris
               </a>
-              &nbsp;IDE Online
             </strong>
             {TOOLS[pathname] && ` / ${TOOLS[pathname]}`}
             {appContext.title && ` / ${appContext.title}`}

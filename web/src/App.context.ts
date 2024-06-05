@@ -1,6 +1,7 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { AsmPageState } from "@nand2tetris/components/stores/asm.store";
-import { Format, MemoryAdapter, ROM } from "@nand2tetris/simulator/cpu/memory";
+import { Format, ROM } from "@nand2tetris/simulator/cpu/memory";
+import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { createContext, useCallback, useState } from "react";
 import { useDialog } from "./shell/dialog";
 import {
@@ -38,8 +39,6 @@ export function useToolStates() {
   const [cpuFile, setCpuFile] = useState<string | LocalFile>();
   const [cpuFormat, setCpuFormat] = useState<Format>("asm");
 
-  const [asmState, setAsmState] = useState<AsmPageState>();
-
   const setCpuState = (
     path: string | LocalFile | undefined,
     rom: ROM | undefined,
@@ -50,11 +49,39 @@ export function useToolStates() {
     setCpuFormat(format);
   };
 
+  const [asmState, setAsmState] = useState<AsmPageState>();
+
+  const [vmTitle, setVmTitle] = useState<string>();
+  const [vmFiles, setVmFiles] = useState<VmFile[]>();
+
+  const [jackTitle, setJackTitle] = useState<string>();
+  const [jackFs, setJackFs] = useState<FileSystem>();
+  const [jackCompiled, setJackCompiled] = useState(false);
+
   return {
     cpuState: { rom: rom, file: cpuFile, format: cpuFormat },
     setCpuState,
     asmState,
     setAsmState,
+    vm: {
+      files: vmFiles,
+      title: vmTitle,
+      setFiles: setVmFiles,
+      setTitle: setVmTitle,
+    },
+    compiler: {
+      title: jackTitle,
+      setTitle: setJackTitle,
+      fs: jackFs,
+      setFs: setJackFs,
+      compiled: jackCompiled,
+      setCompiled: setJackCompiled,
+      reset: () => {
+        setJackTitle(undefined);
+        setJackFs(undefined);
+        setJackCompiled(false);
+      },
+    },
   };
 }
 
@@ -150,6 +177,21 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     },
     setAsmState() {
       return undefined;
+    },
+    vm: {
+      files: undefined,
+      title: undefined,
+      setFiles: () => undefined,
+      setTitle: () => undefined,
+    },
+    compiler: {
+      title: undefined,
+      setTitle: () => undefined,
+      fs: undefined,
+      setFs: () => undefined,
+      compiled: false,
+      setCompiled: () => false,
+      reset: () => undefined,
     },
   },
 });

@@ -25,7 +25,8 @@ export function useFilePicker() {
   const dialog = useDialog();
   const [suffix, setSuffix] = useState<string[]>();
   const [allowFolders, setAllowFolders] = useState(false);
-  const [allowLocal, setAllowLocal] = useState(false);
+
+  const allowLocal = useRef(false);
 
   const selected = useRef<(v: string | LocalFile) => void>();
 
@@ -45,12 +46,12 @@ export function useFilePicker() {
   );
 
   const select = async (options: FilePickerOptions) => {
-    setAllowLocal(false);
+    allowLocal.current = false;
     return (await _select(options)) as string;
   };
 
   const selectAllowLocal = async (options: FilePickerOptions) => {
-    setAllowLocal(true);
+    allowLocal.current = true;
     return _select(options);
   };
 
@@ -61,7 +62,7 @@ export function useFilePicker() {
     [Selected]: selected,
     suffix: suffix,
     allowFolders,
-    allowLocal,
+    allowLocal: allowLocal.current,
   };
 }
 

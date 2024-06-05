@@ -40,11 +40,11 @@ export function useToolStates() {
   const [cpuFormat, setCpuFormat] = useState<Format>("asm");
 
   const setCpuState = (
-    path: string | LocalFile | undefined,
+    file: string | LocalFile | undefined,
     rom: ROM | undefined,
     format: Format
   ) => {
-    setCpuFile(path);
+    setCpuFile(file);
     setRom(rom);
     setCpuFormat(format);
   };

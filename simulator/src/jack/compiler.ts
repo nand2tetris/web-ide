@@ -49,7 +49,7 @@ function isOsClass(name: string): boolean {
 }
 
 function isError(value: unknown): value is CompilationError {
-  return (value as any).message != undefined;
+  return (value as CompilationError).message != undefined;
 }
 
 function capitalize(s: string) {

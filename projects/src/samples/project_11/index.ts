@@ -10,7 +10,11 @@ import * as square_main from "./square/main.js";
 import * as square from "./square/square.js";
 import * as square_game from "./square/square_game.js";
 
-export const Programs: Record<string, Record<string, any>> = {
+type Program = Record<
+  string,
+  { jack: string; parsed: unknown; compiled: string }
+>;
+export const Programs: Record<string, Program> = {
   average: { Main: average },
   complex_arrays: { Main: complex_arrays },
   convert_to_bin: { Main: convert_to_bin },

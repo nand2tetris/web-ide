@@ -5,7 +5,7 @@ import { Chip, Pin } from "./chip.js";
 export function getBuiltinValue(
   chip: string,
   part: Chip,
-  idx: number
+  idx: number,
 ): Pin | undefined {
   switch (chip) {
     case "Register":

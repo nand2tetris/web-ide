@@ -22,13 +22,13 @@
     "test": "jest"
   },
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.0.6",
+    "@davidsouther/jiffies": "^2.2.5",
     "@nand2tetris/runner": "^1.0.0",
     "@nand2tetris/simulator": "^1.0.0"
   },
   "dependencies": {
-    "@types/node": "^18.11.18",
-    "@types/yargs": "^17.0.18",
-    "yargs": "^17.6.2"
+    "@types/node": "^20.14.2",
+    "@types/yargs": "^17.0.32",
+    "yargs": "^17.7.2"
   }
 }

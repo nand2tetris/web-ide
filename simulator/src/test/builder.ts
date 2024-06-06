@@ -91,8 +91,8 @@ export function fill<T extends Test>(test: T, tst: Tst): T {
             new Condition(
               line.condition.left,
               line.condition.right,
-              line.condition.op
-            )
+              line.condition.op,
+            ),
           )
         : new TestRepeatInstruction(line.count);
       repeat.span = line.span;

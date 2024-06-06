@@ -18,7 +18,7 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
     context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ) {
     this._view = webviewView;
 
@@ -35,7 +35,7 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
         if (message.nand2tetris && message.ready) {
           this.updateHdl(vscode.window.activeTextEditor?.document);
         }
-      }
+      },
     );
 
     webviewView.onDidChangeVisibility(() => {
@@ -98,7 +98,7 @@ class HdlViewProvider implements vscode.WebviewViewProvider {
 
   private getUri(webview: vscode.Webview, pathList: string[]) {
     return webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, "out", "views", ...pathList)
+      vscode.Uri.joinPath(this.extensionUri, "out", "views", ...pathList),
     );
   }
 }

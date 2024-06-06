@@ -28,7 +28,7 @@ describe("compiler", () => {
         let a = 4;
         return;
       }`,
-      "SubroutineDec"
+      "SubroutineDec",
     ).subroutineDec;
 
     const compiler = new Compiler();
@@ -77,7 +77,7 @@ describe("compiler", () => {
     } else {
       let x = 5;
     }`,
-      "Statement"
+      "Statement",
     ).statement;
 
     const compiler = new Compiler();
@@ -114,8 +114,8 @@ describe("compiler", () => {
         Object.entries(Programs[program]).map(([name, file]) => [
           name,
           file.jack,
-        ])
-      )
+        ]),
+      ),
     );
 
     for (const file of Object.keys(compiled)) {

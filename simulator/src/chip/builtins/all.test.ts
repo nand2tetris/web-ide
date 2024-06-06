@@ -20,8 +20,8 @@ describe("All Projects", () => {
   describe.each(Object.keys(CHIP_PROJECTS))("project %s", (project) => {
     it.each(
       CHIP_PROJECTS[project as keyof typeof CHIP_PROJECTS].filter(
-        (k) => !SKIP.has(k)
-      )
+        (k) => !SKIP.has(k),
+      ),
     )("Builtin %s", async (chipName) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
@@ -49,8 +49,8 @@ describe("All Projects", () => {
       if (project === "05") {
         test.setFileSystem(
           new FileSystem(
-            new ObjectFileSystemAdapter({ "/samples/Max.hack": Max })
-          )
+            new ObjectFileSystemAdapter({ "/samples/Max.hack": Max }),
+          ),
         );
       }
 

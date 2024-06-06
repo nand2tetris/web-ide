@@ -37,7 +37,7 @@ function set(data: Uint8ClampedArray, x: number, y: number, value: COLOR) {
 function drawImage(ctx: CanvasRenderingContext2D, memory: ScreenMemory) {
   const image = assertExists(
     ctx.getImageData(0, 0, 512, 256),
-    "Failed to create Context2d"
+    "Failed to create Context2d",
   );
   for (let col = 0; col < 512; col++) {
     for (let row = 0; row < 256; row++) {
@@ -84,7 +84,7 @@ export const Screen = ({
       canvas.current = ref ?? undefined;
       draw();
     },
-    [canvas, draw]
+    [canvas, draw],
   );
 
   useClockFrame(draw);

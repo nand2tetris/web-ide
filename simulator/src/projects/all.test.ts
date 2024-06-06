@@ -38,7 +38,7 @@ describe("Chip Projects", () => {
       it.each(
         CHIP_PROJECTS[project as keyof typeof CHIP_PROJECTS]
           .filter((k) => !SKIP.has(k))
-          .filter((k) => INCLUDE.has(k))
+          .filter((k) => INCLUDE.has(k)),
       )("Chip %s", async (chipName) => {
         const chipProject = {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -66,14 +66,14 @@ describe("Chip Projects", () => {
         const chip = await build(Ok(hdl as Ok<HdlParse>));
         expect(chip).toBeOk();
         const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(
-          Ok(chip as Ok<Chip>)
+          Ok(chip as Ok<Chip>),
         );
 
         if (chipName === "Computer") {
           test.setFileSystem(
             new FileSystem(
-              new ObjectFileSystemAdapter({ "samples/Max.hack": Max })
-            )
+              new ObjectFileSystemAdapter({ "samples/Max.hack": Max }),
+            ),
           );
         }
 
@@ -89,7 +89,7 @@ describe("Chip Projects", () => {
         const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));
         expect(diffs).toHaveNoDiff();
       });
-    }
+    },
   );
 });
 
@@ -113,8 +113,8 @@ describe("Vm Projects", () => {
     (project) => {
       it.each(
         VM_PROJECTS[project as keyof typeof VM_PROJECTS].filter(
-          (k) => !SKIP.has(k)
-        )
+          (k) => !SKIP.has(k),
+        ),
       )("VM Program %s", async (vmName) => {
         const vmProject = {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -159,6 +159,6 @@ describe("Vm Projects", () => {
         const diffs = compare(unwrap(cmp), unwrap(out));
         expect(diffs).toHaveNoDiff();
       });
-    }
+    },
   );
 });

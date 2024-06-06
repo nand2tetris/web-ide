@@ -7,7 +7,7 @@ import {
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import { MutableRefObject } from "react";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
-import produce from "immer";
+import { produce } from "immer";
 import { ImmPin } from "src/pinout.js";
 
 function testChipStore(
@@ -16,7 +16,7 @@ function testChipStore(
     "projects/01/Not/Not.tst": not.tst,
     "projects/01/Not/Not.cmp": not.cmp,
   },
-  storage: Record<string, string> = {}
+  storage: Record<string, string> = {},
 ) {
   const dispatch: MutableRefObject<ChipStoreDispatch> = { current: jest.fn() };
 
@@ -26,7 +26,7 @@ function testChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
     setStatus,
     storage,
-    dispatch
+    dispatch,
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
   dispatch.current = jest.fn().mockImplementation(
@@ -38,7 +38,7 @@ function testChipStore(
       store.state = produce(store.state, (draft: typeof initialState) => {
         reducers[command.action](draft, command.payload);
       });
-    }
+    },
   );
 
   return store;
@@ -87,7 +87,7 @@ describe("ChipStore", () => {
         {
           "/chip/project": "03",
           "/chip/chip": "Bit",
-        }
+        },
       );
       expect(state.controls.project).toBe("03");
       expect(state.controls.chipName).toBe("Bit");

@@ -170,7 +170,10 @@ export class Memory extends ClockedChip {
 }
 
 class DRegisterBus extends Bus {
-  constructor(name: string, private cpu: CPUState) {
+  constructor(
+    name: string,
+    private cpu: CPUState,
+  ) {
     super(name);
   }
 
@@ -184,7 +187,10 @@ class DRegisterBus extends Bus {
 }
 
 class ARegisterBus extends Bus {
-  constructor(name: string, private cpu: CPUState) {
+  constructor(
+    name: string,
+    private cpu: CPUState,
+  ) {
     super(name);
   }
 
@@ -198,7 +204,10 @@ class ARegisterBus extends Bus {
 }
 
 class PCBus extends Bus {
-  constructor(name: string, private cpu: CPUState) {
+  constructor(
+    name: string,
+    private cpu: CPUState,
+  ) {
     super(name);
   }
 
@@ -221,7 +230,7 @@ export class CPU extends ClockedChip {
   constructor() {
     super(
       ["inM[16]", "instruction[16]", "reset"],
-      ["outM[16]", "writeM", "addressM[15]", "pc[15]"]
+      ["outM[16]", "writeM", "addressM[15]", "pc[15]"],
     );
   }
 

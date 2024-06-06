@@ -54,7 +54,7 @@ describe("Chip Test", () => {
       test.outputList(
         ["a", "b", "out"].map((v) => {
           return { id: v };
-        })
+        }),
       );
 
       let statement: TestCompoundInstruction;
@@ -96,7 +96,7 @@ describe("Chip Test", () => {
 
       await test.run();
       expect(test.log()).toEqual(
-        `| 0 | 0 | 1 |\n| 1 | 1 | 0 |\n| 1 | 0 | 1 |\n| 0 | 1 | 1 |\n`
+        `| 0 | 0 | 1 |\n| 1 | 1 | 0 |\n| 1 | 0 | 1 |\n| 0 | 1 | 1 |\n`,
       );
     });
 
@@ -144,7 +144,7 @@ describe("Chip Test", () => {
           "6",
           "7",
           "8",
-        ].map((i) => `|${i.padEnd(4, " ")}|`)
+        ].map((i) => `|${i.padEnd(4, " ")}|`),
       );
     });
 
@@ -187,8 +187,8 @@ describe("Chip Test", () => {
 
       expect(test.log().trim().split("\n")).toEqual(
         ["0+", "1", "1+", "2", "2+", "3", "3+", "4", "4+", "5"].map(
-          (i) => `|${i.padEnd(4, " ")}|`
-        )
+          (i) => `|${i.padEnd(4, " ")}|`,
+        ),
       );
     });
   });

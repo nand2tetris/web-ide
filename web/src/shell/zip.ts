@@ -4,7 +4,7 @@ export async function zip(
   files: {
     name: string;
     content: Promise<string>;
-  }[]
+  }[],
 ): Promise<string> {
   const zip = await newZip();
   for (const file of files) {

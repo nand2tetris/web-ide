@@ -1,5 +1,4 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import ohm from "ohm-js";
 import {
   ASSIGN,
   ASSIGN_ASM,
@@ -27,8 +26,9 @@ import {
 
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import asmGrammar from "./grammars/asm.ohm.js";
+import { grammar as ohmGrammar, type Node } from "ohm-js";
 
-export const grammar = ohm.grammar(asmGrammar, grammars);
+export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
 export interface Asm {
@@ -54,13 +54,13 @@ export interface AsmAValueInstruction {
 }
 
 export function isAValueInstruction(
-  inst: AsmInstruction
+  inst: AsmInstruction,
 ): inst is AsmAValueInstruction {
   return inst.type == "A" && (inst as AsmAValueInstruction).value !== undefined;
 }
 
 function isALabelInstruction(
-  inst: AsmInstruction
+  inst: AsmInstruction,
 ): inst is AsmALabelInstruction {
   return inst.type == "A" && (inst as AsmALabelInstruction).label !== undefined;
 }
@@ -90,7 +90,7 @@ asmSemantics.addAttribute<Asm>("asm", {
   ASM(asm, last) {
     const instructions =
       asm.children.map(
-        (node) => node.intermediateInstruction as AsmInstruction
+        (node) => node.intermediateInstruction as AsmInstruction,
       ) ?? [];
     return {
       instructions: last.child(0)
@@ -106,7 +106,7 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
   },
 });
 
-function getAsmAssign(assignN: ohm.Node) {
+function getAsmAssign(assignN: Node) {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
   // The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
@@ -124,14 +124,14 @@ function getAsmAssign(assignN: ohm.Node) {
       : "";
     throw createError(
       `Invalid ASM target: ${assign}${suggestion}`,
-      span(assignN.source)
+      span(assignN.source),
     );
   }
 
   return assign;
 }
 
-function getAsmOp(opN: ohm.Node) {
+function getAsmOp(opN: Node) {
   const op = opN.sourceString;
 
   if (!isCommandAsm(op)) {
@@ -141,7 +141,7 @@ function getAsmOp(opN: ohm.Node) {
       : "";
     throw createError(
       `Invalid ASM value: ${opN.sourceString}${suggestion}`,
-      span(opN.source)
+      span(opN.source),
     );
   }
 
@@ -191,7 +191,7 @@ export type Pointer =
 
 export function fillLabel(
   asm: Asm,
-  symbolCallback?: (name: string, value: number, isVar: boolean) => void
+  symbolCallback?: (name: string, value: number, isVar: boolean) => void,
 ): Result<void, CompilationError> {
   let nextLabel = 16;
   const symbols = new Map<Pointer | string, number>([
@@ -241,7 +241,7 @@ export function fillLabel(
     if (instruction.type === "L") {
       if (symbols.has(instruction.label)) {
         return Err(
-          createError(`Duplicate label ${instruction.label}`, instruction.span)
+          createError(`Duplicate label ${instruction.label}`, instruction.span),
         );
       } else {
         symbols.set(instruction.label, line);
@@ -295,7 +295,7 @@ export function translateInstruction(inst: AsmInstruction): number | undefined {
       inst.isM,
       inst.op,
       (inst.store ?? 0) as ASSIGN_OP,
-      (inst.jump ?? 0) as ASSIGN_OP
+      (inst.jump ?? 0) as ASSIGN_OP,
     );
   }
   return undefined;
@@ -324,7 +324,7 @@ const C = (
   assign: ASSIGN_ASM,
   op: COMMANDS_ASM,
   jmp?: JUMP_ASM,
-  span?: Span
+  span?: Span,
 ): AsmCInstruction => {
   const inst: AsmCInstruction = {
     type: "C",
@@ -341,7 +341,7 @@ const AC = (
   source: string | number,
   assign: ASSIGN_ASM,
   op: COMMANDS_ASM,
-  jmp?: JUMP_ASM
+  jmp?: JUMP_ASM,
 ) => [A(source), C(assign, op, jmp)];
 
 const L = (label: string, span?: Span): AsmLabelInstruction => ({

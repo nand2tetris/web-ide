@@ -1,10 +1,16 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
-import ohm, { Interval } from "ohm-js";
+import {
+  Interval,
+  grammar,
+  type Dict,
+  type Grammar,
+  type Semantics,
+} from "ohm-js";
 import { int10, int16, int2 } from "../util/twos.js";
 
 import baseGrammar from "./grammars/base.ohm.js";
 export const grammars = {
-  Base: ohm.grammar(baseGrammar),
+  Base: grammar(baseGrammar),
 };
 
 export const baseSemantics = grammars.Base.createSemantics();
@@ -63,7 +69,7 @@ const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
 
 export function createError(
   description: string,
-  span?: Span
+  span?: Span,
 ): CompilationError {
   const match = description.match(/Line \d+, col \d+: (?<message>.*)/);
   const message = match?.groups?.message ? match.groups.message : description;
@@ -76,9 +82,9 @@ export function createError(
 }
 
 export function makeParser<ResultType>(
-  grammar: ohm.Grammar,
-  semantics: ohm.Semantics,
-  property: (obj: ohm.Dict) => ResultType = ({ root }) => root
+  grammar: Grammar,
+  semantics: Semantics,
+  property: (obj: Dict) => ResultType = ({ root }) => root,
 ): (source: string) => Result<ResultType, CompilationError> {
   return function parse(source) {
     try {
@@ -91,8 +97,8 @@ export function makeParser<ResultType>(
         return Err(
           createError(
             match.shortMessage ?? UNKNOWN_HDL_ERROR,
-            span(match.getInterval())
-          )
+            span(match.getInterval()),
+          ),
         );
       }
     } catch (e) {

@@ -4,11 +4,11 @@ import { MutableRefObject } from "react";
 
 export class ImmMemory<
   Action extends { action: "update" },
-  Dispatch extends (a: Action) => void
+  Dispatch extends (a: Action) => void,
 > extends SubMemory {
   constructor(
     parent: MemoryAdapter,
-    private dispatch: MutableRefObject<Dispatch>
+    private dispatch: MutableRefObject<Dispatch>,
   ) {
     super(parent, parent.size, 0);
   }

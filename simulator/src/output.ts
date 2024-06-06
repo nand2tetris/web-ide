@@ -18,7 +18,7 @@ export class Output {
     lPad?: number,
     rPad?: number,
     builtin?: boolean,
-    index?: number
+    index?: number,
   ) {
     if (
       format.startsWith("%") &&
@@ -27,7 +27,7 @@ export class Output {
       rPad === undefined
     ) {
       const { fmt, lPad, rPad, len } = format.match(
-        /^%(?<fmt>[BDXS])(?<lPad>\d+)\.(?<len>\d+)\.(?<rPad>\d+)$/
+        /^%(?<fmt>[BDXS])(?<lPad>\d+)\.(?<len>\d+)\.(?<rPad>\d+)$/,
       )?.groups as {
         fmt: "B" | "X" | "D" | "S";
         lPad: string;

@@ -37,7 +37,7 @@ describe("Test Output Handler", () => {
         ["address", 1234],
       ]),
     }),
-    beforeEach
+    beforeEach,
   );
 
   it("outputs padded values", () => {

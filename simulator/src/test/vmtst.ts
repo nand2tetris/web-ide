@@ -22,7 +22,7 @@ export class VMTest extends Test<VMTestInstruction> {
     tst: Tst,
     path?: string,
     loadAction?: (files: VmFile[]) => void,
-    doEcho?: (status: string) => void
+    doEcho?: (status: string) => void,
   ): VMTest {
     const test = new VMTest(doEcho);
     test.dir = path?.split("/").slice(0, -1).join("/");
@@ -128,7 +128,7 @@ export class VMTest extends Test<VMTestInstruction> {
     }
     if (filename) {
       const file = await this.fs.readFile(
-        `${this.dir ? `${this.dir}/` : ""}${filename}`
+        `${this.dir ? `${this.dir}/` : ""}${filename}`,
       );
       this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
     } else {
@@ -137,7 +137,7 @@ export class VMTest extends Test<VMTestInstruction> {
       for (const stat of stats) {
         if (stat.isFile() && stat.name.endsWith(".vm")) {
           const file = await this.fs.readFile(
-            `${this.dir ? `${this.dir}/` : ""}${stat.name}`
+            `${this.dir ? `${this.dir}/` : ""}${stat.name}`,
           );
           files.push({ name: stat.name.replace(".vm", ""), content: file });
         }

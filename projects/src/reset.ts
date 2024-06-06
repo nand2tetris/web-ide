@@ -4,7 +4,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 export async function resetBySuffix(
   fs: FileSystem,
   tree: Tree,
-  suffix: string
+  suffix: string,
 ) {
   for (const [key, value] of Object.entries(tree)) {
     if (typeof value === "string") {

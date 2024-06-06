@@ -52,7 +52,7 @@ export const Compiler = () => {
       dispatch.current({ action: "setSelected", payload: tab });
       tracking.trackEvent("tab", "change", tab);
     },
-    [tracking]
+    [tracking],
   );
 
   useEffect(() => {

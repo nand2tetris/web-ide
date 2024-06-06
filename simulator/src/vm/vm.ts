@@ -133,7 +133,7 @@ export class Vm {
         ) {
           (op as StackInstruction).offset = this.registerStatic(
             fn.name,
-            (op as StackInstruction).offset
+            (op as StackInstruction).offset,
           );
         }
       }
@@ -148,16 +148,16 @@ export class Vm {
           return Err(
             createError(
               `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`,
-              inst.span
-            )
+              inst.span,
+            ),
           );
         }
         if (parts[0] != file.name) {
           return Err(
             createError(
               `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`,
-              inst.span
-            )
+              inst.span,
+            ),
           );
         }
       }
@@ -196,7 +196,7 @@ export class Vm {
   }
 
   private static validateFunctions(
-    instructions: VmInstruction[]
+    instructions: VmInstruction[],
   ): Result<void, CompilationError> {
     const functions: Set<string> = new Set();
     const calls = [];
@@ -207,8 +207,8 @@ export class Vm {
           return Err(
             createError(
               `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`,
-              inst.span
-            )
+              inst.span,
+            ),
           );
         }
         functions.add(inst.name);
@@ -218,8 +218,8 @@ export class Vm {
           return Err(
             createError(
               `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`,
-              inst.span
-            )
+              inst.span,
+            ),
           );
         }
         calls.push(inst as CallInstruction);
@@ -235,8 +235,8 @@ export class Vm {
                 `OS function ${call.name} expects ${
                   VM_BUILTINS[call.name].nArgs
                 } arguments, not ${call.nArgs}`,
-                call.span
-              )
+                call.span,
+              ),
             );
           }
         } else {
@@ -279,11 +279,11 @@ export class Vm {
 
   private static buildFunction(
     instructions: VmInstruction[],
-    i: number
+    i: number,
   ): Result<[VmFunction, number], CompilationError> {
     if (instructions[i].op !== "function")
       throw new Error(
-        "Only call buildFunction at the initial Function instruction"
+        "Only call buildFunction at the initial Function instruction",
       );
 
     const { name, nVars } = instructions[i] as FunctionInstruction;
@@ -375,8 +375,8 @@ export class Vm {
                 `Cannot redeclare label ${label} in function ${
                   fn.name
                 } (previously at line ${fn.labels[label] + 1})`,
-                instructions[i].span
-              )
+                instructions[i].span,
+              ),
             );
           fn.labels[label] = fn.operations.length;
           fn.operations.push({
@@ -440,7 +440,7 @@ export class Vm {
     }
     if (this.invocation.opPtr > this.currentFunction.operations.length)
       throw new Error(
-        `Current operation step beyond end of function operations (${this.invocation.opPtr} > ${this.currentFunction.operations.length})`
+        `Current operation step beyond end of function operations (${this.invocation.opPtr} > ${this.currentFunction.operations.length})`,
       );
 
     return this.currentFunction.operations[this.invocation.opPtr];
@@ -448,7 +448,7 @@ export class Vm {
 
   load(
     instructions: VmInstruction[],
-    reset = false
+    reset = false,
   ): Result<this, CompilationError> {
     if (reset) {
       this.functionMap = {};
@@ -475,8 +475,8 @@ export class Vm {
         return Err(
           createError(
             `VM Already has a function named ${fn.name}`,
-            instructions[0].span
-          )
+            instructions[0].span,
+          ),
         );
       }
 
@@ -517,7 +517,7 @@ export class Vm {
 
     if (this.functionMap[IMPLICIT] && this.functionMap[SYS_INIT.name]) {
       return Err(
-        createError("Cannot use both bootstrap and an implicit function")
+        createError("Cannot use both bootstrap and an implicit function"),
       );
     }
 
@@ -576,12 +576,12 @@ export class Vm {
             // the size of that segment is always 1
             this.segmentInitializations[segment].n = Math.max(
               op.offset + 1,
-              this.segmentInitializations[segment].n
+              this.segmentInitializations[segment].n,
             );
             return;
           } else {
             throw new Error(
-              `The ${segment} segment cannot be accessed since it was not initialized`
+              `The ${segment} segment cannot be accessed since it was not initialized`,
             );
           }
         }
@@ -589,7 +589,7 @@ export class Vm {
       if (op.segment == "this" && this.invocation.thisInitialized) {
         this.invocation.thisN = Math.max(
           op.offset + 1,
-          this.invocation.thisN ?? 0
+          this.invocation.thisN ?? 0,
         );
         return;
       }
@@ -605,12 +605,12 @@ export class Vm {
     }
     if (op.segment == "this" && !this.invocation.thisInitialized) {
       throw new Error(
-        `The this segment cannot be accessed since it was not initialized`
+        `The this segment cannot be accessed since it was not initialized`,
       );
     }
     if (op.segment == "that" && !this.invocation.thatInitialized) {
       throw new Error(
-        `The that segment cannot be accessed since it was not initialized`
+        `The that segment cannot be accessed since it was not initialized`,
       );
     }
   }
@@ -652,7 +652,7 @@ export class Vm {
         this.validateStackOp(operation);
         const value = this.memory.getSegment(
           operation.segment,
-          operation.offset
+          operation.offset,
         );
         this.memory.push(value);
         break;
@@ -727,7 +727,7 @@ export class Vm {
           const base = this.memory.pushFrame(
             this.invocation.opPtr,
             operation.nArgs,
-            this.functionMap[fnName].nVars
+            this.functionMap[fnName].nVars,
           );
           this.executionStack.push({
             function: fnName,
@@ -770,7 +770,7 @@ export class Vm {
     }
     if (this.currentFunction.labels[label] === undefined)
       throw new Error(
-        `Attempting GOTO to unknown label ${label} in ${this.currentFunction.name}`
+        `Attempting GOTO to unknown label ${label} in ${this.currentFunction.name}`,
       );
     this.invocation.opPtr = this.currentFunction.labels[label];
   }
@@ -860,7 +860,7 @@ export class Vm {
       fn.nVars,
       this.invocation.thisN ?? 0,
       1,
-      nextFrame
+      nextFrame,
     );
     frame.fn = fn;
     frame.usedSegments = this.getUsedSegments(invocation);

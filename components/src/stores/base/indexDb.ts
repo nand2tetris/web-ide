@@ -23,7 +23,7 @@ export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemDirec
   return new Promise<FileSystemDirectoryHandle | void>((resolve, reject) => {
     const transaction = db.transaction(
       [IDB_FS_ADAPTER_OBJECT_STORE],
-      "readonly"
+      "readonly",
     );
     const objectStore = transaction.objectStore(IDB_FS_ADAPTER_OBJECT_STORE);
     const handleRequest = objectStore.get(IDB_FS_ADAPTER_KEY);
@@ -34,7 +34,7 @@ export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemDirec
       } else {
         assert(
           handle instanceof FileSystemDirectoryHandle,
-          `Retrieved ${IDB_FS_ADAPTER_KEY} in ${IDB_FS_ADAPTER_OBJECT_STORE} in ${IDB_NAME} is not a FileSystemDirectoryHandle`
+          `Retrieved ${IDB_FS_ADAPTER_KEY} in ${IDB_FS_ADAPTER_OBJECT_STORE} in ${IDB_NAME} is not a FileSystemDirectoryHandle`,
         );
         resolve(handle);
       }
@@ -55,12 +55,12 @@ export async function attemptLoadAdapterFromIndexedDb(): Promise<FileSystemDirec
 }
 
 export async function createAndStoreLocalAdapterInIndexedDB(
-  handle: FileSystemDirectoryHandle
+  handle: FileSystemDirectoryHandle,
 ): Promise<FileSystemDirectoryHandle> {
   const db = await openIndexedDb();
   const transaction = db.transaction(
     [IDB_FS_ADAPTER_OBJECT_STORE],
-    "readwrite"
+    "readwrite",
   );
   transaction
     .objectStore(IDB_FS_ADAPTER_OBJECT_STORE)
@@ -80,7 +80,7 @@ export async function removeLocalAdapterFromIndexedDB() {
   const db = await openIndexedDb();
   const transaction = db.transaction(
     [IDB_FS_ADAPTER_OBJECT_STORE],
-    "readwrite"
+    "readwrite",
   );
   transaction
     .objectStore(IDB_FS_ADAPTER_OBJECT_STORE)

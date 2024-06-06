@@ -40,14 +40,14 @@ export function useBaseContext(): BaseContext {
       const newFs = new FileSystem(
         new ChainedFileSystemAdapter(
           new FileSystemAccessFileSystemAdapter(handle),
-          localAdapter
-        )
+          localAdapter,
+        ),
       );
       newFs.cd(fs.cwd());
       setFs(newFs);
       setUpgraded(handle.name);
     },
-    [setFs, setUpgraded]
+    [setFs, setUpgraded],
   );
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export function useBaseContext(): BaseContext {
       const adapter = await createAndStoreLocalAdapterInIndexedDB(handler);
       replaceFs(adapter);
     },
-    [upgraded, replaceFs]
+    [upgraded, replaceFs],
   );
 
   const closeFs = useCallback(async () => {

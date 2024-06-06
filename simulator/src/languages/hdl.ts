@@ -1,5 +1,5 @@
 /** Reads and parses HDL chip descriptions. */
-import ohm from "ohm-js";
+import { grammar as ohmGrammar } from "ohm-js";
 import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 export interface PinIndex {
@@ -37,7 +37,7 @@ export interface HdlParse {
 }
 
 import hdlGrammar from "./grammars/hdl.ohm.js";
-export const grammar = ohm.grammar(hdlGrammar, grammars);
+export const grammar = ohmGrammar(hdlGrammar, grammars);
 
 export const hdlSemantics = grammar.extendSemantics(baseSemantics);
 
@@ -105,7 +105,7 @@ hdlSemantics.addAttribute<string[]>("Clocked", {
       clocked
         .asIteration()
         .children.map(
-          ({ sourceString }: { sourceString: string }) => sourceString
+          ({ sourceString }: { sourceString: string }) => sourceString,
         ) ?? []
     );
   },

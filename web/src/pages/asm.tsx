@@ -86,7 +86,7 @@ export const Asm = () => {
   const downloadHack = () =>
     download(
       state.result,
-      state.path?.split("/").pop()?.replace(".asm", ".hack") ?? "result.hack"
+      state.path?.split("/").pop()?.replace(".asm", ".hack") ?? "result.hack",
     );
 
   const download = (content: string, name: string) => {
@@ -116,7 +116,7 @@ export const Asm = () => {
     toolStates.setCpuState(
       state.path?.replace(".asm", ".hack"),
       new ROM(new Int16Array(bytes)),
-      "bin"
+      "bin",
     );
     redirectRef.current?.click();
   };

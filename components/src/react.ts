@@ -1,10 +1,10 @@
-import produce from "immer";
+import { produce } from "immer";
 import { Dispatch, useEffect, useReducer, useState } from "react";
 
 export function useImmerReducer<
   T,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  Reducers extends Record<string, (state: T, action?: any) => T | void>
+  Reducers extends Record<string, (state: T, action?: any) => T | void>,
 >(reducers: Reducers, initialState: T) {
   return useReducer(
     (
@@ -13,12 +13,12 @@ export function useImmerReducer<
         action: keyof Reducers;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload?: any;
-      }
+      },
     ): T =>
       produce(state, (draft: T) => {
         reducers[command.action](draft, command.payload);
       }),
-    initialState
+    initialState,
   );
 }
 

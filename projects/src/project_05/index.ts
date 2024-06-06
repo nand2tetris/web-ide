@@ -43,7 +43,7 @@ export const BUILTIN_CHIPS = {
   ROM32K: ROM32K.hdl,
   RAM16K: RAM16K.hdl.replace(
     "//// Replace this comment with your code.",
-    "BUILTIN RAM16K;"
+    "BUILTIN RAM16K;",
   ),
 };
 

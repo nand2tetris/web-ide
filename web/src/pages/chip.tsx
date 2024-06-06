@@ -63,7 +63,7 @@ export const Chip = () => {
       actions.setProject(project);
       tracking.trackEvent("action", "setProject", project);
     },
-    [actions, tracking]
+    [actions, tracking],
   );
 
   const setChip = useCallback(
@@ -72,7 +72,7 @@ export const Chip = () => {
       tracking.trackEvent("action", "setChip", chip);
       pinResetDispatcher.reset();
     },
-    [actions, tracking]
+    [actions, tracking],
   );
 
   const doEval = useCallback(() => {
@@ -134,7 +134,7 @@ export const Chip = () => {
         actions.reset();
       },
     }),
-    [actions]
+    [actions],
   );
 
   const downloadRef = useRef<HTMLAnchorElement>(null);
@@ -250,7 +250,7 @@ export const Chip = () => {
             await actions.saveChip(source);
           }
           compile.current(
-            useBuiltin || state.controls.builtinOnly ? {} : { hdl: source }
+            useBuiltin || state.controls.builtinOnly ? {} : { hdl: source },
           );
         }}
         grammar={HDL.parser}
@@ -320,7 +320,7 @@ export const Chip = () => {
     () => {
       dispatch.current({ action: "updateChip" });
     },
-    state.controls.visualizationParameters
+    state.controls.visualizationParameters,
   );
 
   const pinResetDispatcher = new PinResetDispatcher();

@@ -283,7 +283,7 @@ describe("Chip", () => {
     it("widens output busses if necessary", () => {
       const mux4way16 = new Chip(
         ["in[16]", "b[16]", "c[16]", "d[16]", "sel[2]"],
-        ["out[16]"]
+        ["out[16]"],
       );
 
       mux4way16.wire(new Mux16(), [

@@ -5,7 +5,7 @@ import { halfAdder } from "./half_adder.js";
 export function fullAdder(
   a: Voltage,
   b: Voltage,
-  c: Voltage
+  c: Voltage,
 ): [Voltage, Voltage] {
   const [s, ca] = halfAdder(a, b);
   const [sum, cb] = halfAdder(s, c);

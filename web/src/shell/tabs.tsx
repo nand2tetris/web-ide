@@ -17,7 +17,7 @@ export const Tab = (
     parent?: string;
     checked?: boolean;
     onSelect?: () => void;
-  }>
+  }>,
 ) => {
   const id = useId();
   const tab = `tab-${id}`;
@@ -68,7 +68,7 @@ export const TabList = (props: {
             setSelectedIndex(index);
             child.props?.onSelect?.();
           },
-        })
+        }),
       )}
     </section>
   );

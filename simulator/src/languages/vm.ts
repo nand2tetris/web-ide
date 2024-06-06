@@ -1,10 +1,10 @@
 /** Reads tst files to apply and perform test runs. */
 
-import ohm from "ohm-js";
+import { grammar as ohmGrammar } from "ohm-js";
 import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
-export const grammar = ohm.grammar(vmGrammar, grammars);
+export const grammar = ohmGrammar(vmGrammar, grammars);
 export const vmSemantics = grammar.extendSemantics(baseSemantics);
 
 export interface Vm {

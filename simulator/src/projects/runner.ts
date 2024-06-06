@@ -124,10 +124,10 @@ export async function runTests(
   files: Array<Assignment>,
   loadAssignment: (file: Assignment) => Promise<AssignmentFiles>,
   fs: FileSystem,
-  ideRunner?: Runner
+  ideRunner?: Runner,
 ): Promise<AssignmentRun[]> {
   const run = runner(fs, ideRunner);
   return Promise.all(
-    files.map(loadAssignment).map(async (assignment) => run(await assignment))
+    files.map(loadAssignment).map(async (assignment) => run(await assignment)),
   );
 }

@@ -13,7 +13,7 @@ async function getCmp(): Promise<typeof CMP> {
 }
 
 export async function getDiagnostics(
-  document: TextDocument
+  document: TextDocument,
 ): Promise<[Uri, Diagnostic[]][]> {
   try {
     const { parser } = await getCmp();

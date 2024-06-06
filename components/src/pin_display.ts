@@ -12,12 +12,12 @@ export class ChipDisplayInfo {
       const chip = getBuiltinChip(chipName);
       if (isOk(chip)) {
         const pins = Array.from(Ok(chip).ins.entries()).concat(
-          Array.from(Ok(chip).outs.entries())
+          Array.from(Ok(chip).outs.entries()),
         );
         for (const pin of pins) {
           this.signBehaviors.set(
             pin.name,
-            !unsigned || !unsigned.includes(pin.name)
+            !unsigned || !unsigned.includes(pin.name),
           );
         }
       }

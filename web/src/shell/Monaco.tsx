@@ -10,7 +10,7 @@ import { Decoration, HighlightType } from "./editor";
 
 const isRangeVisible = (
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
-  range: monacoT.Range
+  range: monacoT.Range,
 ) => {
   for (const visibleRange of editor?.getVisibleRanges() ?? []) {
     if (visibleRange.containsRange(range)) {
@@ -27,7 +27,7 @@ export const makeDecorations = (
   additionalDecorations: Decoration[],
   decorations: string[],
   type: HighlightType = "highlight",
-  alwaysCenter = true
+  alwaysCenter = true,
 ): string[] => {
   if (!(editor && highlight)) return decorations;
   const model = editor.getModel();
@@ -53,7 +53,7 @@ export const makeDecorations = (
     const range = monaco?.Range.fromPositions(
       model.getPositionAt(decoration.span.start),
       // editor.getSc
-      model.getPositionAt(decoration.span.end)
+      model.getPositionAt(decoration.span.end),
     );
     if (range) {
       nextDecoration.push({
@@ -144,7 +144,7 @@ export const Monaco = ({
       customDecorations.current,
       decorations.current,
       highlightType,
-      alwaysRecenter
+      alwaysRecenter,
     );
   }, [decorations, monaco, editor, highlight, highlightType]);
 
@@ -202,7 +202,7 @@ export const Monaco = ({
       const model = editor.current?.getModel();
       model?.setEOL(monacoT.editor.EndOfLineSequence.LF);
     },
-    [codeTheme]
+    [codeTheme],
   );
 
   useEffect(() => {

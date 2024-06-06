@@ -117,7 +117,7 @@ export const REGISTRY = new Map<string, () => Chip>(
       chip.name = name;
       return chip;
     },
-  ])
+  ]),
 );
 
 export function hasBuiltinChip(name: string): boolean {

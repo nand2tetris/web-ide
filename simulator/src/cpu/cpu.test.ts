@@ -191,7 +191,7 @@ describe("CPU", () => {
         0xefc8, // M=1 // init RAM[0]=1
         0xefd0, // D=1
         0xe7d8, // MD=D+1
-      ])
+      ]),
     );
 
     const cpu = new CPU({ RAM, ROM });

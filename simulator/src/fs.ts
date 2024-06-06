@@ -19,7 +19,7 @@ export async function loadAsm(fs: FileSystem, path: string): Promise<number[]> {
 
 export async function loadHack(
   fs: FileSystem,
-  path: string
+  path: string,
 ): Promise<number[]> {
   return loader.loadHack(await fs.readFile(path));
 }

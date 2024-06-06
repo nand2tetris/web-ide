@@ -39,7 +39,10 @@ export class Bus implements Pin {
   state: Voltage[];
   next: Pin[] = [];
 
-  constructor(readonly name: string, readonly width = 1) {
+  constructor(
+    readonly name: string,
+    readonly width = 1,
+  ) {
     this.state = range(0, this.width).map(() => LOW);
   }
 
@@ -62,7 +65,7 @@ export class Bus implements Pin {
   pull(voltage: Voltage, bit = 0) {
     assert(
       bit >= 0 && bit < this.width,
-      `Bit out of bounds: ${this.name}@${bit}`
+      `Bit out of bounds: ${this.name}@${bit}`,
     );
     this.state[bit] = voltage;
     this.next.forEach((n) => n.pull(voltage, bit));
@@ -94,12 +97,12 @@ export class InSubBus extends Bus {
   constructor(
     private bus: Pin,
     private start: number,
-    override readonly width = 1
+    override readonly width = 1,
   ) {
     super(bus.name);
     assert(
       start >= 0 && start + width <= bus.width,
-      `Mismatched InSubBus dimensions on ${bus.name} (${width} + ${start} > ${bus.width})`
+      `Mismatched InSubBus dimensions on ${bus.name} (${width} + ${start} > ${bus.width})`,
     );
     this.connect(bus);
   }
@@ -128,7 +131,7 @@ export class InSubBus extends Bus {
   override connect(bus: Pin): void {
     assert(
       this.start + this.width <= bus.width,
-      `Mismatched InSubBus connection dimensions (From ${bus.name} to ${this.name})`
+      `Mismatched InSubBus connection dimensions (From ${bus.name} to ${this.name})`,
     );
     this.bus = bus;
   }
@@ -138,7 +141,7 @@ export class OutSubBus extends Bus {
   constructor(
     private bus: Pin,
     private start: number,
-    override readonly width = 1
+    override readonly width = 1,
   ) {
     super(bus.name);
     assert(start >= 0 && width <= bus.width, `Mismatched OutSubBus dimensions`);
@@ -157,14 +160,17 @@ export class OutSubBus extends Bus {
   override connect(bus: Pin): void {
     assert(
       this.width <= bus.width,
-      `Mismatched OutSubBus connection dimensions`
+      `Mismatched OutSubBus connection dimensions`,
     );
     this.bus = bus;
   }
 }
 
 export class ConstantBus extends Bus {
-  constructor(name: string, private readonly value: number) {
+  constructor(
+    name: string,
+    private readonly value: number,
+  ) {
     super(name, 16 /* TODO: get high bit index */);
   }
 
@@ -210,7 +216,7 @@ export function parseToPin(toPin: string): {
   end?: number;
 } {
   const { pin, i, j } = toPin.match(
-    /(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/
+    /(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/,
   )?.groups as { pin: string; i?: string; j?: string };
   return {
     pin,
@@ -258,7 +264,7 @@ export class Pins {
 function validateWidth(
   start: number,
   width: number,
-  pin: Pin
+  pin: Pin,
 ): Result<void, string> {
   return start + width <= pin.width
     ? Ok()
@@ -303,7 +309,7 @@ export class Chip {
     outs: (string | { pin: string; width: number })[],
     public name?: string,
     internals: (string | { pin: string; width: number })[] = [],
-    clocked: string[] = []
+    clocked: string[] = [],
   ) {
     for (const inn of ins) {
       const { pin, width = 1 } =
@@ -417,7 +423,7 @@ export class Chip {
     return [...(this.partToOuts.get(from) ?? [])].some(
       (pin) =>
         this.insToPart.get(pin)?.has(to) &&
-        !(this.isInternalPin(pin) && to.clocked)
+        !(this.isInternalPin(pin) && to.clocked),
     );
   }
 
@@ -482,11 +488,11 @@ export class Chip {
   private wireOutPin(
     part: Chip,
     to: PinSide,
-    from: PinSide
+    from: PinSide,
   ): Result<void, WireError> {
     const partPin = assertExists(
       part.outs.get(to.name),
-      () => `Cannot wire to missing pin ${to.name}`
+      () => `Cannot wire to missing pin ${to.name}`,
     );
     to.width ??= partPin.width;
 
@@ -543,11 +549,11 @@ export class Chip {
   private wireInPin(
     part: Chip,
     to: PinSide,
-    from: PinSide
+    from: PinSide,
   ): Result<void, WireError> {
     let partPin = assertExists(
       part.ins.get(to.name),
-      () => `Cannot wire to missing pin ${to.name}`
+      () => `Cannot wire to missing pin ${to.name}`,
     );
     to.width ??= partPin.width;
 
@@ -694,7 +700,7 @@ function mask(width: number) {
 function setBus(busses: Pinout, pin: Pin) {
   busses[pin.name] = bin(
     (pin.busVoltage & mask(pin.width)) <<
-      (pin as unknown as { start: number }).start ?? 0
+      (pin as unknown as { start: number }).start ?? 0,
   );
   return busses;
 }

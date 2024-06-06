@@ -66,8 +66,8 @@ export class VmMemory extends RAM {
     if (this.strict && (offset < 0 || offset > 32767))
       return Err(
         new Error(
-          `Illegal offset value ${offset} (must be between 0 and 32767)`
-        )
+          `Illegal offset value ${offset} (must be between 0 and 32767)`,
+        ),
       );
     switch (segment) {
       case "argument":
@@ -79,7 +79,7 @@ export class VmMemory extends RAM {
       case "pointer":
         if (this.strict && offset > 1)
           throw new Error(
-            `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`
+            `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`,
           );
         return Ok(offset === 0 ? THIS : THAT);
       case "static":
@@ -90,8 +90,8 @@ export class VmMemory extends RAM {
         if (this.strict && offset > 7)
           return Err(
             new Error(
-              `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`
-            )
+              `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`,
+            ),
           );
         return Ok(5 + offset);
       case "that":
@@ -105,7 +105,7 @@ export class VmMemory extends RAM {
     if (segment === "constant") {
       if (this.strict && (offset < 0 || offset > 32767))
         throw new Error(
-          `Illegal offset value ${offset} (must be between 0 and 32767)`
+          `Illegal offset value ${offset} (must be between 0 and 32767)`,
         );
       return offset;
     }
@@ -202,7 +202,7 @@ export class VmMemory extends RAM {
     localN: number, // The number of locals in this frame
     thisN: number, // The number of items in `this`
     thatN: number, // the number of items in `that`
-    nextFrame: number
+    nextFrame: number,
   ): VmFrame {
     const arg = base - argN;
     const lcl = base + 5;

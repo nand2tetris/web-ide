@@ -62,7 +62,7 @@ declare module "react" {
 
 const Home = () => {
   const [tests, setTests] = useState(
-    [] as Array<Parameters<typeof TestResult>[0]>
+    [] as Array<Parameters<typeof TestResult>[0]>,
   );
   const { fs } = useBaseContext();
 
@@ -85,7 +85,7 @@ const Home = () => {
           .map(async (file) => {
             const hdl = await file.file.text();
             return { ...file, hdl };
-          })
+          }),
       );
 
       const tests = await runTests(files, loadAssignment, fs);
@@ -94,7 +94,7 @@ const Home = () => {
       setTests(tests);
       fs.popd();
     },
-    [setTests, fs]
+    [setTests, fs],
   );
 
   return (

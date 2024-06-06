@@ -1,7 +1,7 @@
 {
   "name": "@nand2tetris/web-ide",
   "version": "0.0.0",
-  "description": "A Javascript reimplementation of nand2tetris.org.",
+  "description": "A Javascript implementation of nand2tetris.org.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/nand2tetris/web-ide.git"
@@ -34,17 +34,6 @@
     "start": "npm run web",
     "preinstall-cli": "npm run build -w projects && npm run build -w runner && npm run build -w simulator && npm run build -w cli",
     "install-cli": "npm i -g cli"
-  },
-  "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@types/wicg-file-system-access": "^2023.10.5",
-    "@typescript-eslint/eslint-plugin": "^5.47.1",
-    "@typescript-eslint/parser": "^5.47.1",
-    "esbuild": "^0.15.18",
-    "eslint": "^8.31.0",
-    "eslint-plugin-react": "^7.31.11",
-    "prettier": "^2.8.1",
-    "typescript": "^4.9.4"
   },
   "workspaces": [
     "cli",

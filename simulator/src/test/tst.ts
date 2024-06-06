@@ -72,7 +72,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
         param.lpad,
         param.rpad,
         param.builtin,
-        param.address
+        param.address,
       );
     });
   }

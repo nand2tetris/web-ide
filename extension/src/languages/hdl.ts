@@ -12,7 +12,7 @@ async function getHdl(): Promise<typeof HDL> {
 }
 
 export async function getDiagnostics(
-  document: TextDocument
+  document: TextDocument,
 ): Promise<[Uri, Diagnostic[]][]> {
   const { parser } = await getHdl();
 

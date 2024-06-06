@@ -22,14 +22,14 @@ function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
   return Err(
     createError(
       `Bus start index should be less than or equal to bus end index`,
-      pin.span
-    )
+      pin.span,
+    ),
   );
 }
 
 export async function parse(
   code: string,
-  name?: string
+  name?: string,
 ): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
@@ -40,7 +40,7 @@ export async function parse(
 
 export async function loadChip(
   name: string,
-  fs?: FileSystem
+  fs?: FileSystem,
 ): Promise<Result<Chip>> {
   if (hasBuiltinChip(name) || fs === undefined) {
     return getBuiltinChip(name);
@@ -70,7 +70,7 @@ export async function loadChip(
 export async function build(
   parts: HdlParse,
   fs?: FileSystem,
-  name?: string
+  name?: string,
 ): Promise<Result<Chip, CompilationError>> {
   return await new ChipBuilder(parts, fs, name).build();
 }
@@ -103,7 +103,7 @@ function display(pin: PinParts): string {
 
 function createConnection(
   lhs: PinParts,
-  rhs: PinParts
+  rhs: PinParts,
 ): Result<Connection, CompilationError> {
   const lhsWidth = pinWidth(lhs);
   const rhsWidth = pinWidth(rhs);
@@ -141,7 +141,7 @@ function getIndices(pin: PinParts): number[] {
 
 function checkMultipleAssignments(
   pin: PinParts,
-  assignedIndexes: Map<string, Set<number>>
+  assignedIndexes: Map<string, Set<number>>,
 ): Result<void, CompilationError> {
   let errorIndex: number | undefined = undefined; // -1 stands for the whole bus width
   const indices = assignedIndexes.get(pin.pin);
@@ -167,8 +167,8 @@ function checkMultipleAssignments(
         `Cannot write to pin ${pin.pin}${
           errorIndex != -1 ? `[${errorIndex}]` : ""
         } multiple times`,
-        pin.span
-      )
+        pin.span,
+      ),
     );
   }
   return Ok();
@@ -194,7 +194,7 @@ class ChipBuilder {
       parts.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
       parts.name.value,
       [],
-      parts.clocked
+      parts.clocked,
     );
   }
 
@@ -234,8 +234,8 @@ class ChipBuilder {
         return Err(
           createError(
             `Cannot use chip ${partChip.name} to implement itself`,
-            part.span
-          )
+            part.span,
+          ),
         );
       }
       const result = this.wirePart(part, partChip);
@@ -279,8 +279,8 @@ class ChipBuilder {
             error.message,
             error.lhs
               ? part.wires[error.wireIndex].lhs.span
-              : part.wires[error.wireIndex].rhs.span
-          )
+              : part.wires[error.wireIndex].rhs.span,
+          ),
         );
       }
       return Ok();
@@ -292,7 +292,7 @@ class ChipBuilder {
   private validateWire(
     partChip: Chip,
     lhs: PinParts,
-    rhs: PinParts
+    rhs: PinParts,
   ): Result<void, CompilationError> {
     if (partChip.isInPin(lhs.pin)) {
       const result = this.validateInputWire(lhs, rhs);
@@ -315,7 +315,7 @@ class ChipBuilder {
 
   private validateInputWire(
     lhs: PinParts,
-    rhs: PinParts
+    rhs: PinParts,
   ): Result<void, CompilationError> {
     let result = this.validateInputSource(rhs);
     if (isErr(result)) {
@@ -345,7 +345,7 @@ class ChipBuilder {
   private validateOutputWire(
     partChip: Chip,
     lhs: PinParts,
-    rhs: PinParts
+    rhs: PinParts,
   ): Result<void, CompilationError> {
     let result = this.validateWriteTarget(rhs);
     if (isErr(result)) {
@@ -363,8 +363,8 @@ class ChipBuilder {
         return Err(
           createError(
             `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
-            rhs.span
-          )
+            rhs.span,
+          ),
         );
       }
       // track internal pin creation to detect undefined pins
@@ -379,7 +379,7 @@ class ChipBuilder {
       } else {
         if (pinData.isDefined) {
           return Err(
-            createError(`Internal pin ${rhs.pin} already defined`, rhs.span)
+            createError(`Internal pin ${rhs.pin} already defined`, rhs.span),
           );
         }
         pinData.isDefined = true;
@@ -395,7 +395,7 @@ class ChipBuilder {
     }
     if (isConstantPin(rhs.pin)) {
       return Err(
-        createError(`Internal pin name cannot be "true" or "false"`, rhs.span)
+        createError(`Internal pin name cannot be "true" or "false"`, rhs.span),
       );
     }
     return Ok();
@@ -410,8 +410,8 @@ class ChipBuilder {
           isConstantPin(rhs.pin)
             ? `Constant bus cannot be subscripted or indexed`
             : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
-          rhs.span
-        )
+          rhs.span,
+        ),
       );
     }
     return Ok();
@@ -425,8 +425,8 @@ class ChipBuilder {
             name.toLowerCase() == "true" || name.toLowerCase() == "false"
               ? `The constant bus ${name.toLowerCase()} must be in lower-case`
               : `Undefined internal pin name: ${name}`,
-            pinData.firstUse
-          )
+            pinData.firstUse,
+          ),
         );
       }
     }
@@ -445,14 +445,14 @@ class ChipBuilder {
         return Err(
           createError(
             `Different bus widths: ${display(
-              wire.lhs
+              wire.lhs,
             )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
             {
               start: wire.lhs.span.start,
               end: wire.rhs.span.end,
               line: wire.lhs.span.line,
-            }
-          )
+            },
+          ),
         );
       }
     }

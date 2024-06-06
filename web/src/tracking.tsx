@@ -45,14 +45,14 @@ function trackEvent(
   category: Category,
   action: Action,
   label?: string,
-  value?: number
+  value?: number,
 ): void;
 function trackEvent(event: TrackingEvent): void;
 function trackEvent(
   ev: Category | TrackingEvent,
   action?: Action,
   label?: string,
-  value?: number
+  value?: number,
 ) {
   if (stop) return;
 
@@ -87,7 +87,7 @@ export function useTracking() {
   const [haveAsked, setHaveAsked] = useState<boolean>(
     ASKED.includes(stored) ||
       // Technically deprecated
-      navigator.doNotTrack === "1"
+      navigator.doNotTrack === "1",
   );
 
   const accept = useCallback(() => {

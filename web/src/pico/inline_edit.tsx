@@ -36,7 +36,7 @@ export const InlineEdit = (props: {
 
   const doSelect = useCallback(
     (ref: HTMLInputElement | null) => ref?.select(),
-    []
+    [],
   );
   const doChange = useCallback(
     (target: HTMLInputElement) => {
@@ -44,7 +44,7 @@ export const InlineEdit = (props: {
       setValue(target.value ?? "");
       props.onChange(target.value ?? "");
     },
-    [props, setMode, setValue]
+    [props, setMode, setValue],
   );
   const edit = () => {
     const edit = (

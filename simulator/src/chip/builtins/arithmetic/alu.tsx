@@ -17,7 +17,7 @@ export class ALUNoStat extends Chip {
       [
         "out[16]", // 16-bit output
       ],
-      "ALU"
+      "ALU",
     );
   }
 
@@ -56,7 +56,7 @@ export class ALU extends Chip {
         "zr", // 1 if (out === 0), 0 otherwise
         "ng", // 1 if (out < 0),  0 otherwise
       ],
-      "ALU"
+      "ALU",
     );
   }
 
@@ -110,7 +110,7 @@ export class ALUAll extends Chip {
         "zr", // 1 if (out === 0), 0 otherwise
         "ng", // 1 if (out < 0),  0 otherwise
       ],
-      "ALU"
+      "ALU",
     );
   }
 

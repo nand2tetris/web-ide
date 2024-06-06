@@ -13,7 +13,7 @@ export function mux16_4(
   b: number,
   c: number,
   d: number,
-  sel: number
+  sel: number,
 ): [number] {
   const s2 = (sel & 0b01) as Voltage;
   return (sel & 0b10) === 0b00 ? mux16(a, b, s2) : mux16(c, d, s2);
@@ -28,7 +28,7 @@ export function mux16_8(
   f: number,
   g: number,
   h: number,
-  sel: number
+  sel: number,
 ): [number] {
   const s2 = (sel & 0b11) as Voltage;
   return (sel & 0b100) === 0b000
@@ -96,7 +96,7 @@ export class Mux8Way16 extends Chip {
         "h[16]",
         "sel[3]",
       ],
-      ["out[16]"]
+      ["out[16]"],
     );
   }
 

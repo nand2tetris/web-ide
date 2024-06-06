@@ -1,12 +1,13 @@
-import ohm from "ohm-js";
+import type { MatchResult } from "ohm-js";
+
+import { display } from "@davidsouther/jiffies/lib/esm/display.js";
 import {
-  isErr,
-  Result,
   Err,
   Ok,
+  Result,
+  isErr,
   isOk,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { display } from "@davidsouther/jiffies/lib/esm/display.js";
 import { Diff } from "./compare.js";
 
 interface CustomMatchers<R = unknown, T = unknown> {
@@ -74,14 +75,14 @@ expect.extend({
       message: () => `Ok(${display(Ok(result))}) is expected`,
     };
   },
-  toHaveSucceeded(match: ohm.MatchResult) {
+  toHaveSucceeded(match: MatchResult) {
     if (match.succeeded()) {
       return { pass: true, message: () => "Match succeeded" };
     } else {
       return { pass: false, message: () => match.message ?? "Match failed" };
     }
   },
-  toHaveFailed(match: ohm.MatchResult, message: string) {
+  toHaveFailed(match: MatchResult, message: string) {
     expect(match.failed()).toBe(true);
     expect(match.shortMessage).toBe(message);
     return {
@@ -91,7 +92,7 @@ expect.extend({
   },
   toHaveNoDiff(diffs: Diff[]) {
     expect(
-      diffs.map(({ a, b, col, row }) => `${a} <> ${b} (${row}:${col})`)
+      diffs.map(({ a, b, col, row }) => `${a} <> ${b} (${row}:${col})`),
     ).toEqual([]);
     return {
       pass: true,

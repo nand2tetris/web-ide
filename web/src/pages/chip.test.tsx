@@ -13,7 +13,7 @@ import Chip from "./chip";
 describe.skip("chip page", () => {
   const state = cleanState(
     () => ({ context: useTestingAppContext() }),
-    beforeEach
+    beforeEach,
   );
 
   it("tracks the clock", async () => {
@@ -23,12 +23,12 @@ describe.skip("chip page", () => {
         <AppContext.Provider value={state.context.app}>
           <Chip />
         </AppContext.Provider>
-      </BaseContext.Provider>
+      </BaseContext.Provider>,
     );
 
     await events.type(
       screen.getByTestId("editor-hdl"),
-      `CHIP Foo { IN load; PARTS: CLOCKED load; }`
+      `CHIP Foo { IN load; PARTS: CLOCKED load; }`,
     );
 
     await events.click(screen.getByText("Eval"));

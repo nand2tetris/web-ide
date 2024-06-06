@@ -24,7 +24,7 @@ export function useMonaco() {
         setWantsMonaco(false);
       }
     },
-    [canUseMonaco]
+    [canUseMonaco],
   );
 
   return {
@@ -42,7 +42,7 @@ export function useToolStates() {
   const setCpuState = (
     file: string | LocalFile | undefined,
     rom: ROM | undefined,
-    format: Format
+    format: Format,
   ) => {
     setCpuFile(file);
     setRom(rom);

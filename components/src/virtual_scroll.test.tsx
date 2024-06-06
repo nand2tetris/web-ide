@@ -9,7 +9,7 @@ describe("<VirtualScroll />", () => {
         get={arrayAdapter([1, 2, 3])}
         row={(i) => <div>{i}</div>}
         rowKey={(i) => i}
-      />
+      />,
     );
 
     const two = screen.getByText("2");

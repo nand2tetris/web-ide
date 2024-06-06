@@ -30,7 +30,7 @@ export class TestSetInstruction implements TestInstruction {
   constructor(
     private variable: string,
     private value: number,
-    private index?: number | undefined
+    private index?: number | undefined,
   ) {}
 
   async do(test: Test) {
@@ -146,7 +146,7 @@ export class Condition {
   constructor(
     public readonly x: string | number,
     public readonly y: string | number,
-    public readonly op: "<" | "<=" | "=" | ">=" | ">" | "<>"
+    public readonly op: "<" | "<=" | "=" | ">=" | ">" | "<>",
   ) {}
 
   check(test: Test): boolean {
@@ -242,7 +242,10 @@ export class TestLoadInstruction implements TestInstruction {
 }
 
 export class TestBreakpointInstruction implements TestInstruction {
-  constructor(readonly variable: string, readonly value: number) {}
+  constructor(
+    readonly variable: string,
+    readonly value: number,
+  ) {}
 
   async do(test: Test) {
     test.addBreakpoint(this.variable, this.value);

@@ -18,12 +18,12 @@
     }
   },
   "dependencies": {
-    "@davidsouther/jiffies": "^2.0.6",
+    "@davidsouther/jiffies": "^2.2.5",
     "@nand2tetris/projects": "^1.0.0",
-    "@types/node": "^18.11.18"
+    "@types/node": "^20.14.2"
   },
   "devDependencies": {
-    "typescript": "^4.9.4"
+    "typescript": "^5.4.5"
   },
   "scripts": {
     "build": "tsc"

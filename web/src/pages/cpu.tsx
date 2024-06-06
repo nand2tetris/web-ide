@@ -46,7 +46,7 @@ export const CPU = () => {
     toolStates.setCpuState(file, state.sim.ROM as ROM, romFormat);
     if (file) {
       setTitle(
-        typeof file == "string" ? file.split("/").pop() ?? "" : file.name
+        typeof file == "string" ? file.split("/").pop() ?? "" : file.name,
       );
     }
   });

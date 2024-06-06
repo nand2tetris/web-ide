@@ -1,4 +1,28 @@
-@import "https://unpkg.com/@picocss/pico@1/css/pico.min.css" layer(pico);
-@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Poppins:wght@400;700&display=swap");
+@import "./pico.min.css" layer(pico);
+/* @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono&family=Poppins:wght@400;700&display=swap"); */
+@font-face {
+  font-family: "JetBrains Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  /* src: url(https://fonts.gstatic.com/s/jetbrainsmono/v18/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKxjPQ.ttf) format('truetype'); */
+  src: url(./jet_brains_mono.ttf) format("truetype");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  /* src: url(https://fonts.gstatic.com/s/poppins/v21/pxiEyp8kv8JHgFVrFJA.ttf) format('truetype'); */
+  src: url(./poppins_400.ttf) format("truetype");
+}
+@font-face {
+  font-family: "Poppins";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  /* src: url(https://fonts.gstatic.com/s/poppins/v21/pxiByp8kv8JHgFVrLCz7V1s.ttf) format('truetype'); */
+  src: url(./poppins_700.ttf) format("truetype");
+}
 
 @layer pico component user;

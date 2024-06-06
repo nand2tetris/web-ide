@@ -1,4 +1,4 @@
-import ohm from "ohm-js";
+import { grammar as ohmGrammar } from "ohm-js";
 import { grammars, makeParser, baseSemantics } from "./base.js";
 
 export type Cell = string;
@@ -6,7 +6,7 @@ export type Line = Cell[];
 export type Cmp = Line[];
 
 import cmpGrammar from "./grammars/cmp.ohm.js";
-export const grammar = ohm.grammar(cmpGrammar, grammars);
+export const grammar = ohmGrammar(cmpGrammar, grammars);
 export const cmpSemantics = grammar.extendSemantics(baseSemantics);
 
 cmpSemantics.addAttribute<Cell>("cell", {

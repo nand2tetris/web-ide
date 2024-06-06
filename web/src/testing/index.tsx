@@ -8,7 +8,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import { RenderOptions, RenderResult, render } from "@testing-library/react";
 import ue from "@testing-library/user-event";
-import { ReactElement } from "react";
+import { ReactElement, type ReactNode } from "react";
 import { useAppContext } from "../App.context";
 
 export const userEvent = ue;
@@ -16,7 +16,7 @@ export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
 export * from "@testing-library/react";
 export { i18nRender as render };
 
-const I18nWrapper = ({ children }: { children: ReactElement }) => (
+const I18nWrapper = ({ children }: { children: ReactNode }) => (
   <I18nProvider i18n={i18n}>{children}</I18nProvider>
 );
 

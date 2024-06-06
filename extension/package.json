@@ -249,7 +249,7 @@
     "@vscode/vsce": "^2.27.0",
     "@vscode/webview-ui-toolkit": "^1.2.1",
     "esbuild": "^0.15.18",
-    "ohm-js": "^16.6.0",
+    "ohm-js": "^17.1.0",
     "typescript": "^4.9.4"
   },
   "dependencies": {

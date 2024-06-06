@@ -1,3 +1,4 @@
+import type { Grammar } from "ohm-js";
 import {
   Diagnostic,
   DiagnosticSeverity,
@@ -6,11 +7,9 @@ import {
   Uri,
 } from "vscode";
 
-import type ohm from "ohm-js";
-
 export async function getDiagnostics(
   document: TextDocument,
-  parser: ohm.Grammar,
+  parser: Grammar,
 ): Promise<[Uri, Diagnostic[]][]> {
   const parsed = parser.match(document.getText());
   if (!parsed.failed()) return [];

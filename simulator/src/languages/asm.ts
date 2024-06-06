@@ -1,5 +1,4 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import ohm from "ohm-js";
 import {
   ASSIGN,
   ASSIGN_ASM,
@@ -27,8 +26,9 @@ import {
 
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import asmGrammar from "./grammars/asm.ohm.js";
+import { grammar as ohmGrammar, type Node } from "ohm-js";
 
-export const grammar = ohm.grammar(asmGrammar, grammars);
+export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
 export interface Asm {
@@ -106,7 +106,7 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
   },
 });
 
-function getAsmAssign(assignN: ohm.Node) {
+function getAsmAssign(assignN: Node) {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
   // The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
@@ -131,7 +131,7 @@ function getAsmAssign(assignN: ohm.Node) {
   return assign;
 }
 
-function getAsmOp(opN: ohm.Node) {
+function getAsmOp(opN: Node) {
   const op = opN.sourceString;
 
   if (!isCommandAsm(op)) {

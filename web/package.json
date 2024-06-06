@@ -46,7 +46,7 @@
     "sass": "^1.77.4",
     "source-map-explorer": "^2.5.3",
     "typescript": "^5.4.5",
-    "web-vitals": "^4.0.1"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "analyze": "source-map-explorer 'build/static/js/*.js'",

@@ -1,5 +1,5 @@
 import { Trans } from "@lingui/macro";
-import ohm from "ohm-js";
+import { type Grammar } from "ohm-js";
 import { CSSProperties, useContext, useEffect, useState } from "react";
 import { AppContext } from "../App.context";
 
@@ -87,7 +87,7 @@ export const Editor = ({
   error?: CompilationError;
   onChange: (source: string) => void;
   onCursorPositionChange?: (index: number) => void;
-  grammar?: ohm.Grammar;
+  grammar?: Grammar;
   language: string;
   highlight?: Span | number;
   highlightType?: HighlightType;

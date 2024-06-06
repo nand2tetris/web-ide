@@ -1,4 +1,4 @@
-import ohm from "ohm-js";
+import { grammar as ohmGrammar, type Node } from "ohm-js";
 import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
@@ -160,10 +160,10 @@ export interface Expression {
   rest: ExpressionPart[];
 }
 
-export const grammar = ohm.grammar(jackGrammar, grammars);
+export const grammar = ohmGrammar(jackGrammar, grammars);
 export const jackSemantics = grammar.extendSemantics(baseSemantics);
 
-function statements(node: ohm.Node) {
+function statements(node: Node) {
   return node.children.map((n) => n.statement);
 }
 

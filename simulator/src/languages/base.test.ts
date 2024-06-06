@@ -1,5 +1,5 @@
+import { grammar } from "ohm-js";
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
-import ohm from "ohm-js";
 import { baseSemantics, grammars } from "./base.js";
 
 describe("Ohm Base", () => {
@@ -34,7 +34,7 @@ describe("Ohm Base", () => {
 
   describe("trailing lists", () => {
     const state = cleanState(() => {
-      const repGrammar = ohm.grammar(
+      const repGrammar = grammar(
         `Rep <: Base {
           Rep = List<"A", ",">
           Block = OpenParen Rep CloseParen

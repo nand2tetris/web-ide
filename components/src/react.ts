@@ -1,4 +1,4 @@
-import produce from "immer";
+import { produce } from "immer";
 import { Dispatch, useEffect, useReducer, useState } from "react";
 
 export function useImmerReducer<

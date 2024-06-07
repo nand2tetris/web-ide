@@ -14,7 +14,7 @@ const showUpgradeFs = false;
 
 export const Settings = () => {
   const { toolStates } = useContext(AppContext);
-  const { fs, setStatus, upgradeFs, closeFs, upgraded } =
+  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, upgraded } =
     useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
@@ -155,7 +155,7 @@ export const Settings = () => {
                 <Trans>Files</Trans>
               </dt>
               <dd>
-                {showUpgradeFs && (
+                {showUpgradeFs && canUpgradeFs ? (
                   <>
                     <button
                       disabled={upgrading}
@@ -194,6 +194,8 @@ export const Settings = () => {
                       <></>
                     )}
                   </>
+                ) : (
+                  <></>
                 )}
                 <button
                   onClick={async () => {

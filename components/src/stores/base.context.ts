@@ -22,6 +22,7 @@ import {
 
 export interface BaseContext {
   fs: FileSystem;
+  canUpgradeFs: boolean;
   upgradeFs: (force?: boolean) => void;
   closeFs: () => void;
   upgraded?: string;
@@ -58,9 +59,10 @@ export function useBaseContext(): BaseContext {
     });
   }, [upgraded, replaceFs]);
 
+  const canUpgradeFs = `showDirectoryPicker` in window;
   const upgradeFs = useCallback(
     async (force = false) => {
-      if (upgraded && !force) return;
+      if (!canUpgradeFs || (upgraded && !force)) return;
       const handler = await openNand2TetrisDirectory();
       const adapter = await createAndStoreLocalAdapterInIndexedDB(handler);
       replaceFs(adapter);
@@ -82,6 +84,7 @@ export function useBaseContext(): BaseContext {
     status,
     setStatus,
     storage: localStorage,
+    canUpgradeFs,
     upgradeFs,
     closeFs,
     upgraded,
@@ -90,6 +93,7 @@ export function useBaseContext(): BaseContext {
 
 export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
+  canUpgradeFs: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   upgradeFs() {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function

@@ -67,8 +67,12 @@ const headerButtons: HeaderButton[] = [
   headerButtonFromURL(URLs["cpu"], "developer_board"),
   headerButtonFromURL(URLs["asm"], "list_alt"),
   headerButtonFromURL(URLs["vm"], "computer"),
-  // TODO(https://github.com/nand2tetris/web-ide/issues/349) reenable when this is resolved
-  // headerButtonFromURL(URLs["compiler"], "code"),
+  // TODO(https://github.com/nand2tetris/web-ide/issues/349)
+  // reenable when this is resolved for Firefox and safari
+  // https://caniuse.com/?search=showDirectoryPicker
+  ...("showDirectoryPicker" in window
+    ? [headerButtonFromURL(URLs["compiler"], "code")]
+    : []),
   headerButtonFromURL(URLs["bitmap"], "grid_on"),
   headerButtonFromURL(URLs["util"], "function", "Converter Tool"),
   {
@@ -165,7 +169,7 @@ const Header = () => {
                     ))}
                 </li>
               );
-            }
+            },
           )}
         </ul>
       </nav>

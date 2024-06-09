@@ -83,6 +83,9 @@ export const Keyboard = ({
     setCharacter(getKeyDisplay(event.key));
     toggleRef.current?.blur();
     const key = keyPressToHackCharacter(event);
+    if (key) {
+      event.preventDefault();
+    }
     if (key === currentKey) {
       return;
     }
@@ -94,6 +97,10 @@ export const Keyboard = ({
     toggleRef.current?.blur();
     if (!enabled) {
       return;
+    }
+
+    if (keyboard.getKey()) {
+      event.preventDefault();
     }
 
     currentKey = 0;

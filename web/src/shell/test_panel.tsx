@@ -90,13 +90,13 @@ export const TestPanel = ({
     };
   }, [baseRunner]);
 
-  const [selectedTestTab, doSetSelectedTestTab] = useState<
-    "tst" | "cmp" | "out"
-  >("tst");
+  // const [selectedTestTab, doSetSelectedTestTab] = useState<
+  //   "tst" | "cmp" | "out"
+  // >("tst");
 
   const setSelectedTestTab = useCallback(
-    (tab: typeof selectedTestTab) => {
-      doSetSelectedTestTab(tab);
+    (tab: "tst" | "cmp" | "out" | "diff") => {
+      // doSetSelectedTestTab(tab);
       tracking.trackEvent("tab", "change", tab);
     },
     [tracking],
@@ -266,6 +266,18 @@ export const TestPanel = ({
           />
         </Tab>
         <Tab title="Output File" onSelect={() => setSelectedTestTab("out")}>
+          {out == "" && <p>Execute test script to generate output.</p>}
+          <Editor
+            value={out}
+            onChange={() => {
+              return;
+            }}
+            language={"cmp"}
+            disabled={true}
+            lineNumberTransform={(_) => ""}
+          />
+        </Tab>
+        <Tab title="Diff Table" onSelect={() => setSelectedTestTab("diff")}>
           {out == "" && <p>Execute test script to compare output.</p>}
           {(diffDisplay?.failureNum ?? 0) > 0 && (
             <p>

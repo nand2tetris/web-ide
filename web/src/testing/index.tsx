@@ -37,6 +37,7 @@ export const useTestingAppContext = () => ({
         "projects/01/Not/Not.cmp": Not.cmp,
       }),
     ),
+    canUpgradeFs: false,
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     upgradeFs() {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function

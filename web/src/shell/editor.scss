@@ -18,12 +18,20 @@
     background-color: var(--mark-error-color);
   }
 
-  .red {
-    color: rgb(190, 16, 16);
+  .diff-highlight-line-1 {
+    background-color: #ffebe9;
   }
 
-  .green {
-    color: green;
+  .diff-highlight-cell-1 {
+    background-color: #ffc1c0;
+  }
+
+  .diff-highlight-line-2 {
+    background-color: #dafbe1;
+  }
+
+  .diff-highlight-cell-2 {
+    background-color: #aceebb;
   }
 
   textarea {

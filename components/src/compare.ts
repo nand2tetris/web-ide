@@ -16,11 +16,22 @@ interface DiffLineDisplay {
   incorrectCellSpans: Span[];
 }
 
+export type DecorationType =
+  | "correct-line"
+  | "error-line"
+  | "correct-cell"
+  | "error-cell";
+
+interface Decoration {
+  span: Span;
+  type: DecorationType;
+}
+
 export interface DiffDisplay {
   text: string;
   failureNum: number;
-  correctCellSpans: Span[];
-  incorrectCellSpans: Span[];
+  decorations: Decoration[];
+  lineNumbers: string[];
 }
 
 function getDiffs(cmpData: Cmp, outData: Cmp): Diff[] {
@@ -63,8 +74,8 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
     return {
       text: "",
       failureNum: 0,
-      correctCellSpans: [],
-      incorrectCellSpans: [],
+      decorations: [],
+      lineNumbers: [],
     };
   }
 
@@ -93,29 +104,56 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
 
   const finalLines: string[] = [];
   let lineStart = 0;
-  const correctCellSpans: Span[] = [];
-  const incorrectCellSpans: Span[] = [];
+  const decorations: Decoration[] = [];
+  const lineNumbers: string[] = [];
 
   for (let i = 0; i < lines.length; i++) {
     const diffLine = diffLines[i];
+    lineNumbers.push((i + 1).toString());
     if (diffLine) {
-      finalLines.push(diffLine.expectedLine);
-      correctCellSpans.push(
-        ...diffLine.correctCellSpans.map((span) => ({
-          start: span.start + lineStart,
-          end: span.end + lineStart,
-          line: span.line,
-        })),
-      );
-      lineStart += diffLine.expectedLine.length + 1; // +1 for the newline character
+      lineNumbers.push("");
       finalLines.push(diffLine.givenLine);
-      incorrectCellSpans.push(
-        ...diffLine.correctCellSpans.map((span) => ({
-          start: span.start + lineStart,
-          end: span.end + lineStart,
-          line: span.line,
+      decorations.push({
+        span: {
+          start: lineStart,
+          end: lineStart + diffLine.givenLine.length,
+          line: finalLines.length,
+        },
+        type: "error-line",
+      });
+      decorations.push(
+        ...diffLine.incorrectCellSpans.map((span) => ({
+          span: {
+            start: span.start + lineStart,
+            end: span.end + lineStart,
+            line: span.line,
+          },
+          type: "error-cell" as DecorationType,
         })),
       );
+
+      lineStart += diffLine.expectedLine.length + 1; // +1 for the newline character
+
+      finalLines.push(diffLine.expectedLine);
+      decorations.push({
+        span: {
+          start: lineStart,
+          end: lineStart + diffLine.expectedLine.length,
+          line: i,
+        },
+        type: "correct-line",
+      });
+      decorations.push(
+        ...diffLine.correctCellSpans.map((span) => ({
+          span: {
+            start: span.start + lineStart,
+            end: span.end + lineStart,
+            line: finalLines.length,
+          },
+          type: "correct-cell" as DecorationType,
+        })),
+      );
+
       lineStart += diffLine.givenLine.length + 1;
     } else {
       finalLines.push(lines[i]);
@@ -123,17 +161,22 @@ export function generateDiffs(cmp: string, out: string): DiffDisplay {
     }
   }
 
+  let text = finalLines.join("\n");
+  if (text.endsWith("\n")) {
+    text = text.substring(0, text.length - 1);
+  }
+
   return {
-    text: finalLines.join("\n"),
+    text: text,
     failureNum: diffs.length,
-    correctCellSpans,
-    incorrectCellSpans,
+    decorations,
+    lineNumbers,
   };
 }
 
 function generateDiffLine(original: string, diffs: Diff[]): DiffLineDisplay {
   const cells = original.split("|").filter((cell) => cell != "");
-  const newCells = cells.map((cell) => " ".repeat(cell.length));
+  const newCells = Array.from(cells);
 
   const cellStarts: number[] = [];
   let sum = 0;
@@ -157,6 +200,7 @@ function generateDiffLine(original: string, diffs: Diff[]): DiffLineDisplay {
     correctCellSpans.push(span);
     incorrectCellSpans.push(span);
   }
+
   return {
     expectedLine: `|${cells.join("|")}|`,
     givenLine: `|${newCells.join("|")}|`,

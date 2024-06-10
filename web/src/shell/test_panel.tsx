@@ -1,6 +1,10 @@
 import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result";
 import { Trans } from "@lingui/macro";
-import { DiffDisplay, generateDiffs } from "@nand2tetris/components/compare.js";
+import {
+  DecorationType,
+  DiffDisplay,
+  generateDiffs,
+} from "@nand2tetris/components/compare.js";
 import { loadTestFiles } from "@nand2tetris/components/file_utils";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar.js";
@@ -293,19 +297,31 @@ export const TestPanel = ({
             }}
             language={""}
             disabled={true}
-            lineNumberTransform={(_) => ""}
-            customDecorations={diffDisplay?.correctCellSpans
-              .map((span) => {
-                return { span, cssClass: "green" };
-              })
-              .concat(
-                diffDisplay?.incorrectCellSpans.map((span) => {
-                  return { span, cssClass: "red" };
-                }),
-              )}
+            lineNumberTransform={(i) => diffDisplay?.lineNumbers[i - 1] ?? ""}
+            customDecorations={diffDisplay?.decorations.map((decoration) => {
+              return {
+                span: decoration.span,
+                cssClass: decorationTypeToCss(decoration.type),
+              };
+            })}
           />
         </Tab>
       </TabList>
     </Panel>
   );
 };
+
+function decorationTypeToCss(type: DecorationType) {
+  switch (type) {
+    case "error-line":
+      return "diff-highlight-line-1";
+    case "error-cell":
+      return "diff-highlight-cell-1";
+    case "correct-line":
+      return "diff-highlight-line-2";
+    case "correct-cell":
+      return "diff-highlight-cell-2";
+    default:
+      return "";
+  }
+}

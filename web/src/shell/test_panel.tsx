@@ -94,13 +94,8 @@ export const TestPanel = ({
     };
   }, [baseRunner]);
 
-  // const [selectedTestTab, doSetSelectedTestTab] = useState<
-  //   "tst" | "cmp" | "out"
-  // >("tst");
-
   const setSelectedTestTab = useCallback(
     (tab: "tst" | "cmp" | "out" | "diff") => {
-      // doSetSelectedTestTab(tab);
       tracking.trackEvent("tab", "change", tab);
     },
     [tracking],

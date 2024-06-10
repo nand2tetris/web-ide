@@ -4,13 +4,14 @@ import {
   SEP,
   Stats,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { showDirectoryPicker } from "file-system-access";
 
 function dirname(path: string): string {
   return path.split(SEP).slice(0, -1).join(SEP);
 }
 
 export function openNand2TetrisDirectory(): Promise<FileSystemDirectoryHandle> {
-  return window.showDirectoryPicker({
+  return showDirectoryPicker({
     id: "nand2tetris",
     mode: "readwrite",
     startIn: "documents",

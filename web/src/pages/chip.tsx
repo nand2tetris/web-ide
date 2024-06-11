@@ -213,7 +213,7 @@ export const Chip = () => {
           data-tooltip={t`Download .hdl files`}
           data-placement="left"
         >
-          <Trans>Download</Trans>
+          ⬇️
         </button>
       </fieldset>
     </>

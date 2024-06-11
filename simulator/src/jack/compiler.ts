@@ -531,7 +531,7 @@ export class Compiler {
   compileKeywordLiteral(keyword: KeywordConstant) {
     switch (keyword) {
       case "true":
-        this.write(`push constant 1`);
+        this.write(`push constant 1`, `neg`);
         break;
       case "false":
         this.write(`push constant 0`);

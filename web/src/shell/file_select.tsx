@@ -95,7 +95,7 @@ const FileEntry = ({
         }`}
         style={{
           textAlign: "left",
-          color: disabled ? "var(--light-grey)" : undefined,
+          color: disabled ? "var(--disabled)" : undefined,
         }}
         onClick={onClickCB}
       >

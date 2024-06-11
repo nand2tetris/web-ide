@@ -1674,6 +1674,7 @@ function Square.draw 0
     push argument 0
     pop pointer 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0
@@ -1790,6 +1791,7 @@ function Square.moveUp 0
     sub
     pop this 1
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0
@@ -1835,6 +1837,7 @@ function Square.moveDown 0
     add
     pop this 1
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0
@@ -1886,6 +1889,7 @@ function Square.moveLeft 0
     sub
     pop this 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0
@@ -1931,6 +1935,7 @@ function Square.moveRight 0
     add
     pop this 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0

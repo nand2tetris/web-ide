@@ -861,6 +861,7 @@ label L11
     not
     if-goto L13
     push constant 1
+    neg
     pop local 1
     goto L12
 label L13

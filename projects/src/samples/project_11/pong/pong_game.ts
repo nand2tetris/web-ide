@@ -1744,6 +1744,7 @@ label L7
     not
     if-goto L9
     push constant 1
+    neg
     pop this 3
     goto L8
 label L9

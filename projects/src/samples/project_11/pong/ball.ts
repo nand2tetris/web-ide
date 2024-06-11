@@ -2562,6 +2562,7 @@ function Ball.show 0
     push argument 0
     pop pointer 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push pointer 0

@@ -14,15 +14,11 @@ function toInt(char: number) {
   return char - 48;
 }
 
-function toChar(digit: number) {
-  return digit + 48;
-}
-
 export function intToCharArray(value: number) {
   return value
     .toString()
     .split("")
-    .map((c) => toChar(Number(c)));
+    .map((c) => c.charCodeAt(0));
 }
 
 export class StringLib {
@@ -109,14 +105,17 @@ export class StringLib {
 
   intValue(pointer: number) {
     const digits = [];
-    for (let i = 0; i < this.length(pointer); i++) {
+    const neg = this.charAt(pointer, 0) == 45; // minus sign
+    const start = neg ? 1 : 0;
+    for (let i = start; i < this.length(pointer); i++) {
       if (isDigit(this.charAt(pointer, i))) {
         digits.push(toInt(this.charAt(pointer, i)));
       } else {
         break;
       }
     }
-    return digits.reduce((acc, digit) => acc * 10 + digit, 0);
+    const value = digits.reduce((acc, digit) => acc * 10 + digit, 0);
+    return neg ? -value : value;
   }
 
   setInt(pointer: number, value: number) {

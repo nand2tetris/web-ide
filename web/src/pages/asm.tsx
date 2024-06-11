@@ -152,11 +152,11 @@ export const Asm = () => {
             </div>
             <fieldset role="group">
               <button
-                data-tooltip="Download file"
+                data-tooltip="Download"
                 data-placement="left"
                 onClick={downloadAsm}
               >
-                Download
+                ⬇️
               </button>
             </fieldset>
           </>
@@ -210,17 +210,17 @@ export const Asm = () => {
               <fieldset role="group">
                 <button
                   data-tooltip="Load to the CPU Emulator"
-                  data-placement="bottom"
+                  data-placement="left"
                   onClick={loadToCpu}
                 >
                   ↩️
                 </button>
                 <button
-                  data-tooltip="Download translated file"
+                  data-tooltip="Download"
                   data-placement="left"
                   onClick={downloadHack}
                 >
-                  Download
+                  ⬇️
                 </button>
               </fieldset>
             </div>

@@ -13,13 +13,14 @@ body:
     id: program
     attributes:
       label: Tool
-      description: Which NAND2Tetris tool were you using?
+      description: Select the tool for which you wish suggest a feature
       options:
         - Hardware Simulator
         - CPU Emulator
         - Assembler
         - VM Emulator
         - Jack Compiler
+        - General
   - type: dropdown
     id: interface
     attributes:

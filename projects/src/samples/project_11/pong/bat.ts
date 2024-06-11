@@ -1194,6 +1194,7 @@ function Bat.show 0
     push argument 0
     pop pointer 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push pointer 0
@@ -1301,6 +1302,7 @@ label L2
     call Screen.drawRectangle 4
     pop temp 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0
@@ -1349,6 +1351,7 @@ label L4
     call Screen.drawRectangle 4
     pop temp 0
     push constant 1
+    neg
     call Screen.setColor 1
     pop temp 0
     push this 0

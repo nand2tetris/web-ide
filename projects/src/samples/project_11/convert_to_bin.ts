@@ -643,6 +643,7 @@ export const compiled = `function Main.main 1
     return
 function Main.convert 3
     push constant 1
+    neg
     pop local 2
 label L0
     push local 2

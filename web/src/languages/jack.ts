@@ -6,7 +6,7 @@ export const JackLanguage: monaco.languages.IMonarchLanguage = {
     "class",
     "int",
     "char",
-    "bool",
+    "boolean",
     "void",
     "let",
     "function",

@@ -1,4 +1,5 @@
 import { CSSProperties, ReactNode } from "react";
+import "./../pico/accordion.scss";
 
 export const Panel = (props: {
   children: ReactNode;

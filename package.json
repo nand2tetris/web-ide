@@ -48,5 +48,8 @@
   "engines": {
     "node": ">=16",
     "npm": ">=7"
+  },
+  "dependencies": {
+    "file-system-access": "^1.0.4"
   }
 }

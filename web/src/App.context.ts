@@ -52,7 +52,7 @@ export function useToolStates() {
   const [asmState, setAsmState] = useState<AsmPageState>();
 
   const [vmTitle, setVmTitle] = useState<string>();
-  const [vmFiles, setVmFiles] = useState<VmFile[]>();
+  const [vmFiles, setVmFiles] = useState<VmFile[] | string>();
 
   const [jackTitle, setJackTitle] = useState<string>();
   const [jackFs, setJackFs] = useState<FileSystem>();

@@ -66,8 +66,16 @@ const VM = () => {
   });
 
   useEffect(() => {
+    toolStates.vm.setFiles(state.files.vm);
+  }, [state.files.vm]);
+
+  useEffect(() => {
     if (toolStates.vm.files) {
-      actions.loadVm(toolStates.vm.files);
+      if (typeof toolStates.vm.files == "string") {
+        actions.setVm(toolStates.vm.files);
+      } else {
+        actions.loadVm(toolStates.vm.files);
+      }
     }
   }, [toolStates.vm.files]);
 

@@ -30,20 +30,20 @@ export const CPU = () => {
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
-    if (toolStates.cpuState.rom) {
-      actions.replaceROM(toolStates.cpuState.rom);
-      setRomFormat(toolStates.cpuState.format);
-      if (toolStates.cpuState.file) {
-        setFile(toolStates.cpuState.file);
-        if (typeof toolStates.cpuState.file == "string") {
-          setPath(toolStates.cpuState.file);
+    if (toolStates.cpu.rom) {
+      actions.replaceROM(toolStates.cpu.rom);
+      setRomFormat(toolStates.cpu.format);
+      if (toolStates.cpu.file) {
+        setFile(toolStates.cpu.file);
+        if (typeof toolStates.cpu.file == "string") {
+          setPath(toolStates.cpu.file);
         }
       }
     }
   }, []);
 
   useEffect(() => {
-    toolStates.setCpuState(file, state.sim.ROM as ROM, romFormat);
+    toolStates.cpu.setState(file, state.sim.ROM as ROM, romFormat);
     if (file) {
       setTitle(
         typeof file == "string" ? file.split("/").pop() ?? "" : file.name,

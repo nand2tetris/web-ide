@@ -36,14 +36,14 @@ export const Asm = () => {
   });
 
   useEffect(() => {
-    if (toolStates.asmState) {
-      actions.overrideState(toolStates.asmState);
+    if (toolStates.asm.state) {
+      actions.overrideState(toolStates.asm.state);
     }
   }, []);
 
   useEffect(() => {
-    toolStates.setAsmState(state);
-  }, [state, toolStates.setAsmState]);
+    toolStates.asm.setState(state);
+  }, [state, toolStates.asm.state]);
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
@@ -113,7 +113,7 @@ export const Asm = () => {
 
   const loadToCpu = async () => {
     const bytes = await loadHack(state.result);
-    toolStates.setCpuState(
+    toolStates.cpu.setState(
       state.path?.replace(".asm", ".hack"),
       new ROM(new Int16Array(bytes)),
       "bin",

@@ -34,54 +34,73 @@ export function useMonaco() {
   };
 }
 
-export function useToolStates() {
+export function useCpuState() {
   const [rom, setRom] = useState<ROM>();
-  const [cpuFile, setCpuFile] = useState<string | LocalFile>();
-  const [cpuFormat, setCpuFormat] = useState<Format>("asm");
+  const [file, setFile] = useState<string | LocalFile>();
+  const [format, setFormat] = useState<Format>("asm");
 
-  const setCpuState = (
+  const setState = (
     file: string | LocalFile | undefined,
     rom: ROM | undefined,
     format: Format,
   ) => {
-    setCpuFile(file);
+    setFile(file);
     setRom(rom);
-    setCpuFormat(format);
+    setFormat(format);
   };
 
-  const [asmState, setAsmState] = useState<AsmPageState>();
+  return {
+    rom,
+    file,
+    format,
+    setState,
+  };
+}
 
-  const [vmTitle, setVmTitle] = useState<string>();
-  const [vmFiles, setVmFiles] = useState<VmFile[] | string>();
+export function useAsmState() {
+  const [state, setState] = useState<AsmPageState>();
 
-  const [jackTitle, setJackTitle] = useState<string>();
-  const [jackFs, setJackFs] = useState<FileSystem>();
-  const [jackCompiled, setJackCompiled] = useState(false);
+  return { state, setState };
+}
+
+export function useVmState() {
+  const [title, setTitle] = useState<string>();
+  const [files, setFiles] = useState<VmFile[] | string>();
 
   return {
-    cpuState: { rom: rom, file: cpuFile, format: cpuFormat },
-    setCpuState,
-    asmState,
-    setAsmState,
-    vm: {
-      files: vmFiles,
-      title: vmTitle,
-      setFiles: setVmFiles,
-      setTitle: setVmTitle,
+    files,
+    title,
+    setFiles,
+    setTitle,
+  };
+}
+
+export function useCompilerState() {
+  const [title, setTitle] = useState<string>();
+  const [fs, setFs] = useState<FileSystem>();
+  const [compiled, setCompiled] = useState(false);
+
+  return {
+    title,
+    setTitle,
+    fs,
+    setFs,
+    compiled,
+    setCompiled,
+    reset: () => {
+      setTitle(undefined);
+      setFs(undefined);
+      setCompiled(false);
     },
-    compiler: {
-      title: jackTitle,
-      setTitle: setJackTitle,
-      fs: jackFs,
-      setFs: setJackFs,
-      compiled: jackCompiled,
-      setCompiled: setJackCompiled,
-      reset: () => {
-        setJackTitle(undefined);
-        setJackFs(undefined);
-        setJackCompiled(false);
-      },
-    },
+  };
+}
+
+export function useToolStates() {
+  return {
+    cpu: useCpuState(),
+    asm: useAsmState(),
+    vm: useVmState(),
+    compiler: useCompilerState(),
   };
 }
 
@@ -157,27 +176,13 @@ export const AppContext = createContext<ReturnType<typeof useAppContext>>({
     return undefined;
   },
   toolStates: {
-    cpuState: { rom: undefined, file: undefined, format: "asm" },
-    setCpuState() {
-      return undefined;
+    cpu: {
+      rom: undefined,
+      file: undefined,
+      format: "asm",
+      setState: () => undefined,
     },
-    asmState: {
-      asm: "",
-      path: undefined,
-      translating: false,
-      current: -1,
-      resultHighlight: undefined,
-      sourceHighlight: undefined,
-      symbols: [],
-      result: "",
-      compare: "",
-      compareName: undefined,
-      lineNumbers: [],
-      compareError: false,
-    },
-    setAsmState() {
-      return undefined;
-    },
+    asm: { state: undefined, setState: () => undefined },
     vm: {
       files: undefined,
       title: undefined,

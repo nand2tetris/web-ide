@@ -15,7 +15,10 @@ export interface CompilerPageState {
   fs?: FileSystem;
   files: Record<string, string>;
   compiled: Record<string, CompiledFile>;
+  isValid: boolean;
+  isCompiled: boolean;
   selected: string;
+  title?: string;
 }
 
 export type CompilerStoreDispatch = Dispatch<{
@@ -39,6 +42,7 @@ export function makeCompilerStore(
     },
     reset(state: CompilerPageState) {
       state.files = {};
+      state.title = undefined;
     },
 
     setFile(
@@ -46,12 +50,14 @@ export function makeCompilerStore(
       { name, content }: { name: string; content: string },
     ) {
       state.files[name] = content;
+      state.isCompiled = false;
       this.compile(state);
     },
 
     // the keys of 'files' have to be the full file path, not basename
     setFiles(state: CompilerPageState, files: Record<string, string>) {
       state.files = files;
+      state.isCompiled = false;
       this.compile(state);
     },
 
@@ -71,6 +77,9 @@ export function makeCompilerStore(
           };
         }
       }
+      state.isValid = Object.keys(state.files).every(
+        (file) => state.compiled[file].valid,
+      );
     },
 
     writeCompiled(state: CompilerPageState) {
@@ -81,10 +90,15 @@ export function makeCompilerStore(
           }
         }
       }
+      state.isCompiled = true;
     },
 
     setSelected(state: CompilerPageState, selected: string) {
       state.selected = selected;
+    },
+
+    setTitle(state: CompilerPageState, title: string) {
+      state.title = title;
     },
   };
 
@@ -135,6 +149,8 @@ export function makeCompilerStore(
     files: {},
     compiled: {},
     selected: "",
+    isCompiled: false,
+    isValid: true,
   };
 
   return { initialState, reducers, actions };

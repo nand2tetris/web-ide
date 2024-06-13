@@ -181,6 +181,7 @@ export interface AsmPageState {
   lineNumbers: number[];
   error?: CompilationError;
   compareError: boolean;
+  title?: string;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -267,6 +268,10 @@ export function makeAsmStore(
         }
       }
       setStatus("Comparison successful");
+    },
+
+    setTitle(state: AsmPageState, title: string) {
+      state.title = title;
     },
   };
 
@@ -382,6 +387,13 @@ export function makeAsmStore(
       translator.reset();
       this.resetHighlightInfo();
       dispatch.current({ action: "update" });
+    },
+
+    clear() {
+      this.setAsm("");
+      dispatch.current({ action: "setTitle", payload: undefined });
+      dispatch.current({ action: "setCmp", payload: "" });
+      this.reset();
     },
 
     overrideState(state: AsmPageState) {

@@ -5,36 +5,31 @@ import {
   FileSystemAccessFileSystemAdapter,
   openNand2TetrisDirectory,
 } from "@nand2tetris/components/stores/base/fs.js";
-import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useDialog } from "src/shell/dialog";
 import { Editor } from "src/shell/editor";
 import { Tab, TabList } from "src/shell/tabs";
-import URLs from "src/urls";
 import { AppContext } from "../App.context";
+import { PageContext } from "../Page.context";
 import { Panel } from "../shell/panel";
+import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
   const { setStatus } = useContext(BaseContext);
-  const { tracking, toolStates, setTitle } = useContext(AppContext);
-  const { state, dispatch, actions } = useCompilerPageStore();
+  const { tracking } = useContext(AppContext);
+  const { stores, setTool } = useContext(PageContext);
+  const { state, dispatch, actions } = stores.compiler;
 
   const [selected, setSelected] = useState(0);
 
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    setTitle(toolStates.compiler.title);
-  });
-
-  useEffect(() => {
-    if (toolStates.compiler.fs) {
-      actions.loadProject(toolStates.compiler.fs);
-    }
-  }, [actions, toolStates.compiler.fs]);
+    setTool("compiler");
+  }, [setTool]);
 
   const showStatus = () => {
     const current = state.compiled[state.selected];
@@ -62,18 +57,13 @@ export const Compiler = () => {
   const uploadFiles = async () => {
     const handle = await openNand2TetrisDirectory();
     const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
-    toolStates.compiler.setFs(fs);
-    toolStates.compiler.setCompiled(false);
-    toolStates.compiler.setTitle(`${handle.name} / *.jack`);
+    dispatch.current({
+      action: "setTitle",
+      payload: `${handle.name} / *.jack`,
+    });
     setStatus("");
     actions.loadProject(fs);
   };
-
-  const valid = () =>
-    Object.keys(state.files).length == 0 ||
-    Object.keys(state.files)
-      .map((file) => state.compiled[file].valid)
-      .reduce((a, b) => a && b, true);
 
   const compileAll = (): VmFile[] => {
     const files = [];
@@ -86,16 +76,20 @@ export const Compiler = () => {
   };
 
   const compileFiles = () => {
-    if (valid()) {
+    if (state.isValid) {
       actions.compile();
-      toolStates.compiler.setCompiled(true);
       setStatus("Compiled successfully");
     }
   };
 
   const runInVm = () => {
-    toolStates.vm.setTitle(toolStates.compiler.title?.replace("jack", "vm"));
-    toolStates.vm.setFiles(compileAll());
+    if (state.title) {
+      stores.vm.dispatch.current({
+        action: "setTitle",
+        payload: state.title.replace(".jack", ".vm"),
+      });
+    }
+    stores.vm.actions.loadVm(compileAll());
     redirectRef.current?.click();
   };
 
@@ -173,14 +167,14 @@ export const Compiler = () => {
                 data-tooltip={`Compile all the opened Jack files`}
                 data-placement="bottom"
                 onClick={compileFiles}
-                disabled={!valid()}
+                disabled={!state.isValid}
               >
                 Compile
               </button>
               <Padding />
               <button
                 className="flex-0"
-                disabled={!toolStates.compiler.compiled}
+                disabled={!state.isCompiled}
                 data-tooltip={t`Load the compiled code into the VM emulator`}
                 data-placement="bottom"
                 onClick={runInVm}
@@ -206,7 +200,6 @@ export const Compiler = () => {
               <Editor
                 value={state.files[file]}
                 onChange={(source: string) => {
-                  toolStates.compiler.setCompiled(false);
                   actions.writeFile(file, source);
                 }}
                 error={state.compiled[file].error}

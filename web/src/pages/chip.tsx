@@ -24,21 +24,22 @@ import {
   Files,
   PROJECT_NAMES,
   isBuiltinOnly,
-  useChipPageStore,
 } from "@nand2tetris/components/stores/chip.store.js";
 import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
+import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 import { zip } from "../shell/zip";
 
 export const Chip = () => {
   const { setStatus } = useContext(BaseContext);
+  const { stores, setTool } = useContext(PageContext);
   const { tracking } = useContext(AppContext);
-  const { state, actions, dispatch } = useChipPageStore();
+  const { state, actions, dispatch } = stores.chip;
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
   const [tst, setTst] = useStateInitializer(state.files.tst);
@@ -46,8 +47,8 @@ export const Chip = () => {
   const [out, setOut] = useStateInitializer(state.files.out);
 
   useEffect(() => {
-    actions.initialize();
-  }, [actions]);
+    setTool("chip");
+  }, [setTool]);
 
   useEffect(() => {
     tracking.trackPage("/chip");

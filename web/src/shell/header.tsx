@@ -5,6 +5,7 @@ import {
 import { RefObject, useContext, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { AppContext, useAppContext } from "src/App.context";
+import { PageContext } from "src/Page.context";
 import { Icon } from "../pico/icon";
 import URLs, { LAST_ROUTE_KEY, TOOLS, URL } from "../urls";
 
@@ -98,6 +99,7 @@ const headerButtons: HeaderButton[] = [
 const Header = () => {
   const appContext = useContext(AppContext);
   const baseContext = useContext(BaseContext);
+  const { title, setTool } = useContext(PageContext);
   const { setStatus } = useContext(BaseContext);
 
   const redirectRefs: Record<string, RefObject<HTMLAnchorElement>> = {};
@@ -124,7 +126,7 @@ const Header = () => {
               </a>
             </strong>
             {TOOLS[pathname] && ` / ${TOOLS[pathname]}`}
-            {appContext.title && ` / ${appContext.title}`}
+            {title && ` / ${title}`}
           </li>
         </ul>
         <ul className="icon-list">
@@ -136,7 +138,7 @@ const Header = () => {
                   data-tooltip={tooltip}
                   data-placement="bottom"
                   onClick={() => {
-                    appContext.setTitle(undefined);
+                    setTool(tool);
                     setStatus("");
                     if (onClick) {
                       onClick?.({ appContext, baseContext, pathname });

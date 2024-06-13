@@ -77,9 +77,9 @@ export function makeCompilerStore(
           };
         }
       }
-      state.isValid =
-        Object.keys(state.files).length == 0 ||
-        Object.keys(state.files).every((file) => state.compiled[file].valid);
+      state.isValid = Object.keys(state.files).every(
+        (file) => state.compiled[file].valid,
+      );
     },
 
     writeCompiled(state: CompilerPageState) {

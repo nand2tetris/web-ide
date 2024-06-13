@@ -1,6 +1,5 @@
 import { Trans } from "@lingui/macro";
 import { Runbar } from "@nand2tetris/components/runbar";
-import { useAsmPageStore } from "@nand2tetris/components/stores/asm.store";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { Table } from "@nand2tetris/components/table";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
@@ -13,13 +12,15 @@ import { Panel } from "../shell/panel";
 import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
-import { AppContext } from "src/App.context";
-import URLs from "src/urls";
+import { AppContext } from "../App.context";
+import { PageContext } from "../Page.context";
+import URLs from "../urls";
 import "./asm.scss";
 
 export const Asm = () => {
-  const { state, actions, dispatch } = useAsmPageStore();
-  const { toolStates, filePicker, setTitle } = useContext(AppContext);
+  const { filePicker } = useContext(AppContext);
+  const { stores, setTool } = useContext(PageContext);
+  const { state, actions, dispatch } = stores.asm;
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -30,20 +31,8 @@ export const Asm = () => {
   const [showSymbolTable, setShowSymbolTable] = useState(true);
 
   useEffect(() => {
-    if (state?.path) {
-      setTitle(state.path.split("/").pop() ?? "");
-    }
-  });
-
-  useEffect(() => {
-    if (toolStates.asm.state) {
-      actions.overrideState(toolStates.asm.state);
-    }
-  }, []);
-
-  useEffect(() => {
-    toolStates.asm.setState(state);
-  }, [state, toolStates.asm.state]);
+    setTool("asm");
+  }, [setTool]);
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
@@ -75,7 +64,10 @@ export const Asm = () => {
     requestAnimationFrame(async () => {
       await actions.loadAsm(path);
       setStatus("");
-      setTitle(path.split("/").pop() ?? "");
+      dispatch.current({
+        action: "setTitle",
+        payload: path.split("/").pop() ?? "",
+      });
     });
   };
 
@@ -113,11 +105,17 @@ export const Asm = () => {
 
   const loadToCpu = async () => {
     const bytes = await loadHack(state.result);
-    toolStates.cpu.setState(
-      state.path?.replace(".asm", ".hack"),
-      new ROM(new Int16Array(bytes)),
-      "bin",
-    );
+    const rom = new ROM();
+    await rom.loadBytes(bytes);
+    stores.cpu.actions.replaceROM(rom);
+    if (state.path) {
+      stores.cpu.dispatch.current({
+        action: "setTitle",
+        payload: state.path.split("/").pop() ?? "",
+      });
+      stores.cpu.actions.setPath(state.path);
+      stores.cpu.actions.reset();
+    }
     redirectRef.current?.click();
   };
 

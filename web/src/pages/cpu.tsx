@@ -3,53 +3,32 @@ import { Timer } from "@nand2tetris/simulator/timer.js";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
-import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
 import { useContext, useEffect, useRef, useState } from "react";
 
 import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { ROM } from "@nand2tetris/simulator/cpu/memory";
-import { AppContext } from "src/App.context";
-import { LocalFile } from "src/shell/file_select";
-import { Accordian, Panel } from "src/shell/panel";
-import { TestPanel } from "src/shell/test_panel";
+import { AppContext } from "../App.context";
+import { PageContext } from "../Page.context";
+import { Accordian, Panel } from "../shell/panel";
+import { TestPanel } from "../shell/test_panel";
 import "./cpu.scss";
 
 export const CPU = () => {
-  const { state, actions, dispatch } = useCpuPageStore();
-  const { toolStates, filePicker, setTitle } = useContext(AppContext);
+  const { filePicker } = useContext(AppContext);
+  const { setTool, stores } = useContext(PageContext);
+  const { state, actions, dispatch } = stores.cpu;
   const { fs } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
-  const [file, setFile] = useState<string | LocalFile>();
-  const [romFormat, setRomFormat] = useState("asm");
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
-    if (toolStates.cpu.rom) {
-      actions.replaceROM(toolStates.cpu.rom);
-      setRomFormat(toolStates.cpu.format);
-      if (toolStates.cpu.file) {
-        setFile(toolStates.cpu.file);
-        if (typeof toolStates.cpu.file == "string") {
-          setPath(toolStates.cpu.file);
-        }
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    toolStates.cpu.setState(file, state.sim.ROM as ROM, romFormat);
-    if (file) {
-      setTitle(
-        typeof file == "string" ? file.split("/").pop() ?? "" : file.name,
-      );
-    }
-  });
+    setTool("cpu");
+  }, [setTool]);
 
   useEffect(() => {
     actions.compileTest(tst, cmp);
@@ -126,6 +105,25 @@ export const CPU = () => {
     setScale(scale);
   };
 
+  const loadFile = async () => {
+    const file = await filePicker.selectAllowLocal({
+      suffix: [".asm", ".hack"],
+    });
+    const title =
+      typeof file == "string" ? file.split("/").pop() ?? "" : file.name;
+    dispatch.current({ action: "setTitle", payload: title });
+    if (typeof file === "string") {
+      setPath(file);
+      return {
+        name: file.split("/").pop() ?? "",
+        content: await fs.readFile(file),
+      };
+    } else {
+      actions.clearTest();
+      return file;
+    }
+  };
+
   return (
     <div
       className={`Page CpuPage grid ${scale == 2 ? "large-screen" : "normal"}`}
@@ -134,23 +132,8 @@ export const CPU = () => {
         name="ROM"
         memory={state.sim.ROM}
         highlight={state.sim.PC}
-        format={romFormat}
-        fileSelect={async () => {
-          const file = await filePicker.selectAllowLocal({
-            suffix: [".asm", ".hack"],
-          });
-          setFile(file);
-          if (typeof file === "string") {
-            setPath(file);
-            return {
-              name: file.split("/").pop() ?? "",
-              content: await fs.readFile(file),
-            };
-          } else {
-            actions.clearTest();
-            return file;
-          }
-        }}
+        format={"asm"} // TODO: save this in store
+        fileSelect={loadFile}
       />
       <MemoryComponent
         name="RAM"

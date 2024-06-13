@@ -50,6 +50,7 @@ export interface VmPageState {
   controls: ControlsState;
   test: VMTestSim;
   files: VMFiles;
+  title?: string;
 }
 
 export interface ControlsState {
@@ -165,6 +166,10 @@ export function makeVmStore(
           ? `Simulation successful: The output file is identical to the compare file`
           : `Simulation error: The output file differs from the compare file`,
       );
+    },
+
+    setTitle(state: VmPageState, title: string) {
+      state.title = title;
     },
   };
   const initialState: VmPageState = {
@@ -351,6 +356,7 @@ export function makeVmStore(
       dispatch.current({ action: "update" });
     },
     initialize() {
+      dispatch.current({ action: "setTitle", payload: undefined });
       this.setVm(FIBONACCI);
     },
   };

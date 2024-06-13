@@ -51,6 +51,7 @@ export interface CpuPageState {
   test: CPUTestSim;
   path: string;
   tests: string[];
+  title?: string;
 }
 
 function reduceCPUTest(
@@ -123,6 +124,10 @@ export function makeCpuStore(
           : `Simulation error: The output file differs from the compare file`,
       );
     },
+
+    setTitle(state: CpuPageState, title: string) {
+      state.title = title;
+    },
   };
 
   const actions = {
@@ -179,6 +184,14 @@ export function makeCpuStore(
       dispatch.current({ action: "update" });
     },
 
+    clear() {
+      this.replaceROM(new ROM());
+      this.resetRAM();
+      this.clearTest();
+      this.reset();
+      dispatch.current({ action: "setTitle", payload: undefined });
+    },
+
     clearTest() {
       this.compileTest(makeTst(), "");
       dispatch.current({ action: "update" });
@@ -231,6 +244,7 @@ export function makeCpuStore(
     },
     path: "",
     tests: [],
+    title: undefined,
   };
 
   return { initialState, reducers, actions };

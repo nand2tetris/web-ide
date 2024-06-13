@@ -4,6 +4,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
 
+import { PageContext } from "src/Page.context";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
 import { TrackingDisclosure } from "../tracking";
@@ -13,7 +14,7 @@ import { useDialog } from "./dialog";
 const showUpgradeFs = false;
 
 export const Settings = () => {
-  const { toolStates } = useContext(AppContext);
+  const { stores } = useContext(PageContext);
   const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, upgraded } =
     useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
@@ -46,7 +47,12 @@ export const Settings = () => {
     localStorage["/chip/chip"] = "Not";
     const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
-    toolStates.compiler.reset();
+
+    stores.chip.actions.initialize();
+    stores.cpu.actions.clear();
+    stores.asm.actions.clear();
+    stores.vm.actions.initialize();
+    stores.compiler.actions.reset();
   };
 
   const loadSamples = async () => {

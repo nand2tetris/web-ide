@@ -18,6 +18,7 @@ import { Settings } from "./shell/settings";
 import urls from "./urls";
 
 import { ErrorBoundary, RenderError } from "./ErrorBoundary";
+import { PageContextProvider } from "./Page.context";
 import { Redirect } from "./pages/redirect";
 import "./pico/flex.scss";
 import "./pico/pico.scss";
@@ -64,25 +65,27 @@ function App() {
     <I18nProvider i18n={i18n}>
       <BaseContext.Provider value={baseContext}>
         <AppContext.Provider value={appContext}>
-          <Settings />
-          <FilePicker />
-          <Router basename={process.env.PUBLIC_URL}>
-            <Header />
-            <main className="flex flex-1">
-              <ErrorBoundary fallback={RenderError}>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <Routes>
-                    <Route path="/" element={<Redirect />} />
-                    {Object.values(urls).map(({ href, target }) => (
-                      <Route key={href} path={href} element={target} />
-                    ))}
-                  </Routes>
-                </Suspense>
-              </ErrorBoundary>
-            </main>
-            <Footer />
-            <TrackingBanner />
-          </Router>
+          <PageContextProvider>
+            <Settings />
+            <FilePicker />
+            <Router basename={process.env.PUBLIC_URL}>
+              <Header />
+              <main className="flex flex-1">
+                <ErrorBoundary fallback={RenderError}>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <Routes>
+                      <Route path="/" element={<Redirect />} />
+                      {Object.values(urls).map(({ href, target }) => (
+                        <Route key={href} path={href} element={target} />
+                      ))}
+                    </Routes>
+                  </Suspense>
+                </ErrorBoundary>
+              </main>
+              <Footer />
+              <TrackingBanner />
+            </Router>
+          </PageContextProvider>
         </AppContext.Provider>
       </BaseContext.Provider>
     </I18nProvider>

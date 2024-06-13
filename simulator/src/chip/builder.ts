@@ -213,10 +213,17 @@ class ChipBuilder {
     }
 
     // Reset clock order after wiring sub-pins
+    this.chip.clockedPins = new Set(
+      Array.from(this.chip.ins.entries())
+        .concat(Array.from(this.chip.outs.entries()))
+        .map((pin) => pin.name)
+        .filter((pin) => this.chip.isClockedPin(pin)),
+    );
     this.chip.sortParts();
     for (const part of this.chip.parts) {
       part.subscribeToClock();
     }
+    console.log(this.chip.parts.map((p) => p.name));
 
     return Ok(this.chip);
   }

@@ -419,11 +419,39 @@ export class Chip {
     return !this.isExternalPin(pin);
   }
 
+  pathExists(start: string, end: string) {
+    const nodes: (Chip | string)[] = [start];
+
+    while (nodes.length > 0) {
+      const node = assertExists(nodes.pop());
+      if (typeof node == "string") {
+        if (node == end) {
+          return true;
+        }
+        nodes.push(...(this.insToPart.get(node) ?? []));
+      } else {
+        nodes.push(...(this.partToOuts.get(node) ?? []));
+      }
+    }
+
+    return false;
+  }
+
+  isClockedPin(pin: string) {
+    if (this.isInPin(pin)) {
+      return !Array.from(this.outs).some(([out, _]) =>
+        this.pathExists(pin, out),
+      );
+    } else {
+      return !Array.from(this.ins).some(([in_, _]) =>
+        this.pathExists(in_, pin),
+      );
+    }
+  }
+
   hasConnection(from: Chip, to: Chip): boolean {
-    return [...(this.partToOuts.get(from) ?? [])].some(
-      (pin) =>
-        this.insToPart.get(pin)?.has(to) &&
-        !(this.isInternalPin(pin) && to.clocked),
+    return [...(this.partToOuts.get(from) ?? [])].some((pin) =>
+      this.insToPart.get(pin)?.has(to),
     );
   }
 
@@ -502,11 +530,7 @@ export class Chip {
         for (const out of this.partToOuts.get(node.part) ?? []) {
           stack.push(
             ...Array.from(this.insToPart.get(out) ?? [])
-              .filter(
-                (part) =>
-                  !(part.clocked && this.isInternalPin(out)) &&
-                  !visited.has(part),
-              )
+              .filter((part) => !visited.has(part))
               .map((part) => ({
                 part,
                 isReturning: false,
@@ -589,9 +613,11 @@ export class Chip {
 
     partPin.connect(chipPin);
 
-    const partToOuts = this.partToOuts.get(part) ?? new Set();
-    partToOuts.add(chipPin.name);
-    this.partToOuts.set(part, partToOuts);
+    if (!part.clockedPins.has(partPin.name)) {
+      const partToOuts = this.partToOuts.get(part) ?? new Set();
+      partToOuts.add(chipPin.name);
+      this.partToOuts.set(part, partToOuts);
+    }
 
     return Ok();
   }
@@ -638,9 +664,11 @@ export class Chip {
     }
     chipPin.connect(partPin);
 
-    const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
-    pinsToPart.add(part);
-    this.insToPart.set(chipPin.name, pinsToPart);
+    if (!part.clockedPins.has(partPin.name)) {
+      const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
+      pinsToPart.add(part);
+      this.insToPart.set(chipPin.name, pinsToPart);
+    }
 
     return Ok();
   }

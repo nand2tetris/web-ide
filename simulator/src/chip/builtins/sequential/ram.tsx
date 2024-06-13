@@ -18,7 +18,13 @@ export class RAM extends ClockedChip {
     readonly width: number,
     name?: string,
   ) {
-    super(["in[16]", "load", `address[${width}]`], [`out[16]`], name);
+    super(
+      ["in[16]", "load", `address[${width}]`],
+      [`out[16]`],
+      name,
+      [],
+      ["in", "load"],
+    );
     this._memory = new MemoryChip(Math.pow(2, this.width));
   }
 

@@ -82,7 +82,13 @@ export class Memory extends ClockedChip {
   private address = 0;
 
   constructor() {
-    super(["in[16]", "load", "address[15])"], ["out[16]"], "Memory");
+    super(
+      ["in[16]", "load", "address[15])"],
+      ["out[16]"],
+      "Memory",
+      [],
+      ["in", "load"],
+    );
     this.parts.push(this.keyboard);
     this.parts.push(this.screen);
     this.parts.push(this.ram);
@@ -231,6 +237,9 @@ export class CPU extends ClockedChip {
     super(
       ["inM[16]", "instruction[16]", "reset"],
       ["outM[16]", "writeM", "addressM[15]", "pc[15]"],
+      "CPU",
+      [],
+      ["pc", "addressM", "reset"],
     );
   }
 
@@ -291,39 +300,47 @@ export class Computer extends Chip {
   constructor() {
     super(["reset"], []);
 
-    this.wire(this.cpu, [
-      { from: { name: "reset", start: 0 }, to: { name: "reset", start: 0 } },
-      {
-        from: { name: "instruction", start: 0 },
-        to: { name: "instruction", start: 0 },
-      },
-      { from: { name: "oldOutM", start: 0 }, to: { name: "inM", start: 0 } },
-      { from: { name: "writeM", start: 0 }, to: { name: "writeM", start: 0 } },
-      {
-        from: { name: "addressM", start: 0 },
-        to: { name: "addressM", start: 0 },
-      },
-      { from: { name: "newInM", start: 0 }, to: { name: "outM", start: 0 } },
-      { from: { name: "pc", start: 0 }, to: { name: "pc", start: 0 } },
-    ]);
+    // this.wire(this.cpu, [
+    //   { from: { name: "reset", start: 0 }, to: { name: "reset", start: 0 } },
+    //   {
+    //     from: { name: "instruction", start: 0 },
+    //     to: { name: "instruction", start: 0 },
+    //   },
+    //   { from: { name: "oldOutM", start: 0 }, to: { name: "inM", start: 0 } },
+    //   { from: { name: "writeM", start: 0 }, to: { name: "writeM", start: 0 } },
+    //   {
+    //     from: { name: "addressM", start: 0 },
+    //     to: { name: "addressM", start: 0 },
+    //   },
+    //   { from: { name: "newInM", start: 0 }, to: { name: "outM", start: 0 } },
+    //   { from: { name: "pc", start: 0 }, to: { name: "pc", start: 0 } },
+    // ]);
 
-    this.wire(this.rom, [
-      { from: { name: "pc", start: 0 }, to: { name: "address", start: 0 } },
-      {
-        from: { name: "instruction", start: 0 },
-        to: { name: "out", start: 0 },
-      },
-    ]);
+    // this.wire(this.rom, [
+    //   { from: { name: "pc", start: 0 }, to: { name: "address", start: 0 } },
+    //   {
+    //     from: { name: "instruction", start: 0 },
+    //     to: { name: "out", start: 0 },
+    //   },
+    // ]);
 
-    this.wire(this.ram, [
-      { from: { name: "newInM", start: 0 }, to: { name: "in", start: 0 } },
-      { from: { name: "writeM", start: 0 }, to: { name: "load", start: 0 } },
-      {
-        from: { name: "addressM", start: 0 },
-        to: { name: "address", start: 0 },
-      },
-      { from: { name: "oldOutM", start: 0 }, to: { name: "out", start: 0 } },
-    ]);
+    // this.wire(this.ram, [
+    //   { from: { name: "newInM", start: 0 }, to: { name: "in", start: 0 } },
+    //   { from: { name: "writeM", start: 0 }, to: { name: "load", start: 0 } },
+    //   {
+    //     from: { name: "addressM", start: 0 },
+    //     to: { name: "address", start: 0 },
+    //   },
+    //   { from: { name: "oldOutM", start: 0 }, to: { name: "out", start: 0 } },
+    // ]);
+
+    // for (const pin of Array.from(this.ins.entries()).concat(
+    //   Array.from(this.outs.entries()),
+    // )) {
+    //   if (this.isClockedPin(pin.name)) {
+    //     this.clockedPins.add(pin.name);
+    //   }
+    // }
   }
 
   override eval() {

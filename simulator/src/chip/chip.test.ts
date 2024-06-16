@@ -641,6 +641,7 @@ describe("Chip", () => {
     }
 
     const fooA = new FooA();
+    fooA.sortParts();
     expect(fooA.parts).toEqual([fooA.notB, fooA.notA]);
 
     class FooB extends Chip {
@@ -672,6 +673,7 @@ describe("Chip", () => {
     }
 
     const fooB = new FooB();
+    fooB.sortParts();
     expect(fooB.parts).toEqual([fooB.notA, fooB.notB]);
   });
 
@@ -719,6 +721,7 @@ describe("Chip", () => {
       }
     }
     const fooC = new FooC();
+    fooC.sortParts();
     const parts = fooC.parts.map((chip) => chip.id);
     expect(parts).toEqual([fooC.register.id, fooC.inc16A.id, fooC.inc16B.id]);
   });

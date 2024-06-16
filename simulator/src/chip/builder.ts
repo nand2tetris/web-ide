@@ -213,6 +213,7 @@ class ChipBuilder {
     }
 
     // Reset clock order after wiring sub-pins
+    this.chip.sortParts();
     for (const part of this.chip.parts) {
       part.subscribeToClock();
     }

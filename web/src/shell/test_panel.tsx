@@ -7,7 +7,7 @@ import {
 } from "@nand2tetris/components/compare.js";
 import { loadTestFiles } from "@nand2tetris/components/file_utils";
 import { useStateInitializer } from "@nand2tetris/components/react";
-import { Runbar } from "@nand2tetris/components/runbar.js";
+import { RunSpeed, Runbar } from "@nand2tetris/components/runbar.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { Span } from "@nand2tetris/simulator/languages/base";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
@@ -44,6 +44,7 @@ export const TestPanel = ({
   showName = false,
   showLoad = true,
   showClear = false,
+  speed,
   onSpeedChange,
   prefix,
 }: {
@@ -59,6 +60,7 @@ export const TestPanel = ({
   showLoad?: boolean;
   showClear?: boolean;
   disabled?: boolean;
+  speed?: RunSpeed;
   onSpeedChange?: (speed: number) => void;
   prefix?: ReactNode;
 }) => {
@@ -236,6 +238,7 @@ export const TestPanel = ({
                 }
                 runner={runner.current}
                 disabled={disabled}
+                speed={speed}
                 onSpeedChange={onSpeedChange}
               />
             )}

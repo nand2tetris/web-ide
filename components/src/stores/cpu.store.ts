@@ -6,6 +6,7 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
+  Format,
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
@@ -15,6 +16,8 @@ import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import { ScreenScales } from "src/chips/screen.js";
+import { RunSpeed } from "src/runbar.js";
 import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
@@ -46,12 +49,21 @@ export interface CPUTestSim {
   valid: boolean;
 }
 
+export interface CPUPageConfig {
+  romFormat: Format;
+  ramFormat: Format;
+  screenScale: ScreenScales;
+  speed: RunSpeed;
+  testSpeed: RunSpeed;
+}
+
 export interface CpuPageState {
   sim: CpuSim;
   test: CPUTestSim;
   path: string;
   tests: string[];
   title?: string;
+  config: CPUPageConfig;
 }
 
 function reduceCPUTest(
@@ -127,6 +139,10 @@ export function makeCpuStore(
 
     setTitle(state: CpuPageState, title: string) {
       state.title = title;
+    },
+
+    updateConfig(state: CpuPageState, config: Partial<CPUPageConfig>) {
+      state.config = { ...state.config, ...config };
     },
   };
 
@@ -232,7 +248,7 @@ export function makeCpuStore(
     },
   };
 
-  const initialState = {
+  const initialState: CpuPageState = {
     sim: reduceCPUTest(test, dispatch),
     test: {
       highlight: test.currentStep?.span,
@@ -244,7 +260,13 @@ export function makeCpuStore(
     },
     path: "",
     tests: [],
-    title: undefined,
+    config: {
+      romFormat: "asm",
+      ramFormat: "dec",
+      screenScale: 1,
+      speed: 2,
+      testSpeed: 2,
+    },
   };
 
   return { initialState, reducers, actions };

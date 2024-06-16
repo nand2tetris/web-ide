@@ -478,21 +478,6 @@ export class Chip {
         }
       }
     }
-
-    // Topological insertion sort for where this part should go.
-    // It should go at the lower of:
-    //     before the first chip that it has an output to, or at the end
-    //     after the last chip it has an input from, or at the beginning
-    // const before = this.parts
-    //   .map((other, i) => ({ other, i }))
-    //   .filter(({ other }) => this.hasConnection(part, other));
-    // const beforeIdx = before.at(0)?.i ?? this.parts.length;
-    // const after = this.parts
-    //   .map((other, i) => ({ other, i }))
-    //   .filter(({ other }) => this.hasConnection(other, part));
-    // const afterIdx = (after.at(-1)?.i ?? -1) + 1;
-    // const index = Math.min(beforeIdx, afterIdx);
-    // this.parts.splice(index, 0, part);
     this.parts.push(part);
 
     return Ok();

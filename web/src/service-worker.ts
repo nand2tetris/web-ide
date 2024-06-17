@@ -75,6 +75,7 @@ precacheAndRoute([
     url: "user_guide/compiler.pdf",
     revision: null,
   },
+  { url: "web-ide/bitmap_editor.html", revision: null },
 ]);
 
 // Set up App Shell-style routing, so that all navigation requests

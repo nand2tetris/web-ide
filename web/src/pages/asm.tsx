@@ -123,6 +123,7 @@ export const Asm = () => {
     <div className={`AsmPage grid ${showSymbolTable ? "" : "hide-sym"}`}>
       <Panel
         className="source"
+        isEditorPanel={true}
         header={
           <>
             <div>
@@ -193,6 +194,7 @@ export const Asm = () => {
       </Panel>
       <Panel
         className="result"
+        isEditorPanel={true}
         header={
           <>
             <div>
@@ -247,6 +249,7 @@ export const Asm = () => {
       </Panel>
       <Panel
         className="sym"
+        isEditorPanel={true}
         header={
           <>
             <div className="flex-1">

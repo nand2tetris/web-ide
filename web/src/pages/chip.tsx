@@ -222,6 +222,7 @@ export const Chip = () => {
   const hdlPanel = (
     <Panel
       className="_hdl_panel"
+      isEditorPanel={true}
       header={
         <>
           <div tabIndex={0}>HDL</div>

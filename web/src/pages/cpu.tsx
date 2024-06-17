@@ -100,9 +100,11 @@ export const CPU = () => {
     dispatch.current({ action: "update" });
   };
 
-  const [scale, setScale] = useState<ScreenScales>(1);
   const onScale = (scale: ScreenScales) => {
-    setScale(scale);
+    dispatch.current({
+      action: "updateConfig",
+      payload: { screenScale: scale },
+    });
   };
 
   const loadFile = async () => {
@@ -126,21 +128,33 @@ export const CPU = () => {
 
   return (
     <div
-      className={`Page CpuPage grid ${scale == 2 ? "large-screen" : "normal"}`}
+      className={`Page CpuPage grid ${state.config.screenScale == 2 ? "large-screen" : "normal"}`}
     >
       <MemoryComponent
         name="ROM"
         memory={state.sim.ROM}
         highlight={state.sim.PC}
-        format={"asm"} // TODO: save this in store
+        format={state.config.romFormat}
         fileSelect={loadFile}
+        onSetFormat={(format) => {
+          dispatch.current({
+            action: "updateConfig",
+            payload: { romFormat: format },
+          });
+        }}
       />
       <MemoryComponent
         name="RAM"
         memory={state.sim.RAM}
-        format="dec"
+        format={state.config.ramFormat}
         excludedFormats={["asm"]}
         onChange={onMemoryChange}
+        onSetFormat={(format) => {
+          dispatch.current({
+            action: "updateConfig",
+            payload: { ramFormat: format },
+          });
+        }}
       />
       <Panel
         className="IO"
@@ -148,7 +162,16 @@ export const CPU = () => {
           <>
             <div className="flex-1">
               {runnersAssigned && cpuRunner.current && (
-                <Runbar runner={cpuRunner.current} />
+                <Runbar
+                  runner={cpuRunner.current}
+                  speed={state.config.speed}
+                  onSpeedChange={(speed) => {
+                    dispatch.current({
+                      action: "updateConfig",
+                      payload: { speed },
+                    });
+                  }}
+                />
               )}
             </div>
           </>
@@ -158,7 +181,7 @@ export const CPU = () => {
           key={screenRenderKey}
           memory={state.sim.Screen}
           showScaleControls={true}
-          scale={scale}
+          scale={state.config.screenScale}
           onScale={onScale}
         ></Screen>
         <Keyboard update={onKeyChange} keyboard={state.sim.Keyboard} />
@@ -186,7 +209,12 @@ export const CPU = () => {
           tstName={state.test.name}
           disabled={!state.test.valid}
           showName={state.tests.length < 2}
+          speed={state.config.testSpeed}
           onSpeedChange={(speed) => {
+            dispatch.current({
+              action: "updateConfig",
+              payload: { testSpeed: speed },
+            });
             actions.setAnimate(speed <= 2);
           }}
           prefix={

@@ -387,6 +387,10 @@ export const Chip = () => {
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}
+      speed={state.config.speed}
+      onSpeedChange={(speed) => {
+        dispatch.current({ action: "updateConfig", payload: { speed } });
+      }}
     />
   );
 

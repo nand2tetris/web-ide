@@ -3,7 +3,7 @@ import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
-import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
+import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
@@ -158,21 +158,24 @@ const VM = () => {
     setStatus("");
   };
 
-  const onSpeedChange = (speed: number) => {
+  const onSpeedChange = (speed: number, testPanel: boolean) => {
+    dispatch.current({
+      action: "updateConfig",
+      payload: testPanel ? { testSpeed: speed } : { speed },
+    });
     actions.setAnimate(speed <= 2);
   };
 
   const stackRef = useRef<Rerenderable>();
 
-  const [scale, setScale] = useState<ScreenScales>(1);
-  const onScale = (scale: ScreenScales) => {
-    setScale(scale);
-  };
-
   return (
     <div
       className={`Page VmPage grid ${
-        scale == 0 ? "no-screen" : scale == 2 ? "large-screen" : "normal"
+        state.config.screenScale == 0
+          ? "no-screen"
+          : state.config.screenScale == 2
+            ? "large-screen"
+            : "normal"
       }`}
     >
       <Panel
@@ -204,7 +207,8 @@ const VM = () => {
                   }
                   runner={vmRunner.current}
                   disabled={!state.controls.valid}
-                  onSpeedChange={onSpeedChange}
+                  speed={state.config.speed}
+                  onSpeedChange={(speed) => onSpeedChange(speed, false)}
                 />
               )}
             </div>
@@ -244,8 +248,13 @@ const VM = () => {
         <Screen
           memory={state.vm.Screen}
           showScaleControls={true}
-          scale={scale}
-          onScale={onScale}
+          scale={state.config.screenScale}
+          onScale={(scale) => {
+            dispatch.current({
+              action: "updateConfig",
+              payload: { screenScale: scale },
+            });
+          }}
         />
         <Keyboard keyboard={state.vm.Keyboard} />
       </Panel>
@@ -254,14 +263,26 @@ const VM = () => {
         name="RAM"
         memory={state.vm.RAM}
         initialAddr={256}
-        format="dec"
+        format={state.config.ram1Format}
+        onSetFormat={(format) => {
+          dispatch.current({
+            action: "updateConfig",
+            payload: { ram1Format: format },
+          });
+        }}
         showClear={false}
       />
       <Memory
         name="RAM"
         className="Stack"
         memory={state.vm.RAM}
-        format="dec"
+        format={state.config.ram2Format}
+        onSetFormat={(format) => {
+          dispatch.current({
+            action: "updateConfig",
+            payload: { ram2Format: format },
+          });
+        }}
         cellLabels={[
           "SP:",
           "LCL:",
@@ -294,7 +315,8 @@ const VM = () => {
           setPath={setPath}
           showClear={true}
           defaultTst={DEFAULT_TEST}
-          onSpeedChange={onSpeedChange}
+          speed={state.config.testSpeed}
+          onSpeedChange={(speed) => onSpeedChange(speed, true)}
           disabled={!state.controls.valid}
         />
       )}

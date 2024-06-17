@@ -31,6 +31,7 @@ import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { RunSpeed } from "src/runbar.js";
 import { compare } from "../compare.js";
 import { BaseContext } from "./base.context.js";
 
@@ -119,6 +120,11 @@ export interface ChipPageState {
   files: Files;
   sim: ChipSim;
   controls: ControlsState;
+  config: ChipPageConfig;
+}
+
+export interface ChipPageConfig {
+  speed: RunSpeed;
 }
 
 export interface ChipSim {
@@ -296,6 +302,10 @@ export function makeChipStore(
         pending: state.sim.pending,
         invalid: state.sim.invalid,
       });
+    },
+
+    updateConfig(state: ChipPageState, config: Partial<ChipPageConfig>) {
+      state.config = { ...state.config, ...config };
     },
   };
 
@@ -606,6 +616,7 @@ export function makeChipStore(
         out: "",
       },
       sim,
+      config: { speed: 2 },
     };
   })();
 

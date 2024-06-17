@@ -22,6 +22,7 @@ import {
 } from "@nand2tetris/simulator/languages/base.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import { RunSpeed } from "src/runbar.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 
@@ -182,6 +183,11 @@ export interface AsmPageState {
   error?: CompilationError;
   compareError: boolean;
   title?: string;
+  config: AsmPageConfig;
+}
+
+export interface AsmPageConfig {
+  speed: RunSpeed;
 }
 
 export type AsmStoreDispatch = Dispatch<{
@@ -272,6 +278,10 @@ export function makeAsmStore(
 
     setTitle(state: AsmPageState, title: string) {
       state.title = title;
+    },
+
+    updateConfig(state: AsmPageState, config: Partial<AsmPageConfig>) {
+      state.config = { ...state.config, ...config };
     },
   };
 
@@ -427,6 +437,9 @@ export function makeAsmStore(
     compareName: undefined,
     lineNumbers: [],
     compareError: false,
+    config: {
+      speed: 2,
+    },
   };
 
   return { initialState, reducers, actions };

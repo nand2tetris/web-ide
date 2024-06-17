@@ -7,6 +7,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
+  Format,
   KeyboardAdapter,
   MemoryAdapter,
   MemoryKeyboard,
@@ -20,8 +21,10 @@ import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
+import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 
@@ -51,6 +54,15 @@ export interface VmPageState {
   test: VMTestSim;
   files: VMFiles;
   title?: string;
+  config: VmPageConfig;
+}
+
+export interface VmPageConfig {
+  ram1Format: Format;
+  ram2Format: Format;
+  screenScale: ScreenScales;
+  speed: RunSpeed;
+  testSpeed: RunSpeed;
 }
 
 export interface ControlsState {
@@ -171,6 +183,10 @@ export function makeVmStore(
     setTitle(state: VmPageState, title: string) {
       state.title = title;
     },
+
+    updateConfig(state: VmPageState, config: Partial<VmPageConfig>) {
+      state.config = { ...state.config, ...config };
+    },
   };
   const initialState: VmPageState = {
     vm: reduceVMTest(test, dispatch, setStatus, true),
@@ -189,6 +205,13 @@ export function makeVmStore(
       tst: DEFAULT_TEST,
       cmp: "",
       out: "",
+    },
+    config: {
+      ram1Format: "dec",
+      ram2Format: "dec",
+      screenScale: 1,
+      speed: 2,
+      testSpeed: 2,
     },
   };
   const actions = {

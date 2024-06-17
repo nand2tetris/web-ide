@@ -190,6 +190,7 @@ export const Memory = forwardRef(
       editable = true,
       memory,
       format = "dec",
+      onSetFormat,
       excludedFormats = [],
       count,
       maxSize,
@@ -211,6 +212,7 @@ export const Memory = forwardRef(
       offset?: number;
       initialAddr?: number;
       format: Format;
+      onSetFormat?: (format: Format) => void;
       excludedFormats?: Format[];
       cellLabels?: string[];
       fileSelect?: () => Promise<{ name: string; content: string }>;
@@ -295,6 +297,11 @@ export const Memory = forwardRef(
       setGoto({ value: 0 });
     });
 
+    const doSetFormat = (format: Format) => {
+      setFormat(format);
+      onSetFormat?.(format);
+    };
+
     return (
       <article className={`panel memory ${className ?? name}`}>
         <header>
@@ -338,7 +345,7 @@ export const Memory = forwardRef(
               {/* <Icon name="move_down" /> */}
               ⤵️
             </button>
-            <select value={fmt} onChange={(e) => setFormat(e.target.value)}>
+            <select value={fmt} onChange={(e) => doSetFormat(e.target.value)}>
               {FORMATS.filter(
                 (option) => !excludedFormats.includes(option),
               ).map((option) => (

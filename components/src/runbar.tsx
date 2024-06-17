@@ -1,5 +1,6 @@
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { ChangeEvent, ReactNode, useEffect, useRef, useState } from "react";
+import { ChangeEvent, ReactNode, useEffect, useRef } from "react";
+import { useStateInitializer } from "./react.js";
 import { useTimer } from "./timer.js";
 
 interface RunbarTooltipOverrides {
@@ -9,18 +10,21 @@ interface RunbarTooltipOverrides {
   reset: string;
 }
 
+export type RunSpeed = 0 | 1 | 2 | 3 | 4;
+
 export const Runbar = (props: {
   runner: Timer;
+  speed?: RunSpeed;
   disabled?: boolean;
   prefix?: ReactNode;
   children?: ReactNode;
   overrideTooltips?: Partial<RunbarTooltipOverrides>;
-  onSpeedChange?: (speed: number) => void;
+  onSpeedChange?: (speed: RunSpeed) => void;
 }) => {
   const runner = useTimer(props.runner);
-  const [speedValue, setSpeed] = useState(2);
+  const [speedValue, setSpeed] = useStateInitializer(props.speed ?? 2);
 
-  const speedValues: Record<number, [number, number]> = {
+  const speedValues: Record<RunSpeed, [number, number]> = {
     0: [1000, 1],
     1: [500, 1],
     2: [16, 1],
@@ -39,8 +43,9 @@ export const Runbar = (props: {
   };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setSpeed(Number(e.target.value));
-    props.onSpeedChange?.(Number(e.target.value));
+    const speed = Number(e.target.value) as RunSpeed;
+    setSpeed(speed);
+    props.onSpeedChange?.(speed);
   };
 
   const toggleRef = useRef<HTMLButtonElement>(null);

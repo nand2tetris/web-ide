@@ -100,6 +100,7 @@ export const Asm = () => {
   };
 
   const onSpeedChange = (speed: number) => {
+    dispatch.current({ action: "updateConfig", payload: { speed } });
     actions.setAnimate(speed <= 2);
   };
 
@@ -144,6 +145,7 @@ export const Asm = () => {
                     </button>
                   }
                   overrideTooltips={{ step: "Translate", run: "Translate all" }}
+                  speed={state.config.speed}
                   onSpeedChange={onSpeedChange}
                 />
               )}

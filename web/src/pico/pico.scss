@@ -103,6 +103,10 @@
     flex-direction: column;
     overflow-y: auto;
 
+    &.editor {
+      overflow-y: hidden;
+    }
+
     > header {
       padding: 0;
       margin: 0;

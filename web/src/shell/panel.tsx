@@ -7,9 +7,16 @@ export const Panel = (props: {
   footer?: ReactNode;
   className?: string;
   style?: CSSProperties;
+  isEditorPanel?: boolean;
 }) => {
   return (
-    <article className={["panel", props.className ?? ""].join(" ")}>
+    <article
+      className={[
+        "panel",
+        props.className ?? "",
+        props.isEditorPanel ? "editor" : "",
+      ].join(" ")}
+    >
       {props.header && <header>{props.header}</header>}
       <main>{props.children}</main>
       {props.footer && <footer>{props.footer}</footer>}

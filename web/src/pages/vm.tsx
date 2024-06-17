@@ -180,6 +180,7 @@ const VM = () => {
     >
       <Panel
         className="program"
+        isEditorPanel={true}
         header={
           <>
             <input

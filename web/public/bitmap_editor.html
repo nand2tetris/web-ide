@@ -3,28 +3,60 @@
   <head>
     <title>Jack Bitmap Editor</title>
     <script type="text/javascript">
+      const STATE_KEY = "state";
+      const GRID_KEY = "grid";
+
       // initializer global variables
-      var grid = new Array(0);
-      var WIDTH = 48;
-      var HEIGHT = 32;
-      var PIXEL_SIZE = "16";
       var BINARY_BITS = 16;
-      var currentColor = null;
-      var currentIShift = 0;
-      var currentJShift = 0;
-      var marginSaveFrames = 1;
-      var baseI;
-      var baseJ;
-      var drawHeight = 0;
       var includeShift = true;
-      var INVERT_MODE = false;
-      var comments = true;
+      const state = JSON.parse(localStorage.getItem(STATE_KEY));
       var columns = [0, 1, 2];
+      var grid = new Array(0);
+
+      // load saved state from local storage
+      var WIDTH = state.WIDTH ?? 48;
+      var HEIGHT = state.HEIGHT ?? 32;
+      var PIXEL_SIZE = state.PIXEL_SIZE ?? "16";
+      var currentColor = state.currentColor ?? null; // TODO: maybe this shouldn't be in state
+      var currentIShift = state.currentIShift ?? 0;
+      var currentJShift = state.currentJShift ?? 0;
+      var marginSaveFrames = state.marginSaveFrames ?? 1;
+      var baseI = state.baseI;
+      var baseJ = state.baseJ;
+      var drawHeight = state.drawHeight ?? 0;
+
+      var INVERT_MODE = state.INVERT_MODE ?? false;
+      var comments = state.comments ?? true;
+
+      function saveState() {
+        localStorage.setItem(
+          STATE_KEY,
+          JSON.stringify({
+            WIDTH,
+            HEIGHT,
+            PIXEL_SIZE,
+            currentColor,
+            currentIShift,
+            currentJShift,
+            marginSaveFrames,
+            baseI,
+            baseJ,
+            drawHeight,
+            INVERT_MODE,
+            comments,
+          }),
+        );
+      }
+
+      function saveGrid() {
+        localStorage.setItem(GRID_KEY, JSON.stringify(grid));
+      }
 
       function pickColor(cell) {
         var i = (cell.id / WIDTH) | 0;
         var j = cell.id - i * WIDTH;
         currentColor = !grid[i][j];
+        saveState();
         OnCellOver(cell);
       }
 
@@ -38,6 +70,7 @@
 
       function releaseColor() {
         currentColor = null;
+        saveState();
       }
 
       function Init() {
@@ -53,7 +86,7 @@
             })*/
       }
 
-      function InitGrid() {
+      function createGrid() {
         var _grid = new Array(HEIGHT);
         for (i = 0; i < HEIGHT; i++) {
           _grid[i] = new Array(WIDTH);
@@ -62,6 +95,16 @@
           }
         }
         return _grid;
+      }
+
+      function InitGrid() {
+        const savedGrid = localStorage.getItem(GRID_KEY);
+        if (savedGrid) {
+          try {
+            return JSON.parse(savedGrid);
+          } catch {}
+        }
+        return createGrid();
       }
       /*
         // Working on it
@@ -73,13 +116,13 @@
             }
             // for now, only png is supported
             if (!file.type.startsWith('image/png')) return;
-            
+
             const reader = new FileReader();
             reader.addEventListener('load', (event) => {
                 new PNG({filterType: 4}).parse(event.target.result, function(error, image){
                     if(error) return;
                     const signature = [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82];
-                    for (let i = 0; i < signature.length; i++) {  
+                    for (let i = 0; i < signature.length; i++) {
                     if (byteArray[i] !== signature[i]) {
                         return false;
                     }
@@ -91,7 +134,7 @@
       function RotateBitmapRight() {
         // for now, rotate only works for square canvas, and rotates the entire canvas by 90 degrees
         if (HEIGHT != WIDTH) return;
-        var _grid = InitGrid();
+        var _grid = createGrid();
         let side_length = HEIGHT;
         for (i = 0; i < side_length; i++) {
           for (j = 0; j < side_length; j++) {
@@ -100,6 +143,7 @@
         }
 
         grid = _grid;
+        saveGrid();
         DisplayGrid();
         // shifting effects becomes undesirable when rotated, so clear the shift
         ResetShift();
@@ -110,10 +154,11 @@
             grid[i][j] = !grid[i][j];
           }
         }
+        saveGrid();
         DisplayGrid();
       }
       function MirrorBitmap() {
-        var _grid = InitGrid();
+        var _grid = createGrid();
 
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
@@ -122,6 +167,7 @@
         }
 
         grid = _grid;
+        saveGrid();
         DisplayGrid();
       }
       function ShiftLeft() {
@@ -136,10 +182,12 @@
             }
           }
         }
+        saveState();
+        saveGrid();
         DisplayGrid();
       }
       function ShiftRight() {
-        _grid = InitGrid();
+        _grid = createGrid();
         currentJShift += 1;
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
@@ -152,10 +200,13 @@
           }
         }
         grid = _grid;
+        saveState();
+        saveGrid();
         DisplayGrid();
       }
       function ShiftUp() {
         currentIShift -= 1;
+        saveState();
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
             // handle edge
@@ -166,11 +217,13 @@
             }
           }
         }
+        saveGrid();
         DisplayGrid();
       }
       function ShiftDown() {
-        _grid = InitGrid();
+        _grid = createGrid();
         currentIShift += 1;
+        saveState();
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
             // handle edge
@@ -182,6 +235,7 @@
           }
         }
         grid = _grid;
+        saveGrid();
         DisplayGrid();
       }
 
@@ -252,6 +306,7 @@
         grid[i][j] = currentColor;
         if (grid[i][j]) cell.style.backgroundColor = "black";
         else cell.style.backgroundColor = "white";
+        saveGrid();
         GenerateCode();
       }
       function GetColumns(leftJ, rightJ, baseJ) {
@@ -454,6 +509,7 @@
         }
         // set drawHeight for the use of other functions
         drawHeight = Math.max(bottomI, baseI) - Math.min(topI, baseI);
+        saveState();
         return words;
       }
       function GetRowsFromWordColumns(col_mapping) {
@@ -573,6 +629,7 @@
 
         // update styling in case boundaries changed
         UpdateStyling();
+        saveState();
       }
       function GetWordValue(i, j) {
         // given the coordinates i, j of the start of a 16 pixel series corresponding with a 16-bit integer in RAM, returns the base_10
@@ -717,6 +774,7 @@
       function ResetShift() {
         currentIShift = 0;
         currentJShift = 0;
+        saveState();
         GenerateCode();
       }
       function ToggleInvertMode() {
@@ -727,6 +785,7 @@
           INVERT_MODE = false;
           GenerateCode();
         }
+        saveState();
       }
       function isInteger(value) {
         return /^\d+$/.test(value);
@@ -746,6 +805,7 @@
           document.getElementById("inputWidth").value = WIDTH.toString();
           HEIGHT = parseInt(newHeight);
           PIXEL_SIZE = parseInt(newPxSize);
+          saveState();
           Init();
         }
       }
@@ -780,6 +840,7 @@
         } else {
           document.getElementById("marginSaveFramestd").hidden = true;
         }
+        saveState();
         GenerateCode();
       }
     </script>

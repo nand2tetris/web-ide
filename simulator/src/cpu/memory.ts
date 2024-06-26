@@ -249,8 +249,8 @@ export class RAM extends Memory {
   screen = new SubMemory(this, SCREEN_SIZE, SCREEN_OFFSET);
 
   // 4k main memory, 2k screen memory, 1 keyboard
-  // static readonly SIZE = 0x4000 + 0x2000 + 0x0001;
-  static readonly SIZE = 0x8000;
+  static readonly SIZE = 0x4000 + 0x2000 + 0x0001;
+
   constructor() {
     super(RAM.SIZE);
   }

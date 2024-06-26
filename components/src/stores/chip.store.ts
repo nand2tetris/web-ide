@@ -499,7 +499,7 @@ export function makeChipStore(
         usingBuiltin = true;
       }
       const builtinName = chipName;
-      const nextChip = getBuiltinChip(builtinName);
+      const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
         setStatus(
           `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
@@ -597,15 +597,7 @@ export function makeChipStore(
       visualizationParameters: new Set(),
     };
 
-    const maybeChip = getBuiltinChip(controls.chipName);
-    if (isErr(maybeChip)) {
-      setStatus(display(Err(maybeChip)));
-      chip = new Low();
-    } else {
-      chip = Ok(maybeChip);
-    }
-
-    const sim = reduceChip(chip);
+    const sim = reduceChip(new Low());
 
     return {
       controls,

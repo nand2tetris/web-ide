@@ -334,9 +334,7 @@ export class Computer extends Chip {
       { from: { name: "oldOutM", start: 0 }, to: { name: "out", start: 0 } },
     ]);
 
-    for (const pin of Array.from(this.ins.entries()).concat(
-      Array.from(this.outs.entries()),
-    )) {
+    for (const pin of [...this.ins.entries(), ...this.outs.entries()]) {
       if (this.isClockedPin(pin.name)) {
         this.clockedPins.add(pin.name);
       }

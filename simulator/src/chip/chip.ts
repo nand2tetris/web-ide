@@ -439,13 +439,9 @@ export class Chip {
 
   isClockedPin(pin: string) {
     if (this.isInPin(pin)) {
-      return !Array.from(this.outs).some(([out, _]) =>
-        this.pathExists(pin, out),
-      );
+      return ![...this.outs].some(([out, _]) => this.pathExists(pin, out));
     } else {
-      return !Array.from(this.ins).some(([in_, _]) =>
-        this.pathExists(in_, pin),
-      );
+      return ![...this.ins].some(([in_, _]) => this.pathExists(in_, pin));
     }
   }
 

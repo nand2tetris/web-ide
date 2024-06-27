@@ -8,9 +8,8 @@ export class ChipDisplayInfo {
     if (BUILTIN_REGISTRY.has(chipName)) {
       const chip = assertExists(BUILTIN_REGISTRY.get(chipName)?.());
 
-      const pins = Array.from(chip.ins.entries()).concat(
-        Array.from(chip.outs.entries()),
-      );
+      const pins = [...chip.ins.entries(), ...chip.outs.entries()];
+
       for (const pin of pins) {
         this.signBehaviors.set(
           pin.name,

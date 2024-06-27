@@ -82,7 +82,13 @@ export class Memory extends ClockedChip {
   private address = 0;
 
   constructor() {
-    super(["in[16]", "load", "address[15])"], ["out[16]"], "Memory");
+    super(
+      ["in[16]", "load", "address[15])"],
+      ["out[16]"],
+      "Memory",
+      [],
+      ["in", "load"],
+    );
     this.parts.push(this.keyboard);
     this.parts.push(this.screen);
     this.parts.push(this.ram);
@@ -231,6 +237,9 @@ export class CPU extends ClockedChip {
     super(
       ["inM[16]", "instruction[16]", "reset"],
       ["outM[16]", "writeM", "addressM[15]", "pc[15]"],
+      "CPU",
+      [],
+      ["pc", "addressM", "reset"],
     );
   }
 
@@ -324,6 +333,12 @@ export class Computer extends Chip {
       },
       { from: { name: "oldOutM", start: 0 }, to: { name: "out", start: 0 } },
     ]);
+
+    for (const pin of [...this.ins.entries(), ...this.outs.entries()]) {
+      if (this.isClockedPin(pin.name)) {
+        this.clockedPins.add(pin.name);
+      }
+    }
   }
 
   override eval() {

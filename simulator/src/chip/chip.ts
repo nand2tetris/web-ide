@@ -8,9 +8,9 @@ import {
   Result,
   isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
+import type { Subscription } from "rxjs";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
-import type { Subscription } from "rxjs";
 
 export const HIGH = 1;
 export const LOW = 0;
@@ -419,11 +419,35 @@ export class Chip {
     return !this.isExternalPin(pin);
   }
 
+  pathExists(start: string, end: string) {
+    const nodes: (Chip | string)[] = [start];
+
+    while (nodes.length > 0) {
+      const node = assertExists(nodes.pop());
+      if (typeof node == "string") {
+        if (node == end) {
+          return true;
+        }
+        nodes.push(...(this.insToPart.get(node) ?? []));
+      } else {
+        nodes.push(...(this.partToOuts.get(node) ?? []));
+      }
+    }
+
+    return false;
+  }
+
+  isClockedPin(pin: string) {
+    if (this.isInPin(pin)) {
+      return ![...this.outs].some(([out, _]) => this.pathExists(pin, out));
+    } else {
+      return ![...this.ins].some(([in_, _]) => this.pathExists(in_, pin));
+    }
+  }
+
   hasConnection(from: Chip, to: Chip): boolean {
-    return [...(this.partToOuts.get(from) ?? [])].some(
-      (pin) =>
-        this.insToPart.get(pin)?.has(to) &&
-        !(this.isInternalPin(pin) && to.clocked),
+    return [...(this.partToOuts.get(from) ?? [])].some((pin) =>
+      this.insToPart.get(pin)?.has(to),
     );
   }
 
@@ -450,23 +474,54 @@ export class Chip {
         }
       }
     }
-
-    // Topological insertion sort for where this part should go.
-    // It should go at the lower of:
-    //     before the first chip that it has an output to, or at the end
-    //     after the last chip it has an input from, or at the beginning
-    const before = this.parts
-      .map((other, i) => ({ other, i }))
-      .filter(({ other }) => this.hasConnection(part, other));
-    const beforeIdx = before.at(0)?.i ?? this.parts.length;
-    const after = this.parts
-      .map((other, i) => ({ other, i }))
-      .filter(({ other }) => this.hasConnection(other, part));
-    const afterIdx = (after.at(-1)?.i ?? -1) + 1;
-    const index = Math.min(beforeIdx, afterIdx);
-    this.parts.splice(index, 0, part);
+    this.parts.push(part);
 
     return Ok();
+  }
+
+  sortParts() {
+    const sorted: Chip[] = [];
+    const visited = new Set<Chip>();
+    const visiting = new Set<Chip>();
+
+    type Node = { part: Chip; isReturning: boolean };
+
+    const stack: Node[] = this.parts.map((part) => ({
+      part,
+      isReturning: false,
+    }));
+
+    while (stack.length > 0) {
+      const node = assertExists(stack.pop());
+
+      if (node.isReturning) {
+        // If we are returning to this node, we can safely add it to the sorted list
+        visited.add(node.part);
+        sorted.push(node.part);
+      } else if (!visited.has(node.part)) {
+        if (visiting.has(node.part)) {
+          continue;
+        }
+        visiting.add(node.part);
+
+        // Re-push this node to handle it on return
+        stack.push({ part: node.part, isReturning: true });
+
+        // Push all its children to visit them
+        for (const out of this.partToOuts.get(node.part) ?? []) {
+          stack.push(
+            ...Array.from(this.insToPart.get(out) ?? [])
+              .filter((part) => !visited.has(part))
+              .map((part) => ({
+                part,
+                isReturning: false,
+              })),
+          );
+        }
+      }
+    }
+
+    this.parts = sorted.reverse();
   }
 
   private findPin(from: string, minWidth?: number): Pin {
@@ -539,9 +594,11 @@ export class Chip {
 
     partPin.connect(chipPin);
 
-    const partToOuts = this.partToOuts.get(part) ?? new Set();
-    partToOuts.add(chipPin.name);
-    this.partToOuts.set(part, partToOuts);
+    if (!part.clockedPins.has(partPin.name)) {
+      const partToOuts = this.partToOuts.get(part) ?? new Set();
+      partToOuts.add(chipPin.name);
+      this.partToOuts.set(part, partToOuts);
+    }
 
     return Ok();
   }
@@ -588,9 +645,11 @@ export class Chip {
     }
     chipPin.connect(partPin);
 
-    const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
-    pinsToPart.add(part);
-    this.insToPart.set(chipPin.name, pinsToPart);
+    if (!part.clockedPins.has(partPin.name)) {
+      const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
+      pinsToPart.add(part);
+      this.insToPart.set(chipPin.name, pinsToPart);
+    }
 
     return Ok();
   }

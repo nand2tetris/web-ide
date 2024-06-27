@@ -212,6 +212,14 @@ class ChipBuilder {
       return result;
     }
 
+    this.chip.clockedPins = new Set(
+      [...this.chip.ins.entries(), ...this.chip.outs.entries()]
+        .map((pin) => pin.name)
+        .filter((pin) => this.chip.isClockedPin(pin)),
+    );
+
+    this.chip.sortParts();
+
     // Reset clock order after wiring sub-pins
     for (const part of this.chip.parts) {
       part.subscribeToClock();

@@ -4,7 +4,7 @@ export class Bit extends ClockedChip {
   bit: Voltage = LOW;
 
   constructor(name?: string) {
-    super(["in", "load"], ["out"], name);
+    super(["in", "load"], ["out"], name, [], ["in", "load"]);
   }
 
   override tick() {
@@ -44,7 +44,7 @@ export class Register extends ClockedChip {
   bits = 0x00;
 
   constructor(name?: string) {
-    super(["in[16]", "load"], ["out[16]"], name);
+    super(["in[16]", "load"], ["out[16]"], name, [], ["in", "load"]);
   }
 
   override tick() {
@@ -75,7 +75,13 @@ export class PC extends ClockedChip {
   bits = 0x00;
 
   constructor(name?: string) {
-    super(["in[16]", "reset", "load", "inc"], ["out[16]"], name);
+    super(
+      ["in[16]", "reset", "load", "inc"],
+      ["out[16]"],
+      name,
+      [],
+      ["in", "reset", "load", "inc"],
+    );
   }
 
   override tick() {

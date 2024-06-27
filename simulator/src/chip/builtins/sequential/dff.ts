@@ -2,7 +2,7 @@ import { ClockedChip } from "../../chip.js";
 
 export class DFF extends ClockedChip {
   constructor(name?: string) {
-    super(["in"], ["out"], name, ["t"]);
+    super(["in"], ["out"], name, ["t"], ["in"]);
   }
 
   override tick() {

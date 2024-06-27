@@ -43,7 +43,7 @@ export async function loadChip(
   fs?: FileSystem,
 ): Promise<Result<Chip>> {
   if (hasBuiltinChip(name) || fs === undefined) {
-    return getBuiltinChip(name);
+    return await getBuiltinChip(name);
   }
   try {
     const file = await fs.readFile(`${name}.hdl`);
@@ -204,7 +204,7 @@ class ChipBuilder {
     }
 
     if (this.parts.parts === "BUILTIN") {
-      return getBuiltinChip(this.parts.name.value);
+      return await getBuiltinChip(this.parts.name.value);
     }
 
     const result = await this.wireParts();

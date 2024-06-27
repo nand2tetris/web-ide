@@ -1,14 +1,14 @@
-import * as not from "@nand2tetris/projects/project_01/01_not.js";
-import * as bit from "@nand2tetris/projects/project_03/01_bit.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
-import { MutableRefObject } from "react";
-import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
+import * as not from "@nand2tetris/projects/project_01/01_not.js";
+import * as bit from "@nand2tetris/projects/project_03/01_bit.js";
 import { produce } from "immer";
+import { MutableRefObject } from "react";
 import { ImmPin } from "src/pinout.js";
+import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
 
 function testChipStore(
   fs: Record<string, string> = {
@@ -99,9 +99,8 @@ describe("ChipStore", () => {
 
     it.todo("loads projects and chips");
 
-    it("toggles bits", () => {
-      expect(state.store.state.sim.chip[0].out().busVoltage).toBe(1);
-
+    it("toggles bits", async () => {
+      await state.store.actions.initialize();
       state.store.actions.toggle(state.store.state.sim.chip[0].in(), 0);
       expect(state.store.state.sim.chip[0].in().busVoltage).toBe(1);
       expect(state.store.dispatch.current).toHaveBeenCalledWith({

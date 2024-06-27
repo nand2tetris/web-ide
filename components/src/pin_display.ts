@@ -1,25 +1,20 @@
-import { Ok, isOk } from "@davidsouther/jiffies/lib/esm/result.js";
-import {
-  REGISTRY as BUILTIN_REGISTRY,
-  getBuiltinChip,
-} from "@nand2tetris/simulator/chip/builtins/index.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { REGISTRY as BUILTIN_REGISTRY } from "@nand2tetris/simulator/chip/builtins/index.js";
 
 export class ChipDisplayInfo {
   signBehaviors: Map<string, boolean> = new Map();
 
   public constructor(chipName: string, unsigned?: string[]) {
     if (BUILTIN_REGISTRY.has(chipName)) {
-      const chip = getBuiltinChip(chipName);
-      if (isOk(chip)) {
-        const pins = Array.from(Ok(chip).ins.entries()).concat(
-          Array.from(Ok(chip).outs.entries()),
+      const chip = assertExists(BUILTIN_REGISTRY.get(chipName)?.());
+
+      const pins = [...chip.ins.entries(), ...chip.outs.entries()];
+
+      for (const pin of pins) {
+        this.signBehaviors.set(
+          pin.name,
+          !unsigned || !unsigned.includes(pin.name),
         );
-        for (const pin of pins) {
-          this.signBehaviors.set(
-            pin.name,
-            !unsigned || !unsigned.includes(pin.name),
-          );
-        }
       }
     }
   }

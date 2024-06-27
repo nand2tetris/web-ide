@@ -1,4 +1,9 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import {
+  Err,
+  isErr,
+  Ok,
+  Result,
+} from "@davidsouther/jiffies/lib/esm/result.js";
 import { Chip } from "../chip.js";
 
 import { And, And16 } from "./logic/and.js";
@@ -15,6 +20,8 @@ import { FullAdder } from "./arithmetic/full_adder.js";
 import { HalfAdder } from "./arithmetic/half_adder.js";
 import { Inc16 } from "./arithmetic/inc16.js";
 
+import { parse } from "../builder.js";
+import { builtinOverrides } from "./builtinOverrides.js";
 import {
   Computer,
   CPU,
@@ -28,9 +35,18 @@ import { DFF } from "./sequential/dff.js";
 import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram.js";
 
 export {
+  Add16,
+  ALU,
   And,
   And16,
+  VRegister as ARegister,
+  Bit,
+  DFF,
   DMux,
+  VRegister as DRegister,
+  FullAdder,
+  HalfAdder,
+  Inc16,
   Mux,
   Mux16,
   Mux4Way16,
@@ -42,23 +58,14 @@ export {
   Or,
   Or16,
   Or8way,
+  RAM16K,
+  RAM4K,
+  RAM512,
+  RAM64,
+  RAM8,
+  Register,
   Xor,
   Xor16,
-  HalfAdder,
-  FullAdder,
-  Add16,
-  Inc16,
-  ALU,
-  Bit,
-  Register,
-  VRegister as ARegister,
-  VRegister as DRegister,
-  DFF,
-  RAM8,
-  RAM64,
-  RAM512,
-  RAM4K,
-  RAM16K,
 };
 
 export const REGISTRY = new Map<string, () => Chip>(
@@ -124,7 +131,14 @@ export function hasBuiltinChip(name: string): boolean {
   return REGISTRY.has(name);
 }
 
-export function getBuiltinChip(name: string): Result<Chip> {
+export async function getBuiltinChip(name: string): Promise<Result<Chip>> {
+  if (builtinOverrides[name]) {
+    const result = await parse(builtinOverrides[name], name);
+    if (isErr(result)) {
+      return Err(new Error(Err(result).message));
+    }
+    return result;
+  }
   const chip = REGISTRY.get(name);
   return chip
     ? Ok(chip())

@@ -200,6 +200,7 @@ class ChipBuilder {
 
   async build() {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
+      console.log(this.parts.name.value, this.expectedName);
       return Err(createError(`Wrong chip name`, this.parts.name.span));
     }
 

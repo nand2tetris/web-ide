@@ -11,12 +11,19 @@ import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
-const showUpgradeFs = false;
+const showUpgradeFs = true;
 
 export const Settings = () => {
   const { stores } = useContext(PageContext);
-  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, upgraded } =
-    useContext(BaseContext);
+  const {
+    fs,
+    // localFs,
+    setStatus,
+    canUpgradeFs,
+    upgradeFs,
+    closeFs,
+    localFsRoot,
+  } = useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
 
@@ -48,18 +55,18 @@ export const Settings = () => {
     const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
 
-    stores.chip.actions.initialize();
+    // stores.chip.actions.initialize();
     stores.cpu.actions.clear();
     stores.asm.actions.clear();
     stores.vm.actions.initialize();
     stores.compiler.actions.reset();
   };
 
-  const loadSamples = async () => {
-    const loaders = await import("@nand2tetris/projects/loader.js");
-    await loaders.loadSamples(fs);
-    setStatus("Loaded sample files...");
-  };
+  // const loadSamples = async () => {
+  //   const loaders = await import("@nand2tetris/projects/loader.js");
+  //   await loaders.loadSamples(fs);
+  //   setStatus("Loaded sample files...");
+  // };
 
   const resetWarningDialog = (
     <dialog open={resetWarning.isOpen}>
@@ -176,17 +183,17 @@ export const Settings = () => {
                         setUpgrading(false);
                       }}
                     >
-                      {!upgraded ? (
+                      {!localFsRoot ? (
                         <Trans>Use Local FileSystem</Trans>
                       ) : (
                         <Trans>Change Local FileSystem</Trans>
                       )}
                       <Trans>Beta</Trans>
                     </button>
-                    {upgraded ? (
+                    {localFsRoot ? (
                       <>
                         <p>
-                          <Trans>Using {upgraded}</Trans>
+                          <Trans>Using {localFsRoot}</Trans>
                         </p>
                         <button
                           onClick={async () => {
@@ -203,7 +210,7 @@ export const Settings = () => {
                 ) : (
                   <></>
                 )}
-                <button
+                {/* <button
                   onClick={async () => {
                     resetWarning.open();
                   }}
@@ -212,7 +219,7 @@ export const Settings = () => {
                 </button>
                 <button onClick={loadSamples}>
                   <Trans>Samples</Trans>
-                </button>
+                </button> */}
               </dd>
               <dt>
                 <Trans>Language</Trans>

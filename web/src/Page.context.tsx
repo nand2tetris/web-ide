@@ -16,7 +16,7 @@ export function usePageContext() {
   const compiler = useCompilerPageStore();
 
   useEffect(() => {
-    chip.actions.initialize();
+    // chip.actions.initialize();
   }, [chip.actions]);
 
   useEffect(() => {
@@ -25,6 +25,9 @@ export function usePageContext() {
 
   useEffect(() => {
     switch (tool) {
+      case "chip":
+        setTitle(chip.state.title);
+        break;
       case "cpu":
         setTitle(cpu.state.title);
         break;
@@ -32,7 +35,6 @@ export function usePageContext() {
         setTitle(asm.state.title);
         break;
       case "vm":
-        ``;
         setTitle(vm.state.title);
         break;
       case "compiler":
@@ -44,6 +46,7 @@ export function usePageContext() {
     }
   }, [
     tool,
+    chip.state.title,
     cpu.state.title,
     asm.state.title,
     vm.state.title,

@@ -64,7 +64,7 @@ describe("ChipStore", () => {
         "projects/01/Not/Not.cmp": not.cmp,
       });
 
-      await store.actions.initialize();
+      //   await store.actions.initialize();
 
       expect(store.state.controls.project).toBe("01");
       expect(store.state.controls.chipName).toBe("Not");
@@ -100,7 +100,7 @@ describe("ChipStore", () => {
     it.todo("loads projects and chips");
 
     it("toggles bits", async () => {
-      await state.store.actions.initialize();
+      //   await state.store.actions.initialize();
       state.store.actions.toggle(state.store.state.sim.chip[0].in(), 0);
       expect(state.store.state.sim.chip[0].in().busVoltage).toBe(1);
       expect(state.store.dispatch.current).toHaveBeenCalledWith({
@@ -126,7 +126,7 @@ describe("ChipStore", () => {
         "projects/01/Not/Not.tst": not.tst,
         "projects/01/Not/Not.cmp": not.cmp,
       });
-      await store.actions.initialize();
+      //   await store.actions.initialize();
       return { store };
     }, beforeEach);
 
@@ -139,7 +139,7 @@ describe("ChipStore", () => {
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[0]]);
 
-      await state.store.actions.useBuiltin();
+      await state.store.actions.toggleBuiltin();
 
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);

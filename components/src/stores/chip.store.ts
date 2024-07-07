@@ -1,5 +1,4 @@
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 
@@ -9,10 +8,6 @@ import {
   CHIP_PROJECTS,
 } from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
-import {
-  getBuiltinChip,
-  REGISTRY,
-} from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   Chip,
   Low,
@@ -24,15 +19,17 @@ import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { RunSpeed } from "src/runbar.js";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { compare } from "../compare.js";
+import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 
 export const NO_SCREEN = "noScreen";
@@ -58,25 +55,6 @@ function findDropdowns(storage: Record<string, string>) {
   return { project, chips, chipName };
 }
 
-function makeHdl(name: string) {
-  return `CHIP ${name} {
-  IN in;
-  OUT out;
-  PARTS:
-}`;
-}
-
-function makeTst() {
-  return `repeat 10 {
-  tick,
-  tock;
-}`;
-}
-
-function makeCmp() {
-  return `| in|out|`;
-}
-
 export function isBuiltinOnly(
   project: keyof typeof CHIP_PROJECTS,
   chipName: string,
@@ -84,39 +62,12 @@ export function isBuiltinOnly(
   return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
-async function getTemplate(
-  project: keyof typeof CHIP_PROJECTS,
-  chipName: string,
-) {
-  const { ChipProjects } = await import("@nand2tetris/projects/full.js");
-  if (isBuiltinOnly(project, chipName)) {
-    return (ChipProjects[project].BUILTIN_CHIPS as Record<string, string>)[
-      chipName
-    ];
-  }
-
-  return (
-    ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-  )[chipName][`${chipName}.hdl`] as string;
-}
-
-async function getBuiltinCode(
-  project: keyof typeof CHIP_PROJECTS,
-  chipName: string,
-) {
-  const template = await getTemplate(project, chipName);
-  if (isBuiltinOnly(project, chipName)) {
-    return template;
-  }
-  const bodyComment = "//// Replace this comment with your code.";
-  const builtinLine = `BUILTIN ${chipName};`;
-  const builtinCode = template.includes(bodyComment)
-    ? template.replace(bodyComment, builtinLine)
-    : template.replace("PARTS:", `PARTS:\n    ${builtinLine}`);
-  return builtinCode;
+function convertToBuiltin(name: string, hdl: string) {
+  return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};`);
 }
 
 export interface ChipPageState {
+  title?: string;
   files: Files;
   sim: ChipSim;
   controls: ControlsState;
@@ -150,8 +101,7 @@ export interface ControlsState {
   chipName: string;
   tests: string[];
   testName: string;
-  hasBuiltin: boolean;
-  builtinOnly: boolean;
+  usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
   error?: CompilationError;
@@ -183,19 +133,19 @@ export type ChipStoreDispatch = Dispatch<{
 }>;
 
 export function makeChipStore(
-  fs: FileSystem,
+  fs: FileSystem | undefined,
   setStatus: (status: string) => void,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
 ) {
   const dropdowns = findDropdowns(storage);
-  let { project, chipName } = dropdowns;
   const { chips } = dropdowns;
   let chip = new Low();
-  let tests: string[] = [];
+  let hdlPath: string;
+  let backupHdl = "";
+  const tests: string[] = [];
   let test = new ChipTest();
   let usingBuiltin = false;
-  let builtinOnly = false;
   let invalid = false;
 
   const reducers = {
@@ -250,13 +200,15 @@ export function makeChipStore(
     },
 
     setChip(state: ChipPageState, chipName: string) {
+      storage["/chip/chip"] = chipName;
       state.controls.chipName = chipName;
-      state.controls.tests = Array.from(tests);
-      state.controls.hasBuiltin = REGISTRY.has(chipName);
-      state.controls.builtinOnly = isBuiltinOnly(
-        state.controls.project,
-        chipName,
-      );
+      state.title = `${chipName}.hdl`;
+      // state.controls.tests = Array.from(tests);
+      // state.controls.hasBuiltin = REGISTRY.has(chipName);
+      // state.controls.builtinOnly = isBuiltinOnly(
+      //   state.controls.project,
+      //   chipName,
+      // );
     },
 
     setTest(state: ChipPageState, testName: string) {
@@ -307,48 +259,61 @@ export function makeChipStore(
     updateConfig(state: ChipPageState, config: Partial<ChipPageConfig>) {
       state.config = { ...state.config, ...config };
     },
+
+    toggleBuiltin(state: ChipPageState) {
+      state.controls.usingBuiltin = usingBuiltin;
+      if (usingBuiltin) {
+        console.log("backing up", state.files.hdl);
+        backupHdl = state.files.hdl;
+        this.setFiles(state, {
+          hdl: convertToBuiltin(state.controls.chipName, state.files.hdl),
+        });
+      } else {
+        this.setFiles(state, { hdl: backupHdl });
+      }
+    },
   };
 
   const actions = {
-    setProject(p: keyof typeof CHIP_PROJECTS) {
-      project = storage["/chip/project"] = p;
-      dispatch.current({ action: "setProject", payload: project });
-      this.setChip(CHIP_PROJECTS[project][0]);
-    },
+    // setProject(p: keyof typeof CHIP_PROJECTS) {
+    //   project = storage["/chip/project"] = p;
+    //   dispatch.current({ action: "setProject", payload: project });
+    //   this.setChip(CHIP_PROJECTS[project][0]);
+    // },
 
-    async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
-      chipName = storage["/chip/chip"] = chip;
-      builtinOnly = isBuiltinOnly(
-        project as keyof typeof CHIP_PROJECTS,
-        chipName,
-      );
+    // async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
 
-      if (builtinOnly) {
-        this.useBuiltin();
-      } else {
-        await this.loadChip(project, chipName);
-        if (usingBuiltin) {
-          this.useBuiltin();
-        }
-      }
-      await this.initializeTest(chip);
-      dispatch.current({ action: "setChip", payload: chipName });
-    },
+    //   builtinOnly = isBuiltinOnly(
+    //     project as keyof typeof CHIP_PROJECTS,
+    //     chipName,
+    //   );
 
-    setTest(test: string) {
-      dispatch.current({ action: "setTest", payload: test });
+    //   if (builtinOnly) {
+    //     this.useBuiltin();
+    //   } else {
+    //     await this.loadChip(project, chipName);
+    //     if (usingBuiltin) {
+    //       this.useBuiltin();
+    //     }
+    //   }
+    //   await this.initializeTest(chip);
+    //   dispatch.current({ action: "setChip", payload: chipName });
+    // },
 
-      dispatch.current({
-        action: "setVisualizationParams",
-        payload: new Set(
-          test == "ComputerAdd.tst" || test == "ComputerMax.tst"
-            ? [NO_SCREEN]
-            : [],
-        ),
-      });
+    // setTest(test: string) {
+    //   dispatch.current({ action: "setTest", payload: test });
 
-      this.loadTest(test);
-    },
+    //   dispatch.current({
+    //     action: "setVisualizationParams",
+    //     payload: new Set(
+    //       test == "ComputerAdd.tst" || test == "ComputerMax.tst"
+    //         ? [NO_SCREEN]
+    //         : [],
+    //     ),
+    //   });
+
+    //   this.loadTest(test);
+    // },
 
     reset() {
       Clock.get().reset();
@@ -385,9 +350,9 @@ export function makeChipStore(
       }
     },
 
-    async compileChip(hdl: string) {
+    async compileChip(hdl: string, name?: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl, chipName);
+      const maybeChip = await parseChip(hdl, name ?? storage["/chip/chip"]);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
         setStatus(Err(maybeChip).message);
@@ -420,45 +385,45 @@ export function makeChipStore(
     },
 
     async loadChip(project: string, name: string) {
-      storage["/chip/chip"] = name;
-      const fsName = (ext: string) =>
-        `/projects/${project}/${name}/${name}.${ext}`;
-
-      const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
-
-      dispatch.current({ action: "setFiles", payload: { hdl } });
-      await this.compileChip(hdl);
+      // storage["/chip/chip"] = name;
+      // const fsName = (ext: string) =>
+      //   `/projects/${project}/${name}/${name}.${ext}`;
+      // const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
+      // dispatch.current({ action: "setFiles", payload: { hdl } });
+      // await this.compileChip(hdl);
     },
 
-    async initializeTest(name: string) {
-      tests = (await fs.scandir(`/projects/${project}/${name}`))
-        .filter((file) => file.name.endsWith(".tst"))
-        .map((file) => file.name);
-      if (tests.length > 0) {
-        await this.setTest(tests[0]);
+    async initializeTest(project: string, chip: string) {
+      // TODO: CPU, Computer have test with different names
+      // tests = (await fs.scandir(`/projects/${project}/${name}`))
+      //   .filter((file) => file.name.endsWith(".tst"))
+      //   .map((file) => file.name);
+      // if (tests.length > 0) {
+      //   await this.setTest(tests[0]);
+      // }
+    },
+
+    async loadTest(project: string, name: string) {
+      if (!fs) return;
+      try {
+        const tst = await fs.readFile(`${project}/${name}.tst`);
+        const cmp = await fs.readFile(`${project}/${name}.cmp`);
+
+        dispatch.current({ action: "setFiles", payload: { cmp, tst } });
+        this.compileTest(tst);
+      } catch (e) {
+        console.error(e);
       }
-    },
-
-    async loadTest(test: string) {
-      const [tst, cmp] = await Promise.all([
-        fs
-          .readFile(`/projects/${project}/${chipName}/${test}`)
-          .catch(() => makeTst()),
-        fs
-          .readFile(
-            `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp"),
-          )
-          .catch(() => makeCmp()),
-      ]);
-      dispatch.current({ action: "setFiles", payload: { cmp, tst } });
-      this.compileTest(tst);
-    },
-
-    async saveChip(hdl: string, prj = project, name = chipName) {
-      dispatch.current({ action: "setFiles", payload: { hdl } });
-      const path = `/projects/${prj}/${name}/${name}.hdl`;
-      await fs.writeFile(path, hdl);
-      setStatus(`Saved ${path}`);
+      // const [tst, cmp] = await Promise.all([
+      //   fs
+      //     .readFile(`/projects/${project}/${chipName}/${test}`)
+      //     .catch(() => makeTst()),
+      //   fs
+      //     .readFile(
+      //       `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp"),
+      //     )
+      //     .catch(() => makeCmp()),
+      // ]);
     },
 
     toggle(pin: Pin, i: number | undefined) {
@@ -487,18 +452,9 @@ export function makeChipStore(
       dispatch.current({ action: "updateChip" });
     },
 
-    async useBuiltin(doUseBuiltin = true, oldHdl?: string) {
-      if (!doUseBuiltin) {
-        if (!builtinOnly) {
-          usingBuiltin = false;
-        }
-        await this.loadChip(project, chipName);
-        return;
-      }
-      if (!builtinOnly) {
-        usingBuiltin = true;
-      }
-      const builtinName = chipName;
+    async loadBuiltin() {
+      const builtinName = storage["/chip/chip"];
+      console.log(`loading builtin ${builtinName}`);
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
         setStatus(
@@ -506,49 +462,48 @@ export function makeChipStore(
         );
         return;
       }
-
-      // Save hdl code that will be overwritten by the switch
-      if (oldHdl) {
-        await this.saveChip(oldHdl, project, chipName);
-      }
-
-      const hdl = await getBuiltinCode(project, builtinName);
-      dispatch.current({ action: "setFiles", payload: { hdl } });
+      // dispatch.current({ action: "setFiles", payload: { hdl } });
       this.replaceChip(Ok(nextChip));
     },
 
-    async initialize() {
-      await this.setChip(chipName, project);
+    async toggleBuiltin() {
+      usingBuiltin = !usingBuiltin;
+      dispatch.current({ action: "toggleBuiltin" });
+      if (usingBuiltin) {
+        await this.loadBuiltin();
+      } else {
+        await this.compileChip(backupHdl);
+      }
     },
+
+    // async initialize() {
+    //   await this.setChip(chipName, project);
+    // },
 
     compileTest(file: string) {
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
-
       if (isErr(tst)) {
         setStatus(`Failed to parse test ${Err(tst).message}`);
         invalid = true;
         return false;
       }
-
       test = ChipTest.from(Ok(tst), setStatus).with(chip).reset();
-      test.setFileSystem(fs);
+      // test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
       return true;
     },
 
     async runTest(file: string) {
-      if (!this.compileTest(file)) {
-        return;
-      }
-      dispatch.current({ action: "testRunning" });
-
-      fs.pushd("/samples");
-      await test.run();
-      fs.popd();
-
-      dispatch.current({ action: "updateTestStep" });
-      dispatch.current({ action: "testFinished" });
+      // if (!this.compileTest(file)) {
+      //   return;
+      // }
+      // dispatch.current({ action: "testRunning" });
+      // fs.pushd("/samples");
+      // await test.run();
+      // fs.popd();
+      // dispatch.current({ action: "updateTestStep" });
+      // dispatch.current({ action: "testFinished" });
     },
 
     tick(): Promise<boolean> {
@@ -566,32 +521,94 @@ export function makeChipStore(
     },
 
     async resetFile() {
-      const { ChipProjects } = await import("@nand2tetris/projects/full.js");
-      const template = (
-        ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-      )[chipName][`${chipName}.hdl`];
-      dispatch.current({ action: "setFiles", payload: { hdl: template } });
+      // const { ChipProjects } = await import("@nand2tetris/projects/full.js");
+      // const template = (
+      //   ChipProjects[project].CHIPS as Record<string, Record<string, string>>
+      // )[chipName][`${chipName}.hdl`];
+      // dispatch.current({ action: "setFiles", payload: { hdl: template } });
     },
 
     async getProjectFiles() {
-      return await Promise.all(
-        CHIP_PROJECTS[project].map((chip) => ({
-          name: `${chip}.hdl`,
-          content: fs.readFile(`/projects/${project}/${chip}/${chip}.hdl`),
-        })),
-      );
+      // return await Promise.all(
+      //   CHIP_PROJECTS[project].map((chip) => ({
+      //     name: `${chip}.hdl`,
+      //     content: fs.readFile(`/projects/${project}/${chip}/${chip}.hdl`),
+      //   })),
+      // );
+    },
+
+    // TODO: optimize. Maybe create a mapping in initialization
+    async findPath(
+      fs: FileSystem,
+      name: string,
+    ): Promise<string[] | undefined> {
+      if (!fs) return;
+
+      async function findIn(
+        fs: FileSystem,
+        path: string[] = [],
+      ): Promise<string[] | undefined> {
+        const fullPath = path.length == 0 ? "." : path.join("/");
+        for (const entry of await fs.scandir(fullPath)) {
+          if (entry.isDirectory()) {
+            const found = await findIn(fs, [...path, entry.name]);
+            if (found) {
+              return [...path, ...found];
+            }
+          } else {
+            if (entry.name == name) {
+              return [...path, name];
+            }
+          }
+        }
+        return;
+      }
+
+      return await findIn(fs);
+    },
+
+    // TODO: currently doesn't support 2 chips with the same name in different projects
+    async loadLocalChip(handle: FileSystemFileHandle) {
+      if (!fs) return;
+      const path = await this.findPath(fs, handle.name);
+      if (!path) {
+        // TODO: turn into warning?
+        setStatus(`${handle.name} is not inside the projects directory`);
+        return;
+      }
+
+      usingBuiltin = false;
+
+      const name = handle.name.replace(".hdl", "");
+      const hdl = await fs.readFile(path.join("/"));
+
+      hdlPath = path.join("/");
+      dispatch.current({ action: "setChip", payload: name });
+      dispatch.current({ action: "setFiles", payload: { hdl } });
+      await this.compileChip(hdl, name);
+
+      // TODO: replace this with initializeTests for chips with multiple tests
+      await this.loadTest(path[0], name);
+    },
+
+    async saveChip(hdl: string) {
+      dispatch.current({ action: "setFiles", payload: { hdl } });
+      if (fs && hdlPath) {
+        await fs.writeFile(hdlPath, hdl);
+      }
     },
   };
 
   const initialState: ChipPageState = (() => {
     const controls: ControlsState = {
-      project,
+      project: "01",
       chips,
-      chipName,
+      chipName: "",
       tests,
       testName: "",
-      hasBuiltin: REGISTRY.has(chipName),
-      builtinOnly: isBuiltinOnly(project, chipName),
+      // hasBuiltin: false,
+      // builtinOnly: false,
+      usingBuiltin: false,
       runningTest: false,
       error: undefined,
       visualizationParameters: new Set(),
@@ -606,6 +623,7 @@ export function makeChipStore(
         cmp: "",
         tst: "",
         out: "",
+        backupHdl: "",
       },
       sim,
       config: { speed: 2 },
@@ -616,13 +634,13 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { localFs, setStatus, storage } = useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeChipStore(fs, setStatus, storage, dispatch),
-    [fs, setStatus, storage, dispatch],
+    () => makeChipStore(localFs, setStatus, storage, dispatch),
+    [localFs, setStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

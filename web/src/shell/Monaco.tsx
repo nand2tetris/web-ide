@@ -1,8 +1,5 @@
-import MonacoEditor, { useMonaco, type OnMount } from "@monaco-editor/react";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import MonacoEditor, { type OnMount } from "@monaco-editor/react";
+import { CompilationError, Span } from "@nand2tetris/simulator/languages/base";
 import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
@@ -95,7 +92,7 @@ export const Monaco = ({
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
-  const monaco = useMonaco();
+  const monaco = useRef<typeof monacoT>();
   const [height, setHeight] = useState(0);
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
@@ -133,7 +130,7 @@ export const Monaco = ({
       newHighlight = highlight.current;
     }
     decorations.current = makeDecorations(
-      monaco,
+      monaco.current || null,
       editor.current,
       // I'm not sure why this makes things work, but it is load bearing.
       // Removing the empty span will cause the initial first-statement
@@ -170,7 +167,8 @@ export const Monaco = ({
 
   // Set options when mounting
   const onMount: OnMount = useCallback(
-    (ed) => {
+    (ed, mon) => {
+      monaco.current = mon;
       editor.current = ed;
       editor.current?.updateOptions({
         fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
@@ -227,19 +225,19 @@ export const Monaco = ({
 
   // Add error markers on parse failure
   useEffect(() => {
-    if (editor.current === undefined) return;
-    if (monaco === null) return;
+    if (!editor.current) return;
+    if (!monaco.current) return;
     const model = editor.current.getModel();
     if (model === null) return;
     if (error === undefined || error.span === undefined) {
-      monaco.editor.setModelMarkers(model, language, []);
+      monaco.current.editor.setModelMarkers(model, language, []);
       return;
     }
 
     const startPos = model.getPositionAt(error.span.start);
     const endPos = model.getPositionAt(error.span.end);
 
-    monaco.editor.setModelMarkers(model, language, [
+    monaco.current.editor.setModelMarkers(model, language, [
       {
         message: error.message,
         startColumn: startPos.column,
@@ -257,14 +255,14 @@ export const Monaco = ({
   };
 
   return (
-    <>
-      <MonacoEditor
-        value={value}
-        onChange={onValueChange}
-        language={language}
-        onMount={onMount}
-        height={dynamicHeight ? height : undefined}
-      />
-    </>
+    <MonacoEditor
+      value={value}
+      onChange={onValueChange}
+      language={language}
+      onMount={onMount}
+      height={dynamicHeight ? height : undefined}
+    />
   );
 };
+
+export default Monaco;

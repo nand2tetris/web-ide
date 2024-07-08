@@ -2,8 +2,6 @@ name: Feature Request
 description: Request to add or improve a feature
 title: "[feature]: "
 labels: ["feature", "triage"]
-assignees:
-  - davidsouther
 body:
   - type: markdown
     attributes:

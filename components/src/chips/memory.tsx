@@ -27,11 +27,6 @@ import VirtualScroll, { VirtualScrollSettings } from "../virtual_scroll.js";
 
 const ITEM_HEIGHT = 34;
 
-interface CellData {
-  value: number;
-  wasChanged: boolean;
-}
-
 export const MemoryBlock = ({
   memory,
   jmp = { value: 0 },
@@ -69,21 +64,18 @@ export const MemoryBlock = ({
     [memory.size, jmp],
   );
   const get = useCallback(
-    (pos: number, count: number): [number, CellData][] =>
+    (pos: number, count: number): [number, number][] =>
       memory
         .range(pos + offset, pos + offset + count)
-        .map((v, i) => [
-          i + pos + offset,
-          { value: v, wasChanged: memory.wasChanged(i + pos + offset) },
-        ]),
+        .map((v, i) => [i + pos + offset, v]),
     [memory],
   );
 
   const row = useCallback(
-    ([i, v]: [number, CellData]) => (
+    ([i, v]: [number, number]) => (
       <MemoryCell
         index={i}
-        value={v.wasChanged ? format(v.value) : ""}
+        value={format(v)}
         label={(cellLabels?.[i] ?? "").padStart(
           cellLabels ? Math.max(...cellLabels.map((label) => label.length)) : 0,
         )}
@@ -100,7 +92,7 @@ export const MemoryBlock = ({
   );
 
   return (
-    <VirtualScroll<[number, CellData], ReactNode>
+    <VirtualScroll<[number, number], ReactNode>
       settings={settings}
       get={get}
       row={row}

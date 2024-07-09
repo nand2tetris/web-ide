@@ -1,3 +1,8 @@
+<<<<<<< Updated upstream
 projects/src/samples/project_06/04_pong_asm.ts
 web/public/pico.min.css
+=======
+simulator/src/projects/project_06/04_pong.ts
+simulator/src/projects/project_06/04_pong_asm.ts
+>>>>>>> Stashed changes
 web/src/locales

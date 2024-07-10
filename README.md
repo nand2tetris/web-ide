@@ -18,7 +18,7 @@ The parts of the user guide that describe the UI may be out of sync with the cod
 
 Install the CLI tool:
 
-    npm run build && npm i -g cli
+    npm run build && npm i -g ./cli
 
 Run the CLI:
 

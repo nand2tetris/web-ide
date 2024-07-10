@@ -20,13 +20,13 @@ test.describe("chip", () => {
   });
 
   test("simple chip", async ({ page, monaco }) => {
-    await page.goto("chip");
+    await page.goto("chip?monaco=false");
     await page.getByRole("button", { name: "Accept" }).click();
     await page.getByTestId("project-picker").selectOption("Project 1");
     await page.getByTestId("chip-picker").selectOption("Not");
 
-    await monaco.write(NOT);
-    await page.screenshot({ path: "not.png" });
+    await monaco.toggleMonaco();
+    await monaco.write(NOT, "hdl");
     await expect(page.getByText("HDL code: No syntax errors")).toBeVisible();
 
     await page.getByRole("button", { name: "Run ️⏩" }).click();

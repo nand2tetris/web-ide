@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/macro";
 import { type Grammar } from "ohm-js";
-import { CSSProperties, useContext, useEffect, useState } from "react";
+import { CSSProperties, lazy, Suspense, useContext, useState } from "react";
 import { AppContext } from "../App.context";
 
 import {
@@ -9,11 +9,8 @@ import {
 } from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
-import type { Monaco as MonacoT } from "./Monaco";
 
-let Monaco: typeof MonacoT = (
-  ..._params: Parameters<typeof MonacoT>
-): JSX.Element => <></>;
+const Monaco = lazy(() => import("./Monaco"));
 
 export const ErrorPanel = ({ error }: { error?: CompilationError }) => {
   return error ? (
@@ -97,37 +94,29 @@ export const Editor = ({
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { monaco } = useContext(AppContext);
-  const [monacoLoaded, setMonacoLoaded] = useState(false);
-  useEffect(() => {
-    const loadMonaco = async () => {
-      if (monaco.canUse && monaco.wants && !monacoLoaded) {
-        Monaco = (await import("./Monaco")).Monaco;
-        setMonacoLoaded(true);
-      }
-    };
-    loadMonaco();
-  }, [monaco, monacoLoaded, setMonacoLoaded]);
 
   return (
     <div
       className={`Editor ${dynamicHeight ? "dynamic-height" : ""} ${className}`}
       style={style}
     >
-      {monaco.canUse && monaco.wants && monacoLoaded ? (
-        <Monaco
-          value={value}
-          onChange={onChange}
-          onCursorPositionChange={onCursorPositionChange}
-          language={language}
-          error={error}
-          disabled={disabled}
-          highlight={highlight}
-          highlightType={highlightType}
-          customDecorations={customDecorations}
-          dynamicHeight={dynamicHeight}
-          alwaysRecenter={alwaysRecenter}
-          lineNumberTransform={lineNumberTransform}
-        />
+      {monaco.canUse && monaco.wants ? (
+        <Suspense fallback="Loading...">
+          <Monaco
+            value={value}
+            onChange={onChange}
+            onCursorPositionChange={onCursorPositionChange}
+            language={language}
+            error={error}
+            disabled={disabled}
+            highlight={highlight}
+            highlightType={highlightType}
+            customDecorations={customDecorations}
+            dynamicHeight={dynamicHeight}
+            alwaysRecenter={alwaysRecenter}
+            lineNumberTransform={lineNumberTransform}
+          />
+        </Suspense>
       ) : (
         <>
           <Textarea

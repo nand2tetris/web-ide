@@ -14,8 +14,13 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   private clock = Clock.get();
 
-  static from(tst: Tst, setStatus?: Action<string>, path?: string): ChipTest {
-    const test = new ChipTest(setStatus, path);
+  static from(
+    tst: Tst,
+    setStatus?: Action<string>,
+    compareTo?: Action<string>,
+    path?: string,
+  ): ChipTest {
+    const test = new ChipTest(setStatus, compareTo, path);
     return fill(test, tst);
   }
 

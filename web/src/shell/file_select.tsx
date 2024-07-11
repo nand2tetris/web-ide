@@ -299,13 +299,15 @@ export const FilePicker = () => {
           {!localFsRoot && filePicker.allowLocal && (
             <button onClick={loadLocal}>Select local file</button>
           )}
-          <button
-            onClick={downloadFolder}
-            data-tooltip="Download all files in this folder into a zip"
-            disabled={chosen == "" || chosen.includes(".")}
-          >
-            Download
-          </button>
+          {!localFsRoot && (
+            <button
+              onClick={downloadFolder}
+              data-tooltip="Download all files in this folder into a zip"
+              disabled={chosen == "" || chosen.includes(".")}
+            >
+              Download
+            </button>
+          )}
         </footer>
       </article>
     </dialog>

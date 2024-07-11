@@ -30,9 +30,9 @@ import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 
 export const Chip = () => {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, localFsRoot } = useContext(BaseContext);
   const { stores, setTool } = useContext(PageContext);
-  const { tracking } = useContext(AppContext);
+  const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
@@ -163,8 +163,13 @@ export const Chip = () => {
   };
 
   const loadFile = async () => {
-    const [handle] = await window.showOpenFilePicker();
-    actions.loadLocalChip(handle);
+    if (localFsRoot) {
+      const [handle] = await window.showOpenFilePicker();
+      actions.loadLocalChip(handle);
+    } else {
+      const path = await filePicker.select({ suffix: "hdl" });
+      actions.loadChip(path);
+    }
   };
 
   // const selectors = (

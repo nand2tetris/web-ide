@@ -31,6 +31,7 @@ export const Settings = () => {
 
   const writeLocale = useMemo(
     () => (locale: string) => {
+      if (localFsRoot) return;
       i18n.activate(locale);
       fs.writeFile("/locale", locale);
     },
@@ -38,6 +39,7 @@ export const Settings = () => {
   );
 
   useEffect(() => {
+    if (localFsRoot) return;
     fs.readFile("/locale")
       .then((locale) => i18n.activate(locale))
       .catch(() => writeLocale("en"));

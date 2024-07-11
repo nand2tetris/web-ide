@@ -46,6 +46,7 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (baseContext.localFsRoot) return;
     fs.stat("/projects/01/Not/Not.hdl").catch(async () => {
       await loaders.resetFiles(fs);
     });

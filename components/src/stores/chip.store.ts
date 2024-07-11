@@ -147,9 +147,8 @@ export function makeChipStore(
   // const dropdowns = findDropdowns(storage);
   // const { chips } = dropdowns;
   let _chipName = "";
-  let _project = "";
+  let _dir = "";
   let chip = new Low();
-  let hdlPath: string;
   let backupHdl = "";
   let tests: string[] = [];
   let test = new ChipTest();
@@ -209,9 +208,9 @@ export function makeChipStore(
 
     setChip(
       state: ChipPageState,
-      { chipName, project }: { chipName: string; project: string },
+      { chipName, dir }: { chipName: string; dir: string },
     ) {
-      _project = project;
+      _dir = dir;
       _chipName = chipName;
       state.controls.chipName = chipName;
       state.title = `${chipName}.hdl`;
@@ -350,7 +349,7 @@ export function makeChipStore(
           await this.compileChip(hdl);
         }
         if (tst) {
-          this.compileTest(tst, `/${_project}`);
+          this.compileTest(tst, `/${_dir}`);
         }
       } catch (e) {
         setStatus(display(e));
@@ -395,18 +394,9 @@ export function makeChipStore(
       dispatch.current({ action: "updateTestStep" });
     },
 
-    async loadChip(project: string, name: string) {
-      // storage["/chip/chip"] = name;
-      // const fsName = (ext: string) =>
-      //   `/projects/${project}/${name}/${name}.${ext}`;
-      // const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
-      // dispatch.current({ action: "setFiles", payload: { hdl } });
-      // await this.compileChip(hdl);
-    },
-
-    async initializeTests(project: string, chip: string) {
+    async initializeTests(dir: string, chip: string) {
       tests = TEST_NAMES[chip] ?? [];
-      this.loadTest(tests[0] ?? chip, project);
+      this.loadTest(tests[0] ?? chip, dir);
 
       // tests = (await fs.scandir(`/projects/${project}/${name}`))
       //   .filter((file) => file.name.endsWith(".tst"))
@@ -416,16 +406,16 @@ export function makeChipStore(
       // }
     },
 
-    async loadTest(name: string, project?: string) {
+    async loadTest(name: string, dir?: string) {
       if (!fs) return;
       try {
-        project ??= _project;
-        const tst = await fs.readFile(`/${project}/${name}.tst`);
-        const cmp = await fs.readFile(`/${project}/${name}.cmp`);
+        dir ??= _dir;
+        const tst = await fs.readFile(`${dir}/${name}.tst`);
+        const cmp = await fs.readFile(`${dir}/${name}.cmp`);
 
         dispatch.current({ action: "setFiles", payload: { cmp, tst } });
         dispatch.current({ action: "setTest", payload: name });
-        this.compileTest(tst, `/${project}`);
+        this.compileTest(tst, `${dir}`);
       } catch (e) {
         console.error(e);
       }
@@ -582,12 +572,29 @@ export function makeChipStore(
       return await findIn(fs);
     },
 
+    async loadChip(path: string) {
+      usingBuiltin = false;
+
+      // const name = handle.name.replace(".hdl", "");
+      // const path = `/${dir}/${name}.hdl`;
+      const hdl = await fs.readFile(path);
+
+      // hdlPath = path.join("/");
+      const parts = path.split("/");
+      const name = parts.pop()!.replace(".hdl", "");
+      const dir = parts.join("/");
+
+      dispatch.current({
+        action: "setChip",
+        payload: { chipName: name, dir: dir },
+      });
+      dispatch.current({ action: "setFiles", payload: { hdl } });
+      await this.compileChip(hdl, name);
+      await this.initializeTests(dir, name);
+    },
+
     // TODO: currently doesn't support 2 chips with the same name in different projects
     async loadLocalChip(handle: FileSystemFileHandle) {
-      if (!fs) {
-        setStatus("Please configure your project folders in the settings");
-        return;
-      }
       const path = await this.findPath(fs, handle.name);
 
       if (!path) {
@@ -596,25 +603,16 @@ export function makeChipStore(
         return;
       }
 
-      usingBuiltin = false;
+      console.log(path);
 
-      const name = handle.name.replace(".hdl", "");
-      const hdl = await fs.readFile(path.join("/"));
-
-      hdlPath = path.join("/");
-      dispatch.current({
-        action: "setChip",
-        payload: { chipName: name, project: path[0] },
-      });
-      dispatch.current({ action: "setFiles", payload: { hdl } });
-      await this.compileChip(hdl, name);
-      await this.initializeTests(path[0], name);
+      await this.loadChip(`/${path.join("/")}`);
     },
 
     async saveChip(hdl: string) {
       dispatch.current({ action: "setFiles", payload: { hdl } });
-      if (fs && hdlPath) {
-        await fs.writeFile(hdlPath, hdl);
+      const path = `${_dir}/${_chipName}.hdl`;
+      if (fs && path) {
+        await fs.writeFile(path, hdl);
       }
     },
   };
@@ -654,13 +652,13 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { localFs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, storage } = useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeChipStore(localFs, setStatus, storage, dispatch),
-    [localFs, setStatus, storage, dispatch],
+    () => makeChipStore(fs, setStatus, storage, dispatch),
+    [fs, setStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

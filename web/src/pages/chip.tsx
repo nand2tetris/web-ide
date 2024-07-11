@@ -233,7 +233,7 @@ export const Chip = () => {
         }}
         grammar={HDL.parser}
         language={"hdl"}
-        disabled={state.controls.usingBuiltin}
+        disabled={state.controls.usingBuiltin || state.controls.chipName == ""}
       />
     </Panel>
   );
@@ -318,21 +318,23 @@ export const Chip = () => {
       {state.sim.invalid ? (
         <Trans>Syntax errors in the HDL code or test</Trans>
       ) : (
-        <>
-          <PinContext.Provider value={pinResetDispatcher}>
-            <FullPinout
-              sim={state.sim}
-              toggle={actions.toggle}
-              setInputValid={setInputValid}
-              hideInternal={state.controls.usingBuiltin}
-            />
-          </PinContext.Provider>
-          {visualizations.length > 0 && (
-            <Accordian summary={<Trans>Visualization</Trans>} open={true}>
-              <main>{visualizations.map(([_, v]) => v)}</main>
-            </Accordian>
-          )}
-        </>
+        state.controls.chipName != "" && (
+          <>
+            <PinContext.Provider value={pinResetDispatcher}>
+              <FullPinout
+                sim={state.sim}
+                toggle={actions.toggle}
+                setInputValid={setInputValid}
+                hideInternal={state.controls.usingBuiltin}
+              />
+            </PinContext.Provider>
+            {visualizations.length > 0 && (
+              <Accordian summary={<Trans>Visualization</Trans>} open={true}>
+                <main>{visualizations.map(([_, v]) => v)}</main>
+              </Accordian>
+            )}
+          </>
+        )
       )}
     </Panel>
   );

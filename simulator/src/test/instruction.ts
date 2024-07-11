@@ -241,6 +241,34 @@ export class TestLoadInstruction implements TestInstruction {
   }
 }
 
+export class TestCompareToInstruction implements TestInstruction {
+  constructor(readonly file?: string) {}
+
+  async do(test: Test) {
+    if (this.file) {
+      await test.compareTo(this.file);
+    }
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestOutputFileInstruction implements TestInstruction {
+  constructor(readonly file?: string) {}
+
+  async do(test: Test) {
+    if (this.file) {
+      test.outputFile(this.file);
+    }
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
 export class TestBreakpointInstruction implements TestInstruction {
   constructor(
     readonly variable: string,

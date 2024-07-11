@@ -410,9 +410,10 @@ export function makeChipStore(
       try {
         dir ??= _dir;
         const tst = await fs.readFile(`${dir}/${name}.tst`);
-        const cmp = await fs.readFile(`${dir}/${name}.cmp`);
 
-        dispatch.current({ action: "setFiles", payload: { cmp, tst } });
+        // TODO: if not using local fs, either load cmp file here or add compare-to inst to local storage test scripts
+
+        dispatch.current({ action: "setFiles", payload: { tst } });
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, `${dir}`);
       } catch (e) {
@@ -492,7 +493,17 @@ export function makeChipStore(
         invalid = true;
         return false;
       }
-      test = ChipTest.from(Ok(tst), setStatus, path).with(chip).reset();
+      test = ChipTest.from(
+        Ok(tst),
+        setStatus,
+        async (file) => {
+          const cmp = await fs.readFile(`${_dir}/${file}`);
+          dispatch.current({ action: "setFiles", payload: { cmp } });
+        },
+        path,
+      )
+        .with(chip)
+        .reset();
       test.setFileSystem(fs);
       dispatch.current({ action: "updateTestStep" });
       return true;

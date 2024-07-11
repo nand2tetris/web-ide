@@ -16,10 +16,17 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _log = "";
   fs: FileSystem = new FileSystem();
   protected doEcho?: (status: string) => void;
+  protected doCompareTo?: (status: string) => void;
   protected path?: string;
+  protected outputFileName?: string;
 
-  constructor(doEcho?: (status: string) => void, path?: string) {
+  constructor(
+    doEcho?: (status: string) => void,
+    doCompareTo?: (file: string) => void,
+    path?: string,
+  ) {
     this.doEcho = doEcho;
+    this.doCompareTo = doCompareTo;
     this.path = path;
   }
 
@@ -44,10 +51,10 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
     return undefined;
   }
   async compareTo(_filename: string): Promise<void> {
-    return undefined;
+    this.doCompareTo?.(_filename);
   }
   outputFile(_filename: string): void {
-    return undefined;
+    this.outputFileName = _filename;
   }
 
   private createOutputs(params: OutputParams[]): Output[] {
@@ -149,6 +156,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   output() {
     const values = this._outputList.map((output) => output.print(this));
     this._log += `|${values.join("|")}|\n`;
+    // if (this.outputFileName) {
+    //   this.fs.writeFile(`${this.path ?? ""}/${this.outputFileName}`, this._log);
+    // }
   }
 
   header() {

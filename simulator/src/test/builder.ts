@@ -17,10 +17,12 @@ import {
   Condition,
   TestBreakInstruction,
   TestClearEchoInstruction,
+  TestCompareToInstruction,
   TestEchoInstruction,
   TestInstruction,
   TestLoadInstruction,
   TestLoadROMInstruction,
+  TestOutputFileInstruction,
   TestOutputInstruction,
   TestOutputListInstruction,
   TestRepeatInstruction,
@@ -67,8 +69,9 @@ function makeInstruction(inst: TstOperation) {
     case "load":
       return new TestLoadInstruction(inst.file);
     case "output-file":
+      return new TestOutputFileInstruction(inst.file);
     case "compare-to":
-      return undefined;
+      return new TestCompareToInstruction(inst.file);
     default:
       checkExhaustive(op, `Unknown tst operation ${op}`);
   }

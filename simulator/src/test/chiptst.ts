@@ -16,9 +16,10 @@ export class ChipTest extends Test<ChipTestInstruction> {
   static from(
     tst: Tst,
     setStatus?: (status: string) => void,
+    compareTo?: (status: string) => void,
     path?: string,
   ): ChipTest {
-    const test = new ChipTest(setStatus, path);
+    const test = new ChipTest(setStatus, compareTo, path);
     return fill(test, tst);
   }
 

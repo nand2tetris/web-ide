@@ -163,13 +163,13 @@ export const Chip = () => {
   };
 
   const loadFile = async () => {
-    if (localFsRoot) {
-      const [handle] = await window.showOpenFilePicker();
-      actions.loadLocalChip(handle);
-    } else {
-      const path = await filePicker.select({ suffix: "hdl" });
-      actions.loadChip(path);
-    }
+    // if (localFsRoot) {
+    //   const [handle] = await window.showOpenFilePicker();
+    //   actions.loadLocalChip(handle);
+    // } else {
+    const path = await filePicker.select({ suffix: "hdl" });
+    actions.loadChip(path);
+    // }
   };
 
   // const selectors = (

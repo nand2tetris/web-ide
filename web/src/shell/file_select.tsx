@@ -247,38 +247,40 @@ export const FilePicker = () => {
           <div>
             <b>{fs.cwd()}</b>
           </div>
-          {fs.cwd() !== "/" && (
-            <FileEntry
-              stats={{
-                isDirectory() {
-                  return true;
-                },
-                isFile() {
-                  return false;
-                },
-                name: "..",
-              }}
-              onDoubleClick={() => cd("..")}
-            />
-          )}
-          {files.map((file) => (
-            <FileEntry
-              key={file.name}
-              stats={file}
-              highlighted={file.name === chosen.split("/").pop()}
-              onClick={() => select(file.name)}
-              onDoubleClick={() => {
-                if (file.isDirectory()) {
-                  cd(file.name);
+          <div className="flex wrap files-container">
+            {fs.cwd() !== "/" && (
+              <FileEntry
+                stats={{
+                  isDirectory() {
+                    return true;
+                  },
+                  isFile() {
+                    return false;
+                  },
+                  name: "..",
+                }}
+                onDoubleClick={() => cd("..")}
+              />
+            )}
+            {files.map((file) => (
+              <FileEntry
+                key={file.name}
+                stats={file}
+                highlighted={file.name === chosen.split("/").pop()}
+                onClick={() => select(file.name)}
+                onDoubleClick={() => {
+                  if (file.isDirectory()) {
+                    cd(file.name);
+                  }
+                }}
+                disabled={
+                  file.name.includes(".") &&
+                  filePicker.suffix != undefined &&
+                  !isFileValid(file.name, filePicker.suffix)
                 }
-              }}
-              disabled={
-                file.name.includes(".") &&
-                filePicker.suffix != undefined &&
-                !isFileValid(file.name, filePicker.suffix)
-              }
-            />
-          ))}
+              />
+            ))}
+          </div>
         </main>
         <footer>
           <button

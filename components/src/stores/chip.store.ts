@@ -583,13 +583,13 @@ export function makeChipStore(
       const name = parts.pop()!.replace(".hdl", "");
       const dir = parts.join("/");
 
+      await this.compileChip(hdl, name);
+      await this.initializeTests(dir, name);
       dispatch.current({
         action: "setChip",
         payload: { chipName: name, dir: dir },
       });
       dispatch.current({ action: "setFiles", payload: { hdl } });
-      await this.compileChip(hdl, name);
-      await this.initializeTests(dir, name);
     },
 
     // TODO: currently doesn't support 2 chips with the same name in different projects

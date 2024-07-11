@@ -263,7 +263,43 @@ class ChipBuilder {
     return Ok();
   }
 
+  private checkLoops(
+    part: Part,
+    partChip: Chip,
+  ): Result<void, CompilationError> {
+    const ins = new Set<string>();
+    const outs = new Set<string>();
+
+    let loop: string | undefined = undefined;
+    for (const { lhs, rhs } of part.wires) {
+      if (partChip.isInPin(lhs.pin)) {
+        if (outs.has(rhs.pin)) {
+          loop = rhs.pin;
+          break;
+        } else {
+          ins.add(rhs.pin);
+        }
+      } else if (partChip.isOutPin(lhs.pin)) {
+        if (ins.has(rhs.pin)) {
+          loop = rhs.pin;
+          break;
+        } else {
+          outs.add(rhs.pin);
+        }
+      }
+    }
+    if (loop) {
+      return Err(createError(`Looping wire ${loop}`, part.span));
+    }
+    return Ok();
+  }
+
   private wirePart(part: Part, partChip: Chip): Result<void, CompilationError> {
+    const result = this.checkLoops(part, partChip);
+    if (isErr(result)) {
+      return result;
+    }
+
     const connections: Connection[] = [];
     this.inPins.clear();
     for (const { lhs, rhs } of part.wires) {

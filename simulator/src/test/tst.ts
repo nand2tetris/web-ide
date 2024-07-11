@@ -16,10 +16,12 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
-  protected doEcho?: Action<string>;
+  protected doEcho?: (status: string) => void;
+  protected path?: string;
 
-  constructor(doEcho?: Action<string>) {
+  constructor(doEcho?: (status: string) => void, path?: string) {
     this.doEcho = doEcho;
+    this.path = path;
   }
 
   setFileSystem(fs: FileSystem): this {

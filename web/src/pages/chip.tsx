@@ -230,16 +230,18 @@ export const Chip = () => {
             HDL
           </div>
           {/* <fieldset> */}
-          <label>
-            <input
-              type="checkbox"
-              role="switch"
-              checked={state.controls.usingBuiltin}
-              onChange={toggleUseBuiltin}
-              // disabled={state.controls.usingBuiltin}
-            />
-            <Trans>Builtin</Trans>
-          </label>
+          {state.controls.chipName != "" && (
+            <label>
+              <input
+                type="checkbox"
+                role="switch"
+                checked={state.controls.usingBuiltin}
+                onChange={toggleUseBuiltin}
+                // disabled={state.controls.usingBuiltin}
+              />
+              <Trans>Builtin</Trans>
+            </label>
+          )}
           {/* </fieldset> */}
           <fieldset role="group">
             <button onClick={loadFile}>📂</button>
@@ -369,12 +371,13 @@ export const Chip = () => {
     <TestPanel
       runner={runner}
       disabled={state.sim.invalid}
-      showLoad={false}
+      // showLoad={false}
       prefix={
         state.controls.tests.length > 1 ? (
           <select
             value={state.controls.testName}
             onChange={({ target: { value } }) => {
+              actions.loadTest(value);
               // actions.setTest(value);
             }}
             data-testid="test-picker"

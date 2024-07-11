@@ -14,8 +14,8 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   private clock = Clock.get();
 
-  static from(tst: Tst, setStatus?: Action<string>): ChipTest {
-    const test = new ChipTest(setStatus);
+  static from(tst: Tst, setStatus?: Action<string>, path?: string): ChipTest {
+    const test = new ChipTest(setStatus, path);
     return fill(test, tst);
   }
 
@@ -74,7 +74,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
   }
 
   override async loadROM(filename: string) {
-    await this.chip.load(this.fs, filename);
+    await this.chip.load(this.fs, [this.path ?? "", filename].join("/"));
   }
 
   override async run() {

@@ -23,9 +23,13 @@ yargs(hideBin(process.argv))
           describe:
             "When set, look for the java IDE jars in this path and compare both runs.",
         }),
-    (argv) => {
+    async (argv) => {
       console.log("grade", argv.directory, "nand2tetris grader!");
-      main(argv.directory, argv.java_ide);
+      const exitCodePromise = main(argv.directory, argv.java_ide);
+      const exitCode = await exitCodePromise;
+      if (exitCode) {
+        process.exit(exitCode);
+      }
     },
   )
   .command(

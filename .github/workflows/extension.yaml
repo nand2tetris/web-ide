@@ -5,6 +5,8 @@ on:
   push:
     branches: [main]
     paths:
+      - components
+      - projects
       - simulator
       - extension
 
@@ -30,7 +32,7 @@ jobs:
           key: ${{ hashFiles('**/package-lock.json') }}
 
       - name: Install
-        run: npm install
+        run: npm clean-install
 
       - name: CD
         run: |

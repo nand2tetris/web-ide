@@ -51,19 +51,19 @@ export async function main(folder = process.cwd(), java_ide = "") {
   const tests = await runTests(files, loadAssignment(fs), fs, ideRunner);
 
   if (!tests.length) {
-    console.log('No tests have run!');
+    console.log("No tests have run!");
     return 1;
   }
   let failsCount = 0;
   for (const test of tests) {
-    if(!test.pass) {
+    if (!test.pass) {
       failsCount++;
     }
     console.log(
       `Test ${test.name}: ${test.pass ? `Passed` : `Failed (${test.out})`}`,
     );
     if (test.shadow) {
-      if(test.shadow.code !== 0){
+      if (test.shadow.code !== 0) {
         failsCount++;
       }
       console.log(

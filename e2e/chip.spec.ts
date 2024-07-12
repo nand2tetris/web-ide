@@ -29,7 +29,7 @@ test.describe("chip", () => {
     await monaco.write(NOT, "hdl");
     await expect(page.getByText("HDL code: No syntax errors")).toBeVisible();
 
-    await page.getByRole("button", { name: "Run ️⏩" }).click();
+    await page.getByTestId("runbar-run-pause").click();
     await expect(
       page.getByText(
         "Simulation successful: The output file is identical to the compare file",

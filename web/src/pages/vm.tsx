@@ -132,35 +132,41 @@ const VM = () => {
     };
   }, [actions, dispatch]);
 
-  const uploadRef = useRef<HTMLInputElement>(null);
-
   const load = async () => {
-    const target = await filePicker.select({
-      suffix: ".vm",
+    const target = await filePicker.selectAllowLocal({
+      suffix: "vm",
       allowFolders: true,
     });
 
-    const files: VmFile[] = [];
+    let files: VmFile[] = [];
     let title = "";
-    console.log(target);
-    if (target.includes(".")) {
-      // single file
-      files.push({
-        name: target.replace(".vm", ""),
-        content: await fs.readFile(target),
-      });
-      title = target.split("/").pop() ?? "";
-    } else {
-      // folder
-      for (const file of (await fs.scandir(target)).filter(
-        (entry) => entry.isFile() && entry.name.endsWith(".vm"),
-      )) {
+
+    if (typeof target == "string") {
+      if (target.includes(".")) {
+        // single file
         files.push({
-          name: file.name.replace(".vm", ""),
-          content: await fs.readFile(`${target}/${file.name}`),
+          name: target.replace(".vm", ""),
+          content: await fs.readFile(target),
         });
+        title = target.split("/").pop() ?? "";
+      } else {
+        // folder
+        for (const file of (await fs.scandir(target)).filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".vm"),
+        )) {
+          files.push({
+            name: file.name.replace(".vm", ""),
+            content: await fs.readFile(`${target}/${file.name}`),
+          });
+        }
+        title = `${target.split("/").pop()} / *.vm`;
       }
-      title = `${target.split("/").pop()} / *.vm`;
+    } else {
+      files = target.filter((file) => file.name.endsWith(".vm"));
+    }
+
+    if (files.length == 0) {
+      return;
     }
 
     dispatch.current({ action: "setTitle", payload: title });

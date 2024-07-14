@@ -114,7 +114,7 @@ export const CPU = () => {
       suffix: [".asm", ".hack"],
     });
     const title =
-      typeof file == "string" ? file.split("/").pop() ?? "" : file.name;
+      typeof file == "string" ? file.split("/").pop() ?? "" : file[0].name;
     dispatch.current({ action: "setTitle", payload: title });
     if (typeof file === "string") {
       setPath(file);
@@ -124,7 +124,7 @@ export const CPU = () => {
       };
     } else {
       actions.clearTest();
-      return file;
+      return file[0];
     }
   };
 

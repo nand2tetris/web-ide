@@ -28,10 +28,10 @@ export function useFilePicker() {
 
   const allowLocal = useRef(false);
 
-  const selected = useRef<(v: string | LocalFile) => void>();
+  const selected = useRef<(v: string | LocalFile[]) => void>();
 
   const _select = useCallback(
-    async (options: FilePickerOptions): Promise<string | LocalFile> => {
+    async (options: FilePickerOptions): Promise<string | LocalFile[]> => {
       if (typeof options.suffix === "string") {
         options.suffix = [options.suffix];
       }
@@ -190,14 +190,24 @@ export const FilePicker = () => {
   };
 
   const onLoadLocal = async () => {
-    if (loadRef.current && loadRef.current.files) {
-      const file = loadRef.current.files[0];
-      filePicker[Selected].current?.({
+    if (
+      !loadRef.current ||
+      !loadRef.current.files ||
+      loadRef.current.files.length == 0
+    ) {
+      return;
+    }
+
+    const files: LocalFile[] = [];
+    for (const file of loadRef.current.files) {
+      files.push({
         name: file.name,
         content: await file.text(),
       });
-      filePicker.close();
     }
+
+    filePicker[Selected].current?.(files);
+    filePicker.close();
   };
 
   const downloadRef = useRef<HTMLAnchorElement>(null);
@@ -224,6 +234,7 @@ export const FilePicker = () => {
         ref={loadRef}
         onChange={onLoadLocal}
         style={{ display: "none" }}
+        webkitdirectory={filePicker.allowFolders ? "true" : undefined}
       ></input>
       <article className="file-select flex">
         <header>

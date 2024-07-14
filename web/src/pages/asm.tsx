@@ -83,7 +83,7 @@ export const Asm = () => {
     } else {
       dispatch.current({
         action: "setCmp",
-        payload: { cmp: file.content, name: file.name },
+        payload: { cmp: file[0].content, name: file[0].name },
       });
     }
   };

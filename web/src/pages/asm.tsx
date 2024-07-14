@@ -72,6 +72,22 @@ export const Asm = () => {
     });
   };
 
+  const loadCompare = async () => {
+    const file = await filePicker.selectAllowLocal({ suffix: "hack" });
+    if (typeof file == "string") {
+      const cmp = await fs.readFile(file);
+      dispatch.current({
+        action: "setCmp",
+        payload: { cmp, name: file.split("/").pop() },
+      });
+    } else {
+      dispatch.current({
+        action: "setCmp",
+        payload: { cmp: file.content, name: file.name },
+      });
+    }
+  };
+
   const { setStatus } = useContext(BaseContext);
 
   const downloadAsm = () =>
@@ -283,11 +299,13 @@ export const Asm = () => {
               <Trans>Compare Code</Trans>
               {state.compareName && `: ${state.compareName}`}
             </div>
-            <div>
-              <fieldset role="group">
-                <button onClick={compare}>Compare</button>
-              </fieldset>
-            </div>
+            <fieldset role="group">
+              <button onClick={loadCompare}>📂</button>
+            </fieldset>
+            <div className="flex-1" />
+            <fieldset role="group">
+              <button onClick={compare}>Compare</button>
+            </fieldset>
           </>
         }
       >
@@ -297,11 +315,9 @@ export const Asm = () => {
           highlightType={state.compareError ? "error" : "highlight"}
           alwaysRecenter={false}
           onChange={function (source: string): void {
-            dispatch.current({
-              action: "setCmp",
-              payload: { cmp: source },
-            });
+            return;
           }}
+          disabled={true}
           onCursorPositionChange={(index) => {
             if (index == resultCursorPos.current) {
               return;

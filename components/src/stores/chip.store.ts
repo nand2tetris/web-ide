@@ -347,7 +347,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
       try {
         if (hdl) {
-          await this.compileChip(hdl);
+          await this.compileChip(hdl, _dir, _chipName);
         }
         if (tst) {
           this.compileTest(tst, tstPath ?? `/${_dir}`);
@@ -361,9 +361,9 @@ export function makeChipStore(
       }
     },
 
-    async compileChip(hdl: string, name?: string) {
+    async compileChip(hdl: string, dir?: string, name?: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl, name ?? _chipName);
+      const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
         setStatus(Err(maybeChip).message);
@@ -600,7 +600,7 @@ export function makeChipStore(
       const name = parts.pop()!.replace(".hdl", "");
       const dir = parts.join("/");
 
-      await this.compileChip(hdl, name);
+      await this.compileChip(hdl, dir, name);
       await this.initializeTests(dir, name);
       dispatch.current({
         action: "setChip",

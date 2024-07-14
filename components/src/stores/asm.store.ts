@@ -199,6 +199,7 @@ export function makeAsmStore(
   fs: FileSystem,
   setStatus: (status: string) => void,
   dispatch: MutableRefObject<AsmStoreDispatch>,
+  upgraded: boolean,
 ) {
   const translator = new Translator();
   const highlightInfo: HighlightInfo = {
@@ -348,14 +349,23 @@ export function makeAsmStore(
       animate = value;
     },
 
-    step(): boolean {
+    async step(): Promise<boolean> {
       if (compiled) {
         translating = true;
       }
       translator.step(highlightInfo);
+
       if (animate || translator.done) {
         dispatch.current({ action: "update" });
+
+        if (path && upgraded) {
+          await fs.writeFile(
+            path.replace(".asm", ".hack"),
+            translator.getResult(),
+          );
+        }
       }
+
       if (translator.done) {
         setStatus("Translation done.");
       }
@@ -448,12 +458,12 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus, fs } = useContext(BaseContext);
+  const { setStatus, fs, localFsRoot } = useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeAsmStore(fs, setStatus, dispatch),
+    () => makeAsmStore(fs, setStatus, dispatch, localFsRoot != undefined),
     [setStatus, dispatch, fs],
   );
 

@@ -21,6 +21,7 @@ export const Asm = () => {
   const { filePicker } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, actions, dispatch } = stores.asm;
+  const { fs, localFsRoot } = useContext(BaseContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -151,15 +152,17 @@ export const Asm = () => {
                 />
               )}
             </div>
-            <fieldset role="group">
-              <button
-                data-tooltip="Download"
-                data-placement="left"
-                onClick={downloadAsm}
-              >
-                ⬇️
-              </button>
-            </fieldset>
+            {!localFsRoot && (
+              <fieldset role="group">
+                <button
+                  data-tooltip="Download"
+                  data-placement="left"
+                  onClick={downloadAsm}
+                >
+                  ⬇️
+                </button>
+              </fieldset>
+            )}
           </>
         }
       >
@@ -217,13 +220,15 @@ export const Asm = () => {
                 >
                   ↩️
                 </button>
-                <button
-                  data-tooltip="Download"
-                  data-placement="left"
-                  onClick={downloadHack}
-                >
-                  ⬇️
-                </button>
+                {!localFsRoot && (
+                  <button
+                    data-tooltip="Download"
+                    data-placement="left"
+                    onClick={downloadHack}
+                  >
+                    ⬇️
+                  </button>
+                )}
               </fieldset>
             </div>
           </>

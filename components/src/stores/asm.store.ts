@@ -289,6 +289,8 @@ export function makeAsmStore(
   const actions = {
     async loadAsm(_path: string) {
       path = _path;
+      console.log(path);
+      console.log(await fs.scandir("/"));
       const source = await fs.readFile(path);
       actions.setAsm(source, path);
     },
@@ -453,7 +455,7 @@ export function useAsmPageStore() {
 
   const { initialState, reducers, actions } = useMemo(
     () => makeAsmStore(fs, setStatus, dispatch),
-    [setStatus, dispatch],
+    [setStatus, dispatch, fs],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

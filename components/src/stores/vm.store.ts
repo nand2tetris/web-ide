@@ -46,7 +46,6 @@ export interface VmSim {
 
 export interface VMTestSim {
   highlight: Span | undefined;
-  path: string;
 }
 
 export interface VmPageState {
@@ -161,9 +160,6 @@ export function makeVmStore(
       }
       state.controls.error = error;
     },
-    setPath(state: VmPageState, path: string) {
-      state.test.path = path;
-    },
     update(state: VmPageState) {
       state.vm = reduceVMTest(test, dispatch, setStatus, showHighlight);
       state.test.highlight = test.currentStep?.span;
@@ -201,7 +197,6 @@ export function makeVmStore(
     },
     test: {
       highlight: undefined,
-      path: "/",
     },
     files: {
       vm: "",

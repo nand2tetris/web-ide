@@ -54,16 +54,17 @@ const VM = () => {
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
-  const [path, setPath] = useState("/");
+  const [path, setPath] = useState<string>();
 
   useEffect(() => {
     setTool("vm");
   }, [setTool]);
 
   useEffect(() => {
-    console.log("loading test");
-    actions.loadTest(path, tst);
-    actions.reset();
+    if (path) {
+      actions.loadTest(path, tst);
+      actions.reset();
+    }
   }, [tst, path]);
 
   useEffect(() => {
@@ -161,6 +162,7 @@ const VM = () => {
         }
         title = `${target.split("/").pop()} / *.vm`;
       }
+      loadTest(target);
     } else {
       files = target.filter((file) => file.name.endsWith(".vm"));
     }
@@ -174,6 +176,21 @@ const VM = () => {
     actions.loadVm(files);
     actions.reset();
     setStatus("");
+  };
+
+  const loadTest = async (path: string) => {
+    let tstPath = "";
+    if (path.includes(".")) {
+      tstPath = path.replace(".vm", "VME.tst");
+    } else {
+      const name = (await fs.scandir(path)).find(
+        (entry) => entry.isFile() && entry.name.endsWith("VME.tst"),
+      )?.name;
+      tstPath = `${path}/${name}`;
+    }
+    console.log(tstPath);
+    const test = await fs.readFile(tstPath);
+    actions.loadTest(tstPath, test);
   };
 
   const onSpeedChange = (speed: number, testPanel: boolean) => {

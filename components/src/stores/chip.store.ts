@@ -1,7 +1,5 @@
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-
 import {
   BUILTIN_CHIP_PROJECTS,
   // CHIP_ORDER,
@@ -20,6 +18,8 @@ import {
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
+import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import { toast } from "react-toastify";
 
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
@@ -409,6 +409,7 @@ export function makeChipStore(
       if (!fs) return;
       try {
         dir ??= _dir;
+
         const tst = await fs.readFile(`${dir}/${name}.tst`);
 
         // TODO: if not using local fs, either load cmp file here or add compare-to inst to local storage test scripts
@@ -417,6 +418,9 @@ export function makeChipStore(
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, `${dir}`);
       } catch (e) {
+        toast(`Could not find ${name}.tst. Please load test file separately.`, {
+          type: "error",
+        });
         console.error(e);
       }
       // const [tst, cmp] = await Promise.all([

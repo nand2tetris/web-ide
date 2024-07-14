@@ -2,11 +2,11 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";
+import { Action } from "../types.js";
 import { Vm } from "../vm/vm.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
-import { Action } from "../types.js";
 
 export interface VmFile {
   name: string;
@@ -24,10 +24,13 @@ export class VMTest extends Test<VMTestInstruction> {
     path?: string,
     loadAction?: (files: VmFile[]) => void,
     doEcho?: Action<string>,
+    compareTo?: Action<string>,
   ): VMTest {
-    const test = new VMTest(doEcho);
+    const test = new VMTest(doEcho, compareTo, path);
     test.dir = path?.split("/").slice(0, -1).join("/");
     test.loadAction = loadAction;
+    test.doCompareTo = compareTo;
+    test.path = path;
     return fill(test, tst);
   }
 
@@ -123,29 +126,29 @@ export class VMTest extends Test<VMTestInstruction> {
     this.vm.step();
   }
 
-  override async load(filename?: string) {
-    if (!this.loadAction) {
-      return;
-    }
-    if (filename) {
-      const file = await this.fs.readFile(
-        `${this.dir ? `${this.dir}/` : ""}${filename}`,
-      );
-      this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
-    } else {
-      const stats = await this.fs.scandir(this.dir ?? "/");
-      const files: VmFile[] = [];
-      for (const stat of stats) {
-        if (stat.isFile() && stat.name.endsWith(".vm")) {
-          const file = await this.fs.readFile(
-            `${this.dir ? `${this.dir}/` : ""}${stat.name}`,
-          );
-          files.push({ name: stat.name.replace(".vm", ""), content: file });
-        }
-      }
-      this.loadAction(files);
-    }
-  }
+  // override async load(filename?: string) {
+  //   if (!this.loadAction) {
+  //     return;
+  //   }
+  //   if (filename) {
+  //     const file = await this.fs.readFile(
+  //       `${this.dir ? `${this.dir}/` : ""}${filename}`,
+  //     );
+  //     this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
+  //   } else {
+  //     const stats = await this.fs.scandir(this.dir ?? "/");
+  //     const files: VmFile[] = [];
+  //     for (const stat of stats) {
+  //       if (stat.isFile() && stat.name.endsWith(".vm")) {
+  //         const file = await this.fs.readFile(
+  //           `${this.dir ? `${this.dir}/` : ""}${stat.name}`,
+  //         );
+  //         files.push({ name: stat.name.replace(".vm", ""), content: file });
+  //       }
+  //     }
+  //     this.loadAction(files);
+  //   }
+  // }
 }
 
 export interface VMTestInstruction extends TestInstruction {

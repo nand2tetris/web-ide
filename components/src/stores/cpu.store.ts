@@ -219,7 +219,8 @@ export function makeCpuStore(
       this.clearTest();
     },
 
-    compileTest(file: string, cmp?: string) {
+    compileTest(file: string, cmp?: string, _path?: string) {
+      const tstPath = _path ?? path;
       dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
       const tst = TST.parse(file);
 
@@ -231,7 +232,17 @@ export function makeCpuStore(
       }
       valid = true;
 
-      test = CPUTest.from(Ok(tst), test.cpu.ROM, setStatus);
+      test = CPUTest.from(
+        Ok(tst),
+        test.cpu.ROM,
+        setStatus,
+        async (file) => {
+          const dir = tstPath.split("/").slice(0, -1).join("/");
+          const cmp = await fs.readFile(`${dir}/${file}`);
+          dispatch.current({ action: "setTest", payload: { cmp } });
+        },
+        tstPath,
+      );
       dispatch.current({ action: "update" });
       return true;
     },
@@ -244,8 +255,8 @@ export function makeCpuStore(
         return;
       }
       tstName = name;
-      const { tst, cmp } = unwrap(files);
-      this.compileTest(tst, cmp ?? "");
+      const { tst } = unwrap(files);
+      this.compileTest(tst, "");
     },
   };
 

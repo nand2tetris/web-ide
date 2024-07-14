@@ -337,10 +337,12 @@ export function makeChipStore(
       hdl,
       tst,
       cmp,
+      tstPath,
     }: {
       hdl?: string;
       tst?: string;
       cmp: string;
+      tstPath?: string;
     }) {
       invalid = false;
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
@@ -349,7 +351,7 @@ export function makeChipStore(
           await this.compileChip(hdl);
         }
         if (tst) {
-          this.compileTest(tst, `/${_dir}`);
+          this.compileTest(tst, tstPath ?? `/${_dir}`);
         }
       } catch (e) {
         setStatus(display(e));
@@ -415,7 +417,7 @@ export function makeChipStore(
 
         // TODO: if not using local fs, either load cmp file here or add compare-to inst to local storage test scripts
 
-        dispatch.current({ action: "setFiles", payload: { tst } });
+        dispatch.current({ action: "setFiles", payload: { tst, cmp: "" } });
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, `${dir}`);
       } catch (e) {

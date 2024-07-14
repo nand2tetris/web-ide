@@ -24,6 +24,7 @@ export const CPU = () => {
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
+  const [tstPath, setTstPath] = useState<string>();
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
@@ -31,9 +32,9 @@ export const CPU = () => {
   }, [setTool]);
 
   useEffect(() => {
-    actions.compileTest(tst, cmp);
+    actions.compileTest(tst, cmp, tstPath);
     actions.reset();
-  }, [tst, cmp]);
+  }, [tst, cmp, tstPath]);
 
   const cpuRunner = useRef<Timer>();
   const testRunner = useRef<Timer>();
@@ -84,6 +85,7 @@ export const CPU = () => {
   }, [actions, dispatch]);
 
   const setPath = async (fullPath: string) => {
+    setTstPath(fullPath);
     actions.setPath(fullPath);
     actions.reset();
   };
@@ -206,6 +208,7 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          setPath={setTstPath}
           tstName={state.test.name}
           disabled={!state.test.valid}
           showName={state.tests.length < 2}

@@ -137,9 +137,11 @@ export function makeVmStore(
     setVm(state: VmPageState, vm: string) {
       state.files.vm = vm;
     },
-    setTst(state: VmPageState, { tst, cmp }: { tst: string; cmp?: string }) {
+    setTst(state: VmPageState, { tst }: { tst: string }) {
       state.files.tst = tst;
-      state.files.cmp = cmp ?? "";
+    },
+    setCmp(state: VmPageState, { cmp }: { cmp: string }) {
+      state.files.cmp = cmp;
     },
     setExitCode(state: VmPageState, code: number | undefined) {
       state.controls.exitCode = code;
@@ -295,8 +297,9 @@ export function makeVmStore(
       dispatch.current({ action: "update" });
       return true;
     },
-    loadTest(path: string, source: string, cmp?: string) {
-      dispatch.current({ action: "setTst", payload: { tst: source, cmp } });
+
+    loadTest(path: string, source: string) {
+      dispatch.current({ action: "setTst", payload: { tst: source } });
       const tst = TST.parse(source);
 
       if (isErr(tst)) {
@@ -315,6 +318,11 @@ export function makeVmStore(
           this.loadVm(files);
         },
         setStatus,
+        async (file) => {
+          const dir = path.split("/").slice(0, -1).join("/");
+          const cmp = await fs.readFile(`${dir}/${file}`);
+          dispatch.current({ action: "setCmp", payload: { cmp } });
+        },
       ).using(fs);
       test.vm = vm;
       dispatch.current({ action: "update" });

@@ -176,7 +176,6 @@ export const Settings = () => {
                       ) : (
                         <Trans>Change Local FileSystem</Trans>
                       )}
-                      <Trans>Beta</Trans>
                     </button>
                     {localFsRoot ? (
                       <>

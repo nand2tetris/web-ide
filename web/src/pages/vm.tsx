@@ -59,9 +59,10 @@ const VM = () => {
   }, [setTool]);
 
   useEffect(() => {
-    actions.loadTest(path, tst, cmp);
+    console.log("loading test");
+    actions.loadTest(path, tst);
     actions.reset();
-  }, [tst, cmp]);
+  }, [tst, path]);
 
   useEffect(() => {
     if (state.controls.exitCode !== undefined) {

@@ -21,7 +21,6 @@ import {
 } from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import { Files } from "@nand2tetris/components/stores/chip.store.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ToastContainer } from "react-toastify";
@@ -31,8 +30,15 @@ import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 
+interface CompileInput {
+  hdl: string;
+  tst: string;
+  cmp: string;
+  tstPath: string;
+}
+
 export const Chip = () => {
-  const { setStatus, localFsRoot } = useContext(BaseContext);
+  const { setStatus } = useContext(BaseContext);
   const { stores, setTool } = useContext(PageContext);
   const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
@@ -41,6 +47,7 @@ export const Chip = () => {
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
   const [out, setOut] = useStateInitializer(state.files.out);
+  const [tstPath, setTstPath] = useState("/");
 
   useEffect(() => {
     setTool("chip");
@@ -77,8 +84,10 @@ export const Chip = () => {
     tracking.trackEvent("action", "eval");
   }, [actions, tracking]);
 
-  const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
-  compile.current = async (files: Partial<Files> = {}) => {
+  const compile = useRef<(files?: Partial<CompileInput>) => void>(
+    () => undefined,
+  );
+  compile.current = async (files: Partial<CompileInput> = {}) => {
     const hdlToCompile = state.controls.usingBuiltin
       ? files.hdl
       : files.hdl ?? hdl;
@@ -86,13 +95,14 @@ export const Chip = () => {
       hdl: hdlToCompile,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
+      tstPath: files.tstPath ?? tstPath,
     });
   };
 
   useEffect(() => {
     compile.current({ tst, cmp });
     actions.reset();
-  }, [tst, cmp]);
+  }, [tst, cmp, tstPath]);
 
   const runner = useRef<Timer>();
   useEffect(() => {
@@ -402,6 +412,7 @@ export const Chip = () => {
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}
+      setPath={setTstPath}
       speed={state.config.speed}
       onSpeedChange={(speed) => {
         dispatch.current({ action: "updateConfig", payload: { speed } });

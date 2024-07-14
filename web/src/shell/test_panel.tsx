@@ -145,9 +145,9 @@ export const TestPanel = ({
     }
     setPath?.(path);
     setName(path.split("/").pop() ?? "");
-    const { tst, cmp } = unwrap(files);
+    const { tst } = unwrap(files);
     setTst?.(tst);
-    setCmp?.(cmp ?? "");
+    setCmp?.("");
   }, [filePicker, setStatus, fs]);
 
   const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();

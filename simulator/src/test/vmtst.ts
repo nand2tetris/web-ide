@@ -23,10 +23,13 @@ export class VMTest extends Test<VMTestInstruction> {
     path?: string,
     loadAction?: (files: VmFile[]) => void,
     doEcho?: (status: string) => void,
+    compareTo?: (status: string) => void,
   ): VMTest {
-    const test = new VMTest(doEcho);
+    const test = new VMTest(doEcho, compareTo, path);
     test.dir = path?.split("/").slice(0, -1).join("/");
     test.loadAction = loadAction;
+    test.doCompareTo = compareTo;
+    test.path = path;
     return fill(test, tst);
   }
 
@@ -122,29 +125,29 @@ export class VMTest extends Test<VMTestInstruction> {
     this.vm.step();
   }
 
-  override async load(filename?: string) {
-    if (!this.loadAction) {
-      return;
-    }
-    if (filename) {
-      const file = await this.fs.readFile(
-        `${this.dir ? `${this.dir}/` : ""}${filename}`,
-      );
-      this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
-    } else {
-      const stats = await this.fs.scandir(this.dir ?? "/");
-      const files: VmFile[] = [];
-      for (const stat of stats) {
-        if (stat.isFile() && stat.name.endsWith(".vm")) {
-          const file = await this.fs.readFile(
-            `${this.dir ? `${this.dir}/` : ""}${stat.name}`,
-          );
-          files.push({ name: stat.name.replace(".vm", ""), content: file });
-        }
-      }
-      this.loadAction(files);
-    }
-  }
+  // override async load(filename?: string) {
+  //   if (!this.loadAction) {
+  //     return;
+  //   }
+  //   if (filename) {
+  //     const file = await this.fs.readFile(
+  //       `${this.dir ? `${this.dir}/` : ""}${filename}`,
+  //     );
+  //     this.loadAction?.([{ name: filename.replace(".vm", ""), content: file }]);
+  //   } else {
+  //     const stats = await this.fs.scandir(this.dir ?? "/");
+  //     const files: VmFile[] = [];
+  //     for (const stat of stats) {
+  //       if (stat.isFile() && stat.name.endsWith(".vm")) {
+  //         const file = await this.fs.readFile(
+  //           `${this.dir ? `${this.dir}/` : ""}${stat.name}`,
+  //         );
+  //         files.push({ name: stat.name.replace(".vm", ""), content: file });
+  //       }
+  //     }
+  //     this.loadAction(files);
+  //   }
+  // }
 }
 
 export interface VMTestInstruction extends TestInstruction {

@@ -9,13 +9,24 @@ export class CPUTest extends Test<CPUTestInstruction> {
   readonly cpu: CPU;
   private ticks = 0;
 
-  static from(tst: Tst, rom?: ROM, doEcho?: (status: string) => void): CPUTest {
-    const test = new CPUTest(rom, doEcho);
+  static from(
+    tst: Tst,
+    rom?: ROM,
+    doEcho?: (status: string) => void,
+    compareTo?: (status: string) => void,
+    path?: string,
+  ): CPUTest {
+    const test = new CPUTest(rom, doEcho, compareTo, path);
     return fill(test, tst);
   }
 
-  constructor(rom: ROM = new ROM(), doEcho?: (status: string) => void) {
-    super(doEcho);
+  constructor(
+    rom: ROM = new ROM(),
+    doEcho?: (status: string) => void,
+    compareTo?: (status: string) => void,
+    path?: string,
+  ) {
+    super(doEcho, compareTo, path);
     this.cpu = new CPU({ ROM: rom });
     this.reset();
   }

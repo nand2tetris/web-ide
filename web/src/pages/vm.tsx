@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -13,6 +13,7 @@ import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
+import { AppContext } from "src/App.context";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
@@ -45,9 +46,10 @@ interface Rerenderable {
 }
 
 const VM = () => {
+  const { filePicker } = useContext(AppContext);
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.vm;
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, fs } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -132,29 +134,38 @@ const VM = () => {
 
   const uploadRef = useRef<HTMLInputElement>(null);
 
-  const load = () => {
-    uploadRef.current?.click();
-  };
+  const load = async () => {
+    const target = await filePicker.select({
+      suffix: ".vm",
+      allowFolders: true,
+    });
 
-  const onLoad = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length == 0) {
-      return;
-    }
-
-    const sources: VmFile[] = [];
-    for (const file of event.target.files) {
-      if (file.name.endsWith(".vm")) {
-        sources.push({
+    const files: VmFile[] = [];
+    let title = "";
+    console.log(target);
+    if (target.includes(".")) {
+      // single file
+      files.push({
+        name: target.replace(".vm", ""),
+        content: await fs.readFile(target),
+      });
+      title = target.split("/").pop() ?? "";
+    } else {
+      // folder
+      for (const file of (await fs.scandir(target)).filter(
+        (entry) => entry.isFile() && entry.name.endsWith(".vm"),
+      )) {
+        files.push({
           name: file.name.replace(".vm", ""),
-          content: await file.text(),
+          content: await fs.readFile(`${target}/${file.name}`),
         });
       }
+      title = `${target.split("/").pop()} / *.vm`;
     }
 
-    const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
-    dispatch.current({ action: "setTitle", payload: `${dirName} / *.vm` });
+    dispatch.current({ action: "setTitle", payload: title });
 
-    actions.loadVm(sources);
+    actions.loadVm(files);
     actions.reset();
     setStatus("");
   };
@@ -184,13 +195,6 @@ const VM = () => {
         isEditorPanel={true}
         header={
           <>
-            <input
-              style={{ display: "none" }}
-              ref={uploadRef}
-              type="file"
-              webkitdirectory=""
-              onChange={onLoad}
-            />
             <div className="flex-0" style={{ whiteSpace: "nowrap" }}>
               <Trans>VM Code</Trans>
             </div>

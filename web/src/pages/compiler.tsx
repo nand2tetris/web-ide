@@ -57,12 +57,9 @@ export const Compiler = () => {
   const uploadFiles = async () => {
     const handle = await openNand2TetrisDirectory();
     const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
-    dispatch.current({
-      action: "setTitle",
-      payload: `${handle.name} / *.jack`,
-    });
+
     setStatus("");
-    actions.loadProject(fs);
+    actions.loadProject(fs, `${handle.name} / *.jack`);
   };
 
   const compileAll = (): VmFile[] => {

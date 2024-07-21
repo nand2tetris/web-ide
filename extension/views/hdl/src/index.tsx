@@ -10,11 +10,11 @@ import App from "./App";
 
 const baseContext: BaseContext = {
   fs: new FileSystem(
-    new ObjectFileSystemAdapter({ "projects/01/Not.hdl": Not.hdl })
+    new ObjectFileSystemAdapter({ "projects/01/Not.hdl": Not.hdl }),
   ),
   // upgraded: "true",
   canUpgradeFs: false,
-  upgradeFs() {},
+  async upgradeFs() {},
   closeFs() {},
   storage: {},
   status: "",
@@ -25,12 +25,12 @@ const baseContext: BaseContext = {
 };
 
 const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
+  document.getElementById("root") as HTMLElement,
 );
 root.render(
   <React.StrictMode>
     <BaseContext.Provider value={baseContext}>
       <App />
     </BaseContext.Provider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

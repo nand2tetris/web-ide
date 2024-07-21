@@ -24,6 +24,7 @@ export const Compiler = () => {
   const { state, dispatch, actions } = stores.compiler;
 
   const [selected, setSelected] = useState(0);
+  const [suppressStatus, setSuppressStatus] = useState(false);
 
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
@@ -39,8 +40,10 @@ export const Compiler = () => {
   };
 
   useEffect(() => {
-    showStatus();
-  }, [state.selected, state.files]);
+    if (!suppressStatus) {
+      showStatus();
+    }
+  }, [state.selected, state.files, suppressStatus]);
 
   const onSelect = useCallback(
     (tab: string) => {
@@ -61,7 +64,19 @@ export const Compiler = () => {
       action: "setTitle",
       payload: `${handle.name} / *.jack`,
     });
-    setStatus("");
+
+    const empty =
+      (await fs.scandir("/")).filter(
+        (entry) => entry.isFile() && entry.name.endsWith(".jack"),
+      ).length == 0;
+
+    if (empty) {
+      setStatus("No .jack files in the selected folder");
+      setSuppressStatus(true);
+    } else {
+      setStatus("");
+      setSuppressStatus(false);
+    }
     actions.loadProject(fs);
   };
 
@@ -115,6 +130,7 @@ export const Compiler = () => {
     if (name) {
       await actions.writeFile(name);
       onSelect(name);
+      setSuppressStatus(false);
     }
   };
 

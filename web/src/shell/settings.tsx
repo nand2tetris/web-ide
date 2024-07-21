@@ -212,14 +212,16 @@ export const Settings = () => {
                 ) : (
                   <></>
                 )}
-                {/* <button
-                  onClick={async () => {
-                    resetWarning.open();
-                  }}
-                >
-                  <Trans>Reset</Trans>
-                </button>
-                <button onClick={loadSamples}>
+                {!localFsRoot && (
+                  <button
+                    onClick={async () => {
+                      resetWarning.open();
+                    }}
+                  >
+                    <Trans>Reset</Trans>
+                  </button>
+                )}
+                {/* <button onClick={loadSamples}>
                   <Trans>Samples</Trans>
                 </button> */}
               </dd>

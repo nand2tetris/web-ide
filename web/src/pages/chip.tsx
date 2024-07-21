@@ -21,6 +21,7 @@ import {
 } from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ToastContainer } from "react-toastify";
@@ -38,7 +39,7 @@ interface CompileInput {
 }
 
 export const Chip = () => {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, localFsRoot } = useContext(BaseContext);
   const { stores, setTool } = useContext(PageContext);
   const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
@@ -191,59 +192,45 @@ export const Chip = () => {
     // }
   };
 
-  // const selectors = (
-  //   <>
-  //     <fieldset role="group">
-  //       <select
-  //         value={state.controls.project}
-  //         onChange={({ target: { value } }) => {
-  //           setProject(value as keyof typeof CHIP_PROJECTS);
-  //         }}
-  //         data-testid="project-picker"
-  //       >
-  //         {PROJECT_NAMES.map(([number, label]) => (
-  //           <option key={number} value={number}>
-  //             {label}
-  //           </option>
-  //         ))}
-  //       </select>
-  //       <select
-  //         value={state.controls.chipName}
-  //         onChange={({ target: { value } }) => {
-  //           setChip(value);
-  //         }}
-  //         data-testid="chip-picker"
-  //       >
-  //         {state.controls.chips.map((chip) => (
-  //           <option
-  //             key={chip}
-  //             value={chip}
-  //             style={
-  //               isBuiltinOnly(state.controls.project, chip)
-  //                 ? { color: "var(--light-grey)" }
-  //                 : {}
-  //             }
-  //           >
-  //             {`${chip} ${
-  //               isBuiltinOnly(state.controls.project, chip) ? "(given)" : ""
-  //             }`}
-  //           </option>
-  //         ))}
-  //       </select>
-  //       <a ref={downloadRef} style={{ display: "none" }} />
-
-  //       <button
-  //         className="flex-0"
-  //         // onClick={downloadProject}
-  //         disabled={state.controls.builtinOnly}
-  //         data-tooltip={t`Download .hdl files`}
-  //         data-placement="left"
-  //       >
-  //         ⬇️
-  //       </button>
-  //     </fieldset>
-  //   </>
-  // );
+  const selectors = (
+    <>
+      <fieldset role="group">
+        <select
+          value={state.controls.project}
+          onChange={({ target: { value } }) => {
+            actions.setProject(value);
+          }}
+          data-testid="project-picker"
+        >
+          {state.controls.projects.map((project) => (
+            <option key={project} value={project}>
+              {project}
+            </option>
+          ))}
+        </select>
+        <select
+          value={state.controls.chipName}
+          onChange={({ target: { value } }) => {
+            if (value != "") {
+              let path = `/${state.controls.project}/${value}.hdl`;
+              if (!localFsRoot) {
+                path = `/projects${path}`;
+              }
+              actions.loadChip(path);
+            }
+          }}
+          data-testid="chip-picker"
+        >
+          {state.controls.chipName == "" && <option></option>}
+          {state.controls.chips.map((chip) => (
+            <option key={chip} value={chip}>
+              {chip}
+            </option>
+          ))}
+        </select>
+      </fieldset>
+    </>
+  );
   const hdlPanel = (
     <Panel
       className="_hdl_panel"
@@ -253,24 +240,21 @@ export const Chip = () => {
           <div className="flex-1" tabIndex={0}>
             HDL
           </div>
-          {/* <fieldset> */}
-          {state.controls.chipName != "" && (
+          {hasBuiltinChip(state.controls.chipName) && (
             <label>
               <input
                 type="checkbox"
                 role="switch"
                 checked={state.controls.usingBuiltin}
                 onChange={toggleUseBuiltin}
-                // disabled={state.controls.usingBuiltin}
               />
               <Trans>Builtin</Trans>
             </label>
           )}
-          {/* </fieldset> */}
+          {selectors}
           <fieldset role="group">
             <button onClick={loadFile}>📂</button>
           </fieldset>
-          {/* {selectors} */}
         </>
       }
     >

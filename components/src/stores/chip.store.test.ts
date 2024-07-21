@@ -27,6 +27,7 @@ function testChipStore(
     setStatus,
     storage,
     dispatch,
+    false,
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
   dispatch.current = jest.fn().mockImplementation(

@@ -102,7 +102,8 @@ export interface Files {
 }
 
 export interface ControlsState {
-  project: keyof typeof CHIP_PROJECTS;
+  projects: string[];
+  project: string;
   chips: string[];
   chipName: string;
   tests: string[];
@@ -143,6 +144,7 @@ export function makeChipStore(
   setStatus: (status: string) => void,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
+  upgraded: boolean,
 ) {
   // const dropdowns = findDropdowns(storage);
   // const { chips } = dropdowns;
@@ -195,16 +197,17 @@ export function makeChipStore(
         : undefined;
     },
 
-    // setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
-    //   const chips = getChips(project);
-    //   const chipName =
-    //     state.controls.chipName && chips.includes(state.controls.chipName)
-    //       ? state.controls.chipName
-    //       : chips[0];
-    //   state.controls.project = project;
-    //   state.controls.chips = chips;
-    //   this.setChip(state, chipName);
-    // },
+    setProjects(state: ChipPageState, projects: string[]) {
+      state.controls.projects = projects;
+    },
+
+    setProject(state: ChipPageState, project: keyof typeof CHIP_PROJECTS) {
+      state.controls.project = project;
+    },
+
+    setChips(state: ChipPageState, chips: string[]) {
+      state.controls.chips = chips;
+    },
 
     setChip(
       state: ChipPageState,
@@ -216,11 +219,15 @@ export function makeChipStore(
       state.title = `${chipName}.hdl`;
       state.controls.tests = Array.from(tests);
       state.dir = dir;
-      // state.controls.hasBuiltin = REGISTRY.has(chipName);
-      // state.controls.builtinOnly = isBuiltinOnly(
-      //   state.controls.project,
-      //   chipName,
-      // );
+    },
+
+    clearChip(state: ChipPageState) {
+      _chipName = "";
+      state.controls.chipName = "";
+      state.title = undefined;
+      state.controls.tests = [];
+
+      this.setFiles(state, { hdl: "", tst: "", cmp: "", out: "" });
     },
 
     setTest(state: ChipPageState, testName: string) {
@@ -272,6 +279,10 @@ export function makeChipStore(
       state.config = { ...state.config, ...config };
     },
 
+    updateUsingBuiltin(state: ChipPageState) {
+      state.controls.usingBuiltin = usingBuiltin;
+    },
+
     toggleBuiltin(state: ChipPageState) {
       state.controls.usingBuiltin = usingBuiltin;
       if (usingBuiltin) {
@@ -286,11 +297,35 @@ export function makeChipStore(
   };
 
   const actions = {
-    // setProject(p: keyof typeof CHIP_PROJECTS) {
-    //   project = storage["/chip/project"] = p;
-    //   dispatch.current({ action: "setProject", payload: project });
-    //   this.setChip(CHIP_PROJECTS[project][0]);
-    // },
+    async initialize() {
+      if (upgraded) {
+        dispatch.current({
+          action: "setProjects",
+          payload: ["1", "2", "3", "5"],
+        });
+        await actions.setProject("1");
+      } else {
+        dispatch.current({
+          action: "setProjects",
+          payload: ["01", "02", "03", "05"],
+        });
+        await actions.setProject("01");
+      }
+
+      dispatch.current({ action: "clearChip" });
+    },
+
+    async setProject(project: string) {
+      project = storage["/chip/project"] = project;
+      dispatch.current({ action: "setProject", payload: project });
+
+      const chips = (
+        await fs.scandir(upgraded ? `/${project}` : `/projects/${project}`)
+      )
+        .filter((entry) => entry.isFile() && entry.name.endsWith(".hdl"))
+        .map((file) => file.name.replace(".hdl", ""));
+      dispatch.current({ action: "setChips", payload: chips });
+    },
 
     // async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
 
@@ -484,7 +519,7 @@ export function makeChipStore(
       if (usingBuiltin) {
         await this.loadBuiltin();
       } else {
-        await this.compileChip(backupHdl);
+        await this.compileChip(backupHdl, _dir, _chipName);
       }
     },
 
@@ -560,38 +595,39 @@ export function makeChipStore(
       // );
     },
 
-    // TODO: optimize. Maybe create a mapping in initialization
-    async findPath(
-      fs: FileSystem,
-      name: string,
-    ): Promise<string[] | undefined> {
-      if (!fs) return;
+    // // TODO: optimize. Maybe create a mapping in initialization
+    // async findPath(
+    //   fs: FileSystem,
+    //   name: string,
+    // ): Promise<string[] | undefined> {
+    //   if (!fs) return;
 
-      async function findIn(
-        fs: FileSystem,
-        path: string[] = [],
-      ): Promise<string[] | undefined> {
-        const fullPath = path.length == 0 ? "." : path.join("/");
-        for (const entry of await fs.scandir(fullPath)) {
-          if (entry.isDirectory()) {
-            const found = await findIn(fs, [...path, entry.name]);
-            if (found) {
-              return [...path, ...found];
-            }
-          } else {
-            if (entry.name == name) {
-              return [...path, name];
-            }
-          }
-        }
-        return;
-      }
+    //   async function findIn(
+    //     fs: FileSystem,
+    //     path: string[] = [],
+    //   ): Promise<string[] | undefined> {
+    //     const fullPath = path.length == 0 ? "." : path.join("/");
+    //     for (const entry of await fs.scandir(fullPath)) {
+    //       if (entry.isDirectory()) {
+    //         const found = await findIn(fs, [...path, entry.name]);
+    //         if (found) {
+    //           return [...path, ...found];
+    //         }
+    //       } else {
+    //         if (entry.name == name) {
+    //           return [...path, name];
+    //         }
+    //       }
+    //     }
+    //     return;
+    //   }
 
-      return await findIn(fs);
-    },
+    //   return await findIn(fs);
+    // },
 
     async loadChip(path: string) {
       usingBuiltin = false;
+      dispatch.current({ action: "updateUsingBuiltin", payload: false });
 
       // const name = handle.name.replace(".hdl", "");
       // const path = `/${dir}/${name}.hdl`;
@@ -611,20 +647,20 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { hdl } });
     },
 
-    // TODO: currently doesn't support 2 chips with the same name in different projects
-    async loadLocalChip(handle: FileSystemFileHandle) {
-      const path = await this.findPath(fs, handle.name);
+    // // TODO: currently doesn't support 2 chips with the same name in different projects
+    // async loadLocalChip(handle: FileSystemFileHandle) {
+    //   const path = await this.findPath(fs, handle.name);
 
-      if (!path) {
-        // TODO: turn into warning?
-        setStatus(`${handle.name} is not inside the projects directory`);
-        return;
-      }
+    //   if (!path) {
+    //     // TODO: turn into warning?
+    //     setStatus(`${handle.name} is not inside the projects directory`);
+    //     return;
+    //   }
 
-      console.log(path);
+    //   console.log(path);
 
-      await this.loadChip(`/${path.join("/")}`);
-    },
+    //   await this.loadChip(`/${path.join("/")}`);
+    // },
 
     async saveChip(hdl: string) {
       dispatch.current({ action: "setFiles", payload: { hdl } });
@@ -637,13 +673,12 @@ export function makeChipStore(
 
   const initialState: ChipPageState = (() => {
     const controls: ControlsState = {
-      project: "01",
+      projects: ["1", "2", "3", "5"],
+      project: "1",
       chips: [],
       chipName: "",
       tests,
       testName: "",
-      // hasBuiltin: false,
-      // builtinOnly: false,
       usingBuiltin: false,
       runningTest: false,
       error: undefined,
@@ -670,12 +705,13 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, storage, localFsRoot } = useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeChipStore(fs, setStatus, storage, dispatch),
+    () =>
+      makeChipStore(fs, setStatus, storage, dispatch, localFsRoot != undefined),
     [fs, setStatus, storage, dispatch],
   );
 

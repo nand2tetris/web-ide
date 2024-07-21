@@ -78,6 +78,7 @@ export interface ChipPageState {
   sim: ChipSim;
   controls: ControlsState;
   config: ChipPageConfig;
+  dir?: string;
 }
 
 export interface ChipPageConfig {
@@ -215,6 +216,7 @@ export function makeChipStore(
       state.controls.chipName = chipName;
       state.title = `${chipName}.hdl`;
       state.controls.tests = Array.from(tests);
+      state.dir = dir;
       // state.controls.hasBuiltin = REGISTRY.has(chipName);
       // state.controls.builtinOnly = isBuiltinOnly(
       //   state.controls.project,
@@ -351,7 +353,7 @@ export function makeChipStore(
           await this.compileChip(hdl, _dir, _chipName);
         }
         if (tst) {
-          this.compileTest(tst, tstPath ?? `/${_dir}`);
+          this.compileTest(tst, tstPath ?? _dir);
         }
       } catch (e) {
         setStatus(display(e));
@@ -419,7 +421,7 @@ export function makeChipStore(
 
         dispatch.current({ action: "setFiles", payload: { tst, cmp: "" } });
         dispatch.current({ action: "setTest", payload: name });
-        this.compileTest(tst, `${dir}`);
+        this.compileTest(tst, dir);
       } catch (e) {
         toast(`Could not find ${name}.tst. Please load test file separately.`, {
           type: "error",

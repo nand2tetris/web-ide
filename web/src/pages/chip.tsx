@@ -34,7 +34,7 @@ interface CompileInput {
   hdl: string;
   tst: string;
   cmp: string;
-  tstPath: string;
+  tstDir: string;
 }
 
 export const Chip = () => {
@@ -47,7 +47,14 @@ export const Chip = () => {
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
   const [out, setOut] = useStateInitializer(state.files.out);
-  const [tstPath, setTstPath] = useState("/");
+  const [tstDir, setTstDir] = useStateInitializer(state.dir);
+  const [tstPath, setTstPath] = useState<string>();
+
+  useEffect(() => {
+    if (tstPath) {
+      setTstDir(tstPath?.split("/").slice(0, -1).join("/"));
+    }
+  }, [tstPath]);
 
   useEffect(() => {
     setTool("chip");
@@ -95,14 +102,14 @@ export const Chip = () => {
       hdl: hdlToCompile,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
-      tstPath: files.tstPath ?? tstPath,
+      tstPath: files.tstDir ?? tstDir,
     });
   };
 
   useEffect(() => {
-    compile.current({ tst, cmp });
+    compile.current({ tst, cmp, tstDir });
     actions.reset();
-  }, [tst, cmp, tstPath]);
+  }, [tst, cmp, tstDir]);
 
   const runner = useRef<Timer>();
   useEffect(() => {

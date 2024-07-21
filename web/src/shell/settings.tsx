@@ -177,7 +177,7 @@ export const Settings = () => {
                       onClick={async () => {
                         setUpgrading(true);
                         try {
-                          await upgradeFs();
+                          await upgradeFs(localFsRoot != undefined);
                         } catch (err) {
                           console.error("Failed to upgrade FS", { err });
                           setStatus(t`Failed to load local file system.`);

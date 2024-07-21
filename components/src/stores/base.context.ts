@@ -24,7 +24,7 @@ export interface BaseContext {
   fs: FileSystem;
   localFsRoot?: string;
   canUpgradeFs: boolean;
-  upgradeFs: (force?: boolean) => void;
+  upgradeFs: (force?: boolean) => Promise<void>;
   closeFs: () => void;
   status: string;
   setStatus: Action<string>;
@@ -89,7 +89,7 @@ export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  upgradeFs() {},
+  async upgradeFs() {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   closeFs() {},
   status: "",

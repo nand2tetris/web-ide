@@ -3,6 +3,18 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Ok, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import {
+  ASM_PROJECTS,
+  CHIP_PROJECTS,
+  VM_PROJECTS,
+} from "@nand2tetris/projects/base.js";
+import { ChipProjects, VmProjects } from "@nand2tetris/projects/full.js";
+import { Max } from "@nand2tetris/projects/samples/hack.js";
+import {
+  FILES as ASM_FILES,
+  ASM_SOLS,
+} from "@nand2tetris/projects/samples/project_06/index.js";
+import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/index.js";
 import { build } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { compare } from "../compare.js";
@@ -10,22 +22,10 @@ import { Asm, ASM } from "../languages/asm.js";
 import { Cmp, CMP } from "../languages/cmp.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { Tst, TST } from "../languages/tst.js";
-import {
-  ASM_PROJECTS,
-  CHIP_PROJECTS,
-  VM_PROJECTS,
-} from "@nand2tetris/projects/base.js";
-import { ChipProjects, VmProjects } from "@nand2tetris/projects/full.js";
-import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/index.js";
-import {
-  ASM_SOLS,
-  FILES as ASM_FILES,
-} from "@nand2tetris/projects/samples/project_06/index.js";
-import { Max } from "@nand2tetris/projects/samples/hack.js";
-import { ChipTest } from "../test/chiptst.js";
 import { VM } from "../languages/vm.js";
-import { Vm } from "../vm/vm.js";
+import { ChipTest } from "../test/chiptst.js";
 import { VMTest } from "../test/vmtst.js";
+import { Vm } from "../vm/vm.js";
 
 const PROJECTS = new Set<string>(["01", "03", "07", "08"]);
 const SKIP = new Set<string>([]);
@@ -51,8 +51,8 @@ describe("Chip Projects", () => {
           ...ChipProjectsSols[project]!,
         };
         const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
-        const tstFile = chipProject.CHIPS[chipName]?.[`${chipName}.tst`];
-        const cmpFile = chipProject.CHIPS[chipName]?.[`${chipName}.cmp`];
+        const tstFile = chipProject.CHIPS?.[`${chipName}.tst`];
+        const cmpFile = chipProject.CHIPS?.[`${chipName}.cmp`];
 
         expect(hdlFile).toBeDefined();
         expect(tstFile).toBeDefined();
@@ -71,9 +71,7 @@ describe("Chip Projects", () => {
 
         if (chipName === "Computer") {
           test.setFileSystem(
-            new FileSystem(
-              new ObjectFileSystemAdapter({ "samples/Max.hack": Max }),
-            ),
+            new FileSystem(new ObjectFileSystemAdapter({ "Max.hack": Max })),
           );
         }
 

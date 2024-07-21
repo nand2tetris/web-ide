@@ -123,7 +123,7 @@ describe("Chip Builder", () => {
 
     try {
       const chip = unwrap(await HDL.parse(USE_COPY_HDL));
-      foo = unwrap(await build(chip, undefined, undefined, fs));
+      foo = unwrap(await build(chip, ".", undefined, fs));
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {

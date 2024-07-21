@@ -70,23 +70,6 @@ export const Chip = () => {
     tracking.trackEvent("action", "setChip", state.controls.chipName);
   }, []);
 
-  // const setProject = useCallback(
-  //   (project: keyof typeof CHIP_PROJECTS) => {
-  //     actions.setProject(project);
-  //     tracking.trackEvent("action", "setProject", project);
-  //   },
-  //   [actions, tracking],
-  // );
-
-  // const setChip = useCallback(
-  //   (chip: string) => {
-  //     actions.setChip(chip);
-  //     tracking.trackEvent("action", "setChip", chip);
-  //     pinResetDispatcher.reset();
-  //   },
-  //   [actions, tracking],
-  // );
-
   const doEval = useCallback(() => {
     actions.eval();
     tracking.trackEvent("action", "eval");
@@ -153,43 +136,14 @@ export const Chip = () => {
     [actions],
   );
 
-  // const downloadRef = useRef<HTMLAnchorElement>(null);
-
-  // const downloadProject = async () => {
-  //   if (!downloadRef.current) {
-  //     return;
-  //   }
-
-  //   const files = await actions.getProjectFiles();
-  //   const url = await zip(files);
-  //   downloadRef.current.href = url;
-  //   downloadRef.current.download = `${state.controls.project}`;
-  //   downloadRef.current.click();
-
-  //   URL.revokeObjectURL(url);
-  // };
-
-  // const [useBuiltin, setUseBuiltin] = useState(false);
   const toggleUseBuiltin = () => {
     actions.toggleBuiltin();
-    // if (useBuiltin) {
-    //   setUseBuiltin(false);
-    //   actions.useBuiltin(false);
-    // } else {
-    //   setUseBuiltin(true);
-    //   actions.useBuiltin(true, hdl);
-    // }
     pinResetDispatcher.reset();
   };
 
   const loadFile = async () => {
-    // if (localFsRoot) {
-    //   const [handle] = await window.showOpenFilePicker();
-    //   actions.loadLocalChip(handle);
-    // } else {
     const path = await filePicker.select({ suffix: "hdl" });
     actions.loadChip(path);
-    // }
   };
 
   const selectors = (
@@ -379,14 +333,12 @@ export const Chip = () => {
     <TestPanel
       runner={runner}
       disabled={state.sim.invalid}
-      // showLoad={false}
       prefix={
         state.controls.tests.length > 1 ? (
           <select
             value={state.controls.testName}
             onChange={({ target: { value } }) => {
               actions.loadTest(value);
-              // actions.setTest(value);
             }}
             data-testid="test-picker"
           >

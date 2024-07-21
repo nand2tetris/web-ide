@@ -315,6 +315,14 @@ export function makeChipStore(
       dispatch.current({ action: "clearChip" });
     },
 
+    reset() {
+      Clock.get().reset();
+      chip.reset();
+      test.reset();
+      dispatch.current({ action: "setFiles", payload: {} });
+      dispatch.current({ action: "updateChip" });
+    },
+
     async setProject(project: string) {
       project = storage["/chip/project"] = project;
       dispatch.current({ action: "setProject", payload: project });
@@ -327,75 +335,23 @@ export function makeChipStore(
       dispatch.current({ action: "setChips", payload: chips });
     },
 
-    // async setChip(chip: string, project = storage["/chip/project"] ?? "01") {
+    async loadChip(path: string) {
+      usingBuiltin = false;
+      dispatch.current({ action: "updateUsingBuiltin", payload: false });
 
-    //   builtinOnly = isBuiltinOnly(
-    //     project as keyof typeof CHIP_PROJECTS,
-    //     chipName,
-    //   );
+      const hdl = await fs.readFile(path);
 
-    //   if (builtinOnly) {
-    //     this.useBuiltin();
-    //   } else {
-    //     await this.loadChip(project, chipName);
-    //     if (usingBuiltin) {
-    //       this.useBuiltin();
-    //     }
-    //   }
-    //   await this.initializeTest(chip);
-    //   dispatch.current({ action: "setChip", payload: chipName });
-    // },
+      const parts = path.split("/");
+      const name = parts.pop()!.replace(".hdl", "");
+      const dir = parts.join("/");
 
-    // setTest(test: string) {
-    //   dispatch.current({ action: "setTest", payload: test });
-
-    //   dispatch.current({
-    //     action: "setVisualizationParams",
-    //     payload: new Set(
-    //       test == "ComputerAdd.tst" || test == "ComputerMax.tst"
-    //         ? [NO_SCREEN]
-    //         : [],
-    //     ),
-    //   });
-
-    //   this.loadTest(test);
-    // },
-
-    reset() {
-      Clock.get().reset();
-      chip.reset();
-      test.reset();
-      dispatch.current({ action: "setFiles", payload: {} });
-      dispatch.current({ action: "updateChip" });
-    },
-
-    async updateFiles({
-      hdl,
-      tst,
-      cmp,
-      tstPath,
-    }: {
-      hdl?: string;
-      tst?: string;
-      cmp: string;
-      tstPath?: string;
-    }) {
-      invalid = false;
-      dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
-      try {
-        if (hdl) {
-          await this.compileChip(hdl, _dir, _chipName);
-        }
-        if (tst) {
-          this.compileTest(tst, tstPath ?? _dir);
-        }
-      } catch (e) {
-        setStatus(display(e));
-      }
-      dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
-      if (!invalid) {
-        setStatus(`HDL code: No syntax errors`);
-      }
+      await this.compileChip(hdl, dir, name);
+      await this.initializeTests(dir, name);
+      dispatch.current({
+        action: "setChip",
+        payload: { chipName: name, dir: dir },
+      });
+      dispatch.current({ action: "setFiles", payload: { hdl } });
     },
 
     async compileChip(hdl: string, dir?: string, name?: string) {
@@ -435,13 +391,6 @@ export function makeChipStore(
     async initializeTests(dir: string, chip: string) {
       tests = TEST_NAMES[chip] ?? [];
       this.loadTest(tests[0] ?? chip, dir);
-
-      // tests = (await fs.scandir(`/projects/${project}/${name}`))
-      //   .filter((file) => file.name.endsWith(".tst"))
-      //   .map((file) => file.name);
-      // if (tests.length > 0) {
-      //   await this.setTest(tests[0]);
-      // }
     },
 
     async loadTest(name: string, dir?: string) {
@@ -450,8 +399,6 @@ export function makeChipStore(
         dir ??= _dir;
 
         const tst = await fs.readFile(`${dir}/${name}.tst`);
-
-        // TODO: if not using local fs, either load cmp file here or add compare-to inst to local storage test scripts
 
         dispatch.current({ action: "setFiles", payload: { tst, cmp: "" } });
         dispatch.current({ action: "setTest", payload: name });
@@ -462,16 +409,68 @@ export function makeChipStore(
         });
         console.error(e);
       }
-      // const [tst, cmp] = await Promise.all([
-      //   fs
-      //     .readFile(`/projects/${project}/${chipName}/${test}`)
-      //     .catch(() => makeTst()),
-      //   fs
-      //     .readFile(
-      //       `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp"),
-      //     )
-      //     .catch(() => makeCmp()),
-      // ]);
+    },
+
+    compileTest(file: string, path: string) {
+      if (!fs) return;
+      dispatch.current({ action: "setFiles", payload: { tst: file } });
+      const tst = TST.parse(file);
+      if (isErr(tst)) {
+        setStatus(`Failed to parse test ${Err(tst).message}`);
+        invalid = true;
+        return false;
+      }
+      test = ChipTest.from(
+        Ok(tst),
+        setStatus,
+        async (file) => {
+          const cmp = await fs.readFile(`${_dir}/${file}`);
+          dispatch.current({ action: "setFiles", payload: { cmp } });
+        },
+        path,
+      )
+        .with(chip)
+        .reset();
+      test.setFileSystem(fs);
+      dispatch.current({ action: "updateTestStep" });
+      return true;
+    },
+
+    async updateFiles({
+      hdl,
+      tst,
+      cmp,
+      tstPath,
+    }: {
+      hdl?: string;
+      tst?: string;
+      cmp: string;
+      tstPath?: string;
+    }) {
+      invalid = false;
+      dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
+      try {
+        if (hdl) {
+          await this.compileChip(hdl, _dir, _chipName);
+        }
+        if (tst) {
+          this.compileTest(tst, tstPath ?? _dir);
+        }
+      } catch (e) {
+        setStatus(display(e));
+      }
+      dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
+      if (!invalid) {
+        setStatus(`HDL code: No syntax errors`);
+      }
+    },
+
+    async saveChip(hdl: string) {
+      dispatch.current({ action: "setFiles", payload: { hdl } });
+      const path = `${_dir}/${_chipName}.hdl`;
+      if (fs && path) {
+        await fs.writeFile(path, hdl);
+      }
     },
 
     toggle(pin: Pin, i: number | undefined) {
@@ -509,7 +508,6 @@ export function makeChipStore(
         );
         return;
       }
-      // dispatch.current({ action: "setFiles", payload: { hdl } });
       this.replaceChip(Ok(nextChip));
     },
 
@@ -521,47 +519,6 @@ export function makeChipStore(
       } else {
         await this.compileChip(backupHdl, _dir, _chipName);
       }
-    },
-
-    // async initialize() {
-    //   await this.setChip(chipName, project);
-    // },
-
-    compileTest(file: string, path: string) {
-      if (!fs) return;
-      dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = TST.parse(file);
-      if (isErr(tst)) {
-        setStatus(`Failed to parse test ${Err(tst).message}`);
-        invalid = true;
-        return false;
-      }
-      test = ChipTest.from(
-        Ok(tst),
-        setStatus,
-        async (file) => {
-          const cmp = await fs.readFile(`${_dir}/${file}`);
-          dispatch.current({ action: "setFiles", payload: { cmp } });
-        },
-        path,
-      )
-        .with(chip)
-        .reset();
-      test.setFileSystem(fs);
-      dispatch.current({ action: "updateTestStep" });
-      return true;
-    },
-
-    async runTest(file: string) {
-      // if (!this.compileTest(file)) {
-      //   return;
-      // }
-      // dispatch.current({ action: "testRunning" });
-      // fs.pushd("/samples");
-      // await test.run();
-      // fs.popd();
-      // dispatch.current({ action: "updateTestStep" });
-      // dispatch.current({ action: "testFinished" });
     },
 
     tick(): Promise<boolean> {
@@ -576,98 +533,6 @@ export function makeChipStore(
         dispatch.current({ action: "testFinished" });
       }
       return done;
-    },
-
-    async resetFile() {
-      // const { ChipProjects } = await import("@nand2tetris/projects/full.js");
-      // const template = (
-      //   ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-      // )[chipName][`${chipName}.hdl`];
-      // dispatch.current({ action: "setFiles", payload: { hdl: template } });
-    },
-
-    async getProjectFiles() {
-      // return await Promise.all(
-      //   CHIP_PROJECTS[project].map((chip) => ({
-      //     name: `${chip}.hdl`,
-      //     content: fs.readFile(`/projects/${project}/${chip}/${chip}.hdl`),
-      //   })),
-      // );
-    },
-
-    // // TODO: optimize. Maybe create a mapping in initialization
-    // async findPath(
-    //   fs: FileSystem,
-    //   name: string,
-    // ): Promise<string[] | undefined> {
-    //   if (!fs) return;
-
-    //   async function findIn(
-    //     fs: FileSystem,
-    //     path: string[] = [],
-    //   ): Promise<string[] | undefined> {
-    //     const fullPath = path.length == 0 ? "." : path.join("/");
-    //     for (const entry of await fs.scandir(fullPath)) {
-    //       if (entry.isDirectory()) {
-    //         const found = await findIn(fs, [...path, entry.name]);
-    //         if (found) {
-    //           return [...path, ...found];
-    //         }
-    //       } else {
-    //         if (entry.name == name) {
-    //           return [...path, name];
-    //         }
-    //       }
-    //     }
-    //     return;
-    //   }
-
-    //   return await findIn(fs);
-    // },
-
-    async loadChip(path: string) {
-      usingBuiltin = false;
-      dispatch.current({ action: "updateUsingBuiltin", payload: false });
-
-      // const name = handle.name.replace(".hdl", "");
-      // const path = `/${dir}/${name}.hdl`;
-      const hdl = await fs.readFile(path);
-
-      // hdlPath = path.join("/");
-      const parts = path.split("/");
-      const name = parts.pop()!.replace(".hdl", "");
-      const dir = parts.join("/");
-
-      await this.compileChip(hdl, dir, name);
-      await this.initializeTests(dir, name);
-      dispatch.current({
-        action: "setChip",
-        payload: { chipName: name, dir: dir },
-      });
-      dispatch.current({ action: "setFiles", payload: { hdl } });
-    },
-
-    // // TODO: currently doesn't support 2 chips with the same name in different projects
-    // async loadLocalChip(handle: FileSystemFileHandle) {
-    //   const path = await this.findPath(fs, handle.name);
-
-    //   if (!path) {
-    //     // TODO: turn into warning?
-    //     setStatus(`${handle.name} is not inside the projects directory`);
-    //     return;
-    //   }
-
-    //   console.log(path);
-
-    //   await this.loadChip(`/${path.join("/")}`);
-    // },
-
-    async saveChip(hdl: string) {
-      dispatch.current({ action: "setFiles", payload: { hdl } });
-      const path = `${_dir}/${_chipName}.hdl`;
-      if (fs && path) {
-        await fs.writeFile(path, hdl);
-      }
     },
   };
 

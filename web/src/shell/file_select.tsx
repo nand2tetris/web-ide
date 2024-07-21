@@ -125,6 +125,22 @@ function isFileValid(filename: string, validSuffixes: string[]) {
     .reduce((p1, p2) => p1 || p2, false);
 }
 
+function sortFiles(files: Stats[]) {
+  return files.sort((a, b) => {
+    const aIsNum = /^\d+$/.test(a.name);
+    const bIsNum = /^\d+$/.test(b.name);
+    if (aIsNum && !bIsNum) {
+      return -1;
+    } else if (!aIsNum && bIsNum) {
+      return 1;
+    } else if (aIsNum && bIsNum) {
+      return parseInt(a.name) - parseInt(b.name);
+    } else {
+      return a.name.localeCompare(b.name);
+    }
+  });
+}
+
 export const FilePicker = () => {
   const { fs, setStatus, localFsRoot } = useContext(BaseContext);
   const { filePicker } = useContext(AppContext);
@@ -142,7 +158,7 @@ export const FilePicker = () => {
 
   useEffect(() => {
     fs.scandir(fs.cwd()).then((files) => {
-      setFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
+      setFiles(sortFiles(files));
     });
   }, [fs, cwd, setFiles]);
 
@@ -150,7 +166,7 @@ export const FilePicker = () => {
     (dir: string) => {
       fs.cd(dir);
       fs.scandir(fs.cwd()).then((files) => {
-        setFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
+        setFiles(sortFiles(files));
       });
     },
     [fs, setFile, setFiles],

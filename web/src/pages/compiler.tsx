@@ -77,9 +77,8 @@ export const Compiler = () => {
     } else {
       setStatus("");
       setSuppressStatus(false);
-      actions.loadProject(fs, `${handle.name} / *.jack`);
     }
-    actions.loadProject(fs);
+    actions.loadProject(fs, `${handle.name} / *.jack`);
   };
 
   const compileAll = (): VmFile[] => {

@@ -24,6 +24,7 @@ export const Compiler = () => {
   const { state, dispatch, actions } = stores.compiler;
 
   const [selected, setSelected] = useState(0);
+  const [suppressStatus, setSuppressStatus] = useState(false);
 
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
@@ -39,8 +40,10 @@ export const Compiler = () => {
   };
 
   useEffect(() => {
-    showStatus();
-  }, [state.selected, state.files]);
+    if (!suppressStatus) {
+      showStatus();
+    }
+  }, [state.selected, state.files, suppressStatus]);
 
   const onSelect = useCallback(
     (tab: string) => {
@@ -58,8 +61,25 @@ export const Compiler = () => {
     const handle = await openNand2TetrisDirectory();
     const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
 
-    setStatus("");
-    actions.loadProject(fs, `${handle.name} / *.jack`);
+    dispatch.current({
+      action: "setTitle",
+      payload: `${handle.name} / *.jack`,
+    });
+
+    const empty =
+      (await fs.scandir("/")).filter(
+        (entry) => entry.isFile() && entry.name.endsWith(".jack"),
+      ).length == 0;
+
+    if (empty) {
+      setStatus("No .jack files in the selected folder");
+      setSuppressStatus(true);
+    } else {
+      setStatus("");
+      setSuppressStatus(false);
+      actions.loadProject(fs, `${handle.name} / *.jack`);
+    }
+    actions.loadProject(fs);
   };
 
   const compileAll = (): VmFile[] => {
@@ -112,6 +132,7 @@ export const Compiler = () => {
     if (name) {
       await actions.writeFile(name);
       onSelect(name);
+      setSuppressStatus(false);
     }
   };
 

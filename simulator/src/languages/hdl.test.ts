@@ -41,21 +41,21 @@ const CLOCKED = `CHIP Foo {
 
 const ERRORS = [
   ["Not { BUILTIN }", 'Line 1, col 1: expected "CHIP"'],
-  ["CHIP { BUILTIN }", 'Line 1, col 6: expected "_" or a letter'], // A chip name is expected
+  ["CHIP { BUILTIN }", "Line 1, col 6: expected a letter"], // A chip name is expected
   ["CHIP Not BUILTIN }", 'Line 1, col 10: expected "{"'],
   ["CHIP Not { BUILTIN }", 'Line 1, col 20: expected ";"'],
   ["CHIP Not { BONKERS; }", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
   ["CHIP Not { ", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
   [
     "CHIP Not { PARTS: (); }",
-    'Line 1, col 19: expected "}", "CLOCKED", "_", or a letter', // A chip name is expected
+    'Line 1, col 19: expected "}", "CLOCKED", or a letter', // A chip name is expected
   ],
   ["CHIP Not { PARTS: Nand; }", 'Line 1, col 23: expected "("'],
-  ["CHIP Not { PARTS: Nand() }", 'Line 1, col 24: expected "_" or a letter'], // A pin name is expected
-  ["CHIP Not { PARTS: Nand(=a) }", 'Line 1, col 24: expected "_" or a letter'], // A pin name is expected
+  ["CHIP Not { PARTS: Nand() }", "Line 1, col 24: expected a letter"], // A pin name is expected
+  ["CHIP Not { PARTS: Nand(=a) }", "Line 1, col 24: expected a letter"], // A pin name is expected
   [
     "CHIP Not { PARTS: Nand(a=) }",
-    'Line 1, col 26: expected "false", "true", "_", or a letter',
+    'Line 1, col 26: expected "false", "true", or a letter',
   ], // A pin name is expected
   ["CHIP Not { PARTS: Nand(a) }", 'Line 1, col 25: expected "="'],
   ["CHIP Not { PARTS: Nand(a=a }", 'Line 1, col 28: expected ")", ",", or "["'],

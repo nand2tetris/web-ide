@@ -103,10 +103,11 @@ export function makeCompilerStore(
   };
 
   const actions = {
-    async loadProject(_fs: FileSystem) {
+    async loadProject(_fs: FileSystem, title: string) {
       this.reset();
       fs = _fs;
       dispatch.current({ action: "setFs", payload: fs });
+      dispatch.current({ action: "setTitle", payload: title });
 
       const files: Record<string, string> = {};
       for (const file of (await fs.scandir("/")).filter(

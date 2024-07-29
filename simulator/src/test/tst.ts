@@ -1,6 +1,7 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Output } from "../output.js";
+import { Action } from "../types.js";
 import {
   OutputParams,
   TestBreakInstruction,
@@ -15,14 +16,14 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
-  protected doEcho?: (status: string) => void;
-  protected doCompareTo?: (status: string) => void;
+  protected doEcho?: Action<string>;
+  protected doCompareTo?: Action<string>;
   protected path?: string;
   protected outputFileName?: string;
 
   constructor(
-    doEcho?: (status: string) => void,
-    doCompareTo?: (file: string) => void,
+    doEcho?: Action<string>,
+    doCompareTo?: Action<string>,
     path?: string,
   ) {
     this.doEcho = doEcho;
@@ -50,11 +51,11 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   async load(_filename?: string): Promise<void> {
     return undefined;
   }
-  async compareTo(_filename: string): Promise<void> {
-    this.doCompareTo?.(_filename);
+  async compareTo(filename: string): Promise<void> {
+    this.doCompareTo?.(filename);
   }
-  outputFile(_filename: string): void {
-    this.outputFileName = _filename;
+  outputFile(filename: string): void {
+    this.outputFileName = filename;
   }
 
   private createOutputs(params: OutputParams[]): Output[] {

@@ -1,6 +1,7 @@
 import { Bus, Chip, HIGH, Low, LOW } from "../chip/chip.js";
 import { Clock } from "../chip/clock.js";
 import { Tst } from "../languages/tst.js";
+import { Action } from "../types.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
@@ -15,8 +16,8 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   static from(
     tst: Tst,
-    setStatus?: (status: string) => void,
-    compareTo?: (status: string) => void,
+    setStatus?: Action<string>,
+    compareTo?: Action<string>,
     path?: string,
   ): ChipTest {
     const test = new ChipTest(setStatus, compareTo, path);

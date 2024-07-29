@@ -18,6 +18,7 @@ import {
   createAndStoreLocalAdapterInIndexedDB,
   removeLocalAdapterFromIndexedDB,
 } from "./base/indexDb.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 export interface BaseContext {
   fs: FileSystem;
@@ -26,7 +27,7 @@ export interface BaseContext {
   upgradeFs: (force?: boolean) => Promise<void>;
   closeFs: () => void;
   status: string;
-  setStatus: (status: string) => void;
+  setStatus: Action<string>;
   storage: Record<string, string>;
 }
 

@@ -23,6 +23,7 @@ import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 function makeTst() {
   return `repeat {
@@ -93,7 +94,7 @@ export type CpuStoreDispatch = Dispatch<{
 
 export function makeCpuStore(
   fs: FileSystem,
-  setStatus: (status: string) => void,
+  setStatus: Action<string>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
 ) {

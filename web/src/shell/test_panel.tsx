@@ -105,8 +105,6 @@ export const TestPanel = ({
 
   const [editMode, _] = useState(false);
   const [skipWarning, setSkipWarning] = useState(false);
-  // const [savedTst, setSavedTst] = useState("");
-  // const [savedCmp, setSavedCmp] = useState("");
   const editDialog = useDialog();
 
   const onChange = (test: string) => {
@@ -118,21 +116,6 @@ export const TestPanel = ({
     setTst(defaultTst ?? "");
     setCmp(defaultCmp ?? "");
   };
-
-  // const onEdit = () => {
-  //   if (!localStorage.getItem(WARNING_KEY)) {
-  //     editDialog.open();
-  //   }
-  //   setEditMode(true);
-  //   setSavedTst(tst);
-  //   setSavedCmp(cmp);
-  // };
-
-  // const restore = () => {
-  //   setEditMode(false);
-  //   setTst(savedTst);
-  //   setCmp(savedCmp);
-  // };
 
   const [name, setName] = useStateInitializer(tstName ?? "");
 
@@ -215,15 +198,6 @@ export const TestPanel = ({
                         Clear
                       </button>
                     )}
-                    {/* {editMode ? (
-                      <button className="flex-0" onClick={restore}>
-                        Restore
-                      </button>
-                    ) : (
-                      <button className="flex-0" onClick={onEdit}>
-                        Edit
-                      </button>
-                    )} */}
                     {showLoad && (
                       <button
                         className="flex-0"

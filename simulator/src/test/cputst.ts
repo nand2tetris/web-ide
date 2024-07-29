@@ -1,6 +1,7 @@
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
+import { Action } from "../types.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
@@ -12,8 +13,8 @@ export class CPUTest extends Test<CPUTestInstruction> {
   static from(
     tst: Tst,
     rom?: ROM,
-    doEcho?: (status: string) => void,
-    compareTo?: (status: string) => void,
+    doEcho?: Action<string>,
+    compareTo?: Action<string>,
     path?: string,
   ): CPUTest {
     const test = new CPUTest(rom, doEcho, compareTo, path);
@@ -22,8 +23,8 @@ export class CPUTest extends Test<CPUTestInstruction> {
 
   constructor(
     rom: ROM = new ROM(),
-    doEcho?: (status: string) => void,
-    compareTo?: (status: string) => void,
+    doEcho?: Action<string>,
+    compareTo?: Action<string>,
     path?: string,
   ) {
     super(doEcho, compareTo, path);

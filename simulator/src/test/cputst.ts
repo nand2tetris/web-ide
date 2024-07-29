@@ -23,8 +23,8 @@ export class CPUTest extends Test<CPUTestInstruction> {
 
   constructor(
     rom: ROM = new ROM(),
-    doEcho?: (status: string) => void,
-    compareTo?: (status: string) => void,
+    doEcho?: Action<string>,
+    compareTo?: Action<string>,
     path?: string,
   ) {
     super(doEcho, compareTo, path);

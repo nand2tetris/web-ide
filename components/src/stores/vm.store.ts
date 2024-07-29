@@ -28,6 +28,7 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 

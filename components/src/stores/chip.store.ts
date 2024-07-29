@@ -2,7 +2,6 @@ import { display } from "@davidsouther/jiffies/lib/esm/display.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   BUILTIN_CHIP_PROJECTS,
-  // CHIP_ORDER,
   CHIP_PROJECTS,
 } from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
@@ -24,10 +23,11 @@ import { toast } from "react-toastify";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { compare } from "../compare.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
@@ -46,20 +46,6 @@ const TEST_NAMES: Record<string, string[]> = {
   CPU: ["CPU", "CPU-external"],
   Computer: ["ComputerAdd", "ComputerMax", "ComputerRect"],
 };
-
-// function getChips(project: keyof typeof CHIP_PROJECTS) {
-//   return project in CHIP_ORDER
-//     ? (CHIP_ORDER as Record<typeof project, string[]>)[project]
-//     : BUILTIN_CHIP_PROJECTS[project].concat(CHIP_PROJECTS[project]);
-// }
-
-// function findDropdowns(storage: Record<string, string>) {
-//   const project =
-//     (storage["/chip/project"] as keyof typeof CHIP_PROJECTS) ?? "01";
-//   const chips = getChips(project);
-//   const chipName = storage["/chip/chip"] ?? CHIP_PROJECTS[project][0];
-//   return { project, chips, chipName };
-// }
 
 export function isBuiltinOnly(
   project: keyof typeof CHIP_PROJECTS,
@@ -147,8 +133,6 @@ export function makeChipStore(
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
 ) {
-  // const dropdowns = findDropdowns(storage);
-  // const { chips } = dropdowns;
   let _chipName = "";
   let _dir = "";
   let chip = new Low();
@@ -343,7 +327,7 @@ export function makeChipStore(
       const hdl = await fs.readFile(path);
 
       const parts = path.split("/");
-      const name = parts.pop()!.replace(".hdl", "");
+      const name = assertExists(parts.pop()).replace(".hdl", "");
       const dir = parts.join("/");
 
       await this.compileChip(hdl, dir, name);

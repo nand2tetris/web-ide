@@ -28,6 +28,7 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -225,7 +226,7 @@ export function makeVmStore(
       if (path.includes(".")) {
         // single file
         files.push({
-          name: path.replace(".vm", ""),
+          name: assertExists(path.split("/").pop()).replace(".vm", ""),
           content: await fs.readFile(path),
         });
         title = path.split("/").pop() ?? "";

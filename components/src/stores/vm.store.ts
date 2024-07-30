@@ -270,11 +270,7 @@ export function makeVmStore(
     },
     loadVm(files: VmFile[]) {
       showHighlight = false;
-      for (const file of files) {
-        if (file.content.endsWith("\n")) {
-          file.content = file.content.slice(0, -1);
-        }
-      }
+
       const content = files.map((f) => f.content).join("\n");
       dispatch.current({
         action: "setVm",

@@ -18,17 +18,17 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   fs: FileSystem = new FileSystem();
   protected doEcho?: Action<string>;
   protected doCompareTo?: Action<string>;
-  protected path?: string;
+  protected dir?: string;
   protected outputFileName?: string;
 
   constructor(
+    path?: string,
     doEcho?: Action<string>,
     doCompareTo?: Action<string>,
-    path?: string,
   ) {
     this.doEcho = doEcho;
     this.doCompareTo = doCompareTo;
-    this.path = path;
+    this.dir = path;
   }
 
   setFileSystem(fs: FileSystem): this {
@@ -51,6 +51,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   async load(_filename?: string): Promise<void> {
     return undefined;
   }
+
   async compareTo(filename: string): Promise<void> {
     this.doCompareTo?.(filename);
   }

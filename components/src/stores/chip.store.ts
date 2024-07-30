@@ -22,7 +22,7 @@ import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 
-import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
@@ -266,13 +266,17 @@ export function makeChipStore(
       state.controls.usingBuiltin = usingBuiltin;
     },
 
+    displayBuiltin(state: ChipPageState) {
+      this.setFiles(state, {
+        hdl: convertToBuiltin(state.controls.chipName, state.files.hdl),
+      });
+    },
+
     toggleBuiltin(state: ChipPageState) {
       state.controls.usingBuiltin = usingBuiltin;
       if (usingBuiltin) {
         backupHdl = state.files.hdl;
-        this.setFiles(state, {
-          hdl: convertToBuiltin(state.controls.chipName, state.files.hdl),
-        });
+        this.displayBuiltin(state);
       } else {
         this.setFiles(state, { hdl: backupHdl });
       }
@@ -319,7 +323,7 @@ export function makeChipStore(
     },
 
     async loadChip(path: string, loadTests = true) {
-      usingBuiltin = false;
+      // usingBuiltin = false;
       dispatch.current({ action: "updateUsingBuiltin", payload: false });
 
       const hdl = await fs.readFile(path);
@@ -339,6 +343,11 @@ export function makeChipStore(
         payload: { chipName: name, dir: dir },
       });
       dispatch.current({ action: "setFiles", payload: { hdl } });
+
+      if (usingBuiltin) {
+        this.loadBuiltin();
+        dispatch.current({ action: "displayBuiltin" });
+      }
     },
 
     async compileChip(hdl: string, dir?: string, name?: string) {
@@ -409,20 +418,19 @@ export function makeChipStore(
         return false;
       }
       console.log("creating test", path);
-      test = ChipTest.from(
-        Ok(tst),
-        path,
-        setStatus,
-        async (file) => {
+      test = ChipTest.from(Ok(tst), {
+        dir: path,
+        setStatus: setStatus,
+        loadAction: async (file) => {
           console.log("loading from test", file);
           await this.loadChip(file, false);
           return chip;
         },
-        async (file) => {
+        compareTo: async (file) => {
           const cmp = await fs.readFile(`${_dir}/${file}`);
           dispatch.current({ action: "setFiles", payload: { cmp } });
         },
-      )
+      })
         .with(chip)
         .reset();
       test.setFileSystem(fs);
@@ -521,7 +529,6 @@ export function makeChipStore(
     },
 
     async stepTest(): Promise<boolean> {
-      assert(test.chipId === chip.id, "Test and chip out of sync");
       try {
         const done = await test.step();
         dispatch.current({ action: "updateTestStep" });

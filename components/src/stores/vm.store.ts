@@ -220,7 +220,7 @@ export function makeVmStore(
   };
   const actions = {
     async load(path: string) {
-      let files: VmFile[] = [];
+      const files: VmFile[] = [];
       let title: string;
 
       if (path.includes(".")) {

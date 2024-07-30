@@ -124,7 +124,7 @@ describe("ChipStore", () => {
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
 
-      await state.store.actions.stepTest(); // Output List and Compare To
+      await state.store.actions.stepTest(); // Load, Output List and Compare To
 
       expect(state.store.state.files.cmp).toEqual(not.cmp);
 
@@ -145,7 +145,7 @@ describe("ChipStore", () => {
       expect(state.store.state.files.tst).toBe(not.tst);
       expect(state.store.state.controls.span).toEqual({
         start: 167,
-        end: 206,
+        end: 220,
         line: 6,
       });
     });
@@ -160,9 +160,9 @@ describe("ChipStore", () => {
       await state.store.actions.stepTest();
 
       expect(state.store.state.controls.span).toEqual({
-        start: 255,
-        end: 256,
-        line: 15,
+        start: 269,
+        end: 270,
+        line: 16,
       });
     });
   });

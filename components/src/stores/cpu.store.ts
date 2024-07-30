@@ -177,14 +177,19 @@ export function makeCpuStore(
     },
 
     async testStep() {
-      const done = await test.step();
-      if (animate || done) {
-        dispatch.current({ action: "testStep" });
+      try {
+        const done = await test.step();
+        if (animate || done) {
+          dispatch.current({ action: "testStep" });
+        }
+        if (done) {
+          dispatch.current({ action: "testFinished" });
+        }
+        return done;
+      } catch (e) {
+        setStatus((e as Error).message);
+        return true;
       }
-      if (done) {
-        dispatch.current({ action: "testFinished" });
-      }
-      return done;
     },
 
     resetRAM() {

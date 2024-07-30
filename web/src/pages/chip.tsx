@@ -146,7 +146,11 @@ export const Chip = () => {
 
   const selectors = (
     <>
-      <fieldset role="group">
+      <fieldset
+        role="group"
+        data-tooltip="Open an HDL file using this menu"
+        data-placement="bottom"
+      >
         <select
           value={state.controls.project}
           onChange={({ target: { value } }) => {
@@ -205,7 +209,13 @@ export const Chip = () => {
           )}
           {selectors}
           <fieldset role="group">
-            <button onClick={loadFile}>📂</button>
+            <button
+              data-tooltip="Open an HDL file directly"
+              data-placement="left"
+              onClick={loadFile}
+            >
+              📂
+            </button>
           </fieldset>
         </>
       }

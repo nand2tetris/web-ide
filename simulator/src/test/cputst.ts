@@ -2,7 +2,7 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
-import { Action } from "../types.js";
+import { Action, AsyncAction } from "../types.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
@@ -10,14 +10,14 @@ import { Test } from "./tst.js";
 export class CPUTest extends Test<CPUTestInstruction> {
   cpu: CPU;
   private ticks = 0;
-  private doLoad?: Action<string>;
+  private doLoad?: AsyncAction<string>;
 
   static from(
     tst: Tst,
     dir?: string,
     rom?: ROM,
     doEcho?: Action<string>,
-    doLoad?: Action<string>,
+    doLoad?: AsyncAction<string>,
 
     compareTo?: Action<string>,
   ): CPUTest {
@@ -29,7 +29,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
     dir?: string,
     rom: ROM = new ROM(),
     doEcho?: Action<string>,
-    doLoad?: Action<string>,
+    doLoad?: AsyncAction<string>,
     compareTo?: Action<string>,
   ) {
     super(dir, doEcho, compareTo);

@@ -14,7 +14,9 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "src/chips/screen.js";
 import { RunSpeed } from "src/runbar.js";
@@ -23,7 +25,6 @@ import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 function makeTst() {
   return `repeat {
@@ -215,7 +216,7 @@ export function makeCpuStore(
     },
 
     replaceROM(rom: ROM) {
-      test = new CPUTest(rom);
+      test = new CPUTest(path, rom);
       this.clearTest();
     },
 
@@ -234,14 +235,25 @@ export function makeCpuStore(
 
       test = CPUTest.from(
         Ok(tst),
+        tstPath,
         test.cpu.ROM,
         setStatus,
+        async (path) => {
+          const file = await fs.readFile(path);
+          const loader = path.endsWith("hack")
+            ? loadHack
+            : path.endsWith("asm")
+              ? loadAsm
+              : loadBlob;
+          const bytes = await loader(file);
+          console.log(bytes);
+          test.cpu.ROM.loadBytes(bytes);
+        },
         async (file) => {
           const dir = tstPath.split("/").slice(0, -1).join("/");
           const cmp = await fs.readFile(`${dir}/${file}`);
           dispatch.current({ action: "setTest", payload: { cmp } });
         },
-        tstPath,
       );
       dispatch.current({ action: "update" });
       return true;

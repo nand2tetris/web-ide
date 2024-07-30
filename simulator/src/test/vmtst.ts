@@ -1,3 +1,4 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
@@ -16,22 +17,28 @@ export interface VmFile {
 export class VMTest extends Test<VMTestInstruction> {
   vm: Vm = new Vm();
 
-  private loadAction?: (files: VmFile[]) => void;
-  private dir?: string;
+  private doLoad?: Action<string>;
 
   static from(
     tst: Tst,
-    path?: string,
-    loadAction?: (files: VmFile[]) => void,
+    dir?: string,
+    doLoad?: Action<string>,
     doEcho?: Action<string>,
     compareTo?: Action<string>,
   ): VMTest {
-    const test = new VMTest(doEcho, compareTo, path);
-    test.dir = path?.split("/").slice(0, -1).join("/");
-    test.loadAction = loadAction;
-    test.doCompareTo = compareTo;
-    test.path = path;
+    const test = new VMTest(dir, doEcho, doLoad, compareTo);
+    test.doLoad = doLoad;
     return fill(test, tst);
+  }
+
+  constructor(
+    dir?: string,
+    doEcho?: Action<string>,
+    doLoad?: Action<string>,
+    compareTo?: Action<string>,
+  ) {
+    super(dir, doEcho, compareTo);
+    this.doLoad = doLoad;
   }
 
   using(fs: FileSystem): this {
@@ -42,6 +49,15 @@ export class VMTest extends Test<VMTestInstruction> {
   with(vm: Vm) {
     this.vm = vm;
     return this;
+  }
+
+  override async load(filename?: string): Promise<void> {
+    if (!filename && !this.dir) return;
+    const dir = assertExists(this.dir?.split("/").slice(0, -1).join("/"));
+    const vm = await this.doLoad?.(filename ? `${dir}/${filename}` : dir);
+    if (vm) {
+      this.vm = vm;
+    }
   }
 
   hasVar(variable: string | number, index?: number): boolean {

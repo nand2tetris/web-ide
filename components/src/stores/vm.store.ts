@@ -19,6 +19,7 @@ import {
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
@@ -27,7 +28,6 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -128,7 +128,7 @@ export function makeVmStore(
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
   let vm = unwrap(Vm.build(parsed.instructions));
-  let test = new VMTest(setStatus).with(vm);
+  let test = new VMTest(undefined, setStatus).with(vm);
   let useTest = false;
   let animate = true;
   let vmSource = "";
@@ -218,6 +218,34 @@ export function makeVmStore(
     },
   };
   const actions = {
+    async load(path: string) {
+      let files: VmFile[] = [];
+      let title: string;
+
+      if (path.includes(".")) {
+        // single file
+        files.push({
+          name: path.replace(".vm", ""),
+          content: await fs.readFile(path),
+        });
+        title = path.split("/").pop() ?? "";
+      } else {
+        // folder
+        for (const file of (await fs.scandir(path)).filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".vm"),
+        )) {
+          files.push({
+            name: file.name.replace(".vm", ""),
+            content: await fs.readFile(`${path}/${file.name}`),
+          });
+        }
+        title = `${path.split("/").pop()} / *.vm`;
+      }
+      dispatch.current({ action: "setTitle", payload: title });
+      this.loadVm(files);
+      this.reset();
+      setStatus("");
+    },
     setVm(content: string) {
       showHighlight = false;
       dispatch.current({
@@ -314,8 +342,8 @@ export function makeVmStore(
       test = VMTest.from(
         unwrap(tst),
         path,
-        (files) => {
-          this.loadVm(files);
+        async (path) => {
+          await this.load(path);
         },
         setStatus,
         async (file) => {

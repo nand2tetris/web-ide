@@ -4,6 +4,7 @@ import { int2, parseTwosInt } from "./util/twos.js";
 
 export async function loadAsm(source: string): Promise<number[]> {
   const asm = unwrap(ASM.parse(source));
+  console.log(asm);
   ASM.passes.fillLabel(asm);
   return ASM.passes.emit(asm);
 }

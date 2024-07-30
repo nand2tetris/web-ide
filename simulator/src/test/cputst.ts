@@ -1,3 +1,4 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
@@ -7,29 +8,43 @@ import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
 
 export class CPUTest extends Test<CPUTestInstruction> {
-  readonly cpu: CPU;
+  cpu: CPU;
   private ticks = 0;
+  private doLoad?: Action<string>;
 
   static from(
     tst: Tst,
+    dir?: string,
     rom?: ROM,
     doEcho?: Action<string>,
+    doLoad?: Action<string>,
+
     compareTo?: Action<string>,
-    path?: string,
   ): CPUTest {
-    const test = new CPUTest(rom, doEcho, compareTo, path);
+    const test = new CPUTest(dir, rom, doEcho, doLoad, compareTo);
     return fill(test, tst);
   }
 
   constructor(
+    dir?: string,
     rom: ROM = new ROM(),
     doEcho?: Action<string>,
+    doLoad?: Action<string>,
     compareTo?: Action<string>,
-    path?: string,
   ) {
-    super(doEcho, compareTo, path);
+    super(dir, doEcho, compareTo);
+    this.doLoad = doLoad;
     this.cpu = new CPU({ ROM: rom });
     this.reset();
+  }
+
+  override async load(filename?: string): Promise<void> {
+    if (!filename && !this.dir) return;
+    const dir = assertExists(this.dir?.split("/").slice(0, -1).join("/"));
+    const rom = await this.doLoad?.(filename ? `${dir}/${filename}` : dir);
+    if (rom) {
+      this.cpu = new CPU({ ROM: rom });
+    }
   }
 
   override reset(): this {

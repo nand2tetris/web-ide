@@ -318,7 +318,7 @@ export function makeChipStore(
       dispatch.current({ action: "setChips", payload: chips });
     },
 
-    async loadChip(path: string) {
+    async loadChip(path: string, loadTests = true) {
       usingBuiltin = false;
       dispatch.current({ action: "updateUsingBuiltin", payload: false });
 
@@ -329,7 +329,11 @@ export function makeChipStore(
       const dir = parts.join("/");
 
       await this.compileChip(hdl, dir, name);
-      await this.initializeTests(dir, name);
+
+      if (loadTests) {
+        await this.initializeTests(dir, name);
+      }
+
       dispatch.current({
         action: "setChip",
         payload: { chipName: name, dir: dir },
@@ -366,7 +370,8 @@ export function makeChipStore(
       nextChip.eval();
       chip = nextChip;
       chip.reset();
-      test = test.with(chip).reset();
+      console.log("setting chip, id:", chip.id);
+      // test = test.with(chip).reset();
       dispatch.current({ action: "updateChip", payload: { invalid: false } });
       dispatch.current({ action: "updateTestStep" });
     },
@@ -403,14 +408,20 @@ export function makeChipStore(
         invalid = true;
         return false;
       }
+      console.log("creating test", path);
       test = ChipTest.from(
         Ok(tst),
+        path,
         setStatus,
+        async (file) => {
+          console.log("loading from test", file);
+          await this.loadChip(file, false);
+          return chip;
+        },
         async (file) => {
           const cmp = await fs.readFile(`${_dir}/${file}`);
           dispatch.current({ action: "setFiles", payload: { cmp } });
         },
-        path,
       )
         .with(chip)
         .reset();
@@ -432,6 +443,7 @@ export function makeChipStore(
     }) {
       invalid = false;
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
+      console.log("calling update files");
       try {
         if (hdl) {
           await this.compileChip(hdl, _dir, _chipName);

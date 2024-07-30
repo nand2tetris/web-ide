@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 
-import "react-toastify/dist/ReactToastify.css";
 import "./chip.scss";
 
 import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
@@ -24,7 +23,6 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { ToastContainer } from "react-toastify";
 import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
@@ -370,14 +368,6 @@ export const Chip = () => {
         {pinsPanel}
         {testPanel}
       </div>
-      <ToastContainer
-        theme="colored"
-        className="toast"
-        position="bottom-right"
-        closeOnClick={true}
-        closeButton={false}
-        autoClose={false}
-      />
     </>
   );
 };

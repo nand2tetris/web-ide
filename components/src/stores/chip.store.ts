@@ -18,7 +18,6 @@ import {
 } from "@nand2tetris/simulator/languages/base.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { toast } from "react-toastify";
 
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
@@ -388,9 +387,9 @@ export function makeChipStore(
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, dir);
       } catch (e) {
-        toast(`Could not find ${name}.tst. Please load test file separately.`, {
-          type: "error",
-        });
+        setStatus(
+          `Could not find ${name}.tst. Please load test file separately.`,
+        );
         console.error(e);
       }
     },

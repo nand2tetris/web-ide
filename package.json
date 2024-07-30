@@ -48,8 +48,5 @@
   "engines": {
     "node": ">=16",
     "npm": ">=7"
-  },
-  "dependencies": {
-    "react-toastify": "^10.0.5"
   }
 }

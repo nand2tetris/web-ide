@@ -157,9 +157,6 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   output() {
     const values = this._outputList.map((output) => output.print(this));
     this._log += `|${values.join("|")}|\n`;
-    // if (this.outputFileName) {
-    //   this.fs.writeFile(`${this.path ?? ""}/${this.outputFileName}`, this._log);
-    // }
   }
 
   header() {

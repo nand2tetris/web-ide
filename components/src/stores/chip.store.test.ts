@@ -124,7 +124,7 @@ describe("ChipStore", () => {
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
 
-      await state.store.actions.stepTest(); // Output List and Compare To
+      await state.store.actions.stepTest(); // Load, Output List and Compare To
 
       expect(state.store.state.files.cmp).toEqual(not.cmp);
 

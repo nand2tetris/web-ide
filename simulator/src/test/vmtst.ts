@@ -52,7 +52,7 @@ export class VMTest extends Test<VMTestInstruction> {
   }
 
   override async load(filename?: string): Promise<void> {
-    if (!filename && !this.dir) return;
+    if (!this.dir) return;
     const dir = assertExists(this.dir?.split("/").slice(0, -1).join("/"));
     const vm = await this.doLoad?.(filename ? `${dir}/${filename}` : dir);
     if (vm) {

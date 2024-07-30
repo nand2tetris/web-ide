@@ -3,7 +3,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";
-import { Action } from "../types.js";
+import { Action, AsyncAction } from "../types.js";
 import { Vm } from "../vm/vm.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
@@ -17,12 +17,12 @@ export interface VmFile {
 export class VMTest extends Test<VMTestInstruction> {
   vm: Vm = new Vm();
 
-  private doLoad?: Action<string>;
+  private doLoad?: AsyncAction<string>;
 
   static from(
     tst: Tst,
     dir?: string,
-    doLoad?: Action<string>,
+    doLoad?: AsyncAction<string>,
     doEcho?: Action<string>,
     compareTo?: Action<string>,
   ): VMTest {
@@ -34,7 +34,7 @@ export class VMTest extends Test<VMTestInstruction> {
   constructor(
     dir?: string,
     doEcho?: Action<string>,
-    doLoad?: Action<string>,
+    doLoad?: AsyncAction<string>,
     compareTo?: Action<string>,
   ) {
     super(dir, doEcho, compareTo);

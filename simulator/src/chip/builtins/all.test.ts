@@ -42,7 +42,7 @@ describe("All Projects", () => {
       const tst = TST.parse(tstFile);
       expect(tst).toBeOk();
 
-      const chip = await build(Ok(hdl as Ok<HdlParse>));
+      const chip = await build({ parts: Ok(hdl as Ok<HdlParse>) });
       expect(chip).toBeOk();
       const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(Ok(chip as Ok<Chip>));
 

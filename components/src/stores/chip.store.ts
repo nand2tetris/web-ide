@@ -418,12 +418,10 @@ export function makeChipStore(
         invalid = true;
         return false;
       }
-      console.log("creating test", path);
       test = ChipTest.from(Ok(tst), {
         dir: path,
         setStatus: setStatus,
         loadAction: async (file) => {
-          console.log("loading from test", file);
           await this.loadChip(file, false);
           return chip;
         },

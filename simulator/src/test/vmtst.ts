@@ -21,22 +21,28 @@ export class VMTest extends Test<VMTestInstruction> {
 
   static from(
     tst: Tst,
-    dir?: string,
-    doLoad?: AsyncAction<string>,
-    doEcho?: Action<string>,
-    compareTo?: Action<string>,
+    options: {
+      dir?: string;
+      doLoad?: AsyncAction<string>;
+      doEcho?: Action<string>;
+      compareTo?: Action<string>;
+    } = {},
   ): VMTest {
-    const test = new VMTest(dir, doEcho, doLoad, compareTo);
-    test.doLoad = doLoad;
+    const test = new VMTest(options);
     return fill(test, tst);
   }
 
-  constructor(
-    dir?: string,
-    doEcho?: Action<string>,
-    doLoad?: AsyncAction<string>,
-    compareTo?: Action<string>,
-  ) {
+  constructor({
+    dir,
+    doEcho,
+    doLoad,
+    compareTo,
+  }: {
+    dir?: string;
+    doEcho?: Action<string>;
+    doLoad?: AsyncAction<string>;
+    compareTo?: Action<string>;
+  } = {}) {
     super(dir, doEcho, compareTo);
     this.doLoad = doLoad;
   }

@@ -221,7 +221,7 @@ export function makeCpuStore(
     },
 
     replaceROM(rom: ROM) {
-      test = new CPUTest(path, rom);
+      test = new CPUTest({ dir: path, rom });
       this.clearTest();
     },
 
@@ -238,12 +238,11 @@ export function makeCpuStore(
       }
       valid = true;
 
-      test = CPUTest.from(
-        Ok(tst),
-        tstPath,
-        test.cpu.ROM,
-        setStatus,
-        async (path) => {
+      test = CPUTest.from(Ok(tst), {
+        dir: tstPath,
+        rom: test.cpu.ROM,
+        doEcho: setStatus,
+        doLoad: async (path) => {
           const file = await fs.readFile(path);
           const loader = path.endsWith("hack")
             ? loadHack
@@ -254,12 +253,12 @@ export function makeCpuStore(
           console.log(bytes);
           test.cpu.ROM.loadBytes(bytes);
         },
-        async (file) => {
+        compareTo: async (file) => {
           const dir = tstPath.split("/").slice(0, -1).join("/");
           const cmp = await fs.readFile(`${dir}/${file}`);
           dispatch.current({ action: "setTest", payload: { cmp } });
         },
-      );
+      });
       dispatch.current({ action: "update" });
       return true;
     },

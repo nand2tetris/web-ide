@@ -20,7 +20,6 @@ import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { RunSpeed } from "src/runbar.js";
@@ -198,7 +197,7 @@ export type AsmStoreDispatch = Dispatch<{
 
 export function makeAsmStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: (status: string) => void,
   dispatch: MutableRefObject<AsmStoreDispatch>,
   upgraded: boolean,
 ) {

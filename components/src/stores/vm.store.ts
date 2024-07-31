@@ -20,7 +20,6 @@ import {
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
@@ -90,7 +89,7 @@ export type VmStoreDispatch = Dispatch<{
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
-  setStatus: Action<string>,
+  setStatus: (status: string) => void,
   showHighlight: boolean,
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
@@ -123,7 +122,7 @@ function reduceVMTest(
 
 export function makeVmStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: (status: string) => void,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {

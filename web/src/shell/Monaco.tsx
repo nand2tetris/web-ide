@@ -4,7 +4,6 @@ import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Decoration, HighlightType } from "./editor";
-import { Action } from "@nand2tetris/simulator/types";
 
 const isRangeVisible = (
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
@@ -80,7 +79,7 @@ export const Monaco = ({
   lineNumberTransform,
 }: {
   value: string;
-  onChange: Action<string>;
+  onChange: (value: string) => void;
   onCursorPositionChange?: (index: number) => void;
   language: string;
   error?: CompilationError;

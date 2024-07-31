@@ -16,7 +16,6 @@ import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "src/chips/screen.js";
 import { RunSpeed } from "src/runbar.js";
@@ -95,7 +94,7 @@ export type CpuStoreDispatch = Dispatch<{
 
 export function makeCpuStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: (status: string) => void,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
 ) {

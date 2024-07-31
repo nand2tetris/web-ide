@@ -18,6 +18,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // Tests the program by having it multiply several sets of
 // R0 and R1 values.
 
+load Mult.asm,
+compare-to Mult.cmp,
 output-list RAM[0]%D2.6.2 RAM[1]%D2.6.2 RAM[2]%D2.6.2;
 
 set RAM[0] 0,   // Sets R0 and R1 to some input values

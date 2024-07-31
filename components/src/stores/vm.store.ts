@@ -309,7 +309,7 @@ export function makeVmStore(
         return false;
       }
       dispatch.current({ action: "setError" });
-      setStatus("Compiled VM code successfully");
+      // setStatus("Compiled VM code successfully");
 
       vm = unwrap(buildResult);
       test.vm = vm;

@@ -29,6 +29,7 @@ import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { compare } from "../compare.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 export const NO_SCREEN = "noScreen";
 

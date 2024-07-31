@@ -53,6 +53,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Tests and illustrates StackTest.vm on the VM simulator.
 
 load StackTest.vm,
+compare-to StackTest.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -74,6 +75,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // File name: projects/7/StackArithmetic/StackTest/StackTest.tst
 
 // Tests StackTest.asm on the CPU emulator.
+
+load StackTest.asm,
+compare-to StackTest.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 

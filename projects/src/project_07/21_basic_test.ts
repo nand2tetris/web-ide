@@ -42,6 +42,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // of relevant memory segments to selected RAM addresses.
 
 load BasicTest.vm,
+compare-to BasicTest.cmp,
 
 set sp 256,        // stack pointer
 set local 300,     // base address of the local segment
@@ -66,6 +67,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // File name: projects/7/MemoryAccess/BasicTest/BasicTest.tst
 
 // Tests BasicTest.asm on the CPU emulator.
+
+load BasicTest.asm,
+compare-to BasicTest.cmp,
 
 set RAM[0] 256,   // stack pointer
 set RAM[1] 300,   // base address of the local segment

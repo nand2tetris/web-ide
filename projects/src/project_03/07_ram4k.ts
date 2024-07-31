@@ -20,6 +20,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/3/b/RAM4K.tst
 
+load RAM4K.hdl,
+compare-to RAM4K.cmp,
 output-list time%S1.3.1 in%D1.6.1 load%B2.1.1 address%D2.4.2 out%D1.6.1;
 
 set in 0,

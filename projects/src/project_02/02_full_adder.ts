@@ -27,6 +27,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/2/FullAdder.tst
 
+load FullAdder.hdl,
+compare-to FullAdder.cmp,
 output-list a b c sum carry%B2.1.2;
 
 set a 0,

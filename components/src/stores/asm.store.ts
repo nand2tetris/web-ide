@@ -289,6 +289,8 @@ export function makeAsmStore(
   const actions = {
     async loadAsm(_path: string) {
       path = _path;
+      console.log(path);
+      console.log(await fs.scandir("/"));
       const source = await fs.readFile(path);
       actions.setAsm(source, path);
     },

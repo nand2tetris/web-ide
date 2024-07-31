@@ -85,6 +85,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/2/ALU.tst
 
+load ALU.hdl,
+compare-to ALU.cmp,
 output-list x%B1.16.1 y%B1.16.1 zx nx zy ny f no out zr ng;
 
 set x %B0000000000000000,  // x = 0

@@ -29,6 +29,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // and sets some values in the argument segment.
 
 load SimpleFunction.vm,
+compare-to SimpleFunction.cmp,
 
 set sp 317,
 set local 317,
@@ -64,6 +65,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // of the 'return' VM command handles the return value, SP, LCL, ARG, THIS, and THAT. 
 // Before executing the code, initializes the stack pointer and the pointers of some
 // of the memory segments, and sets some values in the argument segment.
+
+Load SimpleFunction.asm,
+compare-to SimpleFunction.cmp,
 
 set RAM[0] 317,    // SP
 set RAM[1] 317,    // LCL

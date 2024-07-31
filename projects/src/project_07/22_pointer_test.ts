@@ -31,6 +31,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Tests and illustrates PointerTest.vm on the VM simulator.
 
 load PointerTest.vm,
+compare-to PointerTest.cmp,
 
 set RAM[0] 256,   // initializes the stack pointer
 
@@ -51,6 +52,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // File name: projects/7/MemoryAccess/PointerTest/PointerTest.tst
 
 // Tests PointerTest.asm on the CPU emulator.
+
+load PointerTest.asm,
+compare-to PointerTest.cmp,
 
 set RAM[0] 256,   // initializes the stack pointer
 

@@ -17,6 +17,7 @@ export const tst = `// This file is part of www.nand2tetris.org
 
 // Tests the Fill.hack program in the CPU emulator.
 
+load Fill.asm;
 echo "Select the highest speed and 'enable keyboard'. Then press any key for some time, and inspect the screen.";
 
 repeat {
@@ -37,6 +38,8 @@ export const autoTst = `// This file is part of www.nand2tetris.org
 // This is done in order to test that these registers are set to 000...0 or 111....1, 
 // as mandated by how the Fill program should react to the keyboard events.
 
+load Fill.asm,
+compare-to FillAutomatic.cmp,
 output-list RAM[16384]%D2.6.2 RAM[17648]%D2.6.2 RAM[18349]%D2.6.2 RAM[19444]%D2.6.2 RAM[20771]%D2.6.2 RAM[21031]%D2.6.2 RAM[22596]%D2.6.2 RAM[23754]%D2.6.2 RAM[24575]%D2.6.2;
 
 set RAM[24576] 0,    // the keyboard is untouched

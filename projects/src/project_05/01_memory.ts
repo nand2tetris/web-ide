@@ -39,6 +39,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // and 'Screen', which correspond to 0, %X2000, and %X4000 in Hexadecimal 
 // (0, 8192 (8K), and 16385 (16K+1) in decimal).
 
+load Memory.hdl,
+compare-to Memory.cmp,
 output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 
 echo "Before you run this script, select the 'Screen' option from the 'View' menu";

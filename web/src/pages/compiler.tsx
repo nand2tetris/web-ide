@@ -68,9 +68,19 @@ export const Compiler = () => {
         action: "setTitle",
         payload: `${handle.name} / *.jack`,
       });
-      setStatus("");
-      actions.loadProject(fs);
-      setEditable(true);
+      const empty =
+        (await fs.scandir("/")).filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".jack"),
+        ).length == 0;
+
+      if (empty) {
+        setStatus("No .jack files in the selected folder");
+        setSuppressStatus(true);
+      } else {
+        setStatus("");
+        actions.loadProject(fs);
+        setEditable(true);
+      }
     } else {
       loadRef.current?.click();
       setEditable(false);

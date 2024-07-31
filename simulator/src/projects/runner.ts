@@ -63,12 +63,10 @@ export const maybeBuild =
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
     let maybeChip: Result<Chip, Error>;
     if (isOk(file.maybeParsedHDL)) {
-      const maybeBuilt = await buildChip(
-        Ok(file.maybeParsedHDL),
-        undefined,
-        undefined,
+      const maybeBuilt = await buildChip({
+        parts: Ok(file.maybeParsedHDL),
         fs,
-      );
+      });
       if (isErr(maybeBuilt)) {
         maybeChip = Err(new Error(Err(maybeBuilt).message));
       } else {

@@ -37,7 +37,7 @@ export async function parse(
   if (isErr(parsed)) {
     return parsed;
   }
-  return build(Ok(parsed), dir, name, fs);
+  return build({ parts: Ok(parsed), dir, name, fs });
 }
 
 export async function loadChip(
@@ -54,7 +54,12 @@ export async function loadChip(
 
     let maybeChip: Result<Chip, Error>;
     if (isOk(maybeParsedHDL)) {
-      const maybeBuilt = await build(Ok(maybeParsedHDL), dir, name, fs);
+      const maybeBuilt = await build({
+        parts: Ok(maybeParsedHDL),
+        dir,
+        name,
+        fs,
+      });
       if (isErr(maybeBuilt)) {
         maybeChip = Err(new Error(Err(maybeBuilt).message));
       } else {
@@ -70,13 +75,18 @@ export async function loadChip(
   }
 }
 
-export async function build(
-  parts: HdlParse,
-  dir?: string,
-  name?: string,
-  fs?: FileSystem,
-): Promise<Result<Chip, CompilationError>> {
-  return await new ChipBuilder(parts, dir, fs, name).build();
+export async function build({
+  parts,
+  fs,
+  dir,
+  name,
+}: {
+  parts: HdlParse;
+  fs?: FileSystem;
+  dir?: string;
+  name?: string;
+}): Promise<Result<Chip, CompilationError>> {
+  return await ChipBuilder.build({ parts, dir, fs, name });
 }
 
 interface InternalPin {
@@ -190,7 +200,26 @@ class ChipBuilder {
   private outPins: Map<string, Set<number>> = new Map();
   private wires: WireData[] = [];
 
-  constructor(parts: HdlParse, dir?: string, fs?: FileSystem, name?: string) {
+  static build(options: {
+    parts: HdlParse;
+    fs?: FileSystem;
+    dir?: string;
+    name?: string;
+  }) {
+    return new ChipBuilder(options).build();
+  }
+
+  private constructor({
+    parts,
+    fs,
+    dir,
+    name,
+  }: {
+    parts: HdlParse;
+    fs?: FileSystem;
+    dir?: string;
+    name?: string;
+  }) {
     this.parts = parts;
     this.expectedName = name;
     this.dir = dir;
@@ -206,7 +235,6 @@ class ChipBuilder {
 
   async build() {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
-      console.log(this.parts.name.value, this.expectedName);
       return Err(createError(`Wrong chip name`, this.parts.name.span));
     }
 

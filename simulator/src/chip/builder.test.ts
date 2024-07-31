@@ -123,7 +123,7 @@ describe("Chip Builder", () => {
 
     try {
       const chip = unwrap(await HDL.parse(USE_COPY_HDL));
-      foo = unwrap(await build(chip, ".", undefined, fs));
+      foo = unwrap(await build({ parts: chip, dir: ".", fs }));
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
@@ -147,7 +147,7 @@ describe("Chip Builder", () => {
         PARTS: Or8Way(in=in, out=out);
       }`),
       );
-      const foo = await build(chip);
+      const foo = await build({ parts: chip });
       expect(foo).toBeErr();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -164,7 +164,7 @@ describe("Chip Builder", () => {
         PARTS: Not(in=in, out=out);
       }`),
       );
-      const foo = await build(chip);
+      const foo = await build({ parts: chip });
       expect(foo).toBeErr();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

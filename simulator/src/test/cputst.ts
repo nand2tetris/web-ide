@@ -14,24 +14,31 @@ export class CPUTest extends Test<CPUTestInstruction> {
 
   static from(
     tst: Tst,
-    dir?: string,
-    rom?: ROM,
-    doEcho?: Action<string>,
-    doLoad?: AsyncAction<string>,
-
-    compareTo?: Action<string>,
+    options: {
+      dir?: string;
+      rom?: ROM;
+      doEcho?: Action<string>;
+      doLoad?: AsyncAction<string>;
+      compareTo?: Action<string>;
+    } = {},
   ): CPUTest {
-    const test = new CPUTest(dir, rom, doEcho, doLoad, compareTo);
+    const test = new CPUTest(options);
     return fill(test, tst);
   }
 
-  constructor(
-    dir?: string,
-    rom: ROM = new ROM(),
-    doEcho?: Action<string>,
-    doLoad?: AsyncAction<string>,
-    compareTo?: Action<string>,
-  ) {
+  constructor({
+    dir,
+    rom = new ROM(),
+    doEcho,
+    doLoad,
+    compareTo,
+  }: {
+    dir?: string;
+    rom?: ROM;
+    doEcho?: Action<string>;
+    doLoad?: AsyncAction<string>;
+    compareTo?: Action<string>;
+  } = {}) {
     super(dir, doEcho, compareTo);
     this.doLoad = doLoad;
     this.cpu = new CPU({ ROM: rom });

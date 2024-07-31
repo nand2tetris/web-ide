@@ -32,7 +32,7 @@ Tst <: Base {
   TstEchoOperation = Echo String
   TstClearEchoOperation = ClearEcho
 
-  filename = (letter|underscore|dot|dollar|minus) (alnum|underscore|dot|dollar|minus)*
+  filename = (alnum|underscore|dot|dollar|minus)+
   FileName = filename
   FileOperation = "load" | "output-file" | "compare-to"
 

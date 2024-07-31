@@ -20,12 +20,12 @@ import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { RunSpeed } from "src/runbar.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -361,7 +361,7 @@ export function makeAsmStore(
 
         if (path && upgraded) {
           await fs.writeFile(
-            path.replace(".asm", ".hack"),
+            path.replace(/\.asm$/, ".hack"),
             translator.getResult(),
           );
         }

@@ -18,22 +18,29 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   static from(
     tst: Tst,
-    dir?: string,
-    setStatus?: Action<string>,
-    loadAction?: (path: string) => Promise<Chip>,
-    compareTo?: Action<string>,
+    options: {
+      dir?: string;
+      setStatus?: Action<string>;
+      loadAction?: (path: string) => Promise<Chip>;
+      compareTo?: Action<string>;
+    } = {},
   ): ChipTest {
-    const test = new ChipTest(dir, setStatus, loadAction, compareTo);
+    const test = new ChipTest(options);
 
     return fill(test, tst);
   }
 
-  constructor(
-    dir?: string,
-    setStatus?: Action<string>,
-    loadAction?: (path: string) => Promise<Chip>,
-    compareTo?: Action<string>,
-  ) {
+  constructor({
+    dir,
+    setStatus,
+    loadAction,
+    compareTo,
+  }: {
+    dir?: string;
+    setStatus?: Action<string>;
+    loadAction?: (path: string) => Promise<Chip>;
+    compareTo?: Action<string>;
+  } = {}) {
     super(dir, setStatus, compareTo);
     this.doLoad = loadAction;
   }

@@ -1,3 +1,4 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
@@ -28,7 +29,6 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -129,7 +129,7 @@ export function makeVmStore(
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
   let vm = unwrap(Vm.build(parsed.instructions));
-  let test = new VMTest(undefined, setStatus).with(vm);
+  let test = new VMTest({ doEcho: setStatus }).with(vm);
   let useTest = false;
   let animate = true;
   let vmSource = "";
@@ -336,19 +336,18 @@ export function makeVmStore(
       setStatus(`Parsed tst`);
 
       vm.reset();
-      test = VMTest.from(
-        unwrap(tst),
-        path,
-        async (path) => {
+      test = VMTest.from(unwrap(tst), {
+        dir: path,
+        doLoad: async (path) => {
           await this.load(path);
         },
-        setStatus,
-        async (file) => {
+        doEcho: setStatus,
+        compareTo: async (file) => {
           const dir = path.split("/").slice(0, -1).join("/");
           const cmp = await fs.readFile(`${dir}/${file}`);
           dispatch.current({ action: "setCmp", payload: { cmp } });
         },
-      ).using(fs);
+      }).using(fs);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;

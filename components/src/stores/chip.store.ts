@@ -34,6 +34,7 @@ import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { RunSpeed } from "src/runbar.js";
 import { compare } from "../compare.js";
 import { BaseContext } from "./base.context.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -184,7 +185,7 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: (status: string) => void,
+  setStatus: Action<string>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
 ) {

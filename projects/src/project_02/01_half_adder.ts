@@ -23,6 +23,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/2/HalfAdder.tst
 
+load HalfAdder.hdl,
+compare-to HalfAdder.cmp,
 output-list a b sum carry;
 
 set a 0,

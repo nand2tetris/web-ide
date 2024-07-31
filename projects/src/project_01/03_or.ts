@@ -23,6 +23,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/1/Or.tst
 
+load Or.hdl,
+compare-to Or.cmp,
 output-list a b out;
 
 set a 0,

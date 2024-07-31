@@ -56,6 +56,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // of the generated series.
 
 load FibonacciSeries.vm,
+compare-to FibonacciSeries.cmp,
 
 set sp 256,
 set local 300,
@@ -82,6 +83,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // Before executing the code, initializes the stack pointer
 // and the base addresses of the local and argument segments,
 // and sets argument[0] and argument [1].
+
+load FibonacciSeries.asm,
+compare-to FibonacciSeries.cmp,
 
 set RAM[0] 256,    // SP
 set RAM[1] 300,    // LCL

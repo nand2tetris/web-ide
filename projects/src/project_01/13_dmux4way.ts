@@ -21,6 +21,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/1/DMux4Way.tst
 
+load DMux4Way.hdl,
+compare-to DMux4Way.cmp,
 output-list in sel%B2.2.2 a b c d;
 
 set in 0,

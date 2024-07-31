@@ -21,6 +21,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/03/a/PC.tst
 
+load PC.hdl,
+compare-to PC.cmp,
 output-list time%S1.3.1 in%D1.6.1 reset%B2.1.2 load%B2.1.2 inc%B2.1.2 out%D1.6.1;
 
 set in 0,

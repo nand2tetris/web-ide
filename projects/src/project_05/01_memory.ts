@@ -14,8 +14,8 @@ export const hdl = `// This file is part of www.nand2tetris.org
  * available through the out output from the next time step onward.
  * Address space rules:
  * Only the upper 16K+8K+1 words of the Memory chip are used. 
- * Access to address>0x6000 is invalid and reads 0. Access to any address
- * in the range 0x4000-0x5FFF results in accessing the screen memory 
+ * Access to address>0x6000 is invalid. Access to any address in 
+ * the range 0x4000-0x5FFF results in accessing the screen memory 
  * map. Access to address 0x6000 results in accessing the keyboard 
  * memory map. The behavior in these addresses is described in the Screen
  * and Keyboard chip specifications given in the lectures and the book.
@@ -39,6 +39,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // and 'Screen', which correspond to 0, %X2000, and %X4000 in Hexadecimal 
 // (0, 8192 (8K), and 16385 (16K+1) in decimal).
 
+load Memory.hdl,
+compare-to Memory.cmp,
 output-list in%D1.6.1 load%B2.1.2 address%B1.15.1 out%D1.6.1;
 
 echo "Before you run this script, select the 'Screen' option from the 'View' menu";

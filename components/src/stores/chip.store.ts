@@ -379,8 +379,6 @@ export function makeChipStore(
       nextChip.eval();
       chip = nextChip;
       chip.reset();
-      console.log("setting chip, id:", chip.id);
-      // test = test.with(chip).reset();
       dispatch.current({ action: "updateChip", payload: { invalid: false } });
       dispatch.current({ action: "updateTestStep" });
     },

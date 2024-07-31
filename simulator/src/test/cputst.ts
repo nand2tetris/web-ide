@@ -1,6 +1,7 @@
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
+import { Action } from "../types.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
@@ -9,12 +10,12 @@ export class CPUTest extends Test<CPUTestInstruction> {
   readonly cpu: CPU;
   private ticks = 0;
 
-  static from(tst: Tst, rom?: ROM, doEcho?: (status: string) => void): CPUTest {
+  static from(tst: Tst, rom?: ROM, doEcho?: Action<string>): CPUTest {
     const test = new CPUTest(rom, doEcho);
     return fill(test, tst);
   }
 
-  constructor(rom: ROM = new ROM(), doEcho?: (status: string) => void) {
+  constructor(rom: ROM = new ROM(), doEcho?: Action<string>) {
     super(doEcho);
     this.cpu = new CPU({ ROM: rom });
     this.reset();

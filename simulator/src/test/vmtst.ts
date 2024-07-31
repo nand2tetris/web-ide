@@ -6,6 +6,7 @@ import { Vm } from "../vm/vm.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
+import { Action } from "../types.js";
 
 export interface VmFile {
   name: string;
@@ -22,7 +23,7 @@ export class VMTest extends Test<VMTestInstruction> {
     tst: Tst,
     path?: string,
     loadAction?: (files: VmFile[]) => void,
-    doEcho?: (status: string) => void,
+    doEcho?: Action<string>,
   ): VMTest {
     const test = new VMTest(doEcho);
     test.dir = path?.split("/").slice(0, -1).join("/");

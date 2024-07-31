@@ -1,6 +1,7 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Output } from "../output.js";
+import { Action } from "../types.js";
 import {
   OutputParams,
   TestBreakInstruction,
@@ -15,9 +16,9 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
-  protected doEcho?: (status: string) => void;
+  protected doEcho?: Action<string>;
 
-  constructor(doEcho?: (status: string) => void) {
+  constructor(doEcho?: Action<string>) {
     this.doEcho = doEcho;
   }
 

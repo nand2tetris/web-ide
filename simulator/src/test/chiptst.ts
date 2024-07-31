@@ -57,7 +57,6 @@ export class ChipTest extends Test<ChipTestInstruction> {
       filename ? `${this.dir}/${filename}` : this.dir,
     );
     if (chip) {
-      console.log("setting chip (test), id:", this.chipId);
       this.chip = chip;
     }
   }

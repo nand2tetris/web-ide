@@ -1,4 +1,5 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
@@ -20,10 +21,11 @@ export class CPUTest extends Test<CPUTestInstruction> {
       doEcho?: Action<string>;
       doLoad?: AsyncAction<string>;
       compareTo?: Action<string>;
+      requireLoad?: boolean;
     } = {},
-  ): CPUTest {
+  ): Result<CPUTest, Error> {
     const test = new CPUTest(options);
-    return fill(test, tst);
+    return fill(test, tst, options.requireLoad);
   }
 
   constructor({

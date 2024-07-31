@@ -16,6 +16,7 @@ import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "src/chips/screen.js";
 import { RunSpeed } from "src/runbar.js";
@@ -24,7 +25,6 @@ import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 function makeTst() {
   return `repeat {
@@ -238,8 +238,7 @@ export function makeCpuStore(
       }
       valid = true;
 
-      test = CPUTest.from(Ok(tst), {
-        dir: tstPath,
+      const maybeTest = CPUTest.from(Ok(tst), {
         rom: test.cpu.ROM,
         doEcho: setStatus,
         doLoad: async (path) => {
@@ -258,9 +257,17 @@ export function makeCpuStore(
           const cmp = await fs.readFile(`${dir}/${file}`);
           dispatch.current({ action: "setTest", payload: { cmp } });
         },
+        requireLoad: false,
       });
-      dispatch.current({ action: "update" });
-      return true;
+
+      if (isErr(maybeTest)) {
+        setStatus(Err(maybeTest).message);
+        return false;
+      } else {
+        test = Ok(maybeTest);
+        dispatch.current({ action: "update" });
+        return true;
+      }
     },
 
     async loadTest(name: string) {

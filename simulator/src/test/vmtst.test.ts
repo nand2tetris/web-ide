@@ -1,11 +1,11 @@
-import { VM_PROJECTS } from "@nand2tetris/projects/base.js";
-import { resetFiles } from "@nand2tetris/projects/full.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { TST } from "../languages/tst.js";
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { VM_PROJECTS } from "@nand2tetris/projects/base.js";
+import { resetFiles } from "@nand2tetris/projects/full.js";
+import { TST } from "../languages/tst.js";
 import { VMTest } from "./vmtst.js";
 
 async function prepare(project: "07" | "08", name: string): Promise<VMTest> {
@@ -14,7 +14,7 @@ async function prepare(project: "07" | "08", name: string): Promise<VMTest> {
   fs.cd(`/projects/${project}/${name}`);
   const vm_tst = await fs.readFile(name + "VME.tst");
   const tst = unwrap(TST.parse(vm_tst));
-  const test = VMTest.from(tst).using(fs);
+  const test = unwrap(VMTest.from(tst)).using(fs);
   await test.load();
   return test;
 }

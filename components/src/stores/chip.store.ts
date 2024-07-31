@@ -414,7 +414,7 @@ export function makeChipStore(
         invalid = true;
         return false;
       }
-      test = ChipTest.from(Ok(tst), {
+      const maybeTest = ChipTest.from(Ok(tst), {
         dir: path,
         setStatus: setStatus,
         loadAction: async (file) => {
@@ -425,12 +425,17 @@ export function makeChipStore(
           const cmp = await fs.readFile(`${_dir}/${file}`);
           dispatch.current({ action: "setFiles", payload: { cmp } });
         },
-      })
-        .with(chip)
-        .reset();
-      test.setFileSystem(fs);
-      dispatch.current({ action: "updateTestStep" });
-      return true;
+      });
+      if (isErr(maybeTest)) {
+        invalid = true;
+        setStatus(Err(maybeTest).message);
+        return false;
+      } else {
+        test = Ok(maybeTest).with(chip).reset();
+        test.setFileSystem(fs);
+        dispatch.current({ action: "updateTestStep" });
+        return true;
+      }
     },
 
     async updateFiles({

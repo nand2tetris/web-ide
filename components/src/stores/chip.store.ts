@@ -95,9 +95,9 @@ async function getTemplate(
     ];
   }
 
-  return (
-    ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-  )[chipName][`${chipName}.hdl`] as string;
+  return (ChipProjects[project].CHIPS as Record<string, string>)[
+    `${chipName}.hdl`
+  ] as string;
 }
 
 async function getBuiltinCode(
@@ -567,9 +567,9 @@ export function makeChipStore(
 
     async resetFile() {
       const { ChipProjects } = await import("@nand2tetris/projects/full.js");
-      const template = (
-        ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-      )[chipName][`${chipName}.hdl`];
+      const template = (ChipProjects[project].CHIPS as Record<string, string>)[
+        `${chipName}.hdl`
+      ];
       dispatch.current({ action: "setFiles", payload: { hdl: template } });
     },
 

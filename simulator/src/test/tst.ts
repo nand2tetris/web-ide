@@ -16,14 +16,14 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
-  protected doEcho?: Action<string>;
+  protected doEcho?: (status: string) => void;
   protected doCompareTo?: Action<string>;
   protected dir?: string;
   protected outputFileName?: string;
 
   constructor(
     path?: string,
-    doEcho?: Action<string>,
+    doEcho?: (status: string) => void,
     doCompareTo?: Action<string>,
   ) {
     this.doEcho = doEcho;

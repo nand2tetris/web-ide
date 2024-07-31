@@ -127,7 +127,7 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: (status: string) => void,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,

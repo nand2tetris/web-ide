@@ -1,7 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { CompilationError } from "@nand2tetris/simulator/languages/base.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
@@ -33,7 +32,7 @@ function classTemplate(name: string) {
 }
 
 export function makeCompilerStore(
-  setStatus: Action<string>,
+  setStatus: (status: string) => void,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
 ) {
   let fs: FileSystem | undefined;

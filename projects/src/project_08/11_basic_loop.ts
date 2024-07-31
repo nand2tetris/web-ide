@@ -34,6 +34,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // and sets argument[0].
 
 load BasicLoop.vm,
+compare-to BasicLoop.cmp,
 
 set sp 256,
 set local 300,
@@ -58,6 +59,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // Before executing the code, initializes the stack pointer
 // and the base addresses of the local and argument segments,
 // and sets argument[0].
+
+load BasicLoop.asm,
+compare-to BasicLoop.cmp,
 
 set RAM[0] 256,  // SP
 set RAM[1] 300,  // LCL

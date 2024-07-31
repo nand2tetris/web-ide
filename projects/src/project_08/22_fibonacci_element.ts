@@ -58,6 +58,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Tests and illustrates the given Fibonacci element program on the VM emulator.
 
 load,
+compare-to FibonacciElement.cmp,
 
 set sp 261,
 
@@ -79,6 +80,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // Tests FibonacciElement.asm on the CPU emulator. 
 // FibonacciElement.asm results from translating Main.vm and Sys.vm into
 // a single assembly program, stored in the file FibonacciElement.asm.
+
+load FibonacciElement.asm,
+compare-to FibonacciElement.cmp,
 
 repeat 6000 {
 	ticktock;

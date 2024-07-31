@@ -27,6 +27,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/1/Mux.tst
 
+load Mux.hdl,
+compare-to Mux.cmp,
 output-list a b sel out;
 
 set a 0,

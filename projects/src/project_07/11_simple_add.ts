@@ -18,6 +18,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Tests and illustrates SimpleAdd.vm on the VM simulator.
 
 load SimpleAdd.vm,
+compare-to SimpleAdd.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -35,6 +36,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.tst
 
 // Tests SimpleAdd.asm on the CPU emulator.
+
+load SimpleAdd.asm,
+compare-to SimpleAdd.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer 
 

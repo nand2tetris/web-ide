@@ -24,6 +24,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/2/Inc16.tst
 
+load Inc16.hdl,
+compare-to Inc16.cmp,
 output-list in%B1.16.1 out%B1.16.1;
 
 set in %B0000000000000000,  // in = 0

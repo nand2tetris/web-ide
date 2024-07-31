@@ -26,6 +26,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Tests and illustrates StaticTest.vm on the VM simulator.
 
 load StaticTest.vm,
+compare-to StaticTest.cmp,
 
 set sp 256,    // initializes the stack pointer
 
@@ -44,6 +45,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // File name: projects/7/MemoryAccess/StaticTest/StaticTest.tst
 
 // Tests StaticTest.asm on the CPU emulator.
+
+load StaticTest.asm,
+compare-to StaticTest.cmp,
 
 set RAM[0] 256,    // initializes the stack pointer
 

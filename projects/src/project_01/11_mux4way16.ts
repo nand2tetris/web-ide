@@ -30,6 +30,8 @@ export const tst = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: projects/1/Mux4Way16.tst
 
+load Mux4Way16.hdl,
+compare-to Mux4Way16.cmp,
 output-list a%B1.16.1 b%B1.16.1 c%B1.16.1 d%B1.16.1 sel%B2.2.2 out%B1.16.1;
 
 set a 0,

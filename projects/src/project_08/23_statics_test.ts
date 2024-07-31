@@ -70,6 +70,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 // Tests and illustrates the statics test on the VM emulator.
 
 load,
+compare-to StaticsTest.cmp,
 
 set sp 261,
 
@@ -88,6 +89,9 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 
 // Tests StaticTest.asm in the CPU emulator.
 // This assembly file results from translating the staticsTest folder.
+
+load StaticsTest.asm,
+compare-to StaticsTest.cmp,
 
 set RAM[0] 256,
 

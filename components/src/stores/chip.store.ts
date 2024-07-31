@@ -26,7 +26,6 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 import { compare } from "../compare.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";

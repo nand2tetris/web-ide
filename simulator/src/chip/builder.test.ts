@@ -183,7 +183,7 @@ describe("Chip Builder", () => {
         Nand(a=in, b=myNand, out=myNand);
       }`),
       );
-      const foo = await build(chip);
+      const foo = await build({ parts: chip });
       expect(foo).toBeErr();
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

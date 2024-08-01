@@ -96,9 +96,9 @@ async function getTemplate(
     ];
   }
 
-  return (
-    ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-  )[chipName][`${chipName}.hdl`] as string;
+  return (ChipProjects[project].CHIPS as Record<string, string>)[
+    `${chipName}.hdl`
+  ] as string;
 }
 
 async function getBuiltinCode(
@@ -422,8 +422,7 @@ export function makeChipStore(
 
     async loadChip(project: string, name: string) {
       storage["/chip/chip"] = name;
-      const fsName = (ext: string) =>
-        `/projects/${project}/${name}/${name}.${ext}`;
+      const fsName = (ext: string) => `/projects/${project}/${name}.${ext}`;
 
       const hdl = await fs.readFile(fsName("hdl")).catch(() => makeHdl(name));
 
@@ -432,8 +431,10 @@ export function makeChipStore(
     },
 
     async initializeTest(name: string) {
-      tests = (await fs.scandir(`/projects/${project}/${name}`))
-        .filter((file) => file.name.endsWith(".tst"))
+      tests = (await fs.scandir(`/projects/${project}`))
+        .filter(
+          (file) => file.name.startsWith(name) && file.name.endsWith(".tst"),
+        )
         .map((file) => file.name);
       if (tests.length > 0) {
         await this.setTest(tests[0]);
@@ -442,13 +443,9 @@ export function makeChipStore(
 
     async loadTest(test: string) {
       const [tst, cmp] = await Promise.all([
+        fs.readFile(`/projects/${project}/${test}`).catch(() => makeTst()),
         fs
-          .readFile(`/projects/${project}/${chipName}/${test}`)
-          .catch(() => makeTst()),
-        fs
-          .readFile(
-            `/projects/${project}/${chipName}/${test}`.replace(".tst", ".cmp"),
-          )
+          .readFile(`/projects/${project}/${test}`.replace(".tst", ".cmp"))
           .catch(() => makeCmp()),
       ]);
       dispatch.current({ action: "setFiles", payload: { cmp, tst } });
@@ -457,7 +454,7 @@ export function makeChipStore(
 
     async saveChip(hdl: string, prj = project, name = chipName) {
       dispatch.current({ action: "setFiles", payload: { hdl } });
-      const path = `/projects/${prj}/${name}/${name}.hdl`;
+      const path = `/projects/${prj}/${name}.hdl`;
       await fs.writeFile(path, hdl);
       setStatus(`Saved ${path}`);
     },
@@ -568,9 +565,9 @@ export function makeChipStore(
 
     async resetFile() {
       const { ChipProjects } = await import("@nand2tetris/projects/full.js");
-      const template = (
-        ChipProjects[project].CHIPS as Record<string, Record<string, string>>
-      )[chipName][`${chipName}.hdl`];
+      const template = (ChipProjects[project].CHIPS as Record<string, string>)[
+        `${chipName}.hdl`
+      ];
       dispatch.current({ action: "setFiles", payload: { hdl: template } });
     },
 
@@ -578,7 +575,7 @@ export function makeChipStore(
       return await Promise.all(
         CHIP_PROJECTS[project].map((chip) => ({
           name: `${chip}.hdl`,
-          content: fs.readFile(`/projects/${project}/${chip}/${chip}.hdl`),
+          content: fs.readFile(`/projects/${project}/${chip}.hdl`),
         })),
       );
     },

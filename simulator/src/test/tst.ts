@@ -3,6 +3,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Output } from "../output.js";
 import { Action } from "../types.js";
 import {
+  OutputParams,
   TestBreakInstruction,
   TestInstruction,
   TestStopInstruction,

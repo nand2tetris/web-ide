@@ -188,7 +188,6 @@ const VM = () => {
       )?.name;
       tstPath = `${path}/${name}`;
     }
-    console.log(tstPath);
     const test = await fs.readFile(tstPath);
     actions.loadTest(tstPath, test);
   };

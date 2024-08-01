@@ -1,8 +1,15 @@
 import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
-import { Trans } from "@lingui/macro";
+import { t, Trans } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import type JSZip from "jszip";
-import { useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
 import { useDialog } from "./dialog";
@@ -127,14 +134,14 @@ function isFileValid(filename: string, validSuffixes: string[]) {
 
 function sortFiles(files: Stats[]) {
   return files.sort((a, b) => {
-    const aIsNum = /^\d+$/.test(a.name);
-    const bIsNum = /^\d+$/.test(b.name);
+    const aIsNum = /^\d+/.test(a.name);
+    const bIsNum = /^\d+/.test(b.name);
     if (aIsNum && !bIsNum) {
       return -1;
     } else if (!aIsNum && bIsNum) {
       return 1;
     } else if (aIsNum && bIsNum) {
-      return parseInt(a.name) - parseInt(b.name);
+      return parseInt(a.name, 10) - parseInt(b.name, 10);
     } else {
       return a.name.localeCompare(b.name);
     }
@@ -149,6 +156,15 @@ export const FilePicker = () => {
   const [chosen, setFile] = useState("");
   const cwd = fs.cwd();
 
+  const getFiles = (files: Stats[]) => {
+    return fs.cwd() != "/"
+      ? [
+          { isFile: () => false, isDirectory: () => true, name: ".." },
+          ...sortFiles(files),
+        ]
+      : sortFiles(files);
+  };
+
   useEffect(() => {
     setFile("");
     if (!localFsRoot && fs.cwd() == "/") {
@@ -158,7 +174,7 @@ export const FilePicker = () => {
 
   useEffect(() => {
     fs.scandir(fs.cwd()).then((files) => {
-      setFiles(sortFiles(files));
+      setFiles(getFiles(files));
     });
   }, [fs, cwd, setFiles]);
 
@@ -166,7 +182,7 @@ export const FilePicker = () => {
     (dir: string) => {
       fs.cd(dir);
       fs.scandir(fs.cwd()).then((files) => {
-        setFiles(sortFiles(files));
+        setFiles(getFiles(files));
       });
     },
     [fs, setFile, setFiles],
@@ -227,6 +243,10 @@ export const FilePicker = () => {
     URL.revokeObjectURL(url);
   };
 
+  const chosenFileName = useMemo(() => {
+    return chosen.split("/").pop();
+  }, [chosen]);
+
   return (
     <dialog open={filePicker.isOpen}>
       <input
@@ -239,7 +259,7 @@ export const FilePicker = () => {
       <article className="file-select flex">
         <header>
           <p>
-            <Trans>Choose file</Trans>
+            <Trans>{t`Choose file`}</Trans>
           </p>
           <a
             style={{ color: "rgba(0, 0, 0, 0)" }}
@@ -250,7 +270,7 @@ export const FilePicker = () => {
               filePicker.close();
             }}
           >
-            close
+            {t`close`}
           </a>
         </header>
         <main>
@@ -259,25 +279,11 @@ export const FilePicker = () => {
             <b>{fs.cwd()}</b>
           </div>
           <div className="flex wrap files-container">
-            {fs.cwd() !== "/" && (
-              <FileEntry
-                stats={{
-                  isDirectory() {
-                    return true;
-                  },
-                  isFile() {
-                    return false;
-                  },
-                  name: "..",
-                }}
-                onDoubleClick={() => cd("..")}
-              />
-            )}
             {files.map((file) => (
               <FileEntry
                 key={file.name}
                 stats={file}
-                highlighted={file.name === chosen.split("/").pop()}
+                highlighted={file.name === chosenFileName}
                 onClick={() => select(file.name)}
                 onDoubleClick={() => {
                   if (file.isDirectory()) {
@@ -285,6 +291,7 @@ export const FilePicker = () => {
                   }
                 }}
                 disabled={
+                  !(file.name == "..") &&
                   file.name.includes(".") &&
                   filePicker.suffix != undefined &&
                   !isFileValid(file.name, filePicker.suffix)
@@ -305,7 +312,7 @@ export const FilePicker = () => {
             }
             onClick={confirm}
           >
-            Select
+            {t`Select`}
           </button>
           {!localFsRoot && filePicker.allowLocal && (
             <button onClick={loadLocal}>Select local file</button>
@@ -313,10 +320,10 @@ export const FilePicker = () => {
           {!localFsRoot && (
             <button
               onClick={downloadFolder}
-              data-tooltip="Download all files in this folder into a zip"
+              data-tooltip={t`Download all files in this folder into a zip`}
               disabled={chosen == "" || chosen.includes(".")}
             >
-              Download
+              {t`Download`}
             </button>
           )}
         </footer>

@@ -28,6 +28,7 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -88,7 +89,7 @@ export type VmStoreDispatch = Dispatch<{
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
-  setStatus: (status: string) => void,
+  setStatus: Action<string>,
   showHighlight: boolean,
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
@@ -121,7 +122,7 @@ function reduceVMTest(
 
 export function makeVmStore(
   fs: FileSystem,
-  setStatus: (status: string) => void,
+  setStatus: Action<string>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {

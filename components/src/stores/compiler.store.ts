@@ -32,7 +32,7 @@ function classTemplate(name: string) {
 }
 
 export function makeCompilerStore(
-  setStatus: (status: string) => void,
+  setStatus: Action<string>,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
 ) {
   let fs: FileSystem | undefined;

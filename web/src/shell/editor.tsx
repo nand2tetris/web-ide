@@ -9,6 +9,7 @@ import {
 } from "@nand2tetris/simulator/languages/base.js";
 
 import "./editor.scss";
+import { Action } from "@nand2tetris/simulator/types";
 
 const Monaco = lazy(() => import("./Monaco"));
 
@@ -34,7 +35,7 @@ const Textarea = ({
   disabled = false,
 }: {
   value: string;
-  onChange: (value: string) => void;
+  onChange: Action<string>;
   language: string;
   disabled?: boolean;
 }) => {
@@ -82,7 +83,7 @@ export const Editor = ({
   disabled?: boolean;
   value: string;
   error?: CompilationError;
-  onChange: (source: string) => void;
+  onChange: Action<string>;
   onCursorPositionChange?: (index: number) => void;
   grammar?: Grammar;
   language: string;

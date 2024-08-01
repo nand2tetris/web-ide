@@ -1,5 +1,6 @@
 import { width } from "@davidsouther/jiffies/lib/esm/dom/css/sizing";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
+import { Action } from "@nand2tetris/simulator/types";
 import { useCallback, useState } from "react";
 
 const Mode = { VIEW: 0, EDIT: 1 };
@@ -7,7 +8,7 @@ const Mode = { VIEW: 0, EDIT: 1 };
 export const InlineEdit = (props: {
   mode?: keyof typeof Mode;
   value: string;
-  onChange: (value: string) => void;
+  onChange: Action<string>;
 }) => {
   const [mode, setMode] = useState(props.mode ?? Mode.VIEW);
   const [value, setValue] = useStateInitializer(props.value);

@@ -2,6 +2,7 @@ import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
   createContext,
   useCallback,
@@ -23,10 +24,10 @@ export interface BaseContext {
   fs: FileSystem;
   localFsRoot?: string;
   canUpgradeFs: boolean;
-  upgradeFs: (force?: boolean) => Promise<void>;
+  upgradeFs: AsyncAction<boolean | undefined>;
   closeFs: () => void;
   status: string;
-  setStatus: (status: string) => void;
+  setStatus: Action<string>;
   storage: Record<string, string>;
 }
 

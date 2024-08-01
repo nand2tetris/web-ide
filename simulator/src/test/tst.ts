@@ -3,7 +3,6 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Output } from "../output.js";
 import { Action } from "../types.js";
 import {
-  OutputParams,
   TestBreakInstruction,
   TestInstruction,
   TestStopInstruction,
@@ -16,14 +15,14 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _outputList: Output[] = [];
   protected _log = "";
   fs: FileSystem = new FileSystem();
-  protected doEcho?: (status: string) => void;
+  protected doEcho?: Action<string>;
   protected doCompareTo?: Action<string>;
   protected dir?: string;
   protected outputFileName?: string;
 
   constructor(
     path?: string,
-    doEcho?: (status: string) => void,
+    doEcho?: Action<string>,
     doCompareTo?: Action<string>,
   ) {
     this.doEcho = doEcho;

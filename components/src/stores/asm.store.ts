@@ -25,6 +25,7 @@ import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { RunSpeed } from "src/runbar.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -197,7 +198,7 @@ export type AsmStoreDispatch = Dispatch<{
 
 export function makeAsmStore(
   fs: FileSystem,
-  setStatus: (status: string) => void,
+  setStatus: Action<string>,
   dispatch: MutableRefObject<AsmStoreDispatch>,
   upgraded: boolean,
 ) {

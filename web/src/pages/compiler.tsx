@@ -64,10 +64,6 @@ export const Compiler = () => {
     if (canUpgradeFs) {
       const handle = await openNand2TetrisDirectory();
       const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
-      dispatch.current({
-        action: "setTitle",
-        payload: `${handle.name} / *.jack`,
-      });
       const empty =
         (await fs.scandir("/")).filter(
           (entry) => entry.isFile() && entry.name.endsWith(".jack"),
@@ -78,7 +74,7 @@ export const Compiler = () => {
         setSuppressStatus(true);
       } else {
         setStatus("");
-        actions.loadProject(fs);
+        actions.loadProject(fs, `${handle.name} / *.jack`);
         setEditable(true);
       }
     } else {

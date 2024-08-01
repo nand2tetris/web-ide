@@ -26,10 +26,10 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { compare } from "../compare.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -267,6 +267,7 @@ export function makeChipStore(
     },
 
     displayBuiltin(state: ChipPageState) {
+      backupHdl = state.files.hdl;
       this.setFiles(state, {
         hdl: convertToBuiltin(state.controls.chipName, state.files.hdl),
       });
@@ -275,7 +276,6 @@ export function makeChipStore(
     toggleBuiltin(state: ChipPageState) {
       state.controls.usingBuiltin = usingBuiltin;
       if (usingBuiltin) {
-        backupHdl = state.files.hdl;
         this.displayBuiltin(state);
       } else {
         this.setFiles(state, { hdl: backupHdl });
@@ -323,7 +323,6 @@ export function makeChipStore(
     },
 
     async loadChip(path: string, loadTests = true) {
-      // usingBuiltin = false;
       dispatch.current({ action: "updateUsingBuiltin", payload: false });
 
       const hdl = await fs.readFile(path);

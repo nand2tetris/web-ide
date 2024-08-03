@@ -71,6 +71,7 @@ export const Runbar = (props: {
         <button
           className="flex-0"
           disabled={props.disabled}
+          data-testid="runbar-frame"
           onClick={() => runner.actions.frame()}
           data-tooltip={props.overrideTooltips?.step ?? `Step`}
           data-placement="bottom"
@@ -87,6 +88,7 @@ export const Runbar = (props: {
               ? runner.actions.stop()
               : runner.actions.start()
           }
+          data-testid="runbar-run-pause"
           data-tooltip={
             runner.state.running
               ? props.overrideTooltips?.pause ?? `Pause`
@@ -105,6 +107,7 @@ export const Runbar = (props: {
             }
             runner.actions.reset();
           }}
+          data-testid="runbar-reset"
           data-tooltip={props.overrideTooltips?.reset ?? `Reset`}
           data-placement="bottom"
         >

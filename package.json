@@ -32,6 +32,7 @@
     "test": "CI=true npm test -w simulator && CI=true npm test -w components && CI=true npm test -w web",
     "web": "npm run start -w web",
     "start": "npm run web",
+    "e2e": "playwright test",
     "preinstall-cli": "npm run build -w projects && npm run build -w runner && npm run build -w simulator && npm run build -w cli",
     "install-cli": "npm i -g cli"
   },
@@ -48,5 +49,8 @@
   "engines": {
     "node": ">=16",
     "npm": ">=7"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.45.1"
   }
 }

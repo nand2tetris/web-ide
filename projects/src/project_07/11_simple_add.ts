@@ -37,7 +37,6 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 
 // Tests SimpleAdd.asm on the CPU emulator.
 
-load SimpleAdd.asm,
 compare-to SimpleAdd.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer 

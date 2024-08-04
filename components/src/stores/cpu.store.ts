@@ -239,10 +239,16 @@ export function makeCpuStore(
       valid = true;
 
       const maybeTest = CPUTest.from(Ok(tst), {
+        dir: tstPath,
         rom: test.cpu.ROM,
         doEcho: setStatus,
         doLoad: async (path) => {
-          const file = await fs.readFile(path);
+          let file;
+          try {
+            file = await fs.readFile(path);
+          } catch (e) {
+            throw new Error(`Cannot find ${path}`);
+          }
           const loader = path.endsWith("hack")
             ? loadHack
             : path.endsWith("asm")

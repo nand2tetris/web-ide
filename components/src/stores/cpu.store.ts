@@ -105,6 +105,7 @@ export function makeCpuStore(
   let path = "";
   let tests: string[] = [];
   let tstName = "";
+  let _title: string | undefined;
 
   const reducers = {
     update(state: CpuPageState) {
@@ -139,8 +140,12 @@ export function makeCpuStore(
       );
     },
 
-    setTitle(state: CpuPageState, title: string) {
+    setTitle(state: CpuPageState, title?: string) {
+      _title = title;
       state.title = title;
+      if (title) {
+        test.fileLoaded = true;
+      }
     },
 
     updateConfig(state: CpuPageState, config: Partial<CPUPageConfig>) {
@@ -216,6 +221,7 @@ export function makeCpuStore(
     },
 
     clearTest() {
+      tstName = "";
       this.compileTest(makeTst(), "");
       dispatch.current({ action: "update" });
     },
@@ -271,6 +277,7 @@ export function makeCpuStore(
         return false;
       } else {
         test = Ok(maybeTest);
+        test.fileLoaded = _title != undefined;
         dispatch.current({ action: "update" });
         return true;
       }

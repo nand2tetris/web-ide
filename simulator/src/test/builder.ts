@@ -34,7 +34,7 @@ import {
 import { Test } from "./tst.js";
 import { TestVMStepInstruction } from "./vmtst.js";
 
-function isTstCommand(line: TstStatement): line is TstCommand {
+export function isTstCommand(line: TstStatement): line is TstCommand {
   return (line as TstCommand).op !== undefined;
 }
 

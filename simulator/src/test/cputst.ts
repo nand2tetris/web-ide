@@ -4,7 +4,7 @@ import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
 import { Action, AsyncAction } from "../types.js";
-import { fill } from "./builder.js";
+import { fill, isTstCommand } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
 
@@ -12,6 +12,8 @@ export class CPUTest extends Test<CPUTestInstruction> {
   cpu: CPU;
   private ticks = 0;
   private doLoad?: AsyncAction<string>;
+  fileLoaded = false;
+  hasLoad = false;
 
   static from(
     tst: Tst,
@@ -25,6 +27,11 @@ export class CPUTest extends Test<CPUTestInstruction> {
     } = {},
   ): Result<CPUTest, Error> {
     const test = new CPUTest(options);
+
+    test.hasLoad = tst.lines.some(
+      (line) => isTstCommand(line) && line.op.op == "load",
+    );
+
     return fill(test, tst, options.requireLoad);
   }
 
@@ -45,6 +52,15 @@ export class CPUTest extends Test<CPUTestInstruction> {
     this.doLoad = doLoad;
     this.cpu = new CPU({ ROM: rom });
     this.reset();
+  }
+
+  override async step() {
+    if (!this.hasLoad && !this.fileLoaded) {
+      throw new Error(
+        "Cannot execute the test without first loading an .asm or .hack file",
+      );
+    }
+    return super.step();
   }
 
   override async load(filename?: string): Promise<void> {

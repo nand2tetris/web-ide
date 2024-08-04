@@ -25,10 +25,10 @@ describe("All Projects", () => {
     )("Builtin %s", async (chipName) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const ChipProject = ChipProjects[project]?.CHIPS[chipName];
-      let hdlFile: string = ChipProject?.[`${chipName}.hdl`];
-      const tstFile: string = ChipProject?.[`${chipName}.tst`];
-      const cmpFile: string = ChipProject?.[`${chipName}.cmp`];
+      const ChipProject = ChipProjects[project].CHIPS;
+      let hdlFile: string = ChipProject[`${chipName}.hdl`];
+      const tstFile: string = ChipProject[`${chipName}.tst`];
+      const cmpFile: string = ChipProject[`${chipName}.cmp`];
 
       expect(hdlFile).toBeDefined();
       expect(tstFile).toBeDefined();

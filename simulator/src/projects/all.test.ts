@@ -51,8 +51,8 @@ describe("Chip Projects", () => {
           ...ChipProjectsSols[project]!,
         };
         const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
-        const tstFile = chipProject.CHIPS[chipName]?.[`${chipName}.tst`];
-        const cmpFile = chipProject.CHIPS[chipName]?.[`${chipName}.cmp`];
+        const tstFile = chipProject.CHIPS?.[`${chipName}.tst`];
+        const cmpFile = chipProject.CHIPS?.[`${chipName}.cmp`];
 
         expect(hdlFile).toBeDefined();
         expect(tstFile).toBeDefined();

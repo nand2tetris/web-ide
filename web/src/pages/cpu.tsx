@@ -145,6 +145,10 @@ export const CPU = () => {
           });
         }}
         onClear={() => actions.clear()}
+        loadTooltip={{
+          value: "Load an .asm or .hack file",
+          placement: "right",
+        }}
       />
       <MemoryComponent
         name="RAM"

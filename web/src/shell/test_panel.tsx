@@ -120,13 +120,13 @@ export const TestPanel = ({
 
   const loadTest = useCallback(async () => {
     const path = await filePicker.select({ suffix: ".tst" });
-    const files = await loadTestFiles(fs, path);
+    const files = await loadTestFiles(fs, path.path);
     if (isErr(files)) {
       setStatus(`Failed to load test`);
       return;
     }
-    setPath?.(path);
-    setName(path.split("/").pop() ?? "");
+    setPath?.(path.path);
+    setName(path.path.split("/").pop() ?? "");
     const { tst, cmp } = unwrap(files);
     setTst?.(tst);
     setCmp?.(cmp ?? "");

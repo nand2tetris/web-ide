@@ -28,6 +28,19 @@ export interface LocalFile {
   content: string;
 }
 
+export function isPath(obj: unknown): obj is Path {
+  return (obj as Path).path != undefined && (obj as Path).isDir != undefined;
+}
+
+export interface Path {
+  path: string;
+  isDir: boolean;
+}
+
+// Selecting a file from the file picker would always return a Path on which we can use fs.readFile / fs.scandir later.
+// In the case of local files, we have to load them on selection, and will return either a LocalFile or LocalFile[] in case of file/folder respectively.
+export type FileSelectionRef = Path | LocalFile | LocalFile[];
+
 export function useFilePicker() {
   const dialog = useDialog();
   const [suffix, setSuffix] = useState<string[]>();
@@ -35,10 +48,10 @@ export function useFilePicker() {
 
   const allowLocal = useRef(false);
 
-  const selected = useRef<(v: string | LocalFile[]) => void>();
+  const selected = useRef<(v: FileSelectionRef) => void>();
 
   const _select = useCallback(
-    async (options: FilePickerOptions): Promise<string | LocalFile[]> => {
+    async (options: FilePickerOptions): Promise<FileSelectionRef> => {
       if (typeof options.suffix === "string") {
         options.suffix = [options.suffix];
       }
@@ -54,7 +67,7 @@ export function useFilePicker() {
 
   const select = async (options: FilePickerOptions) => {
     allowLocal.current = false;
-    return (await _select(options)) as string;
+    return (await _select(options)) as Path;
   };
 
   const selectAllowLocal = async (options: FilePickerOptions) => {
@@ -153,7 +166,7 @@ export const FilePicker = () => {
   const { filePicker } = useContext(AppContext);
 
   const [files, setFiles] = useState<Stats[]>([]);
-  const [chosen, setFile] = useState("");
+  const [chosen, setFile] = useState<Path>({ path: fs.cwd(), isDir: true });
   const cwd = fs.cwd();
 
   const getFiles = (files: Stats[]) => {
@@ -166,10 +179,10 @@ export const FilePicker = () => {
   };
 
   useEffect(() => {
-    setFile("");
     if (!localFsRoot && fs.cwd() == "/") {
       cd("projects");
     }
+    setFile({ path: fs.cwd(), isDir: true });
   }, [fs]);
 
   useEffect(() => {
@@ -189,8 +202,11 @@ export const FilePicker = () => {
   );
 
   const select = useCallback(
-    (basename: string) => {
-      setFile(`${fs.cwd() == "/" ? "" : fs.cwd()}/${basename}`);
+    (basename: string, isDir: boolean) => {
+      setFile({
+        path: `${fs.cwd() == "/" ? "" : fs.cwd()}/${basename}`,
+        isDir,
+      });
     },
     [setFile, fs],
   );
@@ -222,7 +238,7 @@ export const FilePicker = () => {
       });
     }
 
-    filePicker[Selected].current?.(files);
+    filePicker[Selected].current?.(files.length == 1 ? files[0] : files);
     filePicker.close();
   };
 
@@ -233,18 +249,18 @@ export const FilePicker = () => {
     }
 
     const zip = await newZip();
-    await buildZip(zip, fs, chosen);
+    await buildZip(zip, fs, chosen.path);
     const blob = await zip.generateAsync({ type: "blob" });
     const url = URL.createObjectURL(blob);
     downloadRef.current.href = url;
-    downloadRef.current.download = chosen.split("/").pop() ?? chosen;
+    downloadRef.current.download = chosen.path.split("/").pop() ?? chosen.path;
     downloadRef.current.click();
 
     URL.revokeObjectURL(url);
   };
 
   const chosenFileName = useMemo(() => {
-    return chosen.split("/").pop();
+    return chosen.path.split("/").pop();
   }, [chosen]);
 
   return (
@@ -284,7 +300,7 @@ export const FilePicker = () => {
                 key={file.name}
                 stats={file}
                 highlighted={file.name === chosenFileName}
-                onClick={() => select(file.name)}
+                onClick={() => select(file.name, file.isDirectory())}
                 onDoubleClick={() => {
                   if (file.isDirectory()) {
                     cd(file.name);
@@ -304,11 +320,11 @@ export const FilePicker = () => {
           <button
             disabled={
               !chosen ||
-              chosen == ".." ||
+              chosen.path == ".." ||
               (filePicker.suffix != undefined &&
-                chosen.includes(".") &&
-                !isFileValid(chosen, filePicker.suffix)) ||
-              (!filePicker.allowFolders && !chosen.includes("."))
+                chosen.path.includes(".") &&
+                !isFileValid(chosen.path, filePicker.suffix)) ||
+              (!filePicker.allowFolders && !chosen.path.includes("."))
             }
             onClick={confirm}
           >
@@ -321,7 +337,7 @@ export const FilePicker = () => {
             <button
               onClick={downloadFolder}
               data-tooltip={t`Download all files in this folder into a zip`}
-              disabled={chosen == "" || chosen.includes(".")}
+              disabled={chosen.path == "" || chosen.path.includes(".")}
             >
               {t`Download`}
             </button>

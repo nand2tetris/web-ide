@@ -141,7 +141,7 @@ export const Chip = () => {
 
   const loadFile = async () => {
     const path = await filePicker.select({ suffix: "hdl" });
-    actions.loadChip(path);
+    actions.loadChip(path.path);
   };
 
   const selectors = (

@@ -12,6 +12,7 @@ import { Panel } from "../shell/panel";
 import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
+import { isPath } from "src/shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import URLs from "../urls";
@@ -63,27 +64,28 @@ export const Asm = () => {
     const path = await filePicker.select({ suffix: ".asm" });
     setStatus(LOADING);
     requestAnimationFrame(async () => {
-      await actions.loadAsm(path);
+      await actions.loadAsm(path.path);
       setStatus("");
       dispatch.current({
         action: "setTitle",
-        payload: path.split("/").pop() ?? "",
+        payload: path.path.split("/").pop() ?? "",
       });
     });
   };
 
   const loadCompare = async () => {
-    const file = await filePicker.selectAllowLocal({ suffix: "hack" });
-    if (typeof file == "string") {
-      const cmp = await fs.readFile(file);
+    const filesRef = await filePicker.selectAllowLocal({ suffix: "hack" });
+    if (isPath(filesRef)) {
+      const cmp = await fs.readFile(filesRef.path);
       dispatch.current({
         action: "setCmp",
-        payload: { cmp, name: file.split("/").pop() },
+        payload: { cmp, name: filesRef.path.split("/").pop() },
       });
     } else {
+      const file = Array.isArray(filesRef) ? filesRef[0] : filesRef;
       dispatch.current({
         action: "setCmp",
-        payload: { cmp: file[0].content, name: file[0].name },
+        payload: { cmp: file.content, name: file.name },
       });
     }
   };

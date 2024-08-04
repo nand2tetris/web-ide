@@ -9,6 +9,7 @@ import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import { isPath } from "src/shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Accordian, Panel } from "../shell/panel";
@@ -113,18 +114,21 @@ export const CPU = () => {
     const file = await filePicker.selectAllowLocal({
       suffix: [".asm", ".hack"],
     });
-    const title =
-      typeof file == "string" ? file.split("/").pop() ?? "" : file[0].name;
+    const title = isPath(file)
+      ? file.path.split("/").pop() ?? ""
+      : Array.isArray(file)
+        ? file[0].name
+        : file.name;
     dispatch.current({ action: "setTitle", payload: title });
-    if (typeof file === "string") {
-      setPath(file);
+    if (isPath(file)) {
+      setPath(file.path);
       return {
-        name: file.split("/").pop() ?? "",
-        content: await fs.readFile(file),
+        name: file.path.split("/").pop() ?? "",
+        content: await fs.readFile(file.path),
       };
     } else {
       actions.clearTest();
-      return file[0];
+      return Array.isArray(file) ? file[0] : file;
     }
   };
 

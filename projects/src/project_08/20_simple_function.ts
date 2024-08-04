@@ -66,7 +66,6 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // Before executing the code, initializes the stack pointer and the pointers of some
 // of the memory segments, and sets some values in the argument segment.
 
-Load SimpleFunction.asm,
 compare-to SimpleFunction.cmp,
 
 set RAM[0] 317,    // SP

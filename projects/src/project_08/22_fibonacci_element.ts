@@ -81,7 +81,6 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 // FibonacciElement.asm results from translating Main.vm and Sys.vm into
 // a single assembly program, stored in the file FibonacciElement.asm.
 
-load FibonacciElement.asm,
 compare-to FibonacciElement.cmp,
 
 repeat 6000 {

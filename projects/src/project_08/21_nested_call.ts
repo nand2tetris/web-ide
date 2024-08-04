@@ -136,7 +136,6 @@ export const hdl_tst = `// Tests how the VM implementation handles function-call
 // the VM translator is applied to the NestedCall folder, which 
 // includes only one VM file: Sys.vm.
 
-load NestedCall.asm,
 compare-to NestedCall.cmp,
 
 set RAM[0] 261,

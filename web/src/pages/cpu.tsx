@@ -144,6 +144,7 @@ export const CPU = () => {
             payload: { romFormat: format },
           });
         }}
+        onClear={() => actions.clear()}
       />
       <MemoryComponent
         name="RAM"

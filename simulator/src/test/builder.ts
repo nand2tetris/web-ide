@@ -1,4 +1,5 @@
 import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Span } from "../languages/base.js";
 import {
   Tst,
@@ -33,7 +34,7 @@ import {
 import { Test } from "./tst.js";
 import { TestVMStepInstruction } from "./vmtst.js";
 
-function isTstCommand(line: TstStatement): line is TstCommand {
+export function isTstCommand(line: TstStatement): line is TstCommand {
   return (line as TstCommand).op !== undefined;
 }
 
@@ -77,12 +78,18 @@ function makeInstruction(inst: TstOperation) {
   }
 }
 
-export function fill<T extends Test>(test: T, tst: Tst): T {
+export function fill<T extends Test>(
+  test: T,
+  tst: Tst,
+  requireLoad = true,
+): Result<T, Error> {
   let span: Span | undefined;
   let stepInstructions: TestInstruction[] = [];
 
   let base: T | TestWhileInstruction | TestRepeatInstruction = test;
   let commands: TstCommand[] = [];
+
+  let hasLoad = false;
 
   for (const line of tst.lines) {
     if (isTstCommand(line)) {
@@ -106,6 +113,9 @@ export function fill<T extends Test>(test: T, tst: Tst): T {
     }
 
     for (const command of commands) {
+      if (command.op.op == "load") {
+        hasLoad = true;
+      }
       const inst = makeInstruction(command.op);
       if (inst !== undefined) {
         if (span === undefined) {
@@ -132,7 +142,11 @@ export function fill<T extends Test>(test: T, tst: Tst): T {
     }
   }
 
+  if (requireLoad && !hasLoad) {
+    return Err(new Error("A test script must have a load command"));
+  }
+
   test.reset();
 
-  return test;
+  return Ok(test);
 }

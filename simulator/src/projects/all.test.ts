@@ -51,8 +51,8 @@ describe("Chip Projects", () => {
           ...ChipProjectsSols[project]!,
         };
         const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
-        const tstFile = chipProject.CHIPS[chipName]?.[`${chipName}.tst`];
-        const cmpFile = chipProject.CHIPS[chipName]?.[`${chipName}.cmp`];
+        const tstFile = chipProject.CHIPS?.[`${chipName}.tst`];
+        const cmpFile = chipProject.CHIPS?.[`${chipName}.cmp`];
 
         expect(hdlFile).toBeDefined();
         expect(tstFile).toBeDefined();
@@ -65,7 +65,7 @@ describe("Chip Projects", () => {
 
         const chip = await build({ parts: Ok(hdl as Ok<HdlParse>) });
         expect(chip).toBeOk();
-        const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(
+        const test = unwrap(ChipTest.from(Ok(tst as Ok<Tst>))).with(
           Ok(chip as Ok<Chip>),
         );
 
@@ -143,7 +143,7 @@ describe("Vm Projects", () => {
 
         const vm = await Vm.build(unwrap(parsed).instructions);
         expect(vm).toBeOk();
-        const test = VMTest.from(unwrap(tst)).with(unwrap(vm));
+        const test = unwrap(VMTest.from(unwrap(tst))).with(unwrap(vm));
 
         await test.run();
 

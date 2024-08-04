@@ -192,6 +192,7 @@ export const Memory = forwardRef(
       fileSelect,
       showClear = true,
       onChange = undefined,
+      onClear = undefined,
     }: {
       name?: string;
       className?: string;
@@ -210,6 +211,7 @@ export const Memory = forwardRef(
       fileSelect?: () => Promise<{ name: string; content: string }>;
       showClear?: boolean;
       onChange?: () => void;
+      onClear?: () => void;
     },
     ref,
   ) => {
@@ -275,6 +277,7 @@ export const Memory = forwardRef(
     const clear = () => {
       memory.reset();
       onChange?.();
+      onClear?.();
       rerenderMemoryBlock();
     };
 

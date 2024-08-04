@@ -11,9 +11,9 @@ import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
 
 function testChipStore(
   fs: Record<string, string> = {
-    "projects/01/Not/Not.hdl": not.hdl,
-    "projects/01/Not/Not.tst": not.tst,
-    "projects/01/Not/Not.cmp": not.cmp,
+    "projects/01/Not.hdl": not.hdl,
+    "projects/01/Not.tst": not.tst,
+    "projects/01/Not.cmp": not.cmp,
   },
   storage: Record<string, string> = {},
 ) {
@@ -48,9 +48,9 @@ describe("ChipStore", () => {
   describe("initialization", () => {
     it("loads chip", async () => {
       const store = testChipStore({
-        "projects/01/Not/Not.hdl": not.hdl,
-        "projects/01/Not/Not.tst": not.tst,
-        "projects/01/Not/Not.cmp": not.cmp,
+        "projects/01/Not.hdl": not.hdl,
+        "projects/01/Not.tst": not.tst,
+        "projects/01/Not.cmp": not.cmp,
       });
 
       await store.actions.initialize();
@@ -101,9 +101,9 @@ describe("ChipStore", () => {
   describe("execution", () => {
     const state = cleanState(async () => {
       const store = testChipStore({
-        "projects/01/Not/Not.hdl": not.hdl,
-        "projects/01/Not/Not.tst": not.tst,
-        "projects/01/Not/Not.cmp": not.cmp,
+        "projects/01/Not.hdl": not.hdl,
+        "projects/01/Not.tst": not.tst,
+        "projects/01/Not.cmp": not.cmp,
       });
       await store.actions.initialize();
       await store.actions.loadChip("projects/01/Not/Not.hdl");

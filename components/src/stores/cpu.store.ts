@@ -16,6 +16,7 @@ import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "src/chips/screen.js";
 import { RunSpeed } from "src/runbar.js";
@@ -24,7 +25,6 @@ import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 function makeTst() {
   return `repeat {
@@ -105,6 +105,7 @@ export function makeCpuStore(
   let path = "";
   let tests: string[] = [];
   let tstName = "";
+  let _title: string | undefined;
 
   const reducers = {
     update(state: CpuPageState) {
@@ -139,8 +140,12 @@ export function makeCpuStore(
       );
     },
 
-    setTitle(state: CpuPageState, title: string) {
+    setTitle(state: CpuPageState, title?: string) {
+      _title = title;
       state.title = title;
+      if (title) {
+        test.fileLoaded = true;
+      }
     },
 
     updateConfig(state: CpuPageState, config: Partial<CPUPageConfig>) {
@@ -216,6 +221,7 @@ export function makeCpuStore(
     },
 
     clearTest() {
+      tstName = "";
       this.compileTest(makeTst(), "");
       dispatch.current({ action: "update" });
     },
@@ -238,12 +244,17 @@ export function makeCpuStore(
       }
       valid = true;
 
-      test = CPUTest.from(Ok(tst), {
+      const maybeTest = CPUTest.from(Ok(tst), {
         dir: tstPath,
         rom: test.cpu.ROM,
         doEcho: setStatus,
         doLoad: async (path) => {
-          const file = await fs.readFile(path);
+          let file;
+          try {
+            file = await fs.readFile(path);
+          } catch (e) {
+            throw new Error(`Cannot find ${path}`);
+          }
           const loader = path.endsWith("hack")
             ? loadHack
             : path.endsWith("asm")
@@ -258,9 +269,18 @@ export function makeCpuStore(
           const cmp = await fs.readFile(`${dir}/${file}`);
           dispatch.current({ action: "setTest", payload: { cmp } });
         },
+        requireLoad: false,
       });
-      dispatch.current({ action: "update" });
-      return true;
+
+      if (isErr(maybeTest)) {
+        setStatus(Err(maybeTest).message);
+        return false;
+      } else {
+        test = Ok(maybeTest);
+        test.fileLoaded = _title != undefined;
+        dispatch.current({ action: "update" });
+        return true;
+      }
     },
 
     async loadTest(name: string) {

@@ -2,6 +2,7 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
+  Ok,
   Result,
   isErr,
   unwrap,
@@ -20,6 +21,7 @@ import {
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
@@ -28,7 +30,6 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -331,7 +332,8 @@ export function makeVmStore(
       setStatus(`Parsed tst`);
 
       vm.reset();
-      test = VMTest.from(unwrap(tst), {
+
+      const maybeTest = VMTest.from(unwrap(tst), {
         dir: path,
         doLoad: async (path) => {
           await this.load(path);
@@ -342,10 +344,16 @@ export function makeVmStore(
           const cmp = await fs.readFile(`${dir}/${file}`);
           dispatch.current({ action: "setCmp", payload: { cmp } });
         },
-      }).using(fs);
-      test.vm = vm;
-      dispatch.current({ action: "update" });
-      return true;
+      });
+      if (isErr(maybeTest)) {
+        setStatus(Err(maybeTest).message);
+        return false;
+      } else {
+        test = Ok(maybeTest).using(fs);
+        test.vm = vm;
+        dispatch.current({ action: "update" });
+        return true;
+      }
     },
     setAnimate(value: boolean) {
       animate = value;

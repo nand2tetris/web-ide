@@ -1,3 +1,4 @@
+import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Bus, Chip, HIGH, Low, LOW } from "../chip/chip.js";
 import { Clock } from "../chip/clock.js";
 import { Tst } from "../languages/tst.js";
@@ -24,7 +25,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
       loadAction?: (path: string) => Promise<Chip>;
       compareTo?: Action<string>;
     } = {},
-  ): ChipTest {
+  ): Result<ChipTest, Error> {
     const test = new ChipTest(options);
 
     return fill(test, tst);

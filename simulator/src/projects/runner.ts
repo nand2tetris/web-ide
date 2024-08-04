@@ -76,8 +76,9 @@ export const maybeBuild =
       maybeChip = Err(new Error("HDL Was not parsed"));
     }
     const maybeTest = isOk(file.maybeParsedTST)
-      ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
+      ? ChipTest.from(Ok(file.maybeParsedTST))
       : Err(new Error("TST Was not parsed"));
+
     return { ...file, maybeChip, maybeTest };
   };
 

@@ -1,5 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";
@@ -27,7 +28,7 @@ export class VMTest extends Test<VMTestInstruction> {
       doEcho?: Action<string>;
       compareTo?: Action<string>;
     } = {},
-  ): VMTest {
+  ): Result<VMTest, Error> {
     const test = new VMTest(options);
     return fill(test, tst);
   }

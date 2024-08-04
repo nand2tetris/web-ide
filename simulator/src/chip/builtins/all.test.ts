@@ -2,7 +2,7 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Ok } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Ok, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { ChipProjects } from "@nand2tetris/projects/full.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
@@ -25,10 +25,10 @@ describe("All Projects", () => {
     )("Builtin %s", async (chipName) => {
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
-      const ChipProject = ChipProjects[project]?.CHIPS[chipName];
-      let hdlFile: string = ChipProject?.[`${chipName}.hdl`];
-      const tstFile: string = ChipProject?.[`${chipName}.tst`];
-      const cmpFile: string = ChipProject?.[`${chipName}.cmp`];
+      const ChipProject = ChipProjects[project].CHIPS;
+      let hdlFile: string = ChipProject[`${chipName}.hdl`];
+      const tstFile: string = ChipProject[`${chipName}.tst`];
+      const cmpFile: string = ChipProject[`${chipName}.cmp`];
 
       expect(hdlFile).toBeDefined();
       expect(tstFile).toBeDefined();
@@ -44,7 +44,9 @@ describe("All Projects", () => {
 
       const chip = await build({ parts: Ok(hdl as Ok<HdlParse>) });
       expect(chip).toBeOk();
-      const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(Ok(chip as Ok<Chip>));
+      const test = unwrap(ChipTest.from(Ok(tst as Ok<Tst>))).with(
+        Ok(chip as Ok<Chip>),
+      );
 
       if (project === "05") {
         test.setFileSystem(

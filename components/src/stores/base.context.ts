@@ -2,6 +2,7 @@ import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
   createContext,
   useCallback,
@@ -10,7 +11,6 @@ import {
   useState,
 } from "react";
 import {
-  ChainedFileSystemAdapter,
   FileSystemAccessFileSystemAdapter,
   openNand2TetrisDirectory,
 } from "./base/fs.js";
@@ -19,14 +19,13 @@ import {
   createAndStoreLocalAdapterInIndexedDB,
   removeLocalAdapterFromIndexedDB,
 } from "./base/indexDb.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 export interface BaseContext {
   fs: FileSystem;
+  localFsRoot?: string;
   canUpgradeFs: boolean;
-  upgradeFs: (force?: boolean) => void;
+  upgradeFs: AsyncAction<boolean | undefined>;
   closeFs: () => void;
-  upgraded?: string;
   status: string;
   setStatus: Action<string>;
   storage: Record<string, string>;
@@ -35,60 +34,54 @@ export interface BaseContext {
 export function useBaseContext(): BaseContext {
   const localAdapter = useMemo(() => new LocalStorageFileSystemAdapter(), []);
   const [fs, setFs] = useState(new FileSystem(localAdapter));
-  const [upgraded, setUpgraded] = useState<string | undefined>();
+  const [root, setRoot] = useState<string>();
 
-  const replaceFs = useCallback(
+  const setLocalFs = useCallback(
     (handle: FileSystemDirectoryHandle) => {
-      const newFs = new FileSystem(
-        new ChainedFileSystemAdapter(
-          new FileSystemAccessFileSystemAdapter(handle),
-          localAdapter,
-        ),
-      );
-      newFs.cd(fs.cwd());
-      setFs(newFs);
-      setUpgraded(handle.name);
+      setFs(new FileSystem(new FileSystemAccessFileSystemAdapter(handle)));
+      setRoot(handle.name);
     },
-    [setFs, setUpgraded],
+    [setRoot, setFs],
   );
 
   useEffect(() => {
-    if (upgraded) return;
+    if (root) return;
     attemptLoadAdapterFromIndexedDb().then((adapter) => {
       if (!adapter) return;
-      replaceFs(adapter);
+      setLocalFs(adapter);
     });
-  }, [upgraded, replaceFs]);
+  }, [root, setLocalFs]);
 
   const canUpgradeFs = `showDirectoryPicker` in window;
+
   const upgradeFs = useCallback(
     async (force = false) => {
-      if (!canUpgradeFs || (upgraded && !force)) return;
+      if (!canUpgradeFs || (root && !force)) return;
       const handler = await openNand2TetrisDirectory();
       const adapter = await createAndStoreLocalAdapterInIndexedDB(handler);
-      replaceFs(adapter);
+      setLocalFs(adapter);
     },
-    [upgraded, replaceFs],
+    [root, setLocalFs],
   );
 
   const closeFs = useCallback(async () => {
-    if (!upgraded) return;
+    if (!root) return;
     await removeLocalAdapterFromIndexedDB();
+    setRoot(undefined);
     setFs(new FileSystem(localAdapter));
-    setUpgraded(undefined);
-  }, [upgraded, localAdapter]);
+  }, [root]);
 
   const [status, setStatus] = useState("");
 
   return {
     fs,
+    localFsRoot: root,
     status,
     setStatus,
     storage: localStorage,
     canUpgradeFs,
     upgradeFs,
     closeFs,
-    upgraded,
   };
 }
 
@@ -96,7 +89,7 @@ export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  upgradeFs() {},
+  async upgradeFs() {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   closeFs() {},
   status: "",

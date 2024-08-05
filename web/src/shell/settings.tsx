@@ -11,11 +11,11 @@ import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
-const showUpgradeFs = false;
+const showUpgradeFs = true;
 
 export const Settings = () => {
   const { stores } = useContext(PageContext);
-  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, upgraded } =
+  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, localFsRoot } =
     useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
@@ -24,6 +24,7 @@ export const Settings = () => {
 
   const writeLocale = useMemo(
     () => (locale: string) => {
+      if (localFsRoot) return;
       i18n.activate(locale);
       fs.writeFile("/locale", locale);
     },
@@ -31,6 +32,7 @@ export const Settings = () => {
   );
 
   useEffect(() => {
+    if (localFsRoot) return;
     fs.readFile("/locale")
       .then((locale) => i18n.activate(locale))
       .catch(() => writeLocale("en"));
@@ -48,17 +50,10 @@ export const Settings = () => {
     const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
 
-    stores.chip.actions.initialize();
     stores.cpu.actions.clear();
     stores.asm.actions.clear();
     stores.vm.actions.initialize();
     stores.compiler.actions.reset();
-  };
-
-  const loadSamples = async () => {
-    const loaders = await import("@nand2tetris/projects/loader.js");
-    await loaders.loadSamples(fs);
-    setStatus("Loaded sample files...");
   };
 
   const resetWarningDialog = (
@@ -168,7 +163,7 @@ export const Settings = () => {
                       onClick={async () => {
                         setUpgrading(true);
                         try {
-                          await upgradeFs();
+                          await upgradeFs(localFsRoot != undefined);
                         } catch (err) {
                           console.error("Failed to upgrade FS", { err });
                           setStatus(t`Failed to load local file system.`);
@@ -176,17 +171,17 @@ export const Settings = () => {
                         setUpgrading(false);
                       }}
                     >
-                      {!upgraded ? (
+                      {!localFsRoot ? (
                         <Trans>Use Local FileSystem</Trans>
                       ) : (
                         <Trans>Change Local FileSystem</Trans>
                       )}
                       <Trans>Beta</Trans>
                     </button>
-                    {upgraded ? (
+                    {localFsRoot ? (
                       <>
                         <p>
-                          <Trans>Using {upgraded}</Trans>
+                          <Trans>Using {localFsRoot}</Trans>
                         </p>
                         <button
                           onClick={async () => {
@@ -203,16 +198,15 @@ export const Settings = () => {
                 ) : (
                   <></>
                 )}
-                <button
-                  onClick={async () => {
-                    resetWarning.open();
-                  }}
-                >
-                  <Trans>Reset</Trans>
-                </button>
-                <button onClick={loadSamples}>
-                  <Trans>Samples</Trans>
-                </button>
+                {!localFsRoot && (
+                  <button
+                    onClick={async () => {
+                      resetWarning.open();
+                    }}
+                  >
+                    <Trans>Reset</Trans>
+                  </button>
+                )}
               </dd>
               <dt>
                 <Trans>Language</Trans>

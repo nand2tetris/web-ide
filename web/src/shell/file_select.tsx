@@ -126,7 +126,7 @@ function isFileValid(filename: string, validSuffixes: string[]) {
 }
 
 export const FilePicker = () => {
-  const { fs, setStatus } = useContext(BaseContext);
+  const { fs, setStatus, localFsRoot } = useContext(BaseContext);
   const { filePicker } = useContext(AppContext);
 
   const [files, setFiles] = useState<Stats[]>([]);
@@ -134,14 +134,15 @@ export const FilePicker = () => {
   const cwd = fs.cwd();
 
   useEffect(() => {
-    if (fs.cwd() == "/") {
+    setFile("");
+    if (!localFsRoot && fs.cwd() == "/") {
       cd("projects");
     }
   }, [fs]);
 
   useEffect(() => {
     fs.scandir(fs.cwd()).then((files) => {
-      setFiles(files);
+      setFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
     });
   }, [fs, cwd, setFiles]);
 
@@ -149,7 +150,7 @@ export const FilePicker = () => {
     (dir: string) => {
       fs.cd(dir);
       fs.scandir(fs.cwd()).then((files) => {
-        setFiles(files);
+        setFiles(files.sort((a, b) => a.name.localeCompare(b.name)));
       });
     },
     [fs, setFile, setFiles],
@@ -159,7 +160,7 @@ export const FilePicker = () => {
     (basename: string) => {
       setFile(`${fs.cwd() == "/" ? "" : fs.cwd()}/${basename}`);
     },
-    [setFile],
+    [setFile, fs],
   );
 
   const confirm = useCallback(() => {

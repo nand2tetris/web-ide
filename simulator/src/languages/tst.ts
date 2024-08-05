@@ -186,10 +186,10 @@ tstSemantics.addAttribute<TstOperation>("operation", {
       op: "clear-echo",
     };
   },
-  TstLoadROMOperation(_r, _l, { name }) {
+  TstLoadROMOperation(_r, _l, name) {
     return {
       op: "loadRom",
-      file: name,
+      file: name.sourceString,
     };
   },
   TstFileOperation(op, file) {

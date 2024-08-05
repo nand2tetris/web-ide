@@ -1,11 +1,20 @@
 import { useAsmPageStore } from "@nand2tetris/components/stores/asm.store";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { useChipPageStore } from "@nand2tetris/components/stores/chip.store";
 import { useCompilerPageStore } from "@nand2tetris/components/stores/compiler.store";
 import { useCpuPageStore } from "@nand2tetris/components/stores/cpu.store";
 import { useVmPageStore } from "@nand2tetris/components/stores/vm.store";
-import { ReactNode, createContext, useEffect, useState } from "react";
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 export function usePageContext() {
+  const { fs } = useContext(BaseContext);
+
   const [title, setTitle] = useState<string>();
   const [tool, setTool] = useState<string>();
 
@@ -17,7 +26,7 @@ export function usePageContext() {
 
   useEffect(() => {
     chip.actions.initialize();
-  }, [chip.actions]);
+  }, [chip.actions, fs]);
 
   useEffect(() => {
     vm.actions.initialize();
@@ -25,6 +34,9 @@ export function usePageContext() {
 
   useEffect(() => {
     switch (tool) {
+      case "chip":
+        setTitle(chip.state.title);
+        break;
       case "cpu":
         setTitle(cpu.state.title);
         break;
@@ -32,7 +44,6 @@ export function usePageContext() {
         setTitle(asm.state.title);
         break;
       case "vm":
-        ``;
         setTitle(vm.state.title);
         break;
       case "compiler":
@@ -44,6 +55,7 @@ export function usePageContext() {
     }
   }, [
     tool,
+    chip.state.title,
     cpu.state.title,
     asm.state.title,
     vm.state.title,

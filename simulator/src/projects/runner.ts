@@ -1,22 +1,22 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
-  isOk,
-  Ok,
   Err,
-  isErr,
+  Ok,
   Result,
+  isErr,
+  isOk,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   AssignmentStubs,
   type Assignment,
 } from "@nand2tetris/projects/base.js";
-import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
-import { HDL, HdlParse } from "../languages/hdl.js";
-import { Tst, TST } from "../languages/tst.js";
+import type { RunResult, Runner } from "@nand2tetris/runner/types.js";
 import { build as buildChip } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
-import { ChipTest } from "../test/chiptst.js";
 import { CompilationError } from "../languages/base.js";
+import { HDL, HdlParse } from "../languages/hdl.js";
+import { TST, Tst } from "../languages/tst.js";
+import { ChipTest } from "../test/chiptst.js";
 
 export interface AssignmentFiles extends Assignment {
   hdl: string;
@@ -63,7 +63,10 @@ export const maybeBuild =
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
     let maybeChip: Result<Chip, Error>;
     if (isOk(file.maybeParsedHDL)) {
-      const maybeBuilt = await buildChip(Ok(file.maybeParsedHDL), fs);
+      const maybeBuilt = await buildChip({
+        parts: Ok(file.maybeParsedHDL),
+        fs,
+      });
       if (isErr(maybeBuilt)) {
         maybeChip = Err(new Error(Err(maybeBuilt).message));
       } else {
@@ -73,8 +76,9 @@ export const maybeBuild =
       maybeChip = Err(new Error("HDL Was not parsed"));
     }
     const maybeTest = isOk(file.maybeParsedTST)
-      ? Ok(ChipTest.from(Ok(file.maybeParsedTST)))
+      ? ChipTest.from(Ok(file.maybeParsedTST))
       : Err(new Error("TST Was not parsed"));
+
     return { ...file, maybeChip, maybeTest };
   };
 

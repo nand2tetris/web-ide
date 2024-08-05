@@ -181,7 +181,12 @@ describe("Chip Test", () => {
         },
       };
 
-      const maybeTest = ChipTest.from({ lines: [repeat] });
+      const maybeTest = ChipTest.from(
+        {
+          lines: [repeat],
+        },
+        { requireLoad: false },
+      );
       expect(maybeTest).toBeOk();
       const test = unwrap(maybeTest);
       test.outputList([{ id: "time", style: "S", len: 4, lpad: 0, rpad: 0 }]);

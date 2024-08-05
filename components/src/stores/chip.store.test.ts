@@ -54,7 +54,7 @@ describe("ChipStore", () => {
       });
 
       await store.actions.initialize();
-      await store.actions.loadChip("projects/01/Not/Not.hdl");
+      await store.actions.loadChip("projects/01/Not.hdl");
 
       expect(store.state.controls.project).toBe("01");
       expect(store.state.controls.chipName).toBe("Not");
@@ -68,12 +68,12 @@ describe("ChipStore", () => {
   describe("behavior", () => {
     const state = cleanState(async () => {
       const store = testChipStore({
-        "projects/01/Not/Not.hdl": not.hdl,
-        "projects/01/Not/Not.tst": not.tst,
-        "projects/01/Not/Not.cmp": not.cmp,
+        "projects/01/Not.hdl": not.hdl,
+        "projects/01/Not.tst": not.tst,
+        "projects/01/Not.cmp": not.cmp,
       });
       await store.actions.initialize();
-      await store.actions.loadChip("projects/01/Not/Not.hdl");
+      await store.actions.loadChip("projects/01/Not.hdl");
       return { store };
     }, beforeEach);
 
@@ -106,7 +106,7 @@ describe("ChipStore", () => {
         "projects/01/Not.cmp": not.cmp,
       });
       await store.actions.initialize();
-      await store.actions.loadChip("projects/01/Not/Not.hdl");
+      await store.actions.loadChip("projects/01/Not.hdl");
       return { store };
     }, beforeEach);
 
@@ -124,7 +124,7 @@ describe("ChipStore", () => {
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
 
-      await state.store.actions.stepTest(); // Output List
+      await state.store.actions.stepTest(); // Load, Compare To and Output List
 
       await state.store.actions.stepTest(); // Set in 0
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
@@ -143,7 +143,7 @@ describe("ChipStore", () => {
       expect(state.store.state.files.tst).toBe(not.tst);
       expect(state.store.state.controls.span).toEqual({
         start: 167,
-        end: 186,
+        end: 220,
         line: 6,
       });
     });
@@ -158,9 +158,9 @@ describe("ChipStore", () => {
       await state.store.actions.stepTest();
 
       expect(state.store.state.controls.span).toEqual({
-        start: 235,
-        end: 236,
-        line: 14,
+        start: 269,
+        end: 270,
+        line: 16,
       });
     });
   });

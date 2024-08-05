@@ -68,7 +68,6 @@ export const hdl_tst = `// This file is part of www.nand2tetris.org
 
 // Tests BasicTest.asm on the CPU emulator.
 
-load BasicTest.asm,
 compare-to BasicTest.cmp,
 
 set RAM[0] 256,   // stack pointer

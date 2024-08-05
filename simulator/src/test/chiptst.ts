@@ -24,11 +24,12 @@ export class ChipTest extends Test<ChipTestInstruction> {
       setStatus?: Action<string>;
       loadAction?: (path: string) => Promise<Chip>;
       compareTo?: Action<string>;
+      requireLoad?: boolean;
     } = {},
   ): Result<ChipTest, Error> {
     const test = new ChipTest(options);
 
-    return fill(test, tst);
+    return fill(test, tst, options.requireLoad);
   }
 
   constructor({
@@ -53,7 +54,6 @@ export class ChipTest extends Test<ChipTestInstruction> {
 
   override async load(filename?: string): Promise<void> {
     if (!this.dir) return;
-    console.log("Loading chip", this.dir, filename);
     const chip = await this.doLoad?.(
       filename ? `${this.dir}/${filename}` : this.dir,
     );

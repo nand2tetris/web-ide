@@ -1,10 +1,10 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
 import { CompilationError, Span } from "@nand2tetris/simulator/languages/base";
+import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Decoration, HighlightType } from "./editor";
-import { Action } from "@nand2tetris/simulator/types";
 
 const isRangeVisible = (
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,
@@ -190,6 +190,11 @@ export const Monaco = ({
           other: "inline",
         },
       });
+
+      document.fonts.ready.then(() => {
+        monaco.current?.editor.remeasureFonts()
+      })
+
       doDecorations();
       calculateHeight();
       editor.current?.onDidChangeCursorPosition((e) => {

@@ -192,8 +192,8 @@ export const Monaco = ({
       });
 
       document.fonts.ready.then(() => {
-        monaco.current?.editor.remeasureFonts()
-      })
+        monaco.current?.editor.remeasureFonts();
+      });
 
       doDecorations();
       calculateHeight();

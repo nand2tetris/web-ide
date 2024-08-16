@@ -18,20 +18,20 @@
     background-color: var(--mark-error-color);
   }
 
-  .diff-highlight-line-1 {
-    background-color: #390504;
+  .diff-highlight-error-line {
+    background-color: var(--diff-highlight-error-line-bg-color);
   }
 
-  .diff-highlight-cell-1 {
-    background-color: #842019;
+  .diff-highlight-error-cell {
+    background-color: var(--diff-highlight-error-cell-bg-color);
   }
 
-  .diff-highlight-line-2 {
-    background-color: #0d2705;
+  .diff-highlight-correct-line {
+      background-color: var(--diff-highlight-correct-line-bg-color);
   }
 
-  .diff-highlight-cell-2 {
-    background-color: #285d17;
+  .diff-highlight-correct-cell {
+    background-color: var(--diff-highlight-correct-cell-bg-color);
   }
 
   textarea {

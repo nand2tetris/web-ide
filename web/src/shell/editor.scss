@@ -16,22 +16,27 @@
 
   .error-highlight {
     background-color: var(--mark-error-color);
+    color: black;
   }
 
   .diff-highlight-line-1 {
     background-color: #ffebe9;
+    color: black;
   }
 
   .diff-highlight-cell-1 {
     background-color: #ffc1c0;
+    color: black;
   }
 
   .diff-highlight-line-2 {
     background-color: #dafbe1;
+    color: black;
   }
 
   .diff-highlight-cell-2 {
     background-color: #aceebb;
+    color: black;
   }
 
   textarea {

@@ -1,14 +1,14 @@
 :root[data-theme="light"] {
-    --diff-highlight-error-line-bg-color:   #ffebe9;
-    --diff-highlight-error-cell-bg-color:   #ffc1c0;
-    --diff-highlight-correct-line-bg-color: #dafbe1;
-    --diff-highlight-correct-cell-bg-color: #aceebb;
+  --diff-highlight-error-line-bg-color: #ffebe9;
+  --diff-highlight-error-cell-bg-color: #ffc1c0;
+  --diff-highlight-correct-line-bg-color: #dafbe1;
+  --diff-highlight-correct-cell-bg-color: #aceebb;
 }
 :root[data-theme="dark"] {
-    --diff-highlight-error-line-bg-color:   #390504;
-    --diff-highlight-error-cell-bg-color:   #842019;
-    --diff-highlight-correct-line-bg-color: #0d2705;
-    --diff-highlight-correct-cell-bg-color: #285d17;
+  --diff-highlight-error-line-bg-color: #390504;
+  --diff-highlight-error-cell-bg-color: #842019;
+  --diff-highlight-correct-line-bg-color: #0d2705;
+  --diff-highlight-correct-cell-bg-color: #285d17;
 }
 
 .Editor {
@@ -40,7 +40,7 @@
   }
 
   .diff-highlight-correct-line {
-      background-color: var(--diff-highlight-correct-line-bg-color);
+    background-color: var(--diff-highlight-correct-line-bg-color);
   }
 
   .diff-highlight-correct-cell {

@@ -18,3 +18,15 @@ export async function resetBySuffix(
     }
   }
 }
+
+export async function reset(fs: FileSystem, tree: Tree, base?: string) {
+  for (const [key, value] of Object.entries(tree)) {
+    const path = `${base ? `${base}/` : ""}${key}`;
+    if (typeof value === "string") {
+      await fs.writeFile(path, value);
+    } else {
+      await fs.mkdir(path);
+      await reset(fs, value as Tree, path);
+    }
+  }
+}

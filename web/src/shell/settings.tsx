@@ -22,6 +22,17 @@ export const Settings = () => {
 
   const [upgrading, setUpgrading] = useState(false);
 
+  const upgradeFsAction = async (createFiles?: boolean) => {
+    setUpgrading(true);
+    try {
+      await upgradeFs(localFsRoot != undefined, createFiles);
+    } catch (err) {
+      console.error("Failed to upgrade FS", { err });
+      setStatus(t`Failed to load local file system.`);
+    }
+    setUpgrading(false);
+  };
+
   const writeLocale = useMemo(
     () => (locale: string) => {
       if (localFsRoot) return;
@@ -161,21 +172,24 @@ export const Settings = () => {
                     <button
                       disabled={upgrading}
                       onClick={async () => {
-                        setUpgrading(true);
-                        try {
-                          await upgradeFs(localFsRoot != undefined);
-                        } catch (err) {
-                          console.error("Failed to upgrade FS", { err });
-                          setStatus(t`Failed to load local file system.`);
-                        }
-                        setUpgrading(false);
+                        upgradeFsAction(true);
                       }}
+                      data-tooltip={
+                        "This action will download to your device all the project files\n needed for completing the Nand to Tetris courses (both Part I and Part II). You will be prompted where to store the nand2tetris/projects folder on your device"
+                      }
+                      data-placement="bottom"
                     >
-                      {!localFsRoot ? (
-                        <Trans>Use Local FileSystem</Trans>
-                      ) : (
-                        <Trans>Change Local FileSystem</Trans>
-                      )}
+                      <Trans>Download nand2tetris/projects</Trans>
+                    </button>
+                    <button
+                      disabled={upgrading}
+                      onClick={async () => {
+                        upgradeFsAction();
+                      }}
+                      data-tooltip="Load a nand2tetris project folder stored on your device"
+                      data-placement="bottom"
+                    >
+                      <Trans>Select existing folder</Trans>
                     </button>
                     {localFsRoot ? (
                       <>
@@ -187,7 +201,7 @@ export const Settings = () => {
                             await closeFs();
                           }}
                         >
-                          Close Local FileSystem
+                          Use browser storage
                         </button>
                       </>
                     ) : (

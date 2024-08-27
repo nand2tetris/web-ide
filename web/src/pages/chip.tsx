@@ -160,7 +160,7 @@ export const Chip = () => {
         >
           {state.controls.projects.map((project) => (
             <option key={project} value={project}>
-              {project}
+              {`Project ${project}`}
             </option>
           ))}
         </select>

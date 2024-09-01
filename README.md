@@ -8,7 +8,7 @@ Users can work with the tools via a web IDE, or via a VS Code extension. Both ar
 
 ## User Guide
 
-The user guide for the web IDE is available [here](./src/pages/USER_GUIDE.md) and can also be accessed by clicking "Guide" at the top right of the [published project](https://davidsouther.github.io/nand2tetris).
+The user guides for the web IDE are available [here](https://drive.google.com/drive/folders/10hDzWql94MTPIStI3KEx--JYpHTBoeE6) and can also be accessed by clicking "Guide" at the top right of the [published project](https://nand2tetris.github.io/web-ide).
 
 The user guide for the extension is coming.
 

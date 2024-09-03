@@ -235,7 +235,7 @@ export function makeChipStore(
         payload?.invalid ?? state.sim.invalid,
       );
       state.controls.error = state.sim.invalid
-        ? payload?.error ?? state.controls.error
+        ? (payload?.error ?? state.controls.error)
         : undefined;
     },
 

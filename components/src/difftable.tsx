@@ -89,7 +89,7 @@ export const DiffTable = ({
           </tbody>
         </table>
       ) : (
-        zeroState ?? <p>Execute test script to compare output.</p>
+        (zeroState ?? <p>Execute test script to compare output.</p>)
       )}
     </div>
   );

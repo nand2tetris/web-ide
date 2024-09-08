@@ -5,7 +5,6 @@ const asm = `ASM <: Base {
   instruction = label|aInstruction|cInstruction
   intermediateInstruction = instruction space+
 
-  colon = ":"
   identifier := (letter|underscore|dot|dollar|colon) (alnum|underscore|dot|dollar|colon)*
 
   label = openParen identifier closeParen

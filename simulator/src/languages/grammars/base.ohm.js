@@ -43,6 +43,7 @@ Base {
   percent = "%"
   semi = ";"
   underscore = "_"
+  colon = ":"
 
   Value = identifier | number | boolean
 

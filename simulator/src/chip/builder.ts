@@ -75,18 +75,10 @@ export async function loadChip(
   }
 }
 
-export async function build({
-  parts,
-  fs,
-  dir,
-  name,
-}: {
-  parts: HdlParse;
-  fs?: FileSystem;
-  dir?: string;
-  name?: string;
-}): Promise<Result<Chip, CompilationError>> {
-  return await ChipBuilder.build({ parts, dir, fs, name });
+export async function build(
+  ...args: Parameters<typeof ChipBuilder.build>
+): Promise<ReturnType<typeof ChipBuilder.build>> {
+  return await ChipBuilder.build(...args);
 }
 
 interface InternalPin {

@@ -38,6 +38,7 @@ export function useBaseContext(): BaseContext {
 
   const setLocalFs = useCallback(
     async (handle: FileSystemDirectoryHandle, createFiles = false) => {
+      // We will not mirror the changes in localStorage, since they will be saved in the user's file system
       const newFs = new FileSystem(
         new FileSystemAccessFileSystemAdapter(handle),
       );

@@ -485,7 +485,8 @@ export class Chip {
     return Ok();
   }
 
-  sortParts() {
+  // Returns whether the part connection graph has a loop
+  sortParts(): boolean {
     const sorted: Chip[] = [];
     const visited = new Set<Chip>();
     const visiting = new Set<Chip>();
@@ -506,7 +507,7 @@ export class Chip {
         sorted.push(node.part);
       } else if (!visited.has(node.part)) {
         if (visiting.has(node.part)) {
-          continue;
+          return true;
         }
         visiting.add(node.part);
 
@@ -528,6 +529,7 @@ export class Chip {
     }
 
     this.parts = sorted.reverse();
+    return false;
   }
 
   private findPin(from: string, minWidth?: number): Pin {
@@ -598,12 +600,21 @@ export class Chip {
       chipPin = new OutSubBus(chipPin, to.start, to.width);
     }
 
-    partPin.connect(chipPin);
-
     if (!part.clockedPins.has(partPin.name)) {
       const partToOuts = this.partToOuts.get(part) ?? new Set();
       partToOuts.add(chipPin.name);
       this.partToOuts.set(part, partToOuts);
+    }
+
+    const loop = this.sortParts();
+
+    if (loop) {
+      const partToOuts = this.partToOuts.get(part) ?? new Set();
+      partToOuts.delete(chipPin.name);
+      this.partToOuts.set(part, partToOuts);
+      return Err({ message: "Circular pin dependency", lhs: false });
+    } else {
+      partPin.connect(chipPin);
     }
 
     return Ok();
@@ -649,12 +660,22 @@ export class Chip {
         partPin = new OutSubBus(partPin, from.start, from.width);
       }
     }
-    chipPin.connect(partPin);
 
     if (!part.clockedPins.has(partPin.name)) {
       const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
       pinsToPart.add(part);
       this.insToPart.set(chipPin.name, pinsToPart);
+    }
+
+    const loop = this.sortParts();
+
+    if (loop) {
+      const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
+      pinsToPart.delete(part);
+      this.insToPart.set(chipPin.name, pinsToPart);
+      return Err({ message: "Circular pin dependency", lhs: true });
+    } else {
+      chipPin.connect(partPin);
     }
 
     return Ok();

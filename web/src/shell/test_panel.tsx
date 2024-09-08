@@ -312,13 +312,13 @@ export const TestPanel = ({
 function decorationTypeToCss(type: DecorationType) {
   switch (type) {
     case "error-line":
-      return "diff-highlight-line-1";
+      return "diff-highlight-error-line";
     case "error-cell":
-      return "diff-highlight-cell-1";
+      return "diff-highlight-error-cell";
     case "correct-line":
-      return "diff-highlight-line-2";
+      return "diff-highlight-correct-line";
     case "correct-cell":
-      return "diff-highlight-cell-2";
+      return "diff-highlight-correct-cell";
     default:
       return "";
   }

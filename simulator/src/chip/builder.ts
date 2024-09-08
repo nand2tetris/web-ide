@@ -245,8 +245,6 @@ class ChipBuilder {
         .filter((pin) => this.chip.isClockedPin(pin)),
     );
 
-    this.chip.sortParts();
-
     // Reset clock order after wiring sub-pins
     for (const part of this.chip.parts) {
       part.subscribeToClock();

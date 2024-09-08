@@ -11,7 +11,7 @@
   },
   "homepage": "https://davidsouther.github.io/nand2tetris",
   "scripts": {
-    "prebuild": "mkdir -p out/views/hdl ; cd .. ; npm run build -w extension/views/hdl",
+    "prebuild": "shx mkdir -p out/views/hdl && cd .. && npm run build -w extension/views/hdl",
     "build": "npx esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node --sourcemap",
     "watch": "npm run build -- --watch",
     "vscode:prepublish": "npm run build",
@@ -255,5 +255,8 @@
   "dependencies": {
     "gh-pages": "6.1.1",
     "react-scripts": "5.0.1"
+  },
+  "optionalDependencies": {
+    "esbuild-windows-64": "^0.15.18"
   }
 }

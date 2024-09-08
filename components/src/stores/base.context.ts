@@ -54,10 +54,13 @@ export function useBaseContext(): BaseContext {
 
   useEffect(() => {
     if (root) return;
-    attemptLoadAdapterFromIndexedDb().then((adapter) => {
-      if (!adapter) return;
-      setLocalFs(adapter);
-    });
+
+    if ("showDirectoryPicker" in window) {
+      attemptLoadAdapterFromIndexedDb().then((adapter) => {
+        if (!adapter) return;
+        setLocalFs(adapter);
+      });
+    }
   }, [root, setLocalFs]);
 
   const canUpgradeFs = `showDirectoryPicker` in window;

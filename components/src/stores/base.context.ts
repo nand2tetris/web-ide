@@ -38,6 +38,7 @@ export function useBaseContext(): BaseContext {
 
   const setLocalFs = useCallback(
     async (handle: FileSystemDirectoryHandle, createFiles = false) => {
+      // We will not mirror the changes in localStorage, since they will be saved in the user's file system
       const newFs = new FileSystem(
         new FileSystemAccessFileSystemAdapter(handle),
       );
@@ -53,10 +54,13 @@ export function useBaseContext(): BaseContext {
 
   useEffect(() => {
     if (root) return;
-    attemptLoadAdapterFromIndexedDb().then((adapter) => {
-      if (!adapter) return;
-      setLocalFs(adapter);
-    });
+
+    if ("showDirectoryPicker" in window) {
+      attemptLoadAdapterFromIndexedDb().then((adapter) => {
+        if (!adapter) return;
+        setLocalFs(adapter);
+      });
+    }
   }, [root, setLocalFs]);
 
   const canUpgradeFs = `showDirectoryPicker` in window;

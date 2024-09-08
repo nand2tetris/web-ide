@@ -1,3 +1,16 @@
+:root[data-theme="light"] {
+  --diff-highlight-error-line-bg-color: #ffebe9;
+  --diff-highlight-error-cell-bg-color: #ffc1c0;
+  --diff-highlight-correct-line-bg-color: #dafbe1;
+  --diff-highlight-correct-cell-bg-color: #aceebb;
+}
+:root[data-theme="dark"] {
+  --diff-highlight-error-line-bg-color: #390504;
+  --diff-highlight-error-cell-bg-color: #842019;
+  --diff-highlight-correct-line-bg-color: #0d2705;
+  --diff-highlight-correct-cell-bg-color: #285d17;
+}
+
 .Editor {
   width: 100%;
 
@@ -18,20 +31,20 @@
     background-color: var(--mark-error-color);
   }
 
-  .diff-highlight-line-1 {
-    background-color: #ffebe9;
+  .diff-highlight-error-line {
+    background-color: var(--diff-highlight-error-line-bg-color);
   }
 
-  .diff-highlight-cell-1 {
-    background-color: #ffc1c0;
+  .diff-highlight-error-cell {
+    background-color: var(--diff-highlight-error-cell-bg-color);
   }
 
-  .diff-highlight-line-2 {
-    background-color: #dafbe1;
+  .diff-highlight-correct-line {
+    background-color: var(--diff-highlight-correct-line-bg-color);
   }
 
-  .diff-highlight-cell-2 {
-    background-color: #aceebb;
+  .diff-highlight-correct-cell {
+    background-color: var(--diff-highlight-correct-cell-bg-color);
   }
 
   textarea {

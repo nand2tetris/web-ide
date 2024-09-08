@@ -75,18 +75,10 @@ export async function loadChip(
   }
 }
 
-export async function build({
-  parts,
-  fs,
-  dir,
-  name,
-}: {
-  parts: HdlParse;
-  fs?: FileSystem;
-  dir?: string;
-  name?: string;
-}): Promise<Result<Chip, CompilationError>> {
-  return await ChipBuilder.build({ parts, dir, fs, name });
+export async function build(
+  ...args: Parameters<typeof ChipBuilder.build>
+): Promise<ReturnType<typeof ChipBuilder.build>> {
+  return await ChipBuilder.build(...args);
 }
 
 interface InternalPin {
@@ -233,7 +225,7 @@ class ChipBuilder {
     );
   }
 
-  async build() {
+  async build(): Promise<Result<Chip, CompilationError>> {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
       return Err(createError(`Wrong chip name`, this.parts.name.span));
     }
@@ -252,8 +244,6 @@ class ChipBuilder {
         .map((pin) => pin.name)
         .filter((pin) => this.chip.isClockedPin(pin)),
     );
-
-    this.chip.sortParts();
 
     // Reset clock order after wiring sub-pins
     for (const part of this.chip.parts) {

@@ -47,7 +47,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "postbuild": "rm -rf build/public && cp -r src/public/ build/public/",
+    "postbuild": "shx rm -rf build/public && shx cp -r src/public/ build/public/",
     "test": "react-scripts test"
   },
   "jest": {

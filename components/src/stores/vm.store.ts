@@ -219,7 +219,7 @@ export function makeVmStore(
       const files: VmFile[] = [];
       let title: string;
 
-      if (path.includes(".")) {
+      if ((await fs.stat(path)).isFile()) {
         // single file
         files.push({
           name: assertExists(path.split("/").pop()).replace(".vm", ""),

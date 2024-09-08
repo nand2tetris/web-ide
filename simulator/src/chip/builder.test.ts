@@ -191,6 +191,26 @@ describe("Chip Builder", () => {
       throw new Error(display(e.message ?? e.shortMessage ?? e));
     }
   });
+
+  it("returns error for part loop", async () => {
+    try {
+      const chip = unwrap(
+        HDL.parse(`CHIP Not {
+        IN in;
+        OUT out;
+        PARTS:
+        Nand(a=in, b=b, out=c);
+        Nand(a=in, b=c, out=b);
+      }`),
+      );
+      const foo = await build({ parts: chip });
+      expect(foo).toBeErr();
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    }
+  });
 });
 
 const USE_COPY_HDL = `CHIP UseCopy {

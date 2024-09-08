@@ -225,7 +225,7 @@ class ChipBuilder {
     );
   }
 
-  async build() {
+  async build(): Promise<Result<Chip, CompilationError>> {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
       return Err(createError(`Wrong chip name`, this.parts.name.span));
     }

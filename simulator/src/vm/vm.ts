@@ -228,12 +228,17 @@ export class Vm {
 
     for (const call of calls) {
       if (!functions.has(call.name)) {
-        if (VM_BUILTINS[call.name]) {
-          if (VM_BUILTINS[call.name].nArgs != call.nArgs) {
+        const builtin = VM_BUILTINS[call.name];
+        if (builtin) {
+          const expectedNArgs =
+            builtin.type == "method"
+              ? builtin.args.length + 1
+              : builtin.args.length;
+          if (expectedNArgs != call.nArgs) {
             return Err(
               createError(
                 `OS function ${call.name} expects ${
-                  VM_BUILTINS[call.name].nArgs
+                  expectedNArgs
                 } arguments, not ${call.nArgs}`,
                 call.span,
               ),

@@ -80,7 +80,6 @@ export const Chip = () => {
     const hdlToCompile = state.controls.usingBuiltin
       ? files.hdl
       : files.hdl ?? hdl;
-
     await actions.updateFiles({
       hdl: hdlToCompile,
       tst: files.tst ?? tst,
@@ -142,12 +141,16 @@ export const Chip = () => {
 
   const loadFile = async () => {
     const path = await filePicker.select({ suffix: "hdl" });
-    actions.loadChip(path);
+    actions.loadChip(path.path);
   };
 
   const selectors = (
     <>
-      <fieldset role="group">
+      <fieldset
+        role="group"
+        data-tooltip="Open an HDL file using this menu"
+        data-placement="bottom"
+      >
         <select
           value={state.controls.project}
           onChange={({ target: { value } }) => {
@@ -157,7 +160,7 @@ export const Chip = () => {
         >
           {state.controls.projects.map((project) => (
             <option key={project} value={project}>
-              {project}
+              {`Project ${project}`}
             </option>
           ))}
         </select>
@@ -206,7 +209,13 @@ export const Chip = () => {
           )}
           {selectors}
           <fieldset role="group">
-            <button onClick={loadFile}>📂</button>
+            <button
+              data-tooltip="Open an HDL file directly"
+              data-placement="left"
+              onClick={loadFile}
+            >
+              📂
+            </button>
           </fieldset>
         </>
       }
@@ -224,7 +233,7 @@ export const Chip = () => {
         }}
         grammar={HDL.parser}
         language={"hdl"}
-        disabled={state.controls.usingBuiltin}
+        disabled={state.controls.usingBuiltin || state.controls.chipName == ""}
       />
     </Panel>
   );
@@ -309,21 +318,23 @@ export const Chip = () => {
       {state.sim.invalid ? (
         <Trans>Syntax errors in the HDL code or test</Trans>
       ) : (
-        <>
-          <PinContext.Provider value={pinResetDispatcher}>
-            <FullPinout
-              sim={state.sim}
-              toggle={actions.toggle}
-              setInputValid={setInputValid}
-              hideInternal={state.controls.usingBuiltin}
-            />
-          </PinContext.Provider>
-          {visualizations.length > 0 && (
-            <Accordian summary={<Trans>Visualization</Trans>} open={true}>
-              <main>{visualizations.map(([_, v]) => v)}</main>
-            </Accordian>
-          )}
-        </>
+        state.controls.chipName != "" && (
+          <>
+            <PinContext.Provider value={pinResetDispatcher}>
+              <FullPinout
+                sim={state.sim}
+                toggle={actions.toggle}
+                setInputValid={setInputValid}
+                hideInternal={state.controls.usingBuiltin}
+              />
+            </PinContext.Provider>
+            {visualizations.length > 0 && (
+              <Accordian summary={<Trans>Visualization</Trans>} open={true}>
+                <main>{visualizations.map(([_, v]) => v)}</main>
+              </Accordian>
+            )}
+          </>
+        )
       )}
     </Panel>
   );

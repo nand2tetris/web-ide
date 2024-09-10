@@ -103,10 +103,7 @@ export const TestPanel = ({
     [tracking],
   );
 
-  const [editMode, setEditMode] = useState(false);
   const [skipWarning, setSkipWarning] = useState(false);
-  const [savedTst, setSavedTst] = useState("");
-  const [savedCmp, setSavedCmp] = useState("");
   const editDialog = useDialog();
 
   const onChange = (test: string) => {
@@ -119,32 +116,17 @@ export const TestPanel = ({
     setCmp(defaultCmp ?? "");
   };
 
-  const onEdit = () => {
-    if (!localStorage.getItem(WARNING_KEY)) {
-      editDialog.open();
-    }
-    setEditMode(true);
-    setSavedTst(tst);
-    setSavedCmp(cmp);
-  };
-
-  const restore = () => {
-    setEditMode(false);
-    setTst(savedTst);
-    setCmp(savedCmp);
-  };
-
   const [name, setName] = useStateInitializer(tstName ?? "");
 
   const loadTest = useCallback(async () => {
     const path = await filePicker.select({ suffix: ".tst" });
-    const files = await loadTestFiles(fs, path);
+    const files = await loadTestFiles(fs, path.path);
     if (isErr(files)) {
       setStatus(`Failed to load test`);
       return;
     }
-    setPath?.(path);
-    setName(path.split("/").pop() ?? "");
+    setPath?.(path.path);
+    setName(path.path.split("/").pop() ?? "");
     const { tst, cmp } = unwrap(files);
     setTst?.(tst);
     setCmp?.(cmp ?? "");
@@ -215,15 +197,6 @@ export const TestPanel = ({
                         Clear
                       </button>
                     )}
-                    {editMode ? (
-                      <button className="flex-0" onClick={restore}>
-                        Restore
-                      </button>
-                    ) : (
-                      <button className="flex-0" onClick={onEdit}>
-                        Edit
-                      </button>
-                    )}
                     {showLoad && (
                       <button
                         className="flex-0"
@@ -253,7 +226,7 @@ export const TestPanel = ({
             onChange={onChange}
             grammar={TST.parser}
             language={"tst"}
-            disabled={!editMode}
+            disabled={true}
             highlight={showHighlight ? tstHighlight : undefined}
           />
         </Tab>
@@ -264,7 +237,7 @@ export const TestPanel = ({
             grammar={CMP.parser}
             language={"cmp"}
             lineNumberTransform={(_) => ""}
-            disabled={!editMode}
+            disabled={true}
           />
         </Tab>
         <Tab title="Output File" onSelect={() => setSelectedTestTab("out")}>

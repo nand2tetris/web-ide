@@ -193,6 +193,7 @@ export const Memory = forwardRef(
       showClear = true,
       onChange = undefined,
       onClear = undefined,
+      loadTooltip = undefined,
     }: {
       name?: string;
       className?: string;
@@ -212,6 +213,7 @@ export const Memory = forwardRef(
       showClear?: boolean;
       onChange?: () => void;
       onClear?: () => void;
+      loadTooltip?: { value: string; placement: string };
     },
     ref,
   ) => {
@@ -306,8 +308,8 @@ export const Memory = forwardRef(
               <button
                 onClick={doLoad}
                 className="flex-0"
-                data-tooltip={"Load file"}
-                data-placement="bottom"
+                data-tooltip={loadTooltip?.value ?? "Load file"}
+                data-placement={loadTooltip?.placement ?? "bottom"}
               >
                 {/* <Icon name="upload_file" /> */}
                 📂

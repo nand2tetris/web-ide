@@ -5,6 +5,8 @@ export const TstLanguage: monaco.languages.IMonarchLanguage = {
 
   keywords: [
     "output-list",
+    "compare-to",
+    "output-file",
     "set",
     "eval",
     "output",

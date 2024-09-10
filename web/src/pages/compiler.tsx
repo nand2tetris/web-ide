@@ -18,13 +18,14 @@ import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, canUpgradeFs } = useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;
 
   const [selected, setSelected] = useState(0);
   const [suppressStatus, setSuppressStatus] = useState(false);
+  const [editable, setEditable] = useState(false);
 
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
@@ -57,28 +58,46 @@ export const Compiler = () => {
     setSelected(Object.keys(state.files).indexOf(state.selected));
   }, [state.selected]);
 
+  const loadRef = useRef<HTMLInputElement>(null);
+
   const uploadFiles = async () => {
-    const handle = await openNand2TetrisDirectory();
-    const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
+    if (canUpgradeFs) {
+      const handle = await openNand2TetrisDirectory();
+      const fs = new FileSystem(new FileSystemAccessFileSystemAdapter(handle));
+      const empty =
+        (await fs.scandir("/")).filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".jack"),
+        ).length == 0;
 
-    dispatch.current({
-      action: "setTitle",
-      payload: `${handle.name} / *.jack`,
-    });
-
-    const empty =
-      (await fs.scandir("/")).filter(
-        (entry) => entry.isFile() && entry.name.endsWith(".jack"),
-      ).length == 0;
-
-    if (empty) {
-      setStatus("No .jack files in the selected folder");
-      setSuppressStatus(true);
+      if (empty) {
+        setStatus("No .jack files in the selected folder");
+        setSuppressStatus(true);
+      } else {
+        setStatus("");
+        actions.loadProject(fs, `${handle.name} / *.jack`);
+        setEditable(true);
+      }
     } else {
-      setStatus("");
-      setSuppressStatus(false);
+      loadRef.current?.click();
+      setEditable(false);
     }
-    actions.loadProject(fs, `${handle.name} / *.jack`);
+  };
+
+  const onLoad = async () => {
+    if (
+      !loadRef.current ||
+      !loadRef.current?.files ||
+      loadRef.current.files?.length == 0
+    ) {
+      return;
+    }
+    const files: Record<string, string> = {};
+    for (const file of loadRef.current.files) {
+      if (file.name.endsWith(".jack")) {
+        files[file.name.replace(".jack", "")] = await file.text();
+      }
+    }
+    actions.loadFiles(files);
   };
 
   const compileAll = (): VmFile[] => {
@@ -147,6 +166,13 @@ export const Compiler = () => {
 
   return (
     <div className="Page CompilerPage grid">
+      <input
+        type="file"
+        ref={loadRef}
+        webkitdirectory=""
+        onChange={onLoad}
+        style={{ display: "none" }}
+      ></input>
       <Link
         ref={redirectRef}
         to={URLs["vm"].href}
@@ -221,6 +247,7 @@ export const Compiler = () => {
                 }}
                 error={state.compiled[file].error}
                 language={"jack"}
+                disabled={!editable}
               />
             </Tab>
           ))}

@@ -115,7 +115,7 @@ export const CPU = () => {
       suffix: [".asm", ".hack"],
     });
     const title = isPath(file)
-      ? file.path.split("/").pop() ?? ""
+      ? (file.path.split("/").pop() ?? "")
       : Array.isArray(file)
         ? file[0].name
         : file.name;

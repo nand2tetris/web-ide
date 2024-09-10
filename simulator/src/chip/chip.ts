@@ -148,13 +148,19 @@ export class OutSubBus extends Bus {
     this.connect(bus);
   }
 
+  override pull(voltage: Voltage, bit = 0) {
+    if (bit >= this.start && bit < this.start + this.width) {
+      this.bus.pull(voltage, bit - this.start);
+    }
+  }
+
   override set busVoltage(voltage: number) {
     this.bus.busVoltage =
       (voltage & mask(this.width + this.start)) >> this.start;
   }
 
   override get busVoltage(): number {
-    return this.bus.busVoltage & mask(this.width);
+    return (this.bus.busVoltage >> this.start) & mask(this.width);
   }
 
   override connect(bus: Pin): void {

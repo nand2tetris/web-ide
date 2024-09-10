@@ -20,12 +20,7 @@ import {
 } from "@nand2tetris/components/pinout.js";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import {
-  Files,
-  PROJECT_NAMES,
-  isBuiltinOnly,
-} from "@nand2tetris/components/stores/chip.store.js";
-import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
+import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { TestPanel } from "src/shell/test_panel";
@@ -33,18 +28,32 @@ import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
-import { zip } from "../shell/zip";
+
+interface CompileInput {
+  hdl: string;
+  tst: string;
+  cmp: string;
+  tstDir: string;
+}
 
 export const Chip = () => {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, localFsRoot } = useContext(BaseContext);
   const { stores, setTool } = useContext(PageContext);
-  const { tracking } = useContext(AppContext);
+  const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
   const [out, setOut] = useStateInitializer(state.files.out);
+  const [tstDir, setTstDir] = useStateInitializer(state.dir);
+  const [tstPath, setTstPath] = useState<string>();
+
+  useEffect(() => {
+    if (tstPath) {
+      setTstDir(tstPath?.split("/").slice(0, -1).join("/"));
+    }
+  }, [tstPath]);
 
   useEffect(() => {
     setTool("chip");
@@ -59,43 +68,31 @@ export const Chip = () => {
     tracking.trackEvent("action", "setChip", state.controls.chipName);
   }, []);
 
-  const setProject = useCallback(
-    (project: keyof typeof CHIP_PROJECTS) => {
-      actions.setProject(project);
-      tracking.trackEvent("action", "setProject", project);
-    },
-    [actions, tracking],
-  );
-
-  const setChip = useCallback(
-    (chip: string) => {
-      actions.setChip(chip);
-      tracking.trackEvent("action", "setChip", chip);
-      pinResetDispatcher.reset();
-    },
-    [actions, tracking],
-  );
-
   const doEval = useCallback(() => {
     actions.eval();
     tracking.trackEvent("action", "eval");
   }, [actions, tracking]);
 
-  const compile = useRef<(files?: Partial<Files>) => void>(() => undefined);
-  compile.current = async (files: Partial<Files> = {}) => {
-    const hdlToCompile =
-      useBuiltin || state.controls.builtinOnly ? files.hdl : (files.hdl ?? hdl);
+  const compile = useRef<(files?: Partial<CompileInput>) => void>(
+    () => undefined,
+  );
+  compile.current = async (files: Partial<CompileInput> = {}) => {
+    const hdlToCompile = state.controls.usingBuiltin
+      ? files.hdl
+      : files.hdl ?? hdl;
+
     await actions.updateFiles({
       hdl: hdlToCompile,
       tst: files.tst ?? tst,
       cmp: files.cmp ?? cmp,
+      tstPath: files.tstDir ?? tstDir,
     });
   };
 
   useEffect(() => {
-    compile.current({ tst, cmp });
+    compile.current({ tst, cmp, tstDir });
     actions.reset();
-  }, [tst, cmp]);
+  }, [tst, cmp, tstDir]);
 
   const runner = useRef<Timer>();
   useEffect(() => {
@@ -138,32 +135,14 @@ export const Chip = () => {
     [actions],
   );
 
-  const downloadRef = useRef<HTMLAnchorElement>(null);
-
-  const downloadProject = async () => {
-    if (!downloadRef.current) {
-      return;
-    }
-
-    const files = await actions.getProjectFiles();
-    const url = await zip(files);
-    downloadRef.current.href = url;
-    downloadRef.current.download = `${state.controls.project}`;
-    downloadRef.current.click();
-
-    URL.revokeObjectURL(url);
+  const toggleUseBuiltin = () => {
+    actions.toggleBuiltin();
+    pinResetDispatcher.reset();
   };
 
-  const [useBuiltin, setUseBuiltin] = useState(false);
-  const toggleUseBuiltin = () => {
-    if (useBuiltin) {
-      setUseBuiltin(false);
-      actions.useBuiltin(false);
-    } else {
-      setUseBuiltin(true);
-      actions.useBuiltin(true, hdl);
-    }
-    pinResetDispatcher.reset();
+  const loadFile = async () => {
+    const path = await filePicker.select({ suffix: "hdl" });
+    actions.loadChip(path);
   };
 
   const selectors = (
@@ -172,50 +151,36 @@ export const Chip = () => {
         <select
           value={state.controls.project}
           onChange={({ target: { value } }) => {
-            setProject(value as keyof typeof CHIP_PROJECTS);
+            actions.setProject(value);
           }}
           data-testid="project-picker"
         >
-          {PROJECT_NAMES.map(([number, label]) => (
-            <option key={number} value={number}>
-              {label}
+          {state.controls.projects.map((project) => (
+            <option key={project} value={project}>
+              {project}
             </option>
           ))}
         </select>
         <select
           value={state.controls.chipName}
           onChange={({ target: { value } }) => {
-            setChip(value);
+            if (value != "") {
+              let path = `/${state.controls.project}/${value}.hdl`;
+              if (!localFsRoot) {
+                path = `/projects${path}`;
+              }
+              actions.loadChip(path);
+            }
           }}
           data-testid="chip-picker"
         >
+          {state.controls.chipName == "" && <option></option>}
           {state.controls.chips.map((chip) => (
-            <option
-              key={chip}
-              value={chip}
-              style={
-                isBuiltinOnly(state.controls.project, chip)
-                  ? { color: "var(--light-grey)" }
-                  : {}
-              }
-            >
-              {`${chip} ${
-                isBuiltinOnly(state.controls.project, chip) ? "(given)" : ""
-              }`}
+            <option key={chip} value={chip}>
+              {chip}
             </option>
           ))}
         </select>
-        <a ref={downloadRef} style={{ display: "none" }} />
-
-        <button
-          className="flex-0"
-          onClick={downloadProject}
-          disabled={state.controls.builtinOnly}
-          data-tooltip={t`Download .hdl files`}
-          data-placement="left"
-        >
-          ⬇️
-        </button>
       </fieldset>
     </>
   );
@@ -225,20 +190,24 @@ export const Chip = () => {
       isEditorPanel={true}
       header={
         <>
-          <div tabIndex={0}>HDL</div>
-          <fieldset>
+          <div className="flex-1" tabIndex={0}>
+            HDL
+          </div>
+          {hasBuiltinChip(state.controls.chipName) && (
             <label>
               <input
                 type="checkbox"
                 role="switch"
-                checked={state.controls.builtinOnly ? true : useBuiltin}
+                checked={state.controls.usingBuiltin}
                 onChange={toggleUseBuiltin}
-                disabled={state.controls.builtinOnly}
               />
               <Trans>Builtin</Trans>
             </label>
-          </fieldset>
+          )}
           {selectors}
+          <fieldset role="group">
+            <button onClick={loadFile}>📂</button>
+          </fieldset>
         </>
       }
     >
@@ -248,16 +217,14 @@ export const Chip = () => {
         error={state.controls.error}
         onChange={async (source) => {
           setHdl(source);
-          if (!useBuiltin) {
-            await actions.saveChip(source);
+          if (!state.controls.usingBuiltin) {
+            actions.saveChip(source);
           }
-          compile.current(
-            useBuiltin || state.controls.builtinOnly ? {} : { hdl: source },
-          );
+          compile.current(state.controls.usingBuiltin ? {} : { hdl: source });
         }}
         grammar={HDL.parser}
         language={"hdl"}
-        disabled={useBuiltin || state.controls.builtinOnly}
+        disabled={state.controls.usingBuiltin}
       />
     </Panel>
   );
@@ -348,7 +315,7 @@ export const Chip = () => {
               sim={state.sim}
               toggle={actions.toggle}
               setInputValid={setInputValid}
-              hideInternal={state.controls.builtinOnly || useBuiltin}
+              hideInternal={state.controls.usingBuiltin}
             />
           </PinContext.Provider>
           {visualizations.length > 0 && (
@@ -365,13 +332,12 @@ export const Chip = () => {
     <TestPanel
       runner={runner}
       disabled={state.sim.invalid}
-      showLoad={false}
       prefix={
         state.controls.tests.length > 1 ? (
           <select
             value={state.controls.testName}
             onChange={({ target: { value } }) => {
-              actions.setTest(value);
+              actions.loadTest(value);
             }}
             data-testid="test-picker"
           >
@@ -388,6 +354,7 @@ export const Chip = () => {
       tst={[tst, setTst, state.controls.span]}
       cmp={[cmp, setCmp]}
       out={[out, setOut]}
+      setPath={setTstPath}
       speed={state.config.speed}
       onSpeedChange={(speed) => {
         dispatch.current({ action: "updateConfig", payload: { speed } });
@@ -396,11 +363,13 @@ export const Chip = () => {
   );
 
   return (
-    <div className="Page ChipPage grid">
-      {hdlPanel}
-      {pinsPanel}
-      {testPanel}
-    </div>
+    <>
+      <div className="Page ChipPage grid">
+        {hdlPanel}
+        {pinsPanel}
+        {testPanel}
+      </div>
+    </>
   );
 };
 

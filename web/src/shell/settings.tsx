@@ -11,19 +11,31 @@ import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 import { useDialog } from "./dialog";
 
-const showUpgradeFs = false;
+const showUpgradeFs = true;
 
 export const Settings = () => {
   const { stores } = useContext(PageContext);
-  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, upgraded } =
+  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, localFsRoot } =
     useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
 
   const [upgrading, setUpgrading] = useState(false);
 
+  const upgradeFsAction = async (createFiles?: boolean) => {
+    setUpgrading(true);
+    try {
+      await upgradeFs(localFsRoot != undefined, createFiles);
+    } catch (err) {
+      console.error("Failed to upgrade FS", { err });
+      setStatus(t`Failed to load local file system.`);
+    }
+    setUpgrading(false);
+  };
+
   const writeLocale = useMemo(
     () => (locale: string) => {
+      if (localFsRoot) return;
       i18n.activate(locale);
       fs.writeFile("/locale", locale);
     },
@@ -31,6 +43,7 @@ export const Settings = () => {
   );
 
   useEffect(() => {
+    if (localFsRoot) return;
     fs.readFile("/locale")
       .then((locale) => i18n.activate(locale))
       .catch(() => writeLocale("en"));
@@ -48,17 +61,10 @@ export const Settings = () => {
     const loaders = await import("@nand2tetris/projects/loader.js");
     await loaders.resetFiles(fs);
 
-    stores.chip.actions.initialize();
     stores.cpu.actions.clear();
     stores.asm.actions.clear();
     stores.vm.actions.initialize();
     stores.compiler.actions.reset();
-  };
-
-  const loadSamples = async () => {
-    const loaders = await import("@nand2tetris/projects/loader.js");
-    await loaders.loadSamples(fs);
-    setStatus("Loaded sample files...");
   };
 
   const resetWarningDialog = (
@@ -166,34 +172,36 @@ export const Settings = () => {
                     <button
                       disabled={upgrading}
                       onClick={async () => {
-                        setUpgrading(true);
-                        try {
-                          await upgradeFs();
-                        } catch (err) {
-                          console.error("Failed to upgrade FS", { err });
-                          setStatus(t`Failed to load local file system.`);
-                        }
-                        setUpgrading(false);
+                        upgradeFsAction(true);
                       }}
+                      data-tooltip={
+                        "This action will download to your device all the project files\n needed for completing the Nand to Tetris courses (both Part I and Part II). You will be prompted where to store the nand2tetris/projects folder on your device"
+                      }
+                      data-placement="bottom"
                     >
-                      {!upgraded ? (
-                        <Trans>Use Local FileSystem</Trans>
-                      ) : (
-                        <Trans>Change Local FileSystem</Trans>
-                      )}
-                      <Trans>Beta</Trans>
+                      <Trans>Download nand2tetris/projects</Trans>
                     </button>
-                    {upgraded ? (
+                    <button
+                      disabled={upgrading}
+                      onClick={async () => {
+                        upgradeFsAction();
+                      }}
+                      data-tooltip="Load a nand2tetris project folder stored on your device"
+                      data-placement="bottom"
+                    >
+                      <Trans>Select existing folder</Trans>
+                    </button>
+                    {localFsRoot ? (
                       <>
                         <p>
-                          <Trans>Using {upgraded}</Trans>
+                          <Trans>Using {localFsRoot}</Trans>
                         </p>
                         <button
                           onClick={async () => {
                             await closeFs();
                           }}
                         >
-                          Close Local FileSystem
+                          Use browser storage
                         </button>
                       </>
                     ) : (
@@ -203,16 +211,15 @@ export const Settings = () => {
                 ) : (
                   <></>
                 )}
-                <button
-                  onClick={async () => {
-                    resetWarning.open();
-                  }}
-                >
-                  <Trans>Reset</Trans>
-                </button>
-                <button onClick={loadSamples}>
-                  <Trans>Samples</Trans>
-                </button>
+                {!localFsRoot && (
+                  <button
+                    onClick={async () => {
+                      resetWarning.open();
+                    }}
+                  >
+                    <Trans>Reset</Trans>
+                  </button>
+                )}
               </dd>
               <dt>
                 <Trans>Language</Trans>

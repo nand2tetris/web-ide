@@ -1,6 +1,8 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
+  Ok,
   Result,
   isErr,
   unwrap,
@@ -128,7 +130,7 @@ export function makeVmStore(
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
   let vm = unwrap(Vm.build(parsed.instructions));
-  let test = new VMTest(setStatus).with(vm);
+  let test = new VMTest({ doEcho: setStatus }).with(vm);
   let useTest = false;
   let animate = true;
   let vmSource = "";
@@ -137,9 +139,11 @@ export function makeVmStore(
     setVm(state: VmPageState, vm: string) {
       state.files.vm = vm;
     },
-    setTst(state: VmPageState, { tst, cmp }: { tst: string; cmp?: string }) {
+    setTst(state: VmPageState, { tst }: { tst: string }) {
       state.files.tst = tst;
-      state.files.cmp = cmp ?? "";
+    },
+    setCmp(state: VmPageState, { cmp }: { cmp: string }) {
+      state.files.cmp = cmp;
     },
     setExitCode(state: VmPageState, code: number | undefined) {
       state.controls.exitCode = code;
@@ -216,6 +220,34 @@ export function makeVmStore(
     },
   };
   const actions = {
+    async load(path: string) {
+      const files: VmFile[] = [];
+      let title: string;
+
+      if ((await fs.stat(path)).isFile()) {
+        // single file
+        files.push({
+          name: assertExists(path.split("/").pop()).replace(".vm", ""),
+          content: await fs.readFile(path),
+        });
+        title = path.split("/").pop() ?? "";
+      } else {
+        // folder
+        for (const file of (await fs.scandir(path)).filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".vm"),
+        )) {
+          files.push({
+            name: file.name.replace(".vm", ""),
+            content: await fs.readFile(`${path}/${file.name}`),
+          });
+        }
+        title = `${path.split("/").pop()} / *.vm`;
+      }
+      dispatch.current({ action: "setTitle", payload: title });
+      this.loadVm(files);
+      this.reset();
+      setStatus("");
+    },
     setVm(content: string) {
       showHighlight = false;
       dispatch.current({
@@ -239,11 +271,7 @@ export function makeVmStore(
     },
     loadVm(files: VmFile[]) {
       showHighlight = false;
-      for (const file of files) {
-        if (file.content.endsWith("\n")) {
-          file.content = file.content.slice(0, -1);
-        }
-      }
+
       const content = files.map((f) => f.content).join("\n");
       dispatch.current({
         action: "setVm",
@@ -288,15 +316,16 @@ export function makeVmStore(
         return false;
       }
       dispatch.current({ action: "setError" });
-      setStatus("Compiled VM code successfully");
+      // setStatus("Compiled VM code successfully");
 
       vm = unwrap(buildResult);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;
     },
-    loadTest(path: string, source: string, cmp?: string) {
-      dispatch.current({ action: "setTst", payload: { tst: source, cmp } });
+
+    loadTest(path: string, source: string) {
+      dispatch.current({ action: "setTst", payload: { tst: source } });
       const tst = TST.parse(source);
 
       if (isErr(tst)) {
@@ -308,17 +337,28 @@ export function makeVmStore(
       setStatus(`Parsed tst`);
 
       vm.reset();
-      test = VMTest.from(
-        unwrap(tst),
-        path,
-        (files) => {
-          this.loadVm(files);
+
+      const maybeTest = VMTest.from(unwrap(tst), {
+        dir: path,
+        doLoad: async (path) => {
+          await this.load(path);
         },
-        setStatus,
-      ).using(fs);
-      test.vm = vm;
-      dispatch.current({ action: "update" });
-      return true;
+        doEcho: setStatus,
+        compareTo: async (file) => {
+          const dir = path.split("/").slice(0, -1).join("/");
+          const cmp = await fs.readFile(`${dir}/${file}`);
+          dispatch.current({ action: "setCmp", payload: { cmp } });
+        },
+      });
+      if (isErr(maybeTest)) {
+        setStatus(Err(maybeTest).message);
+        return false;
+      } else {
+        test = Ok(maybeTest).using(fs);
+        test.vm = vm;
+        dispatch.current({ action: "update" });
+        return true;
+      }
     },
     setAnimate(value: boolean) {
       animate = value;

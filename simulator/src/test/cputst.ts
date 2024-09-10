@@ -1,24 +1,75 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
-import { Action } from "../types.js";
-import { fill } from "./builder.js";
+import { Action, AsyncAction } from "../types.js";
+import { fill, isTstCommand } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
 
 export class CPUTest extends Test<CPUTestInstruction> {
-  readonly cpu: CPU;
+  cpu: CPU;
   private ticks = 0;
+  private doLoad?: AsyncAction<string>;
+  fileLoaded = false;
+  hasLoad = false;
 
-  static from(tst: Tst, rom?: ROM, doEcho?: Action<string>): CPUTest {
-    const test = new CPUTest(rom, doEcho);
-    return fill(test, tst);
+  static from(
+    tst: Tst,
+    options: {
+      dir?: string;
+      rom?: ROM;
+      doEcho?: Action<string>;
+      doLoad?: AsyncAction<string>;
+      compareTo?: Action<string>;
+      requireLoad?: boolean;
+    } = {},
+  ): Result<CPUTest, Error> {
+    const test = new CPUTest(options);
+
+    test.hasLoad = tst.lines.some(
+      (line) => isTstCommand(line) && line.op.op == "load",
+    );
+
+    return fill(test, tst, options.requireLoad);
   }
 
-  constructor(rom: ROM = new ROM(), doEcho?: Action<string>) {
-    super(doEcho);
+  constructor({
+    dir,
+    rom = new ROM(),
+    doEcho,
+    doLoad,
+    compareTo,
+  }: {
+    dir?: string;
+    rom?: ROM;
+    doEcho?: Action<string>;
+    doLoad?: AsyncAction<string>;
+    compareTo?: Action<string>;
+  } = {}) {
+    super(dir, doEcho, compareTo);
+    this.doLoad = doLoad;
     this.cpu = new CPU({ ROM: rom });
     this.reset();
+  }
+
+  override async step() {
+    if (!(this.hasLoad || this.fileLoaded)) {
+      throw new Error(
+        "Cannot execute the test without first loading an .asm or .hack file",
+      );
+    }
+    return super.step();
+  }
+
+  override async load(filename?: string): Promise<void> {
+    if (!filename && !this.dir) return;
+    const dir = assertExists(this.dir?.split("/").slice(0, -1).join("/"));
+    const rom = await this.doLoad?.(filename ? `${dir}/${filename}` : dir);
+    if (rom) {
+      this.cpu = new CPU({ ROM: rom });
+    }
   }
 
   override reset(): this {

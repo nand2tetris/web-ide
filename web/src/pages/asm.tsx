@@ -39,7 +39,7 @@ export const Asm = () => {
       override async tick(): Promise<boolean> {
         sourceCursorPos.current = 0;
         resultCursorPos.current = 0;
-        return actions.step();
+        return await actions.step();
       }
       override reset(): void {
         actions.reset();

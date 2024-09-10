@@ -1,3 +1,4 @@
+import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Bus, Chip, HIGH, Low, LOW } from "../chip/chip.js";
 import { Clock } from "../chip/clock.js";
 import { Tst } from "../languages/tst.js";
@@ -8,20 +9,57 @@ import { Test } from "./tst.js";
 
 export class ChipTest extends Test<ChipTestInstruction> {
   private chip: Chip = new Low();
+  private doLoad?: (path: string) => Promise<Chip>;
+
   get chipId(): number {
     return this.chip.id;
   }
 
   private clock = Clock.get();
 
-  static from(tst: Tst, setStatus?: Action<string>): ChipTest {
-    const test = new ChipTest(setStatus);
-    return fill(test, tst);
+  static from(
+    tst: Tst,
+    options: {
+      dir?: string;
+      setStatus?: Action<string>;
+      loadAction?: (path: string) => Promise<Chip>;
+      compareTo?: Action<string>;
+      requireLoad?: boolean;
+    } = {},
+  ): Result<ChipTest, Error> {
+    const test = new ChipTest(options);
+
+    return fill(test, tst, options.requireLoad);
+  }
+
+  constructor({
+    dir,
+    setStatus,
+    loadAction,
+    compareTo,
+  }: {
+    dir?: string;
+    setStatus?: Action<string>;
+    loadAction?: (path: string) => Promise<Chip>;
+    compareTo?: Action<string>;
+  } = {}) {
+    super(dir, setStatus, compareTo);
+    this.doLoad = loadAction;
   }
 
   with(chip: Chip): this {
     this.chip = chip;
     return this;
+  }
+
+  override async load(filename?: string): Promise<void> {
+    if (!this.dir) return;
+    const chip = await this.doLoad?.(
+      filename ? `${this.dir}/${filename}` : this.dir,
+    );
+    if (chip) {
+      this.chip = chip;
+    }
   }
 
   hasVar(variable: string | number): boolean {
@@ -74,7 +112,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
   }
 
   override async loadROM(filename: string) {
-    await this.chip.load(this.fs, filename);
+    await this.chip.load(this.fs, [this.dir ?? "", filename].join("/"));
   }
 
   override async run() {

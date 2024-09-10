@@ -1,3 +1,4 @@
+import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Computer } from "../chip/builtins/computer/computer.js";
 import { Nand } from "../chip/builtins/logic/nand.js";
 import { TstRepeat } from "../languages/tst.js";
@@ -180,7 +181,14 @@ describe("Chip Test", () => {
         },
       };
 
-      const test = ChipTest.from({ lines: [repeat] });
+      const maybeTest = ChipTest.from(
+        {
+          lines: [repeat],
+        },
+        { requireLoad: false },
+      );
+      expect(maybeTest).toBeOk();
+      const test = unwrap(maybeTest);
       test.outputList([{ id: "time", style: "S", len: 4, lpad: 0, rpad: 0 }]);
 
       await test.run();

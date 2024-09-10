@@ -89,8 +89,8 @@ export const Runbar = (props: {
           }
           data-tooltip={
             runner.state.running
-              ? props.overrideTooltips?.pause ?? `Pause`
-              : props.overrideTooltips?.run ?? `Run`
+              ? (props.overrideTooltips?.pause ?? `Pause`)
+              : (props.overrideTooltips?.run ?? `Run`)
           }
           data-placement="bottom"
         >

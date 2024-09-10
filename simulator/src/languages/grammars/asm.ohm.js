@@ -5,6 +5,8 @@ const asm = `ASM <: Base {
   instruction = label|aInstruction|cInstruction
   intermediateInstruction = instruction space+
 
+  identifier := (letter|underscore|dot|dollar|colon) (alnum|underscore|dot|dollar|colon)*
+
   label = openParen identifier closeParen
   aInstruction = at (identifier | decNumber)
   cInstruction = assign? op jmp?

@@ -80,6 +80,7 @@ export const Chip = () => {
     const hdlToCompile = state.controls.usingBuiltin
       ? files.hdl
       : files.hdl ?? hdl;
+
     await actions.updateFiles({
       hdl: hdlToCompile,
       tst: files.tst ?? tst,

@@ -120,7 +120,7 @@ export const Monaco = ({
             ?.getOffsetAt({ lineNumber: highlight.current, column: 0 }) ?? 0;
         const end =
           highlight.current == lineCount
-            ? editor.current?.getModel()?.getValueLength() ?? 0
+            ? (editor.current?.getModel()?.getValueLength() ?? 0)
             : (editor.current?.getModel()?.getOffsetAt({
                 lineNumber: highlight.current + 1,
                 column: 0,

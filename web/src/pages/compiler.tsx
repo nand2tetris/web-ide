@@ -36,7 +36,7 @@ export const Compiler = () => {
   const showStatus = () => {
     const current = state.compiled[state.selected];
     if (current) {
-      setStatus(current.valid ? "" : current.error?.message ?? "");
+      setStatus(current.valid ? "" : (current.error?.message ?? ""));
     }
   };
 

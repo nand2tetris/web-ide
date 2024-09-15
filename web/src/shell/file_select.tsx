@@ -146,7 +146,6 @@ function isFileValid(filename: string, validSuffixes: string[]) {
     .reduce((p1, p2) => p1 || p2, false);
 }
 
-
 export const FilePicker = () => {
   const { fs, setStatus, localFsRoot } = useContext(BaseContext);
   const { filePicker } = useContext(AppContext);

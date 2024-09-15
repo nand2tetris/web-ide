@@ -286,13 +286,15 @@ export function makeChipStore(
 
   const actions = {
     async initialize() {
-      const entries = await fs.scandir("/");
+      const projectsFolder = upgraded ? "/" : "/projects";
+
+      const entries = await fs.scandir(projectsFolder);
       const hdlProjects = [];
 
       for (const project of entries.filter((project) =>
         project.isDirectory(),
       )) {
-        const items = await fs.scandir(project.name);
+        const items = await fs.scandir(`${projectsFolder}/${project.name}`);
         if (items.some((item) => item.isFile() && item.name.endsWith(".hdl"))) {
           hdlProjects.push(project);
         }
@@ -321,7 +323,7 @@ export function makeChipStore(
     },
 
     async setProject(project: string) {
-      project = storage["/chip/project"] = project;
+      storage["/chip/project"] = project;
       dispatch.current({ action: "setProject", payload: project });
 
       const chips = (

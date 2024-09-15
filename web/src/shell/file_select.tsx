@@ -1,5 +1,7 @@
 import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
 import { t, Trans } from "@lingui/macro";
+import { useDialog } from "@nand2tetris/components/dialog";
+import { sortFiles } from "@nand2tetris/components/file_utils";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import type JSZip from "jszip";
 import {
@@ -12,10 +14,8 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
-import { useDialog } from "./dialog";
 import "./file_select.scss";
 import { newZip } from "./zip";
-import { sortFiles } from "@nand2tetris/components/file_utils";
 
 export const Selected = "file selected";
 

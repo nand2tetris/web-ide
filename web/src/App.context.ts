@@ -1,6 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { useDialog } from "@nand2tetris/components/dialog.js";
 import { createContext, useCallback, useState } from "react";
-import { useDialog } from "./shell/dialog";
 import { useFilePicker } from "./shell/file_select";
 import { useTracking } from "./tracking";
 

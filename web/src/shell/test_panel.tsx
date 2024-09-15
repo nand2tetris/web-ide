@@ -5,6 +5,7 @@ import {
   DiffDisplay,
   generateDiffs,
 } from "@nand2tetris/components/compare.js";
+import { useDialog } from "@nand2tetris/components/dialog";
 import { loadTestFiles } from "@nand2tetris/components/file_utils";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { RunSpeed, Runbar } from "@nand2tetris/components/runbar.js";
@@ -24,7 +25,6 @@ import {
   useState,
 } from "react";
 import { AppContext } from "../App.context";
-import { useDialog } from "./dialog";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
 import { Tab, TabList } from "./tabs";

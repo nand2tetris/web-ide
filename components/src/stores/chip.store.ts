@@ -28,6 +28,7 @@ import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { compare } from "../compare.js";
+import { sortFiles } from "../file_utils.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 
@@ -285,18 +286,27 @@ export function makeChipStore(
 
   const actions = {
     async initialize() {
-      if (upgraded) {
-        dispatch.current({
-          action: "setProjects",
-          payload: ["1", "2", "3", "5"],
-        });
-        await actions.setProject("1");
-      } else {
-        dispatch.current({
-          action: "setProjects",
-          payload: ["01", "02", "03", "05"],
-        });
-        await actions.setProject("01");
+      const entries = await fs.scandir("/");
+      const hdlProjects = [];
+
+      for (const project of entries.filter((project) =>
+        project.isDirectory(),
+      )) {
+        const items = await fs.scandir(project.name);
+        if (items.some((item) => item.isFile() && item.name.endsWith(".hdl"))) {
+          hdlProjects.push(project);
+        }
+      }
+
+      const sortedNames = sortFiles(hdlProjects).map((project) => project.name);
+
+      dispatch.current({
+        action: "setProjects",
+        payload: sortedNames,
+      });
+
+      if (hdlProjects.length > 0) {
+        await actions.setProject(sortedNames[0]);
       }
 
       dispatch.current({ action: "clearChip" });
@@ -451,7 +461,6 @@ export function makeChipStore(
     }) {
       invalid = false;
       dispatch.current({ action: "setFiles", payload: { hdl, tst, cmp } });
-      console.log("calling update files");
       try {
         if (hdl) {
           await this.compileChip(hdl, _dir, _chipName);

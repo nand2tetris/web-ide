@@ -15,6 +15,7 @@ import { Icon } from "../pico/icon";
 import { useDialog } from "./dialog";
 import "./file_select.scss";
 import { newZip } from "./zip";
+import { sortFiles } from "@nand2tetris/components/file_utils";
 
 export const Selected = "file selected";
 
@@ -145,21 +146,6 @@ function isFileValid(filename: string, validSuffixes: string[]) {
     .reduce((p1, p2) => p1 || p2, false);
 }
 
-function sortFiles(files: Stats[]) {
-  return files.sort((a, b) => {
-    const aIsNum = /^\d+/.test(a.name);
-    const bIsNum = /^\d+/.test(b.name);
-    if (aIsNum && !bIsNum) {
-      return -1;
-    } else if (!aIsNum && bIsNum) {
-      return 1;
-    } else if (aIsNum && bIsNum) {
-      return parseInt(a.name, 10) - parseInt(b.name, 10);
-    } else {
-      return a.name.localeCompare(b.name);
-    }
-  });
-}
 
 export const FilePicker = () => {
   const { fs, setStatus, localFsRoot } = useContext(BaseContext);

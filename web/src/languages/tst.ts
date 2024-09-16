@@ -13,6 +13,7 @@ export const TstLanguage: monaco.languages.IMonarchLanguage = {
     "repeat",
     "while",
     "load",
+    "resetRam",
   ],
 
   // The main tokenizer for our languages

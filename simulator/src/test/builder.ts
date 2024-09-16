@@ -12,7 +12,7 @@ import {
   TestTickInstruction,
   TestTockInstruction,
 } from "./chiptst.js";
-import { TestTickTockInstruction } from "./cputst.js";
+import { TestResetRamInstruction, TestTickTockInstruction } from "./cputst.js";
 import {
   Condition,
   TestBreakInstruction,
@@ -69,6 +69,8 @@ function makeInstruction(inst: TstOperation) {
     case "output-file":
     case "compare-to":
       return undefined;
+    case "resetRam":
+      return new TestResetRamInstruction();
     default:
       checkExhaustive(op, `Unknown tst operation ${op}`);
   }

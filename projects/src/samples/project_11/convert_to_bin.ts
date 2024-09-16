@@ -645,10 +645,10 @@ function Main.convert 3
     push constant 1
     neg
     pop local 2
-label L0
+label Main_L0
     push local 2
     not
-    if-goto L1
+    if-goto Main_L1
     push local 1
     push constant 1
     add
@@ -661,7 +661,7 @@ label L0
     gt
     not
     not
-    if-goto L3
+    if-goto Main_L3
     push argument 0
     push local 0
     and
@@ -669,29 +669,29 @@ label L0
     eq
     not
     not
-    if-goto L5
+    if-goto Main_L5
     push constant 8000
     push local 1
     add
     push constant 1
     call Memory.poke 2
     pop temp 0
-    goto L4
-label L5
+    goto Main_L4
+label Main_L5
     push constant 8000
     push local 1
     add
     push constant 0
     call Memory.poke 2
     pop temp 0
-label L4
-    goto L2
-label L3
+label Main_L4
+    goto Main_L2
+label Main_L3
     push constant 0
     pop local 2
-label L2
-    goto L0
-label L1
+label Main_L2
+    goto Main_L0
+label Main_L1
     push constant 0
     return
 function Main.nextMask 0
@@ -699,23 +699,23 @@ function Main.nextMask 0
     push constant 0
     eq
     not
-    if-goto L7
+    if-goto Main_L7
     push constant 1
     return
-    goto L6
-label L7
+    goto Main_L6
+label Main_L7
     push argument 0
     push constant 2
     call Math.multiply 2
     return
-label L6
+label Main_L6
 function Main.fillMemory 0
-label L8
+label Main_L8
     push argument 1
     push constant 0
     gt
     not
-    if-goto L9
+    if-goto Main_L9
     push argument 0
     push argument 2
     call Memory.poke 2
@@ -728,7 +728,7 @@ label L8
     push constant 1
     add
     pop argument 0
-    goto L8
-label L9
+    goto Main_L8
+label Main_L9
     push constant 0
     return`;

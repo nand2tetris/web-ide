@@ -1689,12 +1689,12 @@ function PongGame.getInstance 0
 function PongGame.run 1
     push argument 0
     pop pointer 0
-label L0
+label PongGame_L0
     push this 3
     not
     not
-    if-goto L1
-label L2
+    if-goto PongGame_L1
+label PongGame_L2
     push local 0
     push constant 0
     eq
@@ -1702,7 +1702,7 @@ label L2
     not
     and
     not
-    if-goto L3
+    if-goto PongGame_L3
     call Keyboard.keyPressed 0
     pop local 0
     push this 0
@@ -1714,44 +1714,44 @@ label L2
     push constant 50
     call Sys.wait 1
     pop temp 0
-    goto L2
-label L3
+    goto PongGame_L2
+label PongGame_L3
     push local 0
     push constant 130
     eq
     not
-    if-goto L5
+    if-goto PongGame_L5
     push this 0
     push constant 1
     call Bat.setDirection 2
     pop temp 0
-    goto L4
-label L5
+    goto PongGame_L4
+label PongGame_L5
     push local 0
     push constant 132
     eq
     not
-    if-goto L7
+    if-goto PongGame_L7
     push this 0
     push constant 2
     call Bat.setDirection 2
     pop temp 0
-    goto L6
-label L7
+    goto PongGame_L6
+label PongGame_L7
     push local 0
     push constant 140
     eq
     not
-    if-goto L9
+    if-goto PongGame_L9
     push constant 1
     neg
     pop this 3
-    goto L8
-label L9
-label L8
-label L6
-label L4
-label L10
+    goto PongGame_L8
+label PongGame_L9
+label PongGame_L8
+label PongGame_L6
+label PongGame_L4
+label PongGame_L10
     push local 0
     push constant 0
     eq
@@ -1760,7 +1760,7 @@ label L10
     not
     and
     not
-    if-goto L11
+    if-goto PongGame_L11
     call Keyboard.keyPressed 0
     pop local 0
     push this 0
@@ -1772,13 +1772,13 @@ label L10
     push constant 50
     call Sys.wait 1
     pop temp 0
-    goto L10
-label L11
-    goto L0
-label L1
+    goto PongGame_L10
+label PongGame_L11
+    goto PongGame_L0
+label PongGame_L1
     push this 3
     not
-    if-goto L13
+    if-goto PongGame_L13
     push constant 10
     push constant 27
     call Output.moveCursor 2
@@ -1805,9 +1805,9 @@ label L1
     call String.appendChar 2
     call Output.printString 1
     pop temp 0
-    goto L12
-label L13
-label L12
+    goto PongGame_L12
+label PongGame_L13
+label PongGame_L12
     push constant 0
     return
 function PongGame.moveBall 5
@@ -1825,7 +1825,7 @@ function PongGame.moveBall 5
     not
     and
     not
-    if-goto L15
+    if-goto PongGame_L15
     push this 2
     pop this 5
     push constant 0
@@ -1846,7 +1846,7 @@ function PongGame.moveBall 5
     push constant 4
     eq
     not
-    if-goto L17
+    if-goto PongGame_L17
     push local 1
     push local 4
     gt
@@ -1858,32 +1858,32 @@ function PongGame.moveBall 5
     push this 3
     not
     not
-    if-goto L19
+    if-goto PongGame_L19
     push local 4
     push local 1
     push constant 10
     add
     lt
     not
-    if-goto L21
+    if-goto PongGame_L21
     push constant 1
     neg
     pop local 0
-    goto L20
-label L21
+    goto PongGame_L20
+label PongGame_L21
     push local 3
     push local 2
     push constant 10
     sub
     gt
     not
-    if-goto L23
+    if-goto PongGame_L23
     push constant 1
     pop local 0
-    goto L22
-label L23
-label L22
-label L20
+    goto PongGame_L22
+label PongGame_L23
+label PongGame_L22
+label PongGame_L20
     push this 6
     push constant 2
     sub
@@ -1903,18 +1903,18 @@ label L20
     push this 4
     call Output.printInt 1
     pop temp 0
-    goto L18
-label L19
-label L18
-    goto L16
-label L17
-label L16
+    goto PongGame_L18
+label PongGame_L19
+label PongGame_L18
+    goto PongGame_L16
+label PongGame_L17
+label PongGame_L16
     push this 1
     push local 0
     call Ball.bounce 2
     pop temp 0
-    goto L14
-label L15
-label L14
+    goto PongGame_L14
+label PongGame_L15
+label PongGame_L14
     push constant 0
     return`;

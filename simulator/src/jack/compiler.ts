@@ -30,7 +30,11 @@ import {
   isPrimitive,
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
-import { VM_BUILTINS } from "../vm/builtins.js";
+import {
+  VM_BUILTINS,
+  makeInterface,
+  overridesOsCorrectly,
+} from "../vm/builtins.js";
 import { validateSubroutine } from "./controlFlow.js";
 
 const osClasses = new Set([
@@ -299,16 +303,10 @@ export class Compiler {
 
     if (isOsClass(this.className)) {
       const builtin = VM_BUILTINS[`${this.className}.${subroutine.name.value}`];
-      const argTypes = subroutine.parameters.map((arg) => arg.type.value);
 
-      if (
-        builtin &&
-        (builtin.args.length != argTypes.length ||
-          builtin.args.some((arg, index) => arg != argTypes[index]) ||
-          builtin.returnType != subroutine.returnType.value)
-      ) {
+      if (builtin && !overridesOsCorrectly(this.className, subroutine)) {
         throw createError(
-          `OS subroutine ${this.className}.${subroutine.name.value} must follow the interface ${builtin.returnType} ${subroutine.name.value}(${builtin.args.join(",")})`,
+          `OS subroutine ${this.className}.${subroutine.name.value} must follow the interface ${makeInterface(subroutine.name.value, builtin)})`,
         );
       }
     }

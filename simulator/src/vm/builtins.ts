@@ -1,4 +1,9 @@
-import { ReturnType, SubroutineType, Type } from "../languages/jack.js";
+import {
+  ReturnType,
+  Subroutine,
+  SubroutineType,
+  Type,
+} from "../languages/jack.js";
 import { VmMemory } from "./memory.js";
 import { ERRNO } from "./os/errors.js";
 import { OS } from "./os/os.js";
@@ -19,6 +24,23 @@ function getArgs(memory: VmMemory, n: number) {
     args.push(memory.get(memory.SP - n + i));
   }
   return args;
+}
+
+export function overridesOsCorrectly(cls: string, subroutine: Subroutine) {
+  const builtin = VM_BUILTINS[`${cls}.${subroutine.name.value}`];
+
+  return (
+    builtin &&
+    builtin.args.length == subroutine.parameters.length &&
+    builtin.args.every(
+      (arg, index) => arg == subroutine.parameters[index].type.value,
+    ) &&
+    builtin.returnType == subroutine.returnType.value
+  );
+}
+
+export function makeInterface(name: string, builtin: VmBuiltin) {
+  return `${builtin.returnType} ${name}(${builtin.args.join(",")}`;
 }
 
 export const VM_BUILTINS: Record<string, VmBuiltin> = {

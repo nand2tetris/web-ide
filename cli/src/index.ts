@@ -12,11 +12,11 @@ import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 yargs(hideBin(process.argv))
   .usage("$0 <cmd>")
   .command(
-    "grade [srcectory]",
-    "Grade all NAND2Tetris projects in a srcectory tree.",
+    "grade [directory]",
+    "Grade all NAND2Tetris projects in a directory tree.",
     (yargs) =>
       yargs
-        .positional("srcectory", {
+        .positional("directory", {
           type: "string",
           default: process.cwd(),
           describe: "Path to a folder to grade for nand2tetris projects.",
@@ -28,8 +28,8 @@ yargs(hideBin(process.argv))
             "When set, look for the java IDE jars in this path and compare both runs.",
         }),
     async (argv) => {
-      console.log("grade", argv.srcectory, "nand2tetris grader!");
-      const exitCodePromise = main(argv.srcectory, argv.java_ide);
+      console.log("grade", argv.directory, "nand2tetris grader!");
+      const exitCodePromise = main(argv.directory, argv.java_ide);
       const exitCode = await exitCodePromise;
       if (exitCode) {
         process.exit(exitCode);

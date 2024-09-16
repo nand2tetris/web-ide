@@ -1,5 +1,7 @@
 import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
 import { t, Trans } from "@lingui/macro";
+import { useDialog } from "@nand2tetris/components/dialog";
+import { sortFiles } from "@nand2tetris/components/file_utils";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import type JSZip from "jszip";
 import {
@@ -12,7 +14,6 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 import { Icon } from "../pico/icon";
-import { useDialog } from "./dialog";
 import "./file_select.scss";
 import { newZip } from "./zip";
 
@@ -143,22 +144,6 @@ function isFileValid(filename: string, validSuffixes: string[]) {
   return validSuffixes
     .map((suffix) => filename.endsWith(suffix))
     .reduce((p1, p2) => p1 || p2, false);
-}
-
-function sortFiles(files: Stats[]) {
-  return files.sort((a, b) => {
-    const aIsNum = /^\d+/.test(a.name);
-    const bIsNum = /^\d+/.test(b.name);
-    if (aIsNum && !bIsNum) {
-      return -1;
-    } else if (!aIsNum && bIsNum) {
-      return 1;
-    } else if (aIsNum && bIsNum) {
-      return parseInt(a.name, 10) - parseInt(b.name, 10);
-    } else {
-      return a.name.localeCompare(b.name);
-    }
-  });
 }
 
 export const FilePicker = () => {

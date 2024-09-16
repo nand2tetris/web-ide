@@ -4,19 +4,29 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
 
+import { useDialog } from "@nand2tetris/components/dialog";
 import { PageContext } from "src/Page.context";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
 import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
-import { useDialog } from "./dialog";
+// import { useDialog } from "./dialog";
 
 const showUpgradeFs = true;
 
 export const Settings = () => {
   const { stores } = useContext(PageContext);
-  const { fs, setStatus, canUpgradeFs, upgradeFs, closeFs, localFsRoot } =
-    useContext(BaseContext);
+  const {
+    fs,
+    setStatus,
+    canUpgradeFs,
+    upgradeFs,
+    closeFs,
+    localFsRoot,
+    permissionPrompt,
+    requestPermission,
+    loadFs,
+  } = useContext(BaseContext);
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
 
@@ -66,6 +76,44 @@ export const Settings = () => {
     stores.vm.actions.initialize();
     stores.compiler.actions.reset();
   };
+
+  const permissionPromptDialog = (
+    <dialog open={permissionPrompt.isOpen}>
+      <article>
+        <main>
+          <div style={{ margin: "10px" }}>
+            {"Please grant permissions to use your local projects folder"}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              marginTop: "30px",
+            }}
+          >
+            <button
+              style={{ width: "100px" }}
+              onClick={async () => {
+                await requestPermission();
+                loadFs();
+                permissionPrompt.close();
+              }}
+            >
+              Ok
+            </button>
+            <button
+              style={{ width: "100px" }}
+              onClick={() => {
+                permissionPrompt.close();
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        </main>
+      </article>
+    </dialog>
+  );
 
   const resetWarningDialog = (
     <dialog open={resetWarning.isOpen}>
@@ -311,6 +359,7 @@ export const Settings = () => {
           </main>
         </article>
       </dialog>
+      {permissionPromptDialog}
       {resetWarningDialog}
       {resetConfirmDialog}
     </>

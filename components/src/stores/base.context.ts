@@ -2,7 +2,7 @@ import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Action } from "@nand2tetris/simulator/types.js";
+import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
   createContext,
   useCallback,
@@ -10,6 +10,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { useDialog } from "../dialog.js";
 import {
   FileSystemAccessFileSystemAdapter,
   openNand2TetrisDirectory,
@@ -29,12 +30,17 @@ export interface BaseContext {
   status: string;
   setStatus: Action<string>;
   storage: Record<string, string>;
+  permissionPrompt: ReturnType<typeof useDialog>;
+  requestPermission: AsyncAction<void>;
+  loadFs: Action<void>;
 }
 
 export function useBaseContext(): BaseContext {
   const localAdapter = useMemo(() => new LocalStorageFileSystemAdapter(), []);
   const [fs, setFs] = useState(new FileSystem(localAdapter));
   const [root, setRoot] = useState<string>();
+
+  const permissionPrompt = useDialog();
 
   const setLocalFs = useCallback(
     async (handle: FileSystemDirectoryHandle, createFiles = false) => {
@@ -52,13 +58,44 @@ export function useBaseContext(): BaseContext {
     [setRoot, setFs],
   );
 
+  const requestPermission = async () => {
+    attemptLoadAdapterFromIndexedDb().then(async (adapter) => {
+      if (!adapter) return;
+      await adapter.requestPermission({ mode: "readwrite" });
+    });
+  };
+
+  const loadFs = () => {
+    attemptLoadAdapterFromIndexedDb().then(async (adapter) => {
+      if (!adapter) return;
+      setLocalFs(adapter);
+    });
+  };
+
   useEffect(() => {
     if (root) return;
 
     if ("showDirectoryPicker" in window) {
-      attemptLoadAdapterFromIndexedDb().then((adapter) => {
+      attemptLoadAdapterFromIndexedDb().then(async (adapter) => {
         if (!adapter) return;
-        setLocalFs(adapter);
+
+        const permissions = await adapter.queryPermission({
+          mode: "readwrite",
+        });
+
+        switch (permissions) {
+          case "granted":
+            setLocalFs(adapter);
+            break;
+          case "prompt":
+            permissionPrompt.open();
+            break;
+          case "denied":
+            setStatus(
+              "Permission denied. Please allow access to your file system.",
+            );
+            break;
+        }
       });
     }
   }, [root, setLocalFs]);
@@ -91,8 +128,11 @@ export function useBaseContext(): BaseContext {
     setStatus,
     storage: localStorage,
     canUpgradeFs,
+    permissionPrompt,
     upgradeFs,
+    requestPermission,
     closeFs,
+    loadFs,
   };
 }
 
@@ -107,4 +147,9 @@ export const BaseContext = createContext<BaseContext>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   setStatus() {},
   storage: {},
+  permissionPrompt: {} as ReturnType<typeof useDialog>,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async requestPermission() {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  loadFs() {},
 });

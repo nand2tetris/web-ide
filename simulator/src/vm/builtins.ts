@@ -44,6 +44,12 @@ export function makeInterface(name: string, builtin: VmBuiltin) {
 }
 
 export const VM_BUILTINS: Record<string, VmBuiltin> = {
+  "Math.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
   "Math.multiply": {
     func: (memory, _) => {
       const [a, b] = getArgs(memory, 2);
@@ -106,6 +112,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     returnType: "int",
     type: "function",
   },
+  "Screen.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
   "Screen.clearScreen": {
     func: (_, os) => {
       os.screen.clear();
@@ -165,6 +177,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     returnType: "void",
     type: "function",
   },
+  "Memory.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
   "Memory.peek": {
     func: (memory, _) => {
       const [address] = getArgs(memory, 1);
@@ -203,6 +221,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     returnType: "void",
     type: "function",
   },
+  "Array.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
   "Array.new": {
     func: (memory, os) => {
       const [size] = getArgs(memory, 1);
@@ -225,6 +249,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     args: [],
     returnType: "void",
     type: "method",
+  },
+  "String.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
   },
   "String.new": {
     func: (memory, os) => {
@@ -335,6 +365,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
     returnType: "char",
     type: "function",
   },
+  "Output.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
   "Output.moveCursor": {
     func: (memory, os) => {
       const [i, j] = getArgs(memory, 2);
@@ -389,6 +425,12 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.backspace();
       return 0;
     },
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
+  "Keyboard.init": {
+    func: (_, __) => 0,
     args: [],
     returnType: "void",
     type: "function",

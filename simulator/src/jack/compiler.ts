@@ -30,7 +30,11 @@ import {
   isPrimitive,
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
-import { VM_BUILTINS } from "../vm/builtins.js";
+import {
+  VM_BUILTINS,
+  makeInterface,
+  overridesOsCorrectly,
+} from "../vm/builtins.js";
 import { validateSubroutine } from "./controlFlow.js";
 
 const osClasses = new Set([
@@ -291,11 +295,25 @@ export class Compiler {
     }
   }
 
-  compileSubroutineDec(subroutine: Subroutine) {
+  validateSubroutineDec(subroutine: Subroutine) {
     this.validateReturnType(
       subroutine.returnType.value,
       subroutine.returnType.span,
     );
+
+    if (isOsClass(this.className)) {
+      const builtin = VM_BUILTINS[`${this.className}.${subroutine.name.value}`];
+
+      if (builtin && !overridesOsCorrectly(this.className, subroutine)) {
+        throw createError(
+          `OS subroutine ${this.className}.${subroutine.name.value} must follow the interface ${makeInterface(subroutine.name.value, builtin)})`,
+        );
+      }
+    }
+  }
+
+  compileSubroutineDec(subroutine: Subroutine) {
+    this.validateSubroutineDec(subroutine);
     switch (subroutine.type) {
       case "method":
         this.compileMethod(subroutine);
@@ -426,15 +444,10 @@ export class Compiler {
       }
       this.validateArgNum(
         `${className}.${subroutineName}`,
-        isMethod ? builtin.nArgs - 1 : builtin.nArgs,
+        builtin.args.length,
         call,
       );
       return;
-    } else if (isOsClass(className)) {
-      throw createError(
-        `Class ${className} doesn't contain a subroutine ${subroutineName}`,
-        call.span,
-      );
     } else if (this.classes[className]) {
       for (const subroutine of this.classes[className].subroutines) {
         if (subroutine.name.value == subroutineName) {

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import path, { dirname, parse, resolve } from "path";
-import yargs, { boolean } from "yargs";
+import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { main } from "./grading.js";
 import { testRunner } from "./testrunner.js";
@@ -90,14 +90,14 @@ yargs(hideBin(process.argv))
         .option("dst", {
           type: "string",
           describe: "Path to destination folder",
-          default: ""
+          default: "",
         })
-        .coerce(['src', 'dst'], function (arg) {
+        .coerce(["src", "dst"], function (arg) {
           return path.resolve(arg) + "/";
         })
         .check((argv, options) => {
-          const src = argv.src
-          const dst = argv.dst
+          const src = argv.src;
+          const dst = argv.dst;
           if (src === undefined) {
             throw Error("Please provide input folder path");
           }
@@ -109,18 +109,18 @@ yargs(hideBin(process.argv))
             throw Error(src + " is not a folder");
           }
 
-          return true
-        }).
-        showHelpOnFail(false, 'Specify --help for available options'),
+          return true;
+        })
+        .showHelpOnFail(false, "Specify --help for available options"),
     async (argv) => {
       enum Colors {
         Red = "\x1b[31m",
         Green = "\x1b[32m",
-        Reset = "\u001b[0m"
+        Reset = "\u001b[0m",
       }
-      const JACK_EXT = '.jack';
-      const src = argv.src
-      const dst = argv.dst ?? src
+      const JACK_EXT = ".jack";
+      const src = argv.src;
+      const dst = argv.dst ?? src;
       if (src === undefined) {
         throw Error("Please provde input folder path");
       }
@@ -130,30 +130,34 @@ yargs(hideBin(process.argv))
       }
       const fs = new FileSystem(new NodeFileSystemAdapter());
 
-
       const files = await fs.readdir(src);
-      const jackFiles = files.filter(file => file.endsWith(JACK_EXT));
+      const jackFiles = files.filter((file) => file.endsWith(JACK_EXT));
       if (jackFiles.length === 0) {
         throw Error("No jack files inside a folder");
       }
       const nameToContent = {} as Record<string, string>;
       for (const file of jackFiles) {
-        const filepath = path.join(src, file)
+        const filepath = path.join(src, file);
         const content = await fs.readFile(filepath);
         nameToContent[file.replace(JACK_EXT, "")] = content;
       }
       let error = false;
       for (const [name, compiled] of Object.entries(compile(nameToContent))) {
         if (typeof compiled === "string") {
-          const outputFilename = name + '.vm'
+          const outputFilename = name + ".vm";
           const outpath = path.join(dst, outputFilename);
           await fs.writeFile(outpath, compiled);
-
         } else {
           if (!error) {
             console.error("Compilation failed\n");
           }
-          console.error(Colors.Red + compiled.message.replace(/Line\s([\d]+):/g, name + ".jack:$1" + Colors.Reset));
+          console.error(
+            Colors.Red +
+              compiled.message.replace(
+                /Line\s([\d]+):/g,
+                name + ".jack:$1" + Colors.Reset,
+              ),
+          );
           error = true;
         }
       }

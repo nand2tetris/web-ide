@@ -164,7 +164,7 @@ yargs(hideBin(process.argv))
       if (error) {
         process.exit(1);
       } else {
-        console.log(Colors.Green + "Compiled files");
+        console.log(Colors.Green + "Compiled files" + Colors.Reset);
       }
     },
   )

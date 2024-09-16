@@ -210,7 +210,7 @@ export const Compiler = () => {
               onSelect={() => onSelect(file)}
               style={{
                 backgroundColor: !state.compiled[file].valid
-                  ? "#ffaaaa"
+                  ? "var(--compiler-err-color)"
                   : undefined,
               }}
             >

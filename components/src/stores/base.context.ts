@@ -106,6 +106,9 @@ export function useBaseContext(): BaseContext {
     async (force = false, createFiles = false) => {
       if (!canUpgradeFs || (root && !force)) return;
       const handler = await openNand2TetrisDirectory();
+      if (root) {
+        await removeLocalAdapterFromIndexedDB();
+      }
       const adapter = await createAndStoreLocalAdapterInIndexedDB(handler);
       await setLocalFs(adapter, createFiles);
     },

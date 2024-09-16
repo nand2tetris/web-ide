@@ -309,6 +309,8 @@ export function makeChipStore(
 
       if (hdlProjects.length > 0) {
         await actions.setProject(sortedNames[0]);
+      } else {
+        dispatch.current({ action: "setChips", payload: [] });
       }
 
       dispatch.current({ action: "clearChip" });

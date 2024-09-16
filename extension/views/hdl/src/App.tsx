@@ -1,3 +1,9 @@
+import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
+import { Clockface } from "@nand2tetris/components/clockface.js";
+import { FullPinout } from "@nand2tetris/components/pinout.js";
+import { useChipPageStore } from "@nand2tetris/components/stores/chip.store.js";
+import * as Not from "@nand2tetris/projects/project_01/01_not.js";
+import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
 import {
   ReactNode,
   useCallback,
@@ -6,21 +12,11 @@ import {
   useMemo,
   useState,
 } from "react";
-import { VSCodeButton, VSCodeCheckbox } from "@vscode/webview-ui-toolkit/react";
-import * as Not from "@nand2tetris/projects/project_01/01_not.js";
-import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
-import { Clockface } from "@nand2tetris/components/clockface.js";
-import { FullPinout } from "@nand2tetris/components/pinout.js";
-import { useChipPageStore } from "@nand2tetris/components/stores/chip.store.js";
 import { VSCodeContext } from "./vscode";
 
 function App() {
   const { state, actions, dispatch } = useChipPageStore();
   const { api } = useContext(VSCodeContext);
-
-  useEffect(() => {
-    actions.initialize();
-  }, [actions]);
 
   const [hdl, setHdl] = useState(Not.hdl);
   const [loaded, setLoaded] = useState(false);
@@ -30,14 +26,14 @@ function App() {
       setHdl(hdl);
       await actions.updateFiles({ hdl, tst: "// No test", cmp: "" });
     },
-    [setHdl, actions]
+    [setHdl, actions],
   );
 
   const onMessage = useCallback(
     (
       event: MessageEvent<
         Partial<{ nand2tetris: boolean; hdl: string; chipName: string }>
-      >
+      >,
     ) => {
       if (!event.data?.nand2tetris) return;
       if (event.data.hdl) compile(event.data.hdl ?? "");
@@ -50,7 +46,7 @@ function App() {
         });
       setLoaded(true);
     },
-    [compile, dispatch]
+    [compile, dispatch],
   );
 
   useEffect(() => {
@@ -70,7 +66,7 @@ function App() {
       compile(hdl);
       setUseBuiltin(false);
     } else {
-      actions.useBuiltin();
+      actions.toggleBuiltin();
       setUseBuiltin(true);
     }
   };
@@ -84,7 +80,7 @@ function App() {
         actions.reset();
       },
     }),
-    [actions]
+    [actions],
   );
 
   const chipButtons = state.controls.error ? (

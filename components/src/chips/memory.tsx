@@ -192,6 +192,8 @@ export const Memory = forwardRef(
       fileSelect,
       showClear = true,
       onChange = undefined,
+      onClear = undefined,
+      loadTooltip = undefined,
     }: {
       name?: string;
       className?: string;
@@ -210,6 +212,8 @@ export const Memory = forwardRef(
       fileSelect?: () => Promise<{ name: string; content: string }>;
       showClear?: boolean;
       onChange?: () => void;
+      onClear?: () => void;
+      loadTooltip?: { value: string; placement: string };
     },
     ref,
   ) => {
@@ -275,6 +279,7 @@ export const Memory = forwardRef(
     const clear = () => {
       memory.reset();
       onChange?.();
+      onClear?.();
       rerenderMemoryBlock();
     };
 
@@ -303,8 +308,8 @@ export const Memory = forwardRef(
               <button
                 onClick={doLoad}
                 className="flex-0"
-                data-tooltip={"Load file"}
-                data-placement="bottom"
+                data-tooltip={loadTooltip?.value ?? "Load file"}
+                data-placement={loadTooltip?.placement ?? "bottom"}
               >
                 {/* <Icon name="upload_file" /> */}
                 📂

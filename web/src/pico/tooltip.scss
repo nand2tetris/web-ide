@@ -12,6 +12,8 @@
     &::before,
     &::after {
       opacity: 1;
+      text-wrap: wrap;
+      text-align: start;
     }
   }
 
@@ -34,7 +36,7 @@
     font-size: 0.875rem;
     text-decoration: none;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    // white-space: nowrap;
     opacity: 0;
     pointer-events: none;
   }

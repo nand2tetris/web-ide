@@ -12,6 +12,7 @@ import { Panel } from "../shell/panel";
 import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
+import { isPath } from "src/shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import URLs from "../urls";
@@ -21,6 +22,7 @@ export const Asm = () => {
   const { filePicker } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, actions, dispatch } = stores.asm;
+  const { fs, localFsRoot } = useContext(BaseContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -39,7 +41,7 @@ export const Asm = () => {
       override async tick(): Promise<boolean> {
         sourceCursorPos.current = 0;
         resultCursorPos.current = 0;
-        return actions.step();
+        return await actions.step();
       }
       override reset(): void {
         actions.reset();
@@ -62,13 +64,30 @@ export const Asm = () => {
     const path = await filePicker.select({ suffix: ".asm" });
     setStatus(LOADING);
     requestAnimationFrame(async () => {
-      await actions.loadAsm(path);
+      await actions.loadAsm(path.path);
       setStatus("");
       dispatch.current({
         action: "setTitle",
-        payload: path.split("/").pop() ?? "",
+        payload: path.path.split("/").pop() ?? "",
       });
     });
+  };
+
+  const loadCompare = async () => {
+    const filesRef = await filePicker.selectAllowLocal({ suffix: "hack" });
+    if (isPath(filesRef)) {
+      const cmp = await fs.readFile(filesRef.path);
+      dispatch.current({
+        action: "setCmp",
+        payload: { cmp, name: filesRef.path.split("/").pop() },
+      });
+    } else {
+      const file = Array.isArray(filesRef) ? filesRef[0] : filesRef;
+      dispatch.current({
+        action: "setCmp",
+        payload: { cmp: file.content, name: file.name },
+      });
+    }
   };
 
   const { setStatus } = useContext(BaseContext);
@@ -151,15 +170,17 @@ export const Asm = () => {
                 />
               )}
             </div>
-            <fieldset role="group">
-              <button
-                data-tooltip="Download"
-                data-placement="left"
-                onClick={downloadAsm}
-              >
-                ⬇️
-              </button>
-            </fieldset>
+            {!localFsRoot && (
+              <fieldset role="group">
+                <button
+                  data-tooltip="Download"
+                  data-placement="left"
+                  onClick={downloadAsm}
+                >
+                  ⬇️
+                </button>
+              </fieldset>
+            )}
           </>
         }
       >
@@ -217,13 +238,15 @@ export const Asm = () => {
                 >
                   ↩️
                 </button>
-                <button
-                  data-tooltip="Download"
-                  data-placement="left"
-                  onClick={downloadHack}
-                >
-                  ⬇️
-                </button>
+                {!localFsRoot && (
+                  <button
+                    data-tooltip="Download"
+                    data-placement="left"
+                    onClick={downloadHack}
+                  >
+                    ⬇️
+                  </button>
+                )}
               </fieldset>
             </div>
           </>
@@ -278,11 +301,13 @@ export const Asm = () => {
               <Trans>Compare Code</Trans>
               {state.compareName && `: ${state.compareName}`}
             </div>
-            <div>
-              <fieldset role="group">
-                <button onClick={compare}>Compare</button>
-              </fieldset>
-            </div>
+            <fieldset role="group">
+              <button onClick={loadCompare}>📂</button>
+            </fieldset>
+            <div className="flex-1" />
+            <fieldset role="group">
+              <button onClick={compare}>Compare</button>
+            </fieldset>
           </>
         }
       >
@@ -292,11 +317,9 @@ export const Asm = () => {
           highlightType={state.compareError ? "error" : "highlight"}
           alwaysRecenter={false}
           onChange={function (source: string): void {
-            dispatch.current({
-              action: "setCmp",
-              payload: { cmp: source },
-            });
+            return;
           }}
+          disabled={true}
           onCursorPositionChange={(index) => {
             if (index == resultCursorPos.current) {
               return;

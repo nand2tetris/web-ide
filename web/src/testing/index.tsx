@@ -4,6 +4,7 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
+import { useDialog } from "@nand2tetris/components/dialog";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import { RenderOptions, RenderResult, render } from "@testing-library/react";
@@ -39,13 +40,18 @@ export const useTestingAppContext = () => ({
     ),
     canUpgradeFs: false,
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    upgradeFs() {},
+    async upgradeFs() {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     closeFs(force?: boolean) {},
     status: "",
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     setStatus() {},
     storage: {},
+    permissionPrompt: useDialog(),
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    async requestPermission() {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    loadFs() {},
   } satisfies BaseContext,
   app: useAppContext(),
 });

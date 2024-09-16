@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 
 interface TestFiles {
@@ -25,4 +25,20 @@ export async function loadTestFiles(
   } catch (e) {
     return Err(e as Error);
   }
+}
+
+export function sortFiles(files: Stats[]) {
+  return files.sort((a, b) => {
+    const aIsNum = /^\d+/.test(a.name);
+    const bIsNum = /^\d+/.test(b.name);
+    if (aIsNum && !bIsNum) {
+      return -1;
+    } else if (!aIsNum && bIsNum) {
+      return 1;
+    } else if (aIsNum && bIsNum) {
+      return parseInt(a.name, 10) - parseInt(b.name, 10);
+    } else {
+      return a.name.localeCompare(b.name);
+    }
+  });
 }

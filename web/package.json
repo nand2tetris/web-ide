@@ -99,7 +99,8 @@
   },
   "jest": {
     "moduleNameMapper": {
-      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2"
+      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2",
+      "\\.css$": "identity-obj-proxy"
     },
     "transformIgnorePatterns": [
       "node_modules/(?!@davidsouther)"

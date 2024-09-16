@@ -9,6 +9,7 @@ import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
+import { isPath } from "src/shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Accordian, Panel } from "../shell/panel";
@@ -24,6 +25,7 @@ export const CPU = () => {
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
   const [cmp, setCmp] = useStateInitializer(state.test.cmp);
+  const [tstPath, setTstPath] = useState<string>();
   const [screenRenderKey, setScreenRenderKey] = useState(0);
 
   useEffect(() => {
@@ -31,9 +33,9 @@ export const CPU = () => {
   }, [setTool]);
 
   useEffect(() => {
-    actions.compileTest(tst, cmp);
+    actions.compileTest(tst, cmp, tstPath);
     actions.reset();
-  }, [tst, cmp]);
+  }, [tst, cmp, tstPath]);
 
   const cpuRunner = useRef<Timer>();
   const testRunner = useRef<Timer>();
@@ -84,6 +86,7 @@ export const CPU = () => {
   }, [actions, dispatch]);
 
   const setPath = async (fullPath: string) => {
+    setTstPath(fullPath);
     actions.setPath(fullPath);
     actions.reset();
   };
@@ -111,18 +114,21 @@ export const CPU = () => {
     const file = await filePicker.selectAllowLocal({
       suffix: [".asm", ".hack"],
     });
-    const title =
-      typeof file == "string" ? (file.split("/").pop() ?? "") : file.name;
+    const title = isPath(file)
+      ? (file.path.split("/").pop() ?? "")
+      : Array.isArray(file)
+        ? file[0].name
+        : file.name;
     dispatch.current({ action: "setTitle", payload: title });
-    if (typeof file === "string") {
-      setPath(file);
+    if (isPath(file)) {
+      setPath(file.path);
       return {
-        name: file.split("/").pop() ?? "",
-        content: await fs.readFile(file),
+        name: file.path.split("/").pop() ?? "",
+        content: await fs.readFile(file.path),
       };
     } else {
       actions.clearTest();
-      return file;
+      return Array.isArray(file) ? file[0] : file;
     }
   };
 
@@ -141,6 +147,11 @@ export const CPU = () => {
             action: "updateConfig",
             payload: { romFormat: format },
           });
+        }}
+        onClear={() => actions.clear()}
+        loadTooltip={{
+          value: "Load an .asm or .hack file",
+          placement: "right",
         }}
       />
       <MemoryComponent
@@ -206,6 +217,7 @@ export const CPU = () => {
           tst={[tst, setTst, state.test.highlight]}
           out={[out, setOut]}
           cmp={[cmp, setCmp]}
+          setPath={setTstPath}
           tstName={state.test.name}
           disabled={!state.test.valid}
           showName={state.tests.length < 2}

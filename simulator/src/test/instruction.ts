@@ -219,9 +219,7 @@ export class TestClearEchoInstruction implements TestInstruction {
 export class TestLoadROMInstruction implements TestInstruction {
   constructor(readonly file: string) {}
   async do(test: Test) {
-    test.fs.pushd("/samples");
     await test.loadROM(this.file);
-    test.fs.popd();
   }
 
   *steps() {
@@ -234,6 +232,34 @@ export class TestLoadInstruction implements TestInstruction {
 
   async do(test: Test) {
     await test.load(this.file);
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestCompareToInstruction implements TestInstruction {
+  constructor(readonly file?: string) {}
+
+  async do(test: Test) {
+    if (this.file) {
+      await test.compareTo(this.file);
+    }
+  }
+
+  *steps() {
+    yield this;
+  }
+}
+
+export class TestOutputFileInstruction implements TestInstruction {
+  constructor(readonly file?: string) {}
+
+  async do(test: Test) {
+    if (this.file) {
+      test.outputFile(this.file);
+    }
   }
 
   *steps() {

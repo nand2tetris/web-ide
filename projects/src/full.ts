@@ -7,6 +7,7 @@ import * as project_04 from "./project_04/index.js";
 import * as project_05 from "./project_05/index.js";
 import * as project_07 from "./project_07/index.js";
 import * as project_08 from "./project_08/index.js";
+import { reset } from "./reset.js";
 import * as project_06 from "./samples/project_06/index.js";
 
 export const ChipProjects = {
@@ -32,10 +33,21 @@ const Projects = {
   8: project_08,
 };
 
-let reset = false;
+const ProjectFiles = {
+  "1": project_01.CHIPS,
+  "2": project_02.CHIPS,
+  "3": project_03.CHIPS,
+  "4": project_04.TESTS,
+  "5": project_05.CHIPS,
+  "6": project_06.FILES,
+  "7": project_07.VMS,
+  "8": project_08.VMS,
+};
+
+let resetFlag = false;
 export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
-  if (reset) return; // React will double-render a call to resetFiles in useEffect.
-  reset = true;
+  if (resetFlag) return; // React will double-render a call to resetFiles in useEffect.
+  resetFlag = true;
   projects ??= [1, 2, 3, 4, 6, 5, 7, 8];
   for (const project of projects) {
     if (!Object.keys(Projects).includes(project.toString())) {
@@ -43,12 +55,12 @@ export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
     }
     await Projects[project as keyof typeof Projects].resetFiles(fs);
   }
-  reset = false;
+  resetFlag = false;
 };
 
 export const resetTests = async (fs: FileSystem, projects?: number[]) => {
-  if (reset) return; // React will double-render a call to resetTests in useEffect.
-  reset = true;
+  if (resetFlag) return; // React will double-render a call to resetTests in useEffect.
+  resetFlag = true;
   projects ??= [1, 2, 3, 4, 5, 7, 8];
   for (const project of projects) {
     if (!Object.keys(Projects).includes(project.toString())) {
@@ -56,7 +68,11 @@ export const resetTests = async (fs: FileSystem, projects?: number[]) => {
     }
     await Projects[project as keyof typeof Projects].resetTests(fs);
   }
-  reset = false;
+  resetFlag = false;
+};
+
+export const createFiles = async (fs: FileSystem) => {
+  await reset(fs, ProjectFiles);
 };
 
 export const Assignments = {

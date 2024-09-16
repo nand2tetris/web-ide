@@ -1,5 +1,9 @@
 .file-select {
-  width: var(--file-picker-width);
+  min-width: var(--file-picker-width);
+
+  .files-container {
+    max-height: 600px;
+  }
 
   @media (max-width: 576px) {
     width: 100%;

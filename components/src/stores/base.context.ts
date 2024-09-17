@@ -21,6 +21,43 @@ import {
   removeLocalAdapterFromIndexedDB,
 } from "./base/indexDb.js";
 
+async function cloneTree(
+  sourceFs: FileSystem,
+  targetFs: FileSystem,
+  dir = "/",
+  pathTransform: (path: string) => string,
+  overwrite = false,
+) {
+  const sourceDir = dir == "/" ? "" : dir;
+  const targetDir = pathTransform(sourceDir);
+
+  const sourceItems = await sourceFs.scandir(dir);
+
+  targetFs.mkdir(targetDir);
+  const targetItems = new Set(
+    (await targetFs.scandir(targetDir)).map((stat) => stat.name),
+  );
+
+  for (const item of sourceItems) {
+    if (item.isFile()) {
+      if (overwrite || !targetItems.has(item.name)) {
+        await targetFs.writeFile(
+          `${targetDir}/${item.name}`,
+          await sourceFs.readFile(`${sourceDir}/${item.name}`),
+        );
+      }
+    } else {
+      await cloneTree(
+        sourceFs,
+        targetFs,
+        `${sourceDir}/${item.name}`,
+        pathTransform,
+        overwrite,
+      );
+    }
+  }
+}
+
 export interface BaseContext {
   fs: FileSystem;
   localFsRoot?: string;
@@ -49,8 +86,14 @@ export function useBaseContext(): BaseContext {
         new FileSystemAccessFileSystemAdapter(handle),
       );
       if (createFiles) {
-        const loaders = await import("@nand2tetris/projects/loader.js");
-        await loaders.createFiles(newFs);
+        if (root) {
+          const loaders = await import("@nand2tetris/projects/loader.js");
+          await loaders.createFiles(newFs);
+        } else {
+          await cloneTree(fs, newFs, "/projects", (path: string) =>
+            path.replace("/projects", "/").replace(/\/0*(\d+)/, "$1"),
+          );
+        }
       }
       setFs(newFs);
       setRoot(handle.name);

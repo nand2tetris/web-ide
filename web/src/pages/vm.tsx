@@ -83,9 +83,9 @@ const VM = () => {
   useEffect(() => {
     vmRunner.current = new (class VMTimer extends Timer {
       override async tick() {
-        const {done, lineNumber} = actions.step();
+        const { done, lineNumber } = actions.step();
         console.log("Breakpoints", breakpoints);
-        if(breakpoints.includes(lineNumber)){
+        if (breakpoints.includes(lineNumber)) {
           return true;
         }
         return done;
@@ -417,7 +417,7 @@ function VMStackFrame({
       <main>
         <p>
           Stack:
-          <code>[{frame.stack.values.join(", ")}]</code>
+          {/* <code>[{frame.stack.values.join(", ")}]</code> */}
         </p>
         {frame.usedSegments?.has("local") && (
           <p>

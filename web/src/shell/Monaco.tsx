@@ -79,7 +79,7 @@ export const Monaco = ({
   dynamicHeight = false,
   alwaysRecenter = true,
   lineNumberTransform,
-  setBreakpoints
+  setBreakpoints,
 }: {
   value: string;
   onChange: Action<string>;
@@ -106,18 +106,18 @@ export const Monaco = ({
   const [instance, setInstace] = useState<MonacoBreakpoint>();
   const [b, setB] = useState<boolean>(false);
   const bCallback = useCallback((breakpoints: number[]) => {
-    console.log('breakpointChanged: ', breakpoints);
-    if(setBreakpoints!==undefined){
+    console.log("breakpointChanged: ", breakpoints);
+    if (setBreakpoints !== undefined) {
       setBreakpoints(breakpoints);
     }
   }, []);
   useEffect(() => {
     if (instance && !b) {
-      console.log("add callback for breakpoints")
-      instance.on('breakpointChanged', bCallback)
+      console.log("add callback for breakpoints");
+      instance.on("breakpointChanged", bCallback);
       setB(true);
     }
-  }, [instance, bCallback])
+  }, [instance, bCallback]);
   const codeTheme = useCallback(() => {
     const isDark =
       theme === "system"
@@ -187,7 +187,7 @@ export const Monaco = ({
   const onMount: OnMount = useCallback(
     (ed, mon) => {
       if (instance === undefined) {
-        setInstace(new MonacoBreakpoint({ editor: ed }))
+        setInstace(new MonacoBreakpoint({ editor: ed }));
       }
       monaco.current = mon;
       editor.current = ed;

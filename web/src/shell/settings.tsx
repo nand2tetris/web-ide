@@ -10,7 +10,6 @@ import "../pico/button-group.scss";
 import "../pico/property.scss";
 import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
-// import { useDialog } from "./dialog";
 
 const showUpgradeFs = true;
 

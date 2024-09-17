@@ -28,6 +28,7 @@ import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
+import { zip } from "../shell/zip";
 
 interface CompileInput {
   hdl: string;
@@ -144,6 +145,22 @@ export const Chip = () => {
     actions.loadChip(path.path);
   };
 
+  const downloadRef = useRef<HTMLAnchorElement>(null);
+
+  const downloadProject = async () => {
+    if (!downloadRef.current) {
+      return;
+    }
+
+    const files = await actions.getProjectFiles();
+    const url = await zip(files);
+    downloadRef.current.href = url;
+    downloadRef.current.download = `${state.controls.project}`;
+    downloadRef.current.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   const selectors = (
     <>
       <fieldset
@@ -193,21 +210,24 @@ export const Chip = () => {
       isEditorPanel={true}
       header={
         <>
-          <div className="flex-1" tabIndex={0}>
-            HDL
-          </div>
-          {hasBuiltinChip(state.controls.chipName) && (
-            <label>
-              <input
-                type="checkbox"
-                role="switch"
-                checked={state.controls.usingBuiltin}
-                onChange={toggleUseBuiltin}
-              />
-              <Trans>Builtin</Trans>
-            </label>
-          )}
-          {selectors}
+          <div tabIndex={0}>HDL</div>
+          <label
+            style={{
+              visibility: hasBuiltinChip(state.controls.chipName)
+                ? "visible"
+                : "hidden",
+            }}
+          >
+            <input
+              type="checkbox"
+              role="switch"
+              checked={state.controls.usingBuiltin}
+              onChange={toggleUseBuiltin}
+            />
+            <Trans>Builtin</Trans>
+          </label>
+          <div style={{ width: "30px" }}></div>
+          <div className="flex-4">{selectors}</div>
           <fieldset role="group">
             <button
               data-tooltip="Open an HDL file directly"
@@ -215,6 +235,14 @@ export const Chip = () => {
               onClick={loadFile}
             >
               📂
+            </button>
+            <a ref={downloadRef} style={{ display: "none" }} />
+            <button
+              onClick={downloadProject}
+              data-tooltip={t`Download .hdl files`}
+              data-placement="left"
+            >
+              ⬇️
             </button>
           </fieldset>
         </>

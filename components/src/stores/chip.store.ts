@@ -326,12 +326,16 @@ export function makeChipStore(
       storage["/chip/project"] = project;
       dispatch.current({ action: "setProject", payload: project });
 
-      const chips = (
-        await fs.scandir(upgraded ? `/${project}` : `/projects/${project}`)
-      )
+      const prefix = upgraded ? "/" : "/projects";
+
+      const chips = (await fs.scandir(`${prefix}/${project}`))
         .filter((entry) => entry.isFile() && entry.name.endsWith(".hdl"))
         .map((file) => file.name.replace(".hdl", ""));
       dispatch.current({ action: "setChips", payload: chips });
+
+      if (chips.length > 0) {
+        this.loadChip(`${prefix}/${project}/${chips[0]}.hdl`, false);
+      }
     },
 
     async loadChip(path: string, loadTests = true) {
@@ -551,6 +555,17 @@ export function makeChipStore(
         setStatus((e as Error).message);
         return true;
       }
+    },
+
+    async getProjectFiles() {
+      console.log(_dir);
+
+      return (await fs.scandir(_dir))
+        .filter((entry) => entry.isFile() && entry.name.endsWith(".hdl"))
+        .map((entry) => ({
+          name: entry.name,
+          content: fs.readFile(`${_dir}/${entry.name}`),
+        }));
     },
   };
 

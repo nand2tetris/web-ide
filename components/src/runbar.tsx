@@ -30,7 +30,13 @@ export const Runbar = (props: {
     2: [16, 1],
     3: [16, 16666],
     4: [16, 16666 * 30],
+
   };
+
+
+  useEffect(() => {
+    updateSpeed();
+  }, []);
 
   useEffect(() => {
     updateSpeed();

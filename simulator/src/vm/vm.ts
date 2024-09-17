@@ -48,6 +48,7 @@ export interface VmFunction {
   labels: Record<string, number>;
   operations: VmInstruction[];
   opBase: number;
+  lineNumberOffset: number;
 }
 
 interface VmFunctionInvocation {
@@ -64,6 +65,8 @@ interface VmFunctionInvocation {
   thatInitialized: boolean;
   // The size of the memory block pointed to by the function's THIS (if exists)
   thisN?: number;
+  // Function line number offset
+  lineNumberOffset: number;
 }
 
 export const IMPLICIT = "__implicit";
@@ -73,6 +76,8 @@ export const SYS_INIT: VmFunction = {
   labels: {},
   nVars: 0,
   opBase: 0,
+  //TODO: RL change?
+  lineNumberOffset: 0,
   operations: [
     { op: "function", name: "Sys.init", nVars: 0 },
     { op: "call", name: "Math.init", nArgs: 0 },
@@ -305,6 +310,7 @@ export class Vm {
       labels: {},
       operations: [{ op: "function", name, nVars, span: instructions[i].span }],
       opBase: 0,
+      lineNumberOffset: i + 2
     };
 
     const declaredLabels: Set<string> = new Set();
@@ -437,6 +443,7 @@ export class Vm {
         opPtr: 0,
         thisInitialized: false,
         thatInitialized: false,
+        lineNumberOffset: -3 //TODO: RL change?
       };
     }
     return invocation;
@@ -567,6 +574,7 @@ export class Vm {
         nArgs: 0,
         thisInitialized: false,
         thatInitialized: false,
+        lineNumberOffset: -2 //TODO: RL change
       },
     ];
     this.memory.reset();
@@ -631,12 +639,12 @@ export class Vm {
     this.os.paused = paused;
   }
 
-  step(): number | undefined {
+  step(): VmStepResult {
     if (this.os.sys.halted) {
-      return this.os.sys.exitCode;
+      return { exitCode: this.os.sys.exitCode, lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
     }
     if (this.os.sys.blocked) {
-      return;
+      return { lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
     }
     if (this.os.sys.released && this.operation?.op == "call") {
       const ret = this.os.sys.readReturnValue();
@@ -644,7 +652,7 @@ export class Vm {
       this.memory.set(sp, ret);
       this.memory.SP = sp + 1;
       this.invocation.opPtr += 1;
-      return;
+      return { lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
     }
 
     if (this.operation == undefined) {
@@ -748,11 +756,12 @@ export class Vm {
             frameBase: base,
             thisInitialized: false,
             thatInitialized: false,
+            lineNumberOffset: -1,//TODO: RL change?
           });
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
           if (this.os.sys.blocked) {
-            return; // we will handle the return when the OS is released
+            return { lineNumber: -1 }; // we will handle the return when the OS is released
           }
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
@@ -767,13 +776,16 @@ export class Vm {
         this.invocation.opPtr = ret;
         if (this.executionStack.length === 0) {
           this.returnLine = line;
-          return 0;
+          return { exitCode: 0, lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
         }
         break;
       }
     }
     this.invocation.opPtr += 1;
-    return;
+    const e = this.currentFunction
+    const lineNumber = e.lineNumberOffset + this.invocation.opPtr - 1;
+
+    return { lineNumber };
   }
 
   private goto(label: string) {
@@ -897,6 +909,12 @@ export class Vm {
     }
     return prog;
   }
+}
+
+
+interface VmStepResult {
+  exitCode?: number;
+  lineNumber: number;
 }
 
 export function writeFrame(frame: VmFrame): string {

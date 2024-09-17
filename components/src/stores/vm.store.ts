@@ -346,12 +346,12 @@ export function makeVmStore(
     setPaused(paused = true) {
       vm.setPaused(paused);
     },
-    step() {
+    step(): VmStepResult {
       showHighlight = true;
       try {
         let done = false;
 
-        const exitCode = vm.step();
+        const { exitCode, lineNumber } = vm.step();
         if (exitCode !== undefined) {
           done = true;
           dispatch.current({ action: "setExitCode", payload: exitCode });
@@ -360,11 +360,11 @@ export function makeVmStore(
         if (animate) {
           dispatch.current({ action: "update" });
         }
-        return done;
+        return { done, lineNumber };
       } catch (e) {
         setStatus(`Runtime error: ${(e as Error).message}`);
         dispatch.current({ action: "setValid", payload: false });
-        return true;
+        return { done: true, lineNumber: -1 };
       }
     },
     reset() {
@@ -387,7 +387,10 @@ export function makeVmStore(
 
   return { initialState, reducers, actions };
 }
-
+export interface VmStepResult {
+  done: boolean;
+  lineNumber: number;
+}
 export function useVmPageStore() {
   const { fs, setStatus, storage } = useContext(BaseContext);
 

@@ -48,7 +48,7 @@ const VM = () => {
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.vm;
   const { setStatus } = useContext(BaseContext);
-
+  const [breakpoints, setBreakpoints] = useState<number[]>([]);
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
@@ -83,7 +83,12 @@ const VM = () => {
   useEffect(() => {
     vmRunner.current = new (class VMTimer extends Timer {
       override async tick() {
-        return actions.step();
+        const {done, lineNumber} = actions.step();
+        console.log("Breakpoints", breakpoints);
+        if(breakpoints.includes(lineNumber)){
+          return true;
+        }
+        return done;
       }
 
       override finishFrame() {
@@ -103,7 +108,10 @@ const VM = () => {
 
     testRunner.current = new (class TestTimer extends Timer {
       override async tick() {
-        return actions.testStep();
+        const t = actions.testStep();
+        actions.setPaused(!this.running);
+        dispatch.current({ action: "update" });
+        return t;
       }
 
       override finishFrame() {
@@ -127,7 +135,7 @@ const VM = () => {
       vmRunner.current?.stop();
       testRunner.current?.stop();
     };
-  }, [actions, dispatch]);
+  }, [actions, dispatch, breakpoints]);
 
   const uploadRef = useRef<HTMLInputElement>(null);
 
@@ -232,6 +240,7 @@ const VM = () => {
               : undefined
           }
           error={state.controls.error}
+          setBreakpoints={setBreakpoints}
         />
       </Panel>
       <Panel className="vm" header={<Trans>VM Structures</Trans>}>

@@ -77,6 +77,7 @@ export const Editor = ({
   dynamicHeight = false,
   alwaysRecenter = true,
   lineNumberTransform,
+  setBreakpoints
 }: {
   className?: string;
   style?: CSSProperties;
@@ -93,6 +94,7 @@ export const Editor = ({
   dynamicHeight?: boolean;
   alwaysRecenter?: boolean;
   lineNumberTransform?: (n: number) => string;
+  setBreakpoints?: (n:number[]) => void
 }) => {
   const { monaco } = useContext(AppContext);
 
@@ -116,6 +118,8 @@ export const Editor = ({
             dynamicHeight={dynamicHeight}
             alwaysRecenter={alwaysRecenter}
             lineNumberTransform={lineNumberTransform}
+            setBreakpoints={setBreakpoints}
+
           />
         </Suspense>
       ) : (

@@ -207,7 +207,7 @@ export class Compiler {
   }
 
   getLabel() {
-    const label = `L${this.labelNum}`;
+    const label = `${this.className}_${this.labelNum}`;
     this.labelNum += 1;
     return label;
   }

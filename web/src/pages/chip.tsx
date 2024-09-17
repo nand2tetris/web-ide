@@ -210,21 +210,24 @@ export const Chip = () => {
       isEditorPanel={true}
       header={
         <>
-          <div className="flex-1" tabIndex={0}>
-            HDL
-          </div>
-          {hasBuiltinChip(state.controls.chipName) && (
-            <label>
-              <input
-                type="checkbox"
-                role="switch"
-                checked={state.controls.usingBuiltin}
-                onChange={toggleUseBuiltin}
-              />
-              <Trans>Builtin</Trans>
-            </label>
-          )}
-          {selectors}
+          <div tabIndex={0}>HDL</div>
+          <label
+            style={{
+              visibility: hasBuiltinChip(state.controls.chipName)
+                ? "visible"
+                : "hidden",
+            }}
+          >
+            <input
+              type="checkbox"
+              role="switch"
+              checked={state.controls.usingBuiltin}
+              onChange={toggleUseBuiltin}
+            />
+            <Trans>Builtin</Trans>
+          </label>
+          <div style={{ width: "30px" }}></div>
+          <div className="flex-4">{selectors}</div>
           <fieldset role="group">
             <button
               data-tooltip="Open an HDL file directly"

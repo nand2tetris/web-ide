@@ -84,7 +84,6 @@ const VM = () => {
     vmRunner.current = new (class VMTimer extends Timer {
       override async tick() {
         const { done, lineNumber } = actions.step();
-        console.log("Breakpoints", breakpoints);
         if (breakpoints.includes(lineNumber)) {
           return true;
         }

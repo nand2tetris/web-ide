@@ -110,7 +110,7 @@ export const Monaco = ({
     if (setBreakpoints !== undefined) {
       setBreakpoints(breakpoints);
     }
-  }, []);
+  },[]);
   useEffect(() => {
     if (instance && !b) {
       console.log("add callback for breakpoints");

@@ -2631,7 +2631,7 @@ function Ball.setDestination 3
     pop this 7
     push this 7
     not
-    if-goto Ball_L1
+    if-goto Ball_1
     push local 0
     pop local 2
     push local 1
@@ -2646,8 +2646,8 @@ function Ball.setDestination 3
     push argument 1
     lt
     pop this 9
-    goto Ball_L0
-label Ball_L1
+    goto Ball_0
+label Ball_1
     push this 0
     push argument 1
     lt
@@ -2656,7 +2656,7 @@ label Ball_L1
     push argument 2
     lt
     pop this 9
-label Ball_L0
+label Ball_0
     push constant 2
     push local 1
     call Math.multiply 2
@@ -2685,138 +2685,138 @@ function Ball.move 0
     push constant 0
     lt
     not
-    if-goto Ball_L3
+    if-goto Ball_3
     push this 4
     push this 5
     add
     pop this 4
-    goto Ball_L2
-label Ball_L3
+    goto Ball_2
+label Ball_3
     push this 4
     push this 6
     add
     pop this 4
     push this 9
     not
-    if-goto Ball_L5
+    if-goto Ball_5
     push this 7
     not
-    if-goto Ball_L7
+    if-goto Ball_7
     push this 0
     push constant 4
     add
     pop this 0
-    goto Ball_L6
-label Ball_L7
+    goto Ball_6
+label Ball_7
     push this 1
     push constant 4
     add
     pop this 1
-label Ball_L6
-    goto Ball_L4
-label Ball_L5
+label Ball_6
+    goto Ball_4
+label Ball_5
     push this 7
     not
-    if-goto Ball_L9
+    if-goto Ball_9
     push this 0
     push constant 4
     sub
     pop this 0
-    goto Ball_L8
-label Ball_L9
+    goto Ball_8
+label Ball_9
     push this 1
     push constant 4
     sub
     pop this 1
-label Ball_L8
-label Ball_L4
-label Ball_L2
+label Ball_8
+label Ball_4
+label Ball_2
     push this 8
     not
-    if-goto Ball_L11
+    if-goto Ball_11
     push this 7
     not
-    if-goto Ball_L13
+    if-goto Ball_13
     push this 1
     push constant 4
     add
     pop this 1
-    goto Ball_L12
-label Ball_L13
+    goto Ball_12
+label Ball_13
     push this 0
     push constant 4
     add
     pop this 0
-label Ball_L12
-    goto Ball_L10
-label Ball_L11
+label Ball_12
+    goto Ball_10
+label Ball_11
     push this 7
     not
-    if-goto Ball_L15
+    if-goto Ball_15
     push this 1
     push constant 4
     sub
     pop this 1
-    goto Ball_L14
-label Ball_L15
+    goto Ball_14
+label Ball_15
     push this 0
     push constant 4
     sub
     pop this 0
-label Ball_L14
-label Ball_L10
+label Ball_14
+label Ball_10
     push this 0
     push this 10
     gt
     not
     not
-    if-goto Ball_L17
+    if-goto Ball_17
     push constant 1
     pop this 14
     push this 10
     pop this 0
-    goto Ball_L16
-label Ball_L17
-label Ball_L16
+    goto Ball_16
+label Ball_17
+label Ball_16
     push this 0
     push this 11
     lt
     not
     not
-    if-goto Ball_L19
+    if-goto Ball_19
     push constant 2
     pop this 14
     push this 11
     pop this 0
-    goto Ball_L18
-label Ball_L19
-label Ball_L18
+    goto Ball_18
+label Ball_19
+label Ball_18
     push this 1
     push this 12
     gt
     not
     not
-    if-goto Ball_L21
+    if-goto Ball_21
     push constant 3
     pop this 14
     push this 12
     pop this 1
-    goto Ball_L20
-label Ball_L21
-label Ball_L20
+    goto Ball_20
+label Ball_21
+label Ball_20
     push this 1
     push this 13
     lt
     not
     not
-    if-goto Ball_L23
+    if-goto Ball_23
     push constant 4
     pop this 14
     push this 13
     pop this 1
-    goto Ball_L22
-label Ball_L23
-label Ball_L22
+    goto Ball_22
+label Ball_23
+label Ball_22
     push pointer 0
     call Ball.show 1
     pop temp 0
@@ -2837,11 +2837,11 @@ function Ball.bounce 5
     push constant 0
     eq
     not
-    if-goto Ball_L25
+    if-goto Ball_25
     push constant 10
     pop local 4
-    goto Ball_L24
-label Ball_L25
+    goto Ball_24
+label Ball_25
     push this 2
     push constant 0
     lt
@@ -2860,20 +2860,20 @@ label Ball_L25
     and
     or
     not
-    if-goto Ball_L27
+    if-goto Ball_27
     push constant 20
     pop local 4
-    goto Ball_L26
-label Ball_L27
+    goto Ball_26
+label Ball_27
     push constant 5
     pop local 4
-label Ball_L26
-label Ball_L24
+label Ball_26
+label Ball_24
     push this 14
     push constant 1
     eq
     not
-    if-goto Ball_L29
+    if-goto Ball_29
     push constant 506
     pop local 0
     push local 3
@@ -2889,13 +2889,13 @@ label Ball_L24
     call Math.multiply 2
     add
     pop local 1
-    goto Ball_L28
-label Ball_L29
+    goto Ball_28
+label Ball_29
     push this 14
     push constant 2
     eq
     not
-    if-goto Ball_L31
+    if-goto Ball_31
     push constant 0
     pop local 0
     push local 3
@@ -2910,13 +2910,13 @@ label Ball_L29
     call Math.multiply 2
     add
     pop local 1
-    goto Ball_L30
-label Ball_L31
+    goto Ball_30
+label Ball_31
     push this 14
     push constant 3
     eq
     not
-    if-goto Ball_L33
+    if-goto Ball_33
     push constant 250
     pop local 1
     push local 2
@@ -2932,8 +2932,8 @@ label Ball_L31
     call Math.multiply 2
     add
     pop local 0
-    goto Ball_L32
-label Ball_L33
+    goto Ball_32
+label Ball_33
     push constant 0
     pop local 1
     push local 2
@@ -2948,9 +2948,9 @@ label Ball_L33
     call Math.multiply 2
     add
     pop local 0
-label Ball_L32
-label Ball_L30
-label Ball_L28
+label Ball_32
+label Ball_30
+label Ball_28
     push pointer 0
     push local 0
     push local 1

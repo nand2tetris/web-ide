@@ -1472,7 +1472,7 @@ export const compiled = `function Main.main 3
     push constant 0
     eq
     not
-    if-goto Main_L1
+    if-goto Main_1
     push local 0
     push constant 10
     call Main.fill 2
@@ -1529,9 +1529,9 @@ export const compiled = `function Main.main 3
     pop pointer 1
     push temp 0
     pop that 0
-    goto Main_L0
-label Main_L1
-label Main_L0
+    goto Main_0
+label Main_1
+label Main_0
     push constant 44
     call String.new 1
     push constant 84
@@ -1744,12 +1744,12 @@ function Main.double 0
     call Math.multiply 2
     return
 function Main.fill 0
-label Main_L2
+label Main_2
     push argument 1
     push constant 0
     gt
     not
-    if-goto Main_L3
+    if-goto Main_3
     push argument 1
     push constant 1
     sub
@@ -1763,7 +1763,7 @@ label Main_L2
     pop pointer 1
     push temp 0
     pop that 0
-    goto Main_L2
-label Main_L3
+    goto Main_2
+label Main_3
     push constant 0
     return`;

@@ -310,7 +310,7 @@ export class Vm {
       labels: {},
       operations: [{ op: "function", name, nVars, span: instructions[i].span }],
       opBase: 0,
-      lineNumberOffset: i + 2
+      lineNumberOffset: i + 2,
     };
 
     const declaredLabels: Set<string> = new Set();
@@ -443,7 +443,7 @@ export class Vm {
         opPtr: 0,
         thisInitialized: false,
         thatInitialized: false,
-        lineNumberOffset: -3 //TODO: RL change?
+        lineNumberOffset: -3, //TODO: RL change?
       };
     }
     return invocation;
@@ -574,7 +574,7 @@ export class Vm {
         nArgs: 0,
         thisInitialized: false,
         thatInitialized: false,
-        lineNumberOffset: -2 //TODO: RL change
+        lineNumberOffset: -2, //TODO: RL change
       },
     ];
     this.memory.reset();
@@ -641,10 +641,15 @@ export class Vm {
 
   step(): VmStepResult {
     if (this.os.sys.halted) {
-      return { exitCode: this.os.sys.exitCode, lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
+      return {
+        exitCode: this.os.sys.exitCode,
+        lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr,
+      };
     }
     if (this.os.sys.blocked) {
-      return { lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
+      return {
+        lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr,
+      };
     }
     if (this.os.sys.released && this.operation?.op == "call") {
       const ret = this.os.sys.readReturnValue();
@@ -652,7 +657,9 @@ export class Vm {
       this.memory.set(sp, ret);
       this.memory.SP = sp + 1;
       this.invocation.opPtr += 1;
-      return { lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
+      return {
+        lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr,
+      };
     }
 
     if (this.operation == undefined) {
@@ -756,7 +763,7 @@ export class Vm {
             frameBase: base,
             thisInitialized: false,
             thatInitialized: false,
-            lineNumberOffset: -1,//TODO: RL change?
+            lineNumberOffset: -1, //TODO: RL change?
           });
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
@@ -776,13 +783,17 @@ export class Vm {
         this.invocation.opPtr = ret;
         if (this.executionStack.length === 0) {
           this.returnLine = line;
-          return { exitCode: 0, lineNumber: this.invocation.lineNumberOffset + this.invocation.opPtr };
+          return {
+            exitCode: 0,
+            lineNumber:
+              this.invocation.lineNumberOffset + this.invocation.opPtr,
+          };
         }
         break;
       }
     }
     this.invocation.opPtr += 1;
-    const e = this.currentFunction
+    const e = this.currentFunction;
     const lineNumber = e.lineNumberOffset + this.invocation.opPtr - 1;
 
     return { lineNumber };
@@ -910,7 +921,6 @@ export class Vm {
     return prog;
   }
 }
-
 
 interface VmStepResult {
   exitCode?: number;

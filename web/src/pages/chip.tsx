@@ -28,6 +28,7 @@ import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
+import { zip } from "../shell/zip";
 
 interface CompileInput {
   hdl: string;
@@ -144,6 +145,22 @@ export const Chip = () => {
     actions.loadChip(path.path);
   };
 
+  const downloadRef = useRef<HTMLAnchorElement>(null);
+
+  const downloadProject = async () => {
+    if (!downloadRef.current) {
+      return;
+    }
+
+    const files = await actions.getProjectFiles();
+    const url = await zip(files);
+    downloadRef.current.href = url;
+    downloadRef.current.download = `${state.controls.project}`;
+    downloadRef.current.click();
+
+    URL.revokeObjectURL(url);
+  };
+
   const selectors = (
     <>
       <fieldset
@@ -215,6 +232,14 @@ export const Chip = () => {
               onClick={loadFile}
             >
               📂
+            </button>
+            <a ref={downloadRef} style={{ display: "none" }} />
+            <button
+              onClick={downloadProject}
+              data-tooltip={t`Download .hdl files`}
+              data-placement="left"
+            >
+              ⬇️
             </button>
           </fieldset>
         </>

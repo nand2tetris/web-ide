@@ -17,13 +17,12 @@ import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js"
  */
 const loadAssignment = (fs: FileSystem) =>
   async function (file: Assignment): Promise<AssignmentFiles> {
-    const assignment = Assignments[file.name as keyof typeof Assignments];
     const hdl = await fs.readFile(file.base);
-    const tst = assignment[
-      `${file.name}.tst` as keyof typeof assignment
+    const tst = Assignments[
+      `${file.name}.tst` as keyof typeof Assignments
     ] as string;
-    const cmp = assignment[
-      `${file.name}.cmp` as keyof typeof assignment
+    const cmp = Assignments[
+      `${file.name}.cmp` as keyof typeof Assignments
     ] as string;
     return { ...file, hdl, tst, cmp };
   };

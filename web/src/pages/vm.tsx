@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { ChangeEvent, MutableRefObject, useContext, useEffect, useRef, useState } from "react";
 
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -7,10 +7,11 @@ import { Screen } from "@nand2tetris/components/chips/screen.js";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { DEFAULT_TEST } from "@nand2tetris/components/stores/vm.store.js";
+import { DEFAULT_TEST, VmPageStoreActions, VmStoreDispatch } from "@nand2tetris/components/stores/vm.store.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import { Action } from "@nand2tetris/simulator/types";
 
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { PageContext } from "../Page.context";
@@ -43,12 +44,49 @@ const ERROR_MESSAGES: Record<ERRNO, string> = {
 interface Rerenderable {
   rerender: () => void;
 }
+class VMTimer extends Timer {
+  public dispatch: MutableRefObject<VmStoreDispatch>;
+  public actions: VmPageStoreActions;
+  public breakpoints: number[];
+  public setStatus: Action<string>
+  constructor(actions: VmPageStoreActions, dispatch: MutableRefObject<VmStoreDispatch>,
+    setStatus: Action<string>, breakpoints: number[] = []) {
+    super();
+    this.actions = actions;
+    this.breakpoints = breakpoints;
+    this.dispatch = dispatch;
+    this.setStatus = setStatus;
+  }
+  override setBreakpoints(breakpoints: number[]): void {
+    this.breakpoints=breakpoints;
+  }
 
+  override async tick() {
+    const { done, lineNumber } = this.actions.step();
+    if (this.breakpoints.includes(lineNumber)) {
+      return true;
+    }
+    return done;
+  }
+
+  override finishFrame() {
+    this.dispatch.current({ action: "update" });
+  }
+
+  override reset() {
+    this.setStatus("Reset");
+    this.actions.reset();
+  }
+
+  override toggle() {
+    this.actions.setPaused(!this.running);
+    this.dispatch.current({ action: "update" });
+  }
+}
 const VM = () => {
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.vm;
   const { setStatus } = useContext(BaseContext);
-  const [breakpoints, setBreakpoints] = useState<number[]>([]);
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
@@ -68,42 +106,21 @@ const VM = () => {
       setStatus(
         state.controls.exitCode == 0
           ? "Program halted"
-          : `Program exited with error code ${state.controls.exitCode}${
-              isSysError(state.controls.exitCode)
-                ? `: ${ERROR_MESSAGES[state.controls.exitCode]}`
-                : ""
-            }`,
+          : `Program exited with error code ${state.controls.exitCode}${isSysError(state.controls.exitCode)
+            ? `: ${ERROR_MESSAGES[state.controls.exitCode]}`
+            : ""
+          }`,
       );
     }
   }, [state.controls.exitCode]);
 
-  const vmRunner = useRef<Timer>();
+  const vmRunner = useRef<VMTimer>();
+  const breakpointsRef = useRef<number[]>([]);
   const testRunner = useRef<Timer>();
   const [runnersAssigned, setRunnersAssigned] = useState(false);
+
   useEffect(() => {
-    vmRunner.current = new (class VMTimer extends Timer {
-      override async tick() {
-        const { done, lineNumber } = actions.step();
-        if (breakpoints.includes(lineNumber)) {
-          return true;
-        }
-        return done;
-      }
-
-      override finishFrame() {
-        dispatch.current({ action: "update" });
-      }
-
-      override reset() {
-        setStatus("Reset");
-        actions.reset();
-      }
-
-      override toggle() {
-        actions.setPaused(!this.running);
-        dispatch.current({ action: "update" });
-      }
-    })();
+    vmRunner.current = new VMTimer(actions, dispatch, setStatus);
 
     testRunner.current = new (class TestTimer extends Timer {
       override async tick() {
@@ -134,7 +151,7 @@ const VM = () => {
       vmRunner.current?.stop();
       testRunner.current?.stop();
     };
-  }, [actions, dispatch, breakpoints]);
+  }, [actions, dispatch]);
 
   const uploadRef = useRef<HTMLInputElement>(null);
 
@@ -181,13 +198,12 @@ const VM = () => {
 
   return (
     <div
-      className={`Page VmPage grid ${
-        state.config.screenScale == 0
-          ? "no-screen"
-          : state.config.screenScale == 2
-            ? "large-screen"
-            : "normal"
-      }`}
+      className={`Page VmPage grid ${state.config.screenScale == 0
+        ? "no-screen"
+        : state.config.screenScale == 2
+          ? "large-screen"
+          : "normal"
+        }`}
     >
       <Panel
         className="program"
@@ -220,6 +236,7 @@ const VM = () => {
                   runner={vmRunner.current}
                   disabled={!state.controls.valid}
                   speed={state.config.speed}
+                  breakpointsRef={breakpointsRef}
                   onSpeedChange={(speed) => onSpeedChange(speed, false)}
                 />
               )}
@@ -239,7 +256,7 @@ const VM = () => {
               : undefined
           }
           error={state.controls.error}
-          setBreakpoints={setBreakpoints}
+          breakpointsRef={breakpointsRef}
         />
       </Panel>
       <Panel className="vm" header={<Trans>VM Structures</Trans>}>

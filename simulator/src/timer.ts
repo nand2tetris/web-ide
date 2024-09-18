@@ -74,4 +74,7 @@ export abstract class Timer {
     this.#running = false;
     this.toggle();
   }
+  setBreakpoints(breakpoints: number[]) {
+
+  }
 }

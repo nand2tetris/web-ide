@@ -391,6 +391,21 @@ export interface VmStepResult {
   done: boolean;
   lineNumber: number;
 }
+
+export interface VmPageStoreActions {
+  setVm(content: string): boolean | undefined;
+  loadVm(files: VmFile[]): boolean | undefined;
+  replaceVm(buildResult: Result<Vm, CompilationError>): boolean;
+  loadTest(path: string, source: string, cmp?: string): boolean;
+  setAnimate(value: boolean): void;
+  testStep(): Promise<boolean>;
+  setPaused(paused?: boolean): void;
+  step(): VmStepResult;
+  reset(): void;
+  toggleUseTest(): void;
+  initialize(): void;
+}
+
 export function useVmPageStore() {
   const { fs, setStatus, storage } = useContext(BaseContext);
 

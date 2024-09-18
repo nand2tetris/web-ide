@@ -1,6 +1,6 @@
 import { Trans } from "@lingui/macro";
 import { type Grammar } from "ohm-js";
-import { CSSProperties, lazy, Suspense, useContext, useState } from "react";
+import { CSSProperties, lazy, MutableRefObject, Suspense, useContext, useState } from "react";
 import { AppContext } from "../App.context";
 
 import {
@@ -77,7 +77,7 @@ export const Editor = ({
   dynamicHeight = false,
   alwaysRecenter = true,
   lineNumberTransform,
-  setBreakpoints,
+  breakpointsRef,
 }: {
   className?: string;
   style?: CSSProperties;
@@ -94,7 +94,7 @@ export const Editor = ({
   dynamicHeight?: boolean;
   alwaysRecenter?: boolean;
   lineNumberTransform?: (n: number) => string;
-  setBreakpoints?: (n: number[]) => void;
+  breakpointsRef?: MutableRefObject<number[]>;
 }) => {
   const { monaco } = useContext(AppContext);
 
@@ -118,7 +118,7 @@ export const Editor = ({
             dynamicHeight={dynamicHeight}
             alwaysRecenter={alwaysRecenter}
             lineNumberTransform={lineNumberTransform}
-            setBreakpoints={setBreakpoints}
+            breakpointsRef={breakpointsRef}
           />
         </Suspense>
       ) : (

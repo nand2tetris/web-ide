@@ -1,5 +1,5 @@
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { ChangeEvent, ReactNode, useEffect, useRef } from "react";
+import { ChangeEvent, MutableRefObject, ReactNode, useEffect, useRef } from "react";
 import { useStateInitializer } from "./react.js";
 import { useTimer } from "./timer.js";
 
@@ -11,6 +11,17 @@ interface RunbarTooltipOverrides {
 }
 
 export type RunSpeed = 0 | 1 | 2 | 3 | 4;
+interface TimerConfiguration {
+  speed: number;
+  steps: number;
+}
+const speedValues: Record<RunSpeed, TimerConfiguration> = {
+  0: { speed: 1000, steps: 1 },
+  1: { speed: 500, steps: 1 },
+  2: { speed: 16, steps: 1 },
+  3: { speed: 16, steps: 16666 },
+  4: { speed: 16, steps: 16666 * 30 },
+};
 
 export const Runbar = (props: {
   runner: Timer;
@@ -20,19 +31,10 @@ export const Runbar = (props: {
   children?: ReactNode;
   overrideTooltips?: Partial<RunbarTooltipOverrides>;
   onSpeedChange?: (speed: RunSpeed) => void;
+  breakpointsRef?: MutableRefObject<number[]>;
 }) => {
   const runner = useTimer(props.runner);
   const [speedValue, setSpeed] = useStateInitializer(props.speed ?? 2);
-
-  const speedValues: Record<RunSpeed, [number, number]> = {
-    0: [1000, 1],
-    1: [500, 1],
-    2: [16, 1],
-    3: [16, 16666],
-    4: [16, 16666 * 30],
-
-  };
-
 
   useEffect(() => {
     updateSpeed();
@@ -42,8 +44,9 @@ export const Runbar = (props: {
     updateSpeed();
   }, [speedValue]);
 
+  
   const updateSpeed = () => {
-    const [speed, steps] = speedValues[speedValue];
+    const {speed, steps} = speedValues[speedValue];
     runner.dispatch({ action: "setSpeed", payload: speed });
     runner.dispatch({ action: "setSteps", payload: steps });
   };
@@ -88,10 +91,12 @@ export const Runbar = (props: {
           className="flex-0"
           ref={toggleRef}
           disabled={props.disabled}
-          onClick={() =>
+          onClick={() =>{
+            runner.actions.setBreakpoints( props.breakpointsRef?.current ?? [])
             runner.state.running
               ? runner.actions.stop()
               : runner.actions.start()
+          }
           }
           data-tooltip={
             runner.state.running

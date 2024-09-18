@@ -49,6 +49,10 @@ const makeTimerStore = (
     frame() {
       timer.frame();
     },
+    setBreakpoints(breakpoints: number[]) {
+      timer.setBreakpoints(breakpoints);
+    },
+    
     start() {
       timer.start();
       dispatch.current({ action: "update" });

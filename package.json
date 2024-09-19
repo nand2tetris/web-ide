@@ -28,6 +28,8 @@
     "prebuild": "npm run check",
     "build": "cross-env CI=true npm run build -w projects && cross-env CI=true npm run build -w runner && cross-env CI=true npm run build -w simulator && cross-env CI=true npm run build -w cli && cross-env CI=true npm run build -w components && cross-env CI=true npm run build -w web && cross-env CI=true npm run build -w extension",
     "build:extension": "cross-env CI=true npm run build -w extension",
+    "watch": "node build-watch.js",
+    
     "test:ci": "cross-env CI=true npm test -w simulator && cross-env CI=true npm test -w components && cross-env CI=true npm test -w web",
     "pretest": "npm run build",
     "test": "npm run test:ci",
@@ -51,6 +53,7 @@
     "npm": ">=7"
   },
   "devDependencies": {
+    "concurrently": "^9.0.1",
     "cross-env": "^7.0.3",
     "shx": "^0.3.4"
   }

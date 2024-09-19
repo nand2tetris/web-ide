@@ -3,11 +3,15 @@ const concurrently = require('concurrently');
 
 const info = fs.readFileSync('package.json', 'utf8')
 const workspaces = JSON.parse(info)['workspaces'];
-var index = workspaces.indexOf("web");
-if (index == -1) {
-    throw new Error("Couldn't find web subproject in package.json");
+// building extensions fails with watch flag
+const workspacesToRemove = ["web", "extension"];
+for (const workspace of workspacesToRemove) {
+    var index = workspaces.indexOf(workspace);
+    if (index == -1) {
+        throw new Error(`Couldn't find ${workspace} subproject in package.json`);
+    }
+    workspaces.splice(index, 1);
 }
-workspaces.splice(index, 1);
 const commands = workspaces.map(workspace => `npm run build -w ${workspace} -- -w`);
 const { result } = concurrently(
     commands,

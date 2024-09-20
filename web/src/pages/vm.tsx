@@ -156,6 +156,10 @@ const VM = () => {
     actions.loadVm(sources);
     actions.reset();
     setStatus("");
+
+    if (uploadRef.current) {
+      uploadRef.current.value = "";
+    }
   };
 
   const onSpeedChange = (speed: number, testPanel: boolean) => {

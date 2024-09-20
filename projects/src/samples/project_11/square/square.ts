@@ -1722,7 +1722,7 @@ function Square.incSize 0
     lt
     and
     not
-    if-goto L1
+    if-goto Square_1
     push pointer 0
     call Square.erase 1
     pop temp 0
@@ -1733,9 +1733,9 @@ function Square.incSize 0
     push pointer 0
     call Square.draw 1
     pop temp 0
-    goto L0
-label L1
-label L0
+    goto Square_0
+label Square_1
+label Square_0
     push constant 0
     return
 function Square.decSize 0
@@ -1745,7 +1745,7 @@ function Square.decSize 0
     push constant 2
     gt
     not
-    if-goto L3
+    if-goto Square_3
     push pointer 0
     call Square.erase 1
     pop temp 0
@@ -1756,9 +1756,9 @@ function Square.decSize 0
     push pointer 0
     call Square.draw 1
     pop temp 0
-    goto L2
-label L3
-label L2
+    goto Square_2
+label Square_3
+label Square_2
     push constant 0
     return
 function Square.moveUp 0
@@ -1768,7 +1768,7 @@ function Square.moveUp 0
     push constant 1
     gt
     not
-    if-goto L5
+    if-goto Square_5
     push constant 0
     call Screen.setColor 1
     pop temp 0
@@ -1804,9 +1804,9 @@ function Square.moveUp 0
     add
     call Screen.drawRectangle 4
     pop temp 0
-    goto L4
-label L5
-label L4
+    goto Square_4
+label Square_5
+label Square_4
     push constant 0
     return
 function Square.moveDown 0
@@ -1818,7 +1818,7 @@ function Square.moveDown 0
     push constant 254
     lt
     not
-    if-goto L7
+    if-goto Square_7
     push constant 0
     call Screen.setColor 1
     pop temp 0
@@ -1854,9 +1854,9 @@ function Square.moveDown 0
     add
     call Screen.drawRectangle 4
     pop temp 0
-    goto L6
-label L7
-label L6
+    goto Square_6
+label Square_7
+label Square_6
     push constant 0
     return
 function Square.moveLeft 0
@@ -1866,7 +1866,7 @@ function Square.moveLeft 0
     push constant 1
     gt
     not
-    if-goto L9
+    if-goto Square_9
     push constant 0
     call Screen.setColor 1
     pop temp 0
@@ -1902,9 +1902,9 @@ function Square.moveLeft 0
     add
     call Screen.drawRectangle 4
     pop temp 0
-    goto L8
-label L9
-label L8
+    goto Square_8
+label Square_9
+label Square_8
     push constant 0
     return
 function Square.moveRight 0
@@ -1916,7 +1916,7 @@ function Square.moveRight 0
     push constant 510
     lt
     not
-    if-goto L11
+    if-goto Square_11
     push constant 0
     call Screen.setColor 1
     pop temp 0
@@ -1952,8 +1952,8 @@ function Square.moveRight 0
     add
     call Screen.drawRectangle 4
     pop temp 0
-    goto L10
-label L11
-label L10
+    goto Square_10
+label Square_11
+label Square_10
     push constant 0
     return`;

@@ -75,6 +75,13 @@ export const SYS_INIT: VmFunction = {
   opBase: 0,
   operations: [
     { op: "function", name: "Sys.init", nVars: 0 },
+    { op: "call", name: "Math.init", nArgs: 0 },
+    { op: "call", name: "String.init", nArgs: 0 },
+    { op: "call", name: "Array.init", nArgs: 0 },
+    { op: "call", name: "Output.init", nArgs: 0 },
+    { op: "call", name: "Screen.init", nArgs: 0 },
+    { op: "call", name: "Keyboard.init", nArgs: 0 },
+    { op: "call", name: "Memory.init", nArgs: 0 },
     { op: "call", name: "Main.main", nArgs: 0 },
   ],
 };
@@ -228,12 +235,17 @@ export class Vm {
 
     for (const call of calls) {
       if (!functions.has(call.name)) {
-        if (VM_BUILTINS[call.name]) {
-          if (VM_BUILTINS[call.name].nArgs != call.nArgs) {
+        const builtin = VM_BUILTINS[call.name];
+        if (builtin) {
+          const expectedNArgs =
+            builtin.type == "method"
+              ? builtin.args.length + 1
+              : builtin.args.length;
+          if (expectedNArgs != call.nArgs) {
             return Err(
               createError(
                 `OS function ${call.name} expects ${
-                  VM_BUILTINS[call.name].nArgs
+                  expectedNArgs
                 } arguments, not ${call.nArgs}`,
                 call.span,
               ),

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+    integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+  <title>Jack image converter</title>
+</head>
+
+<body>
+  <!doctype html>
+  <html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://unpkg.com/tailwindcss@^2/dist/tailwind.min.css" rel="stylesheet">
+    <title>Jack image converter</title>
+  </head>
+
+  <body>
+
+    <div class="flex flex-wrap mb-4">
+      <div class="w-full md:w-1/3 p-4 sm:flex-col sm:flex-row sm:flex-wrap sm:flex-shrink-0 sm:w-full relative">
+        <div class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+
+          <label for="input" class="block text-gray-700 text-sm font-bold mb-2">Jack code:</label>
+          <div class="relative">
+            <textarea id="input" name="input" rows="20" cols="50"
+              class="font-serif  shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+
+          </div>
+        </div>
+      </div>
+      <div class="w-full md:w-1/12 p-4 sm:flex-col sm:flex-row sm:flex-wrap sm:flex-shrink-0 sm:w-full relative">
+      <button class="bg-blue-500  py-2 px-4 rounded-full" id="compile">
+        Compile
+      </button>
+      </div>
+      <div class="w-full md:w-1/3 p-4 sm:flex-col sm:flex-row sm:flex-wrap sm:flex-shrink-0 sm:w-full">
+
+        <label for="output" class="block text-gray-700 text-sm font-bold mb-2">Binary image:</label>
+        <textarea id="output" name="output" rows="20" cols="50"
+          class=" font-serif shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+      </div>
+
+    </div>
+
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+
+  </html>
+</body>
+
+</html>

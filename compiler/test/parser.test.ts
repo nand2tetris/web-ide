@@ -55,5 +55,4 @@ function testJackDir(testFolder: string): void {
         }
         globalSymbolsListener.resetErrors();
     }
-    //TODO: improve this
 }

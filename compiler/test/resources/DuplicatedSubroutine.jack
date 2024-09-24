@@ -1,0 +1,8 @@
+class DuplicatedSubroutine {
+    function void f(){
+        return;
+    }
+    function int f(){
+        return 1;
+    }
+}

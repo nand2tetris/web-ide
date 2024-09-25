@@ -5,8 +5,8 @@ import { ParseTreeWalker } from "antlr4ts/tree/ParseTreeWalker";
 import { JackParser } from "./generated/JackParser";
 import { CharStreams, CommonTokenStream } from "antlr4ts";
 import { JackLexer } from "./generated/JackLexer";
-import { ErrorListener } from "./error.listener";
-import { ValidatorListener } from "./validator.listener";
+import { ErrorListener } from "./listener/error.listener";
+import { ValidatorListener } from "./listener/validator.listener";
 export default class Compiler {
     static compile(dir: string): string {
 

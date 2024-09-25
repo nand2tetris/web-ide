@@ -7,21 +7,21 @@ options {
 program: classDeclaration EOF;
 
 classDeclaration:
-	CLASS className LBRACE classVarDec* subroutineDec* RBRACE;
+	CLASS className LBRACE classVarDec* subroutineDeclaration* RBRACE;
 className: IDENTIFIER;
 classVarDec:
 	STATIC fieldList SEMICOLON	# staticFieldDeclaration
 	| FIELD fieldList SEMICOLON	# fieldDeclaration;
 fieldList: varType fieldName ( COMMA fieldName)*;
 fieldName: IDENTIFIER;
-subroutineDec: {console.log("Subroutine")}
+subroutineDeclaration:
 	CONSTRUCTOR subroutineDecWithoutType	# constructor
 	| METHOD subroutineDecWithoutType		# method
 	| FUNCTION subroutineDecWithoutType		# function;
 subroutineDecWithoutType:
 	subroutineReturnType subroutineName LPAREN parameterList RPAREN subroutineBody;
 subroutineName: IDENTIFIER;
-subroutineReturnType: varType | VOID; 
+subroutineReturnType: varType | VOID;
 
 varType: INT | CHAR | BOOLEAN | IDENTIFIER;
 
@@ -29,9 +29,9 @@ parameterList: (parameter (COMMA parameter)*)?;
 parameter: varType parameterName;
 parameterName: IDENTIFIER;
 subroutineBody:
-	LBRACE varDec* statements RBRACE;
+	LBRACE varDeclaration* statements RBRACE;
 
-varDec: VAR varType varName (COMMA IDENTIFIER)* SEMICOLON;
+varDeclaration: VAR varType varName (COMMA varName)* SEMICOLON;
 varName: IDENTIFIER;
 statements: statement*;
 statement:
@@ -63,7 +63,7 @@ returnStatement: RETURN expression? SEMICOLON;
 expressionList: (expression (COMMA expression)*)?;
 
 expression:
-	binaryOperation = expression binaryOperator expression 
+	binaryOperation = expression binaryOperator expression
 	| constant
 	| IDENTIFIER
 	| subroutineCall
@@ -93,4 +93,3 @@ binaryOperator:
 	| LESS_THAN
 	| GREATER_THAN
 	| EQUALS;
-

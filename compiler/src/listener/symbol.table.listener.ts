@@ -1,8 +1,8 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ClassDeclarationContext, ConstructorContext, FunctionContext, MethodContext, SubroutineDecWithoutTypeContext } from "./generated/JackParser";
-import { JackParserListener } from "./generated/JackParserListener";
-import { DuplicatedSubroutineError } from './error'
+import { ClassDeclarationContext, ConstructorContext, FunctionContext, MethodContext, SubroutineDecWithoutTypeContext } from "../generated/JackParser";
+import { JackParserListener } from "../generated/JackParserListener";
+import { DuplicatedSubroutineError } from '../error'
 const primitives = new Set(["int", "boolean", "char"] as const);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
 
@@ -13,7 +13,7 @@ export interface GenericSymbol extends Symbol {
     subroutineParameterCount?: number;
 }
 
-export class SymbolTableListener implements JackParserListener, ParseTreeListener {
+export class GlobalSymbolTableListener implements JackParserListener, ParseTreeListener {
 
     // key can be class or <class>.<subroutine_name>
     public globalSymbolTable: Record<string, GenericSymbol> = {};

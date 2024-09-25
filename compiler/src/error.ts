@@ -15,3 +15,13 @@ export class DuplicatedSubroutineError extends JackCompilerError {
     }
 
 }
+
+export class DuplicatedVarException extends JackCompilerError {
+    constructor(varName: string) {
+        super("Duplicated variable " + varName);
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, DuplicatedSubroutineError.prototype);
+    }
+
+}

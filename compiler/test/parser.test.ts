@@ -1,10 +1,10 @@
 import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
 import fs from 'fs';
-import { SymbolTableListener } from "../src/symbol.table.istener";
+import { GlobalSymbolTableListener } from "../src/listener/symbol.table.listener";
 
 import path from "path";
-import { ErrorListener } from "../src/error.listener";
-import { getTestResourcePath, parseJack } from "./test.helper";
+import { ErrorListener } from "../src/listener/error.listener";
+import { getTestResourcePath, parseJackFile, traverseTree } from "./test.helper";
 
 
 describe('Parser', () => {
@@ -35,17 +35,13 @@ describe('Parser', () => {
 });
 
 function testJackDir(testFolder: string): void {
-
-    const globalSymbolsListener = new SymbolTableListener();
     const files = fs.readdirSync(testFolder).filter(file => file.endsWith(".jack")).map(file => path.join(testFolder, file));
     for (const filePath of files) {
         const errorListener = ErrorListener.getInstance()
         errorListener.filepath = filePath;
-        const tree = parseJack(filePath, errorListener);
+        const tree = parseJackFile(filePath, errorListener);
         expect(errorListener.error).toBe(false)
-        // console.log(tree.toStringTree(parser.ruleNames));
-
-        ParseTreeWalker.DEFAULT.walk(globalSymbolsListener, tree);
+        const globalSymbolsListener = traverseTree(tree, new GlobalSymbolTableListener());
         const symbolsErrors = globalSymbolsListener.errors.join("\n")
         try {
             expect(globalSymbolsListener.errors.length).toBe(0)

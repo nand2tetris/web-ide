@@ -3,18 +3,18 @@
 
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 
+import { StaticFieldDeclarationContext } from "./JackParser";
+import { FieldDeclarationContext } from "./JackParser";
 import { ConstructorContext } from "./JackParser";
 import { MethodContext } from "./JackParser";
 import { FunctionContext } from "./JackParser";
-import { StaticFieldDeclarationContext } from "./JackParser";
-import { FieldDeclarationContext } from "./JackParser";
 import { ProgramContext } from "./JackParser";
 import { ClassDeclarationContext } from "./JackParser";
 import { ClassNameContext } from "./JackParser";
 import { ClassVarDecContext } from "./JackParser";
 import { FieldListContext } from "./JackParser";
 import { FieldNameContext } from "./JackParser";
-import { SubroutineDecContext } from "./JackParser";
+import { SubroutineDeclarationContext } from "./JackParser";
 import { SubroutineDecWithoutTypeContext } from "./JackParser";
 import { SubroutineNameContext } from "./JackParser";
 import { SubroutineReturnTypeContext } from "./JackParser";
@@ -23,7 +23,7 @@ import { ParameterListContext } from "./JackParser";
 import { ParameterContext } from "./JackParser";
 import { ParameterNameContext } from "./JackParser";
 import { SubroutineBodyContext } from "./JackParser";
-import { VarDecContext } from "./JackParser";
+import { VarDeclarationContext } from "./JackParser";
 import { VarNameContext } from "./JackParser";
 import { StatementsContext } from "./JackParser";
 import { StatementContext } from "./JackParser";
@@ -49,45 +49,6 @@ import { BinaryOperatorContext } from "./JackParser";
  */
 export interface JackParserListener extends ParseTreeListener {
 	/**
-	 * Enter a parse tree produced by the `constructor`
-	 * labeled alternative in `JackParser.subroutineDec`.
-	 * @param ctx the parse tree
-	 */
-	enterConstructor?: (ctx: ConstructorContext) => void;
-	/**
-	 * Exit a parse tree produced by the `constructor`
-	 * labeled alternative in `JackParser.subroutineDec`.
-	 * @param ctx the parse tree
-	 */
-	exitConstructor?: (ctx: ConstructorContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `method`
-	 * labeled alternative in `JackParser.subroutineDec`.
-	 * @param ctx the parse tree
-	 */
-	enterMethod?: (ctx: MethodContext) => void;
-	/**
-	 * Exit a parse tree produced by the `method`
-	 * labeled alternative in `JackParser.subroutineDec`.
-	 * @param ctx the parse tree
-	 */
-	exitMethod?: (ctx: MethodContext) => void;
-
-	/**
-	 * Enter a parse tree produced by the `function`
-	 * labeled alternative in `JackParser.subroutineDec`.
-	 * @param ctx the parse tree
-	 */
-	enterFunction?: (ctx: FunctionContext) => void;
-	/**
-	 * Exit a parse tree produced by the `function`
-	 * labeled alternative in `JackParser.subroutineDec`.
-	 * @param ctx the parse tree
-	 */
-	exitFunction?: (ctx: FunctionContext) => void;
-
-	/**
 	 * Enter a parse tree produced by the `staticFieldDeclaration`
 	 * labeled alternative in `JackParser.classVarDec`.
 	 * @param ctx the parse tree
@@ -112,6 +73,45 @@ export interface JackParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitFieldDeclaration?: (ctx: FieldDeclarationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `constructor`
+	 * labeled alternative in `JackParser.subroutineDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	enterConstructor?: (ctx: ConstructorContext) => void;
+	/**
+	 * Exit a parse tree produced by the `constructor`
+	 * labeled alternative in `JackParser.subroutineDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	exitConstructor?: (ctx: ConstructorContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `method`
+	 * labeled alternative in `JackParser.subroutineDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	enterMethod?: (ctx: MethodContext) => void;
+	/**
+	 * Exit a parse tree produced by the `method`
+	 * labeled alternative in `JackParser.subroutineDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	exitMethod?: (ctx: MethodContext) => void;
+
+	/**
+	 * Enter a parse tree produced by the `function`
+	 * labeled alternative in `JackParser.subroutineDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	enterFunction?: (ctx: FunctionContext) => void;
+	/**
+	 * Exit a parse tree produced by the `function`
+	 * labeled alternative in `JackParser.subroutineDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	exitFunction?: (ctx: FunctionContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.program`.
@@ -180,15 +180,15 @@ export interface JackParserListener extends ParseTreeListener {
 	exitFieldName?: (ctx: FieldNameContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `JackParser.subroutineDec`.
+	 * Enter a parse tree produced by `JackParser.subroutineDeclaration`.
 	 * @param ctx the parse tree
 	 */
-	enterSubroutineDec?: (ctx: SubroutineDecContext) => void;
+	enterSubroutineDeclaration?: (ctx: SubroutineDeclarationContext) => void;
 	/**
-	 * Exit a parse tree produced by `JackParser.subroutineDec`.
+	 * Exit a parse tree produced by `JackParser.subroutineDeclaration`.
 	 * @param ctx the parse tree
 	 */
-	exitSubroutineDec?: (ctx: SubroutineDecContext) => void;
+	exitSubroutineDeclaration?: (ctx: SubroutineDeclarationContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.subroutineDecWithoutType`.
@@ -279,15 +279,15 @@ export interface JackParserListener extends ParseTreeListener {
 	exitSubroutineBody?: (ctx: SubroutineBodyContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `JackParser.varDec`.
+	 * Enter a parse tree produced by `JackParser.varDeclaration`.
 	 * @param ctx the parse tree
 	 */
-	enterVarDec?: (ctx: VarDecContext) => void;
+	enterVarDeclaration?: (ctx: VarDeclarationContext) => void;
 	/**
-	 * Exit a parse tree produced by `JackParser.varDec`.
+	 * Exit a parse tree produced by `JackParser.varDeclaration`.
 	 * @param ctx the parse tree
 	 */
-	exitVarDec?: (ctx: VarDecContext) => void;
+	exitVarDeclaration?: (ctx: VarDeclarationContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.varName`.

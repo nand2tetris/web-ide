@@ -1,5 +1,5 @@
 import { ParserRuleContext } from "antlr4ts"
-import { DuplicatedVariableException, JackCompilerError } from "../src/error"
+import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { GenericSymbol } from "../src/listener/symbol.table.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
@@ -7,6 +7,16 @@ import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
 import { ProgramContext } from "../src/generated/JackParser"
 
 describe('ValidatorListener', () => {
+    const jestConsole = console;
+
+    beforeEach(() => {
+        global.console = require('console');
+    });
+
+    afterEach(() => {
+        global.console = jestConsole;
+    });
+
     const duplicateVarClassBodies = [
         ["static", '  static int a, a;'],
         ["field", '  field int a, a;'],
@@ -28,9 +38,59 @@ describe('ValidatorListener', () => {
               ${classBody}
             }`, DuplicatedVariableException)
     })
+    test('let - undeclared variable ', () => {
+        testValidator('let - undeclared variable', `
+            class Main {
+            function void a(){
+                let b=1;
+            }
+            }`, UndeclaredVariableError)
+    })
+
+    test('call function - undeclared variable ', () => {
+        testValidator('let - undeclared variable', 
+            `class Main {
+                function void b(int a){
+                    return;
+                }
+                function void a(){
+                    do Main.b(a);
+                }
+            }`, UndeclaredVariableError)
+    })
+
+    test('if - undeclared variable ', () => {
+        testValidator('let - undeclared variable', 
+            `class Main {
+              function void a(){
+                if(a=0){
+                }else {
+                }
+                return;
+            }
+            }`, UndeclaredVariableError)
+    })
+
+    test('call function - undeclared variable ', () => {
+        testValidator('let - undeclared variable', `
+            class Main {
+            constructor Main new(){
+                return this;
+            }
+            function void b(int a){
+                return;
+            }
+            method void a(){
+                var Main m;
+                let m = Main.new();
+                do m.b(a);
+            }
+            }`, UndeclaredVariableError)
+    })
+
+
     //TODO: print line when on exception 
     /*
-    * - variable declaration - validate duplicate variable declarations
     * Let:
     * -  Undeclared variable
     * - `Subroutine ${subroutine.name.value}: not all code paths return a value`,
@@ -46,10 +106,10 @@ describe('ValidatorListener', () => {
 
 })
 
-function testValidator<T>(testName: string, src: string, expectedError: T) {
-    console.info("Testing \n", src)
-    const errorListener = ErrorListener.getInstance();
-    errorListener.filepath = testName;
+function testValidator<T>(name: string, src: string, expectedError: T) {
+    console.info(`Testing  ${name}\n`, src)
+    const errorListener = new ErrorListener();
+    errorListener.filepath = name;
     const tree = parseJackText(src, errorListener)
 
     const validator = listenToTheTree(tree, new ValidatorListener({} as Record<string, GenericSymbol>))

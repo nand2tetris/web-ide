@@ -20,7 +20,7 @@ subroutineDeclaration:
 	| FUNCTION subroutineDecWithoutType		# function;
 subroutineDecWithoutType:
 	subroutineReturnType subroutineName LPAREN parameterList RPAREN subroutineBody;
-subroutineName: IDENTIFIER;
+ subroutineName: IDENTIFIER;
 subroutineReturnType: varType | VOID;
 
 varType: INT | CHAR | BOOLEAN | IDENTIFIER;
@@ -31,7 +31,8 @@ parameterName: IDENTIFIER;
 subroutineBody:
 	LBRACE varDeclaration* statements RBRACE;
 
-varDeclaration: VAR varType varName (COMMA varName)* SEMICOLON;
+varDeclaration: VAR varType varNameInDeclaration (COMMA varNameInDeclaration)* SEMICOLON;
+varNameInDeclaration: IDENTIFIER;
 varName: IDENTIFIER;
 statements: statement*;
 statement:
@@ -42,7 +43,7 @@ statement:
 	| returnStatement;
 
 letStatement:
-	LET (IDENTIFIER | arrayAccess) EQUALS expression SEMICOLON; //TODO: check right assoc for this
+	LET (varName | arrayAccess) EQUALS expression SEMICOLON; //TODO: check right assoc for this
 
 ifStatement:
 	IF LPAREN expression RPAREN LBRACE statements RBRACE (
@@ -55,8 +56,8 @@ whileStatement:
 doStatement: DO subroutineCall SEMICOLON;
 
 subroutineCall:
-	IDENTIFIER LPAREN expressionList RPAREN
-	| (IDENTIFIER | THIS_LITERAL) DOT IDENTIFIER LPAREN expressionList RPAREN;
+	subroutineName LPAREN expressionList RPAREN
+	| (className | THIS_LITERAL) DOT subroutineName LPAREN expressionList RPAREN;
 
 returnStatement: RETURN expression? SEMICOLON;
 
@@ -65,7 +66,7 @@ expressionList: (expression (COMMA expression)*)?;
 expression:
 	binaryOperation = expression binaryOperator expression
 	| constant
-	| IDENTIFIER
+	| varName
 	| subroutineCall
 	| arrayAccess
 	| unaryOp
@@ -73,7 +74,7 @@ expression:
 
 groupedExpression: LPAREN expression RPAREN;
 unaryOp: unaryOperator expression;
-arrayAccess: IDENTIFIER LBRACKET expression RBRACKET;
+arrayAccess: varName LBRACKET expression RBRACKET;
 
 constant:
 	INTEGER_LITERAL

@@ -45,3 +45,14 @@ export class DuplicatedVariableException extends JackCompilerError {
     }
 
 }
+
+
+export class UndeclaredVariableError extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, variableName: string) {
+        super(line, charPositionInLine, "Undeclared variable " + variableName);
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, UndeclaredVariableError.prototype);
+    }
+
+}

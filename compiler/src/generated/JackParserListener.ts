@@ -24,6 +24,7 @@ import { ParameterContext } from "./JackParser";
 import { ParameterNameContext } from "./JackParser";
 import { SubroutineBodyContext } from "./JackParser";
 import { VarDeclarationContext } from "./JackParser";
+import { VarNameInDeclarationContext } from "./JackParser";
 import { VarNameContext } from "./JackParser";
 import { StatementsContext } from "./JackParser";
 import { StatementContext } from "./JackParser";
@@ -288,6 +289,17 @@ export interface JackParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitVarDeclaration?: (ctx: VarDeclarationContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `JackParser.varNameInDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	enterVarNameInDeclaration?: (ctx: VarNameInDeclarationContext) => void;
+	/**
+	 * Exit a parse tree produced by `JackParser.varNameInDeclaration`.
+	 * @param ctx the parse tree
+	 */
+	exitVarNameInDeclaration?: (ctx: VarNameInDeclarationContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.varName`.

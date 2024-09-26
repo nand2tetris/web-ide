@@ -1,7 +1,7 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { DuplicatedVariableException, JackCompilerError } from "../error";
-import { FieldDeclarationContext, FieldNameContext, ParameterContext, ParameterNameContext, SubroutineBodyContext, SubroutineDeclarationContext, VarDeclarationContext, VarNameContext } from "../generated/JackParser";
+import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError } from "../error";
+import { FieldDeclarationContext, FieldNameContext, LetStatementContext, ParameterContext, ParameterNameContext, SubroutineBodyContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol } from "./symbol.table.listener";
 
@@ -32,8 +32,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterFieldName(ctx: FieldNameContext) {
         this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
     };
-
-    enterSubroutineDeclaration(ctx: SubroutineDeclarationContext) {
+    enterSubroutineDecWithoutType(ctx: SubroutineDecWithoutTypeContext) {
         this.localSymbolTable.pushStack();
     };
 
@@ -41,14 +40,20 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
     }
 
-    enterVarName(ctx: VarNameContext) {
+    enterVarNameInDeclaration(ctx: VarNameInDeclarationContext) {
         this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
+    };
+    
+    enterVarName(ctx: VarNameContext) {
+        if (!this.localSymbolTable.existsSymbol(ctx.text)) {
+            this.errors.push(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));
+        }
     };
     exitSubroutineBody(ctx: SubroutineBodyContext) {
         this.localSymbolTable.popStack();
     };
     localSymbolTableAdd(line: number, position: number, name: string) {
-        if (this.localSymbolTable.lookup(name)) {
+        if (this.localSymbolTable.existsSymbol(name)) {
             this.errors.push(new DuplicatedVariableException(line, position, name));
         } else {
             this.localSymbolTable.add(name);
@@ -62,7 +67,7 @@ export class LocalSymbolTable {
     constructor(private scopeVarDecs: string[][] = [[]]) {
 
     }
-    lookup(name: string): boolean {
+    existsSymbol(name: string): boolean {
         for (let i = this.scopeVarDecs.length - 1; i >= 0; i--) {
             if (this.scopeVarDecs[i].includes(name)) {
                 return true;

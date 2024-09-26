@@ -4,13 +4,6 @@ export class ErrorListener implements ANTLRErrorListener<any> {
     static instance: ErrorListener;
     public filepath: string = "";
     public errors: JackCompilerError[] = [];
-    static getInstance(): ErrorListener {
-        if (this.instance == null) {
-            this.instance = new ErrorListener()
-        }
-        return this.instance;
-    }
-
 
     // constructor(private filepath: string, ) { };
     /**

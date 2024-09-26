@@ -24,6 +24,7 @@ import { ParameterContext } from "./JackParser";
 import { ParameterNameContext } from "./JackParser";
 import { SubroutineBodyContext } from "./JackParser";
 import { VarDeclarationContext } from "./JackParser";
+import { VarNameInDeclarationContext } from "./JackParser";
 import { VarNameContext } from "./JackParser";
 import { StatementsContext } from "./JackParser";
 import { StatementContext } from "./JackParser";
@@ -202,6 +203,13 @@ export interface JackParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitVarDeclaration?: (ctx: VarDeclarationContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `JackParser.varNameInDeclaration`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitVarNameInDeclaration?: (ctx: VarNameInDeclarationContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `JackParser.varName`.

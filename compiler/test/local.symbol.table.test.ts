@@ -1,14 +1,24 @@
 import { LocalSymbolTable } from "../src/listener/validator.listener";
 
 describe('LocalSymbolTable', () => {
+    const jestConsole = console;
+
+    beforeEach(() => {
+        global.console = require('console');
+    });
+
+    afterEach(() => {
+        global.console = jestConsole;
+    });
+
     test('add', () => {
         const localSymbolTable = new LocalSymbolTable();
         const variableNames = ['testVariable1', 'testVariable2', 'testVariable3'];
 
         variableNames.forEach(variableName => {
             localSymbolTable.add(variableName)
-            expect(localSymbolTable.lookup(variableName)).toBe(true);
-            expect(localSymbolTable.lookup(variableName + "_")).toBe(false);
+            expect(localSymbolTable.existsSymbol(variableName)).toBe(true);
+            expect(localSymbolTable.existsSymbol(variableName + "_")).toBe(false);
 
         });
 
@@ -24,13 +34,13 @@ describe('LocalSymbolTable', () => {
         localSymbolTable.pushStack();
         localSymbolTable.add(functionVar);
 
-        expect(localSymbolTable.lookup(classVar )).toBe(true);
-        expect(localSymbolTable.lookup(functionVar)).toBe(true);
+        expect(localSymbolTable.existsSymbol(classVar )).toBe(true);
+        expect(localSymbolTable.existsSymbol(functionVar)).toBe(true);
 
         localSymbolTable.popStack();
 
-        expect(localSymbolTable.lookup(classVar)).toBe(true);
-        expect(localSymbolTable.lookup(functionVar)).toBe(false);
+        expect(localSymbolTable.existsSymbol(classVar)).toBe(true);
+        expect(localSymbolTable.existsSymbol(functionVar)).toBe(false);
         
     })
 

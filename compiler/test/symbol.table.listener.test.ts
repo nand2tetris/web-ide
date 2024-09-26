@@ -8,6 +8,15 @@ import path from "path";
 import { ProgramContext } from "../src/generated/JackParser";
 
 describe('Global symbol table', () => {
+    const jestConsole = console;
+
+    beforeEach(() => {
+        global.console = require('console');
+    });
+
+    afterEach(() => {
+        global.console = jestConsole;
+    });
 
     test("should fail on duplicated subroutine", () => {
         const filePath = getTestResourcePath("DuplicatedSubroutine.jack");

@@ -9,7 +9,7 @@ import { JackCompilerError } from "../src/error";
 import { ErrorListener } from "../src/listener/error.listener";
 
 export function parseJackFile(filePath: string, trace = false) {
-    const errorListener: ErrorListener = ErrorListener.getInstance()
+    const errorListener: ErrorListener = new ErrorListener()
     errorListener.filepath = filePath
     const f = fs.readFileSync(filePath, 'utf8');
     return parseJackText(f, errorListener, trace);
@@ -17,7 +17,7 @@ export function parseJackFile(filePath: string, trace = false) {
 
 export function parseJackText(src: string, errorListener?: ErrorListener, trace: boolean = false): ProgramContext {
     if (errorListener === undefined) {
-        errorListener = ErrorListener.getInstance();
+        errorListener = new ErrorListener();
     }
     const inputStream = CharStreams.fromString(src);
     const lexer = new JackLexer(inputStream);
@@ -36,6 +36,7 @@ export function parseJackText(src: string, errorListener?: ErrorListener, trace:
     }
     const tree = parser.program()
     if (errorListener.errors.length > 0) {
+        console.error("Parser or lexer errors found");
         handleErrors(src, errorListener.errors);
     }
     return tree;

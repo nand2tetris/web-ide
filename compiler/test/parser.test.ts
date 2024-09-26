@@ -4,7 +4,9 @@ import { GlobalSymbolTableListener } from "../src/listener/symbol.table.listener
 
 import path from "path";
 import { ErrorListener } from "../src/listener/error.listener";
-import { getTestResourcePath, parseJackFile, traverseTree } from "./test.helper";
+import { getTestResourcePath, listenToTheTree, parseJackText, handleErrors, parseJackFile } from "./test.helper";
+import { ProgramContext } from '../src/generated/JackParser';
+import { JackCompilerError } from '../src/error';
 
 
 describe('Parser', () => {
@@ -39,9 +41,8 @@ function testJackDir(testFolder: string): void {
     for (const filePath of files) {
         const errorListener = ErrorListener.getInstance()
         errorListener.filepath = filePath;
-        const tree = parseJackFile(filePath, errorListener);
-        expect(errorListener.error).toBe(false)
-        const globalSymbolsListener = traverseTree(tree, new GlobalSymbolTableListener());
+        const tree = parseJackFile(filePath)
+        const globalSymbolsListener = listenToTheTree(tree, new GlobalSymbolTableListener());
         const symbolsErrors = globalSymbolsListener.errors.join("\n")
         try {
             expect(globalSymbolsListener.errors.length).toBe(0)

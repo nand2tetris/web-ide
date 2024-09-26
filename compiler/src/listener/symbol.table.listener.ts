@@ -26,7 +26,7 @@ export class GlobalSymbolTableListener implements JackParserListener, ParseTreeL
 
     enterClassDeclaration(ctx: ClassDeclarationContext) {
         if (this.globalSymbolTable[ctx.className()!.text] != undefined) {
-            this.errors.push(new DuplicatedSubroutineError(`Class "${ctx.className()!.text}" already defined.`));
+            this.errors.push(new DuplicatedSubroutineError(ctx.start.line, ctx.start.startIndex, `Class "${ctx.className()!.text}" already defined.`));
             return;
         }
         this.globalSymbolTable[ctx.className()!.text] = {} as GenericSymbol;
@@ -48,10 +48,11 @@ export class GlobalSymbolTableListener implements JackParserListener, ParseTreeL
     }
 
     #addSymbol(c: SubroutineDecWithoutTypeContext) {
-        const subroutineName = c.subroutineName().text
+        const ctx = c.subroutineName()
+        const subroutineName = ctx.text
         const id = this.className + "." + subroutineName
         if (this.globalSymbolTable[id] != undefined) {
-            this.errors.push(new DuplicatedSubroutineError(`Subroutine "${subroutineName}" is already defined.`));
+            this.errors.push(new DuplicatedSubroutineError(ctx.start.line, ctx.start.startIndex, `Subroutine "${subroutineName}" is already defined.`));
         }
         this.globalSymbolTable[id] = {
             subroutineParameterCount: c.parameterList().parameter().length

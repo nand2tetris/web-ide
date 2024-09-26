@@ -1,14 +1,34 @@
 export class JackCompilerError extends Error {
-    constructor(msg: string) {
+    /**
+     * 
+     * @param line - line number
+     * @param charPositionInLine  - charPositionInLine in the line
+     * @param msg  - error message
+     */
+    constructor(public line: number, public charPositionInLine: number, public msg: string) {
         super(msg);
 
         // Set the prototype explicitly.
         Object.setPrototypeOf(this, JackCompilerError.prototype);
     }
 }
-export class DuplicatedSubroutineError extends JackCompilerError {
-    constructor(msg: string) {
+export class LexerOrParserError extends Error {
+    /**
+     * 
+     * @param line - line number
+     * @param charPositionInLine  - charPositionInLine in the line
+     * @param msg  - error message
+     */
+    constructor(public filepath: string, public line: number, public charPositionInLine: number, public msg: string) {
         super(msg);
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, LexerOrParserError.prototype);
+    }
+}
+export class DuplicatedSubroutineError extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, msg: string) {
+        super(line, charPositionInLine, msg);
 
         // Set the prototype explicitly.
         Object.setPrototypeOf(this, DuplicatedSubroutineError.prototype);
@@ -16,12 +36,12 @@ export class DuplicatedSubroutineError extends JackCompilerError {
 
 }
 
-export class DuplicatedVarException extends JackCompilerError {
-    constructor(varName: string) {
-        super("Duplicated variable " + varName);
+export class DuplicatedVariableException extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, variableName: string) {
+        super(line, charPositionInLine, "Duplicated variable " + variableName);
 
         // Set the prototype explicitly.
-        Object.setPrototypeOf(this, DuplicatedSubroutineError.prototype);
+        Object.setPrototypeOf(this, DuplicatedVariableException.prototype);
     }
 
 }

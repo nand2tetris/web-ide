@@ -1,12 +1,13 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { DuplicatedVarException, JackCompilerError } from "../error";
-import { FieldDeclarationContext, SubroutineBodyContext, VarDeclarationContext } from "../generated/JackParser";
+import { DuplicatedVariableException, JackCompilerError } from "../error";
+import { FieldDeclarationContext, FieldNameContext, ParameterContext, ParameterNameContext, SubroutineBodyContext, SubroutineDeclarationContext, VarDeclarationContext, VarNameContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol } from "./symbol.table.listener";
 
 
 export class ValidatorListener implements JackParserListener, ParseTreeListener {
+
 
     /**
      *  List of validations rules:
@@ -28,30 +29,29 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     localSymbolTable: LocalSymbolTable = new LocalSymbolTable();
     constructor(private globalSymbolTable: Record<string, GenericSymbol>, public errors: JackCompilerError[] = []) { }
 
-    enterFieldDeclaration(ctx: FieldDeclarationContext) {
-        for (const fieldName of ctx.fieldList().fieldName().map(v=>v.text)) {
-            this.localSymbolTableAdd(fieldName);
-        }
+    enterFieldName(ctx: FieldNameContext) {
+        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
     };
 
-    enterSubroutineBody(ctx: SubroutineBodyContext) {
+    enterSubroutineDeclaration(ctx: SubroutineDeclarationContext) {
         this.localSymbolTable.pushStack();
     };
-    
-    enterVarDec(ctx: VarDeclarationContext) {
-        //validate duplicate variable declarations
-        const varNames = ctx.varName().map(v => v.text)
-        for (const varName of varNames) {
-            this.localSymbolTable.add(varName);
-        }
+
+    enterParameterName(ctx: ParameterNameContext) {
+        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
+    }
+
+    enterVarName(ctx: VarNameContext) {
+        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
     };
     exitSubroutineBody(ctx: SubroutineBodyContext) {
         this.localSymbolTable.popStack();
     };
-
-    localSymbolTableAdd(name: string) {
+    localSymbolTableAdd(line: number, position: number, name: string) {
         if (this.localSymbolTable.lookup(name)) {
-            this.errors.push(new DuplicatedVarException(name));
+            this.errors.push(new DuplicatedVariableException(line, position, name));
+        } else {
+            this.localSymbolTable.add(name);
         }
     }
     //to fix compiler error

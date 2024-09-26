@@ -1,5 +1,5 @@
 import path from "path";
-import { SymbolTableListener } from "./symbol.table.istener";
+import { GlobalSymbolTableListener } from "./listener/symbol.table.listener";
 import fs from "fs";
 import { ParseTreeWalker } from "antlr4ts/tree/ParseTreeWalker";
 import { JackParser } from "./generated/JackParser";
@@ -10,7 +10,7 @@ import { ValidatorListener } from "./listener/validator.listener";
 export default class Compiler {
     static compile(dir: string): string {
 
-        const globalSymbolsListener = new SymbolTableListener();
+        const globalSymbolsListener = new GlobalSymbolTableListener();
         const files = fs.readdirSync(dir).filter(file => file.endsWith(".jack")).map(file => path.join(dir, file));
         for (const filePath of files) {
             const errorListener = ErrorListener.getInstance()
@@ -33,7 +33,7 @@ export default class Compiler {
             }
             const tree = parser.program();
             //TODO add error handling here
-            if (errorListener.error) {
+            if (errorListener.errors.length > 0) {
                 console.error(errorListener.filepath + " has syntax errors");
                 continue
             }

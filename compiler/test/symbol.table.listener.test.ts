@@ -1,21 +1,19 @@
 import { ParseTreeWalker } from "antlr4ts/tree/ParseTreeWalker";
 import { ErrorListener } from "../src/listener/error.listener";
 import { GenericSymbol, GlobalSymbolTableListener } from "../src/listener/symbol.table.listener";
-import { DuplicatedSubroutineError } from "../src/error";
-import { parseJackFile, getTestResourcePath, traverseTree } from "./test.helper";
+import { DuplicatedSubroutineError, JackCompilerError } from "../src/error";
+import { getTestResourcePath, listenToTheTree, handleErrors, parseJackText, parseJackFile } from "./test.helper";
 import fs from 'fs';
 import path from "path";
+import { ProgramContext } from "../src/generated/JackParser";
 
 describe('Global symbol table', () => {
 
     test("should fail on duplicated subroutine", () => {
         const filePath = getTestResourcePath("DuplicatedSubroutine.jack");
-        const errorListener = ErrorListener.getInstance()
-        errorListener.filepath = filePath;
-        const tree = parseJackFile(filePath, errorListener);
-        expect(errorListener.error).toBe(false)
+        const tree = parseJackFile(filePath)
         const globalSymbolsListener = new GlobalSymbolTableListener()
-        traverseTree(tree, globalSymbolsListener)
+        listenToTheTree(tree, globalSymbolsListener)
         const symbolsErrors = globalSymbolsListener.errors
         expect(globalSymbolsListener.errors.length).toBe(1)
         expect(symbolsErrors[0]).toBeInstanceOf(DuplicatedSubroutineError)
@@ -40,9 +38,8 @@ describe('Global symbol table', () => {
         const testFolder = getTestResourcePath("Fraction");
         const files = fs.readdirSync(testFolder).filter(file => file.endsWith(".jack")).map(file => path.join(testFolder, file));
         for (const filePath of files) {
-            const errorListener = ErrorListener.getInstance()
-            const tree = parseJackFile(filePath, errorListener);
-            globalSymbolsListener = traverseTree(tree, globalSymbolsListener);
+            const tree = parseJackFile(filePath)
+            globalSymbolsListener = listenToTheTree(tree, globalSymbolsListener);
             console.log("Symbols for " + path.basename(filePath) + ":", globalSymbolsListener.globalSymbolTable)
         }
         expect(globalSymbolsListener.globalSymbolTable).toEqual(expected)

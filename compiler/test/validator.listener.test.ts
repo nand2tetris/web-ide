@@ -9,15 +9,15 @@ import { Logger, ILogObj } from "tslog";
 
 const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {
-    // const jestConsole = console;
-    // beforeEach(() => {
+    const jestConsole = console;
+    beforeEach(() => {
 
-    //     global.console = require('console');
-    // });
+        global.console = require('console');
+    });
 
-    // afterEach(() => {
-    //     global.console = jestConsole;
-    // });
+    afterEach(() => {
+        global.console = jestConsole;
+    });
 
 
     const genericSymbol = {} as GenericSymbol
@@ -52,6 +52,7 @@ describe('ValidatorListener', () => {
             class Main {
             function void a(){
                 let b=1;
+                return;
             }
             }`, UndeclaredVariableError)
     })
@@ -64,6 +65,7 @@ describe('ValidatorListener', () => {
                 }
                 function void a(){
                     do Main.b(a);
+                    return;
                 }
             }`, UndeclaredVariableError)
     })
@@ -188,7 +190,7 @@ describe('ValidatorListener', () => {
      * `Subroutine ${subroutine.name.value}: not all code paths return a value`
      */
 
-    test('if else missing return', () => {
+    test('if missing return', () => {
         testValidator(`
             class Main {
                 function void a(){
@@ -202,8 +204,35 @@ describe('ValidatorListener', () => {
                 }
             }`, SubroutineNotAllPathsReturn)
     })
+    test('else missing return ', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int a;
+                    let a=0;
+                    if(a=0){
+                        return;
+                    }else{
+                       
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
 
     test('while missing return', () => {
+        testValidator(`
+            class Main {
+                function int a(){
+                    var int a;
+                    let a=0;
+                    while(a<10){
+                       
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
+
+    test(' missing return after while', () => {
         testValidator(`
             class Main {
                 function int a(){
@@ -216,6 +245,75 @@ describe('ValidatorListener', () => {
             }`, SubroutineNotAllPathsReturn)
     })
 
+    test('nested if missing return', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int a;
+                    let a=0;
+                    if(a=0){
+                        if(a=1){
+                            return;
+                        }else {
+
+                        }
+                    }else{
+                        return;
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
+    test('nested if missing return 2', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int a;
+                    let a=0;
+                    if(a=0){
+                        if(a=1){
+                          
+                        }else {
+                              return;
+                        }
+                    }else{
+                        return;
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
+    test('nested if missing return 2', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int a;
+                    let a=0;
+                    if(a=0){
+                        if(a=1){
+                          
+                        return;
+                        }else {
+                              return;
+                        }
+                    }else{
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
+    test('should be valid', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int a;
+                    let a=0;
+                    if(a=0){
+                        if(a=1){
+                        }else {
+                        }
+                    }
+                    return;
+                }
+            }`)
+    })
     /**
      *  List of validations rules:
      * - ,

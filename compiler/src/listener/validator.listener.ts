@@ -1,27 +1,30 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { DuplicatedVariableException, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, VoidSubroutineReturnsValueError } from "../error";
-import { FieldDeclarationContext, FieldNameContext, IfStatementContext, LetStatementContext, ParameterContext, ParameterNameContext, ReturnStatementContext, SubroutineBodyContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, SubroutineReturnTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
+import { ClassDeclarationContext, ElseStatementContext, FieldDeclarationContext, FieldNameContext, IfElseStatementContext, IfStatementContext, LetStatementContext, ParameterContext, ParameterNameContext, ReturnStatementContext, SubroutineBodyContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, SubroutineReturnTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol } from "./symbol.table.listener";
 
 class BinaryTreeNode {
-
+    _returns?: boolean;
     constructor(
         public parent: BinaryTreeNode | undefined,
-        public left: BinaryTreeNode | LeafNode,
-        public right: BinaryTreeNode | LeafNode) { }
+        public left?: BinaryTreeNode,
+        public right?: BinaryTreeNode) { }
 
     get returns(): boolean {
-        return this.left.returns && this.right.returns;
+        if (this._returns) {
+            return this._returns;
+        } else if (this.right == undefined && this.left == undefined) {
+            return false;
+        } else if (this.right != undefined && this.left != undefined) {
+            return this.left.returns && this.right.returns;
+        } else if (this.left != undefined) {
+            return false;
+        } else {
+            throw new Error("Something went wrong - CFG has only right  subtree")
+        }
     }
-}
-enum CFGSide {
-    LEFT,
-    RIGHT
-}
-class LeafNode {
-    returns: boolean = false;
 }
 
 export class ValidatorListener implements JackParserListener, ParseTreeListener {
@@ -32,22 +35,21 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
      * - variable declaration - validate duplicate variable declarations
      * Let:
      * -  Undeclared variable
-     * - `Subroutine ${subroutine.name.value}: not all code paths return a value`,
+     * - `Subroutine ${ subroutine.name.value }: not all code paths return a value`,
      * - `A non void subroutine must return a value`,
      * - Unknown type for return type, class variable, or method local var
      * - OS subroutine ${this.className}.${subroutine.name.value} must follow the interface
      * - validate arg number
-     * -   `Method ${className}.${subroutineName} was called as a function/constructor`
-     * - Subroutine was called as a method
-     * - `Class ${className} doesn't contain a function/constructor ${subroutineName}`
-     * - `Class ${className} doesn't exist`
-     */
+     * -   `Method ${ className }.${ subroutineName } was called as a function/constructor`
+            * - Subroutine was called as a method
+                * - `Class ${className} doesn't contain a function/constructor ${subroutineName}`
+                * - `Class ${className} doesn't exist`
+                */
 
     //why do we need local symbol table? this vars, arguments, local vars. What about types?
     localSymbolTable: LocalSymbolTable = new LocalSymbolTable();
     subroutineShouldReturnVoidType: boolean = false;
-    cfgNode: BinaryTreeNode | undefined
-    cfgSide: CFGSide = CFGSide.LEFT;
+    cfgNode: BinaryTreeNode = new BinaryTreeNode(undefined);
     subroutineName: string = ""
     constructor(private globalSymbolTable: Record<string, GenericSymbol>, public errors: JackCompilerError[] = []) { }
 
@@ -58,40 +60,35 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         this.localSymbolTable.pushStack();
         const returnType = ctx.subroutineReturnType()
         this.subroutineShouldReturnVoidType = returnType.VOID() != undefined
-        this.cfgNode = undefined
-        this.cfgSide = CFGSide.LEFT;
+        this.cfgNode = new BinaryTreeNode(undefined);
         this.subroutineName = ctx.subroutineName().text
     };
 
-    addCFGNode() {
-        if (this.cfgNode == undefined) {
-            this.cfgNode = new BinaryTreeNode(undefined, new LeafNode(), new LeafNode());
-            this.cfgSide = CFGSide.LEFT;
-        } else {
-            switch (this.cfgSide) {
-                case CFGSide.LEFT:
-                    this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode, new LeafNode(), new LeafNode());
-                    break;
-                case CFGSide.RIGHT:
-                    this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode, new LeafNode(), new LeafNode());
-                    this.cfgSide = CFGSide.LEFT;
-                    break;
-            }
-        }
-    }
-    //while
+
     enterWhileStatement(ctx: WhileStatementContext) {
-        this.addCFGNode()
+        this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode);
     };
 
     exitWhileStatement(ctx: WhileStatementContext) {
-        this.cfgSide = CFGSide.RIGHT;
+        if (this.cfgNode?.parent != null) {
+            this.cfgNode = this.cfgNode.parent
+        }
     };
     enterIfStatement(ctx: IfStatementContext) {
-        this.addCFGNode()
+        this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode);
     };
     exitIfStatement(ctx: IfStatementContext) {
-        this.cfgSide = CFGSide.RIGHT;
+        if (this.cfgNode?.parent != null) {
+            this.cfgNode = this.cfgNode.parent
+        }
+    };
+    enterElseStatement(ctx: ElseStatementContext) {
+        this.cfgNode = this.cfgNode.right = new BinaryTreeNode(this.cfgNode);
+    };
+    exitElseStatement(ctx: ElseStatementContext) {
+        if (this.cfgNode?.parent != null) {
+            this.cfgNode = this.cfgNode.parent
+        }
     };
 
     enterVarType(ctx: VarTypeContext) {
@@ -125,24 +122,11 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         if (!returnsVoid && this.subroutineShouldReturnVoidType) {
             this.errors.push(new VoidSubroutineReturnsValueError(ctx.start.line, ctx.start.startIndex,));
         }
-        if (this.cfgNode !== undefined) {
-            switch (this.cfgSide) {
-                case CFGSide.LEFT:
-                    if (!(this.cfgNode.left instanceof LeafNode)) {
-                        throw new Error("Expected left node in CFG")
-                    }
-                    this.cfgNode.left.returns = true;
-                    break
-                case CFGSide.RIGHT:
-                    if (!(this.cfgNode.right instanceof LeafNode)) {
-                        throw new Error("Expected left node in CFG")
-                    }
-                    this.cfgNode.right.returns = true;
-            }
-        }
+        this.cfgNode._returns = true;
     };
+
     exitSubroutineBody(ctx: SubroutineBodyContext) {
-        if (this.cfgNode != undefined && !this.cfgNode.returns) {
+        if (!this.cfgNode.returns) {
             this.errors.push(new SubroutineNotAllPathsReturn(ctx.start.line, ctx.start.startIndex, this.subroutineName));
         }
         this.localSymbolTable.popStack();
@@ -156,6 +140,12 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     }
     //to fix compiler error
     visitTerminal?: (/*@NotNull*/ node: TerminalNode) => void;
+
+    exitClassDeclaration(ctx: ClassDeclarationContext) {
+        while (this.cfgNode?.parent != undefined) {
+            this.cfgNode = this.cfgNode.parent
+        }
+    };
 }
 
 export class LocalSymbolTable {
@@ -179,4 +169,5 @@ export class LocalSymbolTable {
     popStack() {
         this.scopeVarDecs.pop();
     }
+
 }

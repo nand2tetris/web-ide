@@ -1,10 +1,11 @@
 import { ParserRuleContext } from "antlr4ts"
-import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError } from "../src/error"
+import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError, UnknownSubroutineReturnType } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { GenericSymbol } from "../src/listener/symbol.table.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
 import { ProgramContext } from "../src/generated/JackParser"
+import { assert } from "console"
 
 describe('ValidatorListener', () => {
     const jestConsole = console;
@@ -33,13 +34,13 @@ describe('ValidatorListener', () => {
              }`],
     ]
     test.concurrent.each(duplicateVarClassBodies)('duplicated %s', (testName, classBody) => {
-        testValidator(testName, `
+        testValidator(`
             class Main {
               ${classBody}
             }`, DuplicatedVariableException)
     })
     test('let - undeclared variable ', () => {
-        testValidator('let - undeclared variable', `
+        testValidator( `
             class Main {
             function void a(){
                 let b=1;
@@ -48,7 +49,7 @@ describe('ValidatorListener', () => {
     })
 
     test('call function - undeclared variable ', () => {
-        testValidator('let - undeclared variable', 
+        testValidator(
             `class Main {
                 function void b(int a){
                     return;
@@ -60,7 +61,7 @@ describe('ValidatorListener', () => {
     })
 
     test('if - undeclared variable ', () => {
-        testValidator('let - undeclared variable', 
+        testValidator(
             `class Main {
               function void a(){
                 if(a=0){
@@ -71,28 +72,48 @@ describe('ValidatorListener', () => {
             }`, UndeclaredVariableError)
     })
 
-    test('call function - undeclared variable ', () => {
-        testValidator('let - undeclared variable', `
+    test('Unknown type for subroutine return type ', () => {
+        testValidator( `
             class Main {
-            constructor Main new(){
-                return this;
-            }
-            function void b(int a){
+            function D b(int a){
                 return;
             }
-            method void a(){
-                var Main m;
-                let m = Main.new();
-                do m.b(a);
+            }`, UnknownSubroutineReturnType)
+    })
+
+    test('Known type for subroutine return type ', () => {
+        testValidator(`
+            class Main {
+                function D b(int a){
+                    return;
+                }
+            }`, undefined, { "D": {} as GenericSymbol })
+    })
+
+
+    test('Arg unknown type  ', () => {
+        testValidator(`
+            class Main {
+                function void b(D a){
+                    return;
             }
-            }`, UndeclaredVariableError)
+            }`, UnknownSubroutineReturnType)
+    })
+
+    test('Arg known type ', () => {
+        testValidator( `
+
+            class Main {
+                function void b(D a){
+                    return;
+                }
+            }`, undefined, { "D": {} as GenericSymbol })
     })
 
 
     //TODO: print line when on exception 
     /*
     * Let:
-    * -  Undeclared variable
     * - `Subroutine ${subroutine.name.value}: not all code paths return a value`,
     * - `A non void subroutine must return a value`,
     * - Unknown type for return type, class variable, or method local var
@@ -105,14 +126,19 @@ describe('ValidatorListener', () => {
     */
 
 })
-
-function testValidator<T>(name: string, src: string, expectedError: T) {
+function testValidator<T>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
+    const name = expect.getState().currentTestName!
     console.info(`Testing  ${name}\n`, src)
     const errorListener = new ErrorListener();
     errorListener.filepath = name;
     const tree = parseJackText(src, errorListener)
 
-    const validator = listenToTheTree(tree, new ValidatorListener({} as Record<string, GenericSymbol>))
-    expect(validator.errors.length).toBe(1)
-    expect(validator.errors[0]).toBeInstanceOf(expectedError)
+    const validator = listenToTheTree(tree, new ValidatorListener(globalSymbolTable))
+    if (expectedError) {
+        expect(validator.errors.length).toBe(1)
+        expect(validator.errors[0]).toBeInstanceOf(expectedError)
+    } else {
+        if (validator.errors.length != 0) throw new Error("Didn't expect any errors but got " + validator.errors.join("\n"))
+
+    }
 }

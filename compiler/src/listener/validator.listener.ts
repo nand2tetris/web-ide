@@ -1,7 +1,7 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError } from "../error";
-import { FieldDeclarationContext, FieldNameContext, LetStatementContext, ParameterContext, ParameterNameContext, SubroutineBodyContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext } from "../generated/JackParser";
+import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError, UnknownSubroutineReturnType } from "../error";
+import { FieldDeclarationContext, FieldNameContext, LetStatementContext, ParameterContext, ParameterNameContext, SubroutineBodyContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, SubroutineReturnTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext, VarTypeContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol } from "./symbol.table.listener";
 
@@ -35,6 +35,14 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterSubroutineDecWithoutType(ctx: SubroutineDecWithoutTypeContext) {
         this.localSymbolTable.pushStack();
     };
+    enterVarType(ctx: VarTypeContext) {
+        if (ctx.IDENTIFIER() != undefined) {
+            const type = ctx.IDENTIFIER()!.text
+            if (this.globalSymbolTable[type] === undefined) {
+                this.errors.push(new UnknownSubroutineReturnType(ctx.start.line, ctx.start.startIndex, type));
+            }
+        }
+    };
 
     enterParameterName(ctx: ParameterNameContext) {
         this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
@@ -43,7 +51,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterVarNameInDeclaration(ctx: VarNameInDeclarationContext) {
         this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
     };
-    
+
     enterVarName(ctx: VarNameContext) {
         if (!this.localSymbolTable.existsSymbol(ctx.text)) {
             this.errors.push(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));

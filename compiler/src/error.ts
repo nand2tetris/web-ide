@@ -56,3 +56,14 @@ export class UndeclaredVariableError extends JackCompilerError {
     }
 
 }
+
+
+export class UnknownSubroutineReturnType extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, type: string) {
+        super(line, charPositionInLine, "Unknown subroutine return type " + type);
+
+        // Set the prototype explicitly.
+        Object.setPrototypeOf(this, UnknownSubroutineReturnType.prototype);
+    }
+
+}

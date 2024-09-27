@@ -1,11 +1,10 @@
 import { ParserRuleContext } from "antlr4ts"
-import { DuplicatedVariableException, JackCompilerError, UndeclaredVariableError, UnknownSubroutineReturnType } from "../src/error"
+import { DuplicatedVariableException as DuplicatedVariableError, JackCompilerError, UndeclaredVariableError, UnknownTypeError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { GenericSymbol } from "../src/listener/symbol.table.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
 import { ProgramContext } from "../src/generated/JackParser"
-import { assert } from "console"
 
 describe('ValidatorListener', () => {
     const jestConsole = console;
@@ -37,7 +36,7 @@ describe('ValidatorListener', () => {
         testValidator(`
             class Main {
               ${classBody}
-            }`, DuplicatedVariableException)
+            }`, DuplicatedVariableError)
     })
     test('let - undeclared variable ', () => {
         testValidator( `
@@ -78,7 +77,7 @@ describe('ValidatorListener', () => {
             function D b(int a){
                 return;
             }
-            }`, UnknownSubroutineReturnType)
+            }`, UnknownTypeError)
     })
 
     test('Known type for subroutine return type ', () => {
@@ -89,15 +88,13 @@ describe('ValidatorListener', () => {
                 }
             }`, undefined, { "D": {} as GenericSymbol })
     })
-
-
     test('Arg unknown type  ', () => {
         testValidator(`
             class Main {
                 function void b(D a){
                     return;
             }
-            }`, UnknownSubroutineReturnType)
+            }`, UnknownTypeError)
     })
 
     test('Arg known type ', () => {
@@ -108,6 +105,48 @@ describe('ValidatorListener', () => {
                     return;
                 }
             }`, undefined, { "D": {} as GenericSymbol })
+    })
+    test('var unknown type', () => {
+        testValidator( `
+            class Main {
+                function void b(){
+                    var D d;
+                    return;
+                }
+            }`, UnknownTypeError)
+    })
+    test('var known type', () => {
+        testValidator( `
+            class Main {
+                function void b(){
+                    var D d;
+                    return;
+                }
+            }`, undefined, { "D": {} as GenericSymbol })
+    })
+    test('field unknown type', () => {
+        testValidator( `
+            class Main {
+                field T t;
+            }`, UnknownTypeError)
+    })
+    test('field known type', () => {
+        testValidator( `
+            class Main {
+                field T t;
+            }`, undefined, { "T": {} as GenericSymbol })
+    })
+    test('static field unknown type', () => {
+        testValidator( `
+            class Main {
+                static T t;
+            }`, UnknownTypeError)
+    })
+    test('static field known type', () => {
+        testValidator( `
+            class Main {
+                static T t;
+            }`, undefined, { "T": {} as GenericSymbol })
     })
 
 

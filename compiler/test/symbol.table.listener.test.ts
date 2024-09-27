@@ -56,3 +56,4 @@ describe('Global symbol table', () => {
     })
 })
 
+

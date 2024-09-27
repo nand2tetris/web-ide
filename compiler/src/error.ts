@@ -1,4 +1,4 @@
-export class JackCompilerError extends Error {
+export class JackCompilerError {
     /**
      * 
      * @param line - line number
@@ -6,10 +6,6 @@ export class JackCompilerError extends Error {
      * @param msg  - error message
      */
     constructor(public line: number, public charPositionInLine: number, public msg: string) {
-        super(msg);
-
-        // Set the prototype explicitly.
-        Object.setPrototypeOf(this, JackCompilerError.prototype);
     }
 }
 export class LexerOrParserError extends Error {
@@ -21,27 +17,17 @@ export class LexerOrParserError extends Error {
      */
     constructor(public filepath: string, public line: number, public charPositionInLine: number, public msg: string) {
         super(msg);
-
-        // Set the prototype explicitly.
-        Object.setPrototypeOf(this, LexerOrParserError.prototype);
     }
 }
 export class DuplicatedSubroutineError extends JackCompilerError {
     constructor(line: number, charPositionInLine: number, msg: string) {
         super(line, charPositionInLine, msg);
-
-        // Set the prototype explicitly.
-        Object.setPrototypeOf(this, DuplicatedSubroutineError.prototype);
     }
-
 }
 
 export class DuplicatedVariableException extends JackCompilerError {
     constructor(line: number, charPositionInLine: number, variableName: string) {
         super(line, charPositionInLine, "Duplicated variable " + variableName);
-
-        // Set the prototype explicitly.
-        Object.setPrototypeOf(this, DuplicatedVariableException.prototype);
     }
 
 }
@@ -50,20 +36,41 @@ export class DuplicatedVariableException extends JackCompilerError {
 export class UndeclaredVariableError extends JackCompilerError {
     constructor(line: number, charPositionInLine: number, variableName: string) {
         super(line, charPositionInLine, "Undeclared variable " + variableName);
-
-        // Set the prototype explicitly.
-        Object.setPrototypeOf(this, UndeclaredVariableError.prototype);
     }
 
 }
 
 
-export class UnknownTypeError extends JackCompilerError {
-    constructor(line: number, charPositionInLine: number, type: string) {
-        super(line, charPositionInLine, "Unknown type " + type);
+export class UnknownClassError extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, className: string) {
+        super(line, charPositionInLine, `Class ${className} doesn't exist` );
+    }
 
-        // Set the prototype explicitly.
-        Object.setPrototypeOf(this, UnknownTypeError.prototype);
+}
+
+export class NonVoidFunctionNoReturnError extends JackCompilerError {
+
+    //TODO: should we add a subroutine name?
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `A non void subroutine must return a value` );
+    }
+
+}
+
+export class VoidSubroutineReturnsValueError extends JackCompilerError {
+
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `Cannot return a value from a void subroutine` );
+        Object.setPrototypeOf(this, VoidSubroutineReturnsValueError.prototype);
+    }
+
+}
+
+export class SubroutineNotAllPathsReturn extends JackCompilerError {
+
+    constructor(line: number, charPositionInLine: number, subroutineName: string) {
+        super(line, charPositionInLine, `Subroutine ${subroutineName}: not all code paths return a value` );
+        Object.setPrototypeOf(this, SubroutineNotAllPathsReturn.prototype);
     }
 
 }

@@ -33,29 +33,19 @@ export class GlobalSymbolTableListener implements JackParserListener, ParseTreeL
         this.className = ctx.className()?.text;
     };
 
-    enterConstructor(ctx: ConstructorContext) {
-        this.#addSymbol(ctx.subroutineDecWithoutType())
-    };
-    enterMethod(ctx: MethodContext) {
-        this.#addSymbol(ctx.subroutineDecWithoutType())
-    };
-    enterFunction(ctx: FunctionContext) {
-        this.#addSymbol(ctx.subroutineDecWithoutType())
-    };
+    enterSubroutineDecWithoutType(ctx: SubroutineDecWithoutTypeContext) {
+        const nameCtx = ctx.subroutineName()
+        const subroutineName = nameCtx.text
+        const id = this.className + "." + subroutineName
+        if (this.globalSymbolTable[id] != undefined) {
+            this.errors.push(new DuplicatedSubroutineError(nameCtx.start.line, nameCtx.start.startIndex, `Subroutine "${subroutineName}" is already defined.`));
+        }
+        this.globalSymbolTable[id] = {
+            subroutineParameterCount: ctx.parameterList().parameter().length,
+        } as GenericSymbol;
+    }
 
     resetErrors() {
         this.errors = [];
-    }
-
-    #addSymbol(c: SubroutineDecWithoutTypeContext) {
-        const ctx = c.subroutineName()
-        const subroutineName = ctx.text
-        const id = this.className + "." + subroutineName
-        if (this.globalSymbolTable[id] != undefined) {
-            this.errors.push(new DuplicatedSubroutineError(ctx.start.line, ctx.start.startIndex, `Subroutine "${subroutineName}" is already defined.`));
-        }
-        this.globalSymbolTable[id] = {
-            subroutineParameterCount: c.parameterList().parameter().length
-        } as GenericSymbol;
     }
 }

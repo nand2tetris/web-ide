@@ -29,6 +29,8 @@ import { VarNameContext } from "./JackParser";
 import { StatementsContext } from "./JackParser";
 import { StatementContext } from "./JackParser";
 import { LetStatementContext } from "./JackParser";
+import { IfElseStatementContext } from "./JackParser";
+import { ElseStatementContext } from "./JackParser";
 import { IfStatementContext } from "./JackParser";
 import { WhileStatementContext } from "./JackParser";
 import { DoStatementContext } from "./JackParser";
@@ -344,6 +346,28 @@ export interface JackParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitLetStatement?: (ctx: LetStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `JackParser.ifElseStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterIfElseStatement?: (ctx: IfElseStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `JackParser.ifElseStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitIfElseStatement?: (ctx: IfElseStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `JackParser.elseStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterElseStatement?: (ctx: ElseStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `JackParser.elseStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitElseStatement?: (ctx: ElseStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.ifStatement`.

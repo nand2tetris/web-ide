@@ -1,21 +1,26 @@
 import { ParserRuleContext } from "antlr4ts"
-import { DuplicatedVariableException as DuplicatedVariableError, JackCompilerError, UndeclaredVariableError, UnknownTypeError } from "../src/error"
+import { DuplicatedVariableException as DuplicatedVariableError, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, VoidSubroutineReturnsValueError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { GenericSymbol } from "../src/listener/symbol.table.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
 import { ProgramContext } from "../src/generated/JackParser"
+import { Logger, ILogObj } from "tslog";
 
+const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {
-    const jestConsole = console;
+    // const jestConsole = console;
+    // beforeEach(() => {
 
-    beforeEach(() => {
-        global.console = require('console');
-    });
+    //     global.console = require('console');
+    // });
 
-    afterEach(() => {
-        global.console = jestConsole;
-    });
+    // afterEach(() => {
+    //     global.console = jestConsole;
+    // });
+
+
+    const genericSymbol = {} as GenericSymbol
 
     const duplicateVarClassBodies = [
         ["static", '  static int a, a;'],
@@ -38,8 +43,12 @@ describe('ValidatorListener', () => {
               ${classBody}
             }`, DuplicatedVariableError)
     })
+
+    /** 
+     * Undeclared var 
+     */
     test('let - undeclared variable ', () => {
-        testValidator( `
+        testValidator(`
             class Main {
             function void a(){
                 let b=1;
@@ -64,120 +73,183 @@ describe('ValidatorListener', () => {
             `class Main {
               function void a(){
                 if(a=0){
+                    return;
                 }else {
+                   return;
                 }
-                return;
             }
             }`, UndeclaredVariableError)
     })
 
-    test('Unknown type for subroutine return type ', () => {
-        testValidator( `
+    /**
+     * Unknown class
+     */
+    test('Unknown class for subroutine return type ', () => {
+        testValidator(`
             class Main {
             function D b(int a){
-                return;
+                return D.new();
             }
-            }`, UnknownTypeError)
+            }`, UnknownClassError)
     })
 
     test('Known type for subroutine return type ', () => {
         testValidator(`
             class Main {
                 function D b(int a){
-                    return;
+                    return D.new();
                 }
-            }`, undefined, { "D": {} as GenericSymbol })
+            }`, undefined, { "D": genericSymbol, "D.new": genericSymbol })
     })
-    test('Arg unknown type  ', () => {
+    test('Arg Unknown class  ', () => {
         testValidator(`
             class Main {
                 function void b(D a){
                     return;
             }
-            }`, UnknownTypeError)
+            }`, UnknownClassError)
     })
 
     test('Arg known type ', () => {
-        testValidator( `
+        testValidator(`
 
             class Main {
                 function void b(D a){
                     return;
                 }
-            }`, undefined, { "D": {} as GenericSymbol })
+            }`, undefined, { "D": genericSymbol })
     })
-    test('var unknown type', () => {
-        testValidator( `
+    test('var Unknown class', () => {
+        testValidator(`
             class Main {
                 function void b(){
                     var D d;
                     return;
                 }
-            }`, UnknownTypeError)
+            }`, UnknownClassError)
     })
     test('var known type', () => {
-        testValidator( `
+        testValidator(`
             class Main {
                 function void b(){
                     var D d;
                     return;
                 }
-            }`, undefined, { "D": {} as GenericSymbol })
+            }`, undefined, { "D": genericSymbol })
     })
-    test('field unknown type', () => {
-        testValidator( `
+    test('field Unknown class', () => {
+        testValidator(`
             class Main {
                 field T t;
-            }`, UnknownTypeError)
+            }`, UnknownClassError)
     })
     test('field known type', () => {
-        testValidator( `
+        testValidator(`
             class Main {
                 field T t;
-            }`, undefined, { "T": {} as GenericSymbol })
+            }`, undefined, { "T": genericSymbol })
     })
-    test('static field unknown type', () => {
-        testValidator( `
+    test('static field Unknown class', () => {
+        testValidator(`
             class Main {
                 static T t;
-            }`, UnknownTypeError)
+            }`, UnknownClassError)
     })
     test('static field known type', () => {
-        testValidator( `
+        testValidator(`
             class Main {
                 static T t;
-            }`, undefined, { "T": {} as GenericSymbol })
+            }`, undefined, { "T": genericSymbol })
+    })
+
+    /**
+     * Incorrect return type
+     */
+
+    test('non void subroutine must return a value', () => {
+        testValidator(`
+            class Main {
+                function int a(){
+                    return;
+                }
+            }`, NonVoidFunctionNoReturnError)
     })
 
 
-    //TODO: print line when on exception 
-    /*
-    * Let:
-    * - `Subroutine ${subroutine.name.value}: not all code paths return a value`,
-    * - `A non void subroutine must return a value`,
-    * - Unknown type for return type, class variable, or method local var
-    * - OS subroutine ${this.className}.${subroutine.name.value} must follow the interface
-    * - validate arg number
-    * -   `Method ${className}.${subroutineName} was called as a function/constructor`
-    * - Subroutine was called as a method
-    * - `Class ${className} doesn't contain a function/constructor ${subroutineName}`
-    * - `Class ${className} doesn't exist`
-    */
+    test('void subroutine must return not return a value', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    return 1;
+                }
+            }`, VoidSubroutineReturnsValueError)
+    })
+    /**
+     * `Subroutine ${subroutine.name.value}: not all code paths return a value`
+     */
+
+    test('if else missing return', () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int a;
+                    let a=0;
+                    if(a=0){
+
+                    }else{
+                        return;
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
+
+    test('while missing return', () => {
+        testValidator(`
+            class Main {
+                function int a(){
+                    var int a;
+                    let a=0;
+                    while(a<10){
+                        return 0;
+                    }
+                }
+            }`, SubroutineNotAllPathsReturn)
+    })
+
+    /**
+     *  List of validations rules:
+     * - ,
+     * - ``,
+     * - OS subroutine ${this.className}.${subroutine.name.value} must follow the interface
+     * - validate arg number
+     * -   `Method ${className}.${subroutineName} was called as a function/constructor`
+     * - Subroutine was called as a method
+     * - `Class ${className} doesn't contain a function/constructor ${subroutineName}`
+     */
 
 })
-function testValidator<T>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
+function testValidator<T extends typeof JackCompilerError>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
     const name = expect.getState().currentTestName!
-    console.info(`Testing  ${name}\n`, src)
     const errorListener = new ErrorListener();
     errorListener.filepath = name;
     const tree = parseJackText(src, errorListener)
 
     const validator = listenToTheTree(tree, new ValidatorListener(globalSymbolTable))
     if (expectedError) {
+        if (validator.errors.length > 1) {
+            console.error("Errors", validator.errors)
+        }
         expect(validator.errors.length).toBe(1)
-        expect(validator.errors[0]).toBeInstanceOf(expectedError)
+        try {
+            expect(validator.errors[0]).toBeInstanceOf(expectedError)
+        } catch (e) {
+            throw new Error(`Expected error ${expectedError.name} but got ` + JSON.stringify(validator.errors[0]))
+        }
     } else {
         if (validator.errors.length != 0) throw new Error("Didn't expect any errors but got " + validator.errors.join("\n"))
 
     }
 }
+
+
+

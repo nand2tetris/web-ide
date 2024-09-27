@@ -20,7 +20,7 @@ subroutineDeclaration:
 	| FUNCTION subroutineDecWithoutType		# function;
 subroutineDecWithoutType:
 	subroutineReturnType subroutineName LPAREN parameterList RPAREN subroutineBody;
- subroutineName: IDENTIFIER;
+subroutineName: IDENTIFIER;
 subroutineReturnType: varType | VOID;
 
 varType: INT | CHAR | BOOLEAN | IDENTIFIER;
@@ -28,16 +28,16 @@ varType: INT | CHAR | BOOLEAN | IDENTIFIER;
 parameterList: (parameter (COMMA parameter)*)?;
 parameter: varType parameterName;
 parameterName: IDENTIFIER;
-subroutineBody:
-	LBRACE varDeclaration* statements RBRACE;
+subroutineBody: LBRACE varDeclaration* statements RBRACE;
 
-varDeclaration: VAR varType varNameInDeclaration (COMMA varNameInDeclaration)* SEMICOLON;
+varDeclaration:
+	VAR varType varNameInDeclaration (COMMA varNameInDeclaration)* SEMICOLON;
 varNameInDeclaration: IDENTIFIER;
 varName: IDENTIFIER;
 statements: statement*;
 statement:
 	letStatement
-	| ifStatement
+	| ifElseStatement
 	| whileStatement
 	| doStatement
 	| returnStatement;
@@ -45,10 +45,10 @@ statement:
 letStatement:
 	LET (varName | arrayAccess) EQUALS expression SEMICOLON; //TODO: check right assoc for this
 
+ifElseStatement: ifStatement elseStatement?;
 ifStatement:
-	IF LPAREN expression RPAREN LBRACE statements RBRACE (
-		ELSE LBRACE statements RBRACE
-	)?;
+	IF LPAREN expression RPAREN LBRACE statements RBRACE;
+elseStatement: ELSE LBRACE statements RBRACE;
 
 whileStatement:
 	WHILE LPAREN expression RPAREN LBRACE statements RBRACE;

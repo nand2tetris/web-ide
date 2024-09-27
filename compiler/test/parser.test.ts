@@ -8,10 +8,8 @@ import { getTestResourcePath, listenToTheTree, parseJackText, handleErrors, pars
 import { ProgramContext } from '../src/generated/JackParser';
 import { JackCompilerError } from '../src/error';
 
-
 describe('Parser', () => {
     const jestConsole = console;
-
     beforeEach(() => {
         global.console = require('console');
     });

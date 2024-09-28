@@ -1,5 +1,5 @@
 import { ParserRuleContext } from "antlr4ts"
-import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
+import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
@@ -542,6 +542,34 @@ describe('ValidatorListener', () => {
                 "Main.a": genericSymbol(SubroutineType.Function, 0),
             })
     })
+    test("A field can not be referenced in a function", () => {
+        testValidator(`
+            class Main {
+                field int a;
+                function void a(){
+                    let a = 1;
+                    return;
+                }
+            }`, FieldCantBeReferencedInFunction,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
+    test("A static field can be referenced in a function", () => {
+        testValidator(`
+            class Main {
+                static int a;
+                function void a(){
+                    let a = 1;
+                    return;
+                }
+            }`, undefined,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
     /**
      * - An empty statement is not allowed - what is this?
      * 
@@ -551,7 +579,6 @@ describe('ValidatorListener', () => {
      * - this' can't be referenced in a function
      * - Illegal casting into String constant
      * - A field may not be referenced in a function
-     * - Expected primitive type or class name
      */
 
 })

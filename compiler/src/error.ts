@@ -154,3 +154,11 @@ export class IntLiteralIsOutOfRange extends JackCompilerError {
         Object.setPrototypeOf(this, IntLiteralIsOutOfRange.prototype);
     }
 }
+
+
+export class FieldCantBeReferencedInFunction extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `Field can't be referenced in a function`);
+        Object.setPrototypeOf(this, FieldCantBeReferencedInFunction.prototype);
+    }
+}

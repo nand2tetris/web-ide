@@ -18,35 +18,42 @@ export function createSubroutineSymbol(paramsCount: number, type: SubroutineType
 }
 
 type VariableType = string
-
+export enum ScopeType {
+    StaticField,
+    Field,
+    Argument,
+    Local,
+}
 export class LocalSymbolTable {
-    constructor(private scopeVarDecs: Record<string, string>[] = [{}]) {
+    private vars: Record<ScopeType, Record<string, string>> = {
+        [ScopeType.StaticField]: {},
+        [ScopeType.Field]: {},
+        [ScopeType.Argument]: {},
+        [ScopeType.Local]: {},
+    };
+    static readonly functionScopes = [ScopeType.Local, ScopeType.Argument, ScopeType.StaticField];
 
-    }
-    existsSymbol(name: string): boolean {
-        for (let i = this.scopeVarDecs.length - 1; i >= 0; i--) {
-            if (this.scopeVarDecs[i][name] != undefined) {
+    existsSymbol(name: string, scopesToSearch = [ScopeType.Local, ScopeType.Argument, ScopeType.Field, ScopeType.StaticField]): boolean {
+        for (const scope of scopesToSearch) {
+            if (this.vars[scope][name] != undefined) {
                 return true;
             }
         }
         return false;
     }
-    getType(name: string) {
-        for (let i = this.scopeVarDecs.length - 1; i >= 0; i--) {
-            if (this.scopeVarDecs[i][name] != undefined) {
-                return this.scopeVarDecs[i][name];
+    getType(name: string, scopesToSearch = [ScopeType.Local, ScopeType.Argument, ScopeType.Field, ScopeType.StaticField]) {
+        for (const scope of scopesToSearch) {
+            if (this.vars[scope][name] != undefined) {
+                return this.vars[scope][name];
             }
         }
         return undefined;
     }
-    add(varName: string, type: VariableType) {
-        this.scopeVarDecs[this.scopeVarDecs.length - 1][varName] = type;
+    add(scope: ScopeType, varName: string, type: VariableType) {
+        this.vars[scope][varName] = type;
     }
-    pushStack() {
-        this.scopeVarDecs.push({});
+    clearSubroutineVars() {
+        this.vars[ScopeType.Argument] = {};
+        this.vars[ScopeType.Local] = {};
     }
-    popStack() {
-        this.scopeVarDecs.pop();
-    }
-
 }

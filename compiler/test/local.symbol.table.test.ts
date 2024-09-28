@@ -1,4 +1,4 @@
-import { LocalSymbolTable } from "../src/symbol";
+import { LocalSymbolTable, ScopeType } from "../src/symbol";
 
 describe('LocalSymbolTable', () => {
     const jestConsole = console;
@@ -17,7 +17,7 @@ describe('LocalSymbolTable', () => {
         const variableNames = ['testVariable1', 'testVariable2', 'testVariable3'];
 
         variableNames.forEach(variableName => {
-            localSymbolTable.add(variableName, "int")
+            localSymbolTable.add(ScopeType.Local, variableName, "int")
             expect(localSymbolTable.existsSymbol(variableName)).toBe(true);
             expect(localSymbolTable.existsSymbol(variableName + "_")).toBe(false);
 
@@ -29,16 +29,15 @@ describe('LocalSymbolTable', () => {
         const classVar = 'a';
         const functionVar = 'b';
 
-        localSymbolTable.add(classVar, "boolean");
+        localSymbolTable.add(ScopeType.Field, classVar, "boolean");
 
 
-        localSymbolTable.pushStack();
-        localSymbolTable.add(functionVar, "boolean");
+        localSymbolTable.add(ScopeType.Local, functionVar, "boolean");
 
         expect(localSymbolTable.existsSymbol(classVar)).toBe(true);
         expect(localSymbolTable.existsSymbol(functionVar)).toBe(true);
 
-        localSymbolTable.popStack();
+        localSymbolTable.clearSubroutineVars();
 
         expect(localSymbolTable.existsSymbol(classVar)).toBe(true);
         expect(localSymbolTable.existsSymbol(functionVar)).toBe(false);

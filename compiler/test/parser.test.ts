@@ -1,12 +1,9 @@
-import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
 import fs from 'fs';
 import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener";
 
 import path from "path";
 import { ErrorListener } from "../src/listener/error.listener";
-import { getTestResourcePath, listenToTheTree, parseJackText, handleErrors, parseJackFile } from "./test.helper";
-import { ProgramContext } from '../src/generated/JackParser';
-import { JackCompilerError } from '../src/error';
+import { listenToTheTree, parseJackFile, parseJackText } from "./test.helper";
 
 describe('Parser', () => {
     const jestConsole = console;
@@ -33,6 +30,24 @@ describe('Parser', () => {
         console.log("Testing " + dir)
         testJackDir(path.join(__dirname, "resources", dir));
     });
+    test('expected EOF', () => {
+        try {
+            parseJackText(`
+            class A{
+            }
+            var a;
+            `)
+        } catch (e) {
+            if (e instanceof Error) {
+                expect(e.message).toContain("expecting <EOF>")
+                return;
+            } else {
+                fail("Expected Error");
+            }
+        }
+        fail('Expected Error');
+    })
+
 });
 
 function testJackDir(testFolder: string): void {

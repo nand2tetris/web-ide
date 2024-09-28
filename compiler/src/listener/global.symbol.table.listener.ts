@@ -44,7 +44,7 @@ export class GlobalSymbolTableListener implements JackParserListener, ParseTreeL
         const subroutineName = nameCtx.text
         const id = this.className + "." + subroutineName
         if (this.globalSymbolTable[id] != undefined) {
-            this.errors.push(new DuplicatedSubroutineError(nameCtx.start.line, nameCtx.start.startIndex, `Subroutine "${subroutineName}" is already defined.`));
+            this.errors.push(new DuplicatedSubroutineError(nameCtx.start.line, nameCtx.start.startIndex, subroutineName));
         }
         const paramsCount = subroutineWithoutTypeCtx.parameterList().parameter().length
         this.globalSymbolTable[id] = {

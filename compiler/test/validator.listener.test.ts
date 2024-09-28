@@ -1,11 +1,11 @@
 import { ParserRuleContext } from "antlr4ts"
-import { DuplicatedVariableException as DuplicatedVariableError, FunctionCalledAsMethodError, IncorrectParamsNumberInSubroutineCallError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, VoidSubroutineReturnsValueError } from "../src/error"
+import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
 import { ProgramContext } from "../src/generated/JackParser"
 import { Logger, ILogObj } from "tslog";
-import { GenericSymbol, SubroutineInfo, SubroutineType } from "../src/symbol"
+import { createSubroutineSymbol, GenericSymbol, SubroutineInfo, SubroutineType } from "../src/symbol"
 
 const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {
@@ -19,10 +19,9 @@ describe('ValidatorListener', () => {
         global.console = jestConsole;
     });
 
-    //TODO: refactor to use createFunctionSymbol
     function genericSymbol(type?: SubroutineType, paramsCount?: number): GenericSymbol {
         if (type != undefined && paramsCount != undefined) {
-            return { subroutineInfo: { type, paramsCount } } as GenericSymbol
+            return createSubroutineSymbol(paramsCount, type)
         } else {
             return {} as GenericSymbol
         }
@@ -432,12 +431,58 @@ describe('ValidatorListener', () => {
                 "Main.c": genericSymbol(SubroutineType.Function, 0)
             })
     })
-
+    test('incorrect return type in constructor', () => {
+        testValidator(`
+            class Main {
+                constructor D new(){
+                    return this;
+                }
+            }`, IncorrectConstructorReturnType,
+            {
+                "Main": genericSymbol(),
+                "D": genericSymbol(),
+            })
+    });
+    test('unreachable code', () => {
+        testValidator(`
+            class Main {
+                constructor Main new(){
+                    return this;
+                    let a=0;
+                    let a=0;
+                    let a=0;
+                }
+            }`, UnreachableCodeError,
+            {
+                "Main": genericSymbol(),
+                "Main.new": genericSymbol(SubroutineType.Constructor, 0),
+            })
+    });
+    test("A constructor must return 'this'", () => {
+        testValidator(`
+            class Main {
+                constructor Main new(){
+                    return 1;
+                }
+            }`, ConstructorMushReturnThis,
+            {
+                "Main": genericSymbol(),
+                "Main.new": genericSymbol(SubroutineType.Constructor, 0),
+            })
+    })
     /**
-     *  List of validations rules:
-     * -   `Method ${className}.${subroutineName} was called as a function/constructor`
-     * - Subroutine was called as a method
-     * - `Class ${className} doesn't contain a function/constructor ${subroutineName}`
+     * - An empty statement is not allowed - what is this?
+     * 
+     * - Expected class name, subroutine name, field, parameter or local or static variable name (currently expected IDENTIFIER)
+     * - Expected subroutine name in call
+     * - A constructor must return 'this'
+     * - Let statement - expected literal based on var type - boolean, char, int (String?)
+     * - Integer constant too big >32767
+     * - a numeric value is illegal here
+     * - this' can't be referenced in a function
+     * - Illegal casting into String constant
+     * - A field may not be referenced in a function
+     * - Expected primitive type or class name
      */
 
 })

@@ -1,7 +1,7 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { DuplicatedVariableException, FunctionCalledAsMethodError, IncorrectParamsNumberInSubroutineCallError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, VoidSubroutineReturnsValueError } from "../error";
-import { ClassDeclarationContext, ClassNameContext, ElseStatementContext, FieldListContext, IfStatementContext, ParameterContext, ReturnStatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
+import { ConstructorMushReturnThis, DuplicatedVariableException, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError } from "../error";
+import { ClassDeclarationContext, ClassNameContext, ElseStatementContext, FieldListContext, IfStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol, LocalSymbolTable, SubroutineType } from "../symbol";
 
@@ -72,6 +72,8 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     cfgNode: BinaryTreeNode = new BinaryTreeNode(undefined);
     subroutineName: string = ""
     className = ""
+    inConstructor: boolean = false
+    stopProcessingErrorsInThisScope = false;
     constructor(private globalSymbolTable: Record<string, GenericSymbol>, public errors: JackCompilerError[] = []) { }
 
     enterClassName(ctx: ClassNameContext) {
@@ -80,9 +82,18 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterFieldList(ctx: FieldListContext) {
         const type = ctx.varType().text
         ctx.fieldName().forEach(field => {
-            this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, field.text, type);
+            this.#localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, field.text, type);
         });
     };
+    enterSubroutineDeclaration(ctx: SubroutineDeclarationContext) {
+        let subroutineType: SubroutineType;
+        if (ctx.subroutineType().CONSTRUCTOR() != undefined) {
+            this.inConstructor = true;
+            if (ctx.subroutineDecWithoutType().subroutineReturnType().text !== this.className) {
+                this.#addError(new IncorrectConstructorReturnType(ctx.start.line, ctx.start.startIndex));
+            }
+        }
+    }
     enterSubroutineDecWithoutType(ctx: SubroutineDecWithoutTypeContext) {
         this.localSymbolTable.pushStack();
         const returnType = ctx.subroutineReturnType()
@@ -92,14 +103,14 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     };
 
     enterParameter(ctx: ParameterContext) {
-        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.parameterName().text, ctx.varType().text);
+        this.#localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.parameterName().text, ctx.varType().text);
     };
     //Var
     enterVarType(ctx: VarTypeContext) {
         if (ctx.IDENTIFIER() != undefined) {
             const type = ctx.IDENTIFIER()!.text
             if (this.globalSymbolTable[type] === undefined) {
-                this.errors.push(new UnknownClassError(ctx.start.line, ctx.start.startIndex, type));
+                this.#addError(new UnknownClassError(ctx.start.line, ctx.start.startIndex, type));
             }
         }
     };
@@ -107,16 +118,25 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterVarDeclaration(ctx: VarDeclarationContext) {
         const type = ctx.varType().text
         ctx.varNameInDeclaration().forEach(name => {
-            this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, name.text, type);
+            this.#localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, name.text, type);
         })
     };
 
     enterVarName(ctx: VarNameContext) {
         if (!this.localSymbolTable.existsSymbol(ctx.text)) {
-            this.errors.push(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));
+            this.#addError(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));
         }
     };
 
+    enterStatement(ctx: StatementContext) {
+        if (this.cfgNode._returns == true) {
+            this.#addError(new UnreachableCodeError(ctx.start.line, ctx.start.startIndex));
+            this.stopProcessingErrorsInThisScope = true;
+        }
+    };
+    enterRBrace(ctx: RBraceContext) {
+        this.stopProcessingErrorsInThisScope = false;
+    };
     /**
      * Control flow
      */
@@ -144,10 +164,10 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         if (this.cfgNode?.parent != null) {
             this.cfgNode = this.cfgNode.parent
         }
+
     };
     enterSubroutineCall(ctx: SubroutineCallContext) {
         //check if variable exists with the name before dot
-
         const subroutineId = ctx.subroutineId()
         let callType: CallType;
 
@@ -172,7 +192,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
 
         const symbol = this.globalSymbolTable[subroutineIdText]
         if (symbol == undefined) {
-            this.errors.push(new UnknownSubroutineCallError(ctx.start.line, ctx.start.startIndex,
+            this.#addError(new UnknownSubroutineCallError(ctx.start.line, ctx.start.startIndex,
                 subroutineId.subroutineName().text,
                 subroutineId.className()?.text
             ));
@@ -180,20 +200,19 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
             //method called as a function
             if (symbol.subroutineInfo?.type == SubroutineType.Method
                 && callType == CallType.ClassFunctionOrConstructor) {
-                this.errors.push(new MethodCalledAsFunctionError(ctx.start.line, ctx.start.startIndex,
+                this.#addError(new MethodCalledAsFunctionError(ctx.start.line, ctx.start.startIndex,
                     subroutineId.subroutineName().text));
             }
             // function called as a method
             else if (symbol.subroutineInfo?.type == SubroutineType.Function
                 && callType == CallType.LocalMethod) {
-                this.errors.push(new FunctionCalledAsMethodError(ctx.start.line, ctx.start.startIndex,
+                this.#addError(new FunctionCalledAsMethodError(ctx.start.line, ctx.start.startIndex,
                     subroutineId.subroutineName().text));
-
             } else {
                 //check parameter count 
                 const l = ctx.expressionList().expression().length
                 if (symbol.subroutineInfo!.paramsCount != l) {
-                    this.errors.push(new IncorrectParamsNumberInSubroutineCallError(ctx.start.line, ctx.start.startIndex, subroutineId.text,
+                    this.#addError(new IncorrectParamsNumberInSubroutineCallError(ctx.start.line, ctx.start.startIndex, subroutineId.text,
                         symbol.subroutineInfo!.paramsCount, l));
                 }
             }
@@ -203,18 +222,25 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterReturnStatement(ctx: ReturnStatementContext) {
         const returnsVoid = ctx.expression() == undefined
         if (returnsVoid && !this.subroutineShouldReturnVoidType) {
-            this.errors.push(new NonVoidFunctionNoReturnError(ctx.start.line, ctx.start.startIndex));
+            this.#addError(new NonVoidFunctionNoReturnError(ctx.start.line, ctx.start.startIndex));
         }
         if (!returnsVoid && this.subroutineShouldReturnVoidType) {
-            this.errors.push(new VoidSubroutineReturnsValueError(ctx.start.line, ctx.start.startIndex,));
+            this.#addError(new VoidSubroutineReturnsValueError(ctx.start.line, ctx.start.startIndex));
         }
         this.cfgNode._returns = true;
+        if (this.inConstructor) {
+            if (returnsVoid || ctx.expression()!.expression().length > 1 ||
+                ctx.expression()!.constant() == undefined || ctx.expression()!.constant()!.THIS_LITERAL() == undefined) {
+                this.#addError(new ConstructorMushReturnThis(ctx.start.line, ctx.start.startIndex))
+            }
+        }
     };
 
     exitSubroutineBody(ctx: SubroutineBodyContext) {
         if (!this.cfgNode.returns) {
-            this.errors.push(new SubroutineNotAllPathsReturnError(ctx.start.line, ctx.start.startIndex, this.subroutineName));
+            this.#addError(new SubroutineNotAllPathsReturnError(ctx.start.line, ctx.start.startIndex, this.subroutineName));
         }
+        this.inConstructor = false;
         this.localSymbolTable.popStack();
     };
 
@@ -225,12 +251,16 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     };
 
     //Utils
-    localSymbolTableAdd(line: number, position: number, name: string, type: string) {
+    #localSymbolTableAdd(line: number, position: number, name: string, type: string) {
         if (this.localSymbolTable.existsSymbol(name)) {
-            this.errors.push(new DuplicatedVariableException(line, position, name));
+            this.#addError(new DuplicatedVariableException(line, position, name));
         } else {
             this.localSymbolTable.add(name, type);
         }
+    }
+    #addError<T extends JackCompilerError>(error: T) {
+        if (!this.stopProcessingErrorsInThisScope)
+            this.errors.push(error);
     }
     //to fix compiler error
     visitTerminal?: (/*@NotNull*/ node: TerminalNode) => void;

@@ -7,7 +7,7 @@ options {
 program: classDeclaration EOF;
 
 classDeclaration:
-	CLASS className LBRACE classVarDec* subroutineDeclaration* RBRACE;
+	CLASS className LBRACE classVarDec* subroutineDeclaration* rBrace;
 className: IDENTIFIER;
 classVarDec: (STATIC | FIELD) fieldList SEMICOLON;
 fieldList: varType fieldName ( COMMA fieldName)*;
@@ -24,8 +24,8 @@ varType: INT | CHAR | BOOLEAN | IDENTIFIER;
 parameterList: (parameter (COMMA parameter)*)?;
 parameter: varType parameterName;
 parameterName: IDENTIFIER;
-subroutineBody: LBRACE varDeclaration* statements RBRACE;
-
+subroutineBody: LBRACE varDeclaration* statements rBrace;
+rBrace: RBRACE;
 varDeclaration:
 	VAR varType varNameInDeclaration (COMMA varNameInDeclaration)* SEMICOLON;
 varNameInDeclaration: IDENTIFIER;
@@ -43,11 +43,11 @@ letStatement:
 
 ifElseStatement: ifStatement elseStatement?;
 ifStatement:
-	IF LPAREN expression RPAREN LBRACE statements RBRACE;
-elseStatement: ELSE LBRACE statements RBRACE;
+	IF LPAREN expression RPAREN LBRACE statements rBrace;
+elseStatement: ELSE LBRACE statements rBrace;
 
 whileStatement:
-	WHILE LPAREN expression RPAREN LBRACE statements RBRACE;
+	WHILE LPAREN expression RPAREN LBRACE statements rBrace;
 
 doStatement: DO subroutineCall SEMICOLON;
 
@@ -59,7 +59,7 @@ expressionList: (expression (COMMA expression)*)?;
 
 expression:
 	binaryOperation = expression binaryOperator expression
-	| constant
+	| constant 
 	| varName
 	| subroutineCall
 	| arrayAccess

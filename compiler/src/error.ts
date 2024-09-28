@@ -24,8 +24,8 @@ export class LexerOrParserError extends Error {
     }
 }
 export class DuplicatedSubroutineError extends JackCompilerError {
-    constructor(line: number, charPositionInLine: number, msg: string) {
-        super(line, charPositionInLine, msg);
+    constructor(line: number, charPositionInLine: number, subroutineName: string) {
+        super(line, charPositionInLine, `Subroutine ${subroutineName} redeclared.`);
     }
 }
 
@@ -33,7 +33,6 @@ export class DuplicatedVariableException extends JackCompilerError {
     constructor(line: number, charPositionInLine: number, variableName: string) {
         super(line, charPositionInLine, "Duplicated variable " + variableName);
     }
-
 }
 
 
@@ -86,8 +85,9 @@ export class IncorrectParamsNumberInSubroutineCallError extends JackCompilerErro
         subroutineName: string,
         expectedParamsCount: number,
         actualParamsCount: number) {
+
         super(line, charPositionInLine,
-            `Subroutine ${subroutineName} expects ${expectedParamsCount} arguments while ${actualParamsCount} was provided`);
+            `Subroutine ${subroutineName} (declared to accept ${expectedParamsCount} parameter(s)) called with  ${actualParamsCount} parameter(s)`);
         Object.setPrototypeOf(this, IncorrectParamsNumberInSubroutineCallError.prototype);
     }
 
@@ -115,5 +115,26 @@ export class FunctionCalledAsMethodError extends JackCompilerError {
         subroutineId: string) {
         super(line, charPositionInLine, `Function or constructor ${subroutineId} was called as a method`);
         Object.setPrototypeOf(this, FunctionCalledAsMethodError.prototype);
+    }
+}
+
+export class IncorrectConstructorReturnType extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `The return type of a constructor must be of the class type`);
+        Object.setPrototypeOf(this, IncorrectConstructorReturnType.prototype);
+    }
+}
+
+export class UnreachableCodeError extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `Unreachable code`);
+        Object.setPrototypeOf(this, UnreachableCodeError.prototype);
+    }
+}
+
+export class ConstructorMushReturnThis extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `A constructor must return 'this'`);
+        Object.setPrototypeOf(this, ConstructorMushReturnThis.prototype);
     }
 }

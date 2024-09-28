@@ -19,6 +19,7 @@ import { ParameterListContext } from "./JackParser";
 import { ParameterContext } from "./JackParser";
 import { ParameterNameContext } from "./JackParser";
 import { SubroutineBodyContext } from "./JackParser";
+import { RBraceContext } from "./JackParser";
 import { VarDeclarationContext } from "./JackParser";
 import { VarNameInDeclarationContext } from "./JackParser";
 import { VarNameContext } from "./JackParser";
@@ -162,6 +163,13 @@ export interface JackParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSubroutineBody?: (ctx: SubroutineBodyContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `JackParser.rBrace`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitRBrace?: (ctx: RBraceContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `JackParser.varDeclaration`.

@@ -55,10 +55,8 @@ whileStatement:
 
 doStatement: DO subroutineCall SEMICOLON;
 
-subroutineCall:
-	subroutineName LPAREN expressionList RPAREN
-	| (className | THIS_LITERAL) DOT subroutineName LPAREN expressionList RPAREN;
-
+subroutineCall: subroutineId LPAREN expressionList RPAREN;
+subroutineId: ((className | THIS_LITERAL) DOT)? subroutineName;
 returnStatement: RETURN expression? SEMICOLON;
 
 expressionList: (expression (COMMA expression)*)?;

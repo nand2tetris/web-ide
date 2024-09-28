@@ -1,7 +1,7 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { DuplicatedVariableException, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, VoidSubroutineReturnsValueError } from "../error";
-import { ClassDeclarationContext, ElseStatementContext, FieldDeclarationContext, FieldNameContext, IfElseStatementContext, IfStatementContext, LetStatementContext, ParameterContext, ParameterNameContext, ReturnStatementContext, SubroutineBodyContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, SubroutineReturnTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
+import { DuplicatedVariableException, IncorrectParamsNumberInSubroutineCall, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCall, VoidSubroutineReturnsValueError } from "../error";
+import { ClassDeclarationContext, ElseStatementContext, FieldDeclarationContext, FieldNameContext, IfElseStatementContext, IfStatementContext, LetStatementContext, ParameterContext, ParameterNameContext, ReturnStatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, SubroutineReturnTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol } from "./symbol.table.listener";
 
@@ -66,23 +66,6 @@ enum Side {
 
 export class ValidatorListener implements JackParserListener, ParseTreeListener {
 
-
-    /**
-     *  List of validations rules:
-     * - variable declaration - validate duplicate variable declarations
-     * Let:
-     * -  Undeclared variable
-     * - `Subroutine ${ subroutine.name.value }: not all code paths return a value`,
-     * - `A non void subroutine must return a value`,
-     * - Unknown type for return type, class variable, or method local var
-     * - OS subroutine ${this.className}.${subroutine.name.value} must follow the interface
-     * - validate arg number
-     * -   `Method ${ className }.${ subroutineName } was called as a function/constructor`
-            * - Subroutine was called as a method
-                * - `Class ${className} doesn't contain a function/constructor ${subroutineName}`
-                * - `Class ${className} doesn't exist`
-                */
-
     //why do we need local symbol table? this vars, arguments, local vars. What about types?
     localSymbolTable: LocalSymbolTable = new LocalSymbolTable();
     subroutineShouldReturnVoidType: boolean = false;
@@ -101,6 +84,33 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         this.subroutineName = ctx.subroutineName().text
     };
 
+    enterParameterName(ctx: ParameterNameContext) {
+        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
+    }
+
+    //Var
+    enterVarType(ctx: VarTypeContext) {
+        if (ctx.IDENTIFIER() != undefined) {
+            const type = ctx.IDENTIFIER()!.text
+            if (this.globalSymbolTable[type] === undefined) {
+                this.errors.push(new UnknownClassError(ctx.start.line, ctx.start.startIndex, type));
+            }
+        }
+    };
+
+    enterVarNameInDeclaration(ctx: VarNameInDeclarationContext) {
+        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
+    };
+
+    enterVarName(ctx: VarNameContext) {
+        if (!this.localSymbolTable.existsSymbol(ctx.text)) {
+            this.errors.push(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));
+        }
+    };
+
+    /**
+     * Control flow
+     */
 
     enterWhileStatement(ctx: WhileStatementContext) {
         this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode);
@@ -127,28 +137,17 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
             this.cfgNode = this.cfgNode.parent
         }
     };
-
-    enterVarType(ctx: VarTypeContext) {
-        if (ctx.IDENTIFIER() != undefined) {
-            const type = ctx.IDENTIFIER()!.text
-            if (this.globalSymbolTable[type] === undefined) {
-                this.errors.push(new UnknownClassError(ctx.start.line, ctx.start.startIndex, type));
+    enterSubroutineCall(ctx: SubroutineCallContext) {
+        const subroutineId = ctx.subroutineId().text
+        const f = this.globalSymbolTable[subroutineId]
+        if (f == undefined) {
+            this.errors.push(new UnknownSubroutineCall(ctx.start.line, ctx.start.startIndex, ctx.subroutineId().text));
+        } else {
+            const l = ctx.expressionList().expression().length
+            if (f.subroutineParameterCount != l) {
+                this.errors.push(new IncorrectParamsNumberInSubroutineCall(ctx.start.line, ctx.start.startIndex, subroutineId,
+                    f.subroutineParameterCount!, l));
             }
-        }
-    };
-
-
-    enterParameterName(ctx: ParameterNameContext) {
-        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
-    }
-
-    enterVarNameInDeclaration(ctx: VarNameInDeclarationContext) {
-        this.localSymbolTableAdd(ctx.start.line, ctx.start.startIndex, ctx.text);
-    };
-
-    enterVarName(ctx: VarNameContext) {
-        if (!this.localSymbolTable.existsSymbol(ctx.text)) {
-            this.errors.push(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));
         }
     };
     enterReturnStatement(ctx: ReturnStatementContext) {
@@ -168,6 +167,14 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         }
         this.localSymbolTable.popStack();
     };
+
+    exitClassDeclaration(ctx: ClassDeclarationContext) {
+        while (this.cfgNode?.parent != undefined) {
+            this.cfgNode = this.cfgNode.parent
+        }
+    };
+
+    //Utils
     localSymbolTableAdd(line: number, position: number, name: string) {
         if (this.localSymbolTable.existsSymbol(name)) {
             this.errors.push(new DuplicatedVariableException(line, position, name));
@@ -178,11 +185,6 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     //to fix compiler error
     visitTerminal?: (/*@NotNull*/ node: TerminalNode) => void;
 
-    exitClassDeclaration(ctx: ClassDeclarationContext) {
-        while (this.cfgNode?.parent != undefined) {
-            this.cfgNode = this.cfgNode.parent
-        }
-    };
 }
 
 export class LocalSymbolTable {

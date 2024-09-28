@@ -30,11 +30,12 @@ import { StatementsContext } from "./JackParser";
 import { StatementContext } from "./JackParser";
 import { LetStatementContext } from "./JackParser";
 import { IfElseStatementContext } from "./JackParser";
-import { ElseStatementContext } from "./JackParser";
 import { IfStatementContext } from "./JackParser";
+import { ElseStatementContext } from "./JackParser";
 import { WhileStatementContext } from "./JackParser";
 import { DoStatementContext } from "./JackParser";
 import { SubroutineCallContext } from "./JackParser";
+import { SubroutineIdContext } from "./JackParser";
 import { ReturnStatementContext } from "./JackParser";
 import { ExpressionListContext } from "./JackParser";
 import { ExpressionContext } from "./JackParser";
@@ -249,18 +250,18 @@ export interface JackParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	visitIfElseStatement?: (ctx: IfElseStatementContext) => Result;
 
 	/**
-	 * Visit a parse tree produced by `JackParser.elseStatement`.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	visitElseStatement?: (ctx: ElseStatementContext) => Result;
-
-	/**
 	 * Visit a parse tree produced by `JackParser.ifStatement`.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	visitIfStatement?: (ctx: IfStatementContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `JackParser.elseStatement`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitElseStatement?: (ctx: ElseStatementContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `JackParser.whileStatement`.
@@ -282,6 +283,13 @@ export interface JackParserVisitor<Result> extends ParseTreeVisitor<Result> {
 	 * @return the visitor result
 	 */
 	visitSubroutineCall?: (ctx: SubroutineCallContext) => Result;
+
+	/**
+	 * Visit a parse tree produced by `JackParser.subroutineId`.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	visitSubroutineId?: (ctx: SubroutineIdContext) => Result;
 
 	/**
 	 * Visit a parse tree produced by `JackParser.returnStatement`.

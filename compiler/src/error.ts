@@ -7,7 +7,11 @@ export class JackCompilerError {
      */
     constructor(public line: number, public charPositionInLine: number, public msg: string) {
     }
+    public toString = (): string => {
+        return this.constructor.name + `(${this.line}:${this.charPositionInLine} ${this.msg})`;
+    }
 }
+
 export class LexerOrParserError extends Error {
     /**
      * 
@@ -43,7 +47,7 @@ export class UndeclaredVariableError extends JackCompilerError {
 
 export class UnknownClassError extends JackCompilerError {
     constructor(line: number, charPositionInLine: number, className: string) {
-        super(line, charPositionInLine, `Class ${className} doesn't exist` );
+        super(line, charPositionInLine, `Class ${className} doesn't exist`);
     }
 
 }
@@ -52,7 +56,7 @@ export class NonVoidFunctionNoReturnError extends JackCompilerError {
 
     //TODO: should we add a subroutine name?
     constructor(line: number, charPositionInLine: number) {
-        super(line, charPositionInLine, `A non void subroutine must return a value` );
+        super(line, charPositionInLine, `A non void subroutine must return a value`);
     }
 
 }
@@ -60,7 +64,7 @@ export class NonVoidFunctionNoReturnError extends JackCompilerError {
 export class VoidSubroutineReturnsValueError extends JackCompilerError {
 
     constructor(line: number, charPositionInLine: number) {
-        super(line, charPositionInLine, `Cannot return a value from a void subroutine` );
+        super(line, charPositionInLine, `Cannot return a value from a void subroutine`);
         Object.setPrototypeOf(this, VoidSubroutineReturnsValueError.prototype);
     }
 
@@ -69,8 +73,32 @@ export class VoidSubroutineReturnsValueError extends JackCompilerError {
 export class SubroutineNotAllPathsReturn extends JackCompilerError {
 
     constructor(line: number, charPositionInLine: number, subroutineName: string) {
-        super(line, charPositionInLine, `Subroutine ${subroutineName}: not all code paths return a value` );
+        super(line, charPositionInLine, `Subroutine ${subroutineName}: not all code paths return a value`);
         Object.setPrototypeOf(this, SubroutineNotAllPathsReturn.prototype);
+    }
+
+}
+
+export class IncorrectParamsNumberInSubroutineCall extends JackCompilerError {
+
+    constructor(line: number,
+        charPositionInLine: number,
+        subroutineName: string,
+        expectedParamsCount: number,
+        actualParamsCount: number) {
+        super(line, charPositionInLine,
+            `Subroutine ${subroutineName} expects ${expectedParamsCount} arguments while ${actualParamsCount} was provided`);
+        Object.setPrototypeOf(this, IncorrectParamsNumberInSubroutineCall.prototype);
+    }
+
+}
+export class UnknownSubroutineCall extends JackCompilerError {
+
+    constructor(line: number,
+        charPositionInLine: number,
+        subroutineId: string) {
+        super(line, charPositionInLine, `Subroutine ${subroutineId} not found`);
+        Object.setPrototypeOf(this, UnknownSubroutineCall.prototype);
     }
 
 }

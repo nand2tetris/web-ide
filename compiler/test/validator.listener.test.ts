@@ -1,5 +1,5 @@
 import { ParserRuleContext } from "antlr4ts"
-import { DuplicatedVariableException as DuplicatedVariableError, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, VoidSubroutineReturnsValueError } from "../src/error"
+import { DuplicatedVariableException as DuplicatedVariableError, IncorrectParamsNumberInSubroutineCall, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCall, VoidSubroutineReturnsValueError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { GenericSymbol } from "../src/listener/symbol.table.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
@@ -20,7 +20,10 @@ describe('ValidatorListener', () => {
     });
 
 
-    const genericSymbol = {} as GenericSymbol
+    function genericSymbol(paramsCount?: number) {
+        return paramsCount != undefined ? { subroutineParameterCount: paramsCount } as GenericSymbol :
+            {} as GenericSymbol
+    }
 
     const duplicateVarClassBodies = [
         ["static", '  static int a, a;'],
@@ -67,7 +70,12 @@ describe('ValidatorListener', () => {
                     do Main.b(a);
                     return;
                 }
-            }`, UndeclaredVariableError)
+            }`, UndeclaredVariableError,
+            {
+                "Main": genericSymbol(),
+                "Main.b": genericSymbol(1),
+                "Main.a": genericSymbol()
+            })
     })
 
     test('if - undeclared variable ', () => {
@@ -89,8 +97,9 @@ describe('ValidatorListener', () => {
     test('Unknown class for subroutine return type ', () => {
         testValidator(`
             class Main {
-            function D b(int a){
-                return D.new();
+            function void b(int a){
+                var D d;
+                return;
             }
             }`, UnknownClassError)
     })
@@ -101,7 +110,7 @@ describe('ValidatorListener', () => {
                 function D b(int a){
                     return D.new();
                 }
-            }`, undefined, { "D": genericSymbol, "D.new": genericSymbol })
+            }`, undefined, { "D": genericSymbol(), "D.new": genericSymbol(0) })
     })
     test('Arg Unknown class  ', () => {
         testValidator(`
@@ -119,7 +128,7 @@ describe('ValidatorListener', () => {
                 function void b(D a){
                     return;
                 }
-            }`, undefined, { "D": genericSymbol })
+            }`, undefined, { "D": genericSymbol() })
     })
     test('var Unknown class', () => {
         testValidator(`
@@ -137,7 +146,7 @@ describe('ValidatorListener', () => {
                     var D d;
                     return;
                 }
-            }`, undefined, { "D": genericSymbol })
+            }`, undefined, { "D": genericSymbol() })
     })
     test('field Unknown class', () => {
         testValidator(`
@@ -149,7 +158,7 @@ describe('ValidatorListener', () => {
         testValidator(`
             class Main {
                 field T t;
-            }`, undefined, { "T": genericSymbol })
+            }`, undefined, { "T": genericSymbol() })
     })
     test('static field Unknown class', () => {
         testValidator(`
@@ -161,7 +170,7 @@ describe('ValidatorListener', () => {
         testValidator(`
             class Main {
                 static T t;
-            }`, undefined, { "T": genericSymbol })
+            }`, undefined, { "T": genericSymbol() })
     })
 
     /**
@@ -316,9 +325,37 @@ describe('ValidatorListener', () => {
             }`)
     })
     /**
+     * Validate function call 
+     */
+    test('calling undefined subroutine', () => {
+        testValidator(`
+            class Main {
+                function void b(){
+                    do Main.c();
+                    return;
+                }
+            }`, UnknownSubroutineCall)
+    })
+    test('incorrect number of parameters when calling a function', () => {
+        testValidator(`
+            class Main {
+                function void a(int a, int b){
+                    return;
+                }
+                function void b(){
+                    do Main.a(1);
+                    return;
+                }
+            }`, IncorrectParamsNumberInSubroutineCall, {
+            "Main": genericSymbol(),
+            "Main.a": genericSymbol(2),
+            "Main.b": genericSymbol(2)
+        })
+    })
+
+
+    /**
      *  List of validations rules:
-     * - ,
-     * - ``,
      * - OS subroutine ${this.className}.${subroutine.name.value} must follow the interface
      * - validate arg number
      * -   `Method ${className}.${subroutineName} was called as a function/constructor`
@@ -327,7 +364,7 @@ describe('ValidatorListener', () => {
      */
 
 })
-function testValidator<T extends typeof JackCompilerError>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
+function testValidator<T extends { name: string }>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
     const name = expect.getState().currentTestName!
     const errorListener = new ErrorListener();
     errorListener.filepath = name;
@@ -335,17 +372,18 @@ function testValidator<T extends typeof JackCompilerError>(src: string, expected
 
     const validator = listenToTheTree(tree, new ValidatorListener(globalSymbolTable))
     if (expectedError) {
-        if (validator.cfgNode) {
-            validator.cfgNode.print()
-        }
+        // if (validator.cfgNode) {
+        //     validator.cfgNode.print()
+        // }
         if (validator.errors.length > 1) {
             console.error("Errors", validator.errors)
         }
-        expect(validator.errors.length).toBe(1)
+
         try {
+            expect(validator.errors.length).toBe(1)
             expect(validator.errors[0]).toBeInstanceOf(expectedError)
         } catch (e) {
-            throw new Error(`Expected error ${expectedError.name} but got ` + JSON.stringify(validator.errors[0]))
+            throw new Error(`Expected error ${expectedError.name} but got ` + validator.errors[0])
         }
     } else {
         if (validator.errors.length != 0) throw new Error("Didn't expect any errors but got " + validator.errors.join("\n"))

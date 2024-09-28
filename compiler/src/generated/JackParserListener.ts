@@ -30,11 +30,12 @@ import { StatementsContext } from "./JackParser";
 import { StatementContext } from "./JackParser";
 import { LetStatementContext } from "./JackParser";
 import { IfElseStatementContext } from "./JackParser";
-import { ElseStatementContext } from "./JackParser";
 import { IfStatementContext } from "./JackParser";
+import { ElseStatementContext } from "./JackParser";
 import { WhileStatementContext } from "./JackParser";
 import { DoStatementContext } from "./JackParser";
 import { SubroutineCallContext } from "./JackParser";
+import { SubroutineIdContext } from "./JackParser";
 import { ReturnStatementContext } from "./JackParser";
 import { ExpressionListContext } from "./JackParser";
 import { ExpressionContext } from "./JackParser";
@@ -359,17 +360,6 @@ export interface JackParserListener extends ParseTreeListener {
 	exitIfElseStatement?: (ctx: IfElseStatementContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `JackParser.elseStatement`.
-	 * @param ctx the parse tree
-	 */
-	enterElseStatement?: (ctx: ElseStatementContext) => void;
-	/**
-	 * Exit a parse tree produced by `JackParser.elseStatement`.
-	 * @param ctx the parse tree
-	 */
-	exitElseStatement?: (ctx: ElseStatementContext) => void;
-
-	/**
 	 * Enter a parse tree produced by `JackParser.ifStatement`.
 	 * @param ctx the parse tree
 	 */
@@ -379,6 +369,17 @@ export interface JackParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitIfStatement?: (ctx: IfStatementContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `JackParser.elseStatement`.
+	 * @param ctx the parse tree
+	 */
+	enterElseStatement?: (ctx: ElseStatementContext) => void;
+	/**
+	 * Exit a parse tree produced by `JackParser.elseStatement`.
+	 * @param ctx the parse tree
+	 */
+	exitElseStatement?: (ctx: ElseStatementContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.whileStatement`.
@@ -412,6 +413,17 @@ export interface JackParserListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	exitSubroutineCall?: (ctx: SubroutineCallContext) => void;
+
+	/**
+	 * Enter a parse tree produced by `JackParser.subroutineId`.
+	 * @param ctx the parse tree
+	 */
+	enterSubroutineId?: (ctx: SubroutineIdContext) => void;
+	/**
+	 * Exit a parse tree produced by `JackParser.subroutineId`.
+	 * @param ctx the parse tree
+	 */
+	exitSubroutineId?: (ctx: SubroutineIdContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.returnStatement`.

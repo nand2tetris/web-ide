@@ -1,5 +1,6 @@
-import { GenericSymbol } from "./symbol";
+import { GenericSymbol, SubroutineType } from "./symbol";
 
+export const builtInTypes = ["int", "boolean", "char"]
 //TODO: should we convert this to symbols?
 const builtInFunctionsToArgCount: Record<string, number> = {
 
@@ -59,5 +60,10 @@ const builtInFunctionsToArgCount: Record<string, number> = {
 
 export const builtInSymbols = Object.keys(builtInFunctionsToArgCount).reduce((acc, elem) => ({
     ...acc,
-    [elem]: { subroutineParameterCount: builtInFunctionsToArgCount[elem] } as GenericSymbol
+    [elem]: {
+        subroutineInfo: {
+            paramsCount: builtInFunctionsToArgCount[elem],
+            type: SubroutineType.Function
+        }
+    } as GenericSymbol
 }), {} as Record<string, GenericSymbol>)

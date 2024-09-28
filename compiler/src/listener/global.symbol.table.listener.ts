@@ -1,15 +1,13 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ClassDeclarationContext, ConstructorContext, FunctionContext, MethodContext, SubroutineDecWithoutTypeContext } from "../generated/JackParser";
+import { ClassDeclarationContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { DuplicatedSubroutineError } from '../error'
-import {  builtInSymbols } from "../builtins";
-import { GenericSymbol } from "../symbol";
+import { builtInSymbols, builtInTypes } from "../builtins";
+import { GenericSymbol, SubroutineType } from "../symbol";
 
-const primitives = new Set(["int", "boolean", "char"] as const);
+const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
-
-
 
 export class GlobalSymbolTableListener implements JackParserListener, ParseTreeListener {
     // key can be class or <class>.<subroutine_name>
@@ -30,15 +28,30 @@ export class GlobalSymbolTableListener implements JackParserListener, ParseTreeL
         this.className = ctx.className()?.text;
     };
 
-    enterSubroutineDecWithoutType(ctx: SubroutineDecWithoutTypeContext) {
-        const nameCtx = ctx.subroutineName()
+    enterSubroutineDeclaration(ctx: SubroutineDeclarationContext) {
+        let subroutineType: SubroutineType;
+        if (ctx.subroutineType().CONSTRUCTOR() != undefined) {
+            subroutineType = SubroutineType.Constructor;
+        } else if (ctx.subroutineType().METHOD() != undefined) {
+            subroutineType = SubroutineType.Method;
+        } else if (ctx.subroutineType().FUNCTION() != undefined) {
+            subroutineType = SubroutineType.Function;
+        } else {
+            throw new Error("Invalid subroutine type")
+        }
+        const subroutineWithoutTypeCtx = ctx.subroutineDecWithoutType()
+        const nameCtx = subroutineWithoutTypeCtx.subroutineName()
         const subroutineName = nameCtx.text
         const id = this.className + "." + subroutineName
         if (this.globalSymbolTable[id] != undefined) {
             this.errors.push(new DuplicatedSubroutineError(nameCtx.start.line, nameCtx.start.startIndex, `Subroutine "${subroutineName}" is already defined.`));
         }
+        const paramsCount = subroutineWithoutTypeCtx.parameterList().parameter().length
         this.globalSymbolTable[id] = {
-            subroutineParameterCount: ctx.parameterList().parameter().length,
+            subroutineInfo: {
+                type: subroutineType,
+                paramsCount: paramsCount,
+            }
         } as GenericSymbol;
     }
 

@@ -1,5 +1,5 @@
 import path from "path";
-import { GlobalSymbolTableListener } from "./listener/symbol.table.listener";
+import { GlobalSymbolTableListener } from "./listener/global.symbol.table.listener";
 import fs from "fs";
 import { ParseTreeWalker } from "antlr4ts/tree/ParseTreeWalker";
 import { JackParser } from "./generated/JackParser";

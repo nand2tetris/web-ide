@@ -1,6 +1,6 @@
 import { ParseTreeWalker } from 'antlr4ts/tree/ParseTreeWalker';
 import fs from 'fs';
-import { GlobalSymbolTableListener } from "../src/listener/symbol.table.listener";
+import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener";
 
 import path from "path";
 import { ErrorListener } from "../src/listener/error.listener";

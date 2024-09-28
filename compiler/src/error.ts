@@ -70,16 +70,16 @@ export class VoidSubroutineReturnsValueError extends JackCompilerError {
 
 }
 
-export class SubroutineNotAllPathsReturn extends JackCompilerError {
+export class SubroutineNotAllPathsReturnError extends JackCompilerError {
 
     constructor(line: number, charPositionInLine: number, subroutineName: string) {
         super(line, charPositionInLine, `Subroutine ${subroutineName}: not all code paths return a value`);
-        Object.setPrototypeOf(this, SubroutineNotAllPathsReturn.prototype);
+        Object.setPrototypeOf(this, SubroutineNotAllPathsReturnError.prototype);
     }
 
 }
 
-export class IncorrectParamsNumberInSubroutineCall extends JackCompilerError {
+export class IncorrectParamsNumberInSubroutineCallError extends JackCompilerError {
 
     constructor(line: number,
         charPositionInLine: number,
@@ -88,17 +88,32 @@ export class IncorrectParamsNumberInSubroutineCall extends JackCompilerError {
         actualParamsCount: number) {
         super(line, charPositionInLine,
             `Subroutine ${subroutineName} expects ${expectedParamsCount} arguments while ${actualParamsCount} was provided`);
-        Object.setPrototypeOf(this, IncorrectParamsNumberInSubroutineCall.prototype);
+        Object.setPrototypeOf(this, IncorrectParamsNumberInSubroutineCallError.prototype);
     }
 
 }
-export class UnknownSubroutineCall extends JackCompilerError {
-
+export class UnknownSubroutineCallError extends JackCompilerError {
+    constructor(line: number,
+        charPositionInLine: number,
+        subroutineName: string,
+        className?: string) {
+        super(line, charPositionInLine, `Can't find subroutine '${subroutineName}' ${className ? `in ${className}` : ""} `);
+        Object.setPrototypeOf(this, UnknownSubroutineCallError.prototype);
+    }
+}
+export class MethodCalledAsFunctionError extends JackCompilerError {
     constructor(line: number,
         charPositionInLine: number,
         subroutineId: string) {
-        super(line, charPositionInLine, `Subroutine ${subroutineId} not found`);
-        Object.setPrototypeOf(this, UnknownSubroutineCall.prototype);
+        super(line, charPositionInLine, `Method ${subroutineId} was called as a function/constructor`);
+        Object.setPrototypeOf(this, MethodCalledAsFunctionError.prototype);
     }
-
+}
+export class FunctionCalledAsMethodError extends JackCompilerError {
+    constructor(line: number,
+        charPositionInLine: number,
+        subroutineId: string) {
+        super(line, charPositionInLine, `Function or constructor ${subroutineId} was called as a method`);
+        Object.setPrototypeOf(this, FunctionCalledAsMethodError.prototype);
+    }
 }

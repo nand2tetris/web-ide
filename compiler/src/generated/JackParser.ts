@@ -81,45 +81,46 @@ export class JackParser extends Parser {
 	public static readonly RULE_fieldList = 4;
 	public static readonly RULE_fieldName = 5;
 	public static readonly RULE_subroutineDeclaration = 6;
-	public static readonly RULE_subroutineDecWithoutType = 7;
-	public static readonly RULE_subroutineName = 8;
-	public static readonly RULE_subroutineReturnType = 9;
-	public static readonly RULE_varType = 10;
-	public static readonly RULE_parameterList = 11;
-	public static readonly RULE_parameter = 12;
-	public static readonly RULE_parameterName = 13;
-	public static readonly RULE_subroutineBody = 14;
-	public static readonly RULE_varDeclaration = 15;
-	public static readonly RULE_varNameInDeclaration = 16;
-	public static readonly RULE_varName = 17;
-	public static readonly RULE_statements = 18;
-	public static readonly RULE_statement = 19;
-	public static readonly RULE_letStatement = 20;
-	public static readonly RULE_ifElseStatement = 21;
-	public static readonly RULE_ifStatement = 22;
-	public static readonly RULE_elseStatement = 23;
-	public static readonly RULE_whileStatement = 24;
-	public static readonly RULE_doStatement = 25;
-	public static readonly RULE_subroutineCall = 26;
-	public static readonly RULE_subroutineId = 27;
-	public static readonly RULE_returnStatement = 28;
-	public static readonly RULE_expressionList = 29;
-	public static readonly RULE_expression = 30;
-	public static readonly RULE_groupedExpression = 31;
-	public static readonly RULE_unaryOp = 32;
-	public static readonly RULE_arrayAccess = 33;
-	public static readonly RULE_constant = 34;
-	public static readonly RULE_unaryOperator = 35;
-	public static readonly RULE_binaryOperator = 36;
+	public static readonly RULE_subroutineType = 7;
+	public static readonly RULE_subroutineDecWithoutType = 8;
+	public static readonly RULE_subroutineName = 9;
+	public static readonly RULE_subroutineReturnType = 10;
+	public static readonly RULE_varType = 11;
+	public static readonly RULE_parameterList = 12;
+	public static readonly RULE_parameter = 13;
+	public static readonly RULE_parameterName = 14;
+	public static readonly RULE_subroutineBody = 15;
+	public static readonly RULE_varDeclaration = 16;
+	public static readonly RULE_varNameInDeclaration = 17;
+	public static readonly RULE_varName = 18;
+	public static readonly RULE_statements = 19;
+	public static readonly RULE_statement = 20;
+	public static readonly RULE_letStatement = 21;
+	public static readonly RULE_ifElseStatement = 22;
+	public static readonly RULE_ifStatement = 23;
+	public static readonly RULE_elseStatement = 24;
+	public static readonly RULE_whileStatement = 25;
+	public static readonly RULE_doStatement = 26;
+	public static readonly RULE_subroutineCall = 27;
+	public static readonly RULE_subroutineId = 28;
+	public static readonly RULE_returnStatement = 29;
+	public static readonly RULE_expressionList = 30;
+	public static readonly RULE_expression = 31;
+	public static readonly RULE_groupedExpression = 32;
+	public static readonly RULE_unaryOp = 33;
+	public static readonly RULE_arrayAccess = 34;
+	public static readonly RULE_constant = 35;
+	public static readonly RULE_unaryOperator = 36;
+	public static readonly RULE_binaryOperator = 37;
 	// tslint:disable:no-trailing-whitespace
 	public static readonly ruleNames: string[] = [
 		"program", "classDeclaration", "className", "classVarDec", "fieldList", 
-		"fieldName", "subroutineDeclaration", "subroutineDecWithoutType", "subroutineName", 
-		"subroutineReturnType", "varType", "parameterList", "parameter", "parameterName", 
-		"subroutineBody", "varDeclaration", "varNameInDeclaration", "varName", 
-		"statements", "statement", "letStatement", "ifElseStatement", "ifStatement", 
-		"elseStatement", "whileStatement", "doStatement", "subroutineCall", "subroutineId", 
-		"returnStatement", "expressionList", "expression", "groupedExpression", 
+		"fieldName", "subroutineDeclaration", "subroutineType", "subroutineDecWithoutType", 
+		"subroutineName", "subroutineReturnType", "varType", "parameterList", 
+		"parameter", "parameterName", "subroutineBody", "varDeclaration", "varNameInDeclaration", 
+		"varName", "statements", "statement", "letStatement", "ifElseStatement", 
+		"ifStatement", "elseStatement", "whileStatement", "doStatement", "subroutineCall", 
+		"subroutineId", "returnStatement", "expressionList", "expression", "groupedExpression", 
 		"unaryOp", "arrayAccess", "constant", "unaryOperator", "binaryOperator",
 	];
 
@@ -173,9 +174,9 @@ export class JackParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 74;
+			this.state = 76;
 			this.classDeclaration();
-			this.state = 75;
+			this.state = 77;
 			this.match(JackParser.EOF);
 			}
 		}
@@ -201,41 +202,41 @@ export class JackParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 77;
-			this.match(JackParser.CLASS);
-			this.state = 78;
-			this.className();
 			this.state = 79;
+			this.match(JackParser.CLASS);
+			this.state = 80;
+			this.className();
+			this.state = 81;
 			this.match(JackParser.LBRACE);
-			this.state = 83;
+			this.state = 85;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while (_la === JackParser.FIELD || _la === JackParser.STATIC) {
 				{
 				{
-				this.state = 80;
+				this.state = 82;
 				this.classVarDec();
 				}
 				}
-				this.state = 85;
+				this.state = 87;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 89;
+			this.state = 91;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << JackParser.CONSTRUCTOR) | (1 << JackParser.FUNCTION) | (1 << JackParser.METHOD))) !== 0)) {
 				{
 				{
-				this.state = 86;
+				this.state = 88;
 				this.subroutineDeclaration();
 				}
 				}
-				this.state = 91;
+				this.state = 93;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 92;
+			this.state = 94;
 			this.match(JackParser.RBRACE);
 			}
 		}
@@ -260,7 +261,7 @@ export class JackParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 94;
+			this.state = 96;
 			this.match(JackParser.IDENTIFIER);
 			}
 		}
@@ -282,36 +283,26 @@ export class JackParser extends Parser {
 	public classVarDec(): ClassVarDecContext {
 		let _localctx: ClassVarDecContext = new ClassVarDecContext(this._ctx, this.state);
 		this.enterRule(_localctx, 6, JackParser.RULE_classVarDec);
+		let _la: number;
 		try {
-			this.state = 104;
-			this._errHandler.sync(this);
-			switch (this._input.LA(1)) {
-			case JackParser.STATIC:
-				_localctx = new StaticFieldDeclarationContext(_localctx);
-				this.enterOuterAlt(_localctx, 1);
-				{
-				this.state = 96;
-				this.match(JackParser.STATIC);
-				this.state = 97;
-				this.fieldList();
-				this.state = 98;
-				this.match(JackParser.SEMICOLON);
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 98;
+			_la = this._input.LA(1);
+			if (!(_la === JackParser.FIELD || _la === JackParser.STATIC)) {
+			this._errHandler.recoverInline(this);
+			} else {
+				if (this._input.LA(1) === Token.EOF) {
+					this.matchedEOF = true;
 				}
-				break;
-			case JackParser.FIELD:
-				_localctx = new FieldDeclarationContext(_localctx);
-				this.enterOuterAlt(_localctx, 2);
-				{
-				this.state = 100;
-				this.match(JackParser.FIELD);
-				this.state = 101;
-				this.fieldList();
-				this.state = 102;
-				this.match(JackParser.SEMICOLON);
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
+
+				this._errHandler.reportMatch(this);
+				this.consume();
+			}
+			this.state = 99;
+			this.fieldList();
+			this.state = 100;
+			this.match(JackParser.SEMICOLON);
 			}
 		}
 		catch (re) {
@@ -336,23 +327,23 @@ export class JackParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 106;
+			this.state = 102;
 			this.varType();
-			this.state = 107;
+			this.state = 103;
 			this.fieldName();
-			this.state = 112;
+			this.state = 108;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while (_la === JackParser.COMMA) {
 				{
 				{
-				this.state = 108;
+				this.state = 104;
 				this.match(JackParser.COMMA);
-				this.state = 109;
+				this.state = 105;
 				this.fieldName();
 				}
 				}
-				this.state = 114;
+				this.state = 110;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
@@ -379,7 +370,7 @@ export class JackParser extends Parser {
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 115;
+			this.state = 111;
 			this.match(JackParser.IDENTIFIER);
 			}
 		}
@@ -402,41 +393,48 @@ export class JackParser extends Parser {
 		let _localctx: SubroutineDeclarationContext = new SubroutineDeclarationContext(this._ctx, this.state);
 		this.enterRule(_localctx, 12, JackParser.RULE_subroutineDeclaration);
 		try {
-			this.state = 123;
-			this._errHandler.sync(this);
-			switch (this._input.LA(1)) {
-			case JackParser.CONSTRUCTOR:
-				_localctx = new ConstructorContext(_localctx);
-				this.enterOuterAlt(_localctx, 1);
-				{
-				this.state = 117;
-				this.match(JackParser.CONSTRUCTOR);
-				this.state = 118;
-				this.subroutineDecWithoutType();
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 113;
+			this.subroutineType();
+			this.state = 114;
+			this.subroutineDecWithoutType();
+			}
+		}
+		catch (re) {
+			if (re instanceof RecognitionException) {
+				_localctx.exception = re;
+				this._errHandler.reportError(this, re);
+				this._errHandler.recover(this, re);
+			} else {
+				throw re;
+			}
+		}
+		finally {
+			this.exitRule();
+		}
+		return _localctx;
+	}
+	// @RuleVersion(0)
+	public subroutineType(): SubroutineTypeContext {
+		let _localctx: SubroutineTypeContext = new SubroutineTypeContext(this._ctx, this.state);
+		this.enterRule(_localctx, 14, JackParser.RULE_subroutineType);
+		let _la: number;
+		try {
+			this.enterOuterAlt(_localctx, 1);
+			{
+			this.state = 116;
+			_la = this._input.LA(1);
+			if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << JackParser.CONSTRUCTOR) | (1 << JackParser.FUNCTION) | (1 << JackParser.METHOD))) !== 0))) {
+			this._errHandler.recoverInline(this);
+			} else {
+				if (this._input.LA(1) === Token.EOF) {
+					this.matchedEOF = true;
 				}
-				break;
-			case JackParser.METHOD:
-				_localctx = new MethodContext(_localctx);
-				this.enterOuterAlt(_localctx, 2);
-				{
-				this.state = 119;
-				this.match(JackParser.METHOD);
-				this.state = 120;
-				this.subroutineDecWithoutType();
-				}
-				break;
-			case JackParser.FUNCTION:
-				_localctx = new FunctionContext(_localctx);
-				this.enterOuterAlt(_localctx, 3);
-				{
-				this.state = 121;
-				this.match(JackParser.FUNCTION);
-				this.state = 122;
-				this.subroutineDecWithoutType();
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
+
+				this._errHandler.reportMatch(this);
+				this.consume();
+			}
 			}
 		}
 		catch (re) {
@@ -456,21 +454,21 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public subroutineDecWithoutType(): SubroutineDecWithoutTypeContext {
 		let _localctx: SubroutineDecWithoutTypeContext = new SubroutineDecWithoutTypeContext(this._ctx, this.state);
-		this.enterRule(_localctx, 14, JackParser.RULE_subroutineDecWithoutType);
+		this.enterRule(_localctx, 16, JackParser.RULE_subroutineDecWithoutType);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 125;
+			this.state = 118;
 			this.subroutineReturnType();
-			this.state = 126;
+			this.state = 119;
 			this.subroutineName();
-			this.state = 127;
+			this.state = 120;
 			this.match(JackParser.LPAREN);
-			this.state = 128;
+			this.state = 121;
 			this.parameterList();
-			this.state = 129;
+			this.state = 122;
 			this.match(JackParser.RPAREN);
-			this.state = 130;
+			this.state = 123;
 			this.subroutineBody();
 			}
 		}
@@ -491,11 +489,11 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public subroutineName(): SubroutineNameContext {
 		let _localctx: SubroutineNameContext = new SubroutineNameContext(this._ctx, this.state);
-		this.enterRule(_localctx, 16, JackParser.RULE_subroutineName);
+		this.enterRule(_localctx, 18, JackParser.RULE_subroutineName);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 132;
+			this.state = 125;
 			this.match(JackParser.IDENTIFIER);
 			}
 		}
@@ -516,9 +514,9 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public subroutineReturnType(): SubroutineReturnTypeContext {
 		let _localctx: SubroutineReturnTypeContext = new SubroutineReturnTypeContext(this._ctx, this.state);
-		this.enterRule(_localctx, 18, JackParser.RULE_subroutineReturnType);
+		this.enterRule(_localctx, 20, JackParser.RULE_subroutineReturnType);
 		try {
-			this.state = 136;
+			this.state = 129;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case JackParser.INT:
@@ -527,14 +525,14 @@ export class JackParser extends Parser {
 			case JackParser.IDENTIFIER:
 				this.enterOuterAlt(_localctx, 1);
 				{
-				this.state = 134;
+				this.state = 127;
 				this.varType();
 				}
 				break;
 			case JackParser.VOID:
 				this.enterOuterAlt(_localctx, 2);
 				{
-				this.state = 135;
+				this.state = 128;
 				this.match(JackParser.VOID);
 				}
 				break;
@@ -559,12 +557,12 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public varType(): VarTypeContext {
 		let _localctx: VarTypeContext = new VarTypeContext(this._ctx, this.state);
-		this.enterRule(_localctx, 20, JackParser.RULE_varType);
+		this.enterRule(_localctx, 22, JackParser.RULE_varType);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 138;
+			this.state = 131;
 			_la = this._input.LA(1);
 			if (!((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << JackParser.INT) | (1 << JackParser.CHAR) | (1 << JackParser.BOOLEAN))) !== 0) || _la === JackParser.IDENTIFIER)) {
 			this._errHandler.recoverInline(this);
@@ -595,31 +593,31 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public parameterList(): ParameterListContext {
 		let _localctx: ParameterListContext = new ParameterListContext(this._ctx, this.state);
-		this.enterRule(_localctx, 22, JackParser.RULE_parameterList);
+		this.enterRule(_localctx, 24, JackParser.RULE_parameterList);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 148;
+			this.state = 141;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << JackParser.INT) | (1 << JackParser.CHAR) | (1 << JackParser.BOOLEAN))) !== 0) || _la === JackParser.IDENTIFIER) {
 				{
-				this.state = 140;
+				this.state = 133;
 				this.parameter();
-				this.state = 145;
+				this.state = 138;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				while (_la === JackParser.COMMA) {
 					{
 					{
-					this.state = 141;
+					this.state = 134;
 					this.match(JackParser.COMMA);
-					this.state = 142;
+					this.state = 135;
 					this.parameter();
 					}
 					}
-					this.state = 147;
+					this.state = 140;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
@@ -645,13 +643,13 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public parameter(): ParameterContext {
 		let _localctx: ParameterContext = new ParameterContext(this._ctx, this.state);
-		this.enterRule(_localctx, 24, JackParser.RULE_parameter);
+		this.enterRule(_localctx, 26, JackParser.RULE_parameter);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 150;
+			this.state = 143;
 			this.varType();
-			this.state = 151;
+			this.state = 144;
 			this.parameterName();
 			}
 		}
@@ -672,11 +670,11 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public parameterName(): ParameterNameContext {
 		let _localctx: ParameterNameContext = new ParameterNameContext(this._ctx, this.state);
-		this.enterRule(_localctx, 26, JackParser.RULE_parameterName);
+		this.enterRule(_localctx, 28, JackParser.RULE_parameterName);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 153;
+			this.state = 146;
 			this.match(JackParser.IDENTIFIER);
 			}
 		}
@@ -697,30 +695,30 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public subroutineBody(): SubroutineBodyContext {
 		let _localctx: SubroutineBodyContext = new SubroutineBodyContext(this._ctx, this.state);
-		this.enterRule(_localctx, 28, JackParser.RULE_subroutineBody);
+		this.enterRule(_localctx, 30, JackParser.RULE_subroutineBody);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 155;
+			this.state = 148;
 			this.match(JackParser.LBRACE);
-			this.state = 159;
+			this.state = 152;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while (_la === JackParser.VAR) {
 				{
 				{
-				this.state = 156;
+				this.state = 149;
 				this.varDeclaration();
 				}
 				}
-				this.state = 161;
+				this.state = 154;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 162;
+			this.state = 155;
 			this.statements();
-			this.state = 163;
+			this.state = 156;
 			this.match(JackParser.RBRACE);
 			}
 		}
@@ -741,34 +739,34 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public varDeclaration(): VarDeclarationContext {
 		let _localctx: VarDeclarationContext = new VarDeclarationContext(this._ctx, this.state);
-		this.enterRule(_localctx, 30, JackParser.RULE_varDeclaration);
+		this.enterRule(_localctx, 32, JackParser.RULE_varDeclaration);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 165;
+			this.state = 158;
 			this.match(JackParser.VAR);
-			this.state = 166;
+			this.state = 159;
 			this.varType();
-			this.state = 167;
+			this.state = 160;
 			this.varNameInDeclaration();
-			this.state = 172;
+			this.state = 165;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while (_la === JackParser.COMMA) {
 				{
 				{
-				this.state = 168;
+				this.state = 161;
 				this.match(JackParser.COMMA);
-				this.state = 169;
+				this.state = 162;
 				this.varNameInDeclaration();
 				}
 				}
-				this.state = 174;
+				this.state = 167;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
-			this.state = 175;
+			this.state = 168;
 			this.match(JackParser.SEMICOLON);
 			}
 		}
@@ -789,11 +787,11 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public varNameInDeclaration(): VarNameInDeclarationContext {
 		let _localctx: VarNameInDeclarationContext = new VarNameInDeclarationContext(this._ctx, this.state);
-		this.enterRule(_localctx, 32, JackParser.RULE_varNameInDeclaration);
+		this.enterRule(_localctx, 34, JackParser.RULE_varNameInDeclaration);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 177;
+			this.state = 170;
 			this.match(JackParser.IDENTIFIER);
 			}
 		}
@@ -814,11 +812,11 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public varName(): VarNameContext {
 		let _localctx: VarNameContext = new VarNameContext(this._ctx, this.state);
-		this.enterRule(_localctx, 34, JackParser.RULE_varName);
+		this.enterRule(_localctx, 36, JackParser.RULE_varName);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 179;
+			this.state = 172;
 			this.match(JackParser.IDENTIFIER);
 			}
 		}
@@ -839,22 +837,22 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public statements(): StatementsContext {
 		let _localctx: StatementsContext = new StatementsContext(this._ctx, this.state);
-		this.enterRule(_localctx, 36, JackParser.RULE_statements);
+		this.enterRule(_localctx, 38, JackParser.RULE_statements);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 184;
+			this.state = 177;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			while ((((_la) & ~0x1F) === 0 && ((1 << _la) & ((1 << JackParser.LET) | (1 << JackParser.DO) | (1 << JackParser.IF) | (1 << JackParser.WHILE) | (1 << JackParser.RETURN))) !== 0)) {
 				{
 				{
-				this.state = 181;
+				this.state = 174;
 				this.statement();
 				}
 				}
-				this.state = 186;
+				this.state = 179;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 			}
@@ -877,43 +875,43 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public statement(): StatementContext {
 		let _localctx: StatementContext = new StatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 38, JackParser.RULE_statement);
+		this.enterRule(_localctx, 40, JackParser.RULE_statement);
 		try {
-			this.state = 192;
+			this.state = 185;
 			this._errHandler.sync(this);
 			switch (this._input.LA(1)) {
 			case JackParser.LET:
 				this.enterOuterAlt(_localctx, 1);
 				{
-				this.state = 187;
+				this.state = 180;
 				this.letStatement();
 				}
 				break;
 			case JackParser.IF:
 				this.enterOuterAlt(_localctx, 2);
 				{
-				this.state = 188;
+				this.state = 181;
 				this.ifElseStatement();
 				}
 				break;
 			case JackParser.WHILE:
 				this.enterOuterAlt(_localctx, 3);
 				{
-				this.state = 189;
+				this.state = 182;
 				this.whileStatement();
 				}
 				break;
 			case JackParser.DO:
 				this.enterOuterAlt(_localctx, 4);
 				{
-				this.state = 190;
+				this.state = 183;
 				this.doStatement();
 				}
 				break;
 			case JackParser.RETURN:
 				this.enterOuterAlt(_localctx, 5);
 				{
-				this.state = 191;
+				this.state = 184;
 				this.returnStatement();
 				}
 				break;
@@ -938,34 +936,34 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public letStatement(): LetStatementContext {
 		let _localctx: LetStatementContext = new LetStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 40, JackParser.RULE_letStatement);
+		this.enterRule(_localctx, 42, JackParser.RULE_letStatement);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 194;
+			this.state = 187;
 			this.match(JackParser.LET);
-			this.state = 197;
+			this.state = 190;
 			this._errHandler.sync(this);
-			switch ( this.interpreter.adaptivePredict(this._input, 12, this._ctx) ) {
+			switch ( this.interpreter.adaptivePredict(this._input, 10, this._ctx) ) {
 			case 1:
 				{
-				this.state = 195;
+				this.state = 188;
 				this.varName();
 				}
 				break;
 
 			case 2:
 				{
-				this.state = 196;
+				this.state = 189;
 				this.arrayAccess();
 				}
 				break;
 			}
-			this.state = 199;
+			this.state = 192;
 			this.match(JackParser.EQUALS);
-			this.state = 200;
+			this.state = 193;
 			this.expression(0);
-			this.state = 201;
+			this.state = 194;
 			this.match(JackParser.SEMICOLON);
 			}
 		}
@@ -986,19 +984,19 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public ifElseStatement(): IfElseStatementContext {
 		let _localctx: IfElseStatementContext = new IfElseStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 42, JackParser.RULE_ifElseStatement);
+		this.enterRule(_localctx, 44, JackParser.RULE_ifElseStatement);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 203;
+			this.state = 196;
 			this.ifStatement();
-			this.state = 205;
+			this.state = 198;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (_la === JackParser.ELSE) {
 				{
-				this.state = 204;
+				this.state = 197;
 				this.elseStatement();
 				}
 			}
@@ -1022,23 +1020,23 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public ifStatement(): IfStatementContext {
 		let _localctx: IfStatementContext = new IfStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 44, JackParser.RULE_ifStatement);
+		this.enterRule(_localctx, 46, JackParser.RULE_ifStatement);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 207;
+			this.state = 200;
 			this.match(JackParser.IF);
-			this.state = 208;
+			this.state = 201;
 			this.match(JackParser.LPAREN);
-			this.state = 209;
+			this.state = 202;
 			this.expression(0);
-			this.state = 210;
+			this.state = 203;
 			this.match(JackParser.RPAREN);
-			this.state = 211;
+			this.state = 204;
 			this.match(JackParser.LBRACE);
-			this.state = 212;
+			this.state = 205;
 			this.statements();
-			this.state = 213;
+			this.state = 206;
 			this.match(JackParser.RBRACE);
 			}
 		}
@@ -1059,17 +1057,17 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public elseStatement(): ElseStatementContext {
 		let _localctx: ElseStatementContext = new ElseStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 46, JackParser.RULE_elseStatement);
+		this.enterRule(_localctx, 48, JackParser.RULE_elseStatement);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 215;
+			this.state = 208;
 			this.match(JackParser.ELSE);
-			this.state = 216;
+			this.state = 209;
 			this.match(JackParser.LBRACE);
-			this.state = 217;
+			this.state = 210;
 			this.statements();
-			this.state = 218;
+			this.state = 211;
 			this.match(JackParser.RBRACE);
 			}
 		}
@@ -1090,23 +1088,23 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public whileStatement(): WhileStatementContext {
 		let _localctx: WhileStatementContext = new WhileStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 48, JackParser.RULE_whileStatement);
+		this.enterRule(_localctx, 50, JackParser.RULE_whileStatement);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 220;
+			this.state = 213;
 			this.match(JackParser.WHILE);
-			this.state = 221;
+			this.state = 214;
 			this.match(JackParser.LPAREN);
-			this.state = 222;
+			this.state = 215;
 			this.expression(0);
-			this.state = 223;
+			this.state = 216;
 			this.match(JackParser.RPAREN);
-			this.state = 224;
+			this.state = 217;
 			this.match(JackParser.LBRACE);
-			this.state = 225;
+			this.state = 218;
 			this.statements();
-			this.state = 226;
+			this.state = 219;
 			this.match(JackParser.RBRACE);
 			}
 		}
@@ -1127,15 +1125,15 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public doStatement(): DoStatementContext {
 		let _localctx: DoStatementContext = new DoStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 50, JackParser.RULE_doStatement);
+		this.enterRule(_localctx, 52, JackParser.RULE_doStatement);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 228;
+			this.state = 221;
 			this.match(JackParser.DO);
-			this.state = 229;
+			this.state = 222;
 			this.subroutineCall();
-			this.state = 230;
+			this.state = 223;
 			this.match(JackParser.SEMICOLON);
 			}
 		}
@@ -1156,17 +1154,17 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public subroutineCall(): SubroutineCallContext {
 		let _localctx: SubroutineCallContext = new SubroutineCallContext(this._ctx, this.state);
-		this.enterRule(_localctx, 52, JackParser.RULE_subroutineCall);
+		this.enterRule(_localctx, 54, JackParser.RULE_subroutineCall);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 232;
+			this.state = 225;
 			this.subroutineId();
-			this.state = 233;
+			this.state = 226;
 			this.match(JackParser.LPAREN);
-			this.state = 234;
+			this.state = 227;
 			this.expressionList();
-			this.state = 235;
+			this.state = 228;
 			this.match(JackParser.RPAREN);
 			}
 		}
@@ -1187,39 +1185,39 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public subroutineId(): SubroutineIdContext {
 		let _localctx: SubroutineIdContext = new SubroutineIdContext(this._ctx, this.state);
-		this.enterRule(_localctx, 54, JackParser.RULE_subroutineId);
+		this.enterRule(_localctx, 56, JackParser.RULE_subroutineId);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 242;
+			this.state = 235;
 			this._errHandler.sync(this);
-			switch ( this.interpreter.adaptivePredict(this._input, 15, this._ctx) ) {
+			switch ( this.interpreter.adaptivePredict(this._input, 13, this._ctx) ) {
 			case 1:
 				{
-				this.state = 239;
+				this.state = 232;
 				this._errHandler.sync(this);
 				switch (this._input.LA(1)) {
 				case JackParser.IDENTIFIER:
 					{
-					this.state = 237;
+					this.state = 230;
 					this.className();
 					}
 					break;
 				case JackParser.THIS_LITERAL:
 					{
-					this.state = 238;
+					this.state = 231;
 					this.match(JackParser.THIS_LITERAL);
 					}
 					break;
 				default:
 					throw new NoViableAltException(this);
 				}
-				this.state = 241;
+				this.state = 234;
 				this.match(JackParser.DOT);
 				}
 				break;
 			}
-			this.state = 244;
+			this.state = 237;
 			this.subroutineName();
 			}
 		}
@@ -1240,24 +1238,24 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public returnStatement(): ReturnStatementContext {
 		let _localctx: ReturnStatementContext = new ReturnStatementContext(this._ctx, this.state);
-		this.enterRule(_localctx, 56, JackParser.RULE_returnStatement);
+		this.enterRule(_localctx, 58, JackParser.RULE_returnStatement);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 246;
+			this.state = 239;
 			this.match(JackParser.RETURN);
-			this.state = 248;
+			this.state = 241;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (((((_la - 20)) & ~0x1F) === 0 && ((1 << (_la - 20)) & ((1 << (JackParser.LPAREN - 20)) | (1 << (JackParser.MINUS - 20)) | (1 << (JackParser.TILDE - 20)) | (1 << (JackParser.INTEGER_LITERAL - 20)) | (1 << (JackParser.BOOLEAN_LITERAL - 20)) | (1 << (JackParser.NULL_LITERAL - 20)) | (1 << (JackParser.THIS_LITERAL - 20)) | (1 << (JackParser.IDENTIFIER - 20)) | (1 << (JackParser.STRING_LITERAL - 20)))) !== 0)) {
 				{
-				this.state = 247;
+				this.state = 240;
 				this.expression(0);
 				}
 			}
 
-			this.state = 250;
+			this.state = 243;
 			this.match(JackParser.SEMICOLON);
 			}
 		}
@@ -1278,31 +1276,31 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public expressionList(): ExpressionListContext {
 		let _localctx: ExpressionListContext = new ExpressionListContext(this._ctx, this.state);
-		this.enterRule(_localctx, 58, JackParser.RULE_expressionList);
+		this.enterRule(_localctx, 60, JackParser.RULE_expressionList);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 260;
+			this.state = 253;
 			this._errHandler.sync(this);
 			_la = this._input.LA(1);
 			if (((((_la - 20)) & ~0x1F) === 0 && ((1 << (_la - 20)) & ((1 << (JackParser.LPAREN - 20)) | (1 << (JackParser.MINUS - 20)) | (1 << (JackParser.TILDE - 20)) | (1 << (JackParser.INTEGER_LITERAL - 20)) | (1 << (JackParser.BOOLEAN_LITERAL - 20)) | (1 << (JackParser.NULL_LITERAL - 20)) | (1 << (JackParser.THIS_LITERAL - 20)) | (1 << (JackParser.IDENTIFIER - 20)) | (1 << (JackParser.STRING_LITERAL - 20)))) !== 0)) {
 				{
-				this.state = 252;
+				this.state = 245;
 				this.expression(0);
-				this.state = 257;
+				this.state = 250;
 				this._errHandler.sync(this);
 				_la = this._input.LA(1);
 				while (_la === JackParser.COMMA) {
 					{
 					{
-					this.state = 253;
+					this.state = 246;
 					this.match(JackParser.COMMA);
-					this.state = 254;
+					this.state = 247;
 					this.expression(0);
 					}
 					}
-					this.state = 259;
+					this.state = 252;
 					this._errHandler.sync(this);
 					_la = this._input.LA(1);
 				}
@@ -1338,61 +1336,61 @@ export class JackParser extends Parser {
 		let _parentState: number = this.state;
 		let _localctx: ExpressionContext = new ExpressionContext(this._ctx, _parentState);
 		let _prevctx: ExpressionContext = _localctx;
-		let _startState: number = 60;
-		this.enterRecursionRule(_localctx, 60, JackParser.RULE_expression, _p);
+		let _startState: number = 62;
+		this.enterRecursionRule(_localctx, 62, JackParser.RULE_expression, _p);
 		try {
 			let _alt: number;
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 269;
+			this.state = 262;
 			this._errHandler.sync(this);
-			switch ( this.interpreter.adaptivePredict(this._input, 19, this._ctx) ) {
+			switch ( this.interpreter.adaptivePredict(this._input, 17, this._ctx) ) {
 			case 1:
 				{
-				this.state = 263;
+				this.state = 256;
 				this.constant();
 				}
 				break;
 
 			case 2:
 				{
-				this.state = 264;
+				this.state = 257;
 				this.varName();
 				}
 				break;
 
 			case 3:
 				{
-				this.state = 265;
+				this.state = 258;
 				this.subroutineCall();
 				}
 				break;
 
 			case 4:
 				{
-				this.state = 266;
+				this.state = 259;
 				this.arrayAccess();
 				}
 				break;
 
 			case 5:
 				{
-				this.state = 267;
+				this.state = 260;
 				this.unaryOp();
 				}
 				break;
 
 			case 6:
 				{
-				this.state = 268;
+				this.state = 261;
 				this.groupedExpression();
 				}
 				break;
 			}
 			this._ctx._stop = this._input.tryLT(-1);
-			this.state = 277;
+			this.state = 270;
 			this._errHandler.sync(this);
-			_alt = this.interpreter.adaptivePredict(this._input, 20, this._ctx);
+			_alt = this.interpreter.adaptivePredict(this._input, 18, this._ctx);
 			while (_alt !== 2 && _alt !== ATN.INVALID_ALT_NUMBER) {
 				if (_alt === 1) {
 					if (this._parseListeners != null) {
@@ -1404,20 +1402,20 @@ export class JackParser extends Parser {
 					_localctx = new ExpressionContext(_parentctx, _parentState);
 					_localctx._binaryOperation = _prevctx;
 					this.pushNewRecursionContext(_localctx, _startState, JackParser.RULE_expression);
-					this.state = 271;
+					this.state = 264;
 					if (!(this.precpred(this._ctx, 7))) {
 						throw this.createFailedPredicateException("this.precpred(this._ctx, 7)");
 					}
-					this.state = 272;
+					this.state = 265;
 					this.binaryOperator();
-					this.state = 273;
+					this.state = 266;
 					this.expression(8);
 					}
 					}
 				}
-				this.state = 279;
+				this.state = 272;
 				this._errHandler.sync(this);
-				_alt = this.interpreter.adaptivePredict(this._input, 20, this._ctx);
+				_alt = this.interpreter.adaptivePredict(this._input, 18, this._ctx);
 			}
 			}
 		}
@@ -1438,15 +1436,15 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public groupedExpression(): GroupedExpressionContext {
 		let _localctx: GroupedExpressionContext = new GroupedExpressionContext(this._ctx, this.state);
-		this.enterRule(_localctx, 62, JackParser.RULE_groupedExpression);
+		this.enterRule(_localctx, 64, JackParser.RULE_groupedExpression);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 280;
+			this.state = 273;
 			this.match(JackParser.LPAREN);
-			this.state = 281;
+			this.state = 274;
 			this.expression(0);
-			this.state = 282;
+			this.state = 275;
 			this.match(JackParser.RPAREN);
 			}
 		}
@@ -1467,13 +1465,13 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public unaryOp(): UnaryOpContext {
 		let _localctx: UnaryOpContext = new UnaryOpContext(this._ctx, this.state);
-		this.enterRule(_localctx, 64, JackParser.RULE_unaryOp);
+		this.enterRule(_localctx, 66, JackParser.RULE_unaryOp);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 284;
+			this.state = 277;
 			this.unaryOperator();
-			this.state = 285;
+			this.state = 278;
 			this.expression(0);
 			}
 		}
@@ -1494,17 +1492,17 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public arrayAccess(): ArrayAccessContext {
 		let _localctx: ArrayAccessContext = new ArrayAccessContext(this._ctx, this.state);
-		this.enterRule(_localctx, 66, JackParser.RULE_arrayAccess);
+		this.enterRule(_localctx, 68, JackParser.RULE_arrayAccess);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 287;
+			this.state = 280;
 			this.varName();
-			this.state = 288;
+			this.state = 281;
 			this.match(JackParser.LBRACKET);
-			this.state = 289;
+			this.state = 282;
 			this.expression(0);
-			this.state = 290;
+			this.state = 283;
 			this.match(JackParser.RBRACKET);
 			}
 		}
@@ -1525,12 +1523,12 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public constant(): ConstantContext {
 		let _localctx: ConstantContext = new ConstantContext(this._ctx, this.state);
-		this.enterRule(_localctx, 68, JackParser.RULE_constant);
+		this.enterRule(_localctx, 70, JackParser.RULE_constant);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 292;
+			this.state = 285;
 			_la = this._input.LA(1);
 			if (!(((((_la - 40)) & ~0x1F) === 0 && ((1 << (_la - 40)) & ((1 << (JackParser.INTEGER_LITERAL - 40)) | (1 << (JackParser.BOOLEAN_LITERAL - 40)) | (1 << (JackParser.NULL_LITERAL - 40)) | (1 << (JackParser.THIS_LITERAL - 40)) | (1 << (JackParser.STRING_LITERAL - 40)))) !== 0))) {
 			this._errHandler.recoverInline(this);
@@ -1561,12 +1559,12 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public unaryOperator(): UnaryOperatorContext {
 		let _localctx: UnaryOperatorContext = new UnaryOperatorContext(this._ctx, this.state);
-		this.enterRule(_localctx, 70, JackParser.RULE_unaryOperator);
+		this.enterRule(_localctx, 72, JackParser.RULE_unaryOperator);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 294;
+			this.state = 287;
 			_la = this._input.LA(1);
 			if (!(_la === JackParser.MINUS || _la === JackParser.TILDE)) {
 			this._errHandler.recoverInline(this);
@@ -1597,12 +1595,12 @@ export class JackParser extends Parser {
 	// @RuleVersion(0)
 	public binaryOperator(): BinaryOperatorContext {
 		let _localctx: BinaryOperatorContext = new BinaryOperatorContext(this._ctx, this.state);
-		this.enterRule(_localctx, 72, JackParser.RULE_binaryOperator);
+		this.enterRule(_localctx, 74, JackParser.RULE_binaryOperator);
 		let _la: number;
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
-			this.state = 296;
+			this.state = 289;
 			_la = this._input.LA(1);
 			if (!(((((_la - 27)) & ~0x1F) === 0 && ((1 << (_la - 27)) & ((1 << (JackParser.EQUALS - 27)) | (1 << (JackParser.PLUS - 27)) | (1 << (JackParser.MINUS - 27)) | (1 << (JackParser.MUL - 27)) | (1 << (JackParser.DIV - 27)) | (1 << (JackParser.AND - 27)) | (1 << (JackParser.OR - 27)) | (1 << (JackParser.LESS_THAN - 27)) | (1 << (JackParser.GREATER_THAN - 27)))) !== 0))) {
 			this._errHandler.recoverInline(this);
@@ -1633,7 +1631,7 @@ export class JackParser extends Parser {
 
 	public override sempred(_localctx: RuleContext, ruleIndex: number, predIndex: number): boolean {
 		switch (ruleIndex) {
-		case 30:
+		case 31:
 			return this.expression_sempred(_localctx as ExpressionContext, predIndex);
 		}
 		return true;
@@ -1647,134 +1645,130 @@ export class JackParser extends Parser {
 	}
 
 	public static readonly _serializedATN: string =
-		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x030\u012D\x04\x02" +
+		"\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x030\u0126\x04\x02" +
 		"\t\x02\x04\x03\t\x03\x04\x04\t\x04\x04\x05\t\x05\x04\x06\t\x06\x04\x07" +
 		"\t\x07\x04\b\t\b\x04\t\t\t\x04\n\t\n\x04\v\t\v\x04\f\t\f\x04\r\t\r\x04" +
 		"\x0E\t\x0E\x04\x0F\t\x0F\x04\x10\t\x10\x04\x11\t\x11\x04\x12\t\x12\x04" +
 		"\x13\t\x13\x04\x14\t\x14\x04\x15\t\x15\x04\x16\t\x16\x04\x17\t\x17\x04" +
 		"\x18\t\x18\x04\x19\t\x19\x04\x1A\t\x1A\x04\x1B\t\x1B\x04\x1C\t\x1C\x04" +
 		"\x1D\t\x1D\x04\x1E\t\x1E\x04\x1F\t\x1F\x04 \t \x04!\t!\x04\"\t\"\x04#" +
-		"\t#\x04$\t$\x04%\t%\x04&\t&\x03\x02\x03\x02\x03\x02\x03\x03\x03\x03\x03" +
-		"\x03\x03\x03\x07\x03T\n\x03\f\x03\x0E\x03W\v\x03\x03\x03\x07\x03Z\n\x03" +
-		"\f\x03\x0E\x03]\v\x03\x03\x03\x03\x03\x03\x04\x03\x04\x03\x05\x03\x05" +
-		"\x03\x05\x03\x05\x03\x05\x03\x05\x03\x05\x03\x05\x05\x05k\n\x05\x03\x06" +
-		"\x03\x06\x03\x06\x03\x06\x07\x06q\n\x06\f\x06\x0E\x06t\v\x06\x03\x07\x03" +
-		"\x07\x03\b\x03\b\x03\b\x03\b\x03\b\x03\b\x05\b~\n\b\x03\t\x03\t\x03\t" +
-		"\x03\t\x03\t\x03\t\x03\t\x03\n\x03\n\x03\v\x03\v\x05\v\x8B\n\v\x03\f\x03" +
-		"\f\x03\r\x03\r\x03\r\x07\r\x92\n\r\f\r\x0E\r\x95\v\r\x05\r\x97\n\r\x03" +
-		"\x0E\x03\x0E\x03\x0E\x03\x0F\x03\x0F\x03\x10\x03\x10\x07\x10\xA0\n\x10" +
-		"\f\x10\x0E\x10\xA3\v\x10\x03\x10\x03\x10\x03\x10\x03\x11\x03\x11\x03\x11" +
-		"\x03\x11\x03\x11\x07\x11\xAD\n\x11\f\x11\x0E\x11\xB0\v\x11\x03\x11\x03" +
-		"\x11\x03\x12\x03\x12\x03\x13\x03\x13\x03\x14\x07\x14\xB9\n\x14\f\x14\x0E" +
-		"\x14\xBC\v\x14\x03\x15\x03\x15\x03\x15\x03\x15\x03\x15\x05\x15\xC3\n\x15" +
-		"\x03\x16\x03\x16\x03\x16\x05\x16\xC8\n\x16\x03\x16\x03\x16\x03\x16\x03" +
-		"\x16\x03\x17\x03\x17\x05\x17\xD0\n\x17\x03\x18\x03\x18\x03\x18\x03\x18" +
-		"\x03\x18\x03\x18\x03\x18\x03\x18\x03\x19\x03\x19\x03\x19\x03\x19\x03\x19" +
-		"\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1B" +
-		"\x03\x1B\x03\x1B\x03\x1B\x03\x1C\x03\x1C\x03\x1C\x03\x1C\x03\x1C\x03\x1D" +
-		"\x03\x1D\x05\x1D\xF2\n\x1D\x03\x1D\x05\x1D\xF5\n\x1D\x03\x1D\x03\x1D\x03" +
-		"\x1E\x03\x1E\x05\x1E\xFB\n\x1E\x03\x1E\x03\x1E\x03\x1F\x03\x1F\x03\x1F" +
-		"\x07\x1F\u0102\n\x1F\f\x1F\x0E\x1F\u0105\v\x1F\x05\x1F\u0107\n\x1F\x03" +
-		" \x03 \x03 \x03 \x03 \x03 \x03 \x05 \u0110\n \x03 \x03 \x03 \x03 \x07" +
-		" \u0116\n \f \x0E \u0119\v \x03!\x03!\x03!\x03!\x03\"\x03\"\x03\"\x03" +
-		"#\x03#\x03#\x03#\x03#\x03$\x03$\x03%\x03%\x03&\x03&\x03&\x02\x02\x03>" +
-		"\'\x02\x02\x04\x02\x06\x02\b\x02\n\x02\f\x02\x0E\x02\x10\x02\x12\x02\x14" +
-		"\x02\x16\x02\x18\x02\x1A\x02\x1C\x02\x1E\x02 \x02\"\x02$\x02&\x02(\x02" +
-		"*\x02,\x02.\x020\x022\x024\x026\x028\x02:\x02<\x02>\x02@\x02B\x02D\x02" +
-		"F\x02H\x02J\x02\x02\x06\x04\x02\n\f..\x04\x02*-//\x04\x02\x1F\x1F$$\x04" +
-		"\x02\x1D#%&\x02\u0124\x02L\x03\x02\x02\x02\x04O\x03\x02\x02\x02\x06`\x03" +
-		"\x02\x02\x02\bj\x03\x02\x02\x02\nl\x03\x02\x02\x02\fu\x03\x02\x02\x02" +
-		"\x0E}\x03\x02\x02\x02\x10\x7F\x03\x02\x02\x02\x12\x86\x03\x02\x02\x02" +
-		"\x14\x8A\x03\x02\x02\x02\x16\x8C\x03\x02\x02\x02\x18\x96\x03\x02\x02\x02" +
-		"\x1A\x98\x03\x02\x02\x02\x1C\x9B\x03\x02\x02\x02\x1E\x9D\x03\x02\x02\x02" +
-		" \xA7\x03\x02\x02\x02\"\xB3\x03\x02\x02\x02$\xB5\x03\x02\x02\x02&\xBA" +
-		"\x03\x02\x02\x02(\xC2\x03\x02\x02\x02*\xC4\x03\x02\x02\x02,\xCD\x03\x02" +
-		"\x02\x02.\xD1\x03\x02\x02\x020\xD9\x03\x02\x02\x022\xDE\x03\x02\x02\x02" +
-		"4\xE6\x03\x02\x02\x026\xEA\x03\x02\x02\x028\xF4\x03\x02\x02\x02:\xF8\x03" +
-		"\x02\x02\x02<\u0106\x03\x02\x02\x02>\u010F\x03\x02\x02\x02@\u011A\x03" +
-		"\x02\x02\x02B\u011E\x03\x02\x02\x02D\u0121\x03\x02\x02\x02F\u0126\x03" +
-		"\x02\x02\x02H\u0128\x03\x02\x02\x02J\u012A\x03\x02\x02\x02LM\x05\x04\x03" +
-		"\x02MN\x07\x02\x02\x03N\x03\x03\x02\x02\x02OP\x07\x03\x02\x02PQ\x05\x06" +
-		"\x04\x02QU\x07\x14\x02\x02RT\x05\b\x05\x02SR\x03\x02\x02\x02TW\x03\x02" +
-		"\x02\x02US\x03\x02\x02\x02UV\x03\x02\x02\x02V[\x03\x02\x02\x02WU\x03\x02" +
-		"\x02\x02XZ\x05\x0E\b\x02YX\x03\x02\x02\x02Z]\x03\x02\x02\x02[Y\x03\x02" +
-		"\x02\x02[\\\x03\x02\x02\x02\\^\x03\x02\x02\x02][\x03\x02\x02\x02^_\x07" +
-		"\x15\x02\x02_\x05\x03\x02\x02\x02`a\x07.\x02\x02a\x07\x03\x02\x02\x02" +
-		"bc\x07\b\x02\x02cd\x05\n\x06\x02de\x07\x1C\x02\x02ek\x03\x02\x02\x02f" +
-		"g\x07\x07\x02\x02gh\x05\n\x06\x02hi\x07\x1C\x02\x02ik\x03\x02\x02\x02" +
-		"jb\x03\x02\x02\x02jf\x03\x02\x02\x02k\t\x03\x02\x02\x02lm\x05\x16\f\x02" +
-		"mr\x05\f\x07\x02no\x07\x1B\x02\x02oq\x05\f\x07\x02pn\x03\x02\x02\x02q" +
-		"t\x03\x02\x02\x02rp\x03\x02\x02\x02rs\x03\x02\x02\x02s\v\x03\x02\x02\x02" +
-		"tr\x03\x02\x02\x02uv\x07.\x02\x02v\r\x03\x02\x02\x02wx\x07\x04\x02\x02" +
-		"x~\x05\x10\t\x02yz\x07\x06\x02\x02z~\x05\x10\t\x02{|\x07\x05\x02\x02|" +
-		"~\x05\x10\t\x02}w\x03\x02\x02\x02}y\x03\x02\x02\x02}{\x03\x02\x02\x02" +
-		"~\x0F\x03\x02\x02\x02\x7F\x80\x05\x14\v\x02\x80\x81\x05\x12\n\x02\x81" +
-		"\x82\x07\x16\x02\x02\x82\x83\x05\x18\r\x02\x83\x84\x07\x17\x02\x02\x84" +
-		"\x85\x05\x1E\x10\x02\x85\x11\x03\x02\x02\x02\x86\x87\x07.\x02\x02\x87" +
-		"\x13\x03\x02\x02\x02\x88\x8B\x05\x16\f\x02\x89\x8B\x07\r\x02\x02\x8A\x88" +
-		"\x03\x02\x02\x02\x8A\x89\x03\x02\x02\x02\x8B\x15\x03\x02\x02\x02\x8C\x8D" +
-		"\t\x02\x02\x02\x8D\x17\x03\x02\x02\x02\x8E\x93\x05\x1A\x0E\x02\x8F\x90" +
-		"\x07\x1B\x02\x02\x90\x92\x05\x1A\x0E\x02\x91\x8F\x03\x02\x02\x02\x92\x95" +
-		"\x03\x02\x02\x02\x93\x91\x03\x02\x02\x02\x93\x94\x03\x02\x02\x02\x94\x97" +
-		"\x03\x02\x02\x02\x95\x93\x03\x02\x02\x02\x96\x8E\x03\x02\x02\x02\x96\x97" +
-		"\x03\x02\x02\x02\x97\x19\x03\x02\x02\x02\x98\x99\x05\x16\f\x02\x99\x9A" +
-		"\x05\x1C\x0F\x02\x9A\x1B\x03\x02\x02\x02\x9B\x9C\x07.\x02\x02\x9C\x1D" +
-		"\x03\x02\x02\x02\x9D\xA1\x07\x14\x02\x02\x9E\xA0\x05 \x11\x02\x9F\x9E" +
-		"\x03\x02\x02\x02\xA0\xA3\x03\x02\x02\x02\xA1\x9F\x03\x02\x02\x02\xA1\xA2" +
-		"\x03\x02\x02\x02\xA2\xA4\x03\x02\x02\x02\xA3\xA1\x03\x02\x02\x02\xA4\xA5" +
-		"\x05&\x14\x02\xA5\xA6\x07\x15\x02\x02\xA6\x1F\x03\x02\x02\x02\xA7\xA8" +
-		"\x07\t\x02\x02\xA8\xA9\x05\x16\f\x02\xA9\xAE\x05\"\x12\x02\xAA\xAB\x07" +
-		"\x1B\x02\x02\xAB\xAD\x05\"\x12\x02\xAC\xAA\x03\x02\x02\x02\xAD\xB0\x03" +
-		"\x02\x02\x02\xAE\xAC\x03\x02\x02\x02\xAE\xAF\x03\x02\x02\x02\xAF\xB1\x03" +
-		"\x02\x02\x02\xB0\xAE\x03\x02\x02\x02\xB1\xB2\x07\x1C\x02\x02\xB2!\x03" +
-		"\x02\x02\x02\xB3\xB4\x07.\x02\x02\xB4#\x03\x02\x02\x02\xB5\xB6\x07.\x02" +
-		"\x02\xB6%\x03\x02\x02\x02\xB7\xB9\x05(\x15\x02\xB8\xB7\x03\x02\x02\x02" +
-		"\xB9\xBC\x03\x02\x02\x02\xBA\xB8\x03\x02\x02\x02\xBA\xBB\x03\x02\x02\x02" +
-		"\xBB\'\x03\x02\x02\x02\xBC\xBA\x03\x02\x02\x02\xBD\xC3\x05*\x16\x02\xBE" +
-		"\xC3\x05,\x17\x02\xBF\xC3\x052\x1A\x02\xC0\xC3\x054\x1B\x02\xC1\xC3\x05" +
-		":\x1E\x02\xC2\xBD\x03\x02\x02\x02\xC2\xBE\x03\x02\x02\x02\xC2\xBF\x03" +
-		"\x02\x02\x02\xC2\xC0\x03\x02\x02\x02\xC2\xC1\x03\x02\x02\x02\xC3)\x03" +
-		"\x02\x02\x02\xC4\xC7\x07\x0E\x02\x02\xC5\xC8\x05$\x13\x02\xC6\xC8\x05" +
-		"D#\x02\xC7\xC5\x03\x02\x02\x02\xC7\xC6\x03\x02\x02\x02\xC8\xC9\x03\x02" +
-		"\x02\x02\xC9\xCA\x07\x1D\x02\x02\xCA\xCB\x05> \x02\xCB\xCC\x07\x1C\x02" +
-		"\x02\xCC+\x03\x02\x02\x02\xCD\xCF\x05.\x18\x02\xCE\xD0\x050\x19\x02\xCF" +
-		"\xCE\x03\x02\x02\x02\xCF\xD0\x03\x02\x02\x02\xD0-\x03\x02\x02\x02\xD1" +
-		"\xD2\x07\x10\x02\x02\xD2\xD3\x07\x16\x02\x02\xD3\xD4\x05> \x02\xD4\xD5" +
-		"\x07\x17\x02\x02\xD5\xD6\x07\x14\x02\x02\xD6\xD7\x05&\x14\x02\xD7\xD8" +
-		"\x07\x15\x02\x02\xD8/\x03\x02\x02\x02\xD9\xDA\x07\x11\x02\x02\xDA\xDB" +
-		"\x07\x14\x02\x02\xDB\xDC\x05&\x14\x02\xDC\xDD\x07\x15\x02\x02\xDD1\x03" +
-		"\x02\x02\x02\xDE\xDF\x07\x12\x02\x02\xDF\xE0\x07\x16\x02\x02\xE0\xE1\x05" +
-		"> \x02\xE1\xE2\x07\x17\x02\x02\xE2\xE3\x07\x14\x02\x02\xE3\xE4\x05&\x14" +
-		"\x02\xE4\xE5\x07\x15\x02\x02\xE53\x03\x02\x02\x02\xE6\xE7\x07\x0F\x02" +
-		"\x02\xE7\xE8\x056\x1C\x02\xE8\xE9\x07\x1C\x02\x02\xE95\x03\x02\x02\x02" +
-		"\xEA\xEB\x058\x1D\x02\xEB\xEC\x07\x16\x02\x02\xEC\xED\x05<\x1F\x02\xED" +
-		"\xEE\x07\x17\x02\x02\xEE7\x03\x02\x02\x02\xEF\xF2\x05\x06\x04\x02\xF0" +
-		"\xF2\x07-\x02\x02\xF1\xEF\x03\x02\x02\x02\xF1\xF0\x03\x02\x02\x02\xF2" +
-		"\xF3\x03\x02\x02\x02\xF3\xF5\x07\x1A\x02\x02\xF4\xF1\x03\x02\x02\x02\xF4" +
-		"\xF5\x03\x02\x02\x02\xF5\xF6\x03\x02\x02\x02\xF6\xF7\x05\x12\n\x02\xF7" +
-		"9\x03\x02\x02\x02\xF8\xFA\x07\x13\x02\x02\xF9\xFB\x05> \x02\xFA\xF9\x03" +
-		"\x02\x02\x02\xFA\xFB\x03\x02\x02\x02\xFB\xFC\x03\x02\x02\x02\xFC\xFD\x07" +
-		"\x1C\x02\x02\xFD;\x03\x02\x02\x02\xFE\u0103\x05> \x02\xFF\u0100\x07\x1B" +
-		"\x02\x02\u0100\u0102\x05> \x02\u0101\xFF\x03\x02\x02\x02\u0102\u0105\x03" +
-		"\x02\x02\x02\u0103\u0101\x03\x02\x02\x02\u0103\u0104\x03\x02\x02\x02\u0104" +
-		"\u0107\x03\x02\x02\x02\u0105\u0103\x03\x02\x02\x02\u0106\xFE\x03\x02\x02" +
-		"\x02\u0106\u0107\x03\x02\x02\x02\u0107=\x03\x02\x02\x02\u0108\u0109\b" +
-		" \x01\x02\u0109\u0110\x05F$\x02\u010A\u0110\x05$\x13\x02\u010B\u0110\x05" +
-		"6\x1C\x02\u010C\u0110\x05D#\x02\u010D\u0110\x05B\"\x02\u010E\u0110\x05" +
-		"@!\x02\u010F\u0108\x03\x02\x02\x02\u010F\u010A\x03\x02\x02\x02\u010F\u010B" +
-		"\x03\x02\x02\x02\u010F\u010C\x03\x02\x02\x02\u010F\u010D\x03\x02\x02\x02" +
-		"\u010F\u010E\x03\x02\x02\x02\u0110\u0117\x03\x02\x02\x02\u0111\u0112\f" +
-		"\t\x02\x02\u0112\u0113\x05J&\x02\u0113\u0114\x05> \n\u0114\u0116\x03\x02" +
-		"\x02\x02\u0115\u0111\x03\x02\x02\x02\u0116\u0119\x03\x02\x02\x02\u0117" +
-		"\u0115\x03\x02\x02\x02\u0117\u0118\x03\x02\x02\x02\u0118?\x03\x02\x02" +
-		"\x02\u0119\u0117\x03\x02\x02\x02\u011A\u011B\x07\x16\x02\x02\u011B\u011C" +
-		"\x05> \x02\u011C\u011D\x07\x17\x02\x02\u011DA\x03\x02\x02\x02\u011E\u011F" +
-		"\x05H%\x02\u011F\u0120\x05> \x02\u0120C\x03\x02\x02\x02\u0121\u0122\x05" +
-		"$\x13\x02\u0122\u0123\x07\x18\x02\x02\u0123\u0124\x05> \x02\u0124\u0125" +
-		"\x07\x19\x02\x02\u0125E\x03\x02\x02\x02\u0126\u0127\t\x03\x02\x02\u0127" +
-		"G\x03\x02\x02\x02\u0128\u0129\t\x04\x02\x02\u0129I\x03\x02\x02\x02\u012A" +
-		"\u012B\t\x05\x02\x02\u012BK\x03\x02\x02\x02\x17U[jr}\x8A\x93\x96\xA1\xAE" +
-		"\xBA\xC2\xC7\xCF\xF1\xF4\xFA\u0103\u0106\u010F\u0117";
+		"\t#\x04$\t$\x04%\t%\x04&\t&\x04\'\t\'\x03\x02\x03\x02\x03\x02\x03\x03" +
+		"\x03\x03\x03\x03\x03\x03\x07\x03V\n\x03\f\x03\x0E\x03Y\v\x03\x03\x03\x07" +
+		"\x03\\\n\x03\f\x03\x0E\x03_\v\x03\x03\x03\x03\x03\x03\x04\x03\x04\x03" +
+		"\x05\x03\x05\x03\x05\x03\x05\x03\x06\x03\x06\x03\x06\x03\x06\x07\x06m" +
+		"\n\x06\f\x06\x0E\x06p\v\x06\x03\x07\x03\x07\x03\b\x03\b\x03\b\x03\t\x03" +
+		"\t\x03\n\x03\n\x03\n\x03\n\x03\n\x03\n\x03\n\x03\v\x03\v\x03\f\x03\f\x05" +
+		"\f\x84\n\f\x03\r\x03\r\x03\x0E\x03\x0E\x03\x0E\x07\x0E\x8B\n\x0E\f\x0E" +
+		"\x0E\x0E\x8E\v\x0E\x05\x0E\x90\n\x0E\x03\x0F\x03\x0F\x03\x0F\x03\x10\x03" +
+		"\x10\x03\x11\x03\x11\x07\x11\x99\n\x11\f\x11\x0E\x11\x9C\v\x11\x03\x11" +
+		"\x03\x11\x03\x11\x03\x12\x03\x12\x03\x12\x03\x12\x03\x12\x07\x12\xA6\n" +
+		"\x12\f\x12\x0E\x12\xA9\v\x12\x03\x12\x03\x12\x03\x13\x03\x13\x03\x14\x03" +
+		"\x14\x03\x15\x07\x15\xB2\n\x15\f\x15\x0E\x15\xB5\v\x15\x03\x16\x03\x16" +
+		"\x03\x16\x03\x16\x03\x16\x05\x16\xBC\n\x16\x03\x17\x03\x17\x03\x17\x05" +
+		"\x17\xC1\n\x17\x03\x17\x03\x17\x03\x17\x03\x17\x03\x18\x03\x18\x05\x18" +
+		"\xC9\n\x18\x03\x19\x03\x19\x03\x19\x03\x19\x03\x19\x03\x19\x03\x19\x03" +
+		"\x19\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1A\x03\x1B\x03\x1B\x03\x1B\x03" +
+		"\x1B\x03\x1B\x03\x1B\x03\x1B\x03\x1B\x03\x1C\x03\x1C\x03\x1C\x03\x1C\x03" +
+		"\x1D\x03\x1D\x03\x1D\x03\x1D\x03\x1D\x03\x1E\x03\x1E\x05\x1E\xEB\n\x1E" +
+		"\x03\x1E\x05\x1E\xEE\n\x1E\x03\x1E\x03\x1E\x03\x1F\x03\x1F\x05\x1F\xF4" +
+		"\n\x1F\x03\x1F\x03\x1F\x03 \x03 \x03 \x07 \xFB\n \f \x0E \xFE\v \x05 " +
+		"\u0100\n \x03!\x03!\x03!\x03!\x03!\x03!\x03!\x05!\u0109\n!\x03!\x03!\x03" +
+		"!\x03!\x07!\u010F\n!\f!\x0E!\u0112\v!\x03\"\x03\"\x03\"\x03\"\x03#\x03" +
+		"#\x03#\x03$\x03$\x03$\x03$\x03$\x03%\x03%\x03&\x03&\x03\'\x03\'\x03\'" +
+		"\x02\x02\x03@(\x02\x02\x04\x02\x06\x02\b\x02\n\x02\f\x02\x0E\x02\x10\x02" +
+		"\x12\x02\x14\x02\x16\x02\x18\x02\x1A\x02\x1C\x02\x1E\x02 \x02\"\x02$\x02" +
+		"&\x02(\x02*\x02,\x02.\x020\x022\x024\x026\x028\x02:\x02<\x02>\x02@\x02" +
+		"B\x02D\x02F\x02H\x02J\x02L\x02\x02\b\x03\x02\x07\b\x03\x02\x04\x06\x04" +
+		"\x02\n\f..\x04\x02*-//\x04\x02\x1F\x1F$$\x04\x02\x1D#%&\x02\u0119\x02" +
+		"N\x03\x02\x02\x02\x04Q\x03\x02\x02\x02\x06b\x03\x02\x02\x02\bd\x03\x02" +
+		"\x02\x02\nh\x03\x02\x02\x02\fq\x03\x02\x02\x02\x0Es\x03\x02\x02\x02\x10" +
+		"v\x03\x02\x02\x02\x12x\x03\x02\x02\x02\x14\x7F\x03\x02\x02\x02\x16\x83" +
+		"\x03\x02\x02\x02\x18\x85\x03\x02\x02\x02\x1A\x8F\x03\x02\x02\x02\x1C\x91" +
+		"\x03\x02\x02\x02\x1E\x94\x03\x02\x02\x02 \x96\x03\x02\x02\x02\"\xA0\x03" +
+		"\x02\x02\x02$\xAC\x03\x02\x02\x02&\xAE\x03\x02\x02\x02(\xB3\x03\x02\x02" +
+		"\x02*\xBB\x03\x02\x02\x02,\xBD\x03\x02\x02\x02.\xC6\x03\x02\x02\x020\xCA" +
+		"\x03\x02\x02\x022\xD2\x03\x02\x02\x024\xD7\x03\x02\x02\x026\xDF\x03\x02" +
+		"\x02\x028\xE3\x03\x02\x02\x02:\xED\x03\x02\x02\x02<\xF1\x03\x02\x02\x02" +
+		">\xFF\x03\x02\x02\x02@\u0108\x03\x02\x02\x02B\u0113\x03\x02\x02\x02D\u0117" +
+		"\x03\x02\x02\x02F\u011A\x03\x02\x02\x02H\u011F\x03\x02\x02\x02J\u0121" +
+		"\x03\x02\x02\x02L\u0123\x03\x02\x02\x02NO\x05\x04\x03\x02OP\x07\x02\x02" +
+		"\x03P\x03\x03\x02\x02\x02QR\x07\x03\x02\x02RS\x05\x06\x04\x02SW\x07\x14" +
+		"\x02\x02TV\x05\b\x05\x02UT\x03\x02\x02\x02VY\x03\x02\x02\x02WU\x03\x02" +
+		"\x02\x02WX\x03\x02\x02\x02X]\x03\x02\x02\x02YW\x03\x02\x02\x02Z\\\x05" +
+		"\x0E\b\x02[Z\x03\x02\x02\x02\\_\x03\x02\x02\x02][\x03\x02\x02\x02]^\x03" +
+		"\x02\x02\x02^`\x03\x02\x02\x02_]\x03\x02\x02\x02`a\x07\x15\x02\x02a\x05" +
+		"\x03\x02\x02\x02bc\x07.\x02\x02c\x07\x03\x02\x02\x02de\t\x02\x02\x02e" +
+		"f\x05\n\x06\x02fg\x07\x1C\x02\x02g\t\x03\x02\x02\x02hi\x05\x18\r\x02i" +
+		"n\x05\f\x07\x02jk\x07\x1B\x02\x02km\x05\f\x07\x02lj\x03\x02\x02\x02mp" +
+		"\x03\x02\x02\x02nl\x03\x02\x02\x02no\x03\x02\x02\x02o\v\x03\x02\x02\x02" +
+		"pn\x03\x02\x02\x02qr\x07.\x02\x02r\r\x03\x02\x02\x02st\x05\x10\t\x02t" +
+		"u\x05\x12\n\x02u\x0F\x03\x02\x02\x02vw\t\x03\x02\x02w\x11\x03\x02\x02" +
+		"\x02xy\x05\x16\f\x02yz\x05\x14\v\x02z{\x07\x16\x02\x02{|\x05\x1A\x0E\x02" +
+		"|}\x07\x17\x02\x02}~\x05 \x11\x02~\x13\x03\x02\x02\x02\x7F\x80\x07.\x02" +
+		"\x02\x80\x15\x03\x02\x02\x02\x81\x84\x05\x18\r\x02\x82\x84\x07\r\x02\x02" +
+		"\x83\x81\x03\x02\x02\x02\x83\x82\x03\x02\x02\x02\x84\x17\x03\x02\x02\x02" +
+		"\x85\x86\t\x04\x02\x02\x86\x19\x03\x02\x02\x02\x87\x8C\x05\x1C\x0F\x02" +
+		"\x88\x89\x07\x1B\x02\x02\x89\x8B\x05\x1C\x0F\x02\x8A\x88\x03\x02\x02\x02" +
+		"\x8B\x8E\x03\x02\x02\x02\x8C\x8A\x03\x02\x02\x02\x8C\x8D\x03\x02\x02\x02" +
+		"\x8D\x90\x03\x02\x02\x02\x8E\x8C\x03\x02\x02\x02\x8F\x87\x03\x02\x02\x02" +
+		"\x8F\x90\x03\x02\x02\x02\x90\x1B\x03\x02\x02\x02\x91\x92\x05\x18\r\x02" +
+		"\x92\x93\x05\x1E\x10\x02\x93\x1D\x03\x02\x02\x02\x94\x95\x07.\x02\x02" +
+		"\x95\x1F\x03\x02\x02\x02\x96\x9A\x07\x14\x02\x02\x97\x99\x05\"\x12\x02" +
+		"\x98\x97\x03\x02\x02\x02\x99\x9C\x03\x02\x02\x02\x9A\x98\x03\x02\x02\x02" +
+		"\x9A\x9B\x03\x02\x02\x02\x9B\x9D\x03\x02\x02\x02\x9C\x9A\x03\x02\x02\x02" +
+		"\x9D\x9E\x05(\x15\x02\x9E\x9F\x07\x15\x02\x02\x9F!\x03\x02\x02\x02\xA0" +
+		"\xA1\x07\t\x02\x02\xA1\xA2\x05\x18\r\x02\xA2\xA7\x05$\x13\x02\xA3\xA4" +
+		"\x07\x1B\x02\x02\xA4\xA6\x05$\x13\x02\xA5\xA3\x03\x02\x02\x02\xA6\xA9" +
+		"\x03\x02\x02\x02\xA7\xA5\x03\x02\x02\x02\xA7\xA8\x03\x02\x02\x02\xA8\xAA" +
+		"\x03\x02\x02\x02\xA9\xA7\x03\x02\x02\x02\xAA\xAB\x07\x1C\x02\x02\xAB#" +
+		"\x03\x02\x02\x02\xAC\xAD\x07.\x02\x02\xAD%\x03\x02\x02\x02\xAE\xAF\x07" +
+		".\x02\x02\xAF\'\x03\x02\x02\x02\xB0\xB2\x05*\x16\x02\xB1\xB0\x03\x02\x02" +
+		"\x02\xB2\xB5\x03\x02\x02\x02\xB3\xB1\x03\x02\x02\x02\xB3\xB4\x03\x02\x02" +
+		"\x02\xB4)\x03\x02\x02\x02\xB5\xB3\x03\x02\x02\x02\xB6\xBC\x05,\x17\x02" +
+		"\xB7\xBC\x05.\x18\x02\xB8\xBC\x054\x1B\x02\xB9\xBC\x056\x1C\x02\xBA\xBC" +
+		"\x05<\x1F\x02\xBB\xB6\x03\x02\x02\x02\xBB\xB7\x03\x02\x02\x02\xBB\xB8" +
+		"\x03\x02\x02\x02\xBB\xB9\x03\x02\x02\x02\xBB\xBA\x03\x02\x02\x02\xBC+" +
+		"\x03\x02\x02\x02\xBD\xC0\x07\x0E\x02\x02\xBE\xC1\x05&\x14\x02\xBF\xC1" +
+		"\x05F$\x02\xC0\xBE\x03\x02\x02\x02\xC0\xBF\x03\x02\x02\x02\xC1\xC2\x03" +
+		"\x02\x02\x02\xC2\xC3\x07\x1D\x02\x02\xC3\xC4\x05@!\x02\xC4\xC5\x07\x1C" +
+		"\x02\x02\xC5-\x03\x02\x02\x02\xC6\xC8\x050\x19\x02\xC7\xC9\x052\x1A\x02" +
+		"\xC8\xC7\x03\x02\x02\x02\xC8\xC9\x03\x02\x02\x02\xC9/\x03\x02\x02\x02" +
+		"\xCA\xCB\x07\x10\x02\x02\xCB\xCC\x07\x16\x02\x02\xCC\xCD\x05@!\x02\xCD" +
+		"\xCE\x07\x17\x02\x02\xCE\xCF\x07\x14\x02\x02\xCF\xD0\x05(\x15\x02\xD0" +
+		"\xD1\x07\x15\x02\x02\xD11\x03\x02\x02\x02\xD2\xD3\x07\x11\x02\x02\xD3" +
+		"\xD4\x07\x14\x02\x02\xD4\xD5\x05(\x15\x02\xD5\xD6\x07\x15\x02\x02\xD6" +
+		"3\x03\x02\x02\x02\xD7\xD8\x07\x12\x02\x02\xD8\xD9\x07\x16\x02\x02\xD9" +
+		"\xDA\x05@!\x02\xDA\xDB\x07\x17\x02\x02\xDB\xDC\x07\x14\x02\x02\xDC\xDD" +
+		"\x05(\x15\x02\xDD\xDE\x07\x15\x02\x02\xDE5\x03\x02\x02\x02\xDF\xE0\x07" +
+		"\x0F\x02\x02\xE0\xE1\x058\x1D\x02\xE1\xE2\x07\x1C\x02\x02\xE27\x03\x02" +
+		"\x02\x02\xE3\xE4\x05:\x1E\x02\xE4\xE5\x07\x16\x02\x02\xE5\xE6\x05> \x02" +
+		"\xE6\xE7\x07\x17\x02\x02\xE79\x03\x02\x02\x02\xE8\xEB\x05\x06\x04\x02" +
+		"\xE9\xEB\x07-\x02\x02\xEA\xE8\x03\x02\x02\x02\xEA\xE9\x03\x02\x02\x02" +
+		"\xEB\xEC\x03\x02\x02\x02\xEC\xEE\x07\x1A\x02\x02\xED\xEA\x03\x02\x02\x02" +
+		"\xED\xEE\x03\x02\x02\x02\xEE\xEF\x03\x02\x02\x02\xEF\xF0\x05\x14\v\x02" +
+		"\xF0;\x03\x02\x02\x02\xF1\xF3\x07\x13\x02\x02\xF2\xF4\x05@!\x02\xF3\xF2" +
+		"\x03\x02\x02\x02\xF3\xF4\x03\x02\x02\x02\xF4\xF5\x03\x02\x02\x02\xF5\xF6" +
+		"\x07\x1C\x02\x02\xF6=\x03\x02\x02\x02\xF7\xFC\x05@!\x02\xF8\xF9\x07\x1B" +
+		"\x02\x02\xF9\xFB\x05@!\x02\xFA\xF8\x03\x02\x02\x02\xFB\xFE\x03\x02\x02" +
+		"\x02\xFC\xFA\x03\x02\x02\x02\xFC\xFD\x03\x02\x02\x02\xFD\u0100\x03\x02" +
+		"\x02\x02\xFE\xFC\x03\x02\x02\x02\xFF\xF7\x03\x02\x02\x02\xFF\u0100\x03" +
+		"\x02\x02\x02\u0100?\x03\x02\x02\x02\u0101\u0102\b!\x01\x02\u0102\u0109" +
+		"\x05H%\x02\u0103\u0109\x05&\x14\x02\u0104\u0109\x058\x1D\x02\u0105\u0109" +
+		"\x05F$\x02\u0106\u0109\x05D#\x02\u0107\u0109\x05B\"\x02\u0108\u0101\x03" +
+		"\x02\x02\x02\u0108\u0103\x03\x02\x02\x02\u0108\u0104\x03\x02\x02\x02\u0108" +
+		"\u0105\x03\x02\x02\x02\u0108\u0106\x03\x02\x02\x02\u0108\u0107\x03\x02" +
+		"\x02\x02\u0109\u0110\x03\x02\x02\x02\u010A\u010B\f\t\x02\x02\u010B\u010C" +
+		"\x05L\'\x02\u010C\u010D\x05@!\n\u010D\u010F\x03\x02\x02\x02\u010E\u010A" +
+		"\x03\x02\x02\x02\u010F\u0112\x03\x02\x02\x02\u0110\u010E\x03\x02\x02\x02" +
+		"\u0110\u0111\x03\x02\x02\x02\u0111A\x03\x02\x02\x02\u0112\u0110\x03\x02" +
+		"\x02\x02\u0113\u0114\x07\x16\x02\x02\u0114\u0115\x05@!\x02\u0115\u0116" +
+		"\x07\x17\x02\x02\u0116C\x03\x02\x02\x02\u0117\u0118\x05J&\x02\u0118\u0119" +
+		"\x05@!\x02\u0119E\x03\x02\x02\x02\u011A\u011B\x05&\x14\x02\u011B\u011C" +
+		"\x07\x18\x02\x02\u011C\u011D\x05@!\x02\u011D\u011E\x07\x19\x02\x02\u011E" +
+		"G\x03\x02\x02\x02\u011F\u0120\t\x05\x02\x02\u0120I\x03\x02\x02\x02\u0121" +
+		"\u0122\t\x06\x02\x02\u0122K\x03\x02\x02\x02\u0123\u0124\t\x07\x02\x02" +
+		"\u0124M\x03\x02\x02\x02\x15W]n\x83\x8C\x8F\x9A\xA7\xB3\xBB\xC0\xC8\xEA" +
+		"\xED\xF3\xFC\xFF\u0108\u0110";
 	public static __ATN: ATN;
 	public static get _ATN(): ATN {
 		if (!JackParser.__ATN) {
@@ -1903,72 +1897,33 @@ export class ClassNameContext extends ParserRuleContext {
 
 
 export class ClassVarDecContext extends ParserRuleContext {
+	public fieldList(): FieldListContext {
+		return this.getRuleContext(0, FieldListContext);
+	}
+	public SEMICOLON(): TerminalNode { return this.getToken(JackParser.SEMICOLON, 0); }
+	public STATIC(): TerminalNode | undefined { return this.tryGetToken(JackParser.STATIC, 0); }
+	public FIELD(): TerminalNode | undefined { return this.tryGetToken(JackParser.FIELD, 0); }
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
 	public override get ruleIndex(): number { return JackParser.RULE_classVarDec; }
-	public override copyFrom(ctx: ClassVarDecContext): void {
-		super.copyFrom(ctx);
-	}
-}
-export class StaticFieldDeclarationContext extends ClassVarDecContext {
-	public STATIC(): TerminalNode { return this.getToken(JackParser.STATIC, 0); }
-	public fieldList(): FieldListContext {
-		return this.getRuleContext(0, FieldListContext);
-	}
-	public SEMICOLON(): TerminalNode { return this.getToken(JackParser.SEMICOLON, 0); }
-	constructor(ctx: ClassVarDecContext) {
-		super(ctx.parent, ctx.invokingState);
-		this.copyFrom(ctx);
-	}
 	// @Override
 	public override enterRule(listener: JackParserListener): void {
-		if (listener.enterStaticFieldDeclaration) {
-			listener.enterStaticFieldDeclaration(this);
+		if (listener.enterClassVarDec) {
+			listener.enterClassVarDec(this);
 		}
 	}
 	// @Override
 	public override exitRule(listener: JackParserListener): void {
-		if (listener.exitStaticFieldDeclaration) {
-			listener.exitStaticFieldDeclaration(this);
+		if (listener.exitClassVarDec) {
+			listener.exitClassVarDec(this);
 		}
 	}
 	// @Override
 	public override accept<Result>(visitor: JackParserVisitor<Result>): Result {
-		if (visitor.visitStaticFieldDeclaration) {
-			return visitor.visitStaticFieldDeclaration(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-export class FieldDeclarationContext extends ClassVarDecContext {
-	public FIELD(): TerminalNode { return this.getToken(JackParser.FIELD, 0); }
-	public fieldList(): FieldListContext {
-		return this.getRuleContext(0, FieldListContext);
-	}
-	public SEMICOLON(): TerminalNode { return this.getToken(JackParser.SEMICOLON, 0); }
-	constructor(ctx: ClassVarDecContext) {
-		super(ctx.parent, ctx.invokingState);
-		this.copyFrom(ctx);
-	}
-	// @Override
-	public override enterRule(listener: JackParserListener): void {
-		if (listener.enterFieldDeclaration) {
-			listener.enterFieldDeclaration(this);
-		}
-	}
-	// @Override
-	public override exitRule(listener: JackParserListener): void {
-		if (listener.exitFieldDeclaration) {
-			listener.exitFieldDeclaration(this);
-		}
-	}
-	// @Override
-	public override accept<Result>(visitor: JackParserVisitor<Result>): Result {
-		if (visitor.visitFieldDeclaration) {
-			return visitor.visitFieldDeclaration(this);
+		if (visitor.visitClassVarDec) {
+			return visitor.visitClassVarDec(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
@@ -2057,100 +2012,65 @@ export class FieldNameContext extends ParserRuleContext {
 
 
 export class SubroutineDeclarationContext extends ParserRuleContext {
+	public subroutineType(): SubroutineTypeContext {
+		return this.getRuleContext(0, SubroutineTypeContext);
+	}
+	public subroutineDecWithoutType(): SubroutineDecWithoutTypeContext {
+		return this.getRuleContext(0, SubroutineDecWithoutTypeContext);
+	}
 	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
 		super(parent, invokingState);
 	}
 	// @Override
 	public override get ruleIndex(): number { return JackParser.RULE_subroutineDeclaration; }
-	public override copyFrom(ctx: SubroutineDeclarationContext): void {
-		super.copyFrom(ctx);
-	}
-}
-export class ConstructorContext extends SubroutineDeclarationContext {
-	public CONSTRUCTOR(): TerminalNode { return this.getToken(JackParser.CONSTRUCTOR, 0); }
-	public subroutineDecWithoutType(): SubroutineDecWithoutTypeContext {
-		return this.getRuleContext(0, SubroutineDecWithoutTypeContext);
-	}
-	constructor(ctx: SubroutineDeclarationContext) {
-		super(ctx.parent, ctx.invokingState);
-		this.copyFrom(ctx);
-	}
 	// @Override
 	public override enterRule(listener: JackParserListener): void {
-		if (listener.enterConstructor) {
-			listener.enterConstructor(this);
+		if (listener.enterSubroutineDeclaration) {
+			listener.enterSubroutineDeclaration(this);
 		}
 	}
 	// @Override
 	public override exitRule(listener: JackParserListener): void {
-		if (listener.exitConstructor) {
-			listener.exitConstructor(this);
+		if (listener.exitSubroutineDeclaration) {
+			listener.exitSubroutineDeclaration(this);
 		}
 	}
 	// @Override
 	public override accept<Result>(visitor: JackParserVisitor<Result>): Result {
-		if (visitor.visitConstructor) {
-			return visitor.visitConstructor(this);
+		if (visitor.visitSubroutineDeclaration) {
+			return visitor.visitSubroutineDeclaration(this);
 		} else {
 			return visitor.visitChildren(this);
 		}
 	}
 }
-export class MethodContext extends SubroutineDeclarationContext {
-	public METHOD(): TerminalNode { return this.getToken(JackParser.METHOD, 0); }
-	public subroutineDecWithoutType(): SubroutineDecWithoutTypeContext {
-		return this.getRuleContext(0, SubroutineDecWithoutTypeContext);
-	}
-	constructor(ctx: SubroutineDeclarationContext) {
-		super(ctx.parent, ctx.invokingState);
-		this.copyFrom(ctx);
+
+
+export class SubroutineTypeContext extends ParserRuleContext {
+	public CONSTRUCTOR(): TerminalNode | undefined { return this.tryGetToken(JackParser.CONSTRUCTOR, 0); }
+	public METHOD(): TerminalNode | undefined { return this.tryGetToken(JackParser.METHOD, 0); }
+	public FUNCTION(): TerminalNode | undefined { return this.tryGetToken(JackParser.FUNCTION, 0); }
+	constructor(parent: ParserRuleContext | undefined, invokingState: number) {
+		super(parent, invokingState);
 	}
 	// @Override
+	public override get ruleIndex(): number { return JackParser.RULE_subroutineType; }
+	// @Override
 	public override enterRule(listener: JackParserListener): void {
-		if (listener.enterMethod) {
-			listener.enterMethod(this);
+		if (listener.enterSubroutineType) {
+			listener.enterSubroutineType(this);
 		}
 	}
 	// @Override
 	public override exitRule(listener: JackParserListener): void {
-		if (listener.exitMethod) {
-			listener.exitMethod(this);
+		if (listener.exitSubroutineType) {
+			listener.exitSubroutineType(this);
 		}
 	}
 	// @Override
 	public override accept<Result>(visitor: JackParserVisitor<Result>): Result {
-		if (visitor.visitMethod) {
-			return visitor.visitMethod(this);
-		} else {
-			return visitor.visitChildren(this);
-		}
-	}
-}
-export class FunctionContext extends SubroutineDeclarationContext {
-	public FUNCTION(): TerminalNode { return this.getToken(JackParser.FUNCTION, 0); }
-	public subroutineDecWithoutType(): SubroutineDecWithoutTypeContext {
-		return this.getRuleContext(0, SubroutineDecWithoutTypeContext);
-	}
-	constructor(ctx: SubroutineDeclarationContext) {
-		super(ctx.parent, ctx.invokingState);
-		this.copyFrom(ctx);
-	}
-	// @Override
-	public override enterRule(listener: JackParserListener): void {
-		if (listener.enterFunction) {
-			listener.enterFunction(this);
-		}
-	}
-	// @Override
-	public override exitRule(listener: JackParserListener): void {
-		if (listener.exitFunction) {
-			listener.exitFunction(this);
-		}
-	}
-	// @Override
-	public override accept<Result>(visitor: JackParserVisitor<Result>): Result {
-		if (visitor.visitFunction) {
-			return visitor.visitFunction(this);
+		if (visitor.visitSubroutineType) {
+			return visitor.visitSubroutineType(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

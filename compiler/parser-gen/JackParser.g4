@@ -9,15 +9,11 @@ program: classDeclaration EOF;
 classDeclaration:
 	CLASS className LBRACE classVarDec* subroutineDeclaration* RBRACE;
 className: IDENTIFIER;
-classVarDec:
-	STATIC fieldList SEMICOLON	# staticFieldDeclaration
-	| FIELD fieldList SEMICOLON	# fieldDeclaration;
+classVarDec: (STATIC | FIELD) fieldList SEMICOLON;
 fieldList: varType fieldName ( COMMA fieldName)*;
 fieldName: IDENTIFIER;
-subroutineDeclaration:
-	CONSTRUCTOR subroutineDecWithoutType	# constructor
-	| METHOD subroutineDecWithoutType		# method
-	| FUNCTION subroutineDecWithoutType		# function;
+subroutineDeclaration: subroutineType subroutineDecWithoutType;
+subroutineType: CONSTRUCTOR | METHOD | FUNCTION;
 subroutineDecWithoutType:
 	subroutineReturnType subroutineName LPAREN parameterList RPAREN subroutineBody;
 subroutineName: IDENTIFIER;

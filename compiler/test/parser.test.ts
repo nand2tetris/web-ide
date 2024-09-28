@@ -29,6 +29,7 @@ describe('Parser', () => {
         "ComplexArrays"
     ]
     test.each(dirs)('%s', (dir: string) => {
+
         console.log("Testing " + dir)
         testJackDir(path.join(__dirname, "resources", dir));
     });

@@ -1,11 +1,11 @@
 import { ParserRuleContext } from "antlr4ts"
 import { DuplicatedVariableException as DuplicatedVariableError, IncorrectParamsNumberInSubroutineCall, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCall, VoidSubroutineReturnsValueError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
-import { GenericSymbol } from "../src/listener/symbol.table.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
 import { ProgramContext } from "../src/generated/JackParser"
 import { Logger, ILogObj } from "tslog";
+import { GenericSymbol } from "../src/symbol"
 
 const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {

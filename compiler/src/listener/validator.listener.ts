@@ -3,7 +3,7 @@ import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { DuplicatedVariableException, IncorrectParamsNumberInSubroutineCall, JackCompilerError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturn, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCall, VoidSubroutineReturnsValueError } from "../error";
 import { ClassDeclarationContext, ElseStatementContext, FieldDeclarationContext, FieldNameContext, IfElseStatementContext, IfStatementContext, LetStatementContext, ParameterContext, ParameterNameContext, ReturnStatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, SubroutineReturnTypeContext, VarDeclarationContext, VarNameContext, VarNameInDeclarationContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
-import { GenericSymbol } from "./symbol.table.listener";
+import { GenericSymbol } from "../symbol";
 
 class BinaryTreeNode {
     _returns?: boolean;

@@ -3,20 +3,17 @@ import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ClassDeclarationContext, ConstructorContext, FunctionContext, MethodContext, SubroutineDecWithoutTypeContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { DuplicatedSubroutineError } from '../error'
+import {  builtInSymbols } from "../builtins";
+import { GenericSymbol } from "../symbol";
+
 const primitives = new Set(["int", "boolean", "char"] as const);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
 
-/**
- * Generic symbol. Can be used for both class and function symbols
- */
-export interface GenericSymbol extends Symbol {
-    subroutineParameterCount?: number;
-}
+
 
 export class GlobalSymbolTableListener implements JackParserListener, ParseTreeListener {
-
     // key can be class or <class>.<subroutine_name>
-    public globalSymbolTable: Record<string, GenericSymbol> = {};
+    public globalSymbolTable: Record<string, GenericSymbol> = structuredClone(builtInSymbols);
     //track class variables, local vars, function args 
     public className = "";
     public errors: DuplicatedSubroutineError[] = []

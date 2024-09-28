@@ -1,6 +1,11 @@
 import { GenericSymbol, SubroutineType } from "./symbol";
 
 export const builtInTypes = ["int", "boolean", "char"]
+interface Range {
+    min: number;
+    max: number;
+}
+export const intRange = { min: -32768, max: 32767 } as Range;
 //TODO: should we convert this to symbols?
 const builtInFunctionsToArgCount: Record<string, number> = {
 

@@ -138,3 +138,19 @@ export class ConstructorMushReturnThis extends JackCompilerError {
         Object.setPrototypeOf(this, ConstructorMushReturnThis.prototype);
     }
 }
+
+const vowels = "aeiou"
+export class WrongLiteralTypeError extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, typeName: string) {
+        const article = vowels.indexOf(typeName.substring(0, 1)) != -1 ? "an" : "a";
+        super(line, charPositionInLine, `${article} ${typeName} value is expected`);
+        Object.setPrototypeOf(this, WrongLiteralTypeError.prototype);
+    }
+}
+
+export class IntLiteralIsOutOfRange extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number, value: number, min: number, max: number) {
+        super(line, charPositionInLine, `Integer constant(${value}) is out of range. Min value is ${min} and max value is ${max}`);
+        Object.setPrototypeOf(this, IntLiteralIsOutOfRange.prototype);
+    }
+}

@@ -1,9 +1,10 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ConstructorMushReturnThis, DuplicatedVariableException, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError } from "../error";
-import { ClassDeclarationContext, ClassNameContext, ElseStatementContext, FieldListContext, IfStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
+import { ConstructorMushReturnThis, DuplicatedVariableException, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../error";
+import { ClassDeclarationContext, ClassNameContext, ElseStatementContext, FieldListContext, IfStatementContext, LetStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol, LocalSymbolTable, SubroutineType } from "../symbol";
+import { builtInTypes, intRange } from "../builtins";
 
 class BinaryTreeNode {
     _returns?: boolean;
@@ -63,6 +64,11 @@ enum Side {
     LEFT,
     RIGHT
 }
+
+const literalTypes = [
+    ...builtInTypes,
+    "String"
+]
 
 export class ValidatorListener implements JackParserListener, ParseTreeListener {
 
@@ -166,6 +172,56 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         }
 
     };
+    enterLetStatement(ctx: LetStatementContext) {
+        const varName = ctx.varName()
+        const constCtx = ctx.expression().constant()
+        //corresponding literal type check
+        if (varName != undefined && constCtx != undefined &&
+            this.localSymbolTable.existsSymbol(ctx.varName()!.text) &&
+            ctx.expression().constant()!.NULL_LITERAL() == undefined) {
+            const type = this.localSymbolTable.getType(ctx.varName()!.text)!
+            if (literalTypes.indexOf(type) != -1) {
+                const constantCtx = ctx.expression().constant()!
+                switch (type) {
+                    case "int":
+                        if (constantCtx.INTEGER_LITERAL() === undefined) {
+                            this.#addError(new WrongLiteralTypeError(ctx.start.line, ctx.start.startIndex, type));
+                        } else {
+                            const value = parseInt(constantCtx.INTEGER_LITERAL()!.text)
+                            if (value > intRange.max) {
+                                this.#addError(new IntLiteralIsOutOfRange(ctx.start.line, ctx.start.startIndex, value, intRange.min, intRange.max))
+                            }
+                        }
+                        break;
+                    case "boolean":
+                        if (constantCtx.BOOLEAN_LITERAL() === undefined) {
+                            this.#addError(new WrongLiteralTypeError(ctx.start.line, ctx.start.startIndex, type));
+                        }
+                        break;
+                    case "char":
+                        //TODO: add. Is char literal same as int literal?
+                        break;
+                    case "String":
+                        if (constantCtx.STRING_LITERAL() === undefined) {
+                            this.#addError(new WrongLiteralTypeError(ctx.start.line, ctx.start.startIndex, type.toLowerCase()));
+                        }
+                        break;
+                    default:
+                        throw new Error(`Unknown literal type ${type}`)
+                }
+            }
+        }
+        //int min value check
+        const unaryOp = ctx.expression().unaryOp()
+        if (varName && unaryOp != undefined && unaryOp.unaryOperator().MINUS() !== undefined &&
+            unaryOp!.expression().constant() != undefined && unaryOp!.expression().constant()?.INTEGER_LITERAL() !== undefined) {
+            const value = parseInt(unaryOp!.expression().constant()!.INTEGER_LITERAL()!.text)
+            if (-value < intRange.min) {
+                this.#addError(new IntLiteralIsOutOfRange(ctx.start.line, ctx.start.startIndex, value, intRange.min, intRange.max));
+            }
+        }
+    };
+
     enterSubroutineCall(ctx: SubroutineCallContext) {
         //check if variable exists with the name before dot
         const subroutineId = ctx.subroutineId()

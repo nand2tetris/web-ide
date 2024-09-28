@@ -1,5 +1,5 @@
 import { ParserRuleContext } from "antlr4ts"
-import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError } from "../src/error"
+import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
@@ -470,14 +470,83 @@ describe('ValidatorListener', () => {
                 "Main.new": genericSymbol(SubroutineType.Constructor, 0),
             })
     })
+    test("Let statement - expected string literal ", () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var String foo;
+                    let foo = 1;
+                    return;
+                }
+            }`, WrongLiteralTypeError,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+                "String": genericSymbol(),
+            })
+    })
+    test("Let statement - expected boolean literal ", () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var boolean foo;
+                    let foo = 1;
+                    return;
+                }
+            }`, WrongLiteralTypeError,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
+
+    test("Let statement - expected int literal ", () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int foo;
+                    let foo = "asb";
+                    return;
+                }
+            }`, WrongLiteralTypeError,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
+    test("integer constant value is too big", () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int foo;
+                    let foo = 33000;
+                    return;
+                }
+            }`, IntLiteralOverflow,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
+    test("integer constant value is too small", () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var int foo;
+                    let foo = -33000;
+                    return;
+                }
+            }`, IntLiteralOverflow,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
     /**
      * - An empty statement is not allowed - what is this?
      * 
      * - Expected class name, subroutine name, field, parameter or local or static variable name (currently expected IDENTIFIER)
      * - Expected subroutine name in call
-     * - A constructor must return 'this'
-     * - Let statement - expected literal based on var type - boolean, char, int (String?)
-     * - Integer constant too big >32767
      * - a numeric value is illegal here
      * - this' can't be referenced in a function
      * - Illegal casting into String constant

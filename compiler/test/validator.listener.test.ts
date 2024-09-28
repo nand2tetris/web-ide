@@ -1,11 +1,9 @@
-import { ParserRuleContext } from "antlr4ts"
-import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
+import { ILogObj, Logger } from "tslog"
+import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, ThisCantBeReferencedInFunction, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
-import { handleErrors, listenToTheTree, parseJackText } from "./test.helper"
-import { ProgramContext } from "../src/generated/JackParser"
-import { Logger, ILogObj } from "tslog";
-import { createSubroutineSymbol, GenericSymbol, SubroutineInfo, SubroutineType } from "../src/symbol"
+import { createSubroutineSymbol, GenericSymbol, SubroutineType } from "../src/symbol"
+import { listenToTheTree, parseJackText } from "./test.helper"
 
 const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {
@@ -570,9 +568,22 @@ describe('ValidatorListener', () => {
                 "Main.a": genericSymbol(SubroutineType.Function, 0),
             })
     })
+    test("this can't be referenced in a function", () => {
+        testValidator(`
+            class Main {
+                function void a(){
+                    var Main m;
+                    let m = this;
+                    return;
+                }
+            }`, ThisCantBeReferencedInFunction,
+            {
+                "Main": genericSymbol(),
+                "Main.a": genericSymbol(SubroutineType.Function, 0),
+            })
+    })
     /**
-     * - An empty statement is not allowed - what is this?
-     * 
+     *   Errors from old java compiler - 
      * - Expected class name, subroutine name, field, parameter or local or static variable name (currently expected IDENTIFIER)
      * - Expected subroutine name in call
      * - a numeric value is illegal here

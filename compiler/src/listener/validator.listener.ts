@@ -1,7 +1,7 @@
 import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
-import { ConstructorMushReturnThis, DuplicatedVariableException, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../error";
-import { ClassDeclarationContext, ClassNameContext, ClassVarDecContext, ElseStatementContext, FieldListContext, IfStatementContext, LetStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
+import { ConstructorMushReturnThis, DuplicatedVariableException, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, ThisCantBeReferencedInFunction, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../error";
+import { ClassDeclarationContext, ClassNameContext, ClassVarDecContext, ConstantContext, ElseStatementContext, FieldListContext, IfStatementContext, LetStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol, LocalSymbolTable, ScopeType, SubroutineType } from "../symbol";
 import { builtInTypes, intRange } from "../builtins";
@@ -146,6 +146,11 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
             this.#addError(new FieldCantBeReferencedInFunction(ctx.start.line, ctx.start.startIndex));
         } else if (!this.localSymbolTable.existsSymbol(ctx.text)) {
             this.#addError(new UndeclaredVariableError(ctx.start.line, ctx.start.startIndex, ctx.text));
+        }
+    };
+    enterConstant(ctx: ConstantContext) {
+        if (ctx.THIS_LITERAL() != undefined && this.inFunction) {
+            this.#addError(new ThisCantBeReferencedInFunction(ctx.start.line, ctx.start.startIndex));
         }
     };
 

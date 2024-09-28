@@ -39,7 +39,7 @@ statement:
 	| returnStatement;
 
 letStatement:
-	LET (varName | arrayAccess) EQUALS expression SEMICOLON; //TODO: check right assoc for this
+	LET (varName | arrayAccess) EQUALS expression SEMICOLON; //TODO: check if we need right assoc for this
 
 ifElseStatement: ifStatement elseStatement?;
 ifStatement:

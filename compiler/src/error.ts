@@ -162,3 +162,10 @@ export class FieldCantBeReferencedInFunction extends JackCompilerError {
         Object.setPrototypeOf(this, FieldCantBeReferencedInFunction.prototype);
     }
 }
+
+export class ThisCantBeReferencedInFunction extends JackCompilerError {
+    constructor(line: number, charPositionInLine: number) {
+        super(line, charPositionInLine, `this can't be referenced in a function`);
+        Object.setPrototypeOf(this, ThisCantBeReferencedInFunction.prototype);
+    }
+}

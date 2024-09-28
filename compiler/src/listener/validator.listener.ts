@@ -25,6 +25,43 @@ class BinaryTreeNode {
             throw new Error("Something went wrong - CFG has only right  subtree")
         }
     }
+    print() {
+        console.log("Branch returns value")
+        console.log(".")
+        console.log(this.printBT());
+    }
+
+    printBT(prefix: string = "", side: Side = Side.LEFT) {
+        let res: string = ""
+        if (this._returns) {
+            res += this.#pad(prefix, side)
+            res += " " + this._returns + "\n";
+            return res;
+        } else {
+            if (this.right == undefined && this.left == undefined) {
+                res += this.#pad(prefix, side)
+                res += " " + false + "\n";
+            } else {
+                res += this.left?.printBT((side == Side.LEFT ? "|   " : "    "), Side.LEFT);
+                if (this.right) {
+                    res += prefix
+                    res += this.right?.printBT((side == Side.LEFT ? "|\t" : "\t"), Side.RIGHT);
+                } else {
+                    res += "\n";
+                }
+
+            }
+        }
+        return res;
+    }
+    #pad(prefix: string, side: Side): string {
+        return side == Side.LEFT ? "├──" : "└──";
+    }
+
+}
+enum Side {
+    LEFT,
+    RIGHT
 }
 
 export class ValidatorListener implements JackParserListener, ParseTreeListener {

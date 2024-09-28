@@ -281,7 +281,8 @@ describe('ValidatorListener', () => {
                 }
             }`, SubroutineNotAllPathsReturn)
     })
-    test('nested if missing return 2', () => {
+
+    test('nested if missing return 3', () => {
         testValidator(`
             class Main {
                 function void a(){
@@ -289,12 +290,12 @@ describe('ValidatorListener', () => {
                     let a=0;
                     if(a=0){
                         if(a=1){
-                          
-                        return;
+                            return;
                         }else {
-                              return;
+                            return;
                         }
                     }else{
+                    
                     }
                 }
             }`, SubroutineNotAllPathsReturn)
@@ -334,6 +335,9 @@ function testValidator<T extends typeof JackCompilerError>(src: string, expected
 
     const validator = listenToTheTree(tree, new ValidatorListener(globalSymbolTable))
     if (expectedError) {
+        if (validator.cfgNode) {
+            validator.cfgNode.print()
+        }
         if (validator.errors.length > 1) {
             console.error("Errors", validator.errors)
         }

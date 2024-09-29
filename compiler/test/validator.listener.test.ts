@@ -1,4 +1,3 @@
-import { ILogObj, Logger } from "tslog"
 import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, ThisCantBeReferencedInFunction, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
@@ -8,7 +7,6 @@ import fs from 'fs';
 import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener"
 import path from "path"
 import { ProgramContext } from "../src/generated/JackParser"
-const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {
     const jestConsole = console;
     beforeEach(() => {

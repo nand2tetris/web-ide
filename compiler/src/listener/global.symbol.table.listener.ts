@@ -1,4 +1,3 @@
-import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
 import { ClassDeclarationContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
@@ -9,10 +8,12 @@ import { GenericSymbol, SubroutineType } from "../symbol";
 const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
 
-export class GlobalSymbolTableListener implements JackParserListener, ParseTreeListener {
+/**
+ * Creates symbol table that contains built-in functions and found classes and subroutines
+ */
+export class GlobalSymbolTableListener implements JackParserListener {
     // key can be class or <class>.<subroutine_name>
     public globalSymbolTable: Record<string, GenericSymbol> = structuredClone(builtInSymbols);
-    //track class variables, local vars, function args 
     public className = "";
     public errors: DuplicatedSubroutineError[] = []
 
@@ -20,8 +21,8 @@ export class GlobalSymbolTableListener implements JackParserListener, ParseTreeL
     visitTerminal?: (/*@NotNull*/ node: TerminalNode) => void;
 
     enterClassDeclaration(ctx: ClassDeclarationContext) {
-        if (this.globalSymbolTable[ctx.className()!.text] != undefined) {
-            this.errors.push(new DuplicatedSubroutineError(ctx.start.line, ctx.start.startIndex, `Class "${ctx.className()!.text}" already defined.`));
+        if (this. globalSymbolTable[ctx.className()!.text] != undefined) {
+            this.errors.push(new DuplicatedSubroutineError(ctx.start.line, ctx.start.startIndex, `Class "${ctx.className()!.text}" is already defined.`));
             return;
         }
         this.globalSymbolTable[ctx.className()!.text] = {} as GenericSymbol;

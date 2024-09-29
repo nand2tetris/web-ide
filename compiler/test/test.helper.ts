@@ -59,3 +59,14 @@ export function handleErrors(src: string, errors: JackCompilerError[]) {
     console.error(msg);
     throw new Error(msg)
 }
+export const testResourcesDirs: string[] = [
+    "Average",
+    "ConvertToBin",
+    "Fraction",
+    "HelloWorld",
+    "List",
+    "Pong",
+    "Square",
+    "ComplexArrays"
+]
+

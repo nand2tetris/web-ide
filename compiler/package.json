@@ -11,7 +11,7 @@
     "test-w": "jest --watchAll",
     "fix": "eslint --fix",
     "gen": "bash gen.sh",
-    "watch": "nodemon -e jack,ts -w src -w test -x \"npm run test \""
+    "watch-jack": "nodemon -e jack,ts -w src -w test -x \"npm run test \""
   },
   "nodemonConfig": {
     "delay": 700

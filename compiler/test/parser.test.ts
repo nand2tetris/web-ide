@@ -3,7 +3,8 @@ import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.l
 
 import path from "path";
 import { ErrorListener } from "../src/listener/error.listener";
-import { listenToTheTree, parseJackFile, parseJackText } from "./test.helper";
+import { listenToTheTree, parseJackFile, parseJackText, testResourcesDirs } from "./test.helper";
+import { JackParserListener } from '../src/generated/JackParserListener';
 
 describe('Parser', () => {
     const jestConsole = console;
@@ -15,18 +16,7 @@ describe('Parser', () => {
         global.console = jestConsole;
     });
 
-    const dirs: string[] = [
-        "Average",
-        "ConvertToBin",
-        "Fraction",
-        "HelloWorld",
-        "List",
-        "Pong",
-        "Square",
-        "ComplexArrays"
-    ]
-    test.each(dirs)('%s', (dir: string) => {
-
+    test.each(testResourcesDirs)('%s', (dir: string) => {
         console.log("Testing " + dir)
         testJackDir(path.join(__dirname, "resources", dir));
     });

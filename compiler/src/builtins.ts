@@ -8,7 +8,6 @@ interface Range {
 export const intRange = { min: -32768, max: 32767 } as Range;
 //TODO: should we convert this to symbols?
 const builtInFunctionsToArgCount: Record<string, number> = {
-
     "Array.dispose": 0,
     //TODO: what is this?
     // "Array.init": 0,
@@ -62,6 +61,11 @@ const builtInFunctionsToArgCount: Record<string, number> = {
     "Sys.halt": 0,
     "Sys.wait": 1,
 };
+const builtInClasses = ["Array", "Keyboard", "Math", "Memory", "Output", "Screen", "String", "Sys"]
+const builtInClassesRecord = builtInClasses.reduce((acc, elem) => ({
+    ...acc,
+    [elem]: {} as GenericSymbol
+}), {} as Record<string, GenericSymbol>)
 
 export const builtInSymbols = Object.keys(builtInFunctionsToArgCount).reduce((acc, elem) => ({
     ...acc,
@@ -71,4 +75,4 @@ export const builtInSymbols = Object.keys(builtInFunctionsToArgCount).reduce((ac
             type: SubroutineType.Function
         }
     } as GenericSymbol
-}), {} as Record<string, GenericSymbol>)
+}), builtInClassesRecord)

@@ -13,7 +13,7 @@ export default class Compiler {
         const globalSymbolsListener = new GlobalSymbolTableListener();
         const files = fs.readdirSync(dir).filter(file => file.endsWith(".jack")).map(file => path.join(dir, file));
         for (const filePath of files) {
-            const errorListener = ErrorListener.getInstance()
+            const errorListener = new ErrorListener();
             errorListener.filepath = filePath; const f = fs.readFileSync(filePath, 'utf8');
             const inputStream = CharStreams.fromString(f);
             const lexer = new JackLexer(inputStream);
@@ -43,17 +43,15 @@ export default class Compiler {
             const symbolsErrors = globalSymbolsListener.errors.join("\n")
             try {
                 expect(globalSymbolsListener.errors.length).toBe(0)
-            }
-            catch (e) {
+            } catch (e) {
                 throw new Error(symbolsErrors);
             }
             globalSymbolsListener.resetErrors();
             if (globalSymbolsListener.className != path.parse(filePath).name) {
                 console.log("Class name does not match file name: " + globalSymbolsListener.className + " vs " + path.parse(filePath).name);
             }
-
-            //TODO: add OS builtin functions
             const validator = new ValidatorListener(globalSymbolsListener.globalSymbolTable);
+            
         }
         return "";
     }

@@ -3,8 +3,11 @@ import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVar
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
 import { createSubroutineSymbol, GenericSymbol, SubroutineType } from "../src/symbol"
-import { listenToTheTree, parseJackText } from "./test.helper"
-
+import { listenToTheTree, parseJackFile, parseJackText, testResourcesDirs } from "./test.helper"
+import fs from 'fs';
+import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener"
+import path from "path"
+import { ProgramContext } from "../src/generated/JackParser"
 const log: Logger<ILogObj> = new Logger();
 describe('ValidatorListener', () => {
     const jestConsole = console;
@@ -336,6 +339,7 @@ describe('ValidatorListener', () => {
                 }
             }`, UnknownSubroutineCallError)
     })
+    
     test('incorrect number of parameters when calling a function', () => {
         testValidator(`
             class Main {
@@ -582,17 +586,38 @@ describe('ValidatorListener', () => {
                 "Main.a": genericSymbol(SubroutineType.Function, 0),
             })
     })
-    /**
-     *   Errors from old java compiler - 
-     * - Expected class name, subroutine name, field, parameter or local or static variable name (currently expected IDENTIFIER)
-     * - Expected subroutine name in call
-     * - a numeric value is illegal here
-     * - this' can't be referenced in a function
-     * - Illegal casting into String constant
-     * - A field may not be referenced in a function
-     */
+
+    //validate files 
+    test.concurrent.each(testResourcesDirs)('%s', (dir: string) => {
+        console.log("Testing " + dir)
+        testJackDir(path.join(__dirname, "resources", dir));
+    });
 
 })
+
+function testJackDir(testFolder: string): void {
+    const files = fs.readdirSync(testFolder).filter(file => file.endsWith(".jack")).map(file => path.join(testFolder, file));
+    let trees: Record<string, ProgramContext> = {}
+    let globalSymbolsListener: GlobalSymbolTableListener = new GlobalSymbolTableListener();
+    for (const filePath of files) {
+        const errorListener = new ErrorListener()
+        errorListener.filepath = filePath;
+        const tree = parseJackFile(filePath)
+        trees[filePath] = tree
+        listenToTheTree(tree, globalSymbolsListener)
+        expect(globalSymbolsListener.errors).toEqual([]);
+    }
+    console.log("Global sym table \n", globalSymbolsListener.globalSymbolTable)
+    for (const filepath of Object.keys(trees)) {
+        const tree = trees[filepath]
+        console.log(tree.toInfoString)
+        console.log("Testing " + filepath)
+        const validatorListener = listenToTheTree(tree, new ValidatorListener(globalSymbolsListener.globalSymbolTable));
+        expect(validatorListener.errors).toEqual([]);
+    }
+
+}
+
 function testValidator<T extends { name: string }>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
     const name = expect.getState().currentTestName!
     const errorListener = new ErrorListener();
@@ -618,5 +643,12 @@ function testValidator<T extends { name: string }>(src: string, expectedError?: 
     }
 }
 
-
-
+/**
+ * TODO:
+*  Ideas for improvement - 
+* - Show "Expected class name, subroutine name, field, parameter or local or static variable name" instead of "expecting IDENTIFIER" 
+* - Show "Expected subroutine return type followed by a subroutine name" instead of "expecting IDENTIFIER" 
+* - Expected subroutine name in call
+* - a numeric value is illegal here when using non numeric vars
+* - validate function call - when using literal in call validate the type
+*/

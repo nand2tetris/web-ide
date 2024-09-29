@@ -2,14 +2,17 @@
  * Generic symbol. Can be used for both class and function symbols
  */
 export enum SubroutineType {
-    Constructor = "ctor",
-    Function = "function",
-    Method = "method",
+    Constructor,
+    Function,
+    Method,
 }
 export interface SubroutineInfo {
     paramsCount: number;
     type: SubroutineType
 }
+/**
+ * Symbol that represents class or a subroutine
+ */
 export interface GenericSymbol {
     subroutineInfo?: SubroutineInfo;
 }
@@ -19,21 +22,24 @@ export function createSubroutineSymbol(paramsCount: number, type: SubroutineType
 
 type VariableType = string
 export enum ScopeType {
-    StaticField,
-    Field,
+    Static,
+    This,
     Argument,
     Local,
 }
+/**
+ *   Symbol table that provides lookup for variables in different scopes in a file
+ */
 export class LocalSymbolTable {
     private vars: Record<ScopeType, Record<string, string>> = {
-        [ScopeType.StaticField]: {},
-        [ScopeType.Field]: {},
+        [ScopeType.Static]: {},
+        [ScopeType.This]: {},
         [ScopeType.Argument]: {},
         [ScopeType.Local]: {},
     };
-    static readonly functionScopes = [ScopeType.Local, ScopeType.Argument, ScopeType.StaticField];
+    static readonly functionScopes = [ScopeType.Local, ScopeType.Argument, ScopeType.Static];
 
-    existsSymbol(name: string, scopesToSearch = [ScopeType.Local, ScopeType.Argument, ScopeType.Field, ScopeType.StaticField]): boolean {
+    existsSymbol(name: string, scopesToSearch = [ScopeType.Local, ScopeType.Argument, ScopeType.This, ScopeType.Static]): boolean {
         for (const scope of scopesToSearch) {
             if (this.vars[scope][name] != undefined) {
                 return true;
@@ -41,7 +47,7 @@ export class LocalSymbolTable {
         }
         return false;
     }
-    getType(name: string, scopesToSearch = [ScopeType.Local, ScopeType.Argument, ScopeType.Field, ScopeType.StaticField]) {
+    getType(name: string, scopesToSearch = [ScopeType.Local, ScopeType.Argument, ScopeType.This, ScopeType.Static]) {
         for (const scope of scopesToSearch) {
             if (this.vars[scope][name] != undefined) {
                 return this.vars[scope][name];

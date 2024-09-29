@@ -1,81 +1,17 @@
-import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
 import { TerminalNode } from "antlr4ts/tree/TerminalNode";
+import { builtInTypes, intRange } from "../builtins";
 import { ConstructorMushReturnThis, DuplicatedVariableException, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, ThisCantBeReferencedInFunction, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../error";
-import { ClassDeclarationContext, ClassNameContext, ClassVarDecContext, ConstantContext, ElseStatementContext, FieldListContext, IfStatementContext, LetStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
+import { ClassDeclarationContext, ClassNameContext, ClassVarDecContext, ConstantContext, ElseStatementContext, IfStatementContext, LetStatementContext, ParameterContext, RBraceContext, ReturnStatementContext, StatementContext, SubroutineBodyContext, SubroutineCallContext, SubroutineDeclarationContext, SubroutineDecWithoutTypeContext, VarDeclarationContext, VarNameContext, VarTypeContext, WhileStatementContext } from "../generated/JackParser";
 import { JackParserListener } from "../generated/JackParserListener";
 import { GenericSymbol, LocalSymbolTable, ScopeType, SubroutineType } from "../symbol";
-import { builtInTypes, intRange } from "../builtins";
 
-class BinaryTreeNode {
-    _returns?: boolean;
-    constructor(
-        public parent: BinaryTreeNode | undefined,
-        public left?: BinaryTreeNode,
-        public right?: BinaryTreeNode) { }
-
-    get returns(): boolean {
-        if (this._returns) {
-            return this._returns;
-        } else if (this.right == undefined && this.left == undefined) {
-            return false;
-        } else if (this.right != undefined && this.left != undefined) {
-            return this.left.returns && this.right.returns;
-        } else if (this.left != undefined) {
-            return false;
-        } else {
-            throw new Error("Something went wrong - CFG has only right  subtree")
-        }
-    }
-    print() {
-        console.log("Branch returns value")
-        console.log(".")
-        console.log(this.printBT());
-    }
-
-    printBT(prefix: string = "", side: Side = Side.LEFT) {
-        let res: string = ""
-        if (this._returns) {
-            res += this.#pad(prefix, side)
-            res += " " + this._returns + "\n";
-            return res;
-        } else {
-            if (this.right == undefined && this.left == undefined) {
-                res += this.#pad(prefix, side)
-                res += " " + false + "\n";
-            } else {
-                res += this.left?.printBT((side == Side.LEFT ? "|   " : "    "), Side.LEFT);
-                if (this.right) {
-                    res += prefix
-                    res += this.right?.printBT((side == Side.LEFT ? "|\t" : "\t"), Side.RIGHT);
-                } else {
-                    res += "\n";
-                }
-
-            }
-        }
-        return res;
-    }
-    #pad(prefix: string, side: Side): string {
-        return side == Side.LEFT ? "├──" : "└──";
-    }
-
-}
-enum Side {
-    LEFT,
-    RIGHT
-}
-
-const literalTypes = [
-    ...builtInTypes,
-    "String"
-]
-
-export class ValidatorListener implements JackParserListener, ParseTreeListener {
-
-    //why do we need local symbol table? this vars, arguments, local vars. What about types?
+/**
+ * Validates Jack file
+ */
+export class ValidatorListener implements JackParserListener {
     localSymbolTable: LocalSymbolTable = new LocalSymbolTable();
     subroutineShouldReturnVoidType: boolean = false;
-    cfgNode: BinaryTreeNode = new BinaryTreeNode(undefined);
+    controlFlowGraphNode: BinaryTreeNode = new BinaryTreeNode(undefined);
     subroutineName: string = ""
     className = ""
     inConstructor: boolean = false
@@ -83,15 +19,19 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     stopProcessingErrorsInThisScope = false;
     constructor(private globalSymbolTable: Record<string, GenericSymbol>, public errors: JackCompilerError[] = []) { }
 
-    enterClassName(ctx: ClassNameContext) {
-        this.className = ctx.IDENTIFIER().text
+    enterClassDeclaration(ctx: ClassDeclarationContext) {
+        if (this.className != "") {
+            throw new Error("Cannot change class name")
+        }
+        this.className = ctx.className()?.text;
     };
+
     enterClassVarDec(ctx: ClassVarDecContext) {
         let scope: ScopeType;
         if (ctx.STATIC() != undefined) {
-            scope = ScopeType.StaticField;
+            scope = ScopeType.Static;
         } else if (ctx.FIELD() != undefined) {
-            scope = ScopeType.Field;
+            scope = ScopeType.This;
         } else {
             throw new Error("Unknown field modifier ")
         }
@@ -101,7 +41,6 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         });
     };
     enterSubroutineDeclaration(ctx: SubroutineDeclarationContext) {
-        let subroutineType: SubroutineType;
         if (ctx.subroutineType().CONSTRUCTOR() != undefined) {
             this.inConstructor = true;
             if (ctx.subroutineDecWithoutType().subroutineReturnType().text !== this.className) {
@@ -114,7 +53,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     enterSubroutineDecWithoutType(ctx: SubroutineDecWithoutTypeContext) {
         const returnType = ctx.subroutineReturnType()
         this.subroutineShouldReturnVoidType = returnType.VOID() != undefined
-        this.cfgNode = new BinaryTreeNode(undefined);
+        this.controlFlowGraphNode = new BinaryTreeNode(undefined);
         this.subroutineName = ctx.subroutineName().text
     };
 
@@ -155,7 +94,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     };
 
     enterStatement(ctx: StatementContext) {
-        if (this.cfgNode._returns == true) {
+        if (this.controlFlowGraphNode._returns == true) {
             this.#addError(new UnreachableCodeError(ctx.start.line, ctx.start.startIndex));
             this.stopProcessingErrorsInThisScope = true;
         }
@@ -167,28 +106,28 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
      * Control flow
      */
     enterWhileStatement(ctx: WhileStatementContext) {
-        this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode);
+        this.controlFlowGraphNode = this.controlFlowGraphNode.left = new BinaryTreeNode(this.controlFlowGraphNode);
     };
 
     exitWhileStatement(ctx: WhileStatementContext) {
-        if (this.cfgNode?.parent != null) {
-            this.cfgNode = this.cfgNode.parent
+        if (this.controlFlowGraphNode?.parent != null) {
+            this.controlFlowGraphNode = this.controlFlowGraphNode.parent
         }
     };
     enterIfStatement(ctx: IfStatementContext) {
-        this.cfgNode = this.cfgNode.left = new BinaryTreeNode(this.cfgNode);
+        this.controlFlowGraphNode = this.controlFlowGraphNode.left = new BinaryTreeNode(this.controlFlowGraphNode);
     };
     exitIfStatement(ctx: IfStatementContext) {
-        if (this.cfgNode?.parent != null) {
-            this.cfgNode = this.cfgNode.parent
+        if (this.controlFlowGraphNode?.parent != null) {
+            this.controlFlowGraphNode = this.controlFlowGraphNode.parent
         }
     };
     enterElseStatement(ctx: ElseStatementContext) {
-        this.cfgNode = this.cfgNode.right = new BinaryTreeNode(this.cfgNode);
+        this.controlFlowGraphNode = this.controlFlowGraphNode.right = new BinaryTreeNode(this.controlFlowGraphNode);
     };
     exitElseStatement(ctx: ElseStatementContext) {
-        if (this.cfgNode?.parent != null) {
-            this.cfgNode = this.cfgNode.parent
+        if (this.controlFlowGraphNode?.parent != null) {
+            this.controlFlowGraphNode = this.controlFlowGraphNode.parent
         }
 
     };
@@ -303,7 +242,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
         if (!returnsVoid && this.subroutineShouldReturnVoidType) {
             this.#addError(new VoidSubroutineReturnsValueError(ctx.start.line, ctx.start.startIndex));
         }
-        this.cfgNode._returns = true;
+        this.controlFlowGraphNode._returns = true;
         if (this.inConstructor) {
             if (returnsVoid || ctx.expression()!.expression().length > 1 ||
                 ctx.expression()!.constant() == undefined || ctx.expression()!.constant()!.THIS_LITERAL() == undefined) {
@@ -313,7 +252,7 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     };
 
     exitSubroutineBody(ctx: SubroutineBodyContext) {
-        if (!this.cfgNode.returns) {
+        if (!this.controlFlowGraphNode.returns) {
             this.#addError(new SubroutineNotAllPathsReturnError(ctx.start.line, ctx.start.startIndex, this.subroutineName));
         }
         this.inConstructor = false;
@@ -322,8 +261,8 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
     };
 
     exitClassDeclaration(ctx: ClassDeclarationContext) {
-        while (this.cfgNode?.parent != undefined) {
-            this.cfgNode = this.cfgNode.parent
+        while (this.controlFlowGraphNode?.parent != undefined) {
+            this.controlFlowGraphNode = this.controlFlowGraphNode.parent
         }
     };
 
@@ -345,8 +284,70 @@ export class ValidatorListener implements JackParserListener, ParseTreeListener 
 }
 
 
+class BinaryTreeNode {
+    _returns?: boolean;
+    constructor(
+        public parent: BinaryTreeNode | undefined,
+        public left?: BinaryTreeNode,
+        public right?: BinaryTreeNode) { }
+
+    get returns(): boolean {
+        if (this._returns) {
+            return this._returns;
+        } else if (this.right == undefined && this.left == undefined) {
+            return false;
+        } else if (this.right != undefined && this.left != undefined) {
+            return this.left.returns && this.right.returns;
+        } else if (this.left != undefined) {
+            return false;
+        } else {
+            throw new Error("Something went wrong - CFG has only right  subtree")
+        }
+    }
+    print() {
+        console.log("Branch returns value")
+        console.log(".")
+        console.log(this.printBT());
+    }
+
+    printBT(prefix: string = "", side: Side = Side.LEFT) {
+        let res: string = ""
+        if (this._returns) {
+            res += this.#pad(prefix, side)
+            res += " " + this._returns + "\n";
+            return res;
+        } else {
+            if (this.right == undefined && this.left == undefined) {
+                res += this.#pad(prefix, side)
+                res += " " + false + "\n";
+            } else {
+                res += this.left?.printBT((side == Side.LEFT ? "|   " : "    "), Side.LEFT);
+                if (this.right) {
+                    res += prefix
+                    res += this.right?.printBT((side == Side.LEFT ? "|\t" : "\t"), Side.RIGHT);
+                } else {
+                    res += "\n";
+                }
+
+            }
+        }
+        return res;
+    }
+    #pad(prefix: string, side: Side): string {
+        return side == Side.LEFT ? "├──" : "└──";
+    }
+
+}
+enum Side {
+    LEFT,
+    RIGHT
+}
+const literalTypes = [
+    ...builtInTypes,
+    "String"
+]
 enum CallType {
-    VarMethod,
-    LocalMethod,
-    ClassFunctionOrConstructor
+    VarMethod = 1,
+    LocalMethod = 2,
+    ClassFunctionOrConstructor = 3
 }

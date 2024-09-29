@@ -24,12 +24,12 @@ describe('LocalSymbolTable', () => {
         });
 
     })
-    test('push and pop stack', () => {
+    test('clear subroutine vars test', () => {
         const localSymbolTable = new LocalSymbolTable();
         const classVar = 'a';
         const functionVar = 'b';
 
-        localSymbolTable.add(ScopeType.Field, classVar, "boolean");
+        localSymbolTable.add(ScopeType.This, classVar, "boolean");
 
 
         localSymbolTable.add(ScopeType.Local, functionVar, "boolean");

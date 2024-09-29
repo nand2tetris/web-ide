@@ -32,6 +32,14 @@ describe('Global symbol table', () => {
     test("basic", () => {
 
         const expected = {
+            "Array": {},
+            "Keyboard": {},
+            "Math": {},
+            "Memory": {},
+            "Output": {},
+            "Screen": {},
+            "String": {},
+            "Sys": {},
             'Array.dispose': createSubroutineSymbol(0, SubroutineType.Function),
             'Array.new': createSubroutineSymbol(1, SubroutineType.Function),
             'Keyboard.init': createSubroutineSymbol(0, SubroutineType.Function),

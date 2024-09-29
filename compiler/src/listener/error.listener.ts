@@ -5,7 +5,6 @@ export class ErrorListener implements ANTLRErrorListener<any> {
     public filepath: string = "";
     public errors: JackCompilerError[] = [];
 
-    // constructor(private filepath: string, ) { };
     /**
      * Provides a default instance of {@link ConsoleErrorListener}.
     */

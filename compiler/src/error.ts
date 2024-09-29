@@ -23,6 +23,7 @@ export class LexerOrParserError extends Error {
         super(msg);
     }
 }
+//TODO: should add filepath to other errors?
 export class DuplicatedSubroutineError extends JackCompilerError {
     constructor(line: number, charPositionInLine: number, subroutineName: string) {
         super(line, charPositionInLine, `Subroutine ${subroutineName} redeclared.`);
@@ -97,7 +98,7 @@ export class UnknownSubroutineCallError extends JackCompilerError {
         charPositionInLine: number,
         subroutineName: string,
         className?: string) {
-        super(line, charPositionInLine, `Can't find subroutine '${subroutineName}' ${className ? `in ${className}` : ""} `);
+        super(line, charPositionInLine, `Can't find subroutine '${subroutineName}'${className ? ` in ${className}` : ""}`);
         Object.setPrototypeOf(this, UnknownSubroutineCallError.prototype);
     }
 }

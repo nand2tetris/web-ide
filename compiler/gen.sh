@@ -1,6 +1,6 @@
 #!/bin/bash
 echo "Generating"
-cd parser-gen
+cd grammar
 antlr4ts  -Werror  -visitor  JackLexer.g4 JackParser.g4 -o ../src/generated
 cd ../src/generated
 sed -i -e 's/public get serializedATN(/public override get serializedATN\(/g' JackLexer.ts 

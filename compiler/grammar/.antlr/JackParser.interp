@@ -131,7 +131,7 @@ returnStatement
 expressionList
 expression
 groupedExpression
-unaryOp
+unaryOperation
 arrayAccess
 constant
 unaryOperator

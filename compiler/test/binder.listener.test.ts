@@ -1,14 +1,11 @@
-import { ParseTreeWalker } from "antlr4ts/tree/ParseTreeWalker";
-import { ErrorListener } from "../src/listener/error.listener";
-import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener";
-import { DuplicatedSubroutineError, JackCompilerError } from "../src/error";
-import { getTestResourcePath, listenToTheTree, handleErrors, parseJackText, parseJackFile } from "./test.helper";
 import fs from 'fs';
 import path from "path";
-import { ProgramContext } from "../src/generated/JackParser";
+import { DuplicatedSubroutineError } from "../src/error";
+import { BinderListener } from "../src/listener/binder.listener";
 import { createSubroutineSymbol, SubroutineType } from "../src/symbol";
+import { getTestResourcePath, listenToTheTree, parseJackFile } from "./test.helper";
 
-describe('Global symbol table', () => {
+describe('Binder', () => {
     const jestConsole = console;
 
     beforeEach(() => {
@@ -22,7 +19,7 @@ describe('Global symbol table', () => {
     test("should fail on duplicated subroutine", () => {
         const filePath = getTestResourcePath("DuplicatedSubroutine.jack");
         const tree = parseJackFile(filePath)
-        const globalSymbolsListener = new GlobalSymbolTableListener()
+        const globalSymbolsListener = new BinderListener()
         listenToTheTree(tree, globalSymbolsListener)
         const symbolsErrors = globalSymbolsListener.errors
         expect(globalSymbolsListener.errors.length).toBe(1)
@@ -32,6 +29,7 @@ describe('Global symbol table', () => {
     test("basic", () => {
 
         const expected = {
+            //built in classes
             "Array": {},
             "Keyboard": {},
             "Math": {},
@@ -84,19 +82,20 @@ describe('Global symbol table', () => {
             'Sys.error': createSubroutineSymbol(1, SubroutineType.Function),
             'Sys.halt': createSubroutineSymbol(0, SubroutineType.Function),
             'Sys.wait': createSubroutineSymbol(1, SubroutineType.Function),
+            //test files symbols
             'Fraction': {},
-            'Fraction.new': createSubroutineSymbol(2, SubroutineType.Constructor),
-            'Fraction.reduce': createSubroutineSymbol(0, SubroutineType.Method),
-            'Fraction.getNumerator': createSubroutineSymbol(0, SubroutineType.Method),
-            'Fraction.getDenominator': createSubroutineSymbol(0, SubroutineType.Method),
-            'Fraction.plus': createSubroutineSymbol(1, SubroutineType.Method),
-            'Fraction.dispose': createSubroutineSymbol(0, SubroutineType.Method),
-            'Fraction.print': createSubroutineSymbol(0, SubroutineType.Method),
-            'Fraction.gcd': createSubroutineSymbol(2, SubroutineType.Function),
+            'Fraction.new': createSubroutineSymbol(2, SubroutineType.Constructor, 0),
+            'Fraction.reduce': createSubroutineSymbol(0, SubroutineType.Method, 1),
+            'Fraction.getNumerator': createSubroutineSymbol(0, SubroutineType.Method, 0),
+            'Fraction.getDenominator': createSubroutineSymbol(0, SubroutineType.Method, 0),
+            'Fraction.plus': createSubroutineSymbol(1, SubroutineType.Method, 1),
+            'Fraction.dispose': createSubroutineSymbol(0, SubroutineType.Method, 0),
+            'Fraction.print': createSubroutineSymbol(0, SubroutineType.Method, 0),
+            'Fraction.gcd': createSubroutineSymbol(2, SubroutineType.Function, 1),
             'Main': {},
-            'Main.main': createSubroutineSymbol(0, SubroutineType.Function),
+            'Main.main': createSubroutineSymbol(0, SubroutineType.Function, 3),
         }
-        let globalSymbolsListener = new GlobalSymbolTableListener()
+        let globalSymbolsListener = new BinderListener()
 
         const testFolder = getTestResourcePath("Fraction");
         const files = fs.readdirSync(testFolder).filter(file => file.endsWith(".jack")).map(file => path.join(testFolder, file));

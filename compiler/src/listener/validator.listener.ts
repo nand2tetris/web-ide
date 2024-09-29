@@ -11,7 +11,7 @@ import { GenericSymbol, LocalSymbolTable, ScopeType, SubroutineType } from "../s
 export class ValidatorListener implements JackParserListener {
     localSymbolTable: LocalSymbolTable = new LocalSymbolTable();
     subroutineShouldReturnVoidType: boolean = false;
-    controlFlowGraphNode: BinaryTreeNode = new BinaryTreeNode(undefined);
+    controlFlowGraphNode: BinaryTreeNode = new BinaryTreeNode();
     subroutineName: string = ""
     className = ""
     inConstructor: boolean = false
@@ -20,10 +20,11 @@ export class ValidatorListener implements JackParserListener {
     constructor(private globalSymbolTable: Record<string, GenericSymbol>, public errors: JackCompilerError[] = []) { }
 
     enterClassDeclaration(ctx: ClassDeclarationContext) {
+        const newName = ctx.className()?.text
         if (this.className != "") {
             throw new Error("Cannot change class name")
         }
-        this.className = ctx.className()?.text;
+        this.className = newName;
     };
 
     enterClassVarDec(ctx: ClassVarDecContext) {
@@ -171,7 +172,7 @@ export class ValidatorListener implements JackParserListener {
             }
         }
         //int min value check
-        const unaryOp = ctx.expression().unaryOp()
+        const unaryOp = ctx.expression().unaryOperation()
         if (varName && unaryOp != undefined && unaryOp.unaryOperator().MINUS() !== undefined &&
             unaryOp!.expression().constant() != undefined && unaryOp!.expression().constant()?.INTEGER_LITERAL() !== undefined) {
             const value = parseInt(unaryOp!.expression().constant()!.INTEGER_LITERAL()!.text)
@@ -287,7 +288,7 @@ export class ValidatorListener implements JackParserListener {
 class BinaryTreeNode {
     _returns?: boolean;
     constructor(
-        public parent: BinaryTreeNode | undefined,
+        public parent?: BinaryTreeNode,
         public left?: BinaryTreeNode,
         public right?: BinaryTreeNode) { }
 
@@ -336,7 +337,6 @@ class BinaryTreeNode {
     #pad(prefix: string, side: Side): string {
         return side == Side.LEFT ? "├──" : "└──";
     }
-
 }
 enum Side {
     LEFT,

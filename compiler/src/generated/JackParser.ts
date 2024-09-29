@@ -108,7 +108,7 @@ export class JackParser extends Parser {
 	public static readonly RULE_expressionList = 31;
 	public static readonly RULE_expression = 32;
 	public static readonly RULE_groupedExpression = 33;
-	public static readonly RULE_unaryOp = 34;
+	public static readonly RULE_unaryOperation = 34;
 	public static readonly RULE_arrayAccess = 35;
 	public static readonly RULE_constant = 36;
 	public static readonly RULE_unaryOperator = 37;
@@ -122,7 +122,7 @@ export class JackParser extends Parser {
 		"varNameInDeclaration", "varName", "statements", "statement", "letStatement", 
 		"ifElseStatement", "ifStatement", "elseStatement", "whileStatement", "doStatement", 
 		"subroutineCall", "subroutineId", "returnStatement", "expressionList", 
-		"expression", "groupedExpression", "unaryOp", "arrayAccess", "constant", 
+		"expression", "groupedExpression", "unaryOperation", "arrayAccess", "constant", 
 		"unaryOperator", "binaryOperator",
 	];
 
@@ -1403,7 +1403,7 @@ export class JackParser extends Parser {
 			case 5:
 				{
 				this.state = 264;
-				this.unaryOp();
+				this.unaryOperation();
 				}
 				break;
 
@@ -1427,7 +1427,6 @@ export class JackParser extends Parser {
 					{
 					{
 					_localctx = new ExpressionContext(_parentctx, _parentState);
-					_localctx._binaryOperation = _prevctx;
 					this.pushNewRecursionContext(_localctx, _startState, JackParser.RULE_expression);
 					this.state = 268;
 					if (!(this.precpred(this._ctx, 7))) {
@@ -1490,9 +1489,9 @@ export class JackParser extends Parser {
 		return _localctx;
 	}
 	// @RuleVersion(0)
-	public unaryOp(): UnaryOpContext {
-		let _localctx: UnaryOpContext = new UnaryOpContext(this._ctx, this.state);
-		this.enterRule(_localctx, 68, JackParser.RULE_unaryOp);
+	public unaryOperation(): UnaryOperationContext {
+		let _localctx: UnaryOperationContext = new UnaryOperationContext(this._ctx, this.state);
+		this.enterRule(_localctx, 68, JackParser.RULE_unaryOperation);
 		try {
 			this.enterOuterAlt(_localctx, 1);
 			{
@@ -3015,10 +3014,6 @@ export class ExpressionListContext extends ParserRuleContext {
 
 
 export class ExpressionContext extends ParserRuleContext {
-	public _binaryOperation!: ExpressionContext;
-	public binaryOperator(): BinaryOperatorContext | undefined {
-		return this.tryGetRuleContext(0, BinaryOperatorContext);
-	}
 	public expression(): ExpressionContext[];
 	public expression(i: number): ExpressionContext;
 	public expression(i?: number): ExpressionContext | ExpressionContext[] {
@@ -3027,6 +3022,9 @@ export class ExpressionContext extends ParserRuleContext {
 		} else {
 			return this.getRuleContext(i, ExpressionContext);
 		}
+	}
+	public binaryOperator(): BinaryOperatorContext | undefined {
+		return this.tryGetRuleContext(0, BinaryOperatorContext);
 	}
 	public constant(): ConstantContext | undefined {
 		return this.tryGetRuleContext(0, ConstantContext);
@@ -3040,8 +3038,8 @@ export class ExpressionContext extends ParserRuleContext {
 	public arrayAccess(): ArrayAccessContext | undefined {
 		return this.tryGetRuleContext(0, ArrayAccessContext);
 	}
-	public unaryOp(): UnaryOpContext | undefined {
-		return this.tryGetRuleContext(0, UnaryOpContext);
+	public unaryOperation(): UnaryOperationContext | undefined {
+		return this.tryGetRuleContext(0, UnaryOperationContext);
 	}
 	public groupedExpression(): GroupedExpressionContext | undefined {
 		return this.tryGetRuleContext(0, GroupedExpressionContext);
@@ -3108,7 +3106,7 @@ export class GroupedExpressionContext extends ParserRuleContext {
 }
 
 
-export class UnaryOpContext extends ParserRuleContext {
+export class UnaryOperationContext extends ParserRuleContext {
 	public unaryOperator(): UnaryOperatorContext {
 		return this.getRuleContext(0, UnaryOperatorContext);
 	}
@@ -3119,23 +3117,23 @@ export class UnaryOpContext extends ParserRuleContext {
 		super(parent, invokingState);
 	}
 	// @Override
-	public override get ruleIndex(): number { return JackParser.RULE_unaryOp; }
+	public override get ruleIndex(): number { return JackParser.RULE_unaryOperation; }
 	// @Override
 	public override enterRule(listener: JackParserListener): void {
-		if (listener.enterUnaryOp) {
-			listener.enterUnaryOp(this);
+		if (listener.enterUnaryOperation) {
+			listener.enterUnaryOperation(this);
 		}
 	}
 	// @Override
 	public override exitRule(listener: JackParserListener): void {
-		if (listener.exitUnaryOp) {
-			listener.exitUnaryOp(this);
+		if (listener.exitUnaryOperation) {
+			listener.exitUnaryOperation(this);
 		}
 	}
 	// @Override
 	public override accept<Result>(visitor: JackParserVisitor<Result>): Result {
-		if (visitor.visitUnaryOp) {
-			return visitor.visitUnaryOp(this);
+		if (visitor.visitUnaryOperation) {
+			return visitor.visitUnaryOperation(this);
 		} else {
 			return visitor.visitChildren(this);
 		}

@@ -1,10 +1,10 @@
 import { ConstructorMushReturnThis, DuplicatedVariableException as DuplicatedVariableError, FieldCantBeReferencedInFunction, FunctionCalledAsMethodError, IncorrectConstructorReturnType, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRange as IntLiteralOverflow, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, ThisCantBeReferencedInFunction, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../src/error"
 import { ErrorListener } from "../src/listener/error.listener"
 import { ValidatorListener } from "../src/listener/validator.listener"
-import { createSubroutineSymbol, GenericSymbol, SubroutineType } from "../src/symbol"
+import { createSubroutineSymbol, GenericSymbol, LocalSymbolTable, SubroutineType } from "../src/symbol"
 import { listenToTheTree, parseJackFile, parseJackText, testResourcesDirs } from "./test.helper"
 import fs from 'fs';
-import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener"
+import { BinderListener } from "../src/listener/binder.listener"
 import path from "path"
 import { ProgramContext } from "../src/generated/JackParser"
 describe('ValidatorListener', () => {
@@ -337,7 +337,7 @@ describe('ValidatorListener', () => {
                 }
             }`, UnknownSubroutineCallError)
     })
-    
+
     test('incorrect number of parameters when calling a function', () => {
         testValidator(`
             class Main {
@@ -582,12 +582,11 @@ describe('ValidatorListener', () => {
             {
                 "Main": genericSymbol(),
                 "Main.a": genericSymbol(SubroutineType.Function, 0),
-            })
+            },)
     })
 
     //validate files 
     test.concurrent.each(testResourcesDirs)('%s', (dir: string) => {
-        console.log("Testing " + dir)
         testJackDir(path.join(__dirname, "resources", dir));
     });
 
@@ -596,7 +595,7 @@ describe('ValidatorListener', () => {
 function testJackDir(testFolder: string): void {
     const files = fs.readdirSync(testFolder).filter(file => file.endsWith(".jack")).map(file => path.join(testFolder, file));
     let trees: Record<string, ProgramContext> = {}
-    let globalSymbolsListener: GlobalSymbolTableListener = new GlobalSymbolTableListener();
+    let globalSymbolsListener: BinderListener = new BinderListener();
     for (const filePath of files) {
         const errorListener = new ErrorListener()
         errorListener.filepath = filePath;
@@ -605,18 +604,19 @@ function testJackDir(testFolder: string): void {
         listenToTheTree(tree, globalSymbolsListener)
         expect(globalSymbolsListener.errors).toEqual([]);
     }
-    console.log("Global sym table \n", globalSymbolsListener.globalSymbolTable)
     for (const filepath of Object.keys(trees)) {
         const tree = trees[filepath]
-        console.log(tree.toInfoString)
-        console.log("Testing " + filepath)
         const validatorListener = listenToTheTree(tree, new ValidatorListener(globalSymbolsListener.globalSymbolTable));
         expect(validatorListener.errors).toEqual([]);
     }
 
 }
 
-function testValidator<T extends { name: string }>(src: string, expectedError?: T, globalSymbolTable: Record<string, GenericSymbol> = {}) {
+function testValidator<T extends { name: string }>(
+    src: string,
+    expectedError?: T,
+    globalSymbolTable: Record<string, GenericSymbol> = {},
+) {
     const name = expect.getState().currentTestName!
     const errorListener = new ErrorListener();
     errorListener.filepath = name;
@@ -639,8 +639,13 @@ function testValidator<T extends { name: string }>(src: string, expectedError?: 
     } else {
         if (validator.errors.length != 0) throw new Error("Didn't expect any errors but got " + validator.errors.join("\n"))
     }
+    // if (expectedLocalSymbolTable != undefined) {
+    //     expect(validator.localSymbolTable).toEqual(expectedLocalSymbolTable)
+    // }
 }
 
+//TODO: add validation for assgining from void function call
+//TODO: Add rule to forbid var use before assignment
 /**
  * TODO:
 *  Ideas for improvement - 

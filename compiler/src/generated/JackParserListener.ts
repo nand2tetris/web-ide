@@ -37,7 +37,7 @@ import { ReturnStatementContext } from "./JackParser";
 import { ExpressionListContext } from "./JackParser";
 import { ExpressionContext } from "./JackParser";
 import { GroupedExpressionContext } from "./JackParser";
-import { UnaryOpContext } from "./JackParser";
+import { UnaryOperationContext } from "./JackParser";
 import { ArrayAccessContext } from "./JackParser";
 import { ConstantContext } from "./JackParser";
 import { UnaryOperatorContext } from "./JackParser";
@@ -424,15 +424,15 @@ export interface JackParserListener extends ParseTreeListener {
 	exitGroupedExpression?: (ctx: GroupedExpressionContext) => void;
 
 	/**
-	 * Enter a parse tree produced by `JackParser.unaryOp`.
+	 * Enter a parse tree produced by `JackParser.unaryOperation`.
 	 * @param ctx the parse tree
 	 */
-	enterUnaryOp?: (ctx: UnaryOpContext) => void;
+	enterUnaryOperation?: (ctx: UnaryOperationContext) => void;
 	/**
-	 * Exit a parse tree produced by `JackParser.unaryOp`.
+	 * Exit a parse tree produced by `JackParser.unaryOperation`.
 	 * @param ctx the parse tree
 	 */
-	exitUnaryOp?: (ctx: UnaryOpContext) => void;
+	exitUnaryOperation?: (ctx: UnaryOperationContext) => void;
 
 	/**
 	 * Enter a parse tree produced by `JackParser.arrayAccess`.

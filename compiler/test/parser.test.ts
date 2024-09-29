@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { GlobalSymbolTableListener } from "../src/listener/global.symbol.table.listener";
+import { BinderListener } from "../src/listener/binder.listener";
 
 import path from "path";
 import { ErrorListener } from "../src/listener/error.listener";
@@ -17,7 +17,6 @@ describe('Parser', () => {
     });
 
     test.each(testResourcesDirs)('%s', (dir: string) => {
-        console.log("Testing " + dir)
         testJackDir(path.join(__dirname, "resources", dir));
     });
     test('expected EOF', () => {
@@ -46,7 +45,7 @@ function testJackDir(testFolder: string): void {
         const errorListener = new ErrorListener()
         errorListener.filepath = filePath;
         const tree = parseJackFile(filePath)
-        const globalSymbolsListener = listenToTheTree(tree, new GlobalSymbolTableListener());
+        const globalSymbolsListener = listenToTheTree(tree, new BinderListener());
         const symbolsErrors = globalSymbolsListener.errors.join("\n")
         try {
             expect(globalSymbolsListener.errors.length).toBe(0)

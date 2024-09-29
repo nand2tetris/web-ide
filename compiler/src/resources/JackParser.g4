@@ -5,6 +5,7 @@ options {
 }
 
 program: classDeclaration EOF;
+
 classDeclaration:
 	CLASS className LBRACE classVarDec* subroutineDeclaration* rBrace;
 className: IDENTIFIER;
@@ -57,16 +58,16 @@ returnStatement: RETURN expression? SEMICOLON;
 expressionList: (expression (COMMA expression)*)?;
 
 expression:
-	expression binaryOperator expression
+	binaryOperation = expression binaryOperator expression
 	| constant 
 	| varName
 	| subroutineCall
 	| arrayAccess
-	| unaryOperation
+	| unaryOp
 	| groupedExpression;
 
 groupedExpression: LPAREN expression RPAREN;
-unaryOperation: unaryOperator expression;
+unaryOp: unaryOperator expression;
 arrayAccess: varName LBRACKET expression RBRACKET;
 
 constant:

@@ -34,7 +34,7 @@ public class JackParser extends Parser {
 		RULE_ifElseStatement = 23, RULE_ifStatement = 24, RULE_elseStatement = 25, 
 		RULE_whileStatement = 26, RULE_doStatement = 27, RULE_subroutineCall = 28, 
 		RULE_subroutineId = 29, RULE_returnStatement = 30, RULE_expressionList = 31, 
-		RULE_expression = 32, RULE_groupedExpression = 33, RULE_unaryOp = 34, 
+		RULE_expression = 32, RULE_groupedExpression = 33, RULE_unaryOperation = 34, 
 		RULE_arrayAccess = 35, RULE_constant = 36, RULE_unaryOperator = 37, RULE_binaryOperator = 38;
 	private static String[] makeRuleNames() {
 		return new String[] {
@@ -45,7 +45,7 @@ public class JackParser extends Parser {
 			"varNameInDeclaration", "varName", "statements", "statement", "letStatement", 
 			"ifElseStatement", "ifStatement", "elseStatement", "whileStatement", 
 			"doStatement", "subroutineCall", "subroutineId", "returnStatement", "expressionList", 
-			"expression", "groupedExpression", "unaryOp", "arrayAccess", "constant", 
+			"expression", "groupedExpression", "unaryOperation", "arrayAccess", "constant", 
 			"unaryOperator", "binaryOperator"
 		};
 	}
@@ -1662,7 +1662,6 @@ public class JackParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExpressionContext extends ParserRuleContext {
-		public ExpressionContext binaryOperation;
 		public ConstantContext constant() {
 			return getRuleContext(ConstantContext.class,0);
 		}
@@ -1675,20 +1674,20 @@ public class JackParser extends Parser {
 		public ArrayAccessContext arrayAccess() {
 			return getRuleContext(ArrayAccessContext.class,0);
 		}
-		public UnaryOpContext unaryOp() {
-			return getRuleContext(UnaryOpContext.class,0);
+		public UnaryOperationContext unaryOperation() {
+			return getRuleContext(UnaryOperationContext.class,0);
 		}
 		public GroupedExpressionContext groupedExpression() {
 			return getRuleContext(GroupedExpressionContext.class,0);
-		}
-		public BinaryOperatorContext binaryOperator() {
-			return getRuleContext(BinaryOperatorContext.class,0);
 		}
 		public List<ExpressionContext> expression() {
 			return getRuleContexts(ExpressionContext.class);
 		}
 		public ExpressionContext expression(int i) {
 			return getRuleContext(ExpressionContext.class,i);
+		}
+		public BinaryOperatorContext binaryOperator() {
+			return getRuleContext(BinaryOperatorContext.class,0);
 		}
 		public ExpressionContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -1741,7 +1740,7 @@ public class JackParser extends Parser {
 			case 5:
 				{
 				setState(264);
-				unaryOp();
+				unaryOperation();
 				}
 				break;
 			case 6:
@@ -1762,7 +1761,6 @@ public class JackParser extends Parser {
 					{
 					{
 					_localctx = new ExpressionContext(_parentctx, _parentState);
-					_localctx.binaryOperation = _prevctx;
 					pushNewRecursionContext(_localctx, _startState, RULE_expression);
 					setState(268);
 					if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
@@ -1829,22 +1827,22 @@ public class JackParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class UnaryOpContext extends ParserRuleContext {
+	public static class UnaryOperationContext extends ParserRuleContext {
 		public UnaryOperatorContext unaryOperator() {
 			return getRuleContext(UnaryOperatorContext.class,0);
 		}
 		public ExpressionContext expression() {
 			return getRuleContext(ExpressionContext.class,0);
 		}
-		public UnaryOpContext(ParserRuleContext parent, int invokingState) {
+		public UnaryOperationContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_unaryOp; }
+		@Override public int getRuleIndex() { return RULE_unaryOperation; }
 	}
 
-	public final UnaryOpContext unaryOp() throws RecognitionException {
-		UnaryOpContext _localctx = new UnaryOpContext(_ctx, getState());
-		enterRule(_localctx, 68, RULE_unaryOp);
+	public final UnaryOperationContext unaryOperation() throws RecognitionException {
+		UnaryOperationContext _localctx = new UnaryOperationContext(_ctx, getState());
+		enterRule(_localctx, 68, RULE_unaryOperation);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{

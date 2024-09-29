@@ -9,6 +9,7 @@ export enum SubroutineType {
 export interface SubroutineInfo {
     paramsCount: number;
     type: SubroutineType
+    localVarsCount?: number;
 }
 /**
  * Symbol that represents class or a subroutine
@@ -16,8 +17,12 @@ export interface SubroutineInfo {
 export interface GenericSymbol {
     subroutineInfo?: SubroutineInfo;
 }
-export function createSubroutineSymbol(paramsCount: number, type: SubroutineType) {
-    return { subroutineInfo: { paramsCount, type } } as GenericSymbol
+export function createSubroutineSymbol(paramsCount: number, type: SubroutineType, localVarsCount?: number): GenericSymbol {
+    const s = { paramsCount, type } as SubroutineInfo;
+    if (localVarsCount != undefined) {
+        s.localVarsCount = localVarsCount
+    }
+    return { subroutineInfo: s } as GenericSymbol
 }
 
 type VariableType = string

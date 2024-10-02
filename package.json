@@ -28,7 +28,7 @@
     "prebuild": "npm run check",
     "build": "cross-env CI=true npm run build -w projects && cross-env CI=true npm run build -w runner && cross-env CI=true npm run build -w simulator && cross-env CI=true npm run build -w cli && cross-env CI=true npm run build -w components && cross-env CI=true npm run build -w web && cross-env CI=true npm run build -w extension",
     "build:extension": "cross-env CI=true npm run build -w extension",
-    "watch": "concurrently -k --restart-tries 3 \"npm run build -w components -- -w \" \"npm run build -w projects -- -w\" \"npm run build -w runner -- -w\" \"npm run build -w simulator -- -w\"   ",
+    "watch": "concurrently -k --restart-tries 3 \"npm run build -w components -- -w\" \"npm run build -w projects -- -w\" \"npm run build -w runner -- -w\" \"npm run build -w simulator -- -w\"",
     "test:ci": "cross-env CI=true npm test -w simulator && cross-env CI=true npm test -w components && cross-env CI=true npm test -w web",
     "pretest": "npm run build",
     "test": "npm run test:ci",

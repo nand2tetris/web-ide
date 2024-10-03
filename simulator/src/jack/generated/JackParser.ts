@@ -2,21 +2,21 @@
 // noinspection ES6UnusedImports,JSUnusedGlobalSymbols,JSUnusedLocalSymbols
 
 import {
-	ATN,
-	ATNDeserializer,
-	DecisionState,
-	DFA,
-	FailedPredicateException,
-	NoViableAltException,
-	Parser,
-	ParserATNSimulator,
-	ParserRuleContext,
-	PredictionContextCache,
-	RecognitionException,
-	RuleContext,
-	TerminalNode,
-	Token,
-	TokenStream
+  ATN,
+  ATNDeserializer,
+  DecisionState,
+  DFA,
+  FailedPredicateException,
+  NoViableAltException,
+  Parser,
+  ParserATNSimulator,
+  ParserRuleContext,
+  PredictionContextCache,
+  RecognitionException,
+  RuleContext,
+  TerminalNode,
+  Token,
+  TokenStream,
 } from "antlr4";
 import JackParserListener from "./JackParserListener.js";
 // for running tests with parameters, TODO: discuss strategy for typed parameters in CI

@@ -12,6 +12,6 @@ export class CustomErrorListener extends ErrorListener<any> {
     e: RecognitionException | undefined,
   ) => {
     const t = offendingSymbol as Token;
-    this.errors.push(new LexerOrParserError(line, t.start, t.stop+1, msg));
+    this.errors.push(new LexerOrParserError(line, t.start, t.stop + 1, msg));
   };
 }

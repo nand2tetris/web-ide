@@ -806,8 +806,8 @@ function testValidator<T extends { name: string }>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-        validator.errors.join(",") +
-        "'",
+          validator.errors.join(",") +
+          "'",
       );
     }
   } else {

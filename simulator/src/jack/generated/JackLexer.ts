@@ -9,7 +9,7 @@ import {
   Lexer,
   LexerATNSimulator,
   PredictionContextCache,
-  Token
+  Token,
 } from "antlr4";
 export default class JackLexer extends Lexer {
   public static readonly CLASS = 1;

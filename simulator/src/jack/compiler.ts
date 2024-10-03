@@ -1,12 +1,12 @@
 import { BinderListener } from "./listener/binder.listener.js";
 import { CustomErrorListener } from "./listener/error.listener.js";
 import { ValidatorListener } from "./listener/validator.listener.js";
-import { JackCompilerError, LexerOrParserError, Span } from "./error.js";
+import { JackCompilerError, LexerOrParserError } from "./error.js";
 import { VMWriter } from "./listener/vm.writer.listener.js";
 import JackParser, { ProgramContext } from "./generated/JackParser.js";
 import { CharStreams, CommonTokenStream, ParseTreeWalker } from "antlr4";
 import JackLexer from "./generated/JackLexer.js";
-import { CompilationError, createError } from "../languages/base.js";
+import { CompilationError } from "../languages/base.js";
 
 export function compile(
     files: Record<string, string>,
@@ -14,25 +14,14 @@ export function compile(
     try {
         return _compile(files)
     } catch (err) {
+        const result: Record<string, CompilationError> = {};
         console.error(err);
-        if (typeof err === "string") {
-            const result: Record<string, CompilationError> = {};
-            const error: CompilationError = createError(err.toUpperCase())
-            for (const name in Object.keys(files)) {
-                result[name] = error;
-            }
-            return result;
-        } else if (err instanceof Error) {
-            const result: Record<string, CompilationError> = {};
-            const error: CompilationError = createError(err.message)
-            for (const name in Object.keys(files)) {
-                result[name] = error;
-            }
-            return result;
+        const keys = Object.keys(files);
+        for (const name of keys) {
+            result[name] = { message: "Something went wrong while compiling files. Please create a bug report" } as CompilationError;
         }
+        return result;
     }
-    console.error("Should've returned from catch or try");
-    return {};
 }
 function _compile(files: Record<string, string>,
 ): Record<string, string | CompilationError> {
@@ -49,8 +38,7 @@ function _compile(files: Record<string, string>,
     for (const [name, content] of Object.entries(files)) {
         const treeOrErrors = compiler.parserAndBind(content);
         if (Array.isArray(treeOrErrors)) {
-            const s = treeOrErrors[0].span
-            errors[name] = { message: `Line ${s.line}: ${treeOrErrors[0].msg}`, span: { start: s.start, end: s.end, line: 3 } as Span } as CompilationError;
+            errors[name] = toCompilerError(treeOrErrors);
         }
         trees[name] = treeOrErrors as ProgramContext;
     }
@@ -64,13 +52,19 @@ function _compile(files: Record<string, string>,
     for (const [name, tree] of Object.entries(trees)) {
         const compiledOrErrors = compiler.compile(tree);
         if (Array.isArray(compiledOrErrors)) {
-            result[name] = { message: compiledOrErrors[0].msg, span: compiledOrErrors[0].span } as CompilationError;
+            result[name] = toCompilerError(compiledOrErrors);
         } else {
             result[name] = compiledOrErrors;
         }
     }
     return result;
 }
+function toCompilerError(errors: JackCompilerError[]): CompilationError {
+    const err = errors[0];
+    return { message: `Line ${err.span.line}: ${err.msg}`, span: err.span } as CompilationError
+}
+
+
 export class Compiler {
     private binder = new BinderListener();
     private errorListener = new CustomErrorListener();

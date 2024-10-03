@@ -16,7 +16,6 @@ import JackParserListener from "../generated/JackParserListener.js";
 
 const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
-/// <reference path="../error.ts" />
 /**
  * Creates global symbol table that contains built-in functions and found classes and subroutines
  */

@@ -3,9 +3,6 @@ import { JackCompilerError, LexerOrParserError } from "../error.js";
 export class CustomErrorListener extends ErrorListener<any> {
   public errors: JackCompilerError[] = [];
 
-  /**
-   * Provides a default instance of {@link ConsoleErrorListener}.
-   */
   override syntaxError = (
     recognizer: Recognizer<any>,
     offendingSymbol: any,

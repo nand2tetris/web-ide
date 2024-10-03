@@ -6,7 +6,6 @@ interface Range {
   max: number;
 }
 export const intRange = { min: -32768, max: 32767 } as Range;
-//TODO: should we convert this to symbols?
 const builtInFunctionsToArgCount: Record<string, number> = {
   "Array.dispose": 0,
   //TODO: what is this?

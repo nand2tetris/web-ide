@@ -34,12 +34,6 @@
       ],
       "outFiles": ["${workspaceFolder}/extension/build/test/**/*.js"],
       "preLaunchTask": "${defaultBuildTask}"
-    }, {
-      "type": "chrome",
-      "request": "launch",
-      "name": "Test web ide",
-      "url": "http://localhost:3000/web-ide",
-      "webRoot": "${workspaceFolder}"
     }
   ]
 }

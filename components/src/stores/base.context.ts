@@ -11,6 +11,7 @@ import {
   useState,
 } from "react";
 import { useDialog } from "../dialog.js";
+import { cloneTree } from "../file_utils.js";
 import {
   FileSystemAccessFileSystemAdapter,
   openNand2TetrisDirectory,
@@ -49,8 +50,14 @@ export function useBaseContext(): BaseContext {
         new FileSystemAccessFileSystemAdapter(handle),
       );
       if (createFiles) {
-        const loaders = await import("@nand2tetris/projects/loader.js");
-        await loaders.createFiles(newFs);
+        if (root) {
+          const loaders = await import("@nand2tetris/projects/loader.js");
+          await loaders.createFiles(newFs);
+        } else {
+          await cloneTree(fs, newFs, "/projects", (path: string) =>
+            path.replace("/projects", "/").replace(/\/0*(\d+)/, "$1"),
+          );
+        }
       }
       setFs(newFs);
       setRoot(handle.name);
@@ -106,6 +113,9 @@ export function useBaseContext(): BaseContext {
     async (force = false, createFiles = false) => {
       if (!canUpgradeFs || (root && !force)) return;
       const handler = await openNand2TetrisDirectory();
+      if (root) {
+        await removeLocalAdapterFromIndexedDB();
+      }
       const adapter = await createAndStoreLocalAdapterInIndexedDB(handler);
       await setLocalFs(adapter, createFiles);
     },

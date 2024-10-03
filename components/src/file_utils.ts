@@ -42,3 +42,40 @@ export function sortFiles(files: Stats[]) {
     }
   });
 }
+
+export async function cloneTree(
+  sourceFs: FileSystem,
+  targetFs: FileSystem,
+  dir = "/",
+  pathTransform: (path: string) => string,
+  overwrite = false,
+) {
+  const sourceDir = dir == "/" ? "" : dir;
+  const targetDir = pathTransform(sourceDir);
+
+  const sourceItems = await sourceFs.scandir(dir);
+
+  targetFs.mkdir(targetDir);
+  const targetItems = new Set(
+    (await targetFs.scandir(targetDir)).map((stat) => stat.name),
+  );
+
+  for (const item of sourceItems) {
+    if (item.isFile()) {
+      if (overwrite || !targetItems.has(item.name)) {
+        await targetFs.writeFile(
+          `${targetDir}/${item.name}`,
+          await sourceFs.readFile(`${sourceDir}/${item.name}`),
+        );
+      }
+    } else {
+      await cloneTree(
+        sourceFs,
+        targetFs,
+        `${sourceDir}/${item.name}`,
+        pathTransform,
+        overwrite,
+      );
+    }
+  }
+}

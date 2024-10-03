@@ -72,7 +72,7 @@ export const resetTests = async (fs: FileSystem, projects?: number[]) => {
 };
 
 export const createFiles = async (fs: FileSystem) => {
-  await reset(fs, ProjectFiles);
+  await reset(fs, ProjectFiles, "/", false);
 };
 
 export const Assignments = {

@@ -37,11 +37,12 @@ function _doWithTryCatch(files: Record<string, string>, cmd: Command) {
 }
 enum Command {
   Compile,
-  Validate
+  Validate,
 }
 
 function _do(
-  files: Record<string, string>, cmd: Command
+  files: Record<string, string>,
+  cmd: Command,
 ): Record<string, string | CompilationError> {
   if (files instanceof LexerOrParserError) {
     throw new Error("Expected tree but got a lexer or parser error");
@@ -113,7 +114,7 @@ export class Compiler {
     const validator = new ValidatorListener(this.binder.globalSymbolTable);
     ParseTreeWalker.DEFAULT.walk(validator, tree);
 
-    return tree
+    return tree;
   }
   compile(tree: ProgramContext): string | JackCompilerError[] {
     const treeOrErrors = this.validate(tree);

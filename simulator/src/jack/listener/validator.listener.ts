@@ -201,7 +201,7 @@ export class ValidatorListener extends JackParserListener {
   };
 
   override enterStatement = (ctx: StatementContext) => {
-    if (this.controlFlowGraphNode._returns == true) {
+    if (this.controlFlowGraphNode.returns == true) {
       this.#addError(
         new UnreachableCodeError(
           ctx.start.line,
@@ -429,7 +429,7 @@ export class ValidatorListener extends JackParserListener {
         ),
       );
     }
-    this.controlFlowGraphNode._returns = true;
+    this.controlFlowGraphNode.returns = true;
     if (this.subroutineType == SubroutineType.Constructor) {
       if (
         returnsVoid ||
@@ -437,7 +437,6 @@ export class ValidatorListener extends JackParserListener {
         ctx.expression()!.constant() == null ||
         ctx.expression()!.constant()!.THIS_LITERAL() == null
       ) {
-        //TODO: test on UI
         this.#addError(
           new ConstructorMushReturnThis(
             ctx.stop!.line,
@@ -451,7 +450,6 @@ export class ValidatorListener extends JackParserListener {
 
   override exitSubroutineBody = (ctx: SubroutineBodyContext) => {
     if (!this.controlFlowGraphNode.returns) {
-      //TODO: test on UI
       this.#addError(
         new SubroutineNotAllPathsReturnError(
           ctx.stop!.line,
@@ -518,14 +516,14 @@ export class ValidatorListener extends JackParserListener {
 }
 
 class BinaryTreeNode {
-  _returns?: boolean;
+  private _returns?: boolean;
   constructor(
     public parent?: BinaryTreeNode,
     public left?: BinaryTreeNode,
     public right?: BinaryTreeNode,
-  ) {}
+  ) { }
 
-  get returns(): boolean {
+  public get returns(): boolean {
     if (this._returns) {
       return this._returns;
     } else if (this.right == undefined && this.left == undefined) {
@@ -537,6 +535,10 @@ class BinaryTreeNode {
     } else {
       throw new Error("Something went wrong - CFG has only right  subtree");
     }
+  }
+
+  public set returns(_returns: boolean) {
+    this._returns = _returns;
   }
   print() {
     console.log("Branch returns value");

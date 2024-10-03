@@ -1,5 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { compile } from "@nand2tetris/simulator/jack/compiler.js";
+import { compile, validate } from "@nand2tetris/simulator/jack/compiler.js";
 import { CompilationError } from "@nand2tetris/simulator/languages/base.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -51,8 +51,6 @@ export function makeCompilerStore(
       { name, content }: { name: string; content: string },
     ) {
       state.files[name] = content;
-      state.isCompiled = false;
-      this.compile(state);
     },
 
     // the keys of 'files' have to be the full file path, not basename
@@ -62,6 +60,27 @@ export function makeCompilerStore(
       this.compile(state);
     },
 
+    validate(state: CompilerPageState) {
+      state.isCompiled = false;
+      const compiledFiles = validate(state.files);
+      state.compiled = {};
+      for (const [name, compiled] of Object.entries(compiledFiles)) {
+        if (typeof compiled === "string") {
+          state.compiled[name] = {
+            valid: true,
+            vm: compiled,
+          };
+        } else {
+          state.compiled[name] = {
+            valid: false,
+            error: compiled,
+          };
+        }
+      }
+      state.isValid = Object.keys(state.files).every(
+        (file) => state.compiled[file].valid,
+      );
+    },
     compile(state: CompilerPageState) {
       const compiledFiles = compile(state.files);
       state.compiled = {};
@@ -144,6 +163,9 @@ export function makeCompilerStore(
 
     async compile() {
       dispatch.current({ action: "writeCompiled" });
+    },
+    async validate() {
+      dispatch.current({ action: "validate" });
     },
   };
 

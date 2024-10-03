@@ -135,8 +135,8 @@ export class VMWriter extends JackParserListener {
       this.result += `    push constant ${str.length}\n`;
       this.result += `    call String.new 1\n`;
       for (const char of str) {
-        this.result += ` push constant ${char.charCodeAt(0)}\n`;
-        this.result += " call String.appendChar 2\n";
+        this.result += `    push constant ${char.charCodeAt(0)}\n`;
+        this.result += "    call String.appendChar 2\n";
       }
     } else if (ctx.NULL_LITERAL() != null) {
       this.result += `    push constant 0\n`;

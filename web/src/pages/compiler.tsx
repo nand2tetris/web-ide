@@ -218,6 +218,7 @@ export const Compiler = () => {
                 value={state.files[file]}
                 onChange={(source: string) => {
                   actions.writeFile(file, source);
+                  actions.validate();
                 }}
                 error={state.compiled[file].error}
                 language={"jack"}

@@ -11,8 +11,17 @@ import { CompilationError } from "../languages/base.js";
 export function compile(
   files: Record<string, string>,
 ): Record<string, string | CompilationError> {
+  return _doWithTryCatch(files, Command.Compile);
+}
+
+export function validate(
+  files: Record<string, string>,
+): Record<string, string | CompilationError> {
+  return _doWithTryCatch(files, Command.Validate);
+}
+function _doWithTryCatch(files: Record<string, string>, cmd: Command) {
   try {
-    return _compile(files);
+    return _do(files, cmd);
   } catch (err) {
     const result: Record<string, CompilationError> = {};
     console.error(err);
@@ -26,8 +35,13 @@ export function compile(
     return result;
   }
 }
-function _compile(
-  files: Record<string, string>,
+enum Command {
+  Compile,
+  Validate
+}
+
+function _do(
+  files: Record<string, string>, cmd: Command
 ): Record<string, string | CompilationError> {
   if (files instanceof LexerOrParserError) {
     throw new Error("Expected tree but got a lexer or parser error");
@@ -54,11 +68,27 @@ function _compile(
   }
 
   for (const [name, tree] of Object.entries(trees)) {
-    const compiledOrErrors = compiler.compile(tree);
-    if (Array.isArray(compiledOrErrors)) {
-      result[name] = toCompilerError(compiledOrErrors);
-    } else {
-      result[name] = compiledOrErrors;
+    let compiledOrValidatedOrErrors;
+    switch (cmd) {
+      case Command.Compile:
+        compiledOrValidatedOrErrors = compiler.compile(tree);
+
+        if (Array.isArray(compiledOrValidatedOrErrors)) {
+          result[name] = toCompilerError(compiledOrValidatedOrErrors);
+        } else {
+          result[name] = compiledOrValidatedOrErrors;
+        }
+        break;
+      case Command.Validate:
+        compiledOrValidatedOrErrors = compiler.validate(tree);
+        if (Array.isArray(compiledOrValidatedOrErrors)) {
+          result[name] = toCompilerError(compiledOrValidatedOrErrors);
+        } else {
+          result[name] = "";
+        }
+        break;
+      default:
+        throw new Error("Invalid command");
     }
   }
   return result;
@@ -74,7 +104,7 @@ function toCompilerError(errors: JackCompilerError[]): CompilationError {
 export class Compiler {
   private binder = new BinderListener();
   private errorListener = new CustomErrorListener();
-  compile(tree: ProgramContext): string | JackCompilerError[] {
+  validate(tree: ProgramContext): ProgramContext | JackCompilerError[] {
     if (Object.keys(this.binder.globalSymbolTable).length == 0) {
       throw new Error(
         "Please populate global symbol table using parserAndBind method",
@@ -82,12 +112,19 @@ export class Compiler {
     }
     const validator = new ValidatorListener(this.binder.globalSymbolTable);
     ParseTreeWalker.DEFAULT.walk(validator, tree);
-    if (validator.errors.length > 0) {
-      console.log("Errors in validator " + JSON.stringify(validator.errors));
-      return validator.errors;
+
+    return tree
+  }
+  compile(tree: ProgramContext): string | JackCompilerError[] {
+    const treeOrErrors = this.validate(tree);
+    if (Array.isArray(treeOrErrors)) {
+      const errors = treeOrErrors as JackCompilerError[];
+      console.log("Errors in validator " + JSON.stringify(errors));
+      return errors;
     }
+    const validateTree = treeOrErrors as ProgramContext;
     const vmWriter = new VMWriter(this.binder.globalSymbolTable);
-    ParseTreeWalker.DEFAULT.walk(vmWriter, tree);
+    ParseTreeWalker.DEFAULT.walk(vmWriter, validateTree);
     return vmWriter.result;
   }
 

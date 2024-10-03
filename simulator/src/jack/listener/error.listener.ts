@@ -15,20 +15,6 @@ export class CustomErrorListener extends ErrorListener<any> {
     e: RecognitionException | undefined,
   ) => {
     const t = offendingSymbol as Token;
-    const endIndex = column + t.text.length;
-    this.errors.push(new LexerOrParserError(line, column, endIndex, msg));
+    this.errors.push(new LexerOrParserError(line, t.start, t.stop+1, msg));
   };
-
 }
-
-/**
- * 
-  We can add next methods (should be properties) to the error listener class to speed up parsing process. This is not part of Error listener ts class but exists in js implementation
-  reportAmbiguity(recognizer: any, dfa: any, startIndex: any, stopIndex: any, exact: any, ambigAlts: any, configs: any) {
-      console.log(`Ambiguity detected at ${this.filepath}:${startIndex}:${stopIndex}`);
-  }
-
-  reportContextSensitivity(recognizer: any, dfa: any, startIndex: any, stopIndex: any, prediction: any, configs: any) {
-      console.log(`Context sensitivity detected at ${this.filepath}:${startIndex}:${stopIndex}`);
-  }
- */

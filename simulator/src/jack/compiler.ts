@@ -31,7 +31,7 @@ export function compile(
             return result;
         }
     }
-    //to satisfy compiler
+    console.error("Should've returned from catch or try");
     return {};
 }
 function _compile(files: Record<string, string>,
@@ -40,6 +40,9 @@ function _compile(files: Record<string, string>,
         throw new Error("Expected tree but got a lexer or parser error");
     }
     const result: Record<string, string | CompilationError> = {};
+    for (const name of Object.keys(files)) {
+        result[name] = "";
+    }
     const trees: Record<string, ProgramContext> = {};
     const errors: Record<string, CompilationError> = {};
     const compiler = new Compiler();
@@ -47,13 +50,17 @@ function _compile(files: Record<string, string>,
         const treeOrErrors = compiler.parserAndBind(content);
         if (Array.isArray(treeOrErrors)) {
             const s = treeOrErrors[0].span
-            errors[name] = { message: treeOrErrors[0].msg, span: { start: s.start, end: s.end, line: 3 } as Span } as CompilationError;
+            errors[name] = { message: `Line ${s.line}: ${treeOrErrors[0].msg}`, span: { start: s.start, end: s.end, line: 3 } as Span } as CompilationError;
         }
         trees[name] = treeOrErrors as ProgramContext;
     }
     if (Object.keys(errors).length > 0) {
-        return errors;
+        for (const [name, error] of Object.entries(errors)) {
+            result[name] = error;
+        }
+        return result;
     }
+
     for (const [name, tree] of Object.entries(trees)) {
         const compiledOrErrors = compiler.compile(tree);
         if (Array.isArray(compiledOrErrors)) {

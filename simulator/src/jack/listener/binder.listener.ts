@@ -36,7 +36,7 @@ export class BinderListener extends JackParserListener {
       const e = new DuplicatedClassError(
         ctx.className()!.start.line,
         ctx.className()!.start.start,
-        ctx.className()!.stop.stop+1,
+        ctx.className()!.stop.stop + 1,
         className,
       );
       this.errors.push(e);

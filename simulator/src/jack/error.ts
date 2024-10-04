@@ -21,7 +21,7 @@ export class JackCompilerError {
   };
 }
 
-export class LexerOrParserError extends JackCompilerError { }
+export class LexerOrParserError extends JackCompilerError {}
 export class DuplicatedSubroutineError extends JackCompilerError {
   constructor(
     line: number,
@@ -44,12 +44,7 @@ export class DuplicatedClassError extends JackCompilerError {
     endIndex: number,
     className: string,
   ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Class ${className} is already defined.`,
-    );
+    super(line, startInd, endIndex, `Class ${className} is already defined.`);
   }
 }
 export class FilenameDoesntMatchClassName extends JackCompilerError {
@@ -81,7 +76,7 @@ export class DuplicatedVariableException extends JackCompilerError {
       startInd,
       endIndex,
       "Duplicated local variable, field, argument or static variable " +
-      variableName,
+        variableName,
     );
   }
 }

@@ -759,7 +759,7 @@ describe("Jack validator listener", () => {
       {
         A: genericSymbol(),
       },
-      "B"
+      "B",
     );
   });
 
@@ -796,11 +796,14 @@ function testValidator<T extends { name: string }>(
   src: string,
   expectedError?: T,
   globalSymbolTable: Record<string, GenericSymbol> = {},
-  filename?: string
+  filename?: string,
 ) {
   const errorListener = new CustomErrorListener();
   const tree = parseJackText(src, errorListener);
-  const listener = filename != null ? new ValidatorListener(globalSymbolTable, filename) : new ValidatorListener(globalSymbolTable);
+  const listener =
+    filename != null
+      ? new ValidatorListener(globalSymbolTable, filename)
+      : new ValidatorListener(globalSymbolTable);
   const validator = listenToTheTree(tree, listener);
   if (expectedError) {
     if (validator.errors.length > 1) {
@@ -812,8 +815,8 @@ function testValidator<T extends { name: string }>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-        validator.errors.join(",") +
-        "'",
+          validator.errors.join(",") +
+          "'",
       );
     }
   } else {

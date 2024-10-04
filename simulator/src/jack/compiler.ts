@@ -105,18 +105,27 @@ function toCompilerError(errors: JackCompilerError[]): CompilationError {
 export class Compiler {
   private binder = new BinderListener();
   private errorListener = new CustomErrorListener();
-  validate(tree: ProgramContext, filename?: string): ProgramContext | JackCompilerError[] {
+  validate(
+    tree: ProgramContext,
+    filename?: string,
+  ): ProgramContext | JackCompilerError[] {
     if (Object.keys(this.binder.globalSymbolTable).length == 0) {
       throw new Error(
         "Please populate global symbol table using parserAndBind method",
       );
     }
-    const validator = new ValidatorListener(this.binder.globalSymbolTable, filename);
+    const validator = new ValidatorListener(
+      this.binder.globalSymbolTable,
+      filename,
+    );
     ParseTreeWalker.DEFAULT.walk(validator, tree);
 
     return validator.errors.length > 0 ? validator.errors : tree;
   }
-  compile(tree: ProgramContext, filename?: string,): string | JackCompilerError[] {
+  compile(
+    tree: ProgramContext,
+    filename?: string,
+  ): string | JackCompilerError[] {
     const treeOrErrors = this.validate(tree, filename);
     if (Array.isArray(treeOrErrors)) {
       const errors = treeOrErrors as JackCompilerError[];

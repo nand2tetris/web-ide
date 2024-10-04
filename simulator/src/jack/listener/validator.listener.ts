@@ -4,6 +4,7 @@ import {
   ConstructorMushReturnThis,
   DuplicatedVariableException,
   FieldCantBeReferencedInFunction,
+  FilenameDoesntMatchClassName,
   FunctionCalledAsMethodError,
   IncorrectConstructorReturnType,
   IncorrectParamsNumberInSubroutineCallError,
@@ -62,6 +63,7 @@ export class ValidatorListener extends JackParserListener {
   private subroutineType?: SubroutineType;
   constructor(
     private globalSymbolTable: Record<string, GenericSymbol>,
+    private filename?: string,
     public errors: JackCompilerError[] = [],
   ) {
     super();
@@ -73,6 +75,16 @@ export class ValidatorListener extends JackParserListener {
       throw new Error("Cannot change class name");
     }
     this.className = newName;
+    console.log("Filename", this.filename != null, this.filename != this.className);
+    if (this.filename != null && this.filename != this.className) {
+      console.error("FilenameDoesntMatchClassName")
+      this.errors.push(new FilenameDoesntMatchClassName(ctx.start.line,
+        ctx.start.start,
+        ctx.start.stop,
+        this.filename,
+        this.className,
+      ));
+    }
     ctx.localSymbolTable = this.localSymbolTable;
   };
 
@@ -521,7 +533,7 @@ class BinaryTreeNode {
     public parent?: BinaryTreeNode,
     public left?: BinaryTreeNode,
     public right?: BinaryTreeNode,
-  ) {}
+  ) { }
 
   public get returns(): boolean {
     if (this._returns) {

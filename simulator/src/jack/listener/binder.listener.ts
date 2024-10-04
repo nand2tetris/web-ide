@@ -30,16 +30,16 @@ export class BinderListener extends JackParserListener {
   private subroutineId = "";
 
   override enterClassDeclaration = (ctx: ClassDeclarationContext) => {
-    const className = ctx.className()!.IDENTIFIER().getText();
+    const id = ctx.className()!.IDENTIFIER();
+    const className = id.getText();
     if (this.globalSymbolTable[className] != undefined) {
-      this.errors.push(
-        new DuplicatedClassError(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
-          className,
-        ),
+      const e = new DuplicatedClassError(
+        ctx.className()!.start.line,
+        ctx.className()!.start.start,
+        ctx.className()!.stop.stop+1,
+        className,
       );
+      this.errors.push(e);
       return;
     }
     this.globalSymbolTable[className] = {} as GenericSymbol;

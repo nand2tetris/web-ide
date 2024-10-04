@@ -72,7 +72,7 @@ function _do(
     let compiledOrValidatedOrErrors;
     switch (cmd) {
       case Command.Compile:
-        compiledOrValidatedOrErrors = compiler.compile(tree);
+        compiledOrValidatedOrErrors = compiler.compile(tree, name);
 
         if (Array.isArray(compiledOrValidatedOrErrors)) {
           result[name] = toCompilerError(compiledOrValidatedOrErrors);
@@ -81,7 +81,7 @@ function _do(
         }
         break;
       case Command.Validate:
-        compiledOrValidatedOrErrors = compiler.validate(tree);
+        compiledOrValidatedOrErrors = compiler.validate(tree, name);
         if (Array.isArray(compiledOrValidatedOrErrors)) {
           result[name] = toCompilerError(compiledOrValidatedOrErrors);
         } else {
@@ -105,19 +105,19 @@ function toCompilerError(errors: JackCompilerError[]): CompilationError {
 export class Compiler {
   private binder = new BinderListener();
   private errorListener = new CustomErrorListener();
-  validate(tree: ProgramContext): ProgramContext | JackCompilerError[] {
+  validate(tree: ProgramContext, filename?: string): ProgramContext | JackCompilerError[] {
     if (Object.keys(this.binder.globalSymbolTable).length == 0) {
       throw new Error(
         "Please populate global symbol table using parserAndBind method",
       );
     }
-    const validator = new ValidatorListener(this.binder.globalSymbolTable);
+    const validator = new ValidatorListener(this.binder.globalSymbolTable, filename);
     ParseTreeWalker.DEFAULT.walk(validator, tree);
 
-    return tree;
+    return validator.errors.length > 0 ? validator.errors : tree;
   }
-  compile(tree: ProgramContext): string | JackCompilerError[] {
-    const treeOrErrors = this.validate(tree);
+  compile(tree: ProgramContext, filename?: string,): string | JackCompilerError[] {
+    const treeOrErrors = this.validate(tree, filename);
     if (Array.isArray(treeOrErrors)) {
       const errors = treeOrErrors as JackCompilerError[];
       console.log("Errors in validator " + JSON.stringify(errors));

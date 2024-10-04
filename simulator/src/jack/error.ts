@@ -1,5 +1,3 @@
-import { ClassNameContext } from "./generated/JackParser.js";
-
 export interface Span {
   start: number;
   end: number;
@@ -23,7 +21,7 @@ export class JackCompilerError {
   };
 }
 
-export class LexerOrParserError extends JackCompilerError {}
+export class LexerOrParserError extends JackCompilerError { }
 export class DuplicatedSubroutineError extends JackCompilerError {
   constructor(
     line: number,
@@ -50,7 +48,23 @@ export class DuplicatedClassError extends JackCompilerError {
       line,
       startInd,
       endIndex,
-      `Class ${ClassNameContext} is already defined.`,
+      `Class ${className} is already defined.`,
+    );
+  }
+}
+export class FilenameDoesntMatchClassName extends JackCompilerError {
+  constructor(
+    line: number,
+    startInd: number,
+    endIndex: number,
+    filename: string,
+    className: string,
+  ) {
+    super(
+      line,
+      startInd,
+      endIndex,
+      `Class name ${className} doesn't match file name ${filename}`,
     );
   }
 }
@@ -67,7 +81,7 @@ export class DuplicatedVariableException extends JackCompilerError {
       startInd,
       endIndex,
       "Duplicated local variable, field, argument or static variable " +
-        variableName,
+      variableName,
     );
   }
 }

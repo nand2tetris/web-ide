@@ -2,6 +2,7 @@ import {
   ConstructorMushReturnThis,
   DuplicatedVariableException as DuplicatedVariableError,
   FieldCantBeReferencedInFunction,
+  FilenameDoesntMatchClassName,
   FunctionCalledAsMethodError,
   IncorrectConstructorReturnType,
   IncorrectParamsNumberInSubroutineCallError,
@@ -751,6 +752,16 @@ describe("Jack validator listener", () => {
       },
     );
   });
+  test("class name  doesn't match filename", () => {
+    testValidator(
+      `class A {}`,
+      FilenameDoesntMatchClassName,
+      {
+        A: genericSymbol(),
+      },
+      "B"
+    );
+  });
 
   //validate files
   test.concurrent.each(testResourceDirs)("%s", (dir: string) => {
@@ -785,14 +796,12 @@ function testValidator<T extends { name: string }>(
   src: string,
   expectedError?: T,
   globalSymbolTable: Record<string, GenericSymbol> = {},
+  filename?: string
 ) {
   const errorListener = new CustomErrorListener();
   const tree = parseJackText(src, errorListener);
-
-  const validator = listenToTheTree(
-    tree,
-    new ValidatorListener(globalSymbolTable),
-  );
+  const listener = filename != null ? new ValidatorListener(globalSymbolTable, filename) : new ValidatorListener(globalSymbolTable);
+  const validator = listenToTheTree(tree, listener);
   if (expectedError) {
     if (validator.errors.length > 1) {
       console.error("Errors", validator.errors);
@@ -803,8 +812,8 @@ function testValidator<T extends { name: string }>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-          validator.errors.join(",") +
-          "'",
+        validator.errors.join(",") +
+        "'",
       );
     }
   } else {

@@ -2,8 +2,8 @@ import fs from "fs";
 import path from "path";
 import { DuplicatedClassError, DuplicatedSubroutineError } from "../error";
 import { BinderListener } from "./binder.listener";
-import { createSubroutineSymbol, GlobalSymbolTable, SubroutineType } from "../symbol";
-import { builtInSymbols, builtInClassesRecord } from "../builtins";
+import { createSubroutineSymbol, SubroutineType } from "../symbol";
+import { builtInSymbols } from "../builtins";
 import {
   getTestResourcePath,
   listenToTheTree,

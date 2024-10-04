@@ -1,4 +1,4 @@
-import { ClassNameContext } from "./generated/JackParser";
+import { ClassNameContext } from "./generated/JackParser.js";
 
 export interface Span {
   start: number;

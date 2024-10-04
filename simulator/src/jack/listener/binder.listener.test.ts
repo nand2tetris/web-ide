@@ -1,8 +1,9 @@
 import fs from "fs";
 import path from "path";
-import { DuplicatedSubroutineError } from "../error";
+import { DuplicatedClassError, DuplicatedSubroutineError } from "../error";
 import { BinderListener } from "./binder.listener";
-import { createSubroutineSymbol, SubroutineType } from "../symbol";
+import { createSubroutineSymbol, GlobalSymbolTable, SubroutineType } from "../symbol";
+import { builtInSymbols, builtInClassesRecord } from "../builtins";
 import {
   getTestResourcePath,
   listenToTheTree,
@@ -31,76 +32,26 @@ describe("Jack binder", () => {
               return 1;
           }
       }`;
-    const tree = parseJackText(input);
-    const globalSymbolsListener = new BinderListener();
-    listenToTheTree(tree, globalSymbolsListener);
-    const symbolsErrors = globalSymbolsListener.errors;
-    expect(globalSymbolsListener.errors.length).toBe(1);
-    expect(symbolsErrors[0]).toBeInstanceOf(DuplicatedSubroutineError);
+    testBinder(input, DuplicatedSubroutineError)
   });
 
+  test("duplicated class", () => {
+    const input = `
+      class A {
+      }`;
+    const binder = new BinderListener();
+    testBinder(input, undefined, binder);
+    testBinder(input, DuplicatedClassError, binder);
+  });
+  test("duplicated built in class", () => {
+    const input = `
+      class Math {
+      }`;
+    testBinder(input, DuplicatedClassError);
+  });
   test("basic", () => {
     const expected = {
-      //built in classes
-      Array: {},
-      Keyboard: {},
-      Math: {},
-      Memory: {},
-      Output: {},
-      Screen: {},
-      String: {},
-      Sys: {},
-      "Array.dispose": createSubroutineSymbol(0, SubroutineType.Function),
-      "Array.new": createSubroutineSymbol(1, SubroutineType.Function),
-      "Keyboard.init": createSubroutineSymbol(0, SubroutineType.Function),
-      "Keyboard.keyPressed": createSubroutineSymbol(0, SubroutineType.Function),
-      "Keyboard.readChar": createSubroutineSymbol(0, SubroutineType.Function),
-      "Keyboard.readInt": createSubroutineSymbol(1, SubroutineType.Function),
-      "Keyboard.readLine": createSubroutineSymbol(1, SubroutineType.Function),
-      "Math.abs": createSubroutineSymbol(1, SubroutineType.Function),
-      "Math.divide": createSubroutineSymbol(2, SubroutineType.Function),
-      "Math.max": createSubroutineSymbol(2, SubroutineType.Function),
-      "Math.min": createSubroutineSymbol(2, SubroutineType.Function),
-      "Math.multiply": createSubroutineSymbol(2, SubroutineType.Function),
-      "Math.sqrt": createSubroutineSymbol(1, SubroutineType.Function),
-      "Memory.alloc": createSubroutineSymbol(1, SubroutineType.Function),
-      "Memory.deAlloc": createSubroutineSymbol(1, SubroutineType.Function),
-      "Memory.peek": createSubroutineSymbol(1, SubroutineType.Function),
-      "Memory.poke": createSubroutineSymbol(2, SubroutineType.Function),
-      "Output.backSpace": createSubroutineSymbol(0, SubroutineType.Function),
-      "Output.moveCursor": createSubroutineSymbol(2, SubroutineType.Function),
-      "Output.printChar": createSubroutineSymbol(1, SubroutineType.Function),
-      "Output.printInt": createSubroutineSymbol(1, SubroutineType.Function),
-      "Output.println": createSubroutineSymbol(0, SubroutineType.Function),
-      "Output.printString": createSubroutineSymbol(1, SubroutineType.Function),
-      "Screen.clearScreen": createSubroutineSymbol(0, SubroutineType.Function),
-      "Screen.drawCircle": createSubroutineSymbol(3, SubroutineType.Function),
-      "Screen.drawLine": createSubroutineSymbol(4, SubroutineType.Function),
-      "Screen.drawPixel": createSubroutineSymbol(2, SubroutineType.Function),
-      "Screen.drawRectangle": createSubroutineSymbol(
-        4,
-        SubroutineType.Function,
-      ),
-      "Screen.setColor": createSubroutineSymbol(1, SubroutineType.Function),
-      "String.appendChar": createSubroutineSymbol(1, SubroutineType.Function),
-      "String.backSpace": createSubroutineSymbol(0, SubroutineType.Function),
-      "String.charAt": createSubroutineSymbol(2, SubroutineType.Function),
-      "String.dispose": createSubroutineSymbol(0, SubroutineType.Function),
-      "String.doubleQuote": createSubroutineSymbol(0, SubroutineType.Function),
-      "String.eraseLastChar": createSubroutineSymbol(
-        0,
-        SubroutineType.Function,
-      ),
-      "String.intValue": createSubroutineSymbol(0, SubroutineType.Function),
-      "String.length": createSubroutineSymbol(0, SubroutineType.Function),
-      "String.new": createSubroutineSymbol(1, SubroutineType.Function),
-      "String.newLine": createSubroutineSymbol(0, SubroutineType.Function),
-      "String.setCharAt": createSubroutineSymbol(1, SubroutineType.Function),
-      "String.setInt": createSubroutineSymbol(1, SubroutineType.Function),
-      "Sys.error": createSubroutineSymbol(1, SubroutineType.Function),
-      "Sys.halt": createSubroutineSymbol(0, SubroutineType.Function),
-      "Sys.wait": createSubroutineSymbol(1, SubroutineType.Function),
-      //test files symbols
+      ...builtInSymbols,
       Fraction: {},
       "Fraction.new": createSubroutineSymbol(2, SubroutineType.Constructor, 0),
       "Fraction.reduce": createSubroutineSymbol(0, SubroutineType.Method, 1),
@@ -136,3 +87,29 @@ describe("Jack binder", () => {
     expect(globalSymbolsListener.globalSymbolTable).toEqual(expected);
   });
 });
+function testBinder<T extends { name: string }>(input: string, expectedError?: T, binder = new BinderListener()) {
+  const tree = parseJackText(input);
+  listenToTheTree(tree, binder);
+  const errors = binder.errors;
+  if (expectedError) {
+    if (errors.length > 1) {
+      console.error("Errors", errors);
+    }
+    try {
+      expect(errors.length).toBe(1);
+      expect(errors[0]).toBeInstanceOf(expectedError);
+    } catch (e) {
+      throw new Error(
+        `Expected error ${expectedError.name} but got '` +
+        errors.join(",") +
+        "'",
+      );
+    }
+  } else {
+    if (errors.length != 0)
+      throw new Error(
+        "Didn't expect any errors but got " + errors.join("\n"),
+      );
+  }
+
+}

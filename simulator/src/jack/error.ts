@@ -1,3 +1,5 @@
+import { ClassNameContext } from "./generated/JackParser";
+
 export interface Span {
   start: number;
   end: number;
@@ -29,9 +31,20 @@ export class DuplicatedSubroutineError extends JackCompilerError {
     endIndex: number,
     subroutineName: string,
   ) {
-    super(line, startInd, endIndex, `Subroutine ${subroutineName} redeclared.`);
+    super(line, startInd, endIndex, `Subroutine ${subroutineName} is already defined.`);
   }
 }
+export class DuplicatedClassError extends JackCompilerError {
+  constructor(
+    line: number,
+    startInd: number,
+    endIndex: number,
+    className: string,
+  ) {
+    super(line, startInd, endIndex, `Class ${ClassNameContext} is already defined.`);
+  }
+}
+
 
 export class DuplicatedVariableException extends JackCompilerError {
   constructor(

@@ -4,7 +4,7 @@ import {
   SubroutineDeclarationContext,
   VarNameInDeclarationContext,
 } from "../generated/JackParser.js";
-import { DuplicatedSubroutineError } from "../error.js";
+import { DuplicatedClassError, DuplicatedSubroutineError } from "../error.js";
 import { builtInSymbols, builtInTypes } from "../builtins.js";
 import {
   GenericSymbol,
@@ -33,11 +33,11 @@ export class BinderListener extends JackParserListener {
     const className = ctx.className()!.IDENTIFIER().getText();
     if (this.globalSymbolTable[className] != undefined) {
       this.errors.push(
-        new DuplicatedSubroutineError(
+        new DuplicatedClassError(
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          `Class "${className}" is already defined.`,
+          className
         ),
       );
       return;

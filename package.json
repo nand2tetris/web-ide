@@ -35,7 +35,8 @@
     "web": "npm run start -w web",
     "start": "npm run web",
     "preinstall-cli": "npm run build -w projects && npm run build -w runner && npm run build -w simulator && npm run build -w cli",
-    "install-cli": "npm i -g cli"
+    "install-cli": "npm i -g cli",
+    "prepare": "husky"
   },
   "workspaces": [
     "cli",
@@ -54,6 +55,7 @@
   "devDependencies": {
     "concurrently": "^9.0.1",
     "cross-env": "^7.0.3",
+    "husky": "^9.1.6",
     "shx": "^0.3.4"
   }
 }

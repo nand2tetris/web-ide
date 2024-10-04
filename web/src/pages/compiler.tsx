@@ -129,7 +129,7 @@ export const Compiler = () => {
 
   const onCreateFile = async (name?: string) => {
     if (name) {
-      await actions.writeFile(name);
+      await actions.writeNewFile(name);
       onSelect(name);
       setSuppressStatus(false);
     }

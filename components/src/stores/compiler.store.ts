@@ -30,7 +30,9 @@ export type CompilerStoreDispatch = Dispatch<{
 function classTemplate(name: string) {
   return `class ${name} {\n\n}\n`;
 }
-
+interface FileEntry {
+  name: string; content: string
+}
 export function makeCompilerStore(
   setStatus: Action<string>,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
@@ -48,9 +50,15 @@ export function makeCompilerStore(
 
     setFile(
       state: CompilerPageState,
-      { name, content }: { name: string; content: string },
+      { name, content }: FileEntry,
     ) {
       state.files[name] = content;
+      state.isCompiled = false;
+    },
+    setFileAndValidate(state: CompilerPageState,
+      entry: FileEntry,) {
+      this.setFile(state, entry);
+      this.validate(state);
     },
 
     // the keys of 'files' have to be the full file path, not basename
@@ -59,12 +67,9 @@ export function makeCompilerStore(
       state.isCompiled = false;
       this.compile(state);
     },
-
-    validate(state: CompilerPageState) {
-      state.isCompiled = false;
-      const compiledFiles = validate(state.files);
+    _processCompilationResults(state: CompilerPageState, files: Record<string, string | CompilationError>) {
       state.compiled = {};
-      for (const [name, compiled] of Object.entries(compiledFiles)) {
+      for (const [name, compiled] of Object.entries(files)) {
         if (typeof compiled === "string") {
           state.compiled[name] = {
             valid: true,
@@ -81,25 +86,14 @@ export function makeCompilerStore(
         (file) => state.compiled[file].valid,
       );
     },
+    validate(state: CompilerPageState) {
+      state.isCompiled = false;
+      this._processCompilationResults(state, validate(state.files))
+    },
+
     compile(state: CompilerPageState) {
-      const compiledFiles = compile(state.files);
-      state.compiled = {};
-      for (const [name, compiled] of Object.entries(compiledFiles)) {
-        if (typeof compiled === "string") {
-          state.compiled[name] = {
-            valid: true,
-            vm: compiled,
-          };
-        } else {
-          state.compiled[name] = {
-            valid: false,
-            error: compiled,
-          };
-        }
-      }
-      state.isValid = Object.keys(state.files).every(
-        (file) => state.compiled[file].valid,
-      );
+      state.isCompiled = false;
+      this._processCompilationResults(state, compile(state.files));
     },
 
     writeCompiled(state: CompilerPageState) {
@@ -155,6 +149,13 @@ export function makeCompilerStore(
         await fs.writeFile(`${name}.jack`, content);
       }
     },
+    async writeNewFile(name: string, content?: string) {
+      content ??= classTemplate(name);
+      dispatch.current({ action: "setFileAndValidate", payload: { name, content } });
+      if (fs) {
+        await fs.writeFile(`${name}.jack`, content);
+      }
+    },
 
     async reset() {
       fs = undefined;
@@ -162,6 +163,7 @@ export function makeCompilerStore(
     },
 
     async compile() {
+      dispatch.current({ action: "compile" });
       dispatch.current({ action: "writeCompiled" });
     },
     async validate() {

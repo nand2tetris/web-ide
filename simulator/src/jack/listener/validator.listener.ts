@@ -158,7 +158,7 @@ export class ValidatorListener extends JackParserListener {
   };
 
   /**
-   * Var name when using it - do Statement, let ... as opposed to varNameInDeclaration
+   * Var name when doing some actions - do statement, let ... We have a different rule for a var name that is used in declaration
    */
   override enterVarName = (ctx: VarNameContext) => {
     const symbol = this.localSymbolTable.lookup(ctx.getText());

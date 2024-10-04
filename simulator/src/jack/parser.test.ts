@@ -10,7 +10,7 @@ import {
 } from "./test.helper";
 import { BinderListener } from "./listener/binder.listener";
 
-describe("Parser", () => {
+describe("Jack parser", () => {
   const jestConsole = console;
   beforeEach(() => {
     global.console = require("console");

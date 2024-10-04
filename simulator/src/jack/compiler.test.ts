@@ -3,7 +3,7 @@ import { getTestResourcePath, testResourceDirs } from "./test.helper";
 import path from "path";
 import { ProgramContext } from "./generated/JackParser";
 import { Compiler } from "./compiler";
-describe("Compiler", () => {
+describe("Jack compiler", () => {
   test("static field", () => {
     testCompiler(
       `class A{

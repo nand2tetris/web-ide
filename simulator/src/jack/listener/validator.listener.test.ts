@@ -35,7 +35,7 @@ import fs from "fs";
 import { BinderListener } from "./binder.listener";
 import path from "path";
 import { ProgramContext } from "../generated/JackParser";
-describe("ValidatorListener", () => {
+describe("Jack validator listener", () => {
   const jestConsole = console;
   beforeEach(() => {
     global.console = require("console");
@@ -119,7 +119,7 @@ describe("ValidatorListener", () => {
             }`,
       UndeclaredVariableError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.b": genericSymbol(SubroutineType.Function, 1),
         "Main.a": genericSymbol(SubroutineType.Function, 1),
       },
@@ -468,7 +468,7 @@ describe("ValidatorListener", () => {
             }`,
       IncorrectParamsNumberInSubroutineCallError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 2),
         "Main.b": genericSymbol(SubroutineType.Function, 2),
       },
@@ -494,7 +494,7 @@ describe("ValidatorListener", () => {
             }`,
       undefined,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.new": genericSymbol(SubroutineType.Constructor, 0),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
         "Main.b": genericSymbol(SubroutineType.Method, 0),
@@ -515,7 +515,7 @@ describe("ValidatorListener", () => {
             }`,
       undefined,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Method, 0),
         "Main.b": genericSymbol(SubroutineType.Method, 0),
       },
@@ -539,7 +539,7 @@ describe("ValidatorListener", () => {
             }`,
       MethodCalledAsFunctionError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.b": genericSymbol(SubroutineType.Function, 0),
         "Main.c": genericSymbol(SubroutineType.Method, 0),
       },
@@ -559,7 +559,7 @@ describe("ValidatorListener", () => {
             }`,
       FunctionCalledAsMethodError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.b": genericSymbol(SubroutineType.Function, 0),
         "Main.c": genericSymbol(SubroutineType.Function, 0),
       },
@@ -575,7 +575,7 @@ describe("ValidatorListener", () => {
             }`,
       IncorrectConstructorReturnType,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         D: genericSymbol(),
       },
     );
@@ -593,7 +593,7 @@ describe("ValidatorListener", () => {
             }`,
       UnreachableCodeError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.new": genericSymbol(SubroutineType.Constructor, 0),
       },
     );
@@ -608,7 +608,7 @@ describe("ValidatorListener", () => {
             }`,
       ConstructorMushReturnThis,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.new": genericSymbol(SubroutineType.Constructor, 0),
       },
     );
@@ -625,7 +625,7 @@ describe("ValidatorListener", () => {
             }`,
       WrongLiteralTypeError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
         String: genericSymbol(),
       },
@@ -643,7 +643,7 @@ describe("ValidatorListener", () => {
             }`,
       WrongLiteralTypeError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -661,7 +661,7 @@ describe("ValidatorListener", () => {
             }`,
       WrongLiteralTypeError,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -678,7 +678,7 @@ describe("ValidatorListener", () => {
             }`,
       IntLiteralOverflow,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -695,7 +695,7 @@ describe("ValidatorListener", () => {
             }`,
       IntLiteralOverflow,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -712,7 +712,7 @@ describe("ValidatorListener", () => {
             }`,
       FieldCantBeReferencedInFunction,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -729,7 +729,7 @@ describe("ValidatorListener", () => {
             }`,
       undefined,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -746,7 +746,7 @@ describe("ValidatorListener", () => {
             }`,
       ThisCantBeReferencedInFunction,
       {
-        Main: genericSymbol(),
+        "Main": genericSymbol(),
         "Main.a": genericSymbol(SubroutineType.Function, 0),
       },
     );
@@ -794,9 +794,6 @@ function testValidator<T extends { name: string }>(
     new ValidatorListener(globalSymbolTable),
   );
   if (expectedError) {
-    // if (validator.cfgNode) {
-    //     validator.cfgNode.print()
-    // }
     if (validator.errors.length > 1) {
       console.error("Errors", validator.errors);
     }
@@ -806,8 +803,8 @@ function testValidator<T extends { name: string }>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-          validator.errors.join(",") +
-          "'",
+        validator.errors.join(",") +
+        "'",
       );
     }
   } else {
@@ -816,13 +813,9 @@ function testValidator<T extends { name: string }>(
         "Didn't expect any errors but got " + validator.errors.join("\n"),
       );
   }
-  // if (expectedLocalSymbolTable != undefined) {
-  //     expect(validator.localSymbolTable).toEqual(expectedLocalSymbolTable)
-  // }
 }
 
-//TODO: add validation for assgining from void function call
-//TODO: Add rule to forbid var use before assignment
+
 /**
  * TODO:
  *  Ideas for improvement -
@@ -831,4 +824,6 @@ function testValidator<T extends { name: string }>(
  * - Expected subroutine name in call
  * - a numeric value is illegal here when using non numeric vars
  * - validate function call - when using literal in call validate the type
+ *  add validation for assigning from void function call
+ *  add rule to forbid var use before assignment
  */

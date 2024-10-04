@@ -5,7 +5,7 @@ import {
   SubroutineScope,
 } from "./symbol";
 
-describe("LocalSymbolTable", () => {
+describe("Jack local symbol table", () => {
   const jestConsole = console;
 
   beforeEach(() => {

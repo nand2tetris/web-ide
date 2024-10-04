@@ -10,7 +10,7 @@ import {
   parseJackText,
 } from "../test.helper";
 
-describe("Binder", () => {
+describe("Jack binder", () => {
   const jestConsole = console;
 
   beforeEach(() => {

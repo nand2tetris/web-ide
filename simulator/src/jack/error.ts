@@ -31,7 +31,12 @@ export class DuplicatedSubroutineError extends JackCompilerError {
     endIndex: number,
     subroutineName: string,
   ) {
-    super(line, startInd, endIndex, `Subroutine ${subroutineName} is already defined.`);
+    super(
+      line,
+      startInd,
+      endIndex,
+      `Subroutine ${subroutineName} is already defined.`,
+    );
   }
 }
 export class DuplicatedClassError extends JackCompilerError {
@@ -41,10 +46,14 @@ export class DuplicatedClassError extends JackCompilerError {
     endIndex: number,
     className: string,
   ) {
-    super(line, startInd, endIndex, `Class ${ClassNameContext} is already defined.`);
+    super(
+      line,
+      startInd,
+      endIndex,
+      `Class ${ClassNameContext} is already defined.`,
+    );
   }
 }
-
 
 export class DuplicatedVariableException extends JackCompilerError {
   constructor(

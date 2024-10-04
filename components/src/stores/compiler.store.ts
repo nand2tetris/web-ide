@@ -31,7 +31,8 @@ function classTemplate(name: string) {
   return `class ${name} {\n\n}\n`;
 }
 interface FileEntry {
-  name: string; content: string
+  name: string;
+  content: string;
 }
 export function makeCompilerStore(
   setStatus: Action<string>,
@@ -48,15 +49,11 @@ export function makeCompilerStore(
       state.title = undefined;
     },
 
-    setFile(
-      state: CompilerPageState,
-      { name, content }: FileEntry,
-    ) {
+    setFile(state: CompilerPageState, { name, content }: FileEntry) {
       state.files[name] = content;
       state.isCompiled = false;
     },
-    setFileAndValidate(state: CompilerPageState,
-      entry: FileEntry,) {
+    setFileAndValidate(state: CompilerPageState, entry: FileEntry) {
       this.setFile(state, entry);
       this.validate(state);
     },
@@ -67,7 +64,10 @@ export function makeCompilerStore(
       state.isCompiled = false;
       this.compile(state);
     },
-    _processCompilationResults(state: CompilerPageState, files: Record<string, string | CompilationError>) {
+    _processCompilationResults(
+      state: CompilerPageState,
+      files: Record<string, string | CompilationError>,
+    ) {
       state.compiled = {};
       for (const [name, compiled] of Object.entries(files)) {
         if (typeof compiled === "string") {
@@ -88,7 +88,7 @@ export function makeCompilerStore(
     },
     validate(state: CompilerPageState) {
       state.isCompiled = false;
-      this._processCompilationResults(state, validate(state.files))
+      this._processCompilationResults(state, validate(state.files));
     },
 
     compile(state: CompilerPageState) {
@@ -151,7 +151,10 @@ export function makeCompilerStore(
     },
     async writeNewFile(name: string, content?: string) {
       content ??= classTemplate(name);
-      dispatch.current({ action: "setFileAndValidate", payload: { name, content } });
+      dispatch.current({
+        action: "setFileAndValidate",
+        payload: { name, content },
+      });
       if (fs) {
         await fs.writeFile(`${name}.jack`, content);
       }

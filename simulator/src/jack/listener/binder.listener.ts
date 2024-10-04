@@ -37,7 +37,7 @@ export class BinderListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          className
+          className,
         ),
       );
       return;

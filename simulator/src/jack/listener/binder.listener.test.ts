@@ -32,7 +32,7 @@ describe("Jack binder", () => {
               return 1;
           }
       }`;
-    testBinder(input, DuplicatedSubroutineError)
+    testBinder(input, DuplicatedSubroutineError);
   });
 
   test("duplicated class", () => {
@@ -87,7 +87,11 @@ describe("Jack binder", () => {
     expect(globalSymbolsListener.globalSymbolTable).toEqual(expected);
   });
 });
-function testBinder<T extends { name: string }>(input: string, expectedError?: T, binder = new BinderListener()) {
+function testBinder<T extends { name: string }>(
+  input: string,
+  expectedError?: T,
+  binder = new BinderListener(),
+) {
   const tree = parseJackText(input);
   listenToTheTree(tree, binder);
   const errors = binder.errors;
@@ -101,15 +105,12 @@ function testBinder<T extends { name: string }>(input: string, expectedError?: T
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-        errors.join(",") +
-        "'",
+          errors.join(",") +
+          "'",
       );
     }
   } else {
     if (errors.length != 0)
-      throw new Error(
-        "Didn't expect any errors but got " + errors.join("\n"),
-      );
+      throw new Error("Didn't expect any errors but got " + errors.join("\n"));
   }
-
 }

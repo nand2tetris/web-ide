@@ -58,7 +58,6 @@ const TableRow = ({
           style={{
             flex: "1",
             textAlign: "right",
-            color: "black",
             padding: "3px",
             ...rounded("none"),
             ...(highlight

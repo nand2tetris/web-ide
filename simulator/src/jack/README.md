@@ -4,7 +4,8 @@ ANTLR gives us ability to generate lexer and parser in the target programming la
 After parsing is done we get a tree data structure as an output. To do anything useful with this this tree we can use the next 2 design patterns:
 1) Listener
 2) Visitor 
-You can read more about this design patterns and the difference between them on on this [blog post](https://tomassetti.me/listeners-and-visitors/). You can also check out [antlr mega tutorial from the same company](https://tomassetti.me/antlr-mega-tutorial/).
+
+You can read more about this design patterns and the difference between them in this [blog post](https://tomassetti.me/listeners-and-visitors/). You can also check out [antlr mega tutorial from the same company](https://tomassetti.me/antlr-mega-tutorial/).
 
 For jack we use next listeners:
 - Error listener - listens to lexer and parser errors

@@ -2,7 +2,7 @@ import fs from "fs";
 import { getTestResourcePath, testResourceDirs } from "./test.helper";
 import path from "path";
 import { ProgramContext } from "./generated/JackParser";
-import { Compiler } from "./anltr_compiler";
+import { Compiler } from "./anltr.compiler";
 describe("Jack compiler", () => {
   test("static field", () => {
     testCompiler(

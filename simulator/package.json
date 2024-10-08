@@ -37,9 +37,6 @@
   "scripts": {
     "build": "tsc",
     "test": "jest --verbose",
-    "test-w": "jest --watchAll --verbose",
-    "test-jack": "npm run test -- -t \"Jack\"",
-    "test-jack-w": "npm run test-w -- -t \"Jack\"",
     "gen": "cd src/languages/grammars && antlr4 -v 4.13.2 -Dlanguage=TypeScript  JackLexer.g4 JackParser.g4 -o ../../jack/generated"
   }
 }

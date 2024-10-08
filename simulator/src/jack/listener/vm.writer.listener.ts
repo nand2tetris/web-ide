@@ -101,7 +101,10 @@ export class VMWriter extends JackParserListener {
     }
     this.pushSymbolOntoStack(symbol);
     this.result += `    add\n`;
-    if (this.inAssignmentRightHandSide || ctx.parentCtx instanceof ExpressionContext) {
+    if (
+      this.inAssignmentRightHandSide ||
+      ctx.parentCtx instanceof ExpressionContext
+    ) {
       this.result += `    pop pointer 1\n`;
       this.result += `    push that 0\n`;
     }

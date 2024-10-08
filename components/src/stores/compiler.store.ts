@@ -88,7 +88,7 @@ export function makeCompilerStore(
         (file) => state.compiled[file].valid,
       );
     },
-    
+
     validate(state: CompilerPageState) {
       state.isCompiled = false;
       this._processCompilationResults(state, validate(state.files));

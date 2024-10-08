@@ -105,8 +105,8 @@ function testBinder<T extends { name: string }>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-          errors.join(",") +
-          "'",
+        errors.join(",") +
+        "'",
       );
     }
   } else {

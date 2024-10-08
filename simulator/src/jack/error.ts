@@ -118,7 +118,6 @@ export class VoidSubroutineReturnsValueError extends JackCompilerError {
       endIndex,
       `Cannot return a value from a void subroutine`,
     );
-    Object.setPrototypeOf(this, VoidSubroutineReturnsValueError.prototype);
   }
 }
 

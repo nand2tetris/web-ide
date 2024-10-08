@@ -5,7 +5,9 @@ interface Range {
   min: number;
   max: number;
 }
+
 export const intRange:Range = { min: -32768, max: 32767 };
+
 const builtInFunctionsToArgCount: Record<string, number> = {
   "Array.dispose": 0,
   "Array.init": 0,
@@ -58,6 +60,7 @@ const builtInFunctionsToArgCount: Record<string, number> = {
   "Sys.halt": 0,
   "Sys.wait": 1,
 };
+
 const builtInClasses = [
   "Array",
   "Keyboard",

@@ -1,8 +1,5 @@
-export interface Span {
-  start: number;
-  end: number;
-  line: number;
-}
+import { Span } from "../languages/base";
+
 export class JackCompilerError {
   public span: Span;
   constructor(

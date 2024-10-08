@@ -1,7 +1,7 @@
 import { Span } from "../languages/base";
 
 export class JackCompilerError {
-  public span: Span;
+  span: Span;
   constructor(
     line: number,
     startInd: number,

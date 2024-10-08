@@ -47,9 +47,9 @@ const unaryOperationToVmCmd: Record<string, string> = {
 export class VMWriter extends JackParserListener {
   public result = "";
   private className = "";
-  private currentLabelInd = 0;
+  private currentLabelIndex = 0;
   private localSymbolTable: LocalSymbolTable | undefined;
-  private afterEquals = false;
+  private inAssignmentRightHandSide = false;
   constructor(private globalSymbolTable: Record<string, GenericSymbol>) {
     super();
   }
@@ -101,16 +101,16 @@ export class VMWriter extends JackParserListener {
     }
     this.pushSymbolOntoStack(symbol);
     this.result += `    add\n`;
-    if (this.afterEquals || ctx.parentCtx instanceof ExpressionContext) {
+    if (this.inAssignmentRightHandSide || ctx.parentCtx instanceof ExpressionContext) {
       this.result += `    pop pointer 1\n`;
       this.result += `    push that 0\n`;
     }
   };
   override enterEquals = (ctx: EqualsContext) => {
-    this.afterEquals = true;
+    this.inAssignmentRightHandSide = true;
   };
   override exitStatement = (ctx: StatementContext) => {
-    this.afterEquals = false;
+    this.inAssignmentRightHandSide = false;
   };
   override enterConstant = (ctx: ConstantContext) => {
     if (ctx.INTEGER_LITERAL() != null) {
@@ -281,6 +281,6 @@ export class VMWriter extends JackParserListener {
   }
 
   createLabel() {
-    return this.getLabel(this.currentLabelInd++);
+    return this.getLabel(this.currentLabelIndex++);
   }
 }

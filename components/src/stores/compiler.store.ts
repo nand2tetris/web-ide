@@ -53,6 +53,7 @@ export function makeCompilerStore(
       state.files[name] = content;
       state.isCompiled = false;
     },
+
     setFileAndValidate(state: CompilerPageState, entry: FileEntry) {
       this.setFile(state, entry);
       this.validate(state);
@@ -64,6 +65,7 @@ export function makeCompilerStore(
       state.isCompiled = false;
       this.compile(state);
     },
+
     _processCompilationResults(
       state: CompilerPageState,
       files: Record<string, string | CompilationError>,
@@ -86,6 +88,7 @@ export function makeCompilerStore(
         (file) => state.compiled[file].valid,
       );
     },
+    
     validate(state: CompilerPageState) {
       state.isCompiled = false;
       this._processCompilationResults(state, validate(state.files));

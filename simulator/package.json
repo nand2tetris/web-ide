@@ -22,6 +22,7 @@
     "@nand2tetris/projects": "^1.0.0",
     "@nand2tetris/runner": "^1.0.0",
     "@types/node": "^20.14.2",
+    "antlr4": "^4.13.2",
     "ohm-js": "^17.1.0",
     "rxjs": "^7.8.1"
   },
@@ -35,6 +36,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "gen": "cd src/languages/grammars && antlr4 -v 4.13.2 -Dlanguage=TypeScript  JackLexer.g4 JackParser.g4 -o ../../jack/generated"
   }
 }

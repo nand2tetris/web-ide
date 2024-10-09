@@ -64,12 +64,13 @@ export function listenToTheTree<T extends ParseTreeListener>(
 export function handleErrors(src: string, errors: JackCompilerError[]) {
   const msg = errors
     .map((e) => {
-      return `${e.span.line}:${e.span.start} ${e.msg}\n${src.split("\n")[e.span.line]}`;
+      return `${e.span.line}:${e.span.start} ${e.message}\n${src.split("\n")[e.span.line]}`;
     })
     .join("\n");
   console.error(msg);
   throw new Error(msg);
 }
+
 export const testResourceDirs: string[] = [
   "Average",
   "ConvertToBin",

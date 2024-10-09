@@ -4,7 +4,7 @@ import {
   SubroutineDeclarationContext,
   VarNameInDeclarationContext,
 } from "../generated/JackParser.js";
-import { DuplicatedClassError, DuplicatedSubroutineError } from "../error.js";
+import { asSpan, DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error.js";
 import { builtInSymbols, builtInTypes } from "../builtins.js";
 import {
   GenericSymbol,
@@ -13,6 +13,7 @@ import {
   SubroutineType,
 } from "../symbol.js";
 import JackParserListener from "../generated/JackParserListener.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
@@ -24,21 +25,20 @@ export class BinderListener extends JackParserListener {
   // key can be class or <class>.<subroutine_name>
   public globalSymbolTable: GlobalSymbolTable = structuredClone(builtInSymbols);
   public className = "";
-  public errors: DuplicatedSubroutineError[] = [];
+  // public errors: DuplicatedSubroutineError[] = [];
+  public errors: JackCompilerError[] = [];
   private subRoutineInfo: SubroutineInfo = {} as SubroutineInfo;
   private subroutineVarsCount = 0;
   private stopProcessingSubroutines = false;
   private subroutineId = "";
 
   override enterClassDeclaration = (ctx: ClassDeclarationContext) => {
-    const id = ctx.className()!.IDENTIFIER();
+    const ctxClassName = assertExists(ctx.className());
+    const id = ctxClassName.IDENTIFIER();
     const className = id.getText();
     if (this.globalSymbolTable[className] != undefined) {
-      const e = new DuplicatedClassError(
-        ctx.className()!.start.line,
-        ctx.className()!.start.start,
-        ctx.className()!.stop!.stop + 1,
-        className,
+      const e = DuplicatedClassError(
+        asSpan(ctxClassName.start, ctxClassName.stop), className
       );
       this.errors.push(e);
       return;
@@ -64,10 +64,12 @@ export class BinderListener extends JackParserListener {
     const id = this.className + "." + subroutineName;
     if (this.globalSymbolTable[id] != undefined) {
       this.errors.push(
-        new DuplicatedSubroutineError(
-          nameCtx.IDENTIFIER().symbol.line,
-          nameCtx.start.start,
-          nameCtx.start.stop,
+        DuplicatedSubroutineError(
+          {
+          line: nameCtx.IDENTIFIER().symbol.line,
+          start: nameCtx.start.start,
+          end: nameCtx.start.stop,
+      },
           subroutineName,
         ),
       );

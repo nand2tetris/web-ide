@@ -1,283 +1,60 @@
-import { Span } from "../languages/base";
+import { Token } from "antlr4";
+import { CompilationError, Span } from "../languages/base";
 
-export class JackCompilerError {
+export type JackCompilerErrorType =  "ConstructorMushReturnThisError" |
+"DuplicatedClassError" |
+"DuplicatedSubroutineError" |
+"DuplicatedVariableError" |
+"FieldCantBeReferencedInFunctionError" |
+"FilenameDoesntMatchClassNameError" |
+"FunctionCalledAsMethodError" |
+"IncorrectConstructorReturnTypeError" |
+"IncorrectParamsNumberInSubroutineCallError" |
+"IntLiteralIsOutOfRangeError" |
+"LexerOrParserError" |
+"MethodCalledAsFunctionError" |
+"NonVoidFunctionNoReturnError" |
+"SubroutineNotAllPathsReturnError" |
+"ThisCantBeReferencedInFunctionError" |
+"UndeclaredVariableError" |
+"UnknownClassError" |
+"UnknownSubroutineCallError" |
+"UnreachableCodeError" |
+"VoidSubroutineReturnsValueError" |
+"WrongLiteralTypeError";
+
+export interface JackCompilerError extends CompilationError {
+  type: JackCompilerErrorType;
   span: Span;
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    public msg: string,
-  ) {
-    this.span = { start: startInd, end: endIndex, line: line };
-  }
-  public toString = (): string => {
-    return (
-      this.constructor.name +
-      `(${this.span.line}:${this.span.start}:${this.span.end} ${this.msg})`
-    );
-  };
-}
+};
 
-export class LexerOrParserError extends JackCompilerError {}
-export class DuplicatedSubroutineError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    subroutineName: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Subroutine ${subroutineName} is already defined.`,
-    );
-  }
-}
-export class DuplicatedClassError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    className: string,
-  ) {
-    super(line, startInd, endIndex, `Class ${className} is already defined.`);
-  }
-}
-export class FilenameDoesntMatchClassName extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    filename: string,
-    className: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Class name ${className} doesn't match file name ${filename}`,
-    );
+export function makeJackCompilerError(type: JackCompilerErrorType, span: Span, msg?: string): JackCompilerError {
+  return {
+    type, span, message: `${type} (${span.line}:${span.start}:${span.end}${msg ? ' ' + msg : ''})`
   }
 }
 
-export class DuplicatedVariableException extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    variableName: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      "Duplicated local variable, field, argument or static variable " +
-        variableName,
-    );
-  }
-}
+export const LexerOrParserError = (span: Span) => makeJackCompilerError('LexerOrParserError', span);
+export const DuplicatedSubroutineError = (span: Span, subroutineName: string) => makeJackCompilerError('DuplicatedClassError', span, `Subroutine ${subroutineName} is already defined.`,);
+export const DuplicatedClassError = (span: Span, className: string) => makeJackCompilerError('DuplicatedClassError', span, `Class ${className} is already defined.`);
+export const FilenameDoesntMatchClassNameError = (span: Span, filename: string, className: string) => makeJackCompilerError('FilenameDoesntMatchClassNameError', span, `Class name ${className} doesn't match file name ${filename}`);
+export const DuplicatedVariableError = (span: Span, variableName: string) => makeJackCompilerError('DuplicatedVariableError', span, `Duplicated local variable, field, argument or static variable ${variableName}`);
+export const UndeclaredVariableError = (span: Span, variableName: string) => makeJackCompilerError('UndeclaredVariableError', span, `Undeclared variable ${variableName}`);
+export const UnknownClassError = (span: Span, className: string) => makeJackCompilerError('UnknownClassError', span, `Class ${className} doesn't exist`);
+export const NonVoidFunctionNoReturnError = (span: Span) => makeJackCompilerError('NonVoidFunctionNoReturnError', span, `A non void subroutine must return a value`);
+export const VoidSubroutineReturnsValueError = (span: Span) => makeJackCompilerError('VoidSubroutineReturnsValueError', span, 'Cannot return a value from a void subroutine');
+export const SubroutineNotAllPathsReturnError = (span: Span, subroutineName: string) => makeJackCompilerError('SubroutineNotAllPathsReturnError', span, `Subroutine ${subroutineName}: not all code paths return a value`);
+export const IncorrectParamsNumberInSubroutineCallError = (span: Span, subroutineName: string, expectedParamsCount: number, actualParamsCount: number,) => makeJackCompilerError("IncorrectParamsNumberInSubroutineCallError", span, `Subroutine ${subroutineName} (declared to accept ${expectedParamsCount} parameter(s)) called with  ${actualParamsCount} parameter(s)`);
+export const UnknownSubroutineCallError = (span: Span, subroutineName: string, className?: string,) => makeJackCompilerError('UnknownSubroutineCallError', span, `Can't find subroutine '${subroutineName}'${className ? ` in ${className}` : ""}`);
+export const MethodCalledAsFunctionError = (span: Span, subroutineId: string) => makeJackCompilerError('MethodCalledAsFunctionError', span, `Method ${subroutineId} was called as a function/constructor`);
+export const FunctionCalledAsMethodError = (span: Span, subroutineId: string) => makeJackCompilerError('FunctionCalledAsMethodError', span, `Function or constructor ${subroutineId} was called as a method`);
+export const IncorrectConstructorReturnTypeError = (span: Span) => makeJackCompilerError("IncorrectConstructorReturnTypeError", span, `The return type of a constructor must be of the class type`);
+export const UnreachableCodeError = (span: Span) => makeJackCompilerError("UnreachableCodeError", span);
+export const ConstructorMushReturnThisError = (span: Span) => makeJackCompilerError('ConstructorMushReturnThisError', span, `A constructor must return 'this'`);
+const vowels = new Set("aeiou".split(''));
+export const WrongLiteralTypeError = (span: Span, typeName: string) => makeJackCompilerError('WrongLiteralTypeError', span, `${vowels.has(typeName.charAt(0)) ? "an" : "a"} ${typeName} value is expected`)
+export const IntLiteralIsOutOfRangeError = (span: Span, value: number, min: number, max: number,) => makeJackCompilerError('IntLiteralIsOutOfRangeError', span, `Integer constant(${value}) is out of range. Min value is ${min} and max value is ${max}`,);
+export const FieldCantBeReferencedInFunctionError = (span: Span) => makeJackCompilerError('FieldCantBeReferencedInFunctionError', span, `Field can't be referenced in a function`);
+export const ThisCantBeReferencedInFunctionError = (span: Span) => makeJackCompilerError('ThisCantBeReferencedInFunctionError', span, `this can't be referenced in a function`);
 
-export class UndeclaredVariableError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    variableName: string,
-  ) {
-    super(line, startInd, endIndex, "Undeclared variable " + variableName);
-  }
-}
-export class UnknownClassError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    className: string,
-  ) {
-    super(line, startInd, endIndex, `Class ${className} doesn't exist`);
-  }
-}
-
-export class NonVoidFunctionNoReturnError extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `A non void subroutine must return a value`,
-    );
-  }
-}
-
-export class VoidSubroutineReturnsValueError extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Cannot return a value from a void subroutine`,
-    );
-  }
-}
-
-export class SubroutineNotAllPathsReturnError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    subroutineName: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Subroutine ${subroutineName}: not all code paths return a value`,
-    );
-    Object.setPrototypeOf(this, SubroutineNotAllPathsReturnError.prototype);
-  }
-}
-
-export class IncorrectParamsNumberInSubroutineCallError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    subroutineName: string,
-    expectedParamsCount: number,
-    actualParamsCount: number,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Subroutine ${subroutineName} (declared to accept ${expectedParamsCount} parameter(s)) called with  ${actualParamsCount} parameter(s)`,
-    );
-    Object.setPrototypeOf(
-      this,
-      IncorrectParamsNumberInSubroutineCallError.prototype,
-    );
-  }
-}
-export class UnknownSubroutineCallError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    subroutineName: string,
-    className?: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Can't find subroutine '${subroutineName}'${className ? ` in ${className}` : ""}`,
-    );
-    Object.setPrototypeOf(this, UnknownSubroutineCallError.prototype);
-  }
-}
-export class MethodCalledAsFunctionError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    subroutineId: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Method ${subroutineId} was called as a function/constructor`,
-    );
-    Object.setPrototypeOf(this, MethodCalledAsFunctionError.prototype);
-  }
-}
-export class FunctionCalledAsMethodError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    subroutineId: string,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Function or constructor ${subroutineId} was called as a method`,
-    );
-    Object.setPrototypeOf(this, FunctionCalledAsMethodError.prototype);
-  }
-}
-
-export class IncorrectConstructorReturnType extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `The return type of a constructor must be of the class type`,
-    );
-    Object.setPrototypeOf(this, IncorrectConstructorReturnType.prototype);
-  }
-}
-
-export class UnreachableCodeError extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(line, startInd, endIndex, `Unreachable code`);
-    Object.setPrototypeOf(this, UnreachableCodeError.prototype);
-  }
-}
-
-export class ConstructorMushReturnThis extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(line, startInd, endIndex, `A constructor must return 'this'`);
-    Object.setPrototypeOf(this, ConstructorMushReturnThis.prototype);
-  }
-}
-
-const vowels = "aeiou";
-export class WrongLiteralTypeError extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    typeName: string,
-  ) {
-    const article = vowels.indexOf(typeName.substring(0, 1)) != -1 ? "an" : "a";
-    super(line, startInd, endIndex, `${article} ${typeName} value is expected`);
-    Object.setPrototypeOf(this, WrongLiteralTypeError.prototype);
-  }
-}
-
-export class IntLiteralIsOutOfRange extends JackCompilerError {
-  constructor(
-    line: number,
-    startInd: number,
-    endIndex: number,
-    value: number,
-    min: number,
-    max: number,
-  ) {
-    super(
-      line,
-      startInd,
-      endIndex,
-      `Integer constant(${value}) is out of range. Min value is ${min} and max value is ${max}`,
-    );
-    Object.setPrototypeOf(this, IntLiteralIsOutOfRange.prototype);
-  }
-}
-
-export class FieldCantBeReferencedInFunction extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(line, startInd, endIndex, `Field can't be referenced in a function`);
-    Object.setPrototypeOf(this, FieldCantBeReferencedInFunction.prototype);
-  }
-}
-
-export class ThisCantBeReferencedInFunction extends JackCompilerError {
-  constructor(line: number, startInd: number, endIndex: number) {
-    super(line, startInd, endIndex, `this can't be referenced in a function`);
-    Object.setPrototypeOf(this, ThisCantBeReferencedInFunction.prototype);
-  }
-}
+export const asSpan = ({line, start, stop: startEnd}: Token, stop?: Token): Span => ({ line, start, end: stop ? stop.stop : startEnd });

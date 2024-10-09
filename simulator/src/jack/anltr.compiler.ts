@@ -97,7 +97,7 @@ function _do(
 function toCompilerError(errors: JackCompilerError[]): CompilationError {
   const err = errors[0];
   return {
-    message: `Line ${err.span.line}: ${err.msg}`,
+    message: `Line ${err.span.line}: ${err.message}`,
     span: err.span,
   } as CompilationError;
 }

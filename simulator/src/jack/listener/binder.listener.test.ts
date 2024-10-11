@@ -1,4 +1,5 @@
-import fs from "fs";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import path from "path";
 import { DuplicatedClassError, DuplicatedSubroutineError } from "../error";
 import { BinderListener } from "./binder.listener";
@@ -13,9 +14,10 @@ import {
 
 describe("Jack binder", () => {
   const jestConsole = console;
-
+  let fs: FileSystem;
   beforeEach(() => {
     global.console = require("console");
+    fs = new FileSystem(new NodeFileSystemAdapter());
   });
 
   afterEach(() => {
@@ -49,7 +51,7 @@ describe("Jack binder", () => {
       }`;
     testBinder(input, DuplicatedClassError);
   });
-  test("basic", () => {
+  test("basic", async () => {
     const expected = {
       ...builtInSymbols,
       Fraction: {},
@@ -58,12 +60,12 @@ describe("Jack binder", () => {
       "Fraction.getNumerator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0,
+        0
       ),
       "Fraction.getDenominator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0,
+        0
       ),
       "Fraction.plus": createSubroutineSymbol(1, SubroutineType.Method, 1),
       "Fraction.dispose": createSubroutineSymbol(0, SubroutineType.Method, 0),
@@ -75,11 +77,11 @@ describe("Jack binder", () => {
     let globalSymbolsListener = new BinderListener();
 
     const testFolder = getTestResourcePath("Fraction");
-    const files = fs
-      .readdirSync(testFolder)
+
+    const filteredFiles = [...(await fs.readdir(testFolder))]
       .filter((file) => file.endsWith(".jack"))
       .map((file) => path.join(testFolder, file));
-    for (const filePath of files) {
+    for (const filePath of filteredFiles) {
       const tree = parseJackFile(filePath);
       globalSymbolsListener = listenToTheTree(tree, globalSymbolsListener);
       // console.log("Symbols for " + path.basename(filePath) + ":", globalSymbolsListener.globalSymbolTable)
@@ -90,7 +92,7 @@ describe("Jack binder", () => {
 function testBinder<T extends { name: string }>(
   input: string,
   expectedError?: T,
-  binder = new BinderListener(),
+  binder = new BinderListener()
 ) {
   const tree = parseJackText(input);
   listenToTheTree(tree, binder);
@@ -105,8 +107,8 @@ function testBinder<T extends { name: string }>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
-        errors.join(",") +
-        "'",
+          errors.join(",") +
+          "'"
       );
     }
   } else {

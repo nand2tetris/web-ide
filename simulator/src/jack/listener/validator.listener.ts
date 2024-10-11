@@ -76,11 +76,6 @@ export class ValidatorListener extends JackParserListener {
       throw new Error("Cannot change class name");
     }
     this.className = newName;
-    console.log(
-      "Filename",
-      this.filename != null,
-      this.filename != this.className,
-    );
     if (this.filename != null && this.filename != this.className) {
       console.error("FilenameDoesntMatchClassName");
       this.errors.push(

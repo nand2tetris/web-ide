@@ -1,9 +1,14 @@
-import fs from "fs";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import { getTestResourcePath, testResourceDirs } from "./test.helper";
 import path from "path";
 import { ProgramContext } from "./generated/JackParser";
 import { Compiler } from "./anltr.compiler";
 describe("Jack compiler", () => {
+  let fs: FileSystem;
+  beforeEach(() => {
+    fs = new FileSystem(new NodeFileSystemAdapter());
+  });
   test("static field", () => {
     testCompiler(
       `class A{
@@ -19,7 +24,7 @@ describe("Jack compiler", () => {
                 pop static 0
                 push constant 0
                 return
-        `,
+        `
     );
   });
   test("field", () => {
@@ -40,7 +45,7 @@ describe("Jack compiler", () => {
                 pop this 0
                 push constant 0
                 return
-            `,
+            `
     );
   });
 
@@ -910,38 +915,40 @@ describe("Jack compiler", () => {
         `;
     testCompiler(input, expected);
   });
-  test.concurrent.each(testResourceDirs)("%s", (folder: string) => {
-    testFilesInFolder(folder);
+  test.each(testResourceDirs)("%s", async (folder: string) => {
+    await testFilesInFolder(fs, folder);
   });
 });
-function testFilesInFolder(folderInTestResources: string) {
+async function testFilesInFolder(
+  fs: FileSystem,
+  folderInTestResources: string
+) {
   const testFolder = getTestResourcePath(folderInTestResources);
-  const files = fs
-    .readdirSync(testFolder)
+  const files = [...(await fs.readdir(testFolder))]
     .filter((file) => file.endsWith(".jack"))
     .map((file) => path.join(testFolder, file));
   const trees: Record<string, ProgramContext> = {};
   const compiler = new Compiler();
   for (const f of files) {
-    const input = fs.readFileSync(f, { encoding: "utf8", flag: "r" });
+    const input = await fs.readFile(f);
     const treeOrErrors = compiler.parserAndBind(input);
     if (Array.isArray(treeOrErrors)) {
       throw new Error(
-        `Unexpected compilation errors: ${treeOrErrors.join("\n")}`,
+        `Unexpected compilation errors: ${treeOrErrors.join("\n")}`
       );
     }
     const tree = treeOrErrors as ProgramContext;
     trees[f] = tree;
   }
   for (const f of files) {
-    const expected = fs.readFileSync(f.replace(".jack", ".vm"), "utf8");
+    const expected = await fs.readFile(f.replace(".jack", ".vm"));
     const res = compiler.compile(trees[f]);
     if (Array.isArray(res)) {
       throw new Error(`Unexpected compilation errors: ${res.join("\n")}`);
     } else {
       // console.log(res)
       expect(trimAndDeleteComments(res)).toEqual(
-        trimAndDeleteComments(expected),
+        trimAndDeleteComments(expected)
       );
     }
   }
@@ -970,7 +977,7 @@ function testCompiler(input: string, expected: string): void {
   const treeOrErrors = compiler.parserAndBind(input);
   if (Array.isArray(treeOrErrors)) {
     throw new Error(
-      `Unexpected compilation errors: ${treeOrErrors.join("\n")}`,
+      `Unexpected compilation errors: ${treeOrErrors.join("\n")}`
     );
   }
   const tree = treeOrErrors as ProgramContext;

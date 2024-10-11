@@ -41,7 +41,7 @@ const unaryOperationToVmCmd: Record<string, string> = {
   "-": "neg",
   "~": "not",
 };
-/* eslint-disable  @typescript-eslint/no-non-null-assertion */
+
 /**
  * Transforms parse tree into VM code
  */

@@ -17,7 +17,6 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
-/* eslint-disable  @typescript-eslint/no-non-null-assertion */
 /**
  * Creates global symbol table that contains built-in functions and found classes and subroutines
  */

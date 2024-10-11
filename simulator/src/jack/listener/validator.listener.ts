@@ -50,7 +50,6 @@ import {
 } from "../symbol.js";
 import { CallType, getCallType } from "./common.js";
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-/* eslint-disable  @typescript-eslint/no-non-null-assertion */
 /**
  * Validates Jack file
  */

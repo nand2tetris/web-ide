@@ -1,7 +1,7 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import path from "path";
-import { DuplicatedClassError, DuplicatedSubroutineError } from "../error";
+import { DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error";
 import { BinderListener } from "./binder.listener";
 import { createSubroutineSymbol, SubroutineType } from "../symbol";
 import { builtInSymbols } from "../builtins";
@@ -89,7 +89,7 @@ describe("Jack binder", () => {
     expect(globalSymbolsListener.globalSymbolTable).toEqual(expected);
   });
 });
-function testBinder<T extends { name: string }>(
+function testBinder<T extends new (...args: any[]) => JackCompilerError>(
   input: string,
   expectedError?: T,
   binder = new BinderListener()

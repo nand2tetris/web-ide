@@ -6,6 +6,7 @@ import {
   Token,
 } from "antlr4";
 import { JackCompilerError, LexerOrParserError } from "../error.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 interface LexerNoViableAltException {
   startIndex: number;
 }
@@ -21,7 +22,7 @@ export class JackCustomErrorListener extends ErrorListener<any> {
     e: RecognitionException | undefined,
   ) => {
     if (offendingSymbol != null || (e != null && e.offendingToken != null)) {
-      const t = offendingSymbol ?? (e!.offendingToken as Token);
+      const t = offendingSymbol ?? (assertExists(e).offendingToken as Token);
       this.errors.push(new LexerOrParserError(line, t.start, t.stop + 1, msg));
     } else if (e instanceof NoViableAltException) {
       this.errors.push(

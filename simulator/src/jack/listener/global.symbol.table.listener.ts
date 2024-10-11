@@ -13,6 +13,7 @@ import {
   SubroutineType,
 } from "../symbol.js";
 import JackParserListener from "../generated/JackParserListener.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
@@ -31,14 +32,15 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
   private subroutineId = "";
 
   override enterClassDeclaration = (ctx: ClassDeclarationContext) => {
-    const id = ctx.className()!.IDENTIFIER();
+    const classNameCtx = ctx.className();
+    const id = classNameCtx.IDENTIFIER();
     const className = id.getText();
     if (this.globalSymbolTable[className] != undefined) {
       const e = new DuplicatedClassError(
-        ctx.className()!.start.line,
-        ctx.className()!.start.start,
-        ctx.className()!.stop!.stop + 1,
-        className,
+        classNameCtx.start.line,
+        classNameCtx.start.start,
+        assertExists(classNameCtx.stop).stop + 1,
+        className
       );
       this.errors.push(e);
       return;
@@ -68,8 +70,8 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
           nameCtx.IDENTIFIER().symbol.line,
           nameCtx.start.start,
           nameCtx.start.stop,
-          subroutineName,
-        ),
+          subroutineName
+        )
       );
       this.stopProcessingSubroutines = true;
     } else {

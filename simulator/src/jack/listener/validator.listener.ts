@@ -49,6 +49,7 @@ import {
   SubroutineType,
 } from "../symbol.js";
 import { CallType, getCallType } from "./common.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 /* eslint-disable  @typescript-eslint/no-non-null-assertion */
 /**
  * Validates Jack file
@@ -64,7 +65,7 @@ export class JackValidatorListener extends JackParserListener {
   constructor(
     private globalSymbolTable: Record<string, GenericSymbol>,
     private filename?: string,
-    public errors: JackCompilerError[] = [],
+    public errors: JackCompilerError[] = []
   ) {
     super();
   }
@@ -84,8 +85,8 @@ export class JackValidatorListener extends JackParserListener {
           className.start.start,
           className.start.stop,
           this.filename,
-          this.className,
-        ),
+          this.className
+        )
       );
     }
     ctx.localSymbolTable = this.localSymbolTable;
@@ -119,8 +120,8 @@ export class JackValidatorListener extends JackParserListener {
           new IncorrectConstructorReturnType(
             ctx.start.line,
             ctx.start.start,
-            ctx.start.stop,
-          ),
+            ctx.start.stop
+          )
         );
       }
     } else if (ctx.subroutineType().FUNCTION() != null) {
@@ -132,7 +133,7 @@ export class JackValidatorListener extends JackParserListener {
     }
   };
   override enterSubroutineDecWithoutType = (
-    ctx: SubroutineDecWithoutTypeContext,
+    ctx: SubroutineDecWithoutTypeContext
   ) => {
     const returnType = ctx.subroutineReturnType();
     this.subroutineShouldReturnVoidType = returnType.VOID() != null;
@@ -145,21 +146,21 @@ export class JackValidatorListener extends JackParserListener {
       ctx,
       ctx.parameterName().getText(),
       ctx.varType().getText(),
-      this.subroutineType == SubroutineType.Method,
+      this.subroutineType == SubroutineType.Method
     );
   };
   //Var
   override enterVarType = (ctx: VarTypeContext) => {
     if (ctx.IDENTIFIER() != null) {
-      const type = ctx.IDENTIFIER()!.getText();
+      const type = ctx.IDENTIFIER().getText();
       if (this.globalSymbolTable[type] == null) {
         this.addError(
           new UnknownClassError(
             ctx.start.line,
             ctx.start.start,
             ctx.start.stop,
-            type,
-          ),
+            type
+          )
         );
       }
     }
@@ -183,8 +184,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          ctx.getText(),
-        ),
+          ctx.getText()
+        )
       );
     } else if (
       this.subroutineType == SubroutineType.Function &&
@@ -194,8 +195,8 @@ export class JackValidatorListener extends JackParserListener {
         new FieldCantBeReferencedInFunction(
           ctx.start.line,
           ctx.start.start,
-          ctx.start.stop,
-        ),
+          ctx.start.stop
+        )
       );
     }
   };
@@ -209,8 +210,8 @@ export class JackValidatorListener extends JackParserListener {
         new ThisCantBeReferencedInFunction(
           ctx.start.line,
           ctx.start.start,
-          ctx.start.stop,
-        ),
+          ctx.start.stop
+        )
       );
     }
   };
@@ -221,8 +222,8 @@ export class JackValidatorListener extends JackParserListener {
         new UnreachableCodeError(
           ctx.start.line,
           ctx.start.start,
-          ctx.stop?.stop ?? ctx.start.stop,
-        ),
+          ctx.stop?.stop ?? ctx.start.stop
+        )
       );
       this.stopProcessingErrorsInThisScope = true;
     }
@@ -268,10 +269,11 @@ export class JackValidatorListener extends JackParserListener {
     if (
       varName != null &&
       constCtx != null &&
-      this.localSymbolTable.lookup(ctx.varName()!.getText()) &&
-      ctx.expression().constant()!.NULL_LITERAL() == null
+      this.localSymbolTable.lookup(ctx.varName().getText()) &&
+      ctx.expression().constant().NULL_LITERAL() == null
     ) {
-      const type = this.localSymbolTable.lookup(ctx.varName()!.getText())!.type;
+      const symbol = this.localSymbolTable.lookup(ctx.varName().getText());
+      const type = assertExists(symbol).type;
       if (literalTypes.indexOf(type) != -1) {
         const constantCtx = ctx.expression().constant()!;
         switch (type) {
@@ -283,11 +285,11 @@ export class JackValidatorListener extends JackParserListener {
                   ctx.start.line,
                   ctx.start.start,
                   ctx.start.stop,
-                  type,
-                ),
+                  type
+                )
               );
             } else {
-              const value = parseInt(constantCtx.INTEGER_LITERAL()!.getText());
+              const value = parseInt(constantCtx.INTEGER_LITERAL().getText());
               if (value > intRange.max) {
                 this.addError(
                   new IntLiteralIsOutOfRange(
@@ -296,8 +298,8 @@ export class JackValidatorListener extends JackParserListener {
                     ctx.start.stop,
                     value,
                     intRange.min,
-                    intRange.max,
-                  ),
+                    intRange.max
+                  )
                 );
               }
             }
@@ -309,8 +311,8 @@ export class JackValidatorListener extends JackParserListener {
                   ctx.start.line,
                   ctx.start.start,
                   ctx.start.stop,
-                  type,
-                ),
+                  type
+                )
               );
             }
             break;
@@ -321,8 +323,8 @@ export class JackValidatorListener extends JackParserListener {
                   ctx.start.line,
                   ctx.start.start,
                   ctx.start.stop,
-                  type.toLowerCase(),
-                ),
+                  type.toLowerCase()
+                )
               );
             }
             break;
@@ -337,11 +339,11 @@ export class JackValidatorListener extends JackParserListener {
       varName &&
       unaryOp != null &&
       unaryOp.unaryOperator().MINUS() !== null &&
-      unaryOp!.expression().constant() != null &&
-      unaryOp!.expression().constant()?.INTEGER_LITERAL() !== null
+      unaryOp.expression().constant() != null &&
+      unaryOp.expression().constant()?.INTEGER_LITERAL() !== null
     ) {
       const value = parseInt(
-        unaryOp!.expression().constant()!.INTEGER_LITERAL()!.getText(),
+        unaryOp.expression().constant().INTEGER_LITERAL().getText()
       );
       if (-value < intRange.min) {
         this.addError(
@@ -351,8 +353,8 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.stop,
             value,
             intRange.min,
-            intRange.max,
-          ),
+            intRange.max
+          )
         );
       }
     }
@@ -364,7 +366,7 @@ export class JackValidatorListener extends JackParserListener {
     const { callType, subroutineIdText } = getCallType(
       subroutineId,
       this.className,
-      this.localSymbolTable,
+      this.localSymbolTable
     );
 
     const symbol = this.globalSymbolTable[subroutineIdText];
@@ -375,8 +377,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.start,
           ctx.start.stop,
           subroutineId.subroutineName().getText(),
-          subroutineId.className()?.getText(),
-        ),
+          subroutineId.className()?.getText()
+        )
       );
     } else {
       //method called as a function
@@ -389,8 +391,8 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.line,
             ctx.start.start,
             ctx.start.stop,
-            subroutineId.subroutineName().getText(),
-          ),
+            subroutineId.subroutineName().getText()
+          )
         );
       }
       // function called as a method
@@ -403,22 +405,22 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.line,
             ctx.start.start,
             ctx.start.stop,
-            subroutineId.subroutineName().getText(),
-          ),
+            subroutineId.subroutineName().getText()
+          )
         );
       } else {
         //check parameter count
         const l = ctx.expressionList().expression_list().length;
-        if (symbol.subroutineInfo!.paramsCount != l) {
+        if (assertExists(symbol.subroutineInfo).paramsCount != l) {
           this.addError(
             new IncorrectParamsNumberInSubroutineCallError(
               ctx.start.line,
               ctx.start.start,
               ctx.start.stop,
               subroutineId.getText(),
-              symbol.subroutineInfo!.paramsCount,
-              l,
-            ),
+              assertExists(symbol.subroutineInfo).paramsCount,
+              l
+            )
           );
         }
       }
@@ -426,38 +428,39 @@ export class JackValidatorListener extends JackParserListener {
   };
   override enterReturnStatement = (ctx: ReturnStatementContext) => {
     const returnsVoid = ctx.expression() == null;
+    const lastToken = assertExists(ctx.stop);
     if (returnsVoid && !this.subroutineShouldReturnVoidType) {
       this.addError(
         new NonVoidFunctionNoReturnError(
-          ctx.stop!.line,
-          ctx.stop!.start,
-          ctx.stop!.stop,
-        ),
+          lastToken.line,
+          lastToken.start,
+          lastToken.stop
+        )
       );
     }
     if (!returnsVoid && this.subroutineShouldReturnVoidType) {
       this.addError(
         new VoidSubroutineReturnsValueError(
-          ctx.stop!.line,
-          ctx.stop!.start,
-          ctx.stop!.stop,
-        ),
+          lastToken.line,
+          lastToken.start,
+          lastToken.stop
+        )
       );
     }
     this.controlFlowGraphNode.returns = true;
     if (this.subroutineType == SubroutineType.Constructor) {
       if (
         returnsVoid ||
-        ctx.expression()!.expression_list().length > 1 ||
-        ctx.expression()!.constant() == null ||
-        ctx.expression()!.constant()!.THIS_LITERAL() == null
+        ctx.expression().expression_list().length > 1 ||
+        ctx.expression().constant() == null ||
+        ctx.expression().constant().THIS_LITERAL() == null
       ) {
         this.addError(
           new ConstructorMushReturnThis(
-            ctx.stop!.line,
-            ctx.stop!.start,
-            ctx.stop!.stop,
-          ),
+            lastToken.line,
+            lastToken.start,
+            lastToken.stop
+          )
         );
       }
     }
@@ -465,13 +468,14 @@ export class JackValidatorListener extends JackParserListener {
 
   override exitSubroutineBody = (ctx: SubroutineBodyContext) => {
     if (!this.controlFlowGraphNode.returns) {
+      const lastToken = assertExists(ctx.stop);
       this.addError(
         new SubroutineNotAllPathsReturnError(
-          ctx.stop!.line,
-          ctx.stop!.start,
-          ctx.stop!.stop,
-          this.subroutineName,
-        ),
+         lastToken.line,
+          lastToken.start,
+          lastToken.stop,
+          this.subroutineName
+        )
       );
     }
     this.subroutineType = undefined;
@@ -491,7 +495,7 @@ export class JackValidatorListener extends JackParserListener {
     ctx: ParserRuleContext,
     name: string,
     type: string,
-    inMethod: boolean,
+    inMethod: boolean
   ) {
     if (this.localSymbolTable.lookup(name)) {
       this.addError(
@@ -499,8 +503,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          name,
-        ),
+          name
+        )
       );
     } else {
       this.localSymbolTable.defineArgument(name, type, inMethod);
@@ -510,7 +514,7 @@ export class JackValidatorListener extends JackParserListener {
     ctx: ParserRuleContext,
     scope: ScopeType,
     name: string,
-    type: string,
+    type: string
   ) {
     if (this.localSymbolTable.lookup(name)) {
       this.addError(
@@ -518,8 +522,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          name,
-        ),
+          name
+        )
       );
     } else {
       this.localSymbolTable.define(scope, name, type);
@@ -535,7 +539,7 @@ class BinaryTreeNode {
   constructor(
     public parent?: BinaryTreeNode,
     public left?: BinaryTreeNode,
-    public right?: BinaryTreeNode,
+    public right?: BinaryTreeNode
   ) {}
 
   public get returns(): boolean {
@@ -574,13 +578,13 @@ class BinaryTreeNode {
       } else {
         res += this.left?.printBT(
           side == Side.LEFT ? "|   " : "    ",
-          Side.LEFT,
+          Side.LEFT
         );
         if (this.right) {
           res += prefix;
           res += this.right?.printBT(
             side == Side.LEFT ? "|\t" : "\t",
-            Side.RIGHT,
+            Side.RIGHT
           );
         } else {
           res += "\n";

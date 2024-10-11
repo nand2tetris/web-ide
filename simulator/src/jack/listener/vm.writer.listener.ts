@@ -44,7 +44,7 @@ const unaryOperationToVmCmd: Record<string, string> = {
 /**
  * Transforms parse tree into VM code
  */
-export class VMWriter extends JackParserListener {
+export class JackVMWriter extends JackParserListener {
   public result = "";
   private className = "";
   private currentLabelIndex = 0;

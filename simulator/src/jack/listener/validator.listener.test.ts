@@ -20,8 +20,8 @@ import {
 } from "../error";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
-import { CustomErrorListener } from "./error.listener";
-import { ValidatorListener } from "./validator.listener";
+import { JackCustomErrorListener } from "./error.listener";
+import { JackValidatorListener } from "./validator.listener";
 import {
   createSubroutineSymbol,
   GenericSymbol,
@@ -34,7 +34,7 @@ import {
   parseJackText,
   testResourceDirs,
 } from "../test.helper";
-import { BinderListener } from "./binder.listener";
+import { JackGlobalSymbolTableListener } from "./global.symbol.table.listener";
 import path from "path";
 import { ProgramContext } from "../generated/JackParser";
 describe("Jack validator listener", () => {
@@ -777,7 +777,7 @@ async function testJackDir(fs: FileSystem, testFolder: string): Promise<void> {
     .filter((file) => file.endsWith(".jack"))
     .map((file) => path.join(testFolder, file));
   const trees: Record<string, ProgramContext> = {};
-  const globalSymbolsListener: BinderListener = new BinderListener();
+  const globalSymbolsListener: JackGlobalSymbolTableListener = new JackGlobalSymbolTableListener();
   for (const filePath of files) {
     const tree = parseJackFile(filePath);
     trees[filePath] = tree;
@@ -788,7 +788,7 @@ async function testJackDir(fs: FileSystem, testFolder: string): Promise<void> {
     const tree = trees[filepath];
     const validatorListener = listenToTheTree(
       tree,
-      new ValidatorListener(globalSymbolsListener.globalSymbolTable)
+      new JackValidatorListener(globalSymbolsListener.globalSymbolTable)
     );
     expect(validatorListener.errors).toEqual([]);
   }
@@ -800,12 +800,12 @@ function testValidator<T extends { name: string }>(
   globalSymbolTable: Record<string, GenericSymbol> = {},
   filename?: string
 ) {
-  const errorListener = new CustomErrorListener();
+  const errorListener = new JackCustomErrorListener();
   const tree = parseJackText(src, errorListener);
   const listener =
     filename != null
-      ? new ValidatorListener(globalSymbolTable, filename)
-      : new ValidatorListener(globalSymbolTable);
+      ? new JackValidatorListener(globalSymbolTable, filename)
+      : new JackValidatorListener(globalSymbolTable);
   const validator = listenToTheTree(tree, listener);
   if (expectedError) {
     if (validator.errors.length > 1) {

@@ -2,7 +2,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import path from "path";
 import { DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error";
-import { BinderListener } from "./binder.listener";
+import { JackGlobalSymbolTableListener } from "./global.symbol.table.listener";
 import { createSubroutineSymbol, SubroutineType } from "../symbol";
 import { builtInSymbols } from "../builtins";
 import {
@@ -34,22 +34,22 @@ describe("Jack binder", () => {
               return 1;
           }
       }`;
-    testBinder(input, DuplicatedSubroutineError);
+    testJackGlobalSymbolListener(input, DuplicatedSubroutineError);
   });
 
   test("duplicated class", () => {
     const input = `
       class A {
       }`;
-    const binder = new BinderListener();
-    testBinder(input, undefined, binder);
-    testBinder(input, DuplicatedClassError, binder);
+    const binder = new JackGlobalSymbolTableListener();
+    testJackGlobalSymbolListener(input, undefined, binder);
+    testJackGlobalSymbolListener(input, DuplicatedClassError, binder);
   });
   test("duplicated built in class", () => {
     const input = `
       class Math {
       }`;
-    testBinder(input, DuplicatedClassError);
+    testJackGlobalSymbolListener(input, DuplicatedClassError);
   });
   test("basic", async () => {
     const expected = {
@@ -74,7 +74,7 @@ describe("Jack binder", () => {
       Main: {},
       "Main.main": createSubroutineSymbol(0, SubroutineType.Function, 3),
     };
-    let globalSymbolsListener = new BinderListener();
+    let globalSymbolsListener = new JackGlobalSymbolTableListener();
 
     const testFolder = getTestResourcePath("Fraction");
 
@@ -84,15 +84,14 @@ describe("Jack binder", () => {
     for (const filePath of filteredFiles) {
       const tree = parseJackFile(filePath);
       globalSymbolsListener = listenToTheTree(tree, globalSymbolsListener);
-      // console.log("Symbols for " + path.basename(filePath) + ":", globalSymbolsListener.globalSymbolTable)
     }
     expect(globalSymbolsListener.globalSymbolTable).toEqual(expected);
   });
 });
-function testBinder<T extends new (...args: any[]) => JackCompilerError>(
+function testJackGlobalSymbolListener<T extends new (...args: any[]) => JackCompilerError>(
   input: string,
   expectedError?: T,
-  binder = new BinderListener()
+  binder = new JackGlobalSymbolTableListener()
 ) {
   const tree = parseJackText(input);
   listenToTheTree(tree, binder);

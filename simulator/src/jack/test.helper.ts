@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { JackCompilerError } from "./error";
-import { CustomErrorListener } from "./listener/error.listener";
+import { JackCustomErrorListener } from "./listener/error.listener";
 import {
   CharStreams,
   CommonTokenStream,
@@ -12,19 +12,19 @@ import JackLexer from "./generated/JackLexer";
 import JackParser, { ProgramContext } from "./generated/JackParser";
 
 export function parseJackFile(filePath: string, trace = false) {
-  const errorListener: CustomErrorListener = new CustomErrorListener();
+  const errorListener: JackCustomErrorListener = new JackCustomErrorListener();
   const f = fs.readFileSync(filePath, "utf8");
   return parseJackText(f, errorListener, trace);
 }
 
 export function parseJackText(
   src: string,
-  errorListener?: CustomErrorListener,
+  errorListener?: JackCustomErrorListener,
   trace = false,
   throwOnErrors = true,
 ): ProgramContext {
   if (errorListener === undefined) {
-    errorListener = new CustomErrorListener();
+    errorListener = new JackCustomErrorListener();
   }
   const inputStream = CharStreams.fromString(src);
   const lexer = new JackLexer(inputStream);

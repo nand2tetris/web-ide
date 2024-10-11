@@ -1,8 +1,8 @@
-import { BinderListener } from "./listener/binder.listener.js";
-import { CustomErrorListener } from "./listener/error.listener.js";
-import { ValidatorListener } from "./listener/validator.listener.js";
+import { JackGlobalSymbolTableListener } from "./listener/global.symbol.table.listener.js";
+import { JackCustomErrorListener } from "./listener/error.listener.js";
+import { JackValidatorListener } from "./listener/validator.listener.js";
 import { JackCompilerError, LexerOrParserError } from "./error.js";
-import { VMWriter } from "./listener/vm.writer.listener.js";
+import { JackVMWriter } from "./listener/vm.writer.listener.js";
 import JackParser, { ProgramContext } from "./generated/JackParser.js";
 import { CharStreams, CommonTokenStream, ParseTreeWalker } from "antlr4";
 import JackLexer from "./generated/JackLexer.js";
@@ -53,7 +53,7 @@ function _do(
   }
   const trees: Record<string, ProgramContext> = {};
   const errors: Record<string, CompilationError> = {};
-  const compiler = new Compiler();
+  const compiler = new JackCompiler();
   for (const [name, content] of Object.entries(files)) {
     const treeOrErrors = compiler.parserAndBind(content);
     if (Array.isArray(treeOrErrors)) {
@@ -102,9 +102,9 @@ function toCompilerError(errors: JackCompilerError[]): CompilationError {
   } as CompilationError;
 }
 
-export class Compiler {
-  private binder = new BinderListener();
-  private errorListener = new CustomErrorListener();
+export class JackCompiler {
+  private binder = new JackGlobalSymbolTableListener();
+  private errorListener = new JackCustomErrorListener();
   validate(
     tree: ProgramContext,
     filename?: string,
@@ -114,7 +114,7 @@ export class Compiler {
         "Please populate global symbol table using parserAndBind method",
       );
     }
-    const validator = new ValidatorListener(
+    const validator = new JackValidatorListener(
       this.binder.globalSymbolTable,
       filename,
     );
@@ -133,7 +133,7 @@ export class Compiler {
       return errors;
     }
     const validateTree = treeOrErrors as ProgramContext;
-    const vmWriter = new VMWriter(this.binder.globalSymbolTable);
+    const vmWriter = new JackVMWriter(this.binder.globalSymbolTable);
     ParseTreeWalker.DEFAULT.walk(vmWriter, validateTree);
     return vmWriter.result;
   }

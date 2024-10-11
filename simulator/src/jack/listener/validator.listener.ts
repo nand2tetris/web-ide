@@ -53,7 +53,7 @@ import { CallType, getCallType } from "./common.js";
 /**
  * Validates Jack file
  */
-export class ValidatorListener extends JackParserListener {
+export class JackValidatorListener extends JackParserListener {
   private localSymbolTable: LocalSymbolTable = new LocalSymbolTable();
   private subroutineShouldReturnVoidType = false;
   private controlFlowGraphNode: BinaryTreeNode = new BinaryTreeNode();

@@ -9,7 +9,7 @@ import { JackCompilerError, LexerOrParserError } from "../error.js";
 interface LexerNoViableAltException {
   startIndex: number;
 }
-export class CustomErrorListener extends ErrorListener<any> {
+export class JackCustomErrorListener extends ErrorListener<any> {
   public errors: JackCompilerError[] = [];
 
   override syntaxError = (

@@ -3,7 +3,7 @@ import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js"
 import { getTestResourcePath, testResourceDirs } from "./test.helper";
 import path from "path";
 import { ProgramContext } from "./generated/JackParser";
-import { Compiler } from "./anltr.compiler";
+import { JackCompiler } from "./anltr.compiler";
 describe("Jack compiler", () => {
   let fs: FileSystem;
   beforeEach(() => {
@@ -928,7 +928,7 @@ async function testFilesInFolder(
     .filter((file) => file.endsWith(".jack"))
     .map((file) => path.join(testFolder, file));
   const trees: Record<string, ProgramContext> = {};
-  const compiler = new Compiler();
+  const compiler = new JackCompiler();
   for (const f of files) {
     const input = await fs.readFile(f);
     const treeOrErrors = compiler.parserAndBind(input);
@@ -946,7 +946,6 @@ async function testFilesInFolder(
     if (Array.isArray(res)) {
       throw new Error(`Unexpected compilation errors: ${res.join("\n")}`);
     } else {
-      // console.log(res)
       expect(trimAndDeleteComments(res)).toEqual(
         trimAndDeleteComments(expected)
       );
@@ -973,7 +972,7 @@ const compose = <T>(fn1: (a: T) => T, ...fns: Array<(a: T) => T>) =>
 
 const trimAndDeleteComments = compose(trimMultiline, deleteComments);
 function testCompiler(input: string, expected: string): void {
-  const compiler = new Compiler();
+  const compiler = new JackCompiler();
   const treeOrErrors = compiler.parserAndBind(input);
   if (Array.isArray(treeOrErrors)) {
     throw new Error(

@@ -10,12 +10,12 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 interface LexerNoViableAltException {
   startIndex: number;
 }
-export class JackCustomErrorListener extends ErrorListener<unknown> {
+export class JackCustomErrorListener extends ErrorListener<any> {
   public errors: JackCompilerError[] = [];
 
   override syntaxError = (
-    recognizer: Recognizer<unknown>,
-    offendingSymbol: unknown,
+    recognizer: Recognizer<any>,
+    offendingSymbol: any,
     line: number,
     column: number,
     msg: string,

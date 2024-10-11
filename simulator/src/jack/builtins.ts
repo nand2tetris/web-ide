@@ -6,7 +6,7 @@ interface Range {
   max: number;
 }
 
-export const intRange:Range = { min: -32768, max: 32767 };
+export const intRange: Range = { min: -32768, max: 32767 };
 
 const builtInFunctionsToArgCount: Record<string, number> = {
   "Array.dispose": 0,

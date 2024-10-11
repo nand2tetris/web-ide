@@ -24,7 +24,7 @@ describe("Jack compiler", () => {
                 pop static 0
                 push constant 0
                 return
-        `
+        `,
     );
   });
   test("field", () => {
@@ -45,7 +45,7 @@ describe("Jack compiler", () => {
                 pop this 0
                 push constant 0
                 return
-            `
+            `,
     );
   });
 
@@ -921,7 +921,7 @@ describe("Jack compiler", () => {
 });
 async function testFilesInFolder(
   fs: FileSystem,
-  folderInTestResources: string
+  folderInTestResources: string,
 ) {
   const testFolder = getTestResourcePath(folderInTestResources);
   const files = [...(await fs.readdir(testFolder))]
@@ -934,7 +934,7 @@ async function testFilesInFolder(
     const treeOrErrors = compiler.parserAndBind(input);
     if (Array.isArray(treeOrErrors)) {
       throw new Error(
-        `Unexpected compilation errors: ${treeOrErrors.join("\n")}`
+        `Unexpected compilation errors: ${treeOrErrors.join("\n")}`,
       );
     }
     const tree = treeOrErrors as ProgramContext;
@@ -947,7 +947,7 @@ async function testFilesInFolder(
       throw new Error(`Unexpected compilation errors: ${res.join("\n")}`);
     } else {
       expect(trimAndDeleteComments(res)).toEqual(
-        trimAndDeleteComments(expected)
+        trimAndDeleteComments(expected),
       );
     }
   }
@@ -976,7 +976,7 @@ function testCompiler(input: string, expected: string): void {
   const treeOrErrors = compiler.parserAndBind(input);
   if (Array.isArray(treeOrErrors)) {
     throw new Error(
-      `Unexpected compilation errors: ${treeOrErrors.join("\n")}`
+      `Unexpected compilation errors: ${treeOrErrors.join("\n")}`,
     );
   }
   const tree = treeOrErrors as ProgramContext;

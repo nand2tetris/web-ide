@@ -1,5 +1,8 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { compile, validate } from "@nand2tetris/simulator/jack/anltr.compiler.js";
+import {
+  compile,
+  validate,
+} from "@nand2tetris/simulator/jack/anltr.compiler.js";
 import { CompilationError } from "@nand2tetris/simulator/languages/base.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";

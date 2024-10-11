@@ -64,7 +64,7 @@ export class JackValidatorListener extends JackParserListener {
   constructor(
     private globalSymbolTable: Record<string, GenericSymbol>,
     private filename?: string,
-    public errors: JackCompilerError[] = []
+    public errors: JackCompilerError[] = [],
   ) {
     super();
   }
@@ -84,8 +84,8 @@ export class JackValidatorListener extends JackParserListener {
           className.start.start,
           className.start.stop,
           this.filename,
-          this.className
-        )
+          this.className,
+        ),
       );
     }
     ctx.localSymbolTable = this.localSymbolTable;
@@ -119,8 +119,8 @@ export class JackValidatorListener extends JackParserListener {
           new IncorrectConstructorReturnType(
             ctx.start.line,
             ctx.start.start,
-            ctx.start.stop
-          )
+            ctx.start.stop,
+          ),
         );
       }
     } else if (ctx.subroutineType().FUNCTION() != null) {
@@ -132,7 +132,7 @@ export class JackValidatorListener extends JackParserListener {
     }
   };
   override enterSubroutineDecWithoutType = (
-    ctx: SubroutineDecWithoutTypeContext
+    ctx: SubroutineDecWithoutTypeContext,
   ) => {
     const returnType = ctx.subroutineReturnType();
     this.subroutineShouldReturnVoidType = returnType.VOID() != null;
@@ -145,7 +145,7 @@ export class JackValidatorListener extends JackParserListener {
       ctx,
       ctx.parameterName().getText(),
       ctx.varType().getText(),
-      this.subroutineType == SubroutineType.Method
+      this.subroutineType == SubroutineType.Method,
     );
   };
   //Var
@@ -158,8 +158,8 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.line,
             ctx.start.start,
             ctx.start.stop,
-            type
-          )
+            type,
+          ),
         );
       }
     }
@@ -183,8 +183,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          ctx.getText()
-        )
+          ctx.getText(),
+        ),
       );
     } else if (
       this.subroutineType == SubroutineType.Function &&
@@ -194,8 +194,8 @@ export class JackValidatorListener extends JackParserListener {
         new FieldCantBeReferencedInFunction(
           ctx.start.line,
           ctx.start.start,
-          ctx.start.stop
-        )
+          ctx.start.stop,
+        ),
       );
     }
   };
@@ -209,8 +209,8 @@ export class JackValidatorListener extends JackParserListener {
         new ThisCantBeReferencedInFunction(
           ctx.start.line,
           ctx.start.start,
-          ctx.start.stop
-        )
+          ctx.start.stop,
+        ),
       );
     }
   };
@@ -221,8 +221,8 @@ export class JackValidatorListener extends JackParserListener {
         new UnreachableCodeError(
           ctx.start.line,
           ctx.start.start,
-          ctx.stop?.stop ?? ctx.start.stop
-        )
+          ctx.stop?.stop ?? ctx.start.stop,
+        ),
       );
       this.stopProcessingErrorsInThisScope = true;
     }
@@ -284,8 +284,8 @@ export class JackValidatorListener extends JackParserListener {
                   ctx.start.line,
                   ctx.start.start,
                   ctx.start.stop,
-                  type
-                )
+                  type,
+                ),
               );
             } else {
               const value = parseInt(constantCtx.INTEGER_LITERAL().getText());
@@ -297,8 +297,8 @@ export class JackValidatorListener extends JackParserListener {
                     ctx.start.stop,
                     value,
                     intRange.min,
-                    intRange.max
-                  )
+                    intRange.max,
+                  ),
                 );
               }
             }
@@ -310,8 +310,8 @@ export class JackValidatorListener extends JackParserListener {
                   ctx.start.line,
                   ctx.start.start,
                   ctx.start.stop,
-                  type
-                )
+                  type,
+                ),
               );
             }
             break;
@@ -322,8 +322,8 @@ export class JackValidatorListener extends JackParserListener {
                   ctx.start.line,
                   ctx.start.start,
                   ctx.start.stop,
-                  type.toLowerCase()
-                )
+                  type.toLowerCase(),
+                ),
               );
             }
             break;
@@ -342,7 +342,7 @@ export class JackValidatorListener extends JackParserListener {
       unaryOp.expression().constant()?.INTEGER_LITERAL() !== null
     ) {
       const value = parseInt(
-        unaryOp.expression().constant().INTEGER_LITERAL().getText()
+        unaryOp.expression().constant().INTEGER_LITERAL().getText(),
       );
       if (-value < intRange.min) {
         this.addError(
@@ -352,8 +352,8 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.stop,
             value,
             intRange.min,
-            intRange.max
-          )
+            intRange.max,
+          ),
         );
       }
     }
@@ -365,7 +365,7 @@ export class JackValidatorListener extends JackParserListener {
     const { callType, subroutineIdText } = getCallType(
       subroutineId,
       this.className,
-      this.localSymbolTable
+      this.localSymbolTable,
     );
 
     const symbol = this.globalSymbolTable[subroutineIdText];
@@ -376,8 +376,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.start,
           ctx.start.stop,
           subroutineId.subroutineName().getText(),
-          subroutineId.className()?.getText()
-        )
+          subroutineId.className()?.getText(),
+        ),
       );
     } else {
       //method called as a function
@@ -390,8 +390,8 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.line,
             ctx.start.start,
             ctx.start.stop,
-            subroutineId.subroutineName().getText()
-          )
+            subroutineId.subroutineName().getText(),
+          ),
         );
       }
       // function called as a method
@@ -404,8 +404,8 @@ export class JackValidatorListener extends JackParserListener {
             ctx.start.line,
             ctx.start.start,
             ctx.start.stop,
-            subroutineId.subroutineName().getText()
-          )
+            subroutineId.subroutineName().getText(),
+          ),
         );
       } else {
         //check parameter count
@@ -418,8 +418,8 @@ export class JackValidatorListener extends JackParserListener {
               ctx.start.stop,
               subroutineId.getText(),
               assertExists(symbol.subroutineInfo).paramsCount,
-              l
-            )
+              l,
+            ),
           );
         }
       }
@@ -433,8 +433,8 @@ export class JackValidatorListener extends JackParserListener {
         new NonVoidFunctionNoReturnError(
           lastToken.line,
           lastToken.start,
-          lastToken.stop
-        )
+          lastToken.stop,
+        ),
       );
     }
     if (!returnsVoid && this.subroutineShouldReturnVoidType) {
@@ -442,8 +442,8 @@ export class JackValidatorListener extends JackParserListener {
         new VoidSubroutineReturnsValueError(
           lastToken.line,
           lastToken.start,
-          lastToken.stop
-        )
+          lastToken.stop,
+        ),
       );
     }
     this.controlFlowGraphNode.returns = true;
@@ -458,8 +458,8 @@ export class JackValidatorListener extends JackParserListener {
           new ConstructorMushReturnThis(
             lastToken.line,
             lastToken.start,
-            lastToken.stop
-          )
+            lastToken.stop,
+          ),
         );
       }
     }
@@ -470,11 +470,11 @@ export class JackValidatorListener extends JackParserListener {
       const lastToken = assertExists(ctx.stop);
       this.addError(
         new SubroutineNotAllPathsReturnError(
-         lastToken.line,
+          lastToken.line,
           lastToken.start,
           lastToken.stop,
-          this.subroutineName
-        )
+          this.subroutineName,
+        ),
       );
     }
     this.subroutineType = undefined;
@@ -494,7 +494,7 @@ export class JackValidatorListener extends JackParserListener {
     ctx: ParserRuleContext,
     name: string,
     type: string,
-    inMethod: boolean
+    inMethod: boolean,
   ) {
     if (this.localSymbolTable.lookup(name)) {
       this.addError(
@@ -502,8 +502,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          name
-        )
+          name,
+        ),
       );
     } else {
       this.localSymbolTable.defineArgument(name, type, inMethod);
@@ -513,7 +513,7 @@ export class JackValidatorListener extends JackParserListener {
     ctx: ParserRuleContext,
     scope: ScopeType,
     name: string,
-    type: string
+    type: string,
   ) {
     if (this.localSymbolTable.lookup(name)) {
       this.addError(
@@ -521,8 +521,8 @@ export class JackValidatorListener extends JackParserListener {
           ctx.start.line,
           ctx.start.start,
           ctx.start.stop,
-          name
-        )
+          name,
+        ),
       );
     } else {
       this.localSymbolTable.define(scope, name, type);
@@ -538,7 +538,7 @@ class BinaryTreeNode {
   constructor(
     public parent?: BinaryTreeNode,
     public left?: BinaryTreeNode,
-    public right?: BinaryTreeNode
+    public right?: BinaryTreeNode,
   ) {}
 
   public get returns(): boolean {
@@ -577,13 +577,13 @@ class BinaryTreeNode {
       } else {
         res += this.left?.printBT(
           side == Side.LEFT ? "|   " : "    ",
-          Side.LEFT
+          Side.LEFT,
         );
         if (this.right) {
           res += prefix;
           res += this.right?.printBT(
             side == Side.LEFT ? "|\t" : "\t",
-            Side.RIGHT
+            Side.RIGHT,
           );
         } else {
           res += "\n";

@@ -1,7 +1,11 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import path from "path";
-import { DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error";
+import {
+  DuplicatedClassError,
+  DuplicatedSubroutineError,
+  JackCompilerError,
+} from "../error";
 import { JackGlobalSymbolTableListener } from "./global.symbol.table.listener";
 import { createSubroutineSymbol, SubroutineType } from "../symbol";
 import { builtInSymbols } from "../builtins";
@@ -60,12 +64,12 @@ describe("Jack binder", () => {
       "Fraction.getNumerator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0
+        0,
       ),
       "Fraction.getDenominator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0
+        0,
       ),
       "Fraction.plus": createSubroutineSymbol(1, SubroutineType.Method, 1),
       "Fraction.dispose": createSubroutineSymbol(0, SubroutineType.Method, 0),
@@ -88,10 +92,12 @@ describe("Jack binder", () => {
     expect(globalSymbolsListener.globalSymbolTable).toEqual(expected);
   });
 });
-function testJackGlobalSymbolListener<T extends new (...args: any[]) => JackCompilerError>(
+function testJackGlobalSymbolListener<
+  T extends new (...args: any[]) => JackCompilerError,
+>(
   input: string,
   expectedError?: T,
-  binder = new JackGlobalSymbolTableListener()
+  binder = new JackGlobalSymbolTableListener(),
 ) {
   const tree = parseJackText(input);
   listenToTheTree(tree, binder);
@@ -107,7 +113,7 @@ function testJackGlobalSymbolListener<T extends new (...args: any[]) => JackComp
       throw new Error(
         `Expected error ${expectedError.name} but got '` +
           errors.join(",") +
-          "'"
+          "'",
       );
     }
   } else {

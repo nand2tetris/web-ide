@@ -39,7 +39,7 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
         classNameCtx.start.line,
         classNameCtx.start.start,
         assertExists(classNameCtx.stop).stop + 1,
-        className
+        className,
       );
       this.errors.push(e);
       return;
@@ -69,8 +69,8 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
           nameCtx.IDENTIFIER().symbol.line,
           nameCtx.start.start,
           nameCtx.start.stop,
-          subroutineName
-        )
+          subroutineName,
+        ),
       );
       this.stopProcessingSubroutines = true;
     } else {

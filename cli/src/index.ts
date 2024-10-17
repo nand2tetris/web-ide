@@ -7,7 +7,7 @@ import { testRunner } from "./testrunner.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import * as fsCore from "fs";
-import { compile } from "@nand2tetris/simulator/jack/compiler.js";
+import { compile } from "@nand2tetris/simulator/jack/anltr.compiler.js";
 
 yargs(hideBin(process.argv))
   .usage("$0 <cmd>")

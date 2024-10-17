@@ -129,7 +129,7 @@ export const Compiler = () => {
 
   const onCreateFile = async (name?: string) => {
     if (name) {
-      await actions.writeFile(name);
+      await actions.writeNewFile(name);
       onSelect(name);
       setSuppressStatus(false);
     }
@@ -218,6 +218,7 @@ export const Compiler = () => {
                 value={state.files[file]}
                 onChange={(source: string) => {
                   actions.writeFile(file, source);
+                  actions.validate();
                 }}
                 error={state.compiled[file].error}
                 language={"jack"}

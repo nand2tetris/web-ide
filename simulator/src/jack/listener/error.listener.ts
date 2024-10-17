@@ -19,26 +19,20 @@ export class JackCustomErrorListener extends ErrorListener<any> {
     line: number,
     column: number,
     msg: string,
-    e: RecognitionException | undefined,
+    err: RecognitionException | undefined,
   ) => {
-    if (offendingSymbol != null || (e != null && e.offendingToken != null)) {
+    if (offendingSymbol != null || (err?.offendingToken)) {
       const t = offendingSymbol ?? (assertExists(e).offendingToken as Token);
-      this.errors.push(new LexerOrParserError(line, t.start, t.stop + 1, msg));
-    } else if (e instanceof NoViableAltException) {
+      this.errors.push(LexerOrParserError({line, start: t.start, end: t.stop + 1}));
+    } else if (err instanceof NoViableAltException) {
       this.errors.push(
-        new LexerOrParserError(
-          line,
-          e.startToken.start,
-          e.startToken.stop + 1,
-          msg,
-        ),
+        LexerOrParserError({line, start: err.startIndex, end: err.startIndex + 1})
       );
     }
     //antlr doesn't provide a class for LexerNoViableAltException atm. Once https://github.com/antlr/antlr4/pull/4711 is release we can change it
-    else if (e != null && "startIndex" in e) {
-      const err = e as LexerNoViableAltException;
+    else if (err != null && "startIndex" in err) {
       this.errors.push(
-        new LexerOrParserError(line, err.startIndex, err.startIndex + 1, msg),
+        LexerOrParserError({line, start: err.startIndex, end: err.startIndex + 1}, msg),
       );
     } else {
       console.error("Don't know how to handle this error");

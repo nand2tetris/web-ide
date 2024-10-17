@@ -1,26 +1,6 @@
-import { ParserRuleContext } from "antlr4";
+import { ParserRuleContext, Token } from "antlr4";
 import { builtInTypes, intRange } from "../builtins.js";
-import {
-  ConstructorMushReturnThis,
-  DuplicatedVariableException,
-  FieldCantBeReferencedInFunction,
-  FilenameDoesntMatchClassName,
-  FunctionCalledAsMethodError,
-  IncorrectConstructorReturnType,
-  IncorrectParamsNumberInSubroutineCallError,
-  IntLiteralIsOutOfRange,
-  JackCompilerError,
-  MethodCalledAsFunctionError,
-  NonVoidFunctionNoReturnError,
-  SubroutineNotAllPathsReturnError,
-  ThisCantBeReferencedInFunction,
-  UndeclaredVariableError,
-  UnknownClassError,
-  UnknownSubroutineCallError,
-  UnreachableCodeError,
-  VoidSubroutineReturnsValueError,
-  WrongLiteralTypeError,
-} from "../error.js";
+import { asSpan, ConstructorMushReturnThisError, DuplicatedVariableError, FieldCantBeReferencedInFunctionError, FilenameDoesntMatchClassNameError, FunctionCalledAsMethodError, IncorrectConstructorReturnTypeError, IncorrectParamsNumberInSubroutineCallError, IntLiteralIsOutOfRangeError, JackCompilerError, MethodCalledAsFunctionError, NonVoidFunctionNoReturnError, SubroutineNotAllPathsReturnError, ThisCantBeReferencedInFunctionError, UndeclaredVariableError, UnknownClassError, UnknownSubroutineCallError, UnreachableCodeError, VoidSubroutineReturnsValueError, WrongLiteralTypeError } from "../error.js";
 import {
   ClassDeclarationContext,
   ClassVarDecContext,
@@ -49,7 +29,9 @@ import {
   SubroutineType,
 } from "../symbol.js";
 import { CallType, getCallType } from "./common.js";
+import { Span } from "../../languages/base.js";
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+
 /**
  * Validates Jack file
  */
@@ -78,15 +60,7 @@ export class JackValidatorListener extends JackParserListener {
     this.className = newName;
     if (this.filename != null && this.filename != this.className) {
       console.error("FilenameDoesntMatchClassName");
-      this.errors.push(
-        new FilenameDoesntMatchClassName(
-          className.start.line,
-          className.start.start,
-          className.start.stop,
-          this.filename,
-          this.className,
-        ),
-      );
+      this.errors.push( FilenameDoesntMatchClassNameError(asSpan(ctx.start), this.filename, this.className,),);
     }
     ctx.localSymbolTable = this.localSymbolTable;
   };
@@ -116,10 +90,8 @@ export class JackValidatorListener extends JackParserListener {
         this.className
       ) {
         this.addError(
-          new IncorrectConstructorReturnType(
-            ctx.start.line,
-            ctx.start.start,
-            ctx.start.stop,
+          IncorrectConstructorReturnTypeError(
+            asSpan(ctx.start)
           ),
         );
       }
@@ -154,12 +126,7 @@ export class JackValidatorListener extends JackParserListener {
       const type = ctx.IDENTIFIER().getText();
       if (this.globalSymbolTable[type] == null) {
         this.addError(
-          new UnknownClassError(
-            ctx.start.line,
-            ctx.start.start,
-            ctx.start.stop,
-            type,
-          ),
+          UnknownClassError(asSpan(ctx.start), type,),
         );
       }
     }
@@ -178,24 +145,13 @@ export class JackValidatorListener extends JackParserListener {
   override enterVarName = (ctx: VarNameContext) => {
     const symbol = this.localSymbolTable.lookup(ctx.getText());
     if (symbol == undefined) {
-      this.addError(
-        new UndeclaredVariableError(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
-          ctx.getText(),
-        ),
-      );
+      this.addError(UndeclaredVariableError(asSpan(ctx.start), ctx.getText()));
     } else if (
       this.subroutineType == SubroutineType.Function &&
       symbol.scope == ScopeType.This
     ) {
       this.addError(
-        new FieldCantBeReferencedInFunction(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
-        ),
+        FieldCantBeReferencedInFunctionError(asSpan(ctx.start)),
       );
     }
   };
@@ -206,24 +162,14 @@ export class JackValidatorListener extends JackParserListener {
       this.subroutineType == SubroutineType.Function
     ) {
       this.addError(
-        new ThisCantBeReferencedInFunction(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
-        ),
+        ThisCantBeReferencedInFunctionError(asSpan(ctx.start))
       );
     }
   };
 
   override enterStatement = (ctx: StatementContext) => {
     if (this.controlFlowGraphNode.returns == true) {
-      this.addError(
-        new UnreachableCodeError(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.stop?.stop ?? ctx.start.stop,
-        ),
-      );
+      this.addError( UnreachableCodeError( asSpan(ctx.start, ctx.stop)),);
       this.stopProcessingErrorsInThisScope = true;
     }
   };
@@ -280,21 +226,13 @@ export class JackValidatorListener extends JackParserListener {
           case "int":
             if (constantCtx.INTEGER_LITERAL() === null) {
               this.addError(
-                new WrongLiteralTypeError(
-                  ctx.start.line,
-                  ctx.start.start,
-                  ctx.start.stop,
-                  type,
-                ),
+                WrongLiteralTypeError(asSpan(ctx.start), type,),
               );
             } else {
               const value = parseInt(constantCtx.INTEGER_LITERAL().getText());
               if (value > intRange.max) {
                 this.addError(
-                  new IntLiteralIsOutOfRange(
-                    ctx.start.line,
-                    ctx.start.start,
-                    ctx.start.stop,
+                  IntLiteralIsOutOfRangeError(asSpan(ctx.start),
                     value,
                     intRange.min,
                     intRange.max,
@@ -306,22 +244,14 @@ export class JackValidatorListener extends JackParserListener {
           case "boolean":
             if (constantCtx.booleanLiteral() === null) {
               this.addError(
-                new WrongLiteralTypeError(
-                  ctx.start.line,
-                  ctx.start.start,
-                  ctx.start.stop,
-                  type,
-                ),
+                WrongLiteralTypeError( asSpan(ctx.start), type,),
               );
             }
             break;
           case "String":
             if (constantCtx.STRING_LITERAL() === null) {
               this.addError(
-                new WrongLiteralTypeError(
-                  ctx.start.line,
-                  ctx.start.start,
-                  ctx.start.stop,
+                WrongLiteralTypeError(asSpan(ctx.start),
                   type.toLowerCase(),
                 ),
               );
@@ -346,10 +276,7 @@ export class JackValidatorListener extends JackParserListener {
       );
       if (-value < intRange.min) {
         this.addError(
-          new IntLiteralIsOutOfRange(
-            ctx.start.line,
-            ctx.start.start,
-            ctx.start.stop,
+          IntLiteralIsOutOfRangeError(asSpan(ctx.start),
             value,
             intRange.min,
             intRange.max,
@@ -371,10 +298,7 @@ export class JackValidatorListener extends JackParserListener {
     const symbol = this.globalSymbolTable[subroutineIdText];
     if (symbol == undefined) {
       this.addError(
-        new UnknownSubroutineCallError(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
+        UnknownSubroutineCallError(asSpan(ctx.start),
           subroutineId.subroutineName().getText(),
           subroutineId.className()?.getText(),
         ),
@@ -386,10 +310,7 @@ export class JackValidatorListener extends JackParserListener {
         callType == CallType.ClassFunctionOrConstructor
       ) {
         this.addError(
-          new MethodCalledAsFunctionError(
-            ctx.start.line,
-            ctx.start.start,
-            ctx.start.stop,
+          MethodCalledAsFunctionError(asSpan(ctx.start),
             subroutineId.subroutineName().getText(),
           ),
         );
@@ -400,10 +321,7 @@ export class JackValidatorListener extends JackParserListener {
         callType == CallType.LocalMethod
       ) {
         this.addError(
-          new FunctionCalledAsMethodError(
-            ctx.start.line,
-            ctx.start.start,
-            ctx.start.stop,
+          FunctionCalledAsMethodError(asSpan(ctx.start),
             subroutineId.subroutineName().getText(),
           ),
         );
@@ -412,13 +330,11 @@ export class JackValidatorListener extends JackParserListener {
         const l = ctx.expressionList().expression_list().length;
         if (assertExists(symbol.subroutineInfo).paramsCount != l) {
           this.addError(
-            new IncorrectParamsNumberInSubroutineCallError(
-              ctx.start.line,
-              ctx.start.start,
-              ctx.start.stop,
+            IncorrectParamsNumberInSubroutineCallError(
+            asSpan(ctx.start),
               subroutineId.getText(),
               assertExists(symbol.subroutineInfo).paramsCount,
-              l,
+              assertExists(symbol.subroutineInfo?.localVarsCount),
             ),
           );
         }
@@ -430,20 +346,12 @@ export class JackValidatorListener extends JackParserListener {
     const lastToken = assertExists(ctx.stop);
     if (returnsVoid && !this.subroutineShouldReturnVoidType) {
       this.addError(
-        new NonVoidFunctionNoReturnError(
-          lastToken.line,
-          lastToken.start,
-          lastToken.stop,
-        ),
+        NonVoidFunctionNoReturnError(asSpan(ctx.stop ?? ctx.start))
       );
     }
     if (!returnsVoid && this.subroutineShouldReturnVoidType) {
       this.addError(
-        new VoidSubroutineReturnsValueError(
-          lastToken.line,
-          lastToken.start,
-          lastToken.stop,
-        ),
+        VoidSubroutineReturnsValueError(asSpan(ctx.start)),
       );
     }
     this.controlFlowGraphNode.returns = true;
@@ -455,10 +363,8 @@ export class JackValidatorListener extends JackParserListener {
         ctx.expression().constant().THIS_LITERAL() == null
       ) {
         this.addError(
-          new ConstructorMushReturnThis(
-            lastToken.line,
-            lastToken.start,
-            lastToken.stop,
+          ConstructorMushReturnThisError(
+            asSpan(ctx.stop ?? ctx.start),
           ),
         );
       }
@@ -469,10 +375,10 @@ export class JackValidatorListener extends JackParserListener {
     if (!this.controlFlowGraphNode.returns) {
       const lastToken = assertExists(ctx.stop);
       this.addError(
-        new SubroutineNotAllPathsReturnError(
-          lastToken.line,
-          lastToken.start,
-          lastToken.stop,
+
+        SubroutineNotAllPathsReturnError(
+          //TODO: change this and similar
+          asSpan(ctx.stop ?? ctx.start),
           this.subroutineName,
         ),
       );
@@ -498,12 +404,7 @@ export class JackValidatorListener extends JackParserListener {
   ) {
     if (this.localSymbolTable.lookup(name)) {
       this.addError(
-        new DuplicatedVariableException(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
-          name,
-        ),
+        DuplicatedVariableError (asSpan(ctx.start), name)
       );
     } else {
       this.localSymbolTable.defineArgument(name, type, inMethod);
@@ -517,10 +418,8 @@ export class JackValidatorListener extends JackParserListener {
   ) {
     if (this.localSymbolTable.lookup(name)) {
       this.addError(
-        new DuplicatedVariableException(
-          ctx.start.line,
-          ctx.start.start,
-          ctx.start.stop,
+        DuplicatedVariableError (
+          asSpan(ctx.start),
           name,
         ),
       );

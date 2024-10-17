@@ -4,7 +4,7 @@ import {
   SubroutineDeclarationContext,
   VarNameInDeclarationContext,
 } from "../generated/JackParser.js";
-import { DuplicatedClassError, DuplicatedSubroutineError } from "../error.js";
+import { asSpan, DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error.js";
 import { builtInSymbols, builtInTypes } from "../builtins.js";
 import {
   GenericSymbol,
@@ -24,7 +24,7 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
   // key can be class or <class>.<subroutine_name>
   public globalSymbolTable: GlobalSymbolTable = structuredClone(builtInSymbols);
   public className = "";
-  public errors: DuplicatedSubroutineError[] = [];
+  public errors: JackCompilerError[] = [];
   private subRoutineInfo: SubroutineInfo = {} as SubroutineInfo;
   private subroutineVarsCount = 0;
   private stopProcessingSubroutines = false;
@@ -35,11 +35,9 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
     const id = classNameCtx.IDENTIFIER();
     const className = id.getText();
     if (this.globalSymbolTable[className] != undefined) {
-      const e = new DuplicatedClassError(
-        classNameCtx.start.line,
-        classNameCtx.start.start,
-        assertExists(classNameCtx.stop).stop + 1,
-        className,
+      //TODO: RL check on UI
+       const e = DuplicatedClassError(
+        asSpan(ctxClassName.start, ctxClassName.stop), className
       );
       this.errors.push(e);
       return;
@@ -65,10 +63,12 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
     const id = this.className + "." + subroutineName;
     if (this.globalSymbolTable[id] != undefined) {
       this.errors.push(
-        new DuplicatedSubroutineError(
-          nameCtx.IDENTIFIER().symbol.line,
-          nameCtx.start.start,
-          nameCtx.start.stop,
+        DuplicatedSubroutineError(
+          {
+          line: nameCtx.IDENTIFIER().symbol.line,
+          start: nameCtx.start.start,
+          end: nameCtx.start.stop,
+      },
           subroutineName,
         ),
       );

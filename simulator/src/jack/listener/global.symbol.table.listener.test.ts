@@ -1,22 +1,20 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import path from "path";
-import {
-  DuplicatedClassError,
-  DuplicatedSubroutineError,
-  JackCompilerError,
-} from "../error";
-import { JackGlobalSymbolTableListener } from "./global.symbol.table.listener";
-import { createSubroutineSymbol, SubroutineType } from "../symbol";
 import { builtInSymbols } from "../builtins";
+import {
+  JackCompilerErrorType
+} from "../error";
+import { createSubroutineSymbol, SubroutineType } from "../symbol";
 import {
   getTestResourcePath,
   listenToTheTree,
   parseJackFile,
   parseJackText,
 } from "../test.helper";
+import { JackGlobalSymbolTableListener } from "./global.symbol.table.listener";
 
-describe("Jack binder", () => {
+describe("Jack global symbol table listener", () => {
   const jestConsole = console;
   let fs: FileSystem;
   beforeEach(() => {
@@ -38,22 +36,22 @@ describe("Jack binder", () => {
               return 1;
           }
       }`;
-    testJackGlobalSymbolListener(input, DuplicatedSubroutineError);
+    testJackGlobalSymbolListener(input, "DuplicatedSubroutineError");
   });
 
   test("duplicated class", () => {
     const input = `
       class A {
       }`;
-    const binder = new JackGlobalSymbolTableListener();
-    testJackGlobalSymbolListener(input, undefined, binder);
-    testJackGlobalSymbolListener(input, DuplicatedClassError, binder);
+    const globalSymbolTableListener = new JackGlobalSymbolTableListener();
+    testJackGlobalSymbolListener(input, undefined, globalSymbolTableListener);
+    testJackGlobalSymbolListener(input, "DuplicatedClassError", globalSymbolTableListener);
   });
   test("duplicated built in class", () => {
     const input = `
       class Math {
       }`;
-    testJackGlobalSymbolListener(input, DuplicatedClassError);
+    testJackGlobalSymbolListener(input, "DuplicatedClassError");
   });
   test("basic", async () => {
     const expected = {
@@ -64,12 +62,12 @@ describe("Jack binder", () => {
       "Fraction.getNumerator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0,
+        0
       ),
       "Fraction.getDenominator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0,
+        0
       ),
       "Fraction.plus": createSubroutineSymbol(1, SubroutineType.Method, 1),
       "Fraction.dispose": createSubroutineSymbol(0, SubroutineType.Method, 0),
@@ -92,28 +90,26 @@ describe("Jack binder", () => {
     expect(globalSymbolsListener.globalSymbolTable).toEqual(expected);
   });
 });
-function testJackGlobalSymbolListener<
-  T extends new (...args: any[]) => JackCompilerError,
->(
+function testJackGlobalSymbolListener<T extends JackCompilerErrorType>(
   input: string,
   expectedError?: T,
-  binder = new JackGlobalSymbolTableListener(),
+  globalSymbolTableListener = new JackGlobalSymbolTableListener()
 ) {
   const tree = parseJackText(input);
-  listenToTheTree(tree, binder);
-  const errors = binder.errors;
+  listenToTheTree(tree, globalSymbolTableListener);
+  const errors = globalSymbolTableListener.errors;
   if (expectedError) {
     if (errors.length > 1) {
       console.error("Errors", errors);
     }
     try {
-      expect(errors.length).toBe(1);
-      expect(errors[0]).toBeInstanceOf(expectedError);
+      expect(globalSymbolTableListener.errors.length).toBe(1);
+      expect(globalSymbolTableListener.errors[0].type).toBe(expectedError);
     } catch (e) {
       throw new Error(
-        `Expected error ${expectedError.name} but got '` +
-          errors.join(",") +
-          "'",
+        `Expected error ${expectedError} but got '` +
+          JSON.stringify(globalSymbolTableListener.errors) +
+          "'"
       );
     }
   } else {

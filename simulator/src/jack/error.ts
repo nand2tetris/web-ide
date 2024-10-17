@@ -63,7 +63,7 @@ export const DuplicatedClassError = (span: Span, className: string) =>
 
 export const DuplicatedSubroutineError = (span: Span, subroutineName: string) =>
   makeJackCompilerError(
-    "DuplicatedClassError",
+    "DuplicatedSubroutineError",
     span,
     `Subroutine ${subroutineName} is already defined.`
   );
@@ -131,8 +131,8 @@ export const IntLiteralIsOutOfRangeError = (
     `Integer constant(${value}) is out of range. Min value is ${min} and max value is ${max}`
   );
 
-export const LexerOrParserError = (span: Span) =>
-  makeJackCompilerError("LexerOrParserError", span);
+export const LexerOrParserError = (span: Span, msg?: string) =>
+  makeJackCompilerError("LexerOrParserError", span, msg);
 
 export const MethodCalledAsFunctionError = (span: Span, subroutineId: string) =>
   makeJackCompilerError(

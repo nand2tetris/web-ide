@@ -782,7 +782,7 @@ function testValidator<T extends JackCompilerErrorType>(
   globalSymbolTable: Record<string, GenericSymbol> = {},
   filename?: string,
 ) {
-  const errorListener = new CustomErrorListener();
+  const errorListener = new JackCustomErrorListener();
   const tree = parseJackText(src, errorListener);
   const listener =
     filename != null
@@ -799,7 +799,7 @@ function testValidator<T extends JackCompilerErrorType>(
     } catch (e) {
       throw new Error(
         `Expected error ${expectedError} but got '` +
-          validator.errors.join(",") +
+          JSON.stringify(validator.errors) +
           "'",
       );
     }

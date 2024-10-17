@@ -4,7 +4,12 @@ import {
   SubroutineDeclarationContext,
   VarNameInDeclarationContext,
 } from "../generated/JackParser.js";
-import { asSpan, DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error.js";
+import {
+  asSpan,
+  DuplicatedClassError,
+  DuplicatedSubroutineError,
+  JackCompilerError,
+} from "../error.js";
 import { builtInSymbols, builtInTypes } from "../builtins.js";
 import {
   GenericSymbol,
@@ -13,7 +18,6 @@ import {
   SubroutineType,
 } from "../symbol.js";
 import JackParserListener from "../generated/JackParserListener.js";
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 const primitives = new Set(builtInTypes);
 export type Primitive = typeof primitives extends Set<infer S> ? S : never;
@@ -36,9 +40,7 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
     const className = id.getText();
     if (this.globalSymbolTable[className] != undefined) {
       //TODO: RL check on UI
-       const e = DuplicatedClassError(
-        asSpan(ctxClassName.start, ctxClassName.stop), className
-      );
+      const e = DuplicatedClassError(asSpan(id.symbol, id.symbol), className);
       this.errors.push(e);
       return;
     }
@@ -65,12 +67,12 @@ export class JackGlobalSymbolTableListener extends JackParserListener {
       this.errors.push(
         DuplicatedSubroutineError(
           {
-          line: nameCtx.IDENTIFIER().symbol.line,
-          start: nameCtx.start.start,
-          end: nameCtx.start.stop,
-      },
-          subroutineName,
-        ),
+            line: nameCtx.IDENTIFIER().symbol.line,
+            start: nameCtx.start.start,
+            end: nameCtx.start.stop,
+          },
+          subroutineName
+        )
       );
       this.stopProcessingSubroutines = true;
     } else {

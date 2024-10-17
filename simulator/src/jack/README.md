@@ -12,7 +12,7 @@ You can read more about this design patterns and the difference between them in 
 For jack we use next listeners:
 
 - Error listener - listens to lexer and parser errors
-- Binder listener - creates global symbol table (classes and subroutines symbols)
+- Global symbol table listener - creates global symbol table (classes and subroutines symbols)
 - Validator listener - validates jack program
 - VM Writer listener - generates VM code
 

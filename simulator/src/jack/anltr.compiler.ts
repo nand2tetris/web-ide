@@ -103,19 +103,19 @@ function toCompilerError(errors: JackCompilerError[]): CompilationError {
 }
 
 export class JackCompiler {
-  private binder = new JackGlobalSymbolTableListener();
+  private globalSymbolTableListener = new JackGlobalSymbolTableListener();
   private errorListener = new JackCustomErrorListener();
   validate(
     tree: ProgramContext,
     filename?: string,
   ): ProgramContext | JackCompilerError[] {
-    if (Object.keys(this.binder.globalSymbolTable).length == 0) {
+    if (Object.keys(this.globalSymbolTableListener.globalSymbolTable).length == 0) {
       throw new Error(
         "Please populate global symbol table using parserAndBind method",
       );
     }
     const validator = new JackValidatorListener(
-      this.binder.globalSymbolTable,
+      this.globalSymbolTableListener.globalSymbolTable,
       filename,
     );
     ParseTreeWalker.DEFAULT.walk(validator, tree);
@@ -133,7 +133,7 @@ export class JackCompiler {
       return errors;
     }
     const validateTree = treeOrErrors as ProgramContext;
-    const vmWriter = new JackVMWriter(this.binder.globalSymbolTable);
+    const vmWriter = new JackVMWriter(this.globalSymbolTableListener.globalSymbolTable);
     ParseTreeWalker.DEFAULT.walk(vmWriter, validateTree);
     return vmWriter.result;
   }
@@ -151,10 +151,10 @@ export class JackCompiler {
       console.log("Errors when parsing or lexing");
       return this.errorListener.errors;
     }
-    ParseTreeWalker.DEFAULT.walk(this.binder, tree);
-    if (this.binder.errors.length > 0) {
-      console.log("Errors in binder");
-      return this.binder.errors;
+    ParseTreeWalker.DEFAULT.walk(this.globalSymbolTableListener, tree);
+    if (this.globalSymbolTableListener.errors.length > 0) {
+      console.log("Errors when creating global symbol table");
+      return this.globalSymbolTableListener.errors;
     }
     return tree;
   }

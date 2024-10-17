@@ -19,7 +19,6 @@ ELSE: 'else';
 WHILE: 'while';
 RETURN: 'return';
 
-
 LBRACE: '{';
 RBRACE: '}';
 LPAREN: '(';
@@ -41,22 +40,20 @@ TILDE: '~';
 LESS_THAN: '<';
 GREATER_THAN: '>';
 
-WS: [ \t\r\n]+ -> skip;
-COMMENT: '/*' .*? '*/' -> skip;
-LINE_COMMENT: '//' ~[\r\n]* -> skip;
+WHITESPACE: [ \t\r\n\f]+ -> channel(HIDDEN);
+BLOCK_COMMENT: '/*' .*? ('*/' | EOF) -> channel(HIDDEN);
+LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
 
 INTEGER_LITERAL: [0-9]+;
-TRUE: 'true'; 
+TRUE: 'true';
 FALSE: 'false';
 NULL_LITERAL: 'null';
 THIS_LITERAL: 'this';
 
 IDENTIFIER: [a-zA-Z_] [a-zA-Z0-9_]*;
 
-STRING_LITERAL
-  : UnterminatedStringLiteral '"'
-  ;
-UnterminatedStringLiteral
-  : '"' ~["\\\r\n]*
-  ;
 
+
+STRING_LITERAL: '"' (~["\r\n])* '"';
+// STRING_LITERAL: UnterminatedStringLiteral '"';
+// UnterminatedStringLiteral: '"' ~["\\\r\n]*;

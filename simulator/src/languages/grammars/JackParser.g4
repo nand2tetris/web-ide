@@ -4,7 +4,7 @@ options {
 	tokenVocab = JackLexer;
 }
 @header {
-	import { SubroutineScope, LocalSymbolTable } from "../symbol";
+import { SubroutineScope, LocalSymbolTable } from "../symbol";
 }
 
 program: classDeclaration EOF;
@@ -34,7 +34,6 @@ rBrace: RBRACE;
 varDeclaration:
 	VAR varType varNameInDeclaration (COMMA varNameInDeclaration)* SEMICOLON;
 varNameInDeclaration: IDENTIFIER;
-varName: IDENTIFIER;
 statements: statement*;
 statement:
 	letStatement
@@ -75,16 +74,17 @@ expression:
 	| expression binaryOperator expression
 	| groupedExpression;
 
-groupedExpression: LPAREN expression RPAREN;
-unaryOperation: unaryOperator expression;
-arrayAccess: varName LBRACKET expression RBRACKET;
-
 constant:
 	INTEGER_LITERAL
 	| STRING_LITERAL
 	| booleanLiteral
 	| NULL_LITERAL
 	| THIS_LITERAL;
+varName: IDENTIFIER;
+arrayAccess: varName LBRACKET expression RBRACKET;
+unaryOperation: unaryOperator expression;
+groupedExpression: LPAREN expression RPAREN;
+
 booleanLiteral: TRUE | FALSE;
 unaryOperator: TILDE | MINUS;
 binaryOperator:

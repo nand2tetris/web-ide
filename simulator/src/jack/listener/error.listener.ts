@@ -11,10 +11,7 @@ import {
   Recognizer,
   Token,
 } from "antlr4ng";
-import {
-  JackCompilerError,
-  LexerOrParserError
-} from "../error.js";
+import { JackCompilerError, LexerOrParserError } from "../error.js";
 import { assertExists } from "./common.js";
 
 export class CustomErrorListener implements ANTLRErrorListener {
@@ -25,31 +22,34 @@ export class CustomErrorListener implements ANTLRErrorListener {
     line: number,
     _charPositionInLine: number,
     msg: string,
-    e: RecognitionException | null
+    e: RecognitionException | null,
   ): void {
     if (offendingSymbol != null || (e != null && e.offendingToken != null)) {
       const t = offendingSymbol ?? (e?.offendingToken as Token);
       this.errors.push(
-        LexerOrParserError({ line: line, start: t.start, end: t.stop + 1 }, msg)
+        LexerOrParserError(
+          { line: line, start: t.start, end: t.stop + 1 },
+          msg,
+        ),
       );
     } else if (e instanceof NoViableAltException) {
       //theoretically we can't get this exception
       const token = assertExists(
         e.startToken ?? e.offendingToken,
-        "Cant find start token for NoViableAltException"
+        "Cant find start token for NoViableAltException",
       );
       this.errors.push(
         LexerOrParserError(
           { line: token.line, start: token.start, end: token.stop },
-          msg
-        )
+          msg,
+        ),
       );
     } else if (e instanceof LexerNoViableAltException) {
       this.errors.push(
         LexerOrParserError(
           { line: line, start: e.startIndex, end: e.startIndex + 1 },
-          msg
-        )
+          msg,
+        ),
       );
     } else {
       console.error("Don't know how to handle this error");
@@ -64,7 +64,7 @@ export class CustomErrorListener implements ANTLRErrorListener {
     _stopIndex: number,
     _exact: boolean,
     _ambigAlts: BitSet | undefined,
-    _configs: ATNConfigSet
+    _configs: ATNConfigSet,
   ): void {}
   reportAttemptingFullContext(
     _recognizer: Parser,
@@ -72,7 +72,7 @@ export class CustomErrorListener implements ANTLRErrorListener {
     _startIndex: number,
     _stopIndex: number,
     _conflictingAlts: BitSet | undefined,
-    _configs: ATNConfigSet
+    _configs: ATNConfigSet,
   ): void {}
   reportContextSensitivity(
     _recognizer: Parser,
@@ -80,6 +80,6 @@ export class CustomErrorListener implements ANTLRErrorListener {
     _startIndex: number,
     _stopIndex: number,
     _prediction: number,
-    _configs: ATNConfigSet
+    _configs: ATNConfigSet,
   ): void {}
 }

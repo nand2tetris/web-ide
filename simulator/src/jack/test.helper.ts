@@ -3,9 +3,13 @@ import path from "path";
 import { JackCompilerError } from "./error";
 import { CustomErrorListener } from "./listener/error.listener";
 import { JackParser, ProgramContext } from "./generated/JackParser";
-import { CharStream, CommonTokenStream, ParseTreeListener, ParseTreeWalker } from "antlr4ng";
+import {
+  CharStream,
+  CommonTokenStream,
+  ParseTreeListener,
+  ParseTreeWalker,
+} from "antlr4ng";
 import { JackLexer } from "./generated/JackLexer";
-
 
 export function parseJackFile(filePath: string, trace = false) {
   const errorListener = new CustomErrorListener();

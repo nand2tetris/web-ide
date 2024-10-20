@@ -1,4 +1,3 @@
-
 import { GlobalSymbolTableListener } from "./listener/global.symbol.listener.js";
 import { CustomErrorListener } from "./listener/error.listener.js";
 import { ValidatorListener } from "./listener/validator.listener.js";
@@ -110,7 +109,9 @@ export class JackCompiler {
     tree: ProgramContext,
     filename?: string,
   ): ProgramContext | JackCompilerError[] {
-    if (Object.keys(this.globalSymbolTableListener.globalSymbolTable).length == 0) {
+    if (
+      Object.keys(this.globalSymbolTableListener.globalSymbolTable).length == 0
+    ) {
       throw new Error(
         "Please populate global symbol table using parserAndBind method",
       );
@@ -134,7 +135,9 @@ export class JackCompiler {
       return errors;
     }
     const validateTree = treeOrErrors as ProgramContext;
-    const vmWriter = new VMWriter(this.globalSymbolTableListener.globalSymbolTable);
+    const vmWriter = new VMWriter(
+      this.globalSymbolTableListener.globalSymbolTable,
+    );
     ParseTreeWalker.DEFAULT.walk(vmWriter, validateTree);
     return vmWriter.result;
   }

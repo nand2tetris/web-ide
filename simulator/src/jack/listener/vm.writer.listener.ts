@@ -79,12 +79,12 @@ export class VMWriter extends JackParserListener {
     const symbol = this.globalSymbolTable[this.className + "." + name];
     if (symbol == undefined) {
       throw new Error(
-        `Can't find subroutine ${name} in class ${this.className} in symbol table`
+        `Can't find subroutine ${name} in class ${this.className} in symbol table`,
       );
     }
     if (symbol.subroutineInfo == null) {
       throw new Error(
-        `Subroutine info not found for subroutine ${name} in class ${this.className}`
+        `Subroutine info not found for subroutine ${name} in class ${this.className}`,
       );
     }
     this.result += `function ${this.className}.${name} ${symbol.subroutineInfo.localVarsCount}\n`;
@@ -159,20 +159,20 @@ export class VMWriter extends JackParserListener {
     if (ctx.varName() != null) {
       const varNameCtx = assertExists(
         ctx.varName(),
-        "Variable name cannot be null"
+        "Variable name cannot be null",
       );
       const varName = varNameCtx.IDENTIFIER().getText();
       const symbol = this.localSymbolTable.lookup(varName);
       if (symbol == undefined) {
         throw new Error(
-          `Cannot find variable ${varName} in arguments or local variables`
+          `Cannot find variable ${varName} in arguments or local variables`,
         );
       }
       this.pushSymbolOntoStack(symbol);
     } else if (ctx.binaryOperator() != null) {
       const binaryOp = assertExists(
         ctx.binaryOperator(),
-        "Binary operator cannot be null"
+        "Binary operator cannot be null",
       ).getText();
       if (binaryOperationToVmCmd[binaryOp] == undefined) {
         throw new Error(`Unknown binary operator ${binaryOp}`);
@@ -181,7 +181,7 @@ export class VMWriter extends JackParserListener {
     } else if (ctx.unaryOperation() != null) {
       const unaryOp = assertExists(
         ctx.unaryOperation()?.unaryOperator(),
-        "Unary operation cannot be null"
+        "Unary operation cannot be null",
       ).getText();
       if (unaryOperationToVmCmd[unaryOp] == null) {
         throw new Error(`Unknown unary operator ${unaryOp}`);
@@ -196,11 +196,11 @@ export class VMWriter extends JackParserListener {
     if (ctx.varName() != null) {
       const varNameCtx = assertExists(ctx.varName(), "Var name cannot be null");
       const symbol = this.localSymbolTable.lookup(
-        varNameCtx.IDENTIFIER().getText()
+        varNameCtx.IDENTIFIER().getText(),
       );
       if (symbol == undefined) {
         throw new Error(
-          `Can't find variable ${ctx.varName()?.IDENTIFIER().getText()} in local symbol table`
+          `Can't find variable ${ctx.varName()?.IDENTIFIER().getText()} in local symbol table`,
         );
       }
       this.result += `    pop ${scopeTypeToString(symbol.scope)} ${symbol.index}\n`;
@@ -254,7 +254,7 @@ export class VMWriter extends JackParserListener {
     const { callType, symbol } = getCallType(
       ctx.subroutineId(),
       this.className,
-      this.localSymbolTable
+      this.localSymbolTable,
     );
     if (callType === CallType.VarMethod) {
       if (symbol == null)
@@ -270,7 +270,7 @@ export class VMWriter extends JackParserListener {
     const { callType, subroutineIdText } = getCallType(
       ctx.subroutineId(),
       this.className,
-      this.localSymbolTable
+      this.localSymbolTable,
     );
     switch (callType) {
       case CallType.ClassFunctionOrConstructor: {

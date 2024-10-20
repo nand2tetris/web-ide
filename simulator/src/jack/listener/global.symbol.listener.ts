@@ -3,7 +3,12 @@ import {
   SubroutineDeclarationContext,
   VarNameInDeclarationContext,
 } from "../generated/JackParser.js";
-import { ruleContextToSpan, DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error.js";
+import {
+  ruleContextToSpan,
+  DuplicatedClassError,
+  DuplicatedSubroutineError,
+  JackCompilerError,
+} from "../error.js";
 import {
   GenericSymbol,
   GlobalSymbolTable,
@@ -38,7 +43,7 @@ export class GlobalSymbolTableListener extends JackParserListener {
       }
       const e = DuplicatedClassError(
         ruleContextToSpan(classNameCtx),
-        className
+        className,
       );
       this.errors.push(e);
       return;
@@ -74,17 +79,12 @@ export class GlobalSymbolTableListener extends JackParserListener {
         throw new Error("Start token should not be null");
       }
       this.errors.push(
-         DuplicatedSubroutineError(
-          ruleContextToSpan(nameCtx),
-          subroutineName
-        )
+        DuplicatedSubroutineError(ruleContextToSpan(nameCtx), subroutineName),
       );
       this.stopProcessingSubroutines = true;
     } else {
       this.subroutineId = id;
-      const params = subroutineWithoutTypeCtx
-        .parameterList()
-        .parameter()
+      const params = subroutineWithoutTypeCtx.parameterList().parameter();
       this.subRoutineInfo = {
         type: subroutineType,
         paramsCount: params.length,

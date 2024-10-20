@@ -12,7 +12,7 @@ import {
   Token,
 } from "antlr4ng";
 import { JackCompilerError, LexerOrParserError } from "../error.js";
-import { assertExists } from "./common.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 export class CustomErrorListener implements ANTLRErrorListener {
   public errors: JackCompilerError[] = [];
@@ -65,7 +65,9 @@ export class CustomErrorListener implements ANTLRErrorListener {
     _exact: boolean,
     _ambigAlts: BitSet | undefined,
     _configs: ATNConfigSet,
-  ): void {}
+  ): void {
+    return;
+  }
   reportAttemptingFullContext(
     _recognizer: Parser,
     _dfa: DFA,
@@ -73,7 +75,9 @@ export class CustomErrorListener implements ANTLRErrorListener {
     _stopIndex: number,
     _conflictingAlts: BitSet | undefined,
     _configs: ATNConfigSet,
-  ): void {}
+  ): void {
+    return;
+  }
   reportContextSensitivity(
     _recognizer: Parser,
     _dfa: DFA,
@@ -81,5 +85,7 @@ export class CustomErrorListener implements ANTLRErrorListener {
     _stopIndex: number,
     _prediction: number,
     _configs: ATNConfigSet,
-  ): void {}
+  ): void {
+    return;
+  }
 }

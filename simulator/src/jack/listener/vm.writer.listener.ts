@@ -20,7 +20,8 @@ import {
   scopeTypeToString,
   VariableSymbol,
 } from "../symbol.js";
-import { assertExists, CallType, getCallType } from "./common.js";
+import { CallType, getCallType } from "./common.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 const binaryOperationToVmCmd: Record<string, string> = {
   "+": "add",

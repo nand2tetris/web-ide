@@ -8,7 +8,7 @@ import {
   parseJackText,
   testResourceDirs,
 } from "./test.helper";
-import { JackGlobalSymbolTableListener } from "./listener/global.symbol.table.listener";
+import { GlobalSymbolTableListener } from "./listener/global.symbol.listener";
 
 describe("Jack parser", () => {
   const jestConsole = console;
@@ -51,7 +51,7 @@ function testJackDir(testFolder: string): void {
     const tree = parseJackFile(filePath);
     const globalSymbolsListener = listenToTheTree(
       tree,
-      new JackGlobalSymbolTableListener(),
+      new GlobalSymbolTableListener(),
     );
     const symbolsErrors = globalSymbolsListener.errors.join("\n");
     try {

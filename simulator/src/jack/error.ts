@@ -1,11 +1,31 @@
-import { Token } from "antlr4";
-import { CompilationError, Span } from "../languages/base";
+import { ParserRuleContext, TerminalNode } from "antlr4ng";
+import { assertExists } from "./listener/common";
 
-/** Utility to convert an antlr Token to a nand2tetris Span */
-export const asSpan = (
-  { line, start, stop: startEnd }: Token,
-  stop?: Token
-): Span => ({ line, start, end: stop ? stop.stop : startEnd });
+export interface Span {
+  start: number;
+  end: number;
+  line: number;
+}
+export const terminalNodeToSpan = (node: TerminalNode): Span => {
+  const s = node.getSymbol();
+  return {
+    line: s.line,
+    start: s.start,
+    end: s.stop + 1,
+  };
+};
+
+export const ruleContextToSpan = (ctx: ParserRuleContext): Span => {
+  const start = assertExists(
+    ctx.start,
+    " Cannot find start token when creating an error"
+  );
+  return {
+    line: start.line,
+    start: start.start,
+    end: ctx.stop ? ctx.stop.stop + 1 : start.stop,
+  };
+};
 
 export type JackCompilerErrorType =
   | "ConstructorMushReturnThisError"
@@ -30,20 +50,21 @@ export type JackCompilerErrorType =
   | "VoidSubroutineReturnsValueError"
   | "WrongLiteralTypeError";
 
-export interface JackCompilerError extends CompilationError {
+export interface JackCompilerError {
   type: JackCompilerErrorType;
   span: Span;
+  msg: string;
 }
 
 export function makeJackCompilerError(
   type: JackCompilerErrorType,
   span: Span,
-  msg?: string
+  msg: string
 ): JackCompilerError {
   return {
     type,
     span,
-    message: `${type} (${span.line}:${span.start}:${span.end}${msg ? " " + msg : ""})`,
+    msg,
   };
 }
 
@@ -116,8 +137,7 @@ export const IncorrectParamsNumberInSubroutineCallError = (
   makeJackCompilerError(
     "IncorrectParamsNumberInSubroutineCallError",
     span,
-    `Subroutine ${subroutineName} (declared to accept ${expectedParamsCount} parameter(s)) called with  ${actualParamsCount} parameter(s)`
-  );
+    `Expected ${expectedParamsCount} arguments, but got ${actualParamsCount}`);
 
 export const IntLiteralIsOutOfRangeError = (
   span: Span,
@@ -131,7 +151,7 @@ export const IntLiteralIsOutOfRangeError = (
     `Integer constant(${value}) is out of range. Min value is ${min} and max value is ${max}`
   );
 
-export const LexerOrParserError = (span: Span, msg?: string) =>
+export const LexerOrParserError = (span: Span, msg: string) =>
   makeJackCompilerError("LexerOrParserError", span, msg);
 
 export const MethodCalledAsFunctionError = (span: Span, subroutineId: string) =>
@@ -191,7 +211,7 @@ export const UnknownSubroutineCallError = (
   );
 
 export const UnreachableCodeError = (span: Span) =>
-  makeJackCompilerError("UnreachableCodeError", span);
+  makeJackCompilerError("UnreachableCodeError", span, `Unreachable code`);
 
 export const VoidSubroutineReturnsValueError = (span: Span) =>
   makeJackCompilerError(
@@ -200,9 +220,9 @@ export const VoidSubroutineReturnsValueError = (span: Span) =>
     "Cannot return a value from a void subroutine"
   );
 
-export const WrongLiteralTypeError = (span: Span, typeName: string) =>
+export const WrongLiteralTypeError = (span: Span, expectedTypeName: string, actualTypeName:string) =>
   makeJackCompilerError(
     "WrongLiteralTypeError",
     span,
-    `Value is expected to be of type ${typeName}`
+    `Cannot assign ${actualTypeName} type to ${expectedTypeName}`
   );

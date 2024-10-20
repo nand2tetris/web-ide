@@ -11,6 +11,7 @@ export interface SubroutineInfo {
   type: SubroutineType;
   localVarsCount?: number;
 }
+
 export type GlobalSymbolTable = Record<string, GenericSymbol>;
 /**
  * Symbol that represents class or a subroutine

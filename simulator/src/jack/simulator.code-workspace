@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../nand2tetris-jack-lsp/jack-compiler"
+		}
+	],
+	"settings": {}
+}

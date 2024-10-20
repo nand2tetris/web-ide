@@ -1,5 +1,5 @@
-import { SubroutineIdContext } from "../generated/JackParser.js";
-import { LocalSymbolTable, VariableSymbol } from "../symbol.js";
+import { SubroutineIdContext } from "../generated/JackParser";
+import { LocalSymbolTable, VariableSymbol } from "../symbol";
 
 export interface CallTypeResult {
   callType: CallType;
@@ -15,14 +15,14 @@ export enum CallType {
 export function getCallType(
   subroutineId: SubroutineIdContext,
   className: string,
-  localSymbolTable: LocalSymbolTable,
+  localSymbolTable: LocalSymbolTable
 ): CallTypeResult {
   if (subroutineId.DOT() == undefined) {
     //local method
     return {
       callType: CallType.LocalMethod,
       subroutineIdText:
-        className + "." + subroutineId.subroutineName().getText(),
+        className + "." + (subroutineId.subroutineName()?.getText() ?? ""),
     } as CallTypeResult;
   } else {
     // var method
@@ -42,4 +42,14 @@ export function getCallType(
       } as CallTypeResult;
     }
   }
+}
+
+export function assertExists<T>(
+  val: T | undefined | null,
+  message?: string
+): T {
+  if (val == null) {
+    throw new Error(message ?? "Cannot be null or undefined");
+  }
+  return val;
 }

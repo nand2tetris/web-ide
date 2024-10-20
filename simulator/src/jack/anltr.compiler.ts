@@ -1,11 +1,13 @@
-import { JackGlobalSymbolTableListener } from "./listener/global.symbol.table.listener.js";
-import { JackCustomErrorListener } from "./listener/error.listener.js";
-import { JackValidatorListener } from "./listener/validator.listener.js";
+
+import { GlobalSymbolTableListener } from "./listener/global.symbol.listener.js";
+import { CustomErrorListener } from "./listener/error.listener.js";
+import { ValidatorListener } from "./listener/validator.listener.js";
 import { JackCompilerError, LexerOrParserError } from "./error.js";
-import { JackVMWriter } from "./listener/vm.writer.listener.js";
-import JackParser, { ProgramContext } from "./generated/JackParser.js";
-import { CharStreams, CommonTokenStream, ParseTreeWalker } from "antlr4";
-import JackLexer from "./generated/JackLexer.js";
+import { VMWriter } from "./listener/vm.writer.listener.js";
+import { GlobalSymbolTable } from "./symbol.js";
+import { JackParser, ProgramContext } from "./generated/JackParser.js";
+import { JackLexer } from "./generated/JackLexer.js";
+import { CharStream, CommonTokenStream, ParseTreeWalker } from "antlr4ng";
 import { CompilationError } from "../languages/base.js";
 
 export function compile(
@@ -97,14 +99,14 @@ function _do(
 function toCompilerError(errors: JackCompilerError[]): CompilationError {
   const err = errors[0];
   return {
-    message: `Line ${err.span.line}: ${err.message}`,
+    message: `Line ${err.span.line}: ${err.msg}`,
     span: err.span,
   } as CompilationError;
 }
 
 export class JackCompiler {
-  private globalSymbolTableListener = new JackGlobalSymbolTableListener();
-  private errorListener = new JackCustomErrorListener();
+  private globalSymbolTableListener = new GlobalSymbolTableListener();
+  private errorListener = new CustomErrorListener();
   validate(
     tree: ProgramContext,
     filename?: string,
@@ -114,7 +116,7 @@ export class JackCompiler {
         "Please populate global symbol table using parserAndBind method",
       );
     }
-    const validator = new JackValidatorListener(
+    const validator = new ValidatorListener(
       this.globalSymbolTableListener.globalSymbolTable,
       filename,
     );
@@ -133,13 +135,13 @@ export class JackCompiler {
       return errors;
     }
     const validateTree = treeOrErrors as ProgramContext;
-    const vmWriter = new JackVMWriter(this.globalSymbolTableListener.globalSymbolTable);
+    const vmWriter = new VMWriter(this.globalSymbolTableListener.globalSymbolTable);
     ParseTreeWalker.DEFAULT.walk(vmWriter, validateTree);
     return vmWriter.result;
   }
 
   parserAndBind(src: string): ProgramContext | JackCompilerError[] {
-    const lexer = new JackLexer(CharStreams.fromString(src));
+    const lexer = new JackLexer(CharStream.fromString(src));
     lexer.removeErrorListeners();
     lexer.addErrorListener(this.errorListener);
     const tokenStream = new CommonTokenStream(lexer);

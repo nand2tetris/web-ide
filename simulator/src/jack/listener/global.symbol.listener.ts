@@ -43,7 +43,7 @@ export class GlobalSymbolTableListener extends JackParserListener {
       }
       const e = DuplicatedClassError(
         ruleContextToSpan(classNameCtx),
-        className
+        className,
       );
       this.errors.push(e);
       return;
@@ -72,7 +72,7 @@ export class GlobalSymbolTableListener extends JackParserListener {
         throw new Error("Start token should not be null");
       }
       this.errors.push(
-        DuplicatedSubroutineError(ruleContextToSpan(nameCtx), subroutineName)
+        DuplicatedSubroutineError(ruleContextToSpan(nameCtx), subroutineName),
       );
       this.stopProcessingSubroutines = true;
     } else {

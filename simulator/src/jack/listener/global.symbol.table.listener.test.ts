@@ -2,9 +2,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import path from "path";
 import { builtInSymbols } from "../builtins";
-import {
-  JackCompilerErrorType
-} from "../error";
+import { JackCompilerErrorType } from "../error";
 import { createSubroutineSymbol, SubroutineType } from "../symbol";
 import {
   getTestResourcePath,
@@ -45,7 +43,11 @@ describe("Jack global symbol table listener", () => {
       }`;
     const globalSymbolTableListener = new GlobalSymbolTableListener();
     testJackGlobalSymbolListener(input, undefined, globalSymbolTableListener);
-    testJackGlobalSymbolListener(input, "DuplicatedClassError", globalSymbolTableListener);
+    testJackGlobalSymbolListener(
+      input,
+      "DuplicatedClassError",
+      globalSymbolTableListener,
+    );
   });
   test("duplicated built in class", () => {
     const input = `
@@ -62,12 +64,12 @@ describe("Jack global symbol table listener", () => {
       "Fraction.getNumerator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0
+        0,
       ),
       "Fraction.getDenominator": createSubroutineSymbol(
         0,
         SubroutineType.Method,
-        0
+        0,
       ),
       "Fraction.plus": createSubroutineSymbol(1, SubroutineType.Method, 1),
       "Fraction.dispose": createSubroutineSymbol(0, SubroutineType.Method, 0),
@@ -93,7 +95,7 @@ describe("Jack global symbol table listener", () => {
 function testJackGlobalSymbolListener<T extends JackCompilerErrorType>(
   input: string,
   expectedError?: T,
-  globalSymbolTableListener = new GlobalSymbolTableListener()
+  globalSymbolTableListener = new GlobalSymbolTableListener(),
 ) {
   const tree = parseJackText(input);
   listenToTheTree(tree, globalSymbolTableListener);
@@ -109,7 +111,7 @@ function testJackGlobalSymbolListener<T extends JackCompilerErrorType>(
       throw new Error(
         `Expected error ${expectedError} but got '` +
           JSON.stringify(globalSymbolTableListener.errors) +
-          "'"
+          "'",
       );
     }
   } else {

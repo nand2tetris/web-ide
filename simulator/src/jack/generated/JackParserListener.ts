@@ -3,7 +3,7 @@
 import { ErrorNode, ParseTreeListener, ParserRuleContext, TerminalNode } from "antlr4ng";
 
 
-import { SubroutineScope, LocalSymbolTable } from "../symbol";
+import { SubroutineScope, LocalSymbolTable } from "../symbol.js";
 
 
 import { ProgramContext } from "./JackParser.js";

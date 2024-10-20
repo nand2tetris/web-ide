@@ -14,8 +14,8 @@ import {
 import {
   JackCompilerError,
   LexerOrParserError
-} from "../error";
-import { assertExists } from "./common";
+} from "../error.js";
+import { assertExists } from "./common.js";
 
 export class CustomErrorListener implements ANTLRErrorListener {
   public errors: JackCompilerError[] = [];

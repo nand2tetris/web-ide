@@ -2,16 +2,16 @@ import {
   ClassDeclarationContext,
   SubroutineDeclarationContext,
   VarNameInDeclarationContext,
-} from "../generated/JackParser";
-import { ruleContextToSpan, DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error";
+} from "../generated/JackParser.js";
+import { ruleContextToSpan, DuplicatedClassError, DuplicatedSubroutineError, JackCompilerError } from "../error.js";
 import {
   GenericSymbol,
   GlobalSymbolTable,
   SubroutineInfo,
   SubroutineType,
-} from "../symbol";
-import { builtInSymbols } from "../builtins";
-import { JackParserListener } from "../generated/JackParserListener";
+} from "../symbol.js";
+import { builtInSymbols } from "../builtins.js";
+import { JackParserListener } from "../generated/JackParserListener.js";
 
 /**
  * Creates global symbol table that contains built-in functions and found classes and subroutines

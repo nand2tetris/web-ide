@@ -1,4 +1,4 @@
-import { JackParserListener } from "../generated/JackParserListener";
+import { JackParserListener } from "../generated/JackParserListener.js";
 import {
   ArrayAccessContext,
   ClassDeclarationContext,
@@ -13,14 +13,14 @@ import {
   SubroutineDeclarationContext,
   WhileExpressionContext,
   WhileStatementContext,
-} from "../generated/JackParser";
+} from "../generated/JackParser.js";
 import {
   GenericSymbol,
   LocalSymbolTable,
   scopeTypeToString,
   VariableSymbol,
-} from "../symbol";
-import { assertExists, CallType, getCallType } from "./common";
+} from "../symbol.js";
+import { assertExists, CallType, getCallType } from "./common.js";
 
 const binaryOperationToVmCmd: Record<string, string> = {
   "+": "add",

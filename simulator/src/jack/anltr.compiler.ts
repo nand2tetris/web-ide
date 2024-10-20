@@ -2,9 +2,8 @@
 import { GlobalSymbolTableListener } from "./listener/global.symbol.listener.js";
 import { CustomErrorListener } from "./listener/error.listener.js";
 import { ValidatorListener } from "./listener/validator.listener.js";
-import { JackCompilerError, LexerOrParserError } from "./error.js";
+import { JackCompilerError } from "./error.js";
 import { VMWriter } from "./listener/vm.writer.listener.js";
-import { GlobalSymbolTable } from "./symbol.js";
 import { JackParser, ProgramContext } from "./generated/JackParser.js";
 import { JackLexer } from "./generated/JackLexer.js";
 import { CharStream, CommonTokenStream, ParseTreeWalker } from "antlr4ng";
@@ -46,7 +45,7 @@ function _do(
   files: Record<string, string>,
   cmd: Command,
 ): Record<string, string | CompilationError> {
-  if (files instanceof LexerOrParserError) {
+  if (files.type == "LexerOrParserError") {
     throw new Error("Expected tree but got a lexer or parser error");
   }
   const result: Record<string, string | CompilationError> = {};

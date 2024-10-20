@@ -1,5 +1,5 @@
-import { SubroutineIdContext } from "../generated/JackParser";
-import { LocalSymbolTable, VariableSymbol } from "../symbol";
+import { SubroutineIdContext } from "../generated/JackParser.js";
+import { LocalSymbolTable, VariableSymbol } from "../symbol.js";
 
 export interface CallTypeResult {
   callType: CallType;

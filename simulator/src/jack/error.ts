@@ -1,5 +1,5 @@
 import { ParserRuleContext, TerminalNode } from "antlr4ng";
-import { assertExists } from "./listener/common";
+import { assertExists } from "./listener/common.js";
 
 export interface Span {
   start: number;

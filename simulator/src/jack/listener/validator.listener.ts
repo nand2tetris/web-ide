@@ -1,5 +1,5 @@
 import { TerminalNode } from "antlr4ng";
-import { builtInTypes, intRange } from "../builtins";
+import { builtInTypes, intRange } from "../builtins.js";
 import {
   ConstructorMushReturnThisError,
   DuplicatedVariableError,
@@ -22,7 +22,7 @@ import {
   UnreachableCodeError,
   VoidSubroutineReturnsValueError,
   WrongLiteralTypeError,
-} from "../error";
+} from "../error.js";
 import {
   ClassDeclarationContext,
   ClassVarDecContext,
@@ -43,15 +43,15 @@ import {
   VarNameInDeclarationContext,
   VarTypeContext,
   WhileStatementContext
-} from "../generated/JackParser";
-import { JackParserListener } from "../generated/JackParserListener";
+} from "../generated/JackParser.js";
+import { JackParserListener } from "../generated/JackParserListener.js";
 import {
   GenericSymbol,
   LocalSymbolTable,
   ScopeType,
   SubroutineType,
-} from "../symbol";
-import { assertExists, CallType, getCallType } from "./common";
+} from "../symbol.js";
+import { assertExists, CallType, getCallType } from "./common.js";
 /**
  * Validates Jack file
  */

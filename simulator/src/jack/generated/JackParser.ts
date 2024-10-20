@@ -9,7 +9,7 @@ import { JackParserListener } from "./JackParserListener.js";
 type int = number;
 
 
-import { SubroutineScope, LocalSymbolTable } from "../symbol";
+import { SubroutineScope, LocalSymbolTable } from "../symbol.js";
 
 
 export class JackParser extends antlr.Parser {

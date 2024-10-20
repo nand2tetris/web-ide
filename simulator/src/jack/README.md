@@ -23,19 +23,3 @@ Next command gives us ability to regenerate parser and lexer after we've changed
 ```
 npm run gen
 ```
-
-To run this command we would need to install [antlr-tools](https://github.com/antlr/antlr4-tools/blob/master/README.md).
-
-```
-pip install antlr4-tools
-```
-
-Underneath the covers previous command will install Java runtime(JRE)(if you don't have java installed on your machine) and antlr4-{version}-complete.jar from maven.
-
-Beside generating lexer and parser files this tools include `antlr4-parse` that you can use to parser an input jack file and visualize the AST tree or view the token stream in command line.
-
-Small note - If you are using VSCode there is an extension to work with ANTLR grammar files.
-
-# Working with typescript antlr runtime
-
-As ANTLR main target for web is Javascript it doesn't have a typescript source code in general sense. Basically typescript runtime is a collection of javascript files and `.d.ts` files to provide typescript types. If you want to find out what's going on underneath the covers go to [antlr github page](https://github.com/antlr/antlr4/tree/dev/runtime/JavaScript) and find the javascript sources.

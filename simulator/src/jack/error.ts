@@ -1,4 +1,4 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { ParserRuleContext, TerminalNode } from "antlr4ng";
 
 export interface Span {

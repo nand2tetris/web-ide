@@ -26,6 +26,8 @@ function Main.main 0
     push constant 33
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     call Output.println 0
+    pop temp 0
     push constant 0
     return

@@ -14,6 +14,7 @@ function Bat.new 0
     pop this 4
     push pointer 0
     call Bat.show 1
+    pop temp 0
     push pointer 0
     return
 function Bat.dispose 0
@@ -21,6 +22,7 @@ function Bat.dispose 0
     pop pointer 0
     push pointer 0
     call Memory.deAlloc 1
+    pop temp 0
     push constant 0
     return
 function Bat.show 0
@@ -29,8 +31,10 @@ function Bat.show 0
     push constant 1
     neg
     call Screen.setColor 1
+    pop temp 0
     push pointer 0
     call Bat.draw 1
+    pop temp 0
     push constant 0
     return
 function Bat.hide 0
@@ -38,8 +42,10 @@ function Bat.hide 0
     pop pointer 0
     push constant 0
     call Screen.setColor 1
+    pop temp 0
     push pointer 0
     call Bat.draw 1
+    pop temp 0
     push constant 0
     return
 function Bat.draw 0
@@ -54,6 +60,7 @@ function Bat.draw 0
     push this 3
     add
     call Screen.drawRectangle 4
+    pop temp 0
     push constant 0
     return
 function Bat.setDirection 0
@@ -80,10 +87,12 @@ function Bat.setWidth 0
     pop pointer 0
     push pointer 0
     call Bat.hide 1
+    pop temp 0
     push argument 1
     pop this 2
     push pointer 0
     call Bat.show 1
+    pop temp 0
     push constant 0
     return
 function Bat.move 0
@@ -108,6 +117,7 @@ function Bat.move 0
 label Bat_1
     push constant 0
     call Screen.setColor 1
+    pop temp 0
     push this 0
     push this 2
     add
@@ -123,9 +133,11 @@ label Bat_1
     push this 3
     add
     call Screen.drawRectangle 4
+    pop temp 0
     push constant 1
     neg
     call Screen.setColor 1
+    pop temp 0
     push this 0
     push this 1
     push this 0
@@ -135,6 +147,7 @@ label Bat_1
     push this 3
     add
     call Screen.drawRectangle 4
+    pop temp 0
     goto Bat_2
 label Bat_0
     push this 0
@@ -155,6 +168,7 @@ label Bat_0
 label Bat_3
     push constant 0
     call Screen.setColor 1
+    pop temp 0
     push this 0
     push constant 4
     sub
@@ -166,9 +180,11 @@ label Bat_3
     push this 3
     add
     call Screen.drawRectangle 4
+    pop temp 0
     push constant 1
     neg
     call Screen.setColor 1
+    pop temp 0
     push this 0
     push this 2
     add
@@ -182,6 +198,7 @@ label Bat_3
     push this 3
     add
     call Screen.drawRectangle 4
+    pop temp 0
 label Bat_2
     push constant 0
     return

@@ -194,13 +194,16 @@ function Main.main 3
     push constant 32
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     push constant 2
     push local 1
     add
     pop pointer 1
     push that 0
     call Output.printInt 1
+    pop temp 0
     call Output.println 0
+    pop temp 0
     push constant 44
     call String.new 1
     push constant 84
@@ -292,13 +295,16 @@ function Main.main 3
     push constant 32
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     push constant 5
     push local 0
     add
     pop pointer 1
     push that 0
     call Output.printInt 1
+    pop temp 0
     call Output.println 0
+    pop temp 0
     push constant 43
     call String.new 1
     push constant 84
@@ -388,9 +394,12 @@ function Main.main 3
     push constant 32
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     push local 2
     call Output.printInt 1
+    pop temp 0
     call Output.println 0
+    pop temp 0
     push constant 0
     pop local 2
     push local 2
@@ -401,6 +410,7 @@ function Main.main 3
     push local 0
     push constant 10
     call Main.fill 2
+    pop temp 0
     push constant 3
     push local 0
     add
@@ -545,13 +555,16 @@ label Main_0
     push constant 32
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     push constant 1
     push local 2
     add
     pop pointer 1
     push that 0
     call Output.printInt 1
+    pop temp 0
     call Output.println 0
+    pop temp 0
     push constant 45
     call String.new 1
     push constant 84
@@ -645,13 +658,16 @@ label Main_0
     push constant 32
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     push constant 1
     push local 1
     add
     pop pointer 1
     push that 0
     call Output.printInt 1
+    pop temp 0
     call Output.println 0
+    pop temp 0
     push constant 0
     return
 function Main.double 0

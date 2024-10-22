@@ -3,6 +3,7 @@ function PongGame.new 0
     call Memory.alloc 1
     pop pointer 0
     call Screen.clearScreen 0
+    pop temp 0
     push constant 50
     pop this 6
     push constant 230
@@ -23,14 +24,17 @@ function PongGame.new 0
     push constant 400
     push constant 0
     call Ball.setDestination 3
+    pop temp 0
     push constant 0
     push constant 238
     push constant 511
     push constant 240
     call Screen.drawRectangle 4
+    pop temp 0
     push constant 22
     push constant 0
     call Output.moveCursor 2
+    pop temp 0
     push constant 8
     call String.new 1
     push constant 83
@@ -50,6 +54,7 @@ function PongGame.new 0
     push constant 48
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
     push constant 0
     pop this 3
     push constant 0
@@ -65,10 +70,13 @@ function PongGame.dispose 0
     pop pointer 0
     push this 0
     call Bat.dispose 1
+    pop temp 0
     push this 1
     call Ball.dispose 1
+    pop temp 0
     push pointer 0
     call Memory.deAlloc 1
+    pop temp 0
     push constant 0
     return
 function PongGame.newInstance 0
@@ -99,11 +107,14 @@ label PongGame_2
     call Keyboard.keyPressed 0
     pop local 0
     push this 0
-    call Bat.move 1
+   call Bat.move 1
+    pop temp 0
     push pointer 0
     call PongGame.moveBall 1
+    pop temp 0
     push constant 50
     call Sys.wait 1
+    pop temp 0
     goto PongGame_2
 label PongGame_3
     push local 0
@@ -114,6 +125,7 @@ label PongGame_3
     push this 0
     push constant 1
     call Bat.setDirection 2
+    pop temp 0
     goto PongGame_5
 label PongGame_4
     push local 0
@@ -124,6 +136,7 @@ label PongGame_4
     push this 0
     push constant 2
     call Bat.setDirection 2
+    pop temp 0
     goto PongGame_7
 label PongGame_6
     push local 0
@@ -150,11 +163,14 @@ label PongGame_9
     call Keyboard.keyPressed 0
     pop local 0
     push this 0
-    call Bat.move 1
+   call Bat.move 1
+    pop temp 0
     push pointer 0
     call PongGame.moveBall 1
+    pop temp 0
     push constant 50
     call Sys.wait 1
+    pop temp 0
     goto PongGame_9
 label PongGame_10
     goto PongGame_0
@@ -165,6 +181,7 @@ label PongGame_1
     push constant 10
     push constant 27
     call Output.moveCursor 2
+    pop temp 0
     push constant 9
     call String.new 1
     push constant 71
@@ -186,6 +203,7 @@ label PongGame_1
     push constant 114
     call String.appendChar 2
     call Output.printString 1
+    pop temp 0
 label PongGame_11
     push constant 0
     return
@@ -268,6 +286,7 @@ label PongGame_16
     push this 0
     push this 6
     call Bat.setWidth 2
+    pop temp 0
     push this 4
     push constant 1
     add
@@ -275,13 +294,16 @@ label PongGame_16
     push constant 22
     push constant 7
     call Output.moveCursor 2
+    pop temp 0
     push this 4
     call Output.printInt 1
+    pop temp 0
 label PongGame_14
 label PongGame_13
     push this 1
     push local 0
     call Ball.bounce 2
+    pop temp 0
 label PongGame_12
     push constant 0
     return

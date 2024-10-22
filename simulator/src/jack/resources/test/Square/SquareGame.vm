@@ -16,8 +16,10 @@ function SquareGame.dispose 0
     pop pointer 0
     push this 0
     call Square.dispose 1
+    pop temp 0
     push pointer 0
     call Memory.deAlloc 1
+    pop temp 0
     push constant 0
     return
 function SquareGame.moveSquare 0
@@ -30,6 +32,7 @@ function SquareGame.moveSquare 0
     if-goto SquareGame_0
     push this 0
     call Square.moveUp 1
+    pop temp 0
 label SquareGame_0
     push this 1
     push constant 2
@@ -38,6 +41,7 @@ label SquareGame_0
     if-goto SquareGame_1
     push this 0
     call Square.moveDown 1
+    pop temp 0
 label SquareGame_1
     push this 1
     push constant 3
@@ -46,6 +50,7 @@ label SquareGame_1
     if-goto SquareGame_2
     push this 0
     call Square.moveLeft 1
+    pop temp 0
 label SquareGame_2
     push this 1
     push constant 4
@@ -54,9 +59,11 @@ label SquareGame_2
     if-goto SquareGame_3
     push this 0
     call Square.moveRight 1
+    pop temp 0
 label SquareGame_3
     push constant 5
     call Sys.wait 1
+    pop temp 0
     push constant 0
     return
 function SquareGame.run 2
@@ -79,6 +86,7 @@ label SquareGame_6
     pop local 0
     push pointer 0
     call SquareGame.moveSquare 1
+    pop temp 0
     goto SquareGame_6
 label SquareGame_7
     push local 0
@@ -97,6 +105,7 @@ label SquareGame_8
     if-goto SquareGame_9
     push this 0
     call Square.decSize 1
+    pop temp 0
 label SquareGame_9
     push local 0
     push constant 88
@@ -105,6 +114,7 @@ label SquareGame_9
     if-goto SquareGame_10
     push this 0
     call Square.incSize 1
+    pop temp 0
 label SquareGame_10
     push local 0
     push constant 131
@@ -149,6 +159,7 @@ label SquareGame_15
     pop local 0
     push pointer 0
     call SquareGame.moveSquare 1
+    pop temp 0
     goto SquareGame_15
 label SquareGame_16
     goto SquareGame_4

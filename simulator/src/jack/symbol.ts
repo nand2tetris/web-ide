@@ -24,7 +24,7 @@ export interface GenericSymbol {
 export function createSubroutineSymbol(
   paramsCount: number,
   type: SubroutineType,
-  localVarsCount?: number
+  localVarsCount?: number,
 ): GenericSymbol {
   const s = { paramsCount, type } as SubroutineInfo;
   if (localVarsCount != undefined) {
@@ -106,7 +106,7 @@ export class LocalSymbolTable {
   define(scope: ScopeType, varName: string, type: VariableType) {
     if (scope == ScopeType.Argument) {
       throw new Error(
-        "Please use defineArgument method to define function arguments"
+        "Please use defineArgument method to define function arguments",
       );
     }
     this.scopes[scope].push({

@@ -17,7 +17,7 @@ export type CallType = (typeof CallType)[keyof typeof CallType];
 export function getCallType(
   subroutineId: SubroutineIdContext,
   className: string,
-  localSymbolTable: LocalSymbolTable
+  localSymbolTable: LocalSymbolTable,
 ): CallTypeResult {
   if (subroutineId.DOT() == undefined) {
     //local method

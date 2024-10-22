@@ -297,7 +297,7 @@ export class VMWriter extends JackParserListener {
     this.result += "    return\n";
   };
   //Utils
-  ifNotGoto(endLabel: string) { 
+  ifNotGoto(endLabel: string) {
     this.result += "    not\n";
     this.result += `    if-goto ${endLabel}\n`;
   }

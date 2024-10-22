@@ -178,7 +178,7 @@ export class VMWriter extends JackParserListener {
       if (binaryOperationToVmCmd[binaryOp] == undefined) {
         throw new Error(`Unknown binary operator ${binaryOp}`);
       }
-      this.result += "\t" + binaryOperationToVmCmd[binaryOp] + "\n";
+      this.result += "    " + binaryOperationToVmCmd[binaryOp] + "\n";
     } else if (ctx.unaryOperation() != null) {
       const unaryOp = assertExists(
         ctx.unaryOperation()?.unaryOperator(),
@@ -187,7 +187,7 @@ export class VMWriter extends JackParserListener {
       if (unaryOperationToVmCmd[unaryOp] == null) {
         throw new Error(`Unknown unary operator ${unaryOp}`);
       }
-      this.result += "\t" + unaryOperationToVmCmd[unaryOp] + "\n";
+      this.result += "    " + unaryOperationToVmCmd[unaryOp] + "\n";
     }
   };
   pushSymbolOntoStack(symbol: VariableSymbol) {
@@ -224,7 +224,7 @@ export class VMWriter extends JackParserListener {
       parent.endLabel = this.createLabel();
       this.result += `    goto ${parent.endLabel}\n`;
     }
-    this.result += `    label ${ctx.endLabel}\n`;
+    this.result += `label ${ctx.endLabel} \n`;
   };
   override exitIfExpression = (ctx: IfExpressionContext) => {
     const parent = ctx.parent as IfStatementContext;
@@ -232,14 +232,14 @@ export class VMWriter extends JackParserListener {
   };
   override exitIfElseStatement = (ctx: IfElseStatementContext) => {
     if (ctx.endLabel) {
-      this.result += `    label ${ctx.endLabel} \n`;
+      this.result += `label ${ctx.endLabel}\n`;
     }
   };
   //while
   override enterWhileStatement = (ctx: WhileStatementContext) => {
     ctx.startLabel = this.createLabel();
     ctx.endLabel = this.createLabel();
-    this.result += `    label ${ctx.startLabel} \n`;
+    this.result += `label ${ctx.startLabel}\n`;
   };
   override exitWhileExpression = (ctx: WhileExpressionContext) => {
     const parent = ctx.parent as WhileStatementContext;
@@ -248,7 +248,7 @@ export class VMWriter extends JackParserListener {
 
   override exitWhileStatement = (ctx: WhileStatementContext) => {
     this.result += `    goto ${ctx.startLabel}\n`;
-    this.result += `    label ${ctx.endLabel}\n`;
+    this.result += `label ${ctx.endLabel}\n`;
   };
 
   override enterSubroutineCall = (ctx: SubroutineCallContext) => {
@@ -297,9 +297,9 @@ export class VMWriter extends JackParserListener {
     this.result += "    return\n";
   };
   //Utils
-  ifNotGoto(endLabel: string) {
+  ifNotGoto(endLabel: string) { 
     this.result += "    not\n";
-    this.result += `    if-goto ${endLabel} \n`;
+    this.result += `    if-goto ${endLabel}\n`;
   }
   getLabel(ind: number) {
     return `${this.className}_${ind} `;

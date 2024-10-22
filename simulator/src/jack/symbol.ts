@@ -1,11 +1,13 @@
 /**
  * Generic symbol. Can be used for both class and function symbols
  */
-export enum SubroutineType {
-  Constructor,
-  Function,
-  Method,
-}
+export const SubroutineType = {
+  Constructor: 1,
+  Function: 2,
+  Method: 3,
+} as const;
+export type SubroutineType =
+  (typeof SubroutineType)[keyof typeof SubroutineType];
 export interface SubroutineInfo {
   paramsCount: number;
   type: SubroutineType;
@@ -22,7 +24,7 @@ export interface GenericSymbol {
 export function createSubroutineSymbol(
   paramsCount: number,
   type: SubroutineType,
-  localVarsCount?: number,
+  localVarsCount?: number
 ): GenericSymbol {
   const s = { paramsCount, type } as SubroutineInfo;
   if (localVarsCount != undefined) {
@@ -32,12 +34,14 @@ export function createSubroutineSymbol(
 }
 
 type VariableType = string;
-export enum ScopeType {
-  Static,
-  This,
-  Argument,
-  Local,
-}
+
+export const ScopeType = {
+  Static: 1,
+  This: 2,
+  Argument: 3,
+  Local: 4,
+};
+export type ScopeType = (typeof ScopeType)[keyof typeof ScopeType];
 
 const scopeTypeToStringMap: Record<ScopeType, string> = {
   [ScopeType.Static]: "static",
@@ -102,7 +106,7 @@ export class LocalSymbolTable {
   define(scope: ScopeType, varName: string, type: VariableType) {
     if (scope == ScopeType.Argument) {
       throw new Error(
-        "Please use defineArgument method to define function arguments",
+        "Please use defineArgument method to define function arguments"
       );
     }
     this.scopes[scope].push({

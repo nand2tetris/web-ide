@@ -9,13 +9,13 @@ import { CharStream, CommonTokenStream, ParseTreeWalker } from "antlr4ng";
 import { CompilationError } from "../languages/base.js";
 
 export function compile(
-  files: Record<string, string>,
+  files: Record<string, string>
 ): Record<string, string | CompilationError> {
   return _doWithTryCatch(files, Command.Compile);
 }
 
 export function validate(
-  files: Record<string, string>,
+  files: Record<string, string>
 ): Record<string, string | CompilationError> {
   return _doWithTryCatch(files, Command.Validate);
 }
@@ -35,14 +35,16 @@ function _doWithTryCatch(files: Record<string, string>, cmd: Command) {
     return result;
   }
 }
-enum Command {
-  Compile,
-  Validate,
-}
+
+export const Command = {
+  Compile: 1,
+  Validate: 2,
+} as const;
+export type Command = (typeof Command)[keyof typeof Command];
 
 function _do(
   files: Record<string, string>,
-  cmd: Command,
+  cmd: Command
 ): Record<string, string | CompilationError> {
   if (files.type == "LexerOrParserError") {
     throw new Error("Expected tree but got a lexer or parser error");
@@ -107,18 +109,18 @@ export class JackCompiler {
   private errorListener = new CustomErrorListener();
   validate(
     tree: ProgramContext,
-    filename?: string,
+    filename?: string
   ): ProgramContext | JackCompilerError[] {
     if (
       Object.keys(this.globalSymbolTableListener.globalSymbolTable).length == 0
     ) {
       throw new Error(
-        "Please populate global symbol table using parserAndBind method",
+        "Please populate global symbol table using parserAndBind method"
       );
     }
     const validator = new ValidatorListener(
       this.globalSymbolTableListener.globalSymbolTable,
-      filename,
+      filename
     );
     ParseTreeWalker.DEFAULT.walk(validator, tree);
 
@@ -126,7 +128,7 @@ export class JackCompiler {
   }
   compile(
     tree: ProgramContext,
-    filename?: string,
+    filename?: string
   ): string | JackCompilerError[] {
     const treeOrErrors = this.validate(tree, filename);
     if (Array.isArray(treeOrErrors)) {
@@ -136,7 +138,7 @@ export class JackCompiler {
     }
     const validateTree = treeOrErrors as ProgramContext;
     const vmWriter = new VMWriter(
-      this.globalSymbolTableListener.globalSymbolTable,
+      this.globalSymbolTableListener.globalSymbolTable
     );
     ParseTreeWalker.DEFAULT.walk(vmWriter, validateTree);
     return vmWriter.result;

@@ -7,15 +7,17 @@ export interface CallTypeResult {
   symbol?: VariableSymbol;
 }
 
-export enum CallType {
-  VarMethod = 1,
-  LocalMethod = 2,
-  ClassFunctionOrConstructor = 3,
-}
+export const CallType = {
+  VarMethod: 1,
+  LocalMethod: 2,
+  ClassFunctionOrConstructor: 3,
+} as const;
+export type CallType = (typeof CallType)[keyof typeof CallType];
+
 export function getCallType(
   subroutineId: SubroutineIdContext,
   className: string,
-  localSymbolTable: LocalSymbolTable,
+  localSymbolTable: LocalSymbolTable
 ): CallTypeResult {
   if (subroutineId.DOT() == undefined) {
     //local method

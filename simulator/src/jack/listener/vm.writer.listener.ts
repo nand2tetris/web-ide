@@ -289,10 +289,9 @@ export class VMWriter extends JackParserListener {
       default:
         throw new Error(`Unknown call type ${callType}`);
     }
-   
   };
-  override exitDoStatement= (ctx: DoStatementContext) => {
-     this.result += `   pop temp 0\n`;
+  override exitDoStatement = (ctx: DoStatementContext) => {
+    this.result += `   pop temp 0\n`;
   };
   //return
   override exitReturnStatement = (ctx: ReturnStatementContext) => {

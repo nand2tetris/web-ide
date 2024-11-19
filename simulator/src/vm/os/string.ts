@@ -31,7 +31,7 @@ export class StringLib {
   }
 
   new(size: number) {
-    if (size <= 0) {
+    if (size < 0) {
       this.os.sys.error(ERRNO.STRING_LENGTH_NEG);
     }
     const pointer = this.os.memory.alloc(size + 2); // +2 to save length, maxLength fields

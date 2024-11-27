@@ -31,6 +31,7 @@
     --mark-background-color: rgb(255, 230, 121);
     --mark-error-color: rgb(252, 169, 154);
     --light-grey: rgb(170, 170, 170);
+    --compiler-err-color: "#ffaaaa";
     --disabled: var(--light-grey);
     --file-picker-width: 400px;
   }
@@ -47,6 +48,8 @@
     --card-border-color: white;
     --text-color: white;
     --mark-background-color: rgb(30, 74, 109);
+    --compiler-err-color: rgb(69, 25, 22);
+    --code-color: rgb(180, 180, 180);
 
     .outline {
       color: var(--light-grey);

@@ -787,46 +787,46 @@ function SquareGame.moveSquare 0
     push constant 1
     eq
     not
-    if-goto L1
+    if-goto SquareGame_1
     push this 0
     call Square.moveUp 1
     pop temp 0
-    goto L0
-label L1
-label L0
+    goto SquareGame_0
+label SquareGame_1
+label SquareGame_0
     push this 1
     push constant 2
     eq
     not
-    if-goto L3
+    if-goto SquareGame_3
     push this 0
     call Square.moveDown 1
     pop temp 0
-    goto L2
-label L3
-label L2
+    goto SquareGame_2
+label SquareGame_3
+label SquareGame_2
     push this 1
     push constant 3
     eq
     not
-    if-goto L5
+    if-goto SquareGame_5
     push this 0
     call Square.moveLeft 1
     pop temp 0
-    goto L4
-label L5
-label L4
+    goto SquareGame_4
+label SquareGame_5
+label SquareGame_4
     push this 1
     push constant 4
     eq
     not
-    if-goto L7
+    if-goto SquareGame_7
     push this 0
     call Square.moveRight 1
     pop temp 0
-    goto L6
-label L7
-label L6
+    goto SquareGame_6
+label SquareGame_7
+label SquareGame_6
     push constant 5
     call Sys.wait 1
     pop temp 0
@@ -837,112 +837,112 @@ function SquareGame.run 2
     pop pointer 0
     push constant 0
     pop local 1
-label L8
+label SquareGame_8
     push local 1
     not
     not
-    if-goto L9
-label L10
+    if-goto SquareGame_9
+label SquareGame_10
     push local 0
     push constant 0
     eq
     not
-    if-goto L11
+    if-goto SquareGame_11
     call Keyboard.keyPressed 0
     pop local 0
     push pointer 0
     call SquareGame.moveSquare 1
     pop temp 0
-    goto L10
-label L11
+    goto SquareGame_10
+label SquareGame_11
     push local 0
     push constant 81
     eq
     not
-    if-goto L13
+    if-goto SquareGame_13
     push constant 1
     neg
     pop local 1
-    goto L12
-label L13
-label L12
+    goto SquareGame_12
+label SquareGame_13
+label SquareGame_12
     push local 0
     push constant 90
     eq
     not
-    if-goto L15
+    if-goto SquareGame_15
     push this 0
     call Square.decSize 1
     pop temp 0
-    goto L14
-label L15
-label L14
+    goto SquareGame_14
+label SquareGame_15
+label SquareGame_14
     push local 0
     push constant 88
     eq
     not
-    if-goto L17
+    if-goto SquareGame_17
     push this 0
     call Square.incSize 1
     pop temp 0
-    goto L16
-label L17
-label L16
+    goto SquareGame_16
+label SquareGame_17
+label SquareGame_16
     push local 0
     push constant 131
     eq
     not
-    if-goto L19
+    if-goto SquareGame_19
     push constant 1
     pop this 1
-    goto L18
-label L19
-label L18
+    goto SquareGame_18
+label SquareGame_19
+label SquareGame_18
     push local 0
     push constant 133
     eq
     not
-    if-goto L21
+    if-goto SquareGame_21
     push constant 2
     pop this 1
-    goto L20
-label L21
-label L20
+    goto SquareGame_20
+label SquareGame_21
+label SquareGame_20
     push local 0
     push constant 130
     eq
     not
-    if-goto L23
+    if-goto SquareGame_23
     push constant 3
     pop this 1
-    goto L22
-label L23
-label L22
+    goto SquareGame_22
+label SquareGame_23
+label SquareGame_22
     push local 0
     push constant 132
     eq
     not
-    if-goto L25
+    if-goto SquareGame_25
     push constant 4
     pop this 1
-    goto L24
-label L25
-label L24
-label L26
+    goto SquareGame_24
+label SquareGame_25
+label SquareGame_24
+label SquareGame_26
     push local 0
     push constant 0
     eq
     not
     not
-    if-goto L27
+    if-goto SquareGame_27
     call Keyboard.keyPressed 0
     pop local 0
     push pointer 0
     call SquareGame.moveSquare 1
     pop temp 0
-    goto L26
-label L27
-    goto L8
-label L9
+    goto SquareGame_26
+label SquareGame_27
+    goto SquareGame_8
+label SquareGame_9
     push constant 0
     return`;

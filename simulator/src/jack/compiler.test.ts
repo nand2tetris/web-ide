@@ -81,6 +81,7 @@ describe("compiler", () => {
     ).statement;
 
     const compiler = new Compiler();
+    compiler.className = "Main";
     compiler.localSymbolTable = {
       condition: {
         type: "boolean",
@@ -97,14 +98,14 @@ describe("compiler", () => {
     expect(compiler.output).toEqual([
       "push local 0",
       "not",
-      "if-goto L1",
+      "if-goto Main_1",
       "push constant 4",
       "pop local 1",
-      "goto L0",
-      "label L1",
+      "goto Main_0",
+      "label Main_1",
       "push constant 5",
       "pop local 1",
-      "label L0",
+      "label Main_0",
     ]);
   });
 

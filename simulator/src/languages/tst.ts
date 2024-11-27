@@ -56,6 +56,10 @@ export interface TstFileOperation {
   file?: string;
 }
 
+export interface TstResetRamOperation {
+  op: "resetRam";
+}
+
 export type TstOperation =
   | TstFileOperation
   | TstEvalOperation
@@ -64,7 +68,8 @@ export type TstOperation =
   | TstOutputOperation
   | TstSetOperation
   | TstOutputListOperation
-  | TstLoadROMOperation;
+  | TstLoadROMOperation
+  | TstResetRamOperation;
 
 export type Separator = "," | ";" | "!";
 
@@ -196,6 +201,11 @@ tstSemantics.addAttribute<TstOperation>("operation", {
     return {
       op: op.sourceString as TstFileOperation["op"],
       file: file?.sourceString,
+    };
+  },
+  TstResetRAMOperation(_) {
+    return {
+      op: "resetRam",
     };
   },
 });

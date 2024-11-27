@@ -1,4 +1,9 @@
-import { SubroutineType } from "../languages/jack.js";
+import {
+  ReturnType,
+  Subroutine,
+  SubroutineType,
+  Type,
+} from "../languages/jack.js";
 import { VmMemory } from "./memory.js";
 import { ERRNO } from "./os/errors.js";
 import { OS } from "./os/os.js";
@@ -8,8 +13,9 @@ export type VmBuiltinFunction = (memory: VmMemory, os: OS) => number;
 
 export interface VmBuiltin {
   func: VmBuiltinFunction;
-  nArgs: number;
   type: SubroutineType;
+  args: Type[];
+  returnType: ReturnType;
 }
 
 function getArgs(memory: VmMemory, n: number) {
@@ -20,13 +26,37 @@ function getArgs(memory: VmMemory, n: number) {
   return args;
 }
 
+export function overridesOsCorrectly(cls: string, subroutine: Subroutine) {
+  const builtin = VM_BUILTINS[`${cls}.${subroutine.name.value}`];
+
+  return (
+    builtin &&
+    builtin.args.length == subroutine.parameters.length &&
+    builtin.args.every(
+      (arg, index) => arg == subroutine.parameters[index].type.value,
+    ) &&
+    builtin.returnType == subroutine.returnType.value
+  );
+}
+
+export function makeInterface(name: string, builtin: VmBuiltin) {
+  return `${builtin.returnType} ${name}(${builtin.args.join(",")}`;
+}
+
 export const VM_BUILTINS: Record<string, VmBuiltin> = {
+  "Math.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
   "Math.multiply": {
     func: (memory, _) => {
       const [a, b] = getArgs(memory, 2);
       return (a * b) & 0xffff;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "int",
     type: "function",
   },
   "Math.divide": {
@@ -38,7 +68,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       }
       return Math.floor(a / b) & 0xffff;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "int",
     type: "function",
   },
   "Math.min": {
@@ -46,7 +77,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [a, b] = getArgs(memory, 2);
       return Math.min(a, b) & 0xffff;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "int",
     type: "function",
   },
   "Math.max": {
@@ -54,7 +86,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [a, b] = getArgs(memory, 2);
       return Math.max(a, b) & 0xffff;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "int",
     type: "function",
   },
   "Math.sqrt": {
@@ -66,7 +99,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       }
       return Math.floor(Math.sqrt(x)) & 0xffff;
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "int",
     type: "function",
   },
   "Math.abs": {
@@ -74,7 +108,14 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [x] = getArgs(memory, 1);
       return Math.abs(x) & 0xffff;
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "int",
+    type: "function",
+  },
+  "Screen.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Screen.clearScreen": {
@@ -82,7 +123,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.screen.clear();
       return 0;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Screen.setColor": {
@@ -91,7 +133,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.screen.color = color !== 0;
       return 0;
     },
-    nArgs: 1,
+    args: ["boolean"],
+    returnType: "void",
     type: "function",
   },
   "Screen.drawPixel": {
@@ -100,7 +143,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.screen.drawPixel(x, y);
       return 0;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "void",
     type: "function",
   },
   "Screen.drawLine": {
@@ -109,7 +153,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.screen.drawLine(x1, y1, x2, y2);
       return 0;
     },
-    nArgs: 4,
+    args: ["int", "int", "int", "int"],
+    returnType: "void",
     type: "function",
   },
   "Screen.drawRectangle": {
@@ -118,7 +163,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.screen.drawRect(x1, y1, x2, y2);
       return 0;
     },
-    nArgs: 4,
+    args: ["int", "int", "int", "int"],
+    returnType: "void",
     type: "function",
   },
   "Screen.drawCircle": {
@@ -127,7 +173,14 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.screen.drawCircle(x, y, r);
       return 0;
     },
-    nArgs: 3,
+    args: ["int", "int", "int"],
+    returnType: "void",
+    type: "function",
+  },
+  "Memory.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Memory.peek": {
@@ -135,7 +188,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [address] = getArgs(memory, 1);
       return memory.get(address);
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "int",
     type: "function",
   },
   "Memory.poke": {
@@ -144,7 +198,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       memory.set(address, value);
       return 0;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "void",
     type: "function",
   },
   "Memory.alloc": {
@@ -152,7 +207,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [size] = getArgs(memory, 1);
       return os.memory.alloc(size);
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "Array",
     type: "function",
   },
   "Memory.deAlloc": {
@@ -161,7 +217,14 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.memory.deAlloc(address);
       return 0;
     },
-    nArgs: 1,
+    args: ["Array"],
+    returnType: "void",
+    type: "function",
+  },
+  "Array.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Array.new": {
@@ -173,7 +236,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       }
       return os.memory.alloc(size);
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "Array",
     type: "constructor",
   },
   "Array.dispose": {
@@ -182,15 +246,23 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.memory.deAlloc(pointer);
       return 0;
     },
-    nArgs: 1,
+    args: [],
+    returnType: "void",
     type: "method",
+  },
+  "String.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
+    type: "function",
   },
   "String.new": {
     func: (memory, os) => {
       const [length] = getArgs(memory, 1);
       return os.string.new(length);
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "String",
     type: "constructor",
   },
   "String.dispose": {
@@ -199,7 +271,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.string.dispose(pointer);
       return 0;
     },
-    nArgs: 1,
+    args: [],
+    returnType: "void",
     type: "method",
   },
   "String.length": {
@@ -207,7 +280,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [pointer] = getArgs(memory, 1);
       return os.string.length(pointer);
     },
-    nArgs: 1,
+    args: [],
+    returnType: "int",
     type: "method",
   },
   "String.charAt": {
@@ -215,7 +289,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [pointer, index] = getArgs(memory, 2);
       return os.string.charAt(pointer, index);
     },
-    nArgs: 2,
+    args: ["int"],
+    returnType: "char",
     type: "method",
   },
   "String.setCharAt": {
@@ -224,7 +299,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.string.setCharAt(pointer, index, value);
       return 0;
     },
-    nArgs: 3,
+    args: ["int", "char"],
+    returnType: "void",
     type: "method",
   },
   "String.appendChar": {
@@ -232,7 +308,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [pointer, value] = getArgs(memory, 2);
       return os.string.appendChar(pointer, value);
     },
-    nArgs: 2,
+    args: ["char"],
+    returnType: "String",
     type: "method",
   },
   "String.eraseLastChar": {
@@ -241,7 +318,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.string.eraseLastChar(pointer);
       return 0;
     },
-    nArgs: 1,
+    args: [],
+    returnType: "void",
     type: "method",
   },
   "String.intValue": {
@@ -249,7 +327,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       const [pointer] = getArgs(memory, 1);
       return os.string.intValue(pointer);
     },
-    nArgs: 1,
+    args: [],
+    returnType: "int",
     type: "method",
   },
   "String.setInt": {
@@ -258,28 +337,38 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.string.setInt(pointer, value);
       return 0;
     },
-    nArgs: 2,
+    args: ["int"],
+    returnType: "void",
     type: "method",
   },
   "String.backSpace": {
     func: (_, __) => {
       return BACKSPACE;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "char",
     type: "function",
   },
   "String.doubleQuote": {
     func: (_, __) => {
       return DOUBLE_QUOTES;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "char",
     type: "function",
   },
   "String.newLine": {
     func: (_, __) => {
       return NEW_LINE;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "char",
+    type: "function",
+  },
+  "Output.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Output.moveCursor": {
@@ -288,7 +377,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.moveCursor(i, j);
       return 0;
     },
-    nArgs: 2,
+    args: ["int", "int"],
+    returnType: "void",
     type: "function",
   },
   "Output.printChar": {
@@ -297,7 +387,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.printChar(code);
       return 0;
     },
-    nArgs: 1,
+    args: ["char"],
+    returnType: "void",
     type: "function",
   },
   "Output.printString": {
@@ -306,7 +397,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.printString(pointer);
       return 0;
     },
-    nArgs: 1,
+    args: ["String"],
+    returnType: "void",
     type: "function",
   },
   "Output.printInt": {
@@ -315,7 +407,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.printInt(value);
       return 0;
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "void",
     type: "function",
   },
   "Output.println": {
@@ -323,7 +416,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.println();
       return 0;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Output.backSpace": {
@@ -331,14 +425,22 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.output.backspace();
       return 0;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "void",
+    type: "function",
+  },
+  "Keyboard.init": {
+    func: (_, __) => 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Keyboard.keyPressed": {
     func: (_, os) => {
       return os.keyboard.keyPressed();
     },
-    nArgs: 0,
+    args: [],
+    returnType: "char",
     type: "function",
   },
   "Keyboard.readChar": {
@@ -346,7 +448,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.keyboard.readChar();
       return 0;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "char",
     type: "function",
   },
   "Keyboard.readLine": {
@@ -355,7 +458,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.keyboard.readLine(message);
       return 0;
     },
-    nArgs: 1,
+    args: ["String"],
+    returnType: "String",
     type: "function",
   },
   "Keyboard.readInt": {
@@ -364,7 +468,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.keyboard.readInt(message);
       return 0;
     },
-    nArgs: 1,
+    args: ["String"],
+    returnType: "int",
     type: "function",
   },
   "Sys.halt": {
@@ -372,7 +477,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.sys.halt();
       return 0;
     },
-    nArgs: 0,
+    args: [],
+    returnType: "void",
     type: "function",
   },
   "Sys.error": {
@@ -381,7 +487,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.sys.error(code);
       return 0;
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "void",
     type: "function",
   },
   "Sys.wait": {
@@ -390,7 +497,8 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
       os.sys.wait(ms);
       return 0;
     },
-    nArgs: 1,
+    args: ["int"],
+    returnType: "void",
     type: "function",
   },
 };

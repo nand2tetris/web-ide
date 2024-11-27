@@ -63,12 +63,8 @@ label[role="tab"],
 }
 
 [role="tab"] [type="radio"] {
-  /* Leave the radio button focusable, but not visible. Copied from .screen-reader-text */
-  clip: rect(1px, 1px, 1px, 1px);
-  position: absolute !important;
-  height: 1px;
-  width: 1px;
-  overflow: hidden;
+  opacity: 0; // keep the radio button focusable, but not visible, to allow switching tabs with the arrow keys
+  margin-inline: -7px; // offset the gap created by the invisible radio button (7px value was adjusted experimentally)
 }
 
 [role="tab"][aria-selected="true"] {

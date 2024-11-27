@@ -174,3 +174,14 @@ export class TestTickTockInstruction implements CPUTestInstruction {
     yield this;
   }
 }
+
+export class TestResetRamInstruction implements CPUTestInstruction {
+  readonly _cpuTestInstruction_ = true;
+  async do(test: CPUTest) {
+    test.cpu.RAM.reset();
+  }
+
+  *steps() {
+    yield this;
+  }
+}

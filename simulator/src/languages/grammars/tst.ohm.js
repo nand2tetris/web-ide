@@ -19,6 +19,7 @@ Tst <: Base {
     | TstEchoOperation
     | TstClearEchoOperation
     | TstLoadROMOperation
+    | TstResetRAMOperation
 
   TstLoadROMOperation = ROM32K Load FileName
   TstFileOperation = FileOperation FileName?
@@ -32,6 +33,7 @@ Tst <: Base {
   TstOutputOperation = Output
   TstEchoOperation = Echo String
   TstClearEchoOperation = ClearEcho
+  TstResetRAMOperation = ResetRAM
 
   filename = (alnum|underscore|dot|dollar|minus)+
   FileName = filename
@@ -52,6 +54,7 @@ Tst <: Base {
   ROM32K = "ROM32K"
   Load = "load"
   While = "while"
+  ResetRAM = "resetRam"
 
   CompareOp = "<>" | "<=" | ">=" | "=" | "<" | ">"
 }`;

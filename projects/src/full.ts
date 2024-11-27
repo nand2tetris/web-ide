@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, Tree } from "@davidsouther/jiffies/lib/esm/fs.js";
 
 import * as project_01 from "./project_01/index.js";
 import * as project_02 from "./project_02/index.js";
@@ -22,18 +22,22 @@ export const VmProjects = {
   "08": project_08,
 };
 
-const Projects = {
-  1: project_01,
-  2: project_02,
-  3: project_03,
-  4: project_04,
-  5: project_05,
-  6: project_06,
-  7: project_07,
-  8: project_08,
+export const Projects = {
+  "1": project_01,
+  "2": project_02,
+  "3": project_03,
+  "4": project_04,
+  "5": project_05,
+  "6": project_06,
+  "7": project_07,
+  "8": project_08,
 };
 
-const ProjectFiles = {
+export const ProjectIDs: (keyof typeof Projects)[] = Object.keys(
+  Projects,
+) as unknown as (keyof typeof Projects)[];
+
+const ProjectFiles: Record<keyof typeof Projects, Tree> = {
   "1": project_01.CHIPS,
   "2": project_02.CHIPS,
   "3": project_03.CHIPS,
@@ -44,31 +48,16 @@ const ProjectFiles = {
   "8": project_08.VMS,
 };
 
-let resetFlag = false;
-export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
-  if (resetFlag) return; // React will double-render a call to resetFiles in useEffect.
-  resetFlag = true;
-  projects ??= [1, 2, 3, 4, 6, 5, 7, 8];
+export const resetFiles = async (fs: FileSystem, projects = ProjectIDs) => {
   for (const project of projects) {
-    if (!Object.keys(Projects).includes(project.toString())) {
-      continue;
-    }
     await Projects[project as keyof typeof Projects].resetFiles(fs);
   }
-  resetFlag = false;
 };
 
-export const resetTests = async (fs: FileSystem, projects?: number[]) => {
-  if (resetFlag) return; // React will double-render a call to resetTests in useEffect.
-  resetFlag = true;
-  projects ??= [1, 2, 3, 4, 5, 7, 8];
+export const resetTests = async (fs: FileSystem, projects = ProjectIDs) => {
   for (const project of projects) {
-    if (!Object.keys(Projects).includes(project.toString())) {
-      continue;
-    }
     await Projects[project as keyof typeof Projects].resetTests(fs);
   }
-  resetFlag = false;
 };
 
 export const createFiles = async (fs: FileSystem) => {

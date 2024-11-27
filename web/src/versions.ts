@@ -38,36 +38,36 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
     }
   },
   1: async (fs: FileSystem) => {
-    await resetFiles(fs, [4]);
+    await resetFiles(fs, ["4"]);
   },
   2: async (fs: FileSystem) => {
-    await resetTests(fs, [1]);
+    await resetTests(fs, ["1"]);
   },
   3: async (fs: FileSystem) => {
     await resetTests(fs);
   },
   4: async (fs: FileSystem) => {
-    await resetFiles(fs, [7, 8]);
+    await resetFiles(fs, ["7", "8"]);
   },
   5: async (fs: FileSystem) => {
-    await resetTests(fs, [3, 5]);
+    await resetTests(fs, ["3", "5"]);
   },
   6: async (fs: FileSystem) => {
-    await resetTests(fs, [4]);
+    await resetTests(fs, ["4"]);
   },
   7: async (fs: FileSystem) => {
-    await resetTests(fs, [1]);
+    await resetTests(fs, ["1"]);
   },
   8: async (fs: FileSystem) => {
-    await resetFiles(fs, [6]);
+    await resetFiles(fs, ["6"]);
   },
   9: async (fs: FileSystem) => {
-    await resetTests(fs, [5]);
+    await resetTests(fs, ["5"]);
   },
   10: async (fs: FileSystem) => {
-    await resetTests(fs, [5]);
+    await resetTests(fs, ["5"]);
   },
   11: async (fs: FileSystem) => {
-    await resetTests(fs, [1]);
+    await resetTests(fs, ["1"]);
   },
 };

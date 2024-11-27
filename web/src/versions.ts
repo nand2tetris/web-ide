@@ -12,29 +12,40 @@ export function setVersion(version: number) {
   localStorage.setItem(VERSION_KEY, version.toString());
 }
 
-export async function updateVersion(fs: FileSystem) {
-  let version = getVersion();
+let version: number | undefined = undefined;
 
-  while (version < CURRENT_VERSION) {
-    try {
-      await versionUpdates[version](fs);
-      version++;
-    } catch (e) {
-      console.warn(`Error loading files at version ${version}`, e);
-      version++;
+export async function updateVersion(fs: FileSystem) {
+  if (version !== undefined) return version == CURRENT_VERSION;
+  version = getVersion();
+
+  try {
+    await fs.stat("/projects/01/Not.hdl");
+    for (; version < CURRENT_VERSION; version++) {
+      try {
+        await versionUpdates[version](fs);
+      } catch (e) {
+        console.warn(`Error loading files at version ${version}`, e);
+      }
     }
+  } catch (e) {
+    await resetFiles(fs);
   }
 
-  setVersion(CURRENT_VERSION);
+  setVersion(version);
+  return version == CURRENT_VERSION;
 }
 
 const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
   0: async (fs: FileSystem) => {
     for (const suffix of ["hdl", "cmp", "tst"]) {
-      await fs.writeFile(
-        `/projects/01/Xor/Xor.${suffix}`,
-        await fs.readFile(`/projects/01/XOr/XOr.${suffix}`),
-      );
+      try {
+        await fs.writeFile(
+          `/projects/01/Xor/Xor.${suffix}`,
+          await fs.readFile(`/projects/01/XOr/XOr.${suffix}`),
+        );
+      } catch (e) {
+        // The XOr file was probably never loaded
+      }
     }
   },
   1: async (fs: FileSystem) => {

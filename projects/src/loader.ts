@@ -1,11 +1,18 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { type Projects } from "./full.js";
 
-export async function resetFiles(fs: FileSystem, projects?: number[]) {
-  (await import("./full.js")).resetFiles(fs, projects);
+export async function resetFiles(
+  fs: FileSystem,
+  projects?: (keyof typeof Projects)[],
+) {
+  await (await import("./full.js")).resetFiles(fs, projects);
 }
 
-export async function resetTests(fs: FileSystem, projects?: number[]) {
-  (await import("./full.js")).resetTests(fs, projects);
+export async function resetTests(
+  fs: FileSystem,
+  projects?: (keyof typeof Projects)[],
+) {
+  await (await import("./full.js")).resetTests(fs, projects);
 }
 
 export async function createFiles(fs: FileSystem) {

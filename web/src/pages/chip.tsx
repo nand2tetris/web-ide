@@ -231,7 +231,7 @@ export const Chip = () => {
           <fieldset role="group">
             <button
               data-tooltip="Open an HDL file directly"
-              data-placement="left"
+              data-placement="bottom"
               onClick={loadFile}
             >
               📂

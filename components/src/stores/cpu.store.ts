@@ -14,7 +14,9 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "src/chips/screen.js";
 import { RunSpeed } from "src/runbar.js";
@@ -23,7 +25,6 @@ import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 function makeTst() {
   return `repeat {
@@ -104,6 +105,7 @@ export function makeCpuStore(
   let path = "";
   let tests: string[] = [];
   let tstName = "";
+  let _title: string | undefined;
 
   const reducers = {
     update(state: CpuPageState) {
@@ -138,8 +140,12 @@ export function makeCpuStore(
       );
     },
 
-    setTitle(state: CpuPageState, title: string) {
+    setTitle(state: CpuPageState, title?: string) {
+      _title = title;
       state.title = title;
+      if (title) {
+        test.fileLoaded = true;
+      }
     },
 
     updateConfig(state: CpuPageState, config: Partial<CPUPageConfig>) {
@@ -176,14 +182,19 @@ export function makeCpuStore(
     },
 
     async testStep() {
-      const done = await test.step();
-      if (animate || done) {
-        dispatch.current({ action: "testStep" });
+      try {
+        const done = await test.step();
+        if (animate || done) {
+          dispatch.current({ action: "testStep" });
+        }
+        if (done) {
+          dispatch.current({ action: "testFinished" });
+        }
+        return done;
+      } catch (e) {
+        setStatus((e as Error).message);
+        return true;
       }
-      if (done) {
-        dispatch.current({ action: "testFinished" });
-      }
-      return done;
     },
 
     resetRAM() {
@@ -210,16 +221,18 @@ export function makeCpuStore(
     },
 
     clearTest() {
+      tstName = "";
       this.compileTest(makeTst(), "");
       dispatch.current({ action: "update" });
     },
 
     replaceROM(rom: ROM) {
-      test = new CPUTest(rom);
+      test = new CPUTest({ dir: path, rom });
       this.clearTest();
     },
 
-    compileTest(file: string, cmp?: string) {
+    compileTest(file: string, cmp?: string, _path?: string) {
+      const tstPath = _path ?? path;
       dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
       const tst = TST.parse(file);
 
@@ -231,9 +244,43 @@ export function makeCpuStore(
       }
       valid = true;
 
-      test = CPUTest.from(Ok(tst), test.cpu.ROM, setStatus);
-      dispatch.current({ action: "update" });
-      return true;
+      const maybeTest = CPUTest.from(Ok(tst), {
+        dir: tstPath,
+        rom: test.cpu.ROM,
+        doEcho: setStatus,
+        doLoad: async (path) => {
+          let file;
+          try {
+            file = await fs.readFile(path);
+          } catch (e) {
+            throw new Error(`Cannot find ${path}`);
+          }
+          const loader = path.endsWith("hack")
+            ? loadHack
+            : path.endsWith("asm")
+              ? loadAsm
+              : loadBlob;
+          const bytes = await loader(file);
+          console.log(bytes);
+          test.cpu.ROM.loadBytes(bytes);
+        },
+        compareTo: async (file) => {
+          const dir = tstPath.split("/").slice(0, -1).join("/");
+          const cmp = await fs.readFile(`${dir}/${file}`);
+          dispatch.current({ action: "setTest", payload: { cmp } });
+        },
+        requireLoad: false,
+      });
+
+      if (isErr(maybeTest)) {
+        setStatus(Err(maybeTest).message);
+        return false;
+      } else {
+        test = Ok(maybeTest);
+        test.fileLoaded = _title != undefined;
+        dispatch.current({ action: "update" });
+        return true;
+      }
     },
 
     async loadTest(name: string) {
@@ -244,8 +291,8 @@ export function makeCpuStore(
         return;
       }
       tstName = name;
-      const { tst, cmp } = unwrap(files);
-      this.compileTest(tst, cmp ?? "");
+      const { tst } = unwrap(files);
+      this.compileTest(tst, "");
     },
   };
 

@@ -63,9 +63,9 @@ describe("Chip Projects", () => {
         const tst = TST.parse(tstFile);
         expect(tst).toBeOk();
 
-        const chip = await build(Ok(hdl as Ok<HdlParse>));
+        const chip = await build({ parts: Ok(hdl as Ok<HdlParse>) });
         expect(chip).toBeOk();
-        const test = ChipTest.from(Ok(tst as Ok<Tst>)).with(
+        const test = unwrap(ChipTest.from(Ok(tst as Ok<Tst>))).with(
           Ok(chip as Ok<Chip>),
         );
 
@@ -143,7 +143,7 @@ describe("Vm Projects", () => {
 
         const vm = await Vm.build(unwrap(parsed).instructions);
         expect(vm).toBeOk();
-        const test = VMTest.from(unwrap(tst)).with(unwrap(vm));
+        const test = unwrap(VMTest.from(unwrap(tst))).with(unwrap(vm));
 
         await test.run();
 

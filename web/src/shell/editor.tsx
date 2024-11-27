@@ -8,8 +8,8 @@ import {
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 
-import { Action } from "@nand2tetris/simulator/types";
 import "./editor.scss";
+import { Action } from "@nand2tetris/simulator/types";
 
 const Monaco = lazy(() => import("./Monaco"));
 

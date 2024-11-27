@@ -20,12 +20,12 @@ import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
+import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { RunSpeed } from "src/runbar.js";
 import { useImmerReducer } from "../react.js";
 import { BaseContext } from "./base.context.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -200,6 +200,7 @@ export function makeAsmStore(
   fs: FileSystem,
   setStatus: Action<string>,
   dispatch: MutableRefObject<AsmStoreDispatch>,
+  upgraded: boolean,
 ) {
   const translator = new Translator();
   const highlightInfo: HighlightInfo = {
@@ -347,14 +348,23 @@ export function makeAsmStore(
       animate = value;
     },
 
-    step(): boolean {
+    async step(): Promise<boolean> {
       if (compiled) {
         translating = true;
       }
       translator.step(highlightInfo);
+
       if (animate || translator.done) {
         dispatch.current({ action: "update" });
+
+        if (path && upgraded) {
+          await fs.writeFile(
+            path.replace(/\.asm$/, ".hack"),
+            translator.getResult(),
+          );
+        }
       }
+
       if (translator.done) {
         setStatus("Translation done.");
       }
@@ -447,13 +457,13 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus, fs } = useContext(BaseContext);
+  const { setStatus, fs, localFsRoot } = useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeAsmStore(fs, setStatus, dispatch),
-    [setStatus, dispatch],
+    () => makeAsmStore(fs, setStatus, dispatch, localFsRoot != undefined),
+    [setStatus, dispatch, fs],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

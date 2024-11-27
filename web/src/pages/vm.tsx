@@ -1,4 +1,4 @@
-import { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 
 import { Trans, t } from "@lingui/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -13,6 +13,8 @@ import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
+import { AppContext } from "src/App.context";
+import { isPath } from "src/shell/file_select";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
@@ -45,23 +47,26 @@ interface Rerenderable {
 }
 
 const VM = () => {
+  const { filePicker } = useContext(AppContext);
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.vm;
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, fs } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
   const [cmp, setCmp] = useStateInitializer(state.files.cmp);
-  const [path, setPath] = useState("/");
+  const [path, setPath] = useState<string>();
 
   useEffect(() => {
     setTool("vm");
   }, [setTool]);
 
   useEffect(() => {
-    actions.loadTest(path, tst, cmp);
-    actions.reset();
-  }, [tst, cmp]);
+    if (path) {
+      actions.loadTest(path, tst);
+      actions.reset();
+    }
+  }, [tst, path]);
 
   useEffect(() => {
     if (state.controls.exitCode !== undefined) {
@@ -129,37 +134,65 @@ const VM = () => {
     };
   }, [actions, dispatch]);
 
-  const uploadRef = useRef<HTMLInputElement>(null);
+  const load = async () => {
+    const target = await filePicker.selectAllowLocal({
+      suffix: "vm",
+      allowFolders: true,
+    });
 
-  const load = () => {
-    uploadRef.current?.click();
-  };
+    let files: VmFile[] = [];
+    let title = "";
 
-  const onLoad = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (!event.target.files || event.target.files.length == 0) {
+    if (isPath(target)) {
+      if (target.isDir) {
+        // folder
+        for (const file of (await fs.scandir(target.path)).filter(
+          (entry) => entry.isFile() && entry.name.endsWith(".vm"),
+        )) {
+          files.push({
+            name: file.name.replace(".vm", ""),
+            content: await fs.readFile(`${target}/${file.name}`),
+          });
+        }
+        title = `${target.path.split("/").pop()} / *.vm`;
+      } else {
+        // single file
+        files.push({
+          name: target.path.replace(".vm", ""),
+          content: await fs.readFile(target.path),
+        });
+        title = target.path.split("/").pop() ?? "";
+      }
+      loadTest(target.path);
+    } else {
+      files = Array.isArray(target)
+        ? target.filter((file) => file.name.endsWith(".vm"))
+        : [target];
+    }
+
+    if (files.length == 0) {
       return;
     }
 
-    const sources: VmFile[] = [];
-    for (const file of event.target.files) {
-      if (file.name.endsWith(".vm")) {
-        sources.push({
-          name: file.name.replace(".vm", ""),
-          content: await file.text(),
-        });
-      }
-    }
+    dispatch.current({ action: "setTitle", payload: title });
 
-    const dirName = event.target.files[0].webkitRelativePath.split("/")[0];
-    dispatch.current({ action: "setTitle", payload: `${dirName} / *.vm` });
-
-    actions.loadVm(sources);
+    actions.loadVm(files);
     actions.reset();
     setStatus("");
+  };
 
-    if (uploadRef.current) {
-      uploadRef.current.value = "";
+  const loadTest = async (path: string) => {
+    let tstPath = "";
+    if (path.includes(".")) {
+      tstPath = path.replace(".vm", "VME.tst");
+    } else {
+      const name = (await fs.scandir(path)).find(
+        (entry) => entry.isFile() && entry.name.endsWith("VME.tst"),
+      )?.name;
+      tstPath = `${path}/${name}`;
     }
+    const test = await fs.readFile(tstPath);
+    actions.loadTest(tstPath, test);
   };
 
   const onSpeedChange = (speed: number, testPanel: boolean) => {
@@ -187,13 +220,6 @@ const VM = () => {
         isEditorPanel={true}
         header={
           <>
-            <input
-              style={{ display: "none" }}
-              ref={uploadRef}
-              type="file"
-              webkitdirectory=""
-              onChange={onLoad}
-            />
             <div className="flex-0" style={{ whiteSpace: "nowrap" }}>
               <Trans>VM Code</Trans>
             </div>

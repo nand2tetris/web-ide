@@ -4,9 +4,8 @@ import {
   BaseContext,
   useBaseContext,
 } from "@nand2tetris/components/stores/base.context.js";
-import { loaders } from "@nand2tetris/projects/loader.js";
 import { en } from "make-plural/plurals";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { AppContext, useAppContext } from "./App.context";
 import { registerLanguages } from "./languages/loader";
@@ -35,9 +34,13 @@ i18n.loadLocaleData({
 });
 i18n.activate(navigator.language);
 
+type STATE = "none" | "initializing" | "initialized";
+
 function App() {
   const baseContext = useBaseContext();
   const appContext = useAppContext();
+  const state = useRef<STATE>("none");
+  const [initialized, setInitialized] = useState(false);
 
   const fs = baseContext.fs;
 
@@ -46,11 +49,14 @@ function App() {
   }, []);
 
   useEffect(() => {
-    fs.stat("/projects/01/Not.hdl").catch(async () => {
-      await loaders.resetFiles(fs);
+    if (state.current != "none") return;
+    state.current = "initializing";
+    Promise.resolve().then(async () => {
+      await updateVersion(fs);
+      state.current = "initialized";
+      setInitialized(true);
     });
-    updateVersion(fs);
-  }, [fs]);
+  }, [fs, state]);
 
   useEffect(() => {
     (document.children[0] as HTMLHtmlElement).dataset.theme =
@@ -65,27 +71,31 @@ function App() {
     <I18nProvider i18n={i18n}>
       <BaseContext.Provider value={baseContext}>
         <AppContext.Provider value={appContext}>
-          <PageContextProvider>
-            <Settings />
-            <FilePicker />
-            <Router basename={process.env.PUBLIC_URL}>
-              <Header />
-              <main className="flex flex-1">
-                <ErrorBoundary fallback={RenderError}>
-                  <Suspense fallback={<div>Loading...</div>}>
-                    <Routes>
-                      <Route path="/" element={<Redirect />} />
-                      {Object.values(urls).map(({ href, target }) => (
-                        <Route key={href} path={href} element={target} />
-                      ))}
-                    </Routes>
-                  </Suspense>
-                </ErrorBoundary>
-              </main>
-              <Footer />
-              <TrackingBanner />
-            </Router>
-          </PageContextProvider>
+          {initialized ? (
+            <PageContextProvider>
+              <Settings />
+              <FilePicker />
+              <Router basename={process.env.PUBLIC_URL}>
+                <Header />
+                <main className="flex flex-1">
+                  <ErrorBoundary fallback={RenderError}>
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <Routes>
+                        <Route path="/" element={<Redirect />} />
+                        {Object.values(urls).map(({ href, target }) => (
+                          <Route key={href} path={href} element={target} />
+                        ))}
+                      </Routes>
+                    </Suspense>
+                  </ErrorBoundary>
+                </main>
+                <Footer />
+                <TrackingBanner />
+              </Router>
+            </PageContextProvider>
+          ) : (
+            <div>Initializing...</div>
+          )}
         </AppContext.Provider>
       </BaseContext.Provider>
     </I18nProvider>

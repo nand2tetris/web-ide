@@ -29,29 +29,37 @@ function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
 
 export async function parse(
   code: string,
+  dir?: string,
   name?: string,
+  fs?: FileSystem,
 ): Promise<Result<Chip, CompilationError>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
     return parsed;
   }
-  return build(Ok(parsed), undefined, name);
+  return build({ parts: Ok(parsed), dir, name, fs });
 }
 
 export async function loadChip(
   name: string,
+  dir?: string,
   fs?: FileSystem,
 ): Promise<Result<Chip>> {
   if (hasBuiltinChip(name) || fs === undefined) {
     return await getBuiltinChip(name);
   }
   try {
-    const file = await fs.readFile(`${name}.hdl`);
+    const file = await fs.readFile(`${dir}/${name}.hdl`);
     const maybeParsedHDL = HDL.parse(file);
 
     let maybeChip: Result<Chip, Error>;
     if (isOk(maybeParsedHDL)) {
-      const maybeBuilt = await build(Ok(maybeParsedHDL), fs);
+      const maybeBuilt = await build({
+        parts: Ok(maybeParsedHDL),
+        dir,
+        name,
+        fs,
+      });
       if (isErr(maybeBuilt)) {
         maybeChip = Err(new Error(Err(maybeBuilt).message));
       } else {
@@ -68,11 +76,9 @@ export async function loadChip(
 }
 
 export async function build(
-  parts: HdlParse,
-  fs?: FileSystem,
-  name?: string,
-): Promise<Result<Chip, CompilationError>> {
-  return await new ChipBuilder(parts, fs, name).build();
+  ...args: Parameters<typeof ChipBuilder.build>
+): Promise<ReturnType<typeof ChipBuilder.build>> {
+  return await ChipBuilder.build(...args);
 }
 
 interface InternalPin {
@@ -177,6 +183,7 @@ function checkMultipleAssignments(
 class ChipBuilder {
   private parts: HdlParse;
   private fs?: FileSystem;
+  private dir?: string;
   private expectedName?: string;
 
   private chip: Chip;
@@ -185,9 +192,29 @@ class ChipBuilder {
   private outPins: Map<string, Set<number>> = new Map();
   private wires: WireData[] = [];
 
-  constructor(parts: HdlParse, fs?: FileSystem, name?: string) {
+  static build(options: {
+    parts: HdlParse;
+    fs?: FileSystem;
+    dir?: string;
+    name?: string;
+  }) {
+    return new ChipBuilder(options).build();
+  }
+
+  private constructor({
+    parts,
+    fs,
+    dir,
+    name,
+  }: {
+    parts: HdlParse;
+    fs?: FileSystem;
+    dir?: string;
+    name?: string;
+  }) {
     this.parts = parts;
     this.expectedName = name;
+    this.dir = dir;
     this.fs = fs;
     this.chip = new Chip(
       parts.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
@@ -198,7 +225,7 @@ class ChipBuilder {
     );
   }
 
-  async build() {
+  async build(): Promise<Result<Chip, CompilationError>> {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
       return Err(createError(`Wrong chip name`, this.parts.name.span));
     }
@@ -230,8 +257,9 @@ class ChipBuilder {
     if (this.parts.parts === "BUILTIN") {
       return Ok();
     }
+
     for (const part of this.parts.parts) {
-      const builtin = await loadChip(part.name, this.fs);
+      const builtin = await loadChip(part.name, this.dir, this.fs);
       if (isErr(builtin)) {
         return Err(createError(`Undefined chip name: ${part.name}`, part.span));
       }

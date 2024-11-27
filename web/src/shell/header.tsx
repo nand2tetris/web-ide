@@ -71,9 +71,7 @@ const headerButtons: HeaderButton[] = [
   // TODO(https://github.com/nand2tetris/web-ide/issues/349)
   // reenable when this is resolved for Firefox and safari
   // https://caniuse.com/?search=showDirectoryPicker
-  ...("showDirectoryPicker" in window
-    ? [headerButtonFromURL(URLs["compiler"], "code")]
-    : []),
+  headerButtonFromURL(URLs["compiler"], "code"),
   headerButtonFromURL(URLs["bitmap"], "grid_on"),
   headerButtonFromURL(URLs["util"], "function", "Converter Tool"),
   {

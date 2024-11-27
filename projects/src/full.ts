@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, Tree } from "@davidsouther/jiffies/lib/esm/fs.js";
 
 import * as project_01 from "./project_01/index.js";
 import * as project_02 from "./project_02/index.js";
@@ -7,6 +7,7 @@ import * as project_04 from "./project_04/index.js";
 import * as project_05 from "./project_05/index.js";
 import * as project_07 from "./project_07/index.js";
 import * as project_08 from "./project_08/index.js";
+import { reset } from "./reset.js";
 import * as project_06 from "./samples/project_06/index.js";
 
 export const ChipProjects = {
@@ -21,42 +22,46 @@ export const VmProjects = {
   "08": project_08,
 };
 
-const Projects = {
-  1: project_01,
-  2: project_02,
-  3: project_03,
-  4: project_04,
-  5: project_05,
-  6: project_06,
-  7: project_07,
-  8: project_08,
+export const Projects = {
+  "1": project_01,
+  "2": project_02,
+  "3": project_03,
+  "4": project_04,
+  "5": project_05,
+  "6": project_06,
+  "7": project_07,
+  "8": project_08,
 };
 
-let reset = false;
-export const resetFiles = async (fs: FileSystem, projects?: number[]) => {
-  if (reset) return; // React will double-render a call to resetFiles in useEffect.
-  reset = true;
-  projects ??= [1, 2, 3, 4, 6, 5, 7, 8];
+export const ProjectIDs: (keyof typeof Projects)[] = Object.keys(
+  Projects,
+) as unknown as (keyof typeof Projects)[];
+
+const ProjectFiles: Record<keyof typeof Projects, Tree> = {
+  "1": project_01.CHIPS,
+  "2": project_02.CHIPS,
+  "3": project_03.CHIPS,
+  "4": project_04.TESTS,
+  "5": project_05.CHIPS,
+  "6": project_06.FILES,
+  "7": project_07.VMS,
+  "8": project_08.VMS,
+};
+
+export const resetFiles = async (fs: FileSystem, projects = ProjectIDs) => {
   for (const project of projects) {
-    if (!Object.keys(Projects).includes(project.toString())) {
-      continue;
-    }
     await Projects[project as keyof typeof Projects].resetFiles(fs);
   }
-  reset = false;
 };
 
-export const resetTests = async (fs: FileSystem, projects?: number[]) => {
-  if (reset) return; // React will double-render a call to resetTests in useEffect.
-  reset = true;
-  projects ??= [1, 2, 3, 4, 5, 7, 8];
+export const resetTests = async (fs: FileSystem, projects = ProjectIDs) => {
   for (const project of projects) {
-    if (!Object.keys(Projects).includes(project.toString())) {
-      continue;
-    }
     await Projects[project as keyof typeof Projects].resetTests(fs);
   }
-  reset = false;
+};
+
+export const createFiles = async (fs: FileSystem) => {
+  await reset(fs, ProjectFiles, "/", false);
 };
 
 export const Assignments = {

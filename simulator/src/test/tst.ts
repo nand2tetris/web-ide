@@ -17,9 +17,18 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _log = "";
   fs: FileSystem = new FileSystem();
   protected doEcho?: Action<string>;
+  protected doCompareTo?: Action<string>;
+  protected dir?: string;
+  protected outputFileName?: string;
 
-  constructor(doEcho?: Action<string>) {
+  constructor(
+    path?: string,
+    doEcho?: Action<string>,
+    doCompareTo?: Action<string>,
+  ) {
     this.doEcho = doEcho;
+    this.doCompareTo = doCompareTo;
+    this.dir = path;
   }
 
   setFileSystem(fs: FileSystem): this {
@@ -42,11 +51,12 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   async load(_filename?: string): Promise<void> {
     return undefined;
   }
-  async compareTo(_filename: string): Promise<void> {
-    return undefined;
+
+  async compareTo(filename: string): Promise<void> {
+    this.doCompareTo?.(filename);
   }
-  outputFile(_filename: string): void {
-    return undefined;
+  outputFile(filename: string): void {
+    this.outputFileName = filename;
   }
 
   private createOutputs(params: OutputParams[]): Output[] {

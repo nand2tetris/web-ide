@@ -2,7 +2,7 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { resetFiles, resetTests } from "@nand2tetris/projects/loader.js";
 
 const VERSION_KEY = "version";
-const CURRENT_VERSION = 12;
+const CURRENT_VERSION = 13;
 
 export function getVersion() {
   return Number(localStorage.getItem(VERSION_KEY) ?? "0");
@@ -41,7 +41,7 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
       try {
         await fs.writeFile(
           `/projects/01/Xor/Xor.${suffix}`,
-          await fs.readFile(`/projects/01/XOr/XOr.${suffix}`),
+          await fs.readFile(`/projects/01/XOr/XOr.${suffix}`)
         );
       } catch (e) {
         // The XOr file was probably never loaded
@@ -81,4 +81,16 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
   11: async (fs: FileSystem) => {
     await resetTests(fs, ["1"]);
   },
+  12: async (fs: FileSystem) => {
+    for (const suffix of ["hdl", "cmp", "tst"]) {
+      try {
+        await fs.rm(`/projects/01/Xor/Xor.${suffix}`);
+      } catch (e) {
+        // The XOr file was probably never loaded
+      }
+    }
+  },
+  //   13: async (fs: FileSystem) => {
+  //     await resetFiles(fs, ["0", "9", "10", "11", "12", "13"]);
+  //   },
 };

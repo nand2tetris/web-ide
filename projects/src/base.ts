@@ -218,3 +218,37 @@ export const VM_PROJECTS: Record<"07" | "08", string[]> = {
     "StaticsTest",
   ],
 };
+
+function partitionChips(project: "01" | "02" | "03" | "05", chips: string[]) {
+  const base = CHIP_PROJECTS["01"];
+  // Get all the default project chips, in order, and remove those that aren't in `chips`.
+  const core = base.filter((name) => chips.includes(name));
+  // Get all the chips that aren't in base.
+  const rest = chips.filter((name) => !base.includes(name));
+  rest.sort();
+  return [...core, ...rest];
+}
+
+export function sortChips(project: string, chips: string[]): string[] {
+  switch (project) {
+    case "1":
+    case "01": {
+      return partitionChips("01", chips);
+    }
+    case "2":
+    case "02": {
+      return partitionChips("01", chips);
+    }
+    case "3":
+    case "03": {
+      return partitionChips("03", chips);
+    }
+    case "5":
+    case "05": {
+      return partitionChips("05", chips);
+    }
+    default:
+      chips.sort();
+      return chips;
+  }
+}

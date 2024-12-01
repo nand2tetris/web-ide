@@ -41,7 +41,7 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
       try {
         await fs.writeFile(
           `/projects/01/Xor/Xor.${suffix}`,
-          await fs.readFile(`/projects/01/XOr/XOr.${suffix}`)
+          await fs.readFile(`/projects/01/XOr/XOr.${suffix}`),
         );
       } catch (e) {
         // The XOr file was probably never loaded

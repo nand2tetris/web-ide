@@ -340,7 +340,7 @@ export function makeChipStore(
       dispatch.current({ action: "setChips", payload });
 
       if (chips.length > 0) {
-        this.loadChip(`${prefix}/${project}/${chips[0]}.hdl`, false);
+        this.loadChip(`${prefix}/${project}/${chips[0]}.hdl`, true);
       }
     },
 

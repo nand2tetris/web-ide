@@ -3,6 +3,7 @@ import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   BUILTIN_CHIP_PROJECTS,
   CHIP_PROJECTS,
+  sortChips,
 } from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import {
@@ -333,7 +334,10 @@ export function makeChipStore(
       const chips = (await fs.scandir(`${prefix}/${project}`))
         .filter((entry) => entry.isFile() && entry.name.endsWith(".hdl"))
         .map((file) => file.name.replace(".hdl", ""));
-      dispatch.current({ action: "setChips", payload: chips });
+
+      const payload = sortChips(project, chips);
+
+      dispatch.current({ action: "setChips", payload });
 
       if (chips.length > 0) {
         this.loadChip(`${prefix}/${project}/${chips[0]}.hdl`, false);

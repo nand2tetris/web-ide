@@ -4,6 +4,8 @@ export const MAX_STEPS = 1000;
 
 const clock = Clock.get();
 
+const BUDGET = 8; // ms allowed per tick
+
 export abstract class Timer {
   frame() {
     this.tick();
@@ -26,8 +28,24 @@ export abstract class Timer {
 
   abstract toggle(): void;
 
-  steps = 1; // How many steps to take per update
-  speed = 1000; // how often to update, in ms
+  _steps = 1; // How many steps to take per update
+  _steps_actual = 1;
+  get steps() {
+    return this._steps;
+  }
+  set steps(value: number) {
+    this._steps = value;
+    this._steps_actual = value;
+  }
+
+  _speed = 60; // how often to update, in ms
+  get speed() {
+    return this._speed;
+  }
+  set speed(value: number) {
+    this._speed = value;
+  }
+
   get running() {
     return this.#running;
   }
@@ -45,15 +63,19 @@ export abstract class Timer {
     this.#sinceLastFrame += delta;
     if (this.#sinceLastFrame > this.speed) {
       let done = false;
-      // let steps = Math.min(this.steps, MAX_STEPS);
-      let steps = this.steps;
-      const timingLabel = `Timing ${steps} steps`;
-      console.time(timingLabel);
-      while (!done && steps--) {
-        // done = await this.tick();
+      let steps = Math.min(this._steps, this._steps_actual);
+
+      const startTime = performance.now();
+      while (!done && steps-- > 0) {
         done = await this.tick();
       }
-      console.timeEnd(timingLabel);
+      const endTime = performance.now();
+
+      // Dynamically adjust steps to stay within BUDGET ms per update, to avoid blocking the main thread.
+      const duration = endTime - startTime;
+      this._steps_actual *= BUDGET / duration;
+      this._steps_actual = Math.ceil(this._steps_actual);
+
       this.finishFrame();
       if (done) {
         this.stop();

@@ -138,7 +138,7 @@ export const Settings = () => {
                 resetConfirm.open();
               }}
             >
-              Yes
+              <Trans>Yes</Trans>
             </button>
             <button
               style={{ width: "100px" }}
@@ -146,7 +146,7 @@ export const Settings = () => {
                 resetWarning.close();
               }}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
           </div>
         </main>
@@ -157,9 +157,13 @@ export const Settings = () => {
   const resetConfirmDialog = (
     <dialog open={resetConfirm.isOpen}>
       <article>
-        <header>Your files were reset</header>
+        <header>
+          <Trans>Your files were reset</Trans>
+        </header>
         <main>
-          <button onClick={resetConfirm.close}>Ok</button>
+          <button onClick={resetConfirm.close}>
+            <Trans>Ok</Trans>
+          </button>
         </main>
       </article>
     </dialog>
@@ -211,23 +215,33 @@ export const Settings = () => {
                 </div>
               </dd>
               <dt>
-                <Trans>Files</Trans>
+                <Trans>NAND2Tetris Project Files</Trans>
               </dt>
               <dd>
-                {showUpgradeFs && canUpgradeFs ? (
+                <a
+                  role="button"
+                  href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
+                  download="projects.zip"
+                  data-tooltip={
+                    "This action will download to your device all the project files needed for completing the Nand to Tetris courses (both Part I and Part II). You will be prompted where to store the nand2tetris/projects folder on your device"
+                  }
+                  data-placement="bottom"
+                >
+                  <Trans>Download the projects folder</Trans>
+                </a>
+              </dd>
+              <dt>
+                <Trans>Local Project Files</Trans>
+              </dt>
+              <dd>
+                {showUpgradeFs && canUpgradeFs && (
                   <>
-                    <button
-                      disabled={upgrading}
-                      onClick={async () => {
-                        upgradeFsAction(true);
-                      }}
-                      data-tooltip={
-                        "This action will download to your device all the project files\n needed for completing the Nand to Tetris courses (both Part I and Part II). You will be prompted where to store the nand2tetris/projects folder on your device"
-                      }
-                      data-placement="bottom"
-                    >
-                      <Trans>Download nand2tetris/projects</Trans>
-                    </button>
+                    {localFsRoot && (
+                      <p>
+                        <Trans>Current projects folder</Trans>
+                        <code>{localFsRoot}</code>
+                      </p>
+                    )}
                     <button
                       disabled={upgrading}
                       onClick={async () => {
@@ -236,27 +250,24 @@ export const Settings = () => {
                       data-tooltip="Load a nand2tetris project folder stored on your device"
                       data-placement="bottom"
                     >
-                      <Trans>Select existing folder</Trans>
+                      {localFsRoot ? (
+                        <Trans>Select a different projects folder</Trans>
+                      ) : (
+                        <Trans>Select a projects folder</Trans>
+                      )}
                     </button>
-                    {localFsRoot ? (
-                      <>
-                        <p>
-                          <Trans>Using {localFsRoot}</Trans>
-                        </p>
-                        <button
-                          onClick={async () => {
-                            await closeFs();
-                          }}
-                        >
-                          Use browser storage
-                        </button>
-                      </>
-                    ) : (
-                      <></>
+                    {localFsRoot && (
+                      <button
+                        onClick={async () => {
+                          await closeFs();
+                        }}
+                        data-tooltip={t`Close the locally opened projects folder, and instead store your files in the browser's local storage.`}
+                        data-placement="bottom"
+                      >
+                        <Trans>Use browser storage</Trans>
+                      </button>
                     )}
                   </>
-                ) : (
-                  <></>
                 )}
                 {!localFsRoot && (
                   <button

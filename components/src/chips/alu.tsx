@@ -39,7 +39,7 @@ export const ALUComponent = ({
           textAnchor="middle"
           y="61"
           x="35"
-          fill="#000000"
+          // fill="#000000" // use style from chip.scss
         >
           {A}
         </text>
@@ -48,7 +48,7 @@ export const ALUComponent = ({
           textAnchor="middle"
           y="176"
           x="35"
-          fill="#000000"
+          // fill="#000000" // use style from chip.scss
         >
           {D}
         </text>
@@ -57,7 +57,7 @@ export const ALUComponent = ({
           textAnchor="middle"
           y="121"
           x="207"
-          fill="#000000"
+          // fill="#000000" // use style from chip.scss
         >
           {out}
         </text>
@@ -71,19 +71,19 @@ export const ALUComponent = ({
           {COMMANDS_ALU.op[op] ?? "(??)"}
         </text>
         <g>
-          <path stroke="black" d="M 6,67.52217 H 68.675994" />
-          <path stroke="black" d="M 68.479388,67.746136 60.290279,61.90711" />
-          <path stroke="black" d="m 68.479388,67.40711 -8.189109,5.839026" />
+          <path /*stroke="black"*/ d="M 6,67.52217 H 68.675994" />
+          <path /*stroke="black"*/ d="M 68.479388,67.746136 60.290279,61.90711" />
+          <path /*stroke="black"*/ d="m 68.479388,67.40711 -8.189109,5.839026" />
         </g>
         <g transform="translate(0,115.5)">
-          <path stroke="black" d="M 6,67.52217 H 68.675994" />
-          <path d="M 68.479388,67.746136 60.290279,61.90711" stroke="black" />
-          <path stroke="black" d="m 68.479388,67.40711 -8.189109,5.839026" />
+          <path /*stroke="black"*/ d="M 6,67.52217 H 68.675994" />
+          <path d="M 68.479388,67.746136 60.290279,61.90711" /*stroke="black"*/ />
+          <path /*stroke="black"*/ d="m 68.479388,67.40711 -8.189109,5.839026" />
         </g>
         <g transform="translate(176,57.5)">
-          <path stroke="black" d="M 6,67.52217 H 68.675994" />
-          <path stroke="black" d="M 68.479388,67.746136 60.290279,61.90711" />
-          <path stroke="black" d="m 68.479388,67.40711 -8.189109,5.839026" />
+          <path /*stroke="black"*/ d="M 6,67.52217 H 68.675994" />
+          <path /*stroke="black"*/ d="M 68.479388,67.746136 60.290279,61.90711" />
+          <path /*stroke="black"*/ d="m 68.479388,67.40711 -8.189109,5.839026" />
         </g>
       </g>
     </svg>

@@ -36,5 +36,5 @@ echo "Releasing $VERSION..."
 npm version "$VERSION" --include-workspace-root
 sed "/version/ s/$CURRENT/$VERSION/" web/public/index.html > web/public/index.html.out ; mv web/public/index.html.out web/public/index.html
 git --no-pager diff
-git add package.json
+git add .
 git commit --message "Release ${VERSION}"

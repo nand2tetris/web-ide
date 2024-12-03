@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 set -e # Exit on errors
 set -x # Shell debugging
@@ -12,14 +12,10 @@ set -x # Shell debugging
 # THIS FUNCTION IS NOT TRANSITIVE! It must be called with
 # `compare_versions CURRENT NEXT`
 compare_versions() {
-    if [[ "$1" == "$2" ]]; then
-        echo "$1"
-    elif [[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" == "$1" ]]; then
+    if [[ "$1" < "$2" ]]; then
         echo "$2"
     else
-        IFS='.' read -r y1 w1 r1 <<EOF
-$1
-EOF
+        IFS='.' read -r y1 w1 r1 <<<"$1"
         r1=$((r1 + 1))
         echo "${y1}.${w1}.${r1}"
     fi

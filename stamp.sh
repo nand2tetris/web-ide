@@ -12,7 +12,9 @@ set -x # Shell debugging
 # THIS FUNCTION IS NOT TRANSITIVE! It must be called with
 # `compare_versions CURRENT NEXT`
 compare_versions() {
-    if [[ "$1" < "$2" ]] ; then
+    if [[ "$1" == "$2" ]]; then
+        echo "$1"
+    elif [[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" == "$1" ]]; then
         echo "$2"
     else
         IFS='.' read -r y1 w1 r1 <<EOF
@@ -31,7 +33,7 @@ CURRENT=$(grep version package.json | awk -F\" '{print $4}')
 NEXT=$(date +%Y.%W.0)
 VERSION=$(compare_versions "$CURRENT" "$NEXT")
 echo "Releasing $VERSION..."
-npm version "$VERSION" --include-workspace-root -ws
+npm version "$VERSION" --include-workspace-root
 sed "/version/ s/$CURRENT/$VERSION/" web/public/index.html > web/public/index.html.out ; mv web/public/index.html.out web/public/index.html
 git --no-pager diff
 git add package.json

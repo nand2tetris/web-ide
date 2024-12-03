@@ -23,8 +23,8 @@
   "devDependencies": {
     "@davidsouther/jiffies": "^2.2.5",
     "@monaco-editor/react": "^4.6.0",
-    "@nand2tetris/projects": "0.0.0",
-    "@nand2tetris/simulator": "0.0.0",
+    "@nand2tetris/projects": "file:../projects",
+    "@nand2tetris/simulator": "file:../simulator",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^16.0.0",
     "@types/error-cause": "^1.0.4",

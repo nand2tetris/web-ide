@@ -19,7 +19,7 @@
   },
   "dependencies": {
     "@davidsouther/jiffies": "^2.2.5",
-    "@nand2tetris/projects": "0.0.0",
+    "@nand2tetris/projects": "file:../projects",
     "@types/node": "^20.14.2"
   },
   "devDependencies": {

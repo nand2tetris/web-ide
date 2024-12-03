@@ -1,6 +1,6 @@
 {
   "name": "@nand2tetris/components",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "private": true,
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
@@ -23,8 +23,8 @@
   "devDependencies": {
     "@davidsouther/jiffies": "^2.2.5",
     "@monaco-editor/react": "^4.6.0",
-    "@nand2tetris/projects": "^1.0.0",
-    "@nand2tetris/simulator": "^1.0.0",
+    "@nand2tetris/projects": "0.0.0",
+    "@nand2tetris/simulator": "0.0.0",
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^16.0.0",
     "@types/error-cause": "^1.0.4",

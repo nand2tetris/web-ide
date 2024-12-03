@@ -1,6 +1,6 @@
 {
   "name": "@nand2tetris/vscode",
-  "version": "0.2.1",
+  "version": "0.0.0",
   "private": true,
   "description": "NAND2Tetris IDE features for VSCode",
   "author": "David Souther <davidsouther@gmail.com>",
@@ -242,7 +242,7 @@
   ],
   "devDependencies": {
     "@davidsouther/jiffies": "^2.0.6",
-    "@nand2tetris/simulator": "^1.0.0",
+    "@nand2tetris/simulator": "0.0.0",
     "@types/error-cause": "^1.0.1",
     "@types/node": "^16.11.41",
     "@types/vscode": "^1.74.0",

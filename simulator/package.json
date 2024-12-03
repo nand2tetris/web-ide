@@ -1,6 +1,6 @@
 {
   "name": "@nand2tetris/simulator",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "private": true,
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
@@ -19,8 +19,8 @@
   },
   "dependencies": {
     "@davidsouther/jiffies": "^2.2.5",
-    "@nand2tetris/projects": "^1.0.0",
-    "@nand2tetris/runner": "^1.0.0",
+    "@nand2tetris/projects": "0.0.0",
+    "@nand2tetris/runner": "0.0.0",
     "@types/node": "^20.14.2",
     "ohm-js": "^17.1.0",
     "rxjs": "^7.8.1"

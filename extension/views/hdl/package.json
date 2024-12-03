@@ -1,10 +1,10 @@
 {
   "name": "hdl",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@nand2tetris/components": "^1.0.0",
-    "@nand2tetris/simulator": "^1.0.0",
+    "@nand2tetris/components": "0.0.0",
+    "@nand2tetris/simulator": "0.0.0",
     "gh-pages": "6.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -37,8 +37,13 @@ jobs:
           git config --global user.name $user_name
           git config --global user.email $user_email
           git remote set-url origin https://${github_token}@github.com/${repository}
+          ./stamp.sh
           npm run build
           npm run -w web deploy
+          VERSION=$(grep version package.json | awk -F\" '{print $4}')
+          git tag "$VERSION" main
+          git push "$REMOTE" "$VERSION"
+          git push "$REMOTE" main
         env:
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"

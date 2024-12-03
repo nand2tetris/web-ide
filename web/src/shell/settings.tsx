@@ -221,11 +221,9 @@ export const Settings = () => {
                 <a
                   role="button"
                   href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
+                  target="_blank"
+                  rel="noreferrer"
                   download="projects.zip"
-                  data-tooltip={
-                    "This action will download to your device all the project files needed for completing the Nand to Tetris courses (both Part I and Part II). You will be prompted where to store the nand2tetris/projects folder on your device"
-                  }
-                  data-placement="bottom"
                 >
                   <Trans>Download the projects folder</Trans>
                 </a>

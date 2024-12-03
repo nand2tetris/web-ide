@@ -1,7 +1,7 @@
 #!/bin/sh
 
 set -e # Exit on errors
-# set -x # Shell debugging
+set -x # Shell debugging
 
 # CURRENT and NEXT have the format YYYY.WW.REV, where YYYY is the current year,
 # WW is the current week, and REV is the number of releases this week.
@@ -15,7 +15,9 @@ compare_versions() {
     if [[ "$1" < "$2" ]] ; then
         echo "$2"
     else
-        IFS='.' read -r y1 w1 r1 <<< "$1"
+        IFS='.' read -r y1 w1 r1 <<EOF
+$1
+EOF
         r1=$((r1 + 1))
         echo "${y1}.${w1}.${r1}"
     fi

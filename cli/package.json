@@ -1,6 +1,5 @@
 {
   "name": "@nand2tetris/cli",
-  "version": "0.1.0",
   "description": "NAND2Tetris Command Line tools",
   "repository": {
     "type": "git",

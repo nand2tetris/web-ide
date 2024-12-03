@@ -1,6 +1,5 @@
 {
   "name": "hdl",
-  "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@nand2tetris/components": "^1.0.0",

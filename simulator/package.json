@@ -1,6 +1,5 @@
 {
   "name": "@nand2tetris/simulator",
-  "version": "1.0.0",
   "private": true,
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",

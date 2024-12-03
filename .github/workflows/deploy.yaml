@@ -42,8 +42,8 @@ jobs:
           npm run -w web deploy
           VERSION=$(grep version package.json | awk -F\" '{print $4}')
           git tag "$VERSION" main
-          git push "$REMOTE" "$VERSION"
-          git push "$REMOTE" main
+          git push origin "$VERSION"
+          git push origin main
         env:
           user_name: "github-actions[bot]"
           user_email: "github-actions[bot]@users.noreply.github.com"

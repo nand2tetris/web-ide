@@ -22,8 +22,8 @@
   },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.2.5",
-    "@nand2tetris/runner": "0.0.0",
-    "@nand2tetris/simulator": "0.0.0"
+    "@nand2tetris/runner": "file:../runner",
+    "@nand2tetris/simulator": "file:../simulator"
   },
   "dependencies": {
     "@types/node": "^20.14.2",

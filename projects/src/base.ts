@@ -220,7 +220,7 @@ export const VM_PROJECTS: Record<"07" | "08", string[]> = {
 };
 
 function partitionChips(project: "01" | "02" | "03" | "05", chips: string[]) {
-  const base = CHIP_PROJECTS["01"];
+  const base = CHIP_PROJECTS[project];
   // Get all the default project chips, in order, and remove those that aren't in `chips`.
   const core = base.filter((name) => chips.includes(name));
   // Get all the chips that aren't in base.
@@ -237,7 +237,7 @@ export function sortChips(project: string, chips: string[]): string[] {
     }
     case "2":
     case "02": {
-      return partitionChips("01", chips);
+      return partitionChips("02", chips);
     }
     case "3":
     case "03": {

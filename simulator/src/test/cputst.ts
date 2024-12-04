@@ -55,7 +55,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
   }
 
   override async step() {
-    if (!(this.hasLoad || this.fileLoaded)) {
+    if (!this.hasLoad && this.cpu.ROM.isEmpty()) {
       throw new Error(
         "Cannot execute the test without first loading an .asm or .hack file",
       );

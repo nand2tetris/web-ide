@@ -127,6 +127,10 @@ export class Memory implements MemoryAdapter {
   [Symbol.iterator](): Iterable<number> {
     return this.map((_, v) => v);
   }
+
+  isEmpty(): boolean {
+    return this.memory.every((word) => word === 0);
+  }
 }
 
 export class SubMemory implements MemoryAdapter {

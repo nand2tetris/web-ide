@@ -49,7 +49,7 @@ export class OutputLib {
   }
 
   println() {
-    this.row += 1;
+    this.row = this.row == MAX_HEIGHT ? 0 : this.row + 1;
     this.col = 0;
   }
 
@@ -83,9 +83,6 @@ export class OutputLib {
     this.col += 1;
     if (this.col == MAX_WIDTH) {
       this.println();
-      if (this.row == MAX_HEIGHT) {
-        this.row = 0;
-      }
     }
   }
 

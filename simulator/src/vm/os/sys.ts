@@ -53,25 +53,13 @@ export class SysLib {
       this.error(ERRNO.SYS_WAIT_DURATION_NOT_POSITIVE);
       return;
     }
+
     this.block();
 
-    let waited = 0;
-
-    const loop = (delta: number) => {
-      if (this.cancelWait) {
-        return;
-      }
-
-      waited += delta;
-
-      if (waited >= ms) {
-        this.release();
-      } else {
-        this.animationFrameId = requestAnimationFrame(loop);
-      }
-    };
-
-    loop(0);
+    (async () => {
+      await new Promise((x) => setTimeout(x, ms));
+      this.release();
+    })();
   }
 
   halt() {

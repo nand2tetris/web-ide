@@ -57,7 +57,7 @@ export class SysLib {
     this.block();
 
     (async () => {
-      await new Promise(x => setTimeout(x, ms));
+      await new Promise((x) => setTimeout(x, ms));
       this.release();
     })();
   }

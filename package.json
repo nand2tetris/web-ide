@@ -19,9 +19,9 @@
     "precheck": "npm -w web run extract && npm -w web run lingui",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
     "clean": "shx rm -rf **/node_modules **/tsconfig.tsbuildinfo **/build",
-    "format": "prettier --write cli/src components/src extension/src projects/src runner/src simulator/src web/src",
+    "format": "prettier --config .prettierconfig.yaml --write cli/src components/src extension/src projects/src runner/src simulator/src web/src",
     "fix": "eslint --fix cli/src components/src extension/src projects/src runner/src simulator/src web/src",
-    "check:format": "prettier --ignore-unknown --check cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
+    "check:format": "prettier --ignore-unknown --config .prettierconfig.yaml --check cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "check:lint": "eslint --no-error-on-unmatched-pattern cli/src components/src extension/src projects/src runner/src simulator/src web/src web/public",
     "precheck:types": "npm run build -w projects && npm run build -w runner && npm run build -w simulator && npm run build -w components",
     "check:types": "tsc --build tsconfig.json",
@@ -54,6 +54,7 @@
   "devDependencies": {
     "concurrently": "^9.0.1",
     "cross-env": "^7.0.3",
+    "prettier": "^3.4.2",
     "shx": "^0.3.4"
   }
 }

@@ -8,6 +8,7 @@ import { useDialog } from "@nand2tetris/components/dialog";
 import { PageContext } from "src/Page.context";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
+import "./settings.scss";
 import { TrackingDisclosure } from "../tracking";
 import { getVersion, setVersion } from "../versions";
 
@@ -172,7 +173,7 @@ export const Settings = () => {
   return (
     <>
       <dialog open={settings.isOpen}>
-        <article>
+        <article className="settings-dialog">
           <header>
             <p>
               <Trans>Settings</Trans>

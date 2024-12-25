@@ -2,23 +2,23 @@ arrowParens: "always" # default
 bracketSameLine: false # default
 bracketSpacing: true # default
 embeddedLanguageFormatting: "auto" # default
-endOfLine: "lf" # default
+endOfLine: "auto" # default is "lf"
 filepath: "" # default
 htmlWhitespaceSensitivity: "css" # default
 insertPragma: false # default
-jsxBracketSameLine: false # default
+# jsxBracketSameLine: false # deprecated
 jsxSingleQuote: false # default
 parser: "" # default
-printWidth: 80 # Default
+printWidth: 80 # default
 proseWrap: "preserve" # default
 quoteProps: "as-needed" # default
-rangeEnd: Infinity # default
+# rangeEnd: Infinity # default; "Infinity" can't be read as int
 rangeStart: 0 # default
 requirePragma: false # default
 semi: true # default
-singleAttributePerLine: "false" # default
+singleAttributePerLine: false # default
 singleQuote: false # default
 tabWidth: 2 # default
-trailingComma: "es5" # default
+trailingComma: "all" # default is "es5"
 useTabs: false # default
 vueIndentScriptAndStyle: false # default

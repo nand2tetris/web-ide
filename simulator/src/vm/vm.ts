@@ -147,6 +147,24 @@ export class Vm {
     }
   }
 
+  private static fileBasenameNoExtension(file: string): string {
+    // Files that are part of the web-ide are usually passed with folders but without extensions.
+    // e.g.: /projects/08/FibonacciElement/Sys
+    if (file.includes("/")) {
+      file = file.split("/").pop() ?? "";
+    }
+
+    // Local files on Windows are usually passed with extension.
+    // e.g.: Sys.vm
+    if (file.includes(".")) {
+      file = file.split(".")[0];
+    }
+
+    return file;
+
+    // TODO: Check if this also works for Linux and MacOS
+  }
+
   private static validateFile(file: ParsedVmFile) {
     for (const inst of file.instructions) {
       if (inst.op == "function") {
@@ -159,7 +177,7 @@ export class Vm {
             ),
           );
         }
-        if (parts[0] != file.name) {
+        if (parts[0] != this.fileBasenameNoExtension(file.name)) {
           return Err(
             createError(
               `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`,

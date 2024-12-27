@@ -60,7 +60,7 @@ export const vm_tst = `// This file is part of www.nand2tetris.org
 load,
 compare-to FibonacciElement.cmp,
 
-set sp 261,
+set sp 262,
 
 repeat 110 {
   vmstep;
@@ -89,10 +89,10 @@ repeat 6000 {
 
 // Outputs the stack pointer and the value at the stack's base.
 // That's where the implementation should put the return value.
-output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1;
+output-list RAM[0]%D1.6.1 RAM[262]%D1.6.1;
 output;
 `;
 
-export const cmp = `| RAM[0] |RAM[261]|
-|    262 |      3 |
+export const cmp = `| RAM[0] |RAM[262]|
+|    263 |      3 |
 `;

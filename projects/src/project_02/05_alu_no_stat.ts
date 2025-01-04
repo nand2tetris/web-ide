@@ -88,6 +88,8 @@ export const tst = `
 // This way, any comparison failures during ALU.tst will be caused by errors in
 // the handling of the 'zr' and 'ng' status outputs.
 
+load ALU-basic.hdl,
+compare-to ALU-basic.cmp,
 output-list x%B1.16.1 y%B1.16.1 zx%B1.1.1 nx%B1.1.1 zy%B1.1.1 
             ny%B1.1.1 f%B1.1.1 no%B1.1.1 out%B1.16.1;
 

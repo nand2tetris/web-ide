@@ -34,7 +34,7 @@ export class StringLib {
     if (size < 0) {
       this.os.sys.error(ERRNO.STRING_LENGTH_NEG);
     }
-    const pointer = this.os.memory.alloc(size + 2); // +2 to save length, maxLength fields
+    const pointer = this.os.memory.alloc(size + 3); // +3 to save length, maxLength, charArray Ptr
     if (this.os.sys.halted) {
       // alloc returned with an error
       return 0;
@@ -42,6 +42,7 @@ export class StringLib {
 
     this.memory.set(pointer, size); // set maxLength = size
     this.memory.set(pointer + 1, 0); // set length = 0
+    this.memory.set(pointer + 2, this.os.memory.alloc(size)); // set charArrayPtr.
     return pointer;
   }
 
@@ -61,12 +62,16 @@ export class StringLib {
     this.memory.set(pointer + 1, length);
   }
 
+  private charArrayPointer(pointer: number) {
+    return this.memory.get(pointer + 2);
+  }
+
   charAt(pointer: number, index: number) {
     if (index < 0 || index >= this.length(pointer)) {
       this.os.sys.error(ERRNO.GET_CHAR_INDEX_OUT_OF_BOUNDS);
       return 0;
     }
-    return this.memory.get(pointer + index + 2); // +2 to skip the length fields
+    return this.memory.get(this.charArrayPointer(pointer) + index);
   }
 
   setCharAt(pointer: number, index: number, value: number) {
@@ -74,7 +79,7 @@ export class StringLib {
       this.os.sys.error(ERRNO.SET_CHAR_INDEX_OUT_OF_BOUNDS);
       return;
     }
-    this.memory.set(pointer + index + 2, value);
+    this.memory.set(this.charArrayPointer(pointer) + index, value);
   }
 
   // This returns the string pointer to allow compilation of string literals as described in the book,

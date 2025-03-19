@@ -75,6 +75,9 @@
 
       function Init() {
         grid = InitGrid();
+         //Added this console log as a simple fix to ensure the grid had time to populate, on screen the grid would occasionally not populate properly unless I cleared local storage
+         // this is not the optimal solution and this simply buys time but it works for now
+         console.log(grid);
         DisplayGrid();
 
         // enable/disable the rotate button depending on if the canvas is square
@@ -105,6 +108,16 @@
           } catch {}
         }
         return createGrid();
+      }
+      /*Function to reset the grid using logic from createGrid */
+      function ResetGrid(){
+        for (let i = 0; i < HEIGHT; i++) {
+          for (let j = 0; j < WIDTH; j++) {
+            grid[i][j] = false;
+          }
+        }
+        saveGrid();
+        DisplayGrid();
       }
       /*
         // Working on it
@@ -981,6 +994,9 @@
             </td>
             <td align="center">
               <input type="button" value="Invert" onclick="InvertBitmap()" />
+            </td>
+            <td align="center">
+              <input type="button" value="Clear Grid" onclick="ResetGrid()" />
             </td>
             <td align="center">
               <input

@@ -34,13 +34,8 @@ async function loadAssignmentFromSource(
   file: Assignment,
   tst: string,
 ) {
-  const assignment = Assignments[file.name as keyof typeof Assignments];
   const hdl = await fs.readFile(`${file.name}.hdl`);
-  const cmp = await fs
-    .readFile(`${file.name}.cmp`)
-    .catch(
-      () => assignment[`${file.name}.cmp` as keyof typeof assignment] as string,
-    );
+  const cmp = await fs.readFile(`${file.name}.cmp`).catch(() => "" as string);
   return { ...file, hdl, tst, cmp };
 }
 

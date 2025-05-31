@@ -69,8 +69,7 @@ yargs(hideBin(process.argv))
           console.log("tst");
           testRunner(dirname(resolve(argv.file ?? process.cwd())), name);
           break;
-        case ".hdl":
-          console.log("hdl");
+        case ".hdl": {
           const tst = fsCore.readFileSync(0, "utf8");
           testRunnerFromSource(
             dirname(resolve(argv.file ?? process.cwd())),
@@ -78,6 +77,7 @@ yargs(hideBin(process.argv))
             tst,
           );
           break;
+        }
         default:
           console.log("unknown", ext);
           break;

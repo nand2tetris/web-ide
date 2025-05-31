@@ -75,6 +75,8 @@ export async function testRunnerFromSource(
     // Check if these are error results (have 'err' property at top level)
     if ("err" in run.maybeParsedHDL && run.maybeParsedHDL.err) {
       errorMessage = run.maybeParsedHDL.err.message || "HDL parsing error";
+    } else if ("err" in run.maybeParsedTST && run.maybeParsedTST.err) {
+      errorMessage = run.maybeParsedTST.err.message || "TST parsing error";
     } else if ("err" in run.maybeChip && run.maybeChip.err) {
       errorMessage = run.maybeChip.err.message || run.maybeChip.err.toString();
     } else if ("err" in run.maybeTest && run.maybeTest.err) {

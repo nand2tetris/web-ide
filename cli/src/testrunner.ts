@@ -59,6 +59,9 @@ export async function testRunnerFromSource(
   file: string,
   tst: string,
 ) {
+  if (!tst.startsWith("load ")) {
+    tst = `load ${file}\n` + tst;
+  }
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(dir);
   const assignment = await loadAssignmentFromSource(fs, parse(file), tst);

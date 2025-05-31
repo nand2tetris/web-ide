@@ -3,7 +3,7 @@ import path, { dirname, parse, resolve } from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { main } from "./grading.js";
-import { testRunner } from "./testrunner.js";
+import { testRunner, testRunnerFromSource } from "./testrunner.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import * as fsCore from "fs";
@@ -61,7 +61,6 @@ yargs(hideBin(process.argv))
             "When set, look for the java IDE jars in this path and compare both runs.",
         }),
     (argv) => {
-      console.log("nand2tetris command run", argv);
       const { name, ext } = parse(argv.file ?? "");
       switch (ext) {
         case "":
@@ -69,9 +68,15 @@ yargs(hideBin(process.argv))
           console.log("tst");
           testRunner(dirname(resolve(argv.file ?? process.cwd())), name);
           break;
-        case ".hdl":
-          console.log("hdl");
+        case ".hdl": {
+          const tst = fsCore.readFileSync(0, "utf8");
+          testRunnerFromSource(
+            dirname(resolve(argv.file ?? process.cwd())),
+            name,
+            tst,
+          );
           break;
+        }
         default:
           console.log("unknown", ext);
           break;

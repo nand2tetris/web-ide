@@ -64,7 +64,31 @@ export async function testRunnerFromSource(
   const assignment = await loadAssignmentFromSource(fs, parse(file), tst);
   const tryRun = runner(fs);
   const run = await tryRun(assignment);
-  console.log(run);
+
+  // Print output to stdout or stderr based on pass/fail
+  if (run.pass) {
+    process.stdout.write(run.out);
+  } else {
+    // Look for error messages in various places
+    let errorMessage = "";
+
+    // Check if these are error results (have 'err' property at top level)
+    if ("err" in run.maybeParsedHDL && run.maybeParsedHDL.err) {
+      errorMessage = run.maybeParsedHDL.err.message || "HDL parsing error";
+    } else if ("err" in run.maybeChip && run.maybeChip.err) {
+      errorMessage = run.maybeChip.err.message || run.maybeChip.err.toString();
+    } else if ("err" in run.maybeTest && run.maybeTest.err) {
+      errorMessage = run.maybeTest.err.message || run.maybeTest.err.toString();
+    } else {
+      // Fallback to out if no specific error found
+      errorMessage = run.out;
+    }
+
+    process.stderr.write(errorMessage + "\n");
+  }
+
+  // Exit with appropriate code
+  process.exit(run.pass ? 0 : 1);
 }
 
 // export async function testDebugger(root: string, name: string, port: number) {}

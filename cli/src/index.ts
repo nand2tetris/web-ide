@@ -61,7 +61,6 @@ yargs(hideBin(process.argv))
             "When set, look for the java IDE jars in this path and compare both runs.",
         }),
     (argv) => {
-      console.log("nand2tetris command run", argv);
       const { name, ext } = parse(argv.file ?? "");
       switch (ext) {
         case "":

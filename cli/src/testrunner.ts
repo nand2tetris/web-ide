@@ -87,7 +87,10 @@ export async function testRunnerFromSource(
       process.stdout.write(run.out);
     }
 
-    process.stderr.write(errorMessage + "\n");
+    // Write error message to stderr
+    if (errorMessage) {
+      process.stderr.write(errorMessage + "\n");
+    }
   }
 
   // Exit with appropriate code

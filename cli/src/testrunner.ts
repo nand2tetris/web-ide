@@ -68,13 +68,11 @@ export async function testRunnerFromSource(
   const tryRun = runner(fs);
   const run = await tryRun(assignment);
 
+  let errorMessage = "";
   // Print output to stdout or stderr based on pass/fail
   if (run.pass) {
     process.stdout.write(run.out);
   } else {
-    // Look for error messages in various places
-    let errorMessage = "";
-
     // Check if these are error results (have 'err' property at top level)
     if ("err" in run.maybeParsedHDL && run.maybeParsedHDL.err) {
       errorMessage = run.maybeParsedHDL.err.message || "HDL parsing error";
@@ -86,14 +84,14 @@ export async function testRunnerFromSource(
       errorMessage = run.maybeTest.err.message || run.maybeTest.err.toString();
     } else {
       // Fallback to out if no specific error found
-      errorMessage = run.out;
+      process.stdout.write(run.out);
     }
 
     process.stderr.write(errorMessage + "\n");
   }
 
   // Exit with appropriate code
-  process.exit(run.pass ? 0 : 1);
+  process.exit(!errorMessage ? 0 : 1);
 }
 
 // export async function testDebugger(root: string, name: string, port: number) {}

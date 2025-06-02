@@ -60,7 +60,7 @@ export async function testRunnerFromSource(
   tst: string,
 ) {
   if (!tst.startsWith("load ")) {
-    tst = `load ${file}\n` + tst;
+    tst = `load ${file},\n` + tst;
   }
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(dir);

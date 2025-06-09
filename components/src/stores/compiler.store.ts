@@ -3,7 +3,7 @@ import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { CompilationError } from "@nand2tetris/simulator/languages/base.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
-import { BaseContext } from "./base.context.js";
+import { BaseContext, StatusSeverity } from "./base.context.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 
 export interface CompiledFile {
@@ -32,7 +32,7 @@ function classTemplate(name: string) {
 }
 
 export function makeCompilerStore(
-  setStatus: Action<string>,
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
 ) {
   let fs: FileSystem | undefined;

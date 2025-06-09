@@ -31,7 +31,7 @@ import { Action } from "@nand2tetris/simulator/types.js";
 import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext } from "./base.context.js";
+import { BaseContext, StatusSeverity } from "./base.context.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -128,7 +128,7 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
@@ -234,8 +234,14 @@ export function makeChipStore(
       Promise.resolve().then(() => {
         setStatus(
           passed
-            ? `Simulation successful: The output file is identical to the compare file`
-            : `Simulation error: The output file differs from the compare file`,
+            ? {
+                message: `Simulation successful: The output file is identical to the compare file`,
+                severity: "SUCCESS",
+              }
+            : {
+                message: `Simulation error: The output file differs from the compare file`,
+                severity: "ERROR",
+              },
         );
       });
     },
@@ -376,7 +382,10 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
-        setStatus(Err(maybeChip).message);
+        setStatus({
+          message: Err(maybeChip).message,
+          severity: "ERROR",
+        });
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -420,9 +429,10 @@ export function makeChipStore(
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, dir);
       } catch (e) {
-        setStatus(
-          `Could not find ${name}.tst. Please load test file separately.`,
-        );
+        setStatus({
+          message: `Could not find ${name}.tst. Please load test file separately.`,
+          severity: "WARNING",
+        });
         console.error(e);
       }
     },
@@ -432,7 +442,10 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
       if (isErr(tst)) {
-        setStatus(`Failed to parse test ${Err(tst).message}`);
+        setStatus({
+          message: `Failed to parse test ${Err(tst).message}`,
+          severity: "ERROR",
+        });
         invalid = true;
         return false;
       }
@@ -450,7 +463,10 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus(Err(maybeTest).message);
+        setStatus({
+          message: Err(maybeTest).message,
+          severity: "ERROR",
+        });
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -481,7 +497,10 @@ export function makeChipStore(
           this.compileTest(tst, tstPath ?? _dir);
         }
       } catch (e) {
-        setStatus(display(e));
+        setStatus({
+          message: display(e),
+          severity: "ERROR",
+        });
       }
       dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
       if (!invalid) {
@@ -527,9 +546,10 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        setStatus(
-          `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
-        );
+        setStatus({
+          message: `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
+          severity: "ERROR",
+        });
         return;
       }
       this.replaceChip(Ok(nextChip));
@@ -558,7 +578,10 @@ export function makeChipStore(
         }
         return done;
       } catch (e) {
-        setStatus((e as Error).message);
+        setStatus({
+          message: (e as Error).message,
+          severity: "ERROR",
+        });
         return true;
       }
     },

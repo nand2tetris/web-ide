@@ -28,7 +28,7 @@ import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext } from "./base.context.js";
+import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
@@ -90,7 +90,7 @@ export type VmStoreDispatch = Dispatch<{
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
-  setStatus: Action<string>,
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   showHighlight: boolean,
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
@@ -126,7 +126,7 @@ function reduceVMTest(
 
 export function makeVmStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {
@@ -159,7 +159,10 @@ export function makeVmStore(
     setError(state: VmPageState, error?: CompilationError) {
       if (error) {
         state.controls.valid = false;
-        setStatus(error?.message);
+        setStatus({
+          message: error?.message,
+          severity: "ERROR",
+        });
       } else {
         state.controls.valid = true;
       }
@@ -179,8 +182,14 @@ export function makeVmStore(
       const passed = compare(state.files.cmp.trim(), state.files.out);
       setStatus(
         passed
-          ? `Simulation successful: The output file is identical to the compare file`
-          : `Simulation error: The output file differs from the compare file`,
+          ? {
+              message: `Simulation successful: The output file is identical to the compare file`,
+              severity: "SUCCESS",
+            }
+          : {
+              message: `Simulation error: The output file differs from the compare file`,
+              severity: "ERROR",
+            },
       );
     },
 
@@ -328,7 +337,10 @@ export function makeVmStore(
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });
-        setStatus(`Failed to parse test`);
+        setStatus({
+          message: `Failed to parse test`,
+          severity: "ERROR",
+        });
         return false;
       }
       dispatch.current({ action: "setValid", payload: true });
@@ -349,7 +361,10 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        setStatus(Err(maybeTest).message);
+        setStatus({
+          message: Err(maybeTest).message,
+          severity: "ERROR",
+        });
         return false;
       } else {
         test = Ok(maybeTest).using(fs);
@@ -376,7 +391,10 @@ export function makeVmStore(
         }
         return done;
       } catch (e) {
-        setStatus(`Runtime error: ${(e as Error).message}`);
+        setStatus({
+          message: `Runtime error: ${(e as Error).message}`,
+          severity: "ERROR",
+        });
         dispatch.current({ action: "setError", payload: e });
         return true;
       }
@@ -401,7 +419,10 @@ export function makeVmStore(
 
         return done;
       } catch (e) {
-        setStatus(`Runtime error: ${(e as Error).message}`);
+        setStatus({
+          message: `Runtime error: ${(e as Error).message}`,
+          severity: "ERROR",
+        });
         dispatch.current({ action: "setError", payload: e });
         return true;
       }

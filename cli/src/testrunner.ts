@@ -59,8 +59,10 @@ export async function testRunnerFromSource(
   file: string,
   tst: string,
 ) {
-  if (!tst.startsWith("load ")) {
+  let offset = 0;
+  if (!tst.trimStart().startsWith("load ")) {
     tst = `load ${file},\n` + tst;
+    offset = 1;
   }
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(dir);
@@ -89,6 +91,12 @@ export async function testRunnerFromSource(
 
     // Write error message to stderr
     if (errorMessage) {
+      if (offset) {
+        errorMessage = errorMessage.replace(/Line\s+(\d+)/g, (_, l) => {
+          const line = Number(l) - offset;
+          return `Line ${line}`;
+        });
+      }
       process.stderr.write(errorMessage + "\n");
     }
   }

@@ -256,28 +256,25 @@ const VM = () => {
             actions.setVm(source);
           }}
           language={"vm"}
-          highlight={
-            state.controls.valid && state.vm.showHighlight
-              ? state.vm.highlight
-              : undefined
-          }
+          highlight={state.vm.showHighlight ? state.vm.highlight : undefined}
+          highlightType={state.controls.valid ? "highlight" : "error"}
           error={state.controls.error}
         />
       </Panel>
       <Panel className="vm" header={<Trans>VM Structures</Trans>}>
-        {state.controls.valid && state.vm.Stack.length > 0 && (
-          <>
+        <>
+          {state.vm.Stack.length > 0 && (
             <VMStackFrame
               statics={state.vm.Statics}
               temp={state.vm.Temp}
               frame={state.vm.Stack[0]}
             />
-            <CallStack
-              stack={state.vm.Stack}
-              addedSysInit={state.vm.AddedSysInit}
-            />
-          </>
-        )}
+          )}
+          <CallStack
+            stack={state.vm.Stack}
+            addedSysInit={state.vm.AddedSysInit}
+          />
+        </>
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
         <Screen

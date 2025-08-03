@@ -102,7 +102,10 @@ function reduceVMTest(
   try {
     stack = vmTest.vm.vmStack().reverse();
   } catch (e) {
-    setStatus("Runtime error: Invalid stack");
+    dispatch.current({
+      action: "setError",
+      payload: new Error("Runtime error: Invalid stack"),
+    });
   }
 
   return {
@@ -374,7 +377,7 @@ export function makeVmStore(
         return done;
       } catch (e) {
         setStatus(`Runtime error: ${(e as Error).message}`);
-        dispatch.current({ action: "setValid", payload: false });
+        dispatch.current({ action: "setError", payload: e });
         return true;
       }
     },
@@ -395,10 +398,11 @@ export function makeVmStore(
         if (animate) {
           dispatch.current({ action: "update" });
         }
+
         return done;
       } catch (e) {
         setStatus(`Runtime error: ${(e as Error).message}`);
-        dispatch.current({ action: "setValid", payload: false });
+        dispatch.current({ action: "setError", payload: e });
         return true;
       }
     },

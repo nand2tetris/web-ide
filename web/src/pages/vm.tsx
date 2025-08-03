@@ -151,7 +151,7 @@ const VM = () => {
         )) {
           files.push({
             name: file.name.replace(".vm", ""),
-            content: await fs.readFile(`${target}/${file.name}`),
+            content: await fs.readFile(`${target.path}/${file.name}`),
           });
         }
         title = `${target.path.split("/").pop()} / *.vm`;
@@ -191,8 +191,12 @@ const VM = () => {
       )?.name;
       tstPath = `${path}/${name}`;
     }
-    const test = await fs.readFile(tstPath);
-    actions.loadTest(tstPath, test);
+    try {
+      const test = await fs.readFile(tstPath);
+      actions.loadTest(tstPath, test);
+    } catch (e) {
+      // No test file found.
+    }
   };
 
   const onSpeedChange = (speed: number, testPanel: boolean) => {

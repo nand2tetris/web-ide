@@ -25,7 +25,7 @@ import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { RunSpeed } from "src/runbar.js";
 import { useImmerReducer } from "../react.js";
-import { BaseContext } from "./base.context.js";
+import { BaseContext, StatusSeverity } from "./base.context.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -198,7 +198,7 @@ export type AsmStoreDispatch = Dispatch<{
 
 export function makeAsmStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   dispatch: MutableRefObject<AsmStoreDispatch>,
   upgraded: boolean,
 ) {
@@ -234,7 +234,10 @@ export function makeAsmStore(
 
     setError(state: AsmPageState, error?: CompilationError) {
       if (error) {
-        setStatus(error.message);
+        setStatus({
+          message: error.message,
+          severity: "ERROR",
+        });
       }
       state.error = error;
     },
@@ -258,13 +261,19 @@ export function makeAsmStore(
 
       if (resultLines.length != compareLines.length) {
         failure = true;
-        setStatus("Comparison failed - different lengths");
+        setStatus({
+          message: "Comparison failed - different lengths",
+          severity: "ERROR",
+        });
         return;
       }
 
       for (let i = 0; i < compareLines.length; i++) {
         if (resultLines[i] !== compareLines[i]) {
-          setStatus(`Comparison failure: Line ${i}`);
+          setStatus({
+            message: `Comparison failure: Line ${i}`,
+            severity: "ERROR",
+          });
 
           failure = true;
           highlightInfo.resultHighlight = {
@@ -275,7 +284,10 @@ export function makeAsmStore(
           return;
         }
       }
-      setStatus("Comparison successful");
+      setStatus({
+        message: "Comparison successful",
+        severity: "SUCCESS",
+      });
     },
 
     setTitle(state: AsmPageState, title: string) {
@@ -366,7 +378,10 @@ export function makeAsmStore(
       }
 
       if (translator.done) {
-        setStatus("Translation done.");
+        setStatus({
+          message: "Translation done.",
+          severity: "SUCCESS",
+        });
       }
       return translator.done;
     },

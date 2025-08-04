@@ -15,22 +15,49 @@
       var currentColor = null;
 
       // load saved state from local storage
+      // using default values wherever necessary
+      var defaults = {
+        WIDTH: 48,
+        HEIGHT: 32,
+        PIXEL_SIZE: "16",
+        currentIShift: 0,
+        currentJShift: 0,
+        marginSaveFrames: 1,
+        baseI: 0,
+        baseJ: 0,
+        drawHeight: 0,
+        INVERT_MODE: false,
+        comments: true,
+      };
       var state = {};
       try {
-        state = JSON.parse(localStorage.getItem(STATE_KEY, "{}"));
-      } catch {}
-      var WIDTH = state.WIDTH ?? 48;
-      var HEIGHT = state.HEIGHT ?? 32;
-      var PIXEL_SIZE = state.PIXEL_SIZE ?? "16";
-      var currentIShift = state.currentIShift ?? 0;
-      var currentJShift = state.currentJShift ?? 0;
-      var marginSaveFrames = state.marginSaveFrames ?? 1;
+        var savedState = localStorage.getItem(STATE_KEY);
+        if (savedState) {
+          var parsedState = JSON.parse(savedState);
+          state = Object.assign({}, defaults, parsedState);
+        } else {
+          state = defaults;
+        }
+      } catch (error) {
+        console.error(
+          "Error parsing state from localStorage. Using defaults.",
+          error,
+        );
+        state = defaults;
+      }
+      // initialize global variables from state
+      var WIDTH = state.WIDTH;
+      var HEIGHT = state.HEIGHT;
+      var PIXEL_SIZE = state.PIXEL_SIZE;
+      var currentIShift = state.currentIShift;
+      var currentJShift = state.currentJShift;
+      var marginSaveFrames = state.marginSaveFrames;
       var baseI = state.baseI;
       var baseJ = state.baseJ;
-      var drawHeight = state.drawHeight ?? 0;
+      var drawHeight = state.drawHeight;
 
-      var INVERT_MODE = state.INVERT_MODE ?? false;
-      var comments = state.comments ?? true;
+      var INVERT_MODE = state.INVERT_MODE;
+      var comments = state.comments;
 
       function saveState() {
         localStorage.setItem(
@@ -111,6 +138,16 @@
 
         DisplayGrid();
         syncInputsToState();
+      }
+
+      function onLoad() {
+        // attempt to initialize grid based on saved state; fall back to defaults if that fails
+        try {
+          Init();
+        } catch (error) {
+          console.log(error);
+          Reset();
+        }
       }
 
       function createGrid() {
@@ -541,7 +578,6 @@
         if (document.getElementById("pauseCode").checked && !force) return;
         let i, j;
         let value;
-        comments = document.getElementById("commentsOn").checked;
 
         colsOfWords = GetUsedWords();
         let baseRow = 0;
@@ -782,14 +818,14 @@
         GenerateCode();
       }
       function ToggleInvertMode() {
-        if (document.getElementById("invertMode").checked) {
-          INVERT_MODE = true;
-          GenerateCode();
-        } else {
-          INVERT_MODE = false;
-          GenerateCode();
-        }
+        INVERT_MODE = document.getElementById("invertMode").checked;
         saveState();
+        GenerateCode();
+      }
+      function ToggleComments() {
+        comments = document.getElementById("commentsOn").checked;
+        saveState();
+        GenerateCode();
       }
       function isInteger(value) {
         return /^\d+$/.test(value);
@@ -868,8 +904,8 @@
     SPDX-FileCopyrightText: 2023 Erik Umble, <erikumble@gmail.com>
     SPDX-License-Identifier: MIT
   --></head>
-  <body onload="Init();">
-    <h1>Jack Bitmap Editor v2.8</h1>
+  <body onload="onLoad();">
+    <h1>Jack Bitmap Editor v2.9</h1>
     <p>
       See <a href="https://github.com/ErikUmble/JackBitmapEditor">here</a> for
       updates, feature documentation, and contributions.

@@ -151,7 +151,7 @@ const VM = () => {
         )) {
           files.push({
             name: file.name.replace(".vm", ""),
-            content: await fs.readFile(`${target}/${file.name}`),
+            content: await fs.readFile(`${target.path}/${file.name}`),
           });
         }
         title = `${target.path.split("/").pop()} / *.vm`;
@@ -191,8 +191,12 @@ const VM = () => {
       )?.name;
       tstPath = `${path}/${name}`;
     }
-    const test = await fs.readFile(tstPath);
-    actions.loadTest(tstPath, test);
+    try {
+      const test = await fs.readFile(tstPath);
+      actions.loadTest(tstPath, test);
+    } catch (e) {
+      // No test file found.
+    }
   };
 
   const onSpeedChange = (speed: number, testPanel: boolean) => {
@@ -252,28 +256,25 @@ const VM = () => {
             actions.setVm(source);
           }}
           language={"vm"}
-          highlight={
-            state.controls.valid && state.vm.showHighlight
-              ? state.vm.highlight
-              : undefined
-          }
+          highlight={state.vm.showHighlight ? state.vm.highlight : undefined}
+          highlightType={state.controls.valid ? "highlight" : "error"}
           error={state.controls.error}
         />
       </Panel>
       <Panel className="vm" header={<Trans>VM Structures</Trans>}>
-        {state.controls.valid && state.vm.Stack.length > 0 && (
-          <>
+        <>
+          {state.vm.Stack.length > 0 && (
             <VMStackFrame
               statics={state.vm.Statics}
               temp={state.vm.Temp}
               frame={state.vm.Stack[0]}
             />
-            <CallStack
-              stack={state.vm.Stack}
-              addedSysInit={state.vm.AddedSysInit}
-            />
-          </>
-        )}
+          )}
+          <CallStack
+            stack={state.vm.Stack}
+            addedSysInit={state.vm.AddedSysInit}
+          />
+        </>
       </Panel>
       <Panel className="display" style={{ gridArea: "display" }}>
         <Screen

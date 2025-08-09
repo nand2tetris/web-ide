@@ -353,6 +353,7 @@ class ChipBuilder {
           ),
         );
       }
+      this.chip.sortParts();
       return Ok();
     } catch (e) {
       return Err(createError((e as Error).message, part.span));

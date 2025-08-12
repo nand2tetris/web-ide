@@ -206,6 +206,30 @@ describe("Chip Builder", () => {
       throw new Error(asDisplay(e));
     }
   });
+
+  it("sorts after wiring", async () => {
+    try {
+      const chip = unwrap(
+        HDL.parse(`CHIP Or { IN a, b; OUT out;
+  PARTS:
+  Not(in =b , out = net2);
+  Nand(a = net, b =net2 , out =out );
+  Not(in =a , out = net);
+}`),
+      );
+      const orA = await build({ parts: chip });
+      expect(orA).toBeOk();
+
+      const ora = unwrap(orA);
+
+      ora.in("a").pull(HIGH);
+      ora.in("b").pull(LOW);
+      ora.eval();
+      expect(ora.out("out").busVoltage).toBe(HIGH);
+    } catch (e) {
+      throw new Error(asDisplay(e));
+    }
+  });
 });
 
 const USE_COPY_HDL = `CHIP UseCopy {

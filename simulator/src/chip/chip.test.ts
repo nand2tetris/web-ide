@@ -734,4 +734,177 @@ describe("Chip", () => {
     const parts = fooC.parts.map((chip) => chip.id);
     expect(parts).toEqual([fooC.register.id, fooC.inc16A.id, fooC.inc16B.id]);
   });
+
+  it("evals without order issues (after sorting)", () => {
+    /*
+ CHIP Or {
+  IN a, b;
+  OUT out;
+
+  PARTS:
+
+  Not(in =b , out = net2);
+  Nand(a = net, b =net2 , out =out );
+  Not(in =a , out = net);
+}
+  */
+    class OrA extends Chip {
+      readonly nota = new Not();
+      readonly nand = new Nand();
+      readonly notb = new Not();
+      constructor() {
+        super(["a", "b"], ["out"], "OrA", []);
+        this.wire(this.nota, [
+          {
+            from: { name: "b", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "net2", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.wire(this.nand, [
+          {
+            from: { name: "net", start: 0, width: 1 },
+            to: { name: "a", start: 0, width: 1 },
+          },
+          {
+            from: { name: "net2", start: 0, width: 1 },
+            to: { name: "b", start: 0, width: 1 },
+          },
+          {
+            from: { name: "out", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.wire(this.notb, [
+          {
+            from: { name: "a", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "net", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.sortParts();
+      }
+    }
+
+    class OrB extends Chip {
+      readonly nota = new Not();
+      readonly nand = new Nand();
+      readonly notb = new Not();
+      constructor() {
+        super(["a", "b"], ["out"], "OrB", []);
+        this.wire(this.nota, [
+          {
+            from: { name: "b", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "net2", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.wire(this.notb, [
+          {
+            from: { name: "a", start: 0, width: 1 },
+            to: { name: "in", start: 0, width: 1 },
+          },
+          {
+            from: { name: "net", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+        this.wire(this.nand, [
+          {
+            from: { name: "net", start: 0, width: 1 },
+            to: { name: "a", start: 0, width: 1 },
+          },
+          {
+            from: { name: "net2", start: 0, width: 1 },
+            to: { name: "b", start: 0, width: 1 },
+          },
+          {
+            from: { name: "out", start: 0, width: 1 },
+            to: { name: "out", start: 0, width: 1 },
+          },
+        ]);
+      }
+    }
+
+    class OrC extends Chip {
+      readonly nota = new Not();
+      readonly nand = new Nand();
+      readonly notb = new Not();
+      constructor() {
+        super(["a", "b"], ["out"], "OrC", []);
+        this.wireAll([
+          {
+            part: this.nota,
+            connections: [
+              {
+                from: { name: "b", start: 0, width: 1 },
+                to: { name: "in", start: 0, width: 1 },
+              },
+              {
+                from: { name: "net2", start: 0, width: 1 },
+                to: { name: "out", start: 0, width: 1 },
+              },
+            ],
+          },
+          {
+            part: this.nand,
+            connections: [
+              {
+                from: { name: "net", start: 0, width: 1 },
+                to: { name: "a", start: 0, width: 1 },
+              },
+              {
+                from: { name: "net2", start: 0, width: 1 },
+                to: { name: "b", start: 0, width: 1 },
+              },
+              {
+                from: { name: "out", start: 0, width: 1 },
+                to: { name: "out", start: 0, width: 1 },
+              },
+            ],
+          },
+          {
+            part: this.notb,
+            connections: [
+              {
+                from: { name: "a", start: 0, width: 1 },
+                to: { name: "in", start: 0, width: 1 },
+              },
+              {
+                from: { name: "net", start: 0, width: 1 },
+                to: { name: "out", start: 0, width: 1 },
+              },
+            ],
+          },
+        ]);
+      }
+    }
+
+    const ora = new OrA();
+    ora.in("a").pull(HIGH);
+    ora.in("b").pull(LOW);
+    ora.eval();
+    expect(ora.out("out").busVoltage).toBe(HIGH);
+
+    const orb = new OrB();
+    orb.in("a").pull(HIGH);
+    orb.in("b").pull(LOW);
+    orb.eval();
+    expect(orb.out("out").busVoltage).toBe(HIGH);
+
+    const orc = new OrC();
+    orc.in("a").pull(HIGH);
+    orc.in("b").pull(LOW);
+    orc.eval();
+    expect(orc.out("out").busVoltage).toBe(HIGH);
+  });
 });

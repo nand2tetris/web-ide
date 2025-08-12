@@ -485,7 +485,18 @@ export class Chip {
     return Ok();
   }
 
-  // Returns whether the part connection graph has a loop
+  wireAll(wires: Iterable<{ part: Chip; connections: Connection[] }>) {
+    for (const { part, connections } of wires) {
+      this.wire(part, connections);
+    }
+    this.sortParts();
+  }
+
+  // Returns whether the part connection graph has a loop. This should be called
+  // after wiring pins, so that connections are sorted topologically to best
+  // simulate non-order-dependent wiring. This can be handled manually (OrB),
+  // by calling sortParts() after wiring (OrA), or by using wireAll for creating
+  // wires (OrC).
   sortParts(): boolean {
     const sorted: Chip[] = [];
     const visited = new Set<Chip>();

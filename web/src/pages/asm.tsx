@@ -232,7 +232,7 @@ export const Asm = () => {
               />
               <fieldset role="group">
                 <button
-                  data-tooltip="Load to the CPU Emulator"
+                  data-tooltip="Load in CPU Emulator"
                   data-placement="left"
                   onClick={loadToCpu}
                 >

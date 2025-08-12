@@ -5,6 +5,50 @@ export interface Diff {
   col?: number;
 }
 
+function normalLines(
+  str: string,
+  {
+    trim = true,
+    skipTrimmed = false,
+  }: { trim?: boolean; skipTrimmed?: boolean } = {},
+): string[] {
+  let lines = str.replace("\r\n", "\n").split("\n");
+
+  if (trim) lines = lines.map((line) => line.trim());
+  if (skipTrimmed) lines = lines.filter((line) => line != "");
+  return lines;
+}
+
+export type CompareResultSuccess = Record<string, never>;
+export interface CompareResultLengths {
+  lenA: number;
+  lenB: number;
+}
+export interface CompareResultLine {
+  line: number;
+}
+export type CompareResult =
+  | CompareResultSuccess
+  | CompareResultLine
+  | CompareResultLengths;
+
+export function compareLines(as: string, bs: string): CompareResult {
+  const resultLines = normalLines(as);
+  const compareLines = normalLines(bs);
+
+  if (resultLines.length != compareLines.length) {
+    return { lenA: resultLines.length, lenB: compareLines.length };
+  }
+
+  for (let line = 0; line < compareLines.length; line++) {
+    if (resultLines[line] !== compareLines[line]) {
+      return { line };
+    }
+  }
+
+  return {};
+}
+
 export function compare(as: string[][], bs: string[][]): Diff[] {
   let diffs: Diff[] = [];
 

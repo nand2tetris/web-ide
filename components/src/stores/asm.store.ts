@@ -6,6 +6,11 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
+  CompareResultLengths,
+  CompareResultLine,
+  compareLines,
+} from "@nand2tetris/simulator/compare.js";
+import {
   KEYBOARD_OFFSET,
   SCREEN_OFFSET,
 } from "@nand2tetris/simulator/cpu/memory.js";
@@ -251,30 +256,27 @@ export function makeAsmStore(
     },
 
     compare(state: AsmPageState) {
-      const resultLines = state.result.split("\n");
-      const compareLines = state.compare
-        .split("\n")
-        .filter((line) => line.trim() != "");
+      const comparison = compareLines(state.result, state.compare);
 
-      if (resultLines.length != compareLines.length) {
+      if ((comparison as CompareResultLengths).lenA) {
         failure = true;
         setStatus("Comparison failed - different lengths");
         return;
       }
 
-      for (let i = 0; i < compareLines.length; i++) {
-        if (resultLines[i] !== compareLines[i]) {
-          setStatus(`Comparison failure: Line ${i}`);
+      const { line } = comparison as CompareResultLine;
+      if (line) {
+        setStatus(`Comparison failure: Line ${line}`);
 
-          failure = true;
-          highlightInfo.resultHighlight = {
-            start: i * 17,
-            end: (i + 1) * 17,
-            line: -1,
-          };
-          return;
-        }
+        failure = true;
+        highlightInfo.resultHighlight = {
+          start: line * 17,
+          end: (line + 1) * 17,
+          line: -1,
+        };
+        return;
       }
+
       setStatus("Comparison successful");
     },
 

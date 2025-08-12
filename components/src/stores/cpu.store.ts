@@ -1,8 +1,8 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import {
   Err,
-  Ok,
   isErr,
+  Ok,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
@@ -252,7 +252,7 @@ export function makeCpuStore(
           let file;
           try {
             file = await fs.readFile(path);
-          } catch (e) {
+          } catch (_e) {
             throw new Error(`Cannot find ${path}`);
           }
           const loader = path.endsWith("hack")

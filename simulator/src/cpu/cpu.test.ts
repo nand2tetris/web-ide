@@ -1,6 +1,6 @@
 import { HACK } from "../testing/mult.js";
 import { Flags } from "./alu.js";
-import { cpu, CPU, CPUInput, CPUState } from "./cpu.js";
+import { CPU, CPUInput, CPUState, cpu } from "./cpu.js";
 import { Memory } from "./memory.js";
 
 describe("CPU", () => {
@@ -172,7 +172,7 @@ describe("CPU", () => {
     const RAM = new Memory(256);
     RAM.set(0, 2);
     RAM.set(1, 3);
-    const ROM = new Memory(HACK);
+    const ROM = new Memory(HACK.buffer);
     const cpu = new CPU({ RAM, ROM });
 
     for (let i = 0; i < 100; i++) {
@@ -191,7 +191,7 @@ describe("CPU", () => {
         0xefc8, // M=1 // init RAM[0]=1
         0xefd0, // D=1
         0xe7d8, // MD=D+1
-      ]),
+      ]).buffer,
     );
 
     const cpu = new CPU({ RAM, ROM });

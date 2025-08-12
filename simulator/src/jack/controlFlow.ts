@@ -1,8 +1,8 @@
 import {
   Err,
+  isErr,
   Ok,
   Result,
-  isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { CompilationError, createError } from "../languages/base.js";

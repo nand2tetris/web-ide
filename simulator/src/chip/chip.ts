@@ -4,9 +4,9 @@ import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import {
   Err,
+  isErr,
   Ok,
   Result,
-  isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import type { Subscription } from "rxjs";
 import { bin } from "../util/twos.js";
@@ -242,7 +242,7 @@ export class Pins {
 
   emplace(name: string, minWidth?: number) {
     if (this.has(name)) {
-      return this.get(name)!;
+      return assertExists(this.get(name));
     } else {
       const pin = new Bus(name, minWidth);
       this.insert(pin);
@@ -363,12 +363,12 @@ export class Chip {
 
   in(pin = "in"): Pin {
     assert(this.hasIn(pin), `No in pin ${pin}`);
-    return this.ins.get(pin)!;
+    return assertExists(this.ins.get(pin));
   }
 
   out(pin = "out"): Pin {
     assert(this.hasOut(pin), `No in pin ${pin}`);
-    return this.outs.get(pin)!;
+    return assertExists(this.outs.get(pin));
   }
 
   hasIn(pin: string): boolean {
@@ -380,19 +380,19 @@ export class Chip {
   }
 
   pin(name: string): Pin {
-    assert(this.pins.has(name));
-    return this.pins.get(name)!;
+    assert(this.pins.has(name), "Pin not available in ");
+    return assertExists(this.pins.get(name));
   }
 
   get(name: string, offset?: number): Pin | undefined {
     if (this.ins.has(name)) {
-      return this.ins.get(name)!;
+      return assertExists(this.ins.get(name));
     }
     if (this.outs.has(name)) {
-      return this.outs.get(name)!;
+      return assertExists(this.outs.get(name));
     }
     if (this.pins.has(name)) {
-      return this.pins.get(name)!;
+      return assertExists(this.pins.get(name));
     }
     return this.getBuiltin(name, offset);
   }
@@ -540,10 +540,10 @@ export class Chip {
       return FALSE_BUS;
     }
     if (this.ins.has(from)) {
-      return this.ins.get(from)!;
+      return assertExists(this.ins.get(from));
     }
     if (this.outs.has(from)) {
-      return this.outs.get(from)!;
+      return assertExists(this.outs.get(from));
     }
     return this.pins.emplace(from, minWidth);
   }
@@ -786,7 +786,7 @@ function mask(width: number) {
 function setBus(busses: Pinout, pin: Pin) {
   busses[pin.name] = bin(
     (pin.busVoltage & mask(pin.width)) <<
-      (pin as unknown as { start: number }).start ?? 0,
+      (pin as unknown as { start: number }).start,
   );
   return busses;
 }

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { bin } from "../util/twos.js";
 import { And, Inc16, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
@@ -12,9 +13,9 @@ import {
   InSubBus,
   LOW,
   OutSubBus,
-  TRUE_BUS,
   parseToPin,
   printChip,
+  TRUE_BUS,
 } from "./chip.js";
 import { Clock } from "./clock.js";
 
@@ -67,8 +68,8 @@ describe("Chip", () => {
       it("evaluates an and gate", () => {
         const andChip = new And();
 
-        const a = andChip.in("a")!;
-        const b = andChip.in("b")!;
+        const a = assertExists(andChip.in("a"));
+        const b = assertExists(andChip.in("b"));
 
         andChip.eval();
         expect(andChip.out().voltage()).toBe(LOW);
@@ -91,8 +92,8 @@ describe("Chip", () => {
       it("evaluates an or gate", () => {
         const orChip = new Or();
 
-        const a = orChip.in("a")!;
-        const b = orChip.in("b")!;
+        const a = assertExists(orChip.in("a"));
+        const b = assertExists(orChip.in("b"));
 
         orChip.eval();
         expect(orChip.out().voltage()).toBe(LOW);
@@ -116,8 +117,8 @@ describe("Chip", () => {
       it("evaluates an xor gate", () => {
         const xorChip = new Xor();
 
-        const a = xorChip.in("a")!;
-        const b = xorChip.in("b")!;
+        const a = assertExists(xorChip.in("a"));
+        const b = assertExists(xorChip.in("b"));
 
         xorChip.eval();
         expect(xorChip.out().voltage()).toBe(LOW);
@@ -252,8 +253,8 @@ describe("Chip", () => {
         },
       ]);
 
-      chip.in("b")!.busVoltage = 1;
-      chip.in("a")!.busVoltage = 0;
+      assertExists(chip.in("b")).busVoltage = 1;
+      assertExists(chip.in("a")).busVoltage = 0;
       chip.eval();
       expect(chip.out().busVoltage).toBe(0b001);
     });
@@ -384,7 +385,11 @@ describe("Chip", () => {
           this.pins.insert(new ConstantBus("pal", 0b1010_1100_0011_0101));
           this.pins.get("pal")?.connect(new OutSubBus(this.not8.in(), 4, 8));
           this.pins.emplace("out1", 5);
-          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
+          const out1Bus = new OutSubBus(
+            assertExists(this.pins.get("out1")),
+            3,
+            5,
+          );
           this.not8.out().connect(out1Bus);
         }
       }
@@ -411,7 +416,11 @@ describe("Chip", () => {
           TRUE_BUS.connect(new InSubBus(this.not8.in(), 7, 1));
           // out[3..7] = out1
           this.pins.emplace("out1", 5);
-          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
+          const out1Bus = new OutSubBus(
+            assertExists(this.pins.get("out1")),
+            3,
+            5,
+          );
           this.not8.out().connect(out1Bus);
         }
       }

@@ -1,7 +1,7 @@
-import { Diagnostic, TextDocument, Uri } from "vscode";
-
 import type { CMP } from "@nand2tetris/simulator/languages/cmp";
+import { Diagnostic, TextDocument, Uri } from "vscode";
 import * as base from "./base.js";
+
 // import { load } from "../loader.js";
 
 let cmp: typeof CMP | undefined = undefined;

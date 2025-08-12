@@ -1,4 +1,6 @@
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   BUILTIN_CHIP_PROJECTS,
@@ -6,6 +8,7 @@ import {
   sortChips,
 } from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
+import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   Chip,
   Low,
@@ -17,19 +20,14 @@ import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
-import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
-import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-
-import { ImmPin, reducePins } from "../pinout.js";
-import { useImmerReducer } from "../react.js";
-
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
+import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
+import { ImmPin, reducePins } from "../pinout.js";
+import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 

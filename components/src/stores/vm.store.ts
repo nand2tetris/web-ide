@@ -2,9 +2,9 @@ import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
+  isErr,
   Ok,
   Result,
-  isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { FIBONACCI } from "@nand2tetris/projects/base.js";
@@ -101,7 +101,7 @@ function reduceVMTest(
   let stack: VmFrame[] = [];
   try {
     stack = vmTest.vm.vmStack().reverse();
-  } catch (e) {
+  } catch (_e) {
     dispatch.current({
       action: "setError",
       payload: new Error("Runtime error: Invalid stack"),

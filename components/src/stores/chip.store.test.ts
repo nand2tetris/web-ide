@@ -30,11 +30,8 @@ function testChipStore(
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
   dispatch.current = jest.fn().mockImplementation(
-    (command: {
-      action: keyof typeof reducers;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: any;
-    }) => {
+    // biome-ignore lint/suspicious/noExplicitAny: covariants are hard
+    (command: { action: keyof typeof reducers; payload: any }) => {
       store.state = produce(store.state, (draft: typeof initialState) => {
         reducers[command.action](draft, command.payload);
       });

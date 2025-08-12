@@ -3,22 +3,19 @@ import { ERRNO } from "./errors.js";
 import { OS } from "./os.js";
 
 const HEAP_BASE = 2048;
-const HEAP_SIZE = 14336;
-
-interface Segment {
-  address: number;
-  length: number;
-}
+const HEAP_SIZE = 14334;
 
 export class MemoryLib {
   private memory: VmMemory;
   private os: OS;
-
-  private freeSegments: Segment[] = [{ address: HEAP_BASE, length: HEAP_SIZE }];
+  private freeListPtr: number;
 
   public constructor(memory: VmMemory, os: OS) {
     this.memory = memory;
     this.os = os;
+    this.freeListPtr = HEAP_BASE;
+    this.memory.set(HEAP_BASE, 0);
+    this.memory.set(HEAP_BASE + 1, HEAP_SIZE);
   }
 
   alloc(size: number): number {
@@ -26,25 +23,47 @@ export class MemoryLib {
       this.os.sys.error(ERRNO.ARRAY_SIZE_NOT_POSITIVE);
       return 0;
     }
-    for (let i = 0; i < this.freeSegments.length; i++) {
-      const seg = this.freeSegments[i];
-      if (seg.length >= size) {
-        const address = seg.address;
-        seg.address += size + 1;
-        seg.length -= size + 1;
-        if (seg.length === 0) {
-          this.freeSegments.splice(i, 1);
+
+    let blockPtr = this.freeListPtr;
+    do {
+      const nextFreeList = this.memory.get(blockPtr);
+      const blockSize = this.memory.get(blockPtr + 1);
+      if (blockSize >= size + 2) {
+        // We can fit this required size and overhead in this block.
+        this.memory.set(blockPtr + 1, size);
+
+        const newBlockPtr = blockPtr + 2 + size;
+        const newBlockSize = blockSize - size - 2;
+        this.memory.set(newBlockPtr, nextFreeList);
+        this.memory.set(newBlockPtr + 1, newBlockSize);
+        if (this.freeListPtr === blockPtr) {
+          // Move freelist pointer to the new block.
+          this.freeListPtr = newBlockPtr;
         }
-        this.memory.set(address, size); // save the segment size for deallocation
-        return address + 1;
+        return blockPtr + 2;
+      } else {
+        // We can't fit this required size and overhead in this block.
+        blockPtr = nextFreeList;
       }
-    }
+    } while (blockPtr !== 0);
+
     this.os.sys.error(ERRNO.HEAP_OVERFLOW);
     return 0;
   }
 
   deAlloc(address: number) {
-    const size = this.memory.get(address - 1);
-    this.freeSegments.push({ address: address - 1, length: size + 1 });
+    const deallocBlockPtr = address - 2;
+    // This will be the last block in the free list.
+    this.memory.set(deallocBlockPtr, 0);
+
+    let blockPtr = this.freeListPtr;
+    do {
+      const nextBlockPtr = this.memory.get(blockPtr);
+      if (nextBlockPtr === 0) {
+        this.memory.set(blockPtr, deallocBlockPtr);
+        return;
+      }
+      blockPtr = nextBlockPtr;
+    } while (blockPtr !== 0);
   }
 }

@@ -6,6 +6,11 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
+  CompareResultLengths,
+  CompareResultLine,
+  compareLines,
+} from "@nand2tetris/simulator/compare.js";
+import {
   KEYBOARD_OFFSET,
   SCREEN_OFFSET,
 } from "@nand2tetris/simulator/cpu/memory.js";
@@ -21,11 +26,6 @@ import {
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 import { Action } from "@nand2tetris/simulator/types.js";
-import {
-  compareLines,
-  CompareResultLengths,
-  CompareResultLine,
-} from "@nand2tetris/simulator/compare.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { RunSpeed } from "src/runbar.js";

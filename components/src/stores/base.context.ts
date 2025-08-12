@@ -149,17 +149,17 @@ export function useBaseContext(): BaseContext {
 export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async upgradeFs() {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   closeFs() {},
   status: "",
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   setStatus() {},
   storage: {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async requestPermission() {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   loadFs() {},
 });

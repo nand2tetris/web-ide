@@ -1,8 +1,8 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
-import { runner } from "@nand2tetris/simulator/projects/runner.js";
-import { Assignments } from "@nand2tetris/projects/full.js";
 import type { Assignment } from "@nand2tetris/projects/base.js";
+import { Assignments } from "@nand2tetris/projects/full.js";
+import { runner } from "@nand2tetris/simulator/projects/runner.js";
 import { parse } from "path";
 
 /**

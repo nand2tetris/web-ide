@@ -343,8 +343,8 @@ describe("asm language", () => {
     fillLabel(asm);
     const bin = emit(asm);
 
-    // prettier-ignore
-    expect(bin).toEqual([
+    // biome-ignore format: special constant formatting
+    const file = [
       0b0_000000000000000,    // @R0                     0x0000
       0b111_1_110000_010_000, // D=M                     0xFE10
       0b0_000000000000001,    // @R1                     0x0001
@@ -361,6 +361,7 @@ describe("asm language", () => {
       0b111_0_001100_001_000, // M=D (INFINITE LOOP:14)  0xE308
       0b0_000000000001110,    // @INFINITE_LOOP#14       0x0014
       0b111_0_101010_000_111, // 0;JMP                   0xEA83
-    ]);
+    ];
+    expect(bin).toEqual(file);
   });
 });

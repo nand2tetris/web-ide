@@ -3,7 +3,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { resetFiles } from "@nand2tetris/projects/full.js";
-import { TST, grammar } from "./tst.js";
+import { grammar, TST } from "./tst.js";
 
 const NOT_TST = `
 output-list in%B3.1.3 out%B3.1.3;

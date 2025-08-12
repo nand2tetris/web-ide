@@ -1,3 +1,5 @@
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 import type { Assignment } from "@nand2tetris/projects/base.js";
 import { Assignments } from "@nand2tetris/projects/full.js";
 import { JavaRunner } from "@nand2tetris/runner/index.js";
@@ -6,10 +8,7 @@ import {
   hasTest,
   runTests,
 } from "@nand2tetris/simulator/projects/runner.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { join, parse } from "path";
-
-import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
 
 /**
  * Given a FileSystem wrapper, curry a function that loads the necessary files for running an HDL test.

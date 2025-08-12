@@ -1,16 +1,16 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
-  Ok,
-  Result,
   isErr,
   isOk,
+  Ok,
+  Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
-  AssignmentStubs,
   type Assignment,
+  AssignmentStubs,
 } from "@nand2tetris/projects/base.js";
-import type { RunResult, Runner } from "@nand2tetris/runner/types.js";
+import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { build as buildChip } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { CompilationError } from "../languages/base.js";

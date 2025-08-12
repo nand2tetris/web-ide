@@ -1,6 +1,5 @@
-import { Diagnostic, TextDocument, Uri } from "vscode";
-
 import type { TST } from "@nand2tetris/simulator/languages/tst";
+import { Diagnostic, TextDocument, Uri } from "vscode";
 import * as base from "./base.js";
 
 let tst: typeof TST | undefined = undefined;

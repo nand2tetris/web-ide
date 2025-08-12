@@ -1,13 +1,13 @@
 #!/usr/bin/env node
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
+import { compile } from "@nand2tetris/simulator/jack/compiler.js";
+import * as fsCore from "fs";
 import path, { dirname, parse, resolve } from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { main } from "./grading.js";
 import { testRunner } from "./testrunner.js";
-import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import * as fsCore from "fs";
-import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 
 yargs(hideBin(process.argv))
   .usage("$0 <cmd>")

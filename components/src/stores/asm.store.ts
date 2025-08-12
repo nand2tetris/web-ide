@@ -1,9 +1,9 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
+  isErr,
   Ok,
   Result,
-  isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   KEYBOARD_OFFSET,

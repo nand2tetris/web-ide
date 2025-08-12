@@ -70,7 +70,7 @@ export async function loadChip(
     }
 
     return maybeChip;
-  } catch (e) {
+  } catch (_e) {
     return Err(new Error(`Could not load chip ${name}.hdl` /*, { cause: e }*/));
   }
 }

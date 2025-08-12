@@ -315,7 +315,7 @@ export class Chip {
     outs: (string | { pin: string; width: number })[],
     public name?: string,
     internals: (string | { pin: string; width: number })[] = [],
-    clocked: string[] = []
+    clocked: string[] = [],
   ) {
     for (const inn of ins) {
       const { pin, width = 1 } =
@@ -453,7 +453,7 @@ export class Chip {
 
   hasConnection(from: Chip, to: Chip): boolean {
     return [...(this.partToOuts.get(from) ?? [])].some((pin) =>
-      this.insToPart.get(pin)?.has(to)
+      this.insToPart.get(pin)?.has(to),
     );
   }
 
@@ -533,7 +533,7 @@ export class Chip {
               .map((part) => ({
                 part,
                 isReturning: false,
-              }))
+              })),
           );
         }
       }
@@ -562,11 +562,11 @@ export class Chip {
   private wireOutPin(
     part: Chip,
     to: PinSide,
-    from: PinSide
+    from: PinSide,
   ): Result<void, WireError> {
     const partPin = assertExists(
       part.outs.get(to.name),
-      () => `Cannot wire to missing pin ${to.name}`
+      () => `Cannot wire to missing pin ${to.name}`,
     );
     to.width ??= partPin.width;
 
@@ -634,11 +634,11 @@ export class Chip {
   private wireInPin(
     part: Chip,
     to: PinSide,
-    from: PinSide
+    from: PinSide,
   ): Result<void, WireError> {
     let partPin = assertExists(
       part.ins.get(to.name),
-      () => `Cannot wire to missing pin ${to.name}`
+      () => `Cannot wire to missing pin ${to.name}`,
     );
     to.width ??= partPin.width;
 

@@ -215,7 +215,7 @@ describe("Chip Builder", () => {
   Not(in =b , out = net2);
   Nand(a = net, b =net2 , out =out );
   Not(in =a , out = net);
-}`)
+}`),
       );
       const orA = await build({ parts: chip });
       expect(orA).toBeOk();
@@ -226,10 +226,8 @@ describe("Chip Builder", () => {
       ora.in("b").pull(LOW);
       ora.eval();
       expect(ora.out("out").busVoltage).toBe(HIGH);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
   });
 });

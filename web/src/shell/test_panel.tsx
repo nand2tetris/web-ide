@@ -28,6 +28,7 @@ import { AppContext } from "../App.context";
 import { Editor } from "./editor";
 import { Panel } from "./panel";
 import { Tab, TabList } from "./tabs";
+import { isPath } from "src/shell/file_select";
 
 const WARNING_KEY = "skipTestEditWarning";
 
@@ -119,18 +120,35 @@ export const TestPanel = ({
   const [name, setName] = useStateInitializer(tstName ?? "");
 
   const loadTest = useCallback(async () => {
-    const path = await filePicker.select({ suffix: ".tst" });
-    const files = await loadTestFiles(fs, path.path);
-    if (isErr(files)) {
-      setStatus(`Failed to load test`);
-      return;
+    const file = await filePicker.selectAllowLocal({ 
+      suffix: [".tst", ".cmp"] 
+    });
+    if (isPath(file)) {
+      const files = await loadTestFiles(fs, file.path);
+      if (isErr(files)) {
+        setStatus(`Failed to load test`);
+        return;
+      }
+      setPath?.(file.path);
+      setName(file.path.split("/").pop() ?? "");
+      const { tst, cmp } = unwrap(files);
+      setTst?.(tst);
+      setCmp?.(cmp ?? "");
+    } else { // File uploaded
+      const selectedFiles = Array.isArray(file) ? file : [file];
+      const tstFile = selectedFiles.find(f => f.name.endsWith('.tst'));
+      const cmpFile = selectedFiles.find(f => f.name.endsWith('.cmp'));
+      
+      if (tstFile) {
+        setTst?.(tstFile.content);
+        setName(tstFile.name);
+        setPath?.(tstFile.name);
+      }
+      if (cmpFile) {
+        setCmp?.(cmpFile.content);
+      }
     }
-    setPath?.(path.path);
-    setName(path.path.split("/").pop() ?? "");
-    const { tst, cmp } = unwrap(files);
-    setTst?.(tst);
-    setCmp?.(cmp ?? "");
-  }, [filePicker, setStatus, fs]);
+  }, [filePicker, setStatus, fs, setPath, setName, setTst, setCmp]);
 
   const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();
 

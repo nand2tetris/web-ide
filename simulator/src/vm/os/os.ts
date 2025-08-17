@@ -17,14 +17,14 @@ export class OS {
 
   paused = false;
 
-  constructor(memory: VmMemory) {
+  constructor(memory: VmMemory, raf?: typeof window.requestAnimationFrame) {
     this.vmMemory = memory;
     this.screen = new ScreenLib(this.vmMemory, this);
     this.memory = new MemoryLib(this.vmMemory, this);
     this.string = new StringLib(this.vmMemory, this);
     this.output = new OutputLib(this);
     this.keyboard = new KeyboardLib(this.vmMemory, this);
-    this.sys = new SysLib(this);
+    this.sys = new SysLib(this, raf);
   }
 
   dispose() {

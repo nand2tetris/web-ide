@@ -2,8 +2,6 @@ import { ERRNO } from "./errors.js";
 import { OS } from "./os";
 
 export class SysLib {
-  private os: OS;
-
   private _blocked = false;
   private _released = false;
   private _returnValue = 0;
@@ -13,14 +11,19 @@ export class SysLib {
   private cancelWait = false;
   private animationFrameId: number | undefined;
 
-  constructor(os: OS) {
-    this.os = os;
-  }
+  constructor(
+    private os: OS,
+    private raf: (
+      cb: FrameRequestCallback
+    ) => number = window.requestAnimationFrame
+  ) {}
 
+  // true when the OS indicates the system should not make progress.
   get blocked() {
     return this._blocked;
   }
 
+  // true for one tick after the system has been unblocked.
   get released() {
     return this._released;
   }
@@ -37,10 +40,10 @@ export class SysLib {
     this._blocked = true;
   }
 
-  release(returnValue?: number) {
+  release(returnValue = 0) {
     this._blocked = false;
-    this._returnValue = returnValue ?? 0;
     this._released = true;
+    this._returnValue = returnValue;
   }
 
   readReturnValue() {
@@ -56,10 +59,22 @@ export class SysLib {
 
     this.block();
 
-    (async () => {
-      await new Promise((x) => setTimeout(x, ms));
-      this.release();
-    })();
+    let waited = 0;
+    const loop = (delta: number) => {
+      if (this.cancelWait) {
+        this.release();
+      }
+
+      waited += delta;
+
+      if (waited >= ms) {
+        this.release();
+      } else {
+        this.animationFrameId = this.raf(loop);
+      }
+    };
+
+    loop(0);
   }
 
   halt() {

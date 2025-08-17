@@ -468,12 +468,22 @@ export class Vm {
     if (!this.currentFunction) {
       return undefined;
     }
+
+    this.assert_op_pointer();
+
+    return this.currentFunction.operations[this.invocation.opPtr];
+  }
+
+  private advanceOpPointer() {
+    this.invocation.opPtr += 1;
+    this.assert_op_pointer();
+  }
+
+  private assert_op_pointer() {
     if (this.invocation.opPtr > this.currentFunction.operations.length)
       throw new Error(
         `Current operation step beyond end of function operations (${this.invocation.opPtr} > ${this.currentFunction.operations.length})`,
       );
-
-    return this.currentFunction.operations[this.invocation.opPtr];
   }
 
   load(
@@ -649,6 +659,14 @@ export class Vm {
     this.os.paused = paused;
   }
 
+  private doCallReturn(ret: number) {
+    if (this.operation?.op == "call") {
+      const sp = this.memory.SP - this.operation.nArgs;
+      this.memory.set(sp, ret);
+      this.memory.SP = sp + 1;
+    }
+  }
+
   step(): number | undefined {
     if (this.os.sys.halted) {
       return this.os.sys.exitCode;
@@ -656,12 +674,10 @@ export class Vm {
     if (this.os.sys.blocked) {
       return;
     }
-    if (this.os.sys.released && this.operation?.op == "call") {
+    if (this.os.sys.released) {
       const ret = this.os.sys.readReturnValue();
-      const sp = this.memory.SP - this.operation.nArgs;
-      this.memory.set(sp, ret);
-      this.memory.SP = sp + 1;
-      this.invocation.opPtr += 1;
+      this.doCallReturn(ret);
+      this.advanceOpPointer();
       return;
     }
 
@@ -673,7 +689,7 @@ export class Vm {
     const operation = this.operation;
 
     if (operation.op === "label") {
-      this.invocation.opPtr += 1;
+      this.advanceOpPointer();
       return this.step();
     }
 
@@ -682,7 +698,7 @@ export class Vm {
         this.validateStackOp(operation);
         const value = this.memory.getSegment(
           operation.segment,
-          operation.offset,
+          operation.offset
         );
         this.memory.push(value);
         break;
@@ -751,6 +767,17 @@ export class Vm {
         }
         break;
       }
+      case "return": {
+        const line = this.derivedLine();
+        this.executionStack.pop();
+        const ret = this.memory.popFrame();
+        this.invocation.opPtr = ret;
+        if (this.executionStack.length === 0) {
+          this.returnLine = line;
+          return 0;
+        }
+        break;
+      }
       case "call": {
         const fnName = operation.name;
         if (this.functionMap[fnName]) {
@@ -770,27 +797,20 @@ export class Vm {
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
           if (this.os.sys.blocked) {
-            return; // we will handle the return when the OS is released
+            // we will handle the return when the OS is released
+          } else {
+            this.doCallReturn(ret);
           }
-          const sp = this.memory.SP - operation.nArgs;
-          this.memory.set(sp, ret);
-          this.memory.SP = sp + 1;
+        } else {
+          // calling an undefined function
+          throw new Error(
+            `Cannot find function ${fnName} in program or as builtin.`
+          );
         }
-        break;
-      }
-      case "return": {
-        const line = this.derivedLine();
-        this.executionStack.pop();
-        const ret = this.memory.popFrame();
-        this.invocation.opPtr = ret;
-        if (this.executionStack.length === 0) {
-          this.returnLine = line;
-          return 0;
-        }
-        break;
+        return; // doCallReturn handles advancing the op pointer
       }
     }
-    this.invocation.opPtr += 1;
+    this.advanceOpPointer();
     return;
   }
 

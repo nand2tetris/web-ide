@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { compare, compareLines, diff } from "./compare.js";
 
 describe("compare", () => {

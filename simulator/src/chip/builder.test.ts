@@ -4,6 +4,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { describe, expect, it } from "vitest";
 import { HDL } from "../languages/hdl.js";
 import { bin } from "../util/twos.js";
 import { build, parse } from "./builder.js";

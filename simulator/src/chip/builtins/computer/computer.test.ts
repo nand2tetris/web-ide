@@ -3,6 +3,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
+import { describe, expect, it } from "vitest";
 import { HIGH } from "../../chip.js";
 import { CPU, Memory, ROM32K } from "./computer.js";
 

@@ -1,3 +1,4 @@
+import { expect, test } from "vitest";
 import { grammar, VM, Vm } from "./vm.js";
 
 const SIMPLE_ADD = `

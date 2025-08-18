@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { cmpSemantics, grammar } from "./cmp.js";
 
 describe("cmp language", () => {

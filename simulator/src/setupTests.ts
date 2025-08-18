@@ -7,6 +7,7 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import type { MatchResult } from "ohm-js";
+import { expect } from "vitest";
 import { Diff } from "./compare.js";
 
 interface CustomMatchers<R = unknown, T = unknown> {

@@ -1,3 +1,4 @@
+import { describe, expect, it, test } from "vitest";
 import { HACK } from "../testing/mult.js";
 import { Flags } from "./alu.js";
 import { CPU, CPUInput, CPUState, cpu } from "./cpu.js";

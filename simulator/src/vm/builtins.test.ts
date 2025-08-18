@@ -1,4 +1,5 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { describe, expect, test } from "vitest";
 import { Vm } from "./vm.js";
 
 describe("builtins", () => {

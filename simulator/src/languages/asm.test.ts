@@ -1,4 +1,5 @@
 import { MaxAsm } from "@nand2tetris/projects/samples/project_06/02_max.js";
+import { describe, expect, it } from "vitest";
 import { ASSIGN, COMMANDS, JUMP } from "../cpu/alu.js";
 import { Asm, asmSemantics, emit, fillLabel, grammar } from "./asm.js";
 

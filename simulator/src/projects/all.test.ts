@@ -16,6 +16,7 @@ import {
   ASM_SOLS,
 } from "@nand2tetris/projects/samples/project_06/index.js";
 import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/index.js";
+import { describe, expect, it } from "vitest";
 import { build } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { compare } from "../compare.js";
@@ -89,17 +90,21 @@ describe("Chip Projects", () => {
 });
 
 describe("ASM Projects", () => {
-  describe.each(Object.keys(ASM_PROJECTS))("project %s", (project) => {
-    it.each(Object.keys(ASM_FILES))("%s", (file_name) => {
-      const source = ASM_FILES[file_name as keyof typeof ASM_FILES];
-      const parsed = ASM.parse(source);
-      expect(parsed).toBeOk();
-      const asm = Ok(parsed as Ok<Asm>);
-      ASM.passes.fillLabel(asm);
-      const filled = ASM.passes.emit(asm);
-      expect(filled).toEqual(ASM_SOLS[file_name as keyof typeof ASM_FILES]);
-    });
-  });
+  describe.each(Object.keys(ASM_PROJECTS))(
+    "project %s",
+    (project) => {
+      it.each(Object.keys(ASM_FILES))("%s", (file_name) => {
+        const source = ASM_FILES[file_name as keyof typeof ASM_FILES];
+        const parsed = ASM.parse(source);
+        expect(parsed).toBeOk();
+        const asm = Ok(parsed as Ok<Asm>);
+        ASM.passes.fillLabel(asm);
+        const filled = ASM.passes.emit(asm);
+        expect(filled).toEqual(ASM_SOLS[file_name as keyof typeof ASM_FILES]);
+      });
+    },
+    15_000, // timeout
+  );
 });
 
 describe("Vm Projects", () => {

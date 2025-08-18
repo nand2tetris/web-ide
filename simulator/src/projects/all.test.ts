@@ -117,9 +117,7 @@ describe("Vm Projects", () => {
         ),
       )("VM Program %s", async (vmName) => {
         const vmProject = {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ...assertExists(VmProjects[project]),
         };
 

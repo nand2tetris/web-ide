@@ -88,18 +88,39 @@
   },
   "javascript": {
     "formatter": { "quoteStyle": "double" },
-    "globals": [
-      "expect",
-      "it",
-      "describe",
-      "beforeEach",
-      "afterEach",
-      "test",
-      "jest",
-      "acquireVsCodeApi"
-    ]
+    "globals": ["acquireVsCodeApi"]
   },
   "overrides": [
+    {
+      "includes": ["*.ts", "*.tsx", "*.mts", "*.cts"],
+      "linter": {
+        "rules": {
+          "complexity": { "noArguments": "error" },
+          "correctness": {
+            "noConstAssign": "off",
+            "noGlobalObjectCalls": "off",
+            "noInvalidConstructorSuper": "off",
+            "noSetterReturn": "off",
+            "noUndeclaredVariables": "off",
+            "noUnreachable": "off",
+            "noUnreachableSuper": "off",
+            "useValidTypeof": "off"
+          },
+          "style": { "useConst": "error" },
+          "suspicious": {
+            "noDuplicateClassMembers": "off",
+            "noDuplicateObjectKeys": "off",
+            "noDuplicateParameters": "off",
+            "noFunctionAssign": "off",
+            "noImportAssign": "off",
+            "noRedeclare": "off",
+            "noUnsafeNegation": "off",
+            "noVar": "error",
+            "useGetterReturn": "off"
+          }
+        }
+      }
+    },
     {
       "includes": ["*.ts", "*.tsx", "*.mts", "*.cts"],
       "linter": {

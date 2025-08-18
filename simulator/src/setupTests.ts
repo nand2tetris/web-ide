@@ -27,10 +27,8 @@ interface CmpMatchers<R = unknown> {
 declare global {
   // biome-ignore lint/style/noNamespace: add some setup stuff
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     type Expect = CustomMatchers;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     interface Matchers<R, T = unknown>
       extends CustomMatchers<R, T>,

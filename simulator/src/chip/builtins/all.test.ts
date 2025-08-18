@@ -24,7 +24,6 @@ describe("All Projects", () => {
         (k) => !SKIP.has(k),
       ),
     )("Builtin %s", async (chipName) => {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const ChipProject = ChipProjects[project].CHIPS;
       let hdlFile: string = ChipProject[`${chipName}.hdl`];

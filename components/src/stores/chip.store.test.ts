@@ -7,6 +7,7 @@ import * as not from "@nand2tetris/projects/project_01/01_not.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
 import { ImmPin } from "src/pinout.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
 
 function testChipStore(
@@ -17,9 +18,9 @@ function testChipStore(
   },
   storage: Record<string, string> = {},
 ) {
-  const dispatch: MutableRefObject<ChipStoreDispatch> = { current: jest.fn() };
+  const dispatch: MutableRefObject<ChipStoreDispatch> = { current: vi.fn() };
 
-  const setStatus = jest.fn();
+  const setStatus = vi.fn();
 
   const { initialState, actions, reducers } = makeChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
@@ -29,7 +30,7 @@ function testChipStore(
     false,
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
-  dispatch.current = jest.fn().mockImplementation(
+  dispatch.current = vi.fn().mockImplementation(
     // biome-ignore lint/suspicious/noExplicitAny: covariants are hard
     (command: { action: keyof typeof reducers; payload: any }) => {
       store.state = produce(store.state, (draft: typeof initialState) => {

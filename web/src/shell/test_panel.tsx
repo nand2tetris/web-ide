@@ -26,9 +26,10 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 import { Editor } from "./editor";
+import { isPath } from "./file_select";
 import { Panel } from "./panel";
 import { Tab, TabList } from "./tabs";
-import { isPath } from "src/shell/file_select";
+
 
 const WARNING_KEY = "skipTestEditWarning";
 

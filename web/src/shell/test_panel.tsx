@@ -30,7 +30,6 @@ import { isPath } from "./file_select";
 import { Panel } from "./panel";
 import { Tab, TabList } from "./tabs";
 
-
 const WARNING_KEY = "skipTestEditWarning";
 
 export const TestPanel = ({

@@ -4,13 +4,13 @@ import {
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { HIGH } from "../../chip.js";
-import { CPU, ROM32K } from "./computer.js";
+import { CPU, Memory, ROM32K } from "./computer.js";
 
 describe("Computer Chip Builtins", () => {
   describe("ROM Builtin", () => {
     it("can load a file", async () => {
       const fs = new FileSystem(
-        new ObjectFileSystemAdapter({ "Max.hack": Max }),
+        new ObjectFileSystemAdapter({ "Max.hack": Max })
       );
       const rom = new ROM32K();
 
@@ -44,6 +44,24 @@ describe("Computer Chip Builtins", () => {
 
       expect(cpu.out("writeM").voltage()).toBe(HIGH);
       expect(cpu.out("outM").busVoltage).toBe(1);
+    });
+  });
+
+  describe("memory", () => {
+    it("maps addresses greater than KBD as 0", () => {
+      const memory = new Memory();
+      memory.in("address").busVoltage = 24577;
+      memory.in("in").busVoltage = 47;
+
+      memory.eval();
+
+      expect(memory.out().busVoltage).toBe(0);
+
+      memory.in("load").busVoltage = HIGH;
+
+      memory.eval();
+
+      expect(memory.out().busVoltage).toBe(0);
     });
   });
 });

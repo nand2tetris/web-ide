@@ -1,0 +1,1 @@
+"use strict";(globalThis.webpackChunk_nand2tetris_web=globalThis.webpackChunk_nand2tetris_web||[]).push([[323],{1323:(t,e,i)=>{i.r(e),i.d(e,{BitmapEditor:()=>s,default:()=>a});var h=i(782);const s=()=>(0,h.jsx)("div",{style:{width:"100%",height:"100%"},children:(0,h.jsx)("iframe",{style:{width:"100%",height:"100%"},src:"/web-ide/bitmap_editor.html"})}),a=s}}]);

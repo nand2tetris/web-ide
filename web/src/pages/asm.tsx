@@ -256,7 +256,7 @@ export const Asm = () => {
           value={state.result}
           highlight={state.resultHighlight}
           disabled={true}
-          onChange={function (source: string): void {
+          onChange={function (_source: string): void {
             return;
           }}
           onCursorPositionChange={(index) => {
@@ -316,7 +316,7 @@ export const Asm = () => {
           highlight={state.translating ? state.resultHighlight : undefined}
           highlightType={state.compareError ? "error" : "highlight"}
           alwaysRecenter={false}
-          onChange={function (source: string): void {
+          onChange={function (_source: string): void {
             return;
           }}
           disabled={true}

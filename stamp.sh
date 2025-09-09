@@ -29,7 +29,7 @@ CURRENT=$(grep version package.json | awk -F\" '{print $4}')
 NEXT=$(date +%Y.%W.0)
 VERSION=$(compare_versions "$CURRENT" "$NEXT")
 echo "Releasing $VERSION..."
-npm version "$VERSION" --include-workspace-root --no-git-tag-version
+npm version "$VERSION" -ws --include-workspace-root --no-git-tag-version
 sed "/version/ s/$CURRENT/$VERSION/" web/public/index.html > web/public/index.html.out ; mv web/public/index.html.out web/public/index.html
 git --no-pager diff
 git add .

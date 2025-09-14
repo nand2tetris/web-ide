@@ -76,7 +76,7 @@ precacheAndRoute([
     revision: null,
   },
   { /*url: "/web-ide/bitmap_editor.html", revision: null */
-    url: "user_guide/bitmap_editor.pdf",
+    url: "user_guide/bitmap editor.pdf",
     revision: null,
   },
 ]);

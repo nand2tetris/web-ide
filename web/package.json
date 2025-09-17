@@ -5,7 +5,7 @@
   "description": "",
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
-  "homepage": "https://renanbazinin.github.io/web-ide",
+  "homepage": "https://nand2tetris.github.io/web-ide",
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@davidsouther/jiffies": "^2.2.5",

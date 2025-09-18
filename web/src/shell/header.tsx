@@ -45,6 +45,7 @@ const guideLinks: Record<string, string> = {
   asm: "user_guide/asm.pdf",
   vm: "user_guide/vm.pdf",
   compiler: "user_guide/compiler.pdf",
+  bitmap: "user_guide/bitmap editor.pdf",
 };
 
 const GUIDE_NOT_AVAILABLE_MESSAGE = "Guide not available for this tool";

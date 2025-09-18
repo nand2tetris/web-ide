@@ -858,11 +858,11 @@
       function ChangeCodeType() {
         // Update header text based on current mode
         if (currentCodeMode === "hack") {
-          document.getElementById("codeTypeHeader").textContent =
-            "Generated Hack Assembly";
+          document.getElementById("hackTab").classList.add("active");
+          document.getElementById("jackTab").classList.remove("active");
         } else {
-          document.getElementById("codeTypeHeader").textContent =
-            "Generated Jack Code";
+          document.getElementById("jackTab").classList.add("active");
+          document.getElementById("hackTab").classList.remove("active");
         }
         GenerateCode();
       }
@@ -896,6 +896,21 @@
       }
     </script>
    </head>
+   <style>
+      .tab-button {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        background-color: #f0f0f0;
+        cursor: pointer;
+        margin-bottom: -1px;
+        position: relative;
+        border-radius: 5px 5px 0 0;
+      }
+      .tab-button.active {
+        background-color: white;
+        border-bottom: 1px solid white;
+      }
+    </style>
   <body onload="onLoad();">
     <h1>Jack Bitmap Editor v2.9</h1>
 
@@ -953,10 +968,10 @@
             </form>
           </th>
           <th align="left">
-            <span id="codeTypeHeader">Generated Jack Code</span>
-            <br />
-            <button type="button" onclick="SwitchToHack()">Generate Hack code</button>
-            <button type="button" onclick="SwitchToJack()">Generate Jack code</button>
+            <div class="tab-container">
+              <button id="jackTab" class="tab-button active" onclick="SwitchToJack()">Generated Jack Code</button>
+              <button id="hackTab" class="tab-button" onclick="SwitchToHack()">Generated Hack Assembly</button>
+            </div>
           </th>
         </tr>
         <div id="style_stuff"></div>

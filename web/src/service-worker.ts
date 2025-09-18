@@ -75,6 +75,7 @@ precacheAndRoute([
     url: "user_guide/compiler.pdf",
     revision: null,
   },
+  {
     url: "user_guide/bitmap_editor.pdf",
     revision: null,
   },

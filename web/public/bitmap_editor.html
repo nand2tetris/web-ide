@@ -27,22 +27,20 @@
         baseJ: 0,
         drawHeight: 0,
         INVERT_MODE: false,
-        comments: true,
+        comments: true
       };
       var state = {};
       try {
         var savedState = localStorage.getItem(STATE_KEY);
         if (savedState) {
+
           var parsedState = JSON.parse(savedState);
           state = Object.assign({}, defaults, parsedState);
         } else {
           state = defaults;
         }
       } catch (error) {
-        console.error(
-          "Error parsing state from localStorage. Using defaults.",
-          error,
-        );
+        console.error("Error parsing state from localStorage. Using defaults.", error);
         state = defaults;
       }
       // initialize global variables from state
@@ -145,7 +143,7 @@
         try {
           Init();
         } catch (error) {
-          console.log(error);
+          console.log(error)
           Reset();
         }
       }
@@ -586,17 +584,12 @@
         }
 
         generateCode = document.getElementById("generatedCode");
-        let subroutineName = document.getElementById("subroutineName").value;
-        if (document.getElementById("changeNameOnShift").checked) {
-          subroutineName =
-            subroutineName +
-            (Math.abs(currentJShift) / marginSaveFrames).toString();
-        }
+        // Fixed name/signature requirements
+        let subroutineName = "draw";
 
-        if (document.getElementById("jackCode").checked) {
+        if (currentCodeMode === "jack") {
+          // Always generate a Jack function with this signature
           let subroutineType = "function";
-          if (document.getElementById("methodSubroutine").checked)
-            subroutineType = "method";
 
           generateCode.value =
             subroutineType +
@@ -621,7 +614,7 @@
             }
           }
           generateCode.value = generateCode.value + "\treturn;\n}";
-        } else {
+  } else {
           // hack assembly
           rowsOfWords = GetRowsFromWordColumns(colsOfWords);
           generateCode.value = "(" + subroutineName + ")\n";
@@ -856,30 +849,34 @@
               newGrid[i][j] = grid[i][j];
             }
           }
-
           saveGrid(newGrid);
           saveState();
           Init(); // init loads the new grid into grid
         }
       }
 
-      function ChangeName() {
-        if (document.getElementById("subroutineName").value == "")
-          document.getElementById("subroutineName").value = "draw";
-        GenerateCode(true);
-      }
       function ChangeCodeType() {
-        if (document.getElementById("hackAssemblyCode").checked) {
-          document.getElementById("baseTopLeft").click();
-          document.getElementById("baseBottomLeft").disabled = true;
+        // Update header text based on current mode
+        if (currentCodeMode === "hack") {
           document.getElementById("codeTypeHeader").textContent =
             "Generated Hack Assembly";
         } else {
-          document.getElementById("baseBottomLeft").disabled = false;
           document.getElementById("codeTypeHeader").textContent =
             "Generated Jack Code";
         }
         GenerateCode();
+      }
+      // I made this global for ezier...
+      var currentCodeMode = "jack"; 
+      
+      // convenience helpers for toggle controls
+      function SwitchToHack() {
+        currentCodeMode = "hack";
+        ChangeCodeType();
+      }
+      function SwitchToJack() {
+        currentCodeMode = "jack";
+        ChangeCodeType();
       }
       function UpdateMarginType() {
         if (document.getElementById("fitToDrawing").checked) {
@@ -898,25 +895,68 @@
         GenerateCode();
       }
     </script>
-
-    <!--
-    SPDX-FileCopyrightText: 2013 Golan Parashi
-    SPDX-FileCopyrightText: 2023 Erik Umble, <erikumble@gmail.com>
-    SPDX-License-Identifier: MIT
-  --></head>
+   </head>
   <body onload="onLoad();">
     <h1>Jack Bitmap Editor v2.9</h1>
-    <p>
-      See <a href="https://github.com/ErikUmble/JackBitmapEditor">here</a> for
-      updates, feature documentation, and contributions.
+
+  <p>Use this tool for drawing bitmap images and generating Hack or Jack code. <br/>
+    Then copy-pase the generated code into your Hack or Jack program. Change the generated label / function name, as needed.
     </p>
-    <p></p>
+  
+  <p></p>
     <table>
       <thead>
         <tr>
-          <th align="left">Bitmap</th>
+          <th align="left">
+            <form action="javascript:ResetSize()">
+              <label for="inputWidth">Canvase Size: </label>
+              <input
+                id="inputWidth"
+                placeholder="width"
+                maxlength="3"
+                size="3"
+                type="text"
+                value="48"
+              />
+              x
+              <input
+                id="inputHeight"
+                placeholder="height"
+                maxlength="3"
+                size="3"
+                type="text"
+                value="32"
+              />
+
+              <label for="pixelSize">Canvas pixel size: </label>
+              <input
+                id="pixelSize"
+                placeholder="px"
+                maxlength="2"
+                size="1"
+                type="text"
+                value="16"
+              />
+
+              <button
+                title="Resize Canvas Preserving Upper-left Contents"
+                formaction="javascript:SetSize()"
+              >
+                Resize
+              </button>
+              <button
+                title="Reset Canvas Size, Settings, and Clear Contents"
+                formaction="javascript:Reset()"
+              >
+                Reset
+              </button>
+            </form>
+          </th>
           <th align="left">
             <span id="codeTypeHeader">Generated Jack Code</span>
+            <br />
+            <button type="button" onclick="SwitchToHack()">Generate Hack code</button>
+            <button type="button" onclick="SwitchToJack()">Generate Jack code</button>
           </th>
         </tr>
         <div id="style_stuff"></div>
@@ -1008,9 +1048,8 @@
             </td>
             <td align="center">
               <input
-                checked
                 id="commentsOn"
-                onclick="GenerateCode()"
+                onclick="ToggleComments()"
                 type="checkbox"
               /><label for="commentsOn">Comments On</label>
             </td>
@@ -1024,58 +1063,7 @@
           </tr>
         </table>
       </tr>
-      <tr>
-        <table>
-          <tr>
-            <td>
-              <form action="javascript:ResetSize()">
-                <label for="inputWidth">Canvase Size: </label>
-                <input
-                  id="inputWidth"
-                  placeholder="width"
-                  maxlength="3"
-                  size="3"
-                  type="text"
-                  value="48"
-                />
-                x
-                <input
-                  id="inputHeight"
-                  placeholder="height"
-                  maxlength="3"
-                  size="3"
-                  type="text"
-                  value="32"
-                />
-
-                <label for="pixelSize">Canvas pixel size: </label>
-                <input
-                  id="pixelSize"
-                  placeholder="px"
-                  maxlength="2"
-                  size="1"
-                  type="text"
-                  value="16"
-                />
-
-                <button
-                  title="Resize Canvas Preserving Upper-left Contents"
-                  formaction="javascript:SetSize()"
-                >
-                  Resize
-                </button>
-                <button
-                  title="Reset Canvas Size, Settings, and Clear Contents"
-                  formaction="javascript:Reset()"
-                >
-                  Reset
-                </button>
-              </form>
-            </td>
-          </tr>
-        </table>
-      </tr>
-      <tr>
+     
         <table>
           <tr>
             <td align="center">
@@ -1121,99 +1109,25 @@
           </tr>
         </table>
       </tr>
-      <tr>
+
+       <tr>
         <table>
           <tr>
-            <td align="center">
+            <td align="center">   
               <label for="baseRowFrom">Base address:</label>
-              <input
-                checked
-                id="baseTopLeft"
-                name="baseRowFrom"
-                onclick="GenerateCode()"
-                type="radio"
-              />
+              <input checked id="baseTopLeft" name="baseRowFrom" onclick="GenerateCode()" type="radio" />
               <label for="baseTopLeft">Top Left</label>
-
-              <input
-                id="baseBottomLeft"
-                name="baseRowFrom"
-                onclick="GenerateCode()"
-                type="radio"
-              />
+              <input id="baseBottomLeft" name="baseRowFrom" onclick="GenerateCode()" type="radio" />
               <label for="baseBottomLeft">Bottom Left</label>
             </td>
           </tr>
         </table>
       </tr>
-      <tr>
-        <table>
-          <tr>
-            <td align="center">
-              <form action="javascript:ChangeName()">
-                <label for="subroutineName">Subroutine Name: </label>
-                <input
-                  id="subroutineName"
-                  placeholder="name"
-                  type="text"
-                  value="draw"
-                />
-                <button>Generate Code</button>
-              </form>
-            </td>
-            <td align="center">
-              <input
-                checked
-                id="functionSubroutine"
-                name="subroutineType"
-                onclick="GenerateCode()"
-                type="radio"
-              />
-              <label for="functionSubroutine">function</label>
-
-              <input
-                id="methodSubroutine"
-                name="subroutineType"
-                onclick="GenerateCode()"
-                type="radio"
-              />
-              <label for="methodSubroutine">method</label>
-            </td>
-            <td align="center">
-              <input
-                id="changeNameOnShift"
-                onclick="GenerateCode()"
-                type="checkbox"
-              /><label for="pauseCode">Change name with horizontal shift</label>
-            </td>
-          </tr>
-        </table>
-      </tr>
-      <tr>
-        <table>
-          <tr>
-            <td align="center">
-              <input
-                checked
-                id="jackCode"
-                name="codeType"
-                onclick="ChangeCodeType()"
-                type="radio"
-              />
-              <label for="jackCode">Jack</label>
-
-              <input
-                id="hackAssemblyCode"
-                name="codeType"
-                onclick="ChangeCodeType()"
-                type="radio"
-              />
-              <label for="hackAssemblyCode">Hack Assembly</label>
-            </td>
-          </tr>
-        </table>
-      </tr>
+      
+        
+        
     </table>
+
     <style>
       .fileButton label {
         display: block;

@@ -148,6 +148,7 @@
           console.log(error);
           Reset();
         }
+        ChangeCodeType();
       }
 
       function createGrid() {
@@ -586,17 +587,10 @@
         }
 
         generateCode = document.getElementById("generatedCode");
-        let subroutineName = document.getElementById("subroutineName").value;
-        if (document.getElementById("changeNameOnShift").checked) {
-          subroutineName =
-            subroutineName +
-            (Math.abs(currentJShift) / marginSaveFrames).toString();
-        }
+        let subroutineName = "draw";
 
-        if (document.getElementById("jackCode").checked) {
+        if (currentCodeMode === "jack") {
           let subroutineType = "function";
-          if (document.getElementById("methodSubroutine").checked)
-            subroutineType = "method";
 
           generateCode.value =
             subroutineType +
@@ -863,23 +857,27 @@
         }
       }
 
-      function ChangeName() {
-        if (document.getElementById("subroutineName").value == "")
-          document.getElementById("subroutineName").value = "draw";
-        GenerateCode(true);
-      }
       function ChangeCodeType() {
-        if (document.getElementById("hackAssemblyCode").checked) {
-          document.getElementById("baseTopLeft").click();
-          document.getElementById("baseBottomLeft").disabled = true;
-          document.getElementById("codeTypeHeader").textContent =
-            "Generated Hack Assembly";
+        if (currentCodeMode === "hack") {
+          document.getElementById("hackTab").classList.add("active");
+          document.getElementById("jackTab").classList.remove("active");
         } else {
-          document.getElementById("baseBottomLeft").disabled = false;
-          document.getElementById("codeTypeHeader").textContent =
-            "Generated Jack Code";
+          document.getElementById("jackTab").classList.add("active");
+          document.getElementById("hackTab").classList.remove("active");
         }
         GenerateCode();
+      }
+      // I made this global for ezier...
+      var currentCodeMode = "jack";
+
+      // convenience helpers for toggle controls
+      function SwitchToHack() {
+        currentCodeMode = "hack";
+        ChangeCodeType();
+      }
+      function SwitchToJack() {
+        currentCodeMode = "jack";
+        ChangeCodeType();
       }
       function UpdateMarginType() {
         if (document.getElementById("fitToDrawing").checked) {
@@ -898,25 +896,97 @@
         GenerateCode();
       }
     </script>
+    <style>
+      .tab-button {
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        background-color: #f0f0f0;
+        cursor: pointer;
+        margin-bottom: -1px;
+        position: relative;
+        border-radius: 5px 5px 0 0;
+      }
+      .tab-button.active {
+        background-color: white;
+        border-bottom: 1px solid white;
+      }
+    </style>
 
     <!--
     SPDX-FileCopyrightText: 2013 Golan Parashi
     SPDX-FileCopyrightText: 2023 Erik Umble, <erikumble@gmail.com>
     SPDX-License-Identifier: MIT
-  --></head>
+  -->
+  </head>
   <body onload="onLoad();">
     <h1>Jack Bitmap Editor v2.9</h1>
     <p>
-      See <a href="https://github.com/ErikUmble/JackBitmapEditor">here</a> for
-      updates, feature documentation, and contributions.
+      Use this tool for drawing bitmap images and generating Hack or Jack code.
+      <br />
+      Then copy-paste the generated code into your Hack or Jack program. Change
+      the generated label / function name, as needed.
     </p>
-    <p></p>
     <table>
       <thead>
         <tr>
-          <th align="left">Bitmap</th>
           <th align="left">
-            <span id="codeTypeHeader">Generated Jack Code</span>
+            <div>
+              <label for="inputWidth">Canvas Size:</label>
+              <input
+                id="inputWidth"
+                placeholder="width"
+                maxlength="3"
+                size="3"
+                type="text"
+                value="48"
+              />
+              x
+              <input
+                id="inputHeight"
+                placeholder="height"
+                maxlength="3"
+                size="3"
+                type="text"
+                value="32"
+              />
+
+              <label for="pixelSize">Canvas pixel size: </label>
+              <input
+                id="pixelSize"
+                placeholder="px"
+                maxlength="2"
+                size="1"
+                type="text"
+                value="16"
+              />
+
+              <button
+                title="Resize Canvas Preserving Upper-left Contents"
+                onclick="SetSize()"
+              >
+                Resize
+              </button>
+              <button
+                title="Reset Canvas Size, Settings, and Clear Contents"
+                onclick="Reset()"
+              >
+                Reset
+              </button>
+            </div>
+          </th>
+          <th align="left">
+            <div class="tab-container">
+              <button
+                id="jackTab"
+                class="tab-button active"
+                onclick="SwitchToJack()"
+              >
+                Generated Jack Code
+              </button>
+              <button id="hackTab" class="tab-button" onclick="SwitchToHack()">
+                Generated Hack Assembly
+              </button>
+            </div>
           </th>
         </tr>
         <div id="style_stuff"></div>
@@ -1027,57 +1097,6 @@
       <tr>
         <table>
           <tr>
-            <td>
-              <form action="javascript:ResetSize()">
-                <label for="inputWidth">Canvase Size: </label>
-                <input
-                  id="inputWidth"
-                  placeholder="width"
-                  maxlength="3"
-                  size="3"
-                  type="text"
-                  value="48"
-                />
-                x
-                <input
-                  id="inputHeight"
-                  placeholder="height"
-                  maxlength="3"
-                  size="3"
-                  type="text"
-                  value="32"
-                />
-
-                <label for="pixelSize">Canvas pixel size: </label>
-                <input
-                  id="pixelSize"
-                  placeholder="px"
-                  maxlength="2"
-                  size="1"
-                  type="text"
-                  value="16"
-                />
-
-                <button
-                  title="Resize Canvas Preserving Upper-left Contents"
-                  formaction="javascript:SetSize()"
-                >
-                  Resize
-                </button>
-                <button
-                  title="Reset Canvas Size, Settings, and Clear Contents"
-                  formaction="javascript:Reset()"
-                >
-                  Reset
-                </button>
-              </form>
-            </td>
-          </tr>
-        </table>
-      </tr>
-      <tr>
-        <table>
-          <tr>
             <td align="center">
               <input
                 checked
@@ -1121,6 +1140,7 @@
           </tr>
         </table>
       </tr>
+
       <tr>
         <table>
           <tr>
@@ -1134,7 +1154,6 @@
                 type="radio"
               />
               <label for="baseTopLeft">Top Left</label>
-
               <input
                 id="baseBottomLeft"
                 name="baseRowFrom"
@@ -1146,74 +1165,8 @@
           </tr>
         </table>
       </tr>
-      <tr>
-        <table>
-          <tr>
-            <td align="center">
-              <form action="javascript:ChangeName()">
-                <label for="subroutineName">Subroutine Name: </label>
-                <input
-                  id="subroutineName"
-                  placeholder="name"
-                  type="text"
-                  value="draw"
-                />
-                <button>Generate Code</button>
-              </form>
-            </td>
-            <td align="center">
-              <input
-                checked
-                id="functionSubroutine"
-                name="subroutineType"
-                onclick="GenerateCode()"
-                type="radio"
-              />
-              <label for="functionSubroutine">function</label>
-
-              <input
-                id="methodSubroutine"
-                name="subroutineType"
-                onclick="GenerateCode()"
-                type="radio"
-              />
-              <label for="methodSubroutine">method</label>
-            </td>
-            <td align="center">
-              <input
-                id="changeNameOnShift"
-                onclick="GenerateCode()"
-                type="checkbox"
-              /><label for="pauseCode">Change name with horizontal shift</label>
-            </td>
-          </tr>
-        </table>
-      </tr>
-      <tr>
-        <table>
-          <tr>
-            <td align="center">
-              <input
-                checked
-                id="jackCode"
-                name="codeType"
-                onclick="ChangeCodeType()"
-                type="radio"
-              />
-              <label for="jackCode">Jack</label>
-
-              <input
-                id="hackAssemblyCode"
-                name="codeType"
-                onclick="ChangeCodeType()"
-                type="radio"
-              />
-              <label for="hackAssemblyCode">Hack Assembly</label>
-            </td>
-          </tr>
-        </table>
-      </tr>
     </table>
+
     <style>
       .fileButton label {
         display: block;

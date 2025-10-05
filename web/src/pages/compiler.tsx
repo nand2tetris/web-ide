@@ -16,6 +16,7 @@ import { PageContext } from "../Page.context";
 import { Panel } from "../shell/panel";
 import URLs from "../urls";
 import "./compiler.scss";
+import { tr } from "make-plural";
 
 export const Compiler = () => {
   const { setStatus, canUpgradeFs, loadFs } = useContext(BaseContext);
@@ -165,15 +166,7 @@ export const Compiler = () => {
   );
 
   useEffect(() => {
-    // Try to reload the file system handle from IndexedDB on mount
-    if (!state.fs && canUpgradeFs && typeof loadFs === "function") {
-      loadFs();
-    }
-  }, [state.fs, canUpgradeFs, loadFs]);
-
-  useEffect(() => {
-    // Make the editor editable whenever a project folder is loaded (state.fs is present)
-    setEditable(!!state.fs);
+    setEditable(true);
   }, [state.fs]);
 
   return (

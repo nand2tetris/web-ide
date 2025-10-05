@@ -18,7 +18,7 @@ import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { setStatus, canUpgradeFs } = useContext(BaseContext);
+  const { setStatus, canUpgradeFs, loadFs } = useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;
@@ -163,6 +163,18 @@ export const Compiler = () => {
       onExit={onCreateFile}
     />
   );
+
+  useEffect(() => {
+    // Try to reload the file system handle from IndexedDB on mount
+    if (!state.fs && canUpgradeFs && typeof loadFs === "function") {
+      loadFs();
+    }
+  }, [state.fs, canUpgradeFs, loadFs]);
+
+  useEffect(() => {
+    // Make the editor editable whenever a project folder is loaded (state.fs is present)
+    setEditable(!!state.fs);
+  }, [state.fs]);
 
   return (
     <div className="Page CompilerPage grid">

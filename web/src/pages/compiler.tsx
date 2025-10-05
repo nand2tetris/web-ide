@@ -16,10 +16,9 @@ import { PageContext } from "../Page.context";
 import { Panel } from "../shell/panel";
 import URLs from "../urls";
 import "./compiler.scss";
-import { tr } from "make-plural";
 
 export const Compiler = () => {
-  const { setStatus, canUpgradeFs, loadFs } = useContext(BaseContext);
+  const { setStatus, canUpgradeFs } = useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;

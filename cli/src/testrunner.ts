@@ -1,27 +1,49 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
+import { Err, isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import type { Assignment } from "@nand2tetris/projects/base.js";
 import { Assignments } from "@nand2tetris/projects/full.js";
+import { compile } from "@nand2tetris/simulator/jack/compiler.js";
+import type { AssignmentFiles } from "@nand2tetris/simulator/projects/runner.js";
 import { runner } from "@nand2tetris/simulator/projects/runner.js";
-import { parse } from "path";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { VM } from "@nand2tetris/simulator/languages/vm.js";
+import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
+import { Vm, type ParsedVmFile } from "@nand2tetris/simulator/vm/vm.js";
+import { dirname, join, parse, resolve } from "path";
+
+const VMSTEP_REGEX = /\bvmstep\b/i;
+
+interface VmSourceFile {
+  name: string;
+  content: string;
+}
 
 /**
  * Load an assignment from the local folder.
  * Uses built in assignments when the local tests are missing.
  */
-async function loadAssignment(fs: FileSystem, file: Assignment) {
+async function loadAssignment(
+  fs: FileSystem,
+  file: Assignment,
+): Promise<AssignmentFiles> {
+  const baseDir = file.dir || process.cwd();
   const assignment = Assignments[file.name as keyof typeof Assignments];
-  const hdl = await fs.readFile(`${file.name}.hdl`);
-  const tst = await fs
-    .readFile(`${file.name}.tst`)
-    .catch(
-      () => assignment[`${file.name}.tst` as keyof typeof assignment] as string,
-    );
-  const cmp = await fs
-    .readFile(`${file.name}.cmp`)
-    .catch(
-      () => assignment[`${file.name}.cmp` as keyof typeof assignment] as string,
-    );
+  const hdlPath = join(baseDir, `${file.name}.hdl`);
+  const tstPath = join(baseDir, `${file.name}.tst`);
+  const cmpPath = join(baseDir, `${file.name}.cmp`);
+
+  const hdl = await fs.readFile(hdlPath);
+  const tst =
+    (await fs.readFile(tstPath).catch(() => undefined)) ??
+    ((assignment?.[
+      `${file.name}.tst` as keyof typeof assignment
+    ] ?? "") as string);
+  const cmp =
+    (await fs.readFile(cmpPath).catch(() => undefined)) ??
+    ((assignment?.[
+      `${file.name}.cmp` as keyof typeof assignment
+    ] ?? "") as string);
 
   return { ...file, hdl, tst, cmp };
 }
@@ -34,18 +56,36 @@ async function loadAssignmentFromSource(
   file: Assignment,
   tst: string,
 ) {
-  const hdl = await fs.readFile(`${file.name}.hdl`);
-  const cmp = await fs.readFile(`${file.name}.cmp`).catch(() => "" as string);
+  const baseDir = file.dir || process.cwd();
+  const hdl = await fs.readFile(join(baseDir, `${file.name}.hdl`));
+  const cmp = await fs
+    .readFile(join(baseDir, `${file.name}.cmp`))
+    .catch(() => "" as string);
   return { ...file, hdl, tst, cmp };
 }
 
 /**
  * Run a nand2tetris.tst file.
  */
-export async function testRunner(dir: string, file: string) {
+export async function testRunner(testFilePath: string) {
   const fs = new FileSystem(new NodeFileSystemAdapter());
-  fs.cd(dir);
-  const assignment = await loadAssignment(fs, parse(file));
+  const absolutePath = resolve(testFilePath);
+  const parsedTarget = parse(absolutePath);
+  const tstPath =
+    parsedTarget.ext.toLowerCase() === ".tst"
+      ? absolutePath
+      : `${absolutePath}.tst`;
+  const tstSource = await fs.readFile(tstPath);
+
+  if (VMSTEP_REGEX.test(tstSource)) {
+    await runVmTest(fs, tstPath, tstSource);
+    return;
+  }
+
+  const assignment = await loadAssignment(fs, parse(tstPath));
+  if (assignment.dir) {
+    fs.cd(assignment.dir);
+  }
   const tryRun = runner(fs);
   const run = await tryRun(assignment);
   console.log(run);
@@ -65,8 +105,11 @@ export async function testRunnerFromSource(
     offset = 1;
   }
   const fs = new FileSystem(new NodeFileSystemAdapter());
-  fs.cd(dir);
-  const assignment = await loadAssignmentFromSource(fs, parse(file), tst);
+  const assignmentPath = parse(join(resolve(dir), `${file}.tst`));
+  const assignment = await loadAssignmentFromSource(fs, assignmentPath, tst);
+  if (assignment.dir) {
+    fs.cd(assignment.dir);
+  }
   const tryRun = runner(fs);
   const run = await tryRun(assignment);
 
@@ -103,6 +146,125 @@ export async function testRunnerFromSource(
 
   // Exit with appropriate code
   process.exit(!errorMessage ? 0 : 1);
+}
+
+async function runVmTest(
+  fs: FileSystem,
+  tstPath: string,
+  tstSource: string,
+) {
+  const parsedTst = TST.parse(tstSource);
+  if (isErr(parsedTst)) {
+    throw Err(parsedTst);
+  }
+
+  const testDir = dirname(tstPath);
+  let expectedCmp: string | undefined;
+  let vmTest: VMTest;
+
+  const maybeTest = VMTest.from(unwrap(parsedTst), {
+    dir: tstPath,
+    doEcho: (message) => console.log(message),
+    compareTo: async (file) => {
+      if (!file) {
+        return;
+      }
+      const cmpPath = join(testDir, file);
+      try {
+        expectedCmp = await fs.readFile(cmpPath);
+      } catch (error) {
+        throw new Error(
+          `Unable to read compare file ${cmpPath}: ${(error as Error).message}`,
+        );
+      }
+    },
+    doLoad: async (target) => {
+      const resolvedTarget = target ?? testDir;
+      const vm = await buildVmForTarget(fs, resolvedTarget);
+      vmTest.with(vm);
+    },
+  });
+
+  vmTest = unwrap(maybeTest).using(fs);
+  await vmTest.run();
+  const out = vmTest.log();
+  const pass = expectedCmp ? out.trim() === expectedCmp.trim() : true;
+  console.log({ pass, out });
+  if (!pass) {
+    process.exitCode = 1;
+  }
+}
+
+async function buildVmForTarget(fs: FileSystem, targetPath: string): Promise<Vm> {
+  const stats = await fs.stat(targetPath).catch(() => undefined);
+  const loadDir = stats?.isDirectory() ? targetPath : dirname(targetPath);
+  const sources = await collectVmSources(fs, loadDir);
+  if (!sources.length) {
+    throw new Error(
+      `No .vm or .jack files found in ${loadDir} to execute this test.`,
+    );
+  }
+  const parsed: ParsedVmFile[] = [];
+  for (const source of sources) {
+    const parsedVm = VM.parse(source.content);
+    if (isErr(parsedVm)) {
+      throw Err(parsedVm);
+    }
+    parsed.push({
+      name: source.name,
+      instructions: unwrap(parsedVm).instructions,
+    });
+  }
+  const built = Vm.buildFromFiles(parsed);
+  if (isErr(built)) {
+    throw Err(built);
+  }
+  return unwrap(built);
+}
+
+async function collectVmSources(
+  fs: FileSystem,
+  dir: string,
+): Promise<VmSourceFile[]> {
+  const entries = await fs.scandir(dir).catch(() => []);
+  const jackSources: Record<string, string> = {};
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith(".jack")) {
+      const baseName = entry.name.replace(/\.jack$/, "");
+      jackSources[baseName] = await fs.readFile(join(dir, entry.name));
+    }
+  }
+
+  const vmSources: VmSourceFile[] = [];
+  if (Object.keys(jackSources).length) {
+    const compiled = compile(jackSources);
+    const errors: string[] = [];
+    for (const [name, compiledFile] of Object.entries(compiled)) {
+      if (typeof compiledFile === "string") {
+        vmSources.push({ name, content: compiledFile });
+      } else {
+        errors.push(compiledFile.message);
+      }
+    }
+    if (errors.length) {
+      throw new Error(errors.join("\n"));
+    }
+  }
+
+  for (const entry of entries) {
+    if (entry.isFile() && entry.name.endsWith(".vm")) {
+      const baseName = entry.name.replace(/\.vm$/, "");
+      if (vmSources.some((source) => source.name === baseName)) {
+        continue;
+      }
+      vmSources.push({
+        name: baseName,
+        content: await fs.readFile(join(dir, entry.name)),
+      });
+    }
+  }
+
+  return vmSources;
 }
 
 // export async function testDebugger(root: string, name: string, port: number) {}

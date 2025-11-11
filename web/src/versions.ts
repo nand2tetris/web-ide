@@ -27,7 +27,7 @@ export async function updateVersion(fs: FileSystem) {
         console.warn(`Error loading files at version ${version}`, e);
       }
     }
-  } catch (e) {
+  } catch (_e) {
     await resetFiles(fs);
   }
 
@@ -43,7 +43,7 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
           `/projects/01/Xor/Xor.${suffix}`,
           await fs.readFile(`/projects/01/XOr/XOr.${suffix}`),
         );
-      } catch (e) {
+      } catch (_e) {
         // The XOr file was probably never loaded
       }
     }
@@ -85,7 +85,7 @@ const versionUpdates: Record<number, (fs: FileSystem) => Promise<void>> = {
     for (const suffix of ["hdl", "cmp", "tst"]) {
       try {
         await fs.rm(`/projects/01/Xor/Xor.${suffix}`);
-      } catch (e) {
+      } catch (_e) {
         // The XOr file was probably never loaded
       }
     }

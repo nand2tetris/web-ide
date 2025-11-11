@@ -1,4 +1,4 @@
-import { exec, ExecOptions, ExecException } from "node:child_process";
+import { ExecException, ExecOptions, exec } from "node:child_process";
 import { dirname, join, parse } from "node:path";
 import type { Assignment } from "@nand2tetris/projects/base.js";
 import { Runner, RunResult } from "./types";
@@ -10,7 +10,7 @@ export function run(cmd: string, options: ExecOptions = {}) {
       if (error !== null || stderr.length > 0) {
         reject({ error, stderr });
       } else {
-        resolve(stdout);
+        resolve(`${stdout}`);
       }
     });
   });

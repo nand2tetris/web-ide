@@ -22,14 +22,16 @@ import {
   removeLocalAdapterFromIndexedDB,
 } from "./base/indexDb.js";
 
+export type StatusSeverity = "SUCCESS" | "WARNING" | "ERROR" | "INFO";
+
 export interface BaseContext {
   fs: FileSystem;
   localFsRoot?: string;
   canUpgradeFs: boolean;
   upgradeFs: (force?: boolean, createFiles?: boolean) => Promise<void>;
   closeFs: () => void;
-  status: string;
-  setStatus: Action<string>;
+  status: { message: string; severity: StatusSeverity };
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>;
   storage: Record<string, string>;
   permissionPrompt: ReturnType<typeof useDialog>;
   requestPermission: AsyncAction<void>;
@@ -98,9 +100,11 @@ export function useBaseContext(): BaseContext {
             permissionPrompt.open();
             break;
           case "denied":
-            setStatus(
-              "Permission denied. Please allow access to your file system.",
-            );
+            setStatus({
+              message:
+                "Permission denied. Please allow access to your file system.",
+              severity: "ERROR",
+            });
             break;
         }
       });
@@ -129,7 +133,24 @@ export function useBaseContext(): BaseContext {
     setFs(new FileSystem(localAdapter));
   }, [root]);
 
-  const [status, setStatus] = useState("");
+  const [status, setStatusInternal] = useState<{
+    message: string;
+    severity: StatusSeverity;
+  }>({ message: "", severity: "INFO" });
+
+  const setStatus = useCallback(
+    (input: string | { message: string; severity?: StatusSeverity }) => {
+      if (typeof input === "string") {
+        setStatusInternal({ message: input, severity: "INFO" });
+      } else {
+        setStatusInternal({
+          message: input.message,
+          severity: input.severity || "INFO",
+        });
+      }
+    },
+    [],
+  );
 
   return {
     fs,
@@ -149,17 +170,17 @@ export function useBaseContext(): BaseContext {
 export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async upgradeFs() {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   closeFs() {},
-  status: "",
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  status: { message: "", severity: "INFO" },
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   setStatus() {},
   storage: {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async requestPermission() {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   loadFs() {},
 });

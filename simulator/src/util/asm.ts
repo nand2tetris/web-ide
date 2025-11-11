@@ -4,11 +4,11 @@ import {
   COMMANDS,
   COMMANDS_ASM,
   COMMANDS_OP,
-  JUMP,
-  JUMP_OP,
   isAssignAsm,
   isCommandAsm,
   isJumpAsm,
+  JUMP,
+  JUMP_OP,
 } from "../cpu/alu.js";
 
 export type CommandOps = keyof typeof COMMANDS.op;

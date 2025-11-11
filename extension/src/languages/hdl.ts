@@ -1,6 +1,5 @@
-import { Diagnostic, TextDocument, Uri } from "vscode";
-
 import type { HDL } from "@nand2tetris/simulator/languages/hdl";
+import { Diagnostic, TextDocument, Uri } from "vscode";
 import * as base from "./base.js";
 
 let hdl: typeof HDL | undefined = undefined;

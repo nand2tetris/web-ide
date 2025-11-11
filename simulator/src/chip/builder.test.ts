@@ -9,6 +9,14 @@ import { bin } from "../util/twos.js";
 import { build, parse } from "./builder.js";
 import { Chip, HIGH, LOW } from "./chip.js";
 
+function asDisplay(e: unknown): string {
+  return display(
+    (e as { message: string }).message ??
+      (e as { shortMessage: string }).shortMessage ??
+      e,
+  );
+}
+
 describe("Chip Builder", () => {
   it("builds a chip from a string", async () => {
     const nand = unwrap(
@@ -42,9 +50,8 @@ describe("Chip Builder", () => {
           }`,
         ),
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
     const six = foo.in("six");
     six.busVoltage = 6;
@@ -71,9 +78,8 @@ describe("Chip Builder", () => {
         }
       `),
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
 
     foo.in().busVoltage = 0b00;
@@ -101,9 +107,8 @@ describe("Chip Builder", () => {
           }`,
         ),
       );
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
 
     foo.in().busVoltage = 0b1010_1100_0011_0101;
@@ -124,10 +129,8 @@ describe("Chip Builder", () => {
     try {
       const chip = unwrap(await HDL.parse(USE_COPY_HDL));
       foo = unwrap(await build({ parts: chip, dir: ".", fs }));
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
 
     foo.in("a").pull(HIGH);
@@ -149,10 +152,8 @@ describe("Chip Builder", () => {
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
   });
 
@@ -166,10 +167,8 @@ describe("Chip Builder", () => {
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
   });
 
@@ -185,10 +184,8 @@ describe("Chip Builder", () => {
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
   });
 
@@ -205,10 +202,32 @@ describe("Chip Builder", () => {
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
+    } catch (e) {
+      throw new Error(asDisplay(e));
+    }
+  });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
-      throw new Error(display(e.message ?? e.shortMessage ?? e));
+  it("sorts after wiring", async () => {
+    try {
+      const chip = unwrap(
+        HDL.parse(`CHIP Or { IN a, b; OUT out;
+  PARTS:
+  Not(in =b , out = net2);
+  Nand(a = net, b =net2 , out =out );
+  Not(in =a , out = net);
+}`),
+      );
+      const orA = await build({ parts: chip });
+      expect(orA).toBeOk();
+
+      const ora = unwrap(orA);
+
+      ora.in("a").pull(HIGH);
+      ora.in("b").pull(LOW);
+      ora.eval();
+      expect(ora.out("out").busVoltage).toBe(HIGH);
+    } catch (e) {
+      throw new Error(asDisplay(e));
     }
   });
 });

@@ -1,10 +1,10 @@
 import {
   Err,
+  isErr,
   Ok,
   Result,
-  isErr,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { CompilationError, Span, createError } from "../languages/base.js";
+import { CompilationError, createError, Span } from "../languages/base.js";
 import {
   ArrayAccess,
   Class,
@@ -12,6 +12,7 @@ import {
   DoStatement,
   Expression,
   IfStatement,
+  isPrimitive,
   JACK,
   KeywordConstant,
   LetStatement,
@@ -27,13 +28,12 @@ import {
   VarDec,
   Variable,
   WhileStatement,
-  isPrimitive,
 } from "../languages/jack.js";
 import { Segment } from "../languages/vm.js";
 import {
-  VM_BUILTINS,
   makeInterface,
   overridesOsCorrectly,
+  VM_BUILTINS,
 } from "../vm/builtins.js";
 import { validateSubroutine } from "./controlFlow.js";
 

@@ -1,5 +1,5 @@
 import { grammar as ohmGrammar } from "ohm-js";
-import { grammars, makeParser, baseSemantics } from "./base.js";
+import { baseSemantics, grammars, makeParser } from "./base.js";
 
 export type Cell = string;
 export type Line = Cell[];

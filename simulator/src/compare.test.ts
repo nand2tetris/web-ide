@@ -1,4 +1,4 @@
-import { compare, diff } from "./compare.js";
+import { compare, compareLines, diff } from "./compare.js";
 
 describe("compare", () => {
   it("diffs a row", () => {
@@ -27,5 +27,16 @@ describe("compare", () => {
       { a: "1", b: "0", row: 2, col: 2 },
       { a: "0", b: "1", row: 3, col: 2 },
     ]);
+  });
+});
+
+describe("compareLines", () => {
+  it("handles windows and unix lines", () => {
+    expect(compareLines("AAA\r\nBBB\r\nCCC\r\n", "AAA\nBBB\nCCC\n")).toEqual(
+      {},
+    );
+    expect(compareLines("AAA\nBBB\nCCC\n", "AAA\r\nBBB\r\nCCC\r\n")).toEqual(
+      {},
+    );
   });
 });

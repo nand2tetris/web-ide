@@ -19,6 +19,7 @@ import {
   Chip,
   ClockedChip,
   ConstantBus,
+  FALSE_BUS,
   HIGH,
   LOW,
   Pin,
@@ -87,7 +88,7 @@ export class Memory extends ClockedChip {
       ["out[16]"],
       "Memory",
       [],
-      ["in", "load"],
+      ["in", "load"]
     );
     this.parts.push(this.keyboard);
     this.parts.push(this.screen);
@@ -99,7 +100,10 @@ export class Memory extends ClockedChip {
     this.address = this.in("address").busVoltage;
     if (load) {
       const inn = this.in().busVoltage;
-      if (this.address >= Keyboard.OFFSET) {
+      if (this.address > Keyboard.OFFSET) {
+        // out of "physical" bounds, should result in some kind of issue...
+      }
+      if (this.address == Keyboard.OFFSET) {
         // Keyboard, do nothing
       } else if (this.address >= Screen.OFFSET) {
         this.screen.at(this.address - Screen.OFFSET).busVoltage = inn;
@@ -117,8 +121,9 @@ export class Memory extends ClockedChip {
     if (!this.ram) return;
     this.address = this.in("address").busVoltage;
     let out = 0;
-    if (this.address >= Keyboard.OFFSET) {
-      // Keyboard, do nothing
+    if (this.address > Keyboard.OFFSET) {
+      // out of "physical" bounds, should result in some kind of issue...
+    } else if (this.address == Keyboard.OFFSET) {
       out = this.keyboard?.out().busVoltage ?? 0;
     } else if (this.address >= Screen.OFFSET) {
       out = this.screen?.at(this.address - Screen.OFFSET).busVoltage ?? 0;
@@ -136,6 +141,9 @@ export class Memory extends ClockedChip {
     if (pin?.startsWith("Screen")) {
       const idx = int10(pin.match(/\[(?<idx>\d+)]/)?.groups?.idx ?? "0");
       return this.screen.at(idx);
+    }
+    if (pin?.startsWith("Keyboard")) {
+      return this.keyboard.out();
     }
     return super.in(pin);
   }
@@ -157,14 +165,16 @@ export class Memory extends ClockedChip {
   }
 
   at(offset: number): Pin {
-    if (offset >= Keyboard.OFFSET) {
+    if (offset > Keyboard.OFFSET) {
+      return FALSE_BUS;
+    }
+    if (offset == Keyboard.OFFSET) {
       return this.keyboard.out();
     }
     if (offset >= Screen.OFFSET) {
       return this.screen.at(offset - Screen.OFFSET);
-    } else {
-      return this.ram.at(offset);
     }
+    return this.ram.at(offset);
   }
 
   override reset(): void {

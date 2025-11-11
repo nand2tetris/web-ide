@@ -61,18 +61,19 @@ yargs(hideBin(process.argv))
             "When set, look for the java IDE jars in this path and compare both runs.",
         }),
     (argv) => {
-      const { name, ext } = parse(argv.file ?? "");
+      const filePath = resolve(argv.file ?? process.cwd());
+      const parsedPath = parse(filePath);
+      const ext = parsedPath.ext || ".tst";
       switch (ext) {
-        case "":
         case ".tst":
           console.log("tst");
-          testRunner(dirname(resolve(argv.file ?? process.cwd())), name);
+          testRunner(filePath);
           break;
         case ".hdl": {
           const tst = fsCore.readFileSync(0, "utf8");
           testRunnerFromSource(
-            dirname(resolve(argv.file ?? process.cwd())),
-            name,
+            dirname(filePath),
+            parsedPath.name,
             tst,
           );
           break;

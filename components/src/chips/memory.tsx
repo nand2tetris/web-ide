@@ -258,7 +258,10 @@ export const Memory = forwardRef(
               );
               jumpTo();
             } catch (e) {
-              setStatus(`Error loading memory: ${(e as Error).message}`);
+              setStatus({
+                message: `Error loading memory: ${(e as Error).message}`,
+                severity: "ERROR",
+              });
               return;
             }
           });

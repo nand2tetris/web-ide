@@ -1,8 +1,8 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
 import {
   Err,
-  Ok,
   isErr,
+  Ok,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
@@ -23,7 +23,7 @@ import { RunSpeed } from "src/runbar.js";
 import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
-import { BaseContext } from "./base.context.js";
+import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 
 function makeTst() {
@@ -95,7 +95,7 @@ export type CpuStoreDispatch = Dispatch<{
 
 export function makeCpuStore(
   fs: FileSystem,
-  setStatus: Action<string>,
+  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
 ) {
@@ -135,8 +135,14 @@ export function makeCpuStore(
       const passed = compare(state.test.cmp.trim(), test.log().trim());
       setStatus(
         passed
-          ? `Simulation successful: The output file is identical to the compare file`
-          : `Simulation error: The output file differs from the compare file`,
+          ? {
+              message: `Simulation successful: The output file is identical to the compare file`,
+              severity: "SUCCESS",
+            }
+          : {
+              message: `Simulation error: The output file differs from the compare file`,
+              severity: "ERROR",
+            },
       );
     },
 
@@ -192,7 +198,10 @@ export function makeCpuStore(
         }
         return done;
       } catch (e) {
-        setStatus((e as Error).message);
+        setStatus({
+          message: (e as Error).message,
+          severity: "ERROR",
+        });
         return true;
       }
     },
@@ -237,7 +246,10 @@ export function makeCpuStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus(`Failed to parse test - ${Err(tst).message}`);
+        setStatus({
+          message: `Failed to parse test - ${Err(tst).message}`,
+          severity: "ERROR",
+        });
         valid = false;
         dispatch.current({ action: "update" });
         return false;
@@ -252,7 +264,7 @@ export function makeCpuStore(
           let file;
           try {
             file = await fs.readFile(path);
-          } catch (e) {
+          } catch (_e) {
             throw new Error(`Cannot find ${path}`);
           }
           const loader = path.endsWith("hack")
@@ -273,7 +285,10 @@ export function makeCpuStore(
       });
 
       if (isErr(maybeTest)) {
-        setStatus(Err(maybeTest).message);
+        setStatus({
+          message: Err(maybeTest).message,
+          severity: "ERROR",
+        });
         return false;
       } else {
         test = Ok(maybeTest);
@@ -287,7 +302,10 @@ export function makeCpuStore(
       const dir = path.split("/").slice(0, -1).join("/");
       const files = await loadTestFiles(fs, `${dir}/${name}`);
       if (isErr(files)) {
-        setStatus(`Failed to load test`);
+        setStatus({
+          message: `Failed to load test`,
+          severity: "ERROR",
+        });
         return;
       }
       tstName = name;

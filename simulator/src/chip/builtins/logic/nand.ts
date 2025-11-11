@@ -1,5 +1,5 @@
 import { nand16 } from "../../../util/twos.js";
-import { HIGH, LOW, Chip, Voltage } from "../../chip.js";
+import { Chip, HIGH, LOW, Voltage } from "../../chip.js";
 
 export function nand(a: Voltage, b: Voltage): [Voltage] {
   return [a === 1 && b === 1 ? LOW : HIGH];

@@ -1,9 +1,9 @@
 import {
+  grammar,
   HdlParse,
+  hdlSemantics,
   Part,
   PinDeclaration,
-  grammar,
-  hdlSemantics,
 } from "./hdl.js";
 
 const AND_BUILTIN = `CHIP And {

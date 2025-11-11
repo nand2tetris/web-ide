@@ -15,7 +15,7 @@ function Sys.init 0
 	goto LOOP
 
 // Sets locals 1, 2 and 3 to some values. Leaves locals 0 and 4 unchanged, 
-// to test that the 'function' VM command initliazes them to 0 (the test 
+// to test that the 'function' VM command initializes them to 0 (the test 
 // script sets them to -1 before this code starts running).
 // Calls Sys.add12(123) and stores the return value (should be 135) in temp 0.
 // Returns local 0 + local 1 + local 2 + local 3 + local 4 (should be 456), to 

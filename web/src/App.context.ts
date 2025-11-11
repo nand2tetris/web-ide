@@ -27,7 +27,7 @@ export function useMonaco() {
   };
 }
 
-export function useAppContext(fs: FileSystem = new FileSystem()) {
+export function useAppContext(_fs: FileSystem = new FileSystem()) {
   const [theme, setTheme] = useState<Theme>("system");
 
   return {

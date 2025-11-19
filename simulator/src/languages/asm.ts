@@ -1,6 +1,4 @@
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
-import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   ASSIGN,
   ASSIGN_ASM,
@@ -8,24 +6,27 @@ import {
   COMMANDS,
   COMMANDS_ASM,
   COMMANDS_OP,
-  isAssignAsm,
-  isCommandAsm,
   JUMP,
   JUMP_ASM,
   JUMP_OP,
+  isAssignAsm,
+  isCommandAsm,
 } from "../cpu/alu.js";
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import {
-  baseSemantics,
   CompilationError,
+  Span,
+  baseSemantics,
   createError,
   grammars,
   makeParser,
-  Span,
   span,
 } from "./base.js";
+
+import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import asmGrammar from "./grammars/asm.ohm.js";
+import { grammar as ohmGrammar, type Node } from "ohm-js";
 
 export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);

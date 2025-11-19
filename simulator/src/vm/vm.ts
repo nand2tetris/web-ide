@@ -1,12 +1,12 @@
 import {
   Err,
-  isErr,
   Ok,
   Result,
+  isErr,
   unwrap,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { CompilationError, createError, Span } from "../languages/base.js";
+import { CompilationError, Span, createError } from "../languages/base.js";
 import {
   CallInstruction,
   FunctionInstruction,
@@ -466,7 +466,7 @@ export class Vm {
 
   get operation() {
     if (!this.currentFunction) {
-      return undefined;
+      return;
     }
     if (this.invocation.opPtr > this.currentFunction.operations.length)
       throw new Error(

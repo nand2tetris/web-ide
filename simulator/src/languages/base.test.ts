@@ -1,5 +1,5 @@
-import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import { grammar } from "ohm-js";
+import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import { baseSemantics, grammars } from "./base.js";
 
 describe("Ohm Base", () => {

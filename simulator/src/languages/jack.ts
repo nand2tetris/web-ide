@@ -1,5 +1,5 @@
-import { type Node, grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import { grammar as ohmGrammar, type Node } from "ohm-js";
+import { Span, baseSemantics, grammars, makeParser, span } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
 const primitives = new Set(["int", "boolean", "char"] as const);

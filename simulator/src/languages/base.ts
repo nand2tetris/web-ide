@@ -1,12 +1,12 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
+  Interval,
+  grammar,
   type Dict,
   type Grammar,
-  grammar,
-  Interval,
   type Semantics,
 } from "ohm-js";
-import { int2, int10, int16 } from "../util/twos.js";
+import { int10, int16, int2 } from "../util/twos.js";
 
 import baseGrammar from "./grammars/base.ohm.js";
 export const grammars = {

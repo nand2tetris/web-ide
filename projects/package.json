@@ -20,6 +20,9 @@
   "dependencies": {
     "@davidsouther/jiffies": "^2.2.5"
   },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
   "scripts": {
     "build": "tsc"
   }

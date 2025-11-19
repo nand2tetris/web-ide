@@ -70,7 +70,7 @@ export async function loadChip(
     }
 
     return maybeChip;
-  } catch (_e) {
+  } catch (e) {
     return Err(new Error(`Could not load chip ${name}.hdl` /*, { cause: e }*/));
   }
 }
@@ -353,7 +353,6 @@ class ChipBuilder {
           ),
         );
       }
-      this.chip.sortParts();
       return Ok();
     } catch (e) {
       return Err(createError((e as Error).message, part.span));

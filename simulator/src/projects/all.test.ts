@@ -1,4 +1,3 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import {
   FileSystem,
   ObjectFileSystemAdapter,
@@ -19,10 +18,10 @@ import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/
 import { build } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { compare } from "../compare.js";
-import { ASM, Asm } from "../languages/asm.js";
-import { CMP, Cmp } from "../languages/cmp.js";
+import { Asm, ASM } from "../languages/asm.js";
+import { Cmp, CMP } from "../languages/cmp.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
-import { TST, Tst } from "../languages/tst.js";
+import { Tst, TST } from "../languages/tst.js";
 import { VM } from "../languages/vm.js";
 import { ChipTest } from "../test/chiptst.js";
 import { VMTest } from "../test/vmtst.js";
@@ -42,10 +41,14 @@ describe("Chip Projects", () => {
           .filter((k) => INCLUDE.has(k)),
       )("Chip %s", async (chipName) => {
         const chipProject = {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          ...assertExists(ChipProjects[project]),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          ...ChipProjects[project]!,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
-          ...assertExists(ChipProjectsSols[project]),
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          ...ChipProjectsSols[project]!,
         };
         const hdlFile = chipProject.SOLS[chipName]?.[`${chipName}.hdl`];
         const tstFile = chipProject.CHIPS?.[`${chipName}.tst`];
@@ -115,7 +118,7 @@ describe("Vm Projects", () => {
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ...assertExists(VmProjects[project]),
+          ...VmProjects[project]!,
         };
 
         const tstFile = vmProject.VMS[vmName]?.[`${vmName}VME.tst`];

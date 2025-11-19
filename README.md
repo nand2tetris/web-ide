@@ -2,7 +2,7 @@
 
 A Javascript reimplementation of the software suite described in www.nand2tetris.org and in "The Elements of Computing Systems" by Nisan and Schocken, MIT Press (2nd edition, 2021). The repo also includes the project files described in the website and in the book.
 
-The goal is to allow students complete the projects using modern, web-based tools, without having to download code to their computers.
+Presently the implementation focuses on the Hardware Simulator (projects 1, 2, 3, 5). The CPU and the VM Emulators will be next. The goal is to allow students complete the projects using modern, web-based tools, without having to download code to their computers.
 
 Users can work with the tools via a web IDE, or via a VS Code extension. Both are described below.
 
@@ -18,7 +18,6 @@ The parts of the user guide that describe the UI may be out of sync with the cod
 
 Install the CLI tool:
 
-    npm install
     npm run build && npm i -g ./cli
 
 Run the CLI:
@@ -31,15 +30,6 @@ Run the CLI with a nand2tetris Java install:
 
     cd nand2tetris/project/01
     nand2tetris grade --java_ide=${HOME}/nand2tetris
-
-### Web IDE
-
-Build the web IDE:
-
-    npm install
-    npm run build && npm run start
-
-It will print the URL to the console. Any changes will automatically trigger a rebuild.
 
 ## Architecture
 
@@ -62,7 +52,7 @@ Simulator objects are also independant of language, and serve equally well to ru
 
 Languages are parsed using [Ohm](https://ohmjs.org/), a parser combinator library.
 Ohm works well for simple cases, but does not handle error recovery well.
-Replacing or augmenting this to handle a number of errors, rather than only the first, is a possible future improvement.
+Replacing or augmenting this to handle a number of errors, rather than only the first, w
 
 ### Web
 
@@ -76,7 +66,7 @@ Pages should use semantic blocks as much as possible, with special attention on 
 
 #### React
 
-The user interface is written in React, using functional components and vanilla hooks as much as possible.
+The user interface is written in react, using functional components and vanilla hooks as much as possible.
 Pages are routable things, usually with a store connecting it to the appropriate simulation.
 Components are reusable pieces of UI, which take props to update their interface.
 

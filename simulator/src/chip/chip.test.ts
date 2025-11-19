@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { bin } from "../util/twos.js";
 import { And, Inc16, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
@@ -13,9 +12,9 @@ import {
   InSubBus,
   LOW,
   OutSubBus,
+  TRUE_BUS,
   parseToPin,
   printChip,
-  TRUE_BUS,
 } from "./chip.js";
 import { Clock } from "./clock.js";
 
@@ -68,8 +67,8 @@ describe("Chip", () => {
       it("evaluates an and gate", () => {
         const andChip = new And();
 
-        const a = assertExists(andChip.in("a"));
-        const b = assertExists(andChip.in("b"));
+        const a = andChip.in("a")!;
+        const b = andChip.in("b")!;
 
         andChip.eval();
         expect(andChip.out().voltage()).toBe(LOW);
@@ -92,8 +91,8 @@ describe("Chip", () => {
       it("evaluates an or gate", () => {
         const orChip = new Or();
 
-        const a = assertExists(orChip.in("a"));
-        const b = assertExists(orChip.in("b"));
+        const a = orChip.in("a")!;
+        const b = orChip.in("b")!;
 
         orChip.eval();
         expect(orChip.out().voltage()).toBe(LOW);
@@ -117,8 +116,8 @@ describe("Chip", () => {
       it("evaluates an xor gate", () => {
         const xorChip = new Xor();
 
-        const a = assertExists(xorChip.in("a"));
-        const b = assertExists(xorChip.in("b"));
+        const a = xorChip.in("a")!;
+        const b = xorChip.in("b")!;
 
         xorChip.eval();
         expect(xorChip.out().voltage()).toBe(LOW);
@@ -253,8 +252,8 @@ describe("Chip", () => {
         },
       ]);
 
-      assertExists(chip.in("b")).busVoltage = 1;
-      assertExists(chip.in("a")).busVoltage = 0;
+      chip.in("b")!.busVoltage = 1;
+      chip.in("a")!.busVoltage = 0;
       chip.eval();
       expect(chip.out().busVoltage).toBe(0b001);
     });
@@ -385,11 +384,7 @@ describe("Chip", () => {
           this.pins.insert(new ConstantBus("pal", 0b1010_1100_0011_0101));
           this.pins.get("pal")?.connect(new OutSubBus(this.not8.in(), 4, 8));
           this.pins.emplace("out1", 5);
-          const out1Bus = new OutSubBus(
-            assertExists(this.pins.get("out1")),
-            3,
-            5,
-          );
+          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
           this.not8.out().connect(out1Bus);
         }
       }
@@ -416,11 +411,7 @@ describe("Chip", () => {
           TRUE_BUS.connect(new InSubBus(this.not8.in(), 7, 1));
           // out[3..7] = out1
           this.pins.emplace("out1", 5);
-          const out1Bus = new OutSubBus(
-            assertExists(this.pins.get("out1")),
-            3,
-            5,
-          );
+          const out1Bus = new OutSubBus(this.pins.get("out1")!, 3, 5);
           this.not8.out().connect(out1Bus);
         }
       }
@@ -733,178 +724,5 @@ describe("Chip", () => {
     fooC.sortParts();
     const parts = fooC.parts.map((chip) => chip.id);
     expect(parts).toEqual([fooC.register.id, fooC.inc16A.id, fooC.inc16B.id]);
-  });
-
-  it("evals without order issues (after sorting)", () => {
-    /*
- CHIP Or {
-  IN a, b;
-  OUT out;
-
-  PARTS:
-
-  Not(in =b , out = net2);
-  Nand(a = net, b =net2 , out =out );
-  Not(in =a , out = net);
-}
-  */
-    class OrA extends Chip {
-      readonly nota = new Not();
-      readonly nand = new Nand();
-      readonly notb = new Not();
-      constructor() {
-        super(["a", "b"], ["out"], "OrA", []);
-        this.wire(this.nota, [
-          {
-            from: { name: "b", start: 0, width: 1 },
-            to: { name: "in", start: 0, width: 1 },
-          },
-          {
-            from: { name: "net2", start: 0, width: 1 },
-            to: { name: "out", start: 0, width: 1 },
-          },
-        ]);
-        this.wire(this.nand, [
-          {
-            from: { name: "net", start: 0, width: 1 },
-            to: { name: "a", start: 0, width: 1 },
-          },
-          {
-            from: { name: "net2", start: 0, width: 1 },
-            to: { name: "b", start: 0, width: 1 },
-          },
-          {
-            from: { name: "out", start: 0, width: 1 },
-            to: { name: "out", start: 0, width: 1 },
-          },
-        ]);
-        this.wire(this.notb, [
-          {
-            from: { name: "a", start: 0, width: 1 },
-            to: { name: "in", start: 0, width: 1 },
-          },
-          {
-            from: { name: "net", start: 0, width: 1 },
-            to: { name: "out", start: 0, width: 1 },
-          },
-        ]);
-        this.sortParts();
-      }
-    }
-
-    class OrB extends Chip {
-      readonly nota = new Not();
-      readonly nand = new Nand();
-      readonly notb = new Not();
-      constructor() {
-        super(["a", "b"], ["out"], "OrB", []);
-        this.wire(this.nota, [
-          {
-            from: { name: "b", start: 0, width: 1 },
-            to: { name: "in", start: 0, width: 1 },
-          },
-          {
-            from: { name: "net2", start: 0, width: 1 },
-            to: { name: "out", start: 0, width: 1 },
-          },
-        ]);
-        this.wire(this.notb, [
-          {
-            from: { name: "a", start: 0, width: 1 },
-            to: { name: "in", start: 0, width: 1 },
-          },
-          {
-            from: { name: "net", start: 0, width: 1 },
-            to: { name: "out", start: 0, width: 1 },
-          },
-        ]);
-        this.wire(this.nand, [
-          {
-            from: { name: "net", start: 0, width: 1 },
-            to: { name: "a", start: 0, width: 1 },
-          },
-          {
-            from: { name: "net2", start: 0, width: 1 },
-            to: { name: "b", start: 0, width: 1 },
-          },
-          {
-            from: { name: "out", start: 0, width: 1 },
-            to: { name: "out", start: 0, width: 1 },
-          },
-        ]);
-      }
-    }
-
-    class OrC extends Chip {
-      readonly nota = new Not();
-      readonly nand = new Nand();
-      readonly notb = new Not();
-      constructor() {
-        super(["a", "b"], ["out"], "OrC", []);
-        this.wireAll([
-          {
-            part: this.nota,
-            connections: [
-              {
-                from: { name: "b", start: 0, width: 1 },
-                to: { name: "in", start: 0, width: 1 },
-              },
-              {
-                from: { name: "net2", start: 0, width: 1 },
-                to: { name: "out", start: 0, width: 1 },
-              },
-            ],
-          },
-          {
-            part: this.nand,
-            connections: [
-              {
-                from: { name: "net", start: 0, width: 1 },
-                to: { name: "a", start: 0, width: 1 },
-              },
-              {
-                from: { name: "net2", start: 0, width: 1 },
-                to: { name: "b", start: 0, width: 1 },
-              },
-              {
-                from: { name: "out", start: 0, width: 1 },
-                to: { name: "out", start: 0, width: 1 },
-              },
-            ],
-          },
-          {
-            part: this.notb,
-            connections: [
-              {
-                from: { name: "a", start: 0, width: 1 },
-                to: { name: "in", start: 0, width: 1 },
-              },
-              {
-                from: { name: "net", start: 0, width: 1 },
-                to: { name: "out", start: 0, width: 1 },
-              },
-            ],
-          },
-        ]);
-      }
-    }
-
-    const ora = new OrA();
-    ora.in("a").pull(HIGH);
-    ora.in("b").pull(LOW);
-    ora.eval();
-    expect(ora.out("out").busVoltage).toBe(HIGH);
-
-    const orb = new OrB();
-    orb.in("a").pull(HIGH);
-    orb.in("b").pull(LOW);
-    orb.eval();
-    expect(orb.out("out").busVoltage).toBe(HIGH);
-
-    const orc = new OrC();
-    orc.in("a").pull(HIGH);
-    orc.in("b").pull(LOW);
-    orc.eval();
-    expect(orc.out("out").busVoltage).toBe(HIGH);
   });
 });

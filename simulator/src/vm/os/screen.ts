@@ -36,11 +36,10 @@ export class ScreenLib {
     }
     const address = row * 32 + Math.floor(col / 16);
     let value = this.memory.screen.get(address);
-    const rem = col % 16;
     if (this.color) {
-      value |= 1 << rem;
+      value |= 1 << col % 16;
     } else {
-      value &= ~(1 << rem);
+      value &= ~(1 << col % 16);
     }
     this.memory.screen.set(address, value);
   }

@@ -26,7 +26,6 @@ import {
 } from "react";
 import { AppContext } from "../App.context";
 import { Editor } from "./editor";
-import { isPath } from "./file_select";
 import { Panel } from "./panel";
 import { Tab, TabList } from "./tabs";
 
@@ -120,35 +119,18 @@ export const TestPanel = ({
   const [name, setName] = useStateInitializer(tstName ?? "");
 
   const loadTest = useCallback(async () => {
-    const file = await filePicker.selectAllowLocal({ 
-      suffix: [".tst", ".cmp"] 
-    });
-    if (isPath(file)) {
-      const files = await loadTestFiles(fs, file.path);
-      if (isErr(files)) {
-        setStatus(`Failed to load test`);
-        return;
-      }
-      setPath?.(file.path);
-      setName(file.path.split("/").pop() ?? "");
-      const { tst, cmp } = unwrap(files);
-      setTst?.(tst);
-      setCmp?.(cmp ?? "");
-    } else { // File uploaded
-      const selectedFiles = Array.isArray(file) ? file : [file];
-      const tstFile = selectedFiles.find(f => f.name.endsWith('.tst'));
-      const cmpFile = selectedFiles.find(f => f.name.endsWith('.cmp'));
-      
-      if (tstFile) {
-        setTst?.(tstFile.content);
-        setName(tstFile.name);
-        setPath?.(tstFile.name);
-      }
-      if (cmpFile) {
-        setCmp?.(cmpFile.content);
-      }
+    const path = await filePicker.select({ suffix: ".tst" });
+    const files = await loadTestFiles(fs, path.path);
+    if (isErr(files)) {
+      setStatus(`Failed to load test`);
+      return;
     }
-  }, [filePicker, setStatus, fs, setPath, setName, setTst, setCmp]);
+    setPath?.(path.path);
+    setName(path.path.split("/").pop() ?? "");
+    const { tst, cmp } = unwrap(files);
+    setTst?.(tst);
+    setCmp?.(cmp ?? "");
+  }, [filePicker, setStatus, fs]);
 
   const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();
 

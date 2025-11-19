@@ -19,9 +19,8 @@ const commandASMValues = new Set([
   "D|A",
 ] as const);
 
-export type COMMANDS_ASM = typeof commandASMValues extends Set<infer S>
-  ? S
-  : never;
+export type COMMANDS_ASM =
+  typeof commandASMValues extends Set<infer S> ? S : never;
 
 export function isCommandAsm(command: string): command is COMMANDS_ASM {
   return (
@@ -161,9 +160,8 @@ const assignAsmValues = new Set([
   "AMD",
 ] as const);
 
-export type ASSIGN_ASM = typeof assignAsmValues extends Set<infer S>
-  ? S
-  : never;
+export type ASSIGN_ASM =
+  typeof assignAsmValues extends Set<infer S> ? S : never;
 
 export type ASSIGN_OP = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 

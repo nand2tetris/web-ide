@@ -1,6 +1,6 @@
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Span } from "@nand2tetris/simulator/languages/base";
-import { CMP, Cmp } from "@nand2tetris/simulator/languages/cmp.js";
+import { Cmp, CMP } from "@nand2tetris/simulator/languages/cmp.js";
 
 interface Diff {
   row: number;

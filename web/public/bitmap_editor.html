@@ -3,61 +3,30 @@
   <head>
     <title>Jack Bitmap Editor</title>
     <script type="text/javascript">
-      // constants
       const STATE_KEY = "state";
       const GRID_KEY = "grid";
 
       // initializer global variables
       var BINARY_BITS = 16;
       var includeShift = true;
+      const state = JSON.parse(localStorage.getItem(STATE_KEY));
       var columns = [0, 1, 2];
       var grid = new Array(0);
-      var currentColor = null;
 
       // load saved state from local storage
-      // using default values wherever necessary
-      var defaults = {
-        WIDTH: 48,
-        HEIGHT: 32,
-        PIXEL_SIZE: "16",
-        currentIShift: 0,
-        currentJShift: 0,
-        marginSaveFrames: 1,
-        baseI: 0,
-        baseJ: 0,
-        drawHeight: 0,
-        INVERT_MODE: false,
-        comments: true,
-      };
-      var state = {};
-      try {
-        var savedState = localStorage.getItem(STATE_KEY);
-        if (savedState) {
-          var parsedState = JSON.parse(savedState);
-          state = Object.assign({}, defaults, parsedState);
-        } else {
-          state = defaults;
-        }
-      } catch (error) {
-        console.error(
-          "Error parsing state from localStorage. Using defaults.",
-          error,
-        );
-        state = defaults;
-      }
-      // initialize global variables from state
-      var WIDTH = state.WIDTH;
-      var HEIGHT = state.HEIGHT;
-      var PIXEL_SIZE = state.PIXEL_SIZE;
-      var currentIShift = state.currentIShift;
-      var currentJShift = state.currentJShift;
-      var marginSaveFrames = state.marginSaveFrames;
+      var WIDTH = state.WIDTH ?? 48;
+      var HEIGHT = state.HEIGHT ?? 32;
+      var PIXEL_SIZE = state.PIXEL_SIZE ?? "16";
+      var currentColor = state.currentColor ?? null; // TODO: maybe this shouldn't be in state
+      var currentIShift = state.currentIShift ?? 0;
+      var currentJShift = state.currentJShift ?? 0;
+      var marginSaveFrames = state.marginSaveFrames ?? 1;
       var baseI = state.baseI;
       var baseJ = state.baseJ;
-      var drawHeight = state.drawHeight;
+      var drawHeight = state.drawHeight ?? 0;
 
-      var INVERT_MODE = state.INVERT_MODE;
-      var comments = state.comments;
+      var INVERT_MODE = state.INVERT_MODE ?? false;
+      var comments = state.comments ?? true;
 
       function saveState() {
         localStorage.setItem(
@@ -66,6 +35,7 @@
             WIDTH,
             HEIGHT,
             PIXEL_SIZE,
+            currentColor,
             currentIShift,
             currentJShift,
             marginSaveFrames,
@@ -78,45 +48,15 @@
         );
       }
 
-      function saveGrid(grid) {
+      function saveGrid() {
         localStorage.setItem(GRID_KEY, JSON.stringify(grid));
-      }
-
-      function Reset() {
-        // resets state to the default values
-        WIDTH = 48;
-        HEIGHT = 32;
-        PIXEL_SIZE = "16";
-        currentIShift = 0;
-        currentJShift = 0;
-        marginSaveFrames = 1;
-        baseI = 0;
-        baseJ = 0;
-        drawHeight = 0;
-        INVERT_MODE = false;
-        comments = true;
-        saveState();
-        saveGrid(createGrid());
-        Init();
-      }
-
-      function syncInputsToState() {
-        // syncs the input fields to the current state
-        document.getElementById("inputWidth").value = WIDTH.toString();
-        document.getElementById("inputHeight").value = HEIGHT.toString();
-        document.getElementById("pixelSize").value = PIXEL_SIZE;
-        document.getElementById("marginSaveFrames").value = marginSaveFrames;
-        document.getElementById("invertMode").checked = INVERT_MODE;
-        document.getElementById("commentsOn").checked = comments;
-
-        // rotate button is only enabled if the canvas is square
-        document.getElementById("rotateButton").disabled = WIDTH != HEIGHT;
       }
 
       function pickColor(cell) {
         var i = (cell.id / WIDTH) | 0;
         var j = cell.id - i * WIDTH;
         currentColor = !grid[i][j];
+        saveState();
         OnCellOver(cell);
       }
 
@@ -130,24 +70,20 @@
 
       function releaseColor() {
         currentColor = null;
+        saveState();
       }
 
       function Init() {
         grid = InitGrid();
-        saveGrid(grid);
-
         DisplayGrid();
-        syncInputsToState();
-      }
 
-      function onLoad() {
-        // attempt to initialize grid based on saved state; fall back to defaults if that fails
-        try {
-          Init();
-        } catch (error) {
-          console.log(error);
-          Reset();
-        }
+        // enable/disable the rotate button depending on if the canvas is square
+        document.getElementById("rotateButton").disabled = WIDTH != HEIGHT;
+
+        /*const inputImage = document.getElementById("inputImage");
+            inputImage.addEventListener("change", (event) => {
+                loadImage(event.target.files[0])
+            })*/
       }
 
       function createGrid() {
@@ -155,7 +91,7 @@
         for (i = 0; i < HEIGHT; i++) {
           _grid[i] = new Array(WIDTH);
           for (j = 0; j < WIDTH; j++) {
-            _grid[i][j] = INVERT_MODE; // populate with current "empty" color
+            _grid[i][j] = false;
           }
         }
         return _grid;
@@ -170,7 +106,31 @@
         }
         return createGrid();
       }
+      /*
+        // Working on it
+        function loadImage(file, type) {
+            // Check if the file is an image.
+            if (file.type && !file.type.startsWith('image/')) {
+                console.log('File is not an image.', file.type, file);
+                return;
+            }
+            // for now, only png is supported
+            if (!file.type.startsWith('image/png')) return;
 
+            const reader = new FileReader();
+            reader.addEventListener('load', (event) => {
+                new PNG({filterType: 4}).parse(event.target.result, function(error, image){
+                    if(error) return;
+                    const signature = [137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 73, 72, 68, 82];
+                    for (let i = 0; i < signature.length; i++) {
+                    if (byteArray[i] !== signature[i]) {
+                        return false;
+                    }
+                    }
+                });
+            });
+            reader.readAsArrayBuffer(file);
+        }*/
       function RotateBitmapRight() {
         // for now, rotate only works for square canvas, and rotates the entire canvas by 90 degrees
         if (HEIGHT != WIDTH) return;
@@ -183,6 +143,7 @@
         }
 
         grid = _grid;
+        saveGrid();
         DisplayGrid();
         // shifting effects becomes undesirable when rotated, so clear the shift
         ResetShift();
@@ -193,11 +154,11 @@
             grid[i][j] = !grid[i][j];
           }
         }
-        saveGrid(grid);
+        saveGrid();
         DisplayGrid();
       }
       function MirrorBitmap() {
-        var _grid = InitGrid();
+        var _grid = createGrid();
 
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
@@ -206,7 +167,7 @@
         }
 
         grid = _grid;
-        saveGrid(grid);
+        saveGrid();
         DisplayGrid();
       }
       function ShiftLeft() {
@@ -222,11 +183,11 @@
           }
         }
         saveState();
-        saveGrid(grid);
+        saveGrid();
         DisplayGrid();
       }
       function ShiftRight() {
-        _grid = InitGrid();
+        _grid = createGrid();
         currentJShift += 1;
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
@@ -240,11 +201,12 @@
         }
         grid = _grid;
         saveState();
-        saveGrid(grid);
+        saveGrid();
         DisplayGrid();
       }
       function ShiftUp() {
         currentIShift -= 1;
+        saveState();
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
             // handle edge
@@ -255,13 +217,13 @@
             }
           }
         }
-        saveState();
-        saveGrid(grid);
+        saveGrid();
         DisplayGrid();
       }
       function ShiftDown() {
-        _grid = InitGrid();
+        _grid = createGrid();
         currentIShift += 1;
+        saveState();
         for (i = 0; i < HEIGHT; i++) {
           for (j = 0; j < WIDTH; j++) {
             // handle edge
@@ -273,8 +235,7 @@
           }
         }
         grid = _grid;
-        saveState();
-        saveGrid(grid);
+        saveGrid();
         DisplayGrid();
       }
 
@@ -282,7 +243,6 @@
         var str = '<table id="canvas" border=1 cellspacing=0>';
         var i, j, backgroundColor;
         let font_style = "style='font-size:" + PIXEL_SIZE + "px' ";
-
         for (i = -1; i < HEIGHT; i++) {
           str = str + "<tr>";
           for (j = -1; j < WIDTH; j++) {
@@ -346,18 +306,17 @@
         grid[i][j] = currentColor;
         if (grid[i][j]) cell.style.backgroundColor = "black";
         else cell.style.backgroundColor = "white";
-
+        saveGrid();
         GenerateCode();
-        saveGrid(grid);
       }
       function GetColumns(leftJ, rightJ, baseJ) {
         /*
-          Divides the line segment between leftJ and rightJ into divisions of width 16, making sure that baseJ is the start of one of those divisions,
-          then it returns those divisions, relative baseJ (and only returns divisions that contain at least part of the line segment)
-          so GetColumns(0, 5, 0) should return [0] since there is 1 division that starts 0*16 units away from baseJ=0
-          and GetColumns(0, 5, 3) should return [-1, 0] since baseJ enforces a split in the segment
-          and GetColumns(0, 5, 6) should return [-1] because the entire distance between leftJ and rightJ fits in the chunk that starts at baseJ + (-16*1)
-        */
+                Divides the line segment between leftJ and rightJ into divisions of width 16, making sure that baseJ is the start of one of those divisions,
+                then it returns those divisions, relative baseJ (and only returns divisions that contain at least part of the line segment)
+                so GetColumns(0, 5, 0) should return [0] since there is 1 division that starts 0*16 units away from baseJ=0
+                and GetColumns(0, 5, 3) should return [-1, 0] since baseJ enforces a split in the segment
+                and GetColumns(0, 5, 6) should return [-1] because the entire distance between leftJ and rightJ fits in the chunk that starts at baseJ + (-16*1)
+            */
 
         let leftmost = Math.min(0, -Math.ceil((baseJ - leftJ) / 16));
         let rightmost = Math.max(0, Math.floor((rightJ - baseJ) / 16));
@@ -578,6 +537,7 @@
         if (document.getElementById("pauseCode").checked && !force) return;
         let i, j;
         let value;
+        comments = document.getElementById("commentsOn").checked;
 
         colsOfWords = GetUsedWords();
         let baseRow = 0;
@@ -818,25 +778,23 @@
         GenerateCode();
       }
       function ToggleInvertMode() {
-        INVERT_MODE = document.getElementById("invertMode").checked;
+        if (document.getElementById("invertMode").checked) {
+          INVERT_MODE = true;
+          GenerateCode();
+        } else {
+          INVERT_MODE = false;
+          GenerateCode();
+        }
         saveState();
-        GenerateCode();
-      }
-      function ToggleComments() {
-        comments = document.getElementById("commentsOn").checked;
-        saveState();
-        GenerateCode();
       }
       function isInteger(value) {
         return /^\d+$/.test(value);
       }
-
-      function SetSize() {
-        // sets the canvas width, height, and pixel size to the values specified by input fields as long as both fields contain integer values
-        var newWidth = document.getElementById("inputWidth").value;
-        var newHeight = document.getElementById("inputHeight").value;
-        var newPxSize = document.getElementById("pixelSize").value;
-
+      function ResetSize() {
+        // resets the canvas width, height, and pixel size to the values specified by input fields as long as both fields contain integer values
+        newWidth = document.getElementById("inputWidth").value;
+        newHeight = document.getElementById("inputHeight").value;
+        newPxSize = document.getElementById("pixelSize").value;
         if (
           isInteger(newWidth) &&
           isInteger(newHeight) &&
@@ -844,25 +802,13 @@
         ) {
           // set the new measurements, ensuring that width is a multiple of 16 (for the sake of fullCanvas mode)
           WIDTH = Math.floor(parseInt(newWidth) / 16) * 16;
-          document.getElementById("inputWidth").value = newWidth.toString();
+          document.getElementById("inputWidth").value = WIDTH.toString();
           HEIGHT = parseInt(newHeight);
           PIXEL_SIZE = parseInt(newPxSize);
-
-          var newGrid = createGrid();
-
-          // copy over current grid contents (as much as possible)
-          for (var i = 0; i < Math.min(HEIGHT, grid.length); i++) {
-            for (var j = 0; j < Math.min(WIDTH, grid[i].length); j++) {
-              newGrid[i][j] = grid[i][j];
-            }
-          }
-
-          saveGrid(newGrid);
           saveState();
-          Init(); // init loads the new grid into grid
+          Init();
         }
       }
-
       function ChangeName() {
         if (document.getElementById("subroutineName").value == "")
           document.getElementById("subroutineName").value = "draw";
@@ -904,12 +850,71 @@
     SPDX-FileCopyrightText: 2023 Erik Umble, <erikumble@gmail.com>
     SPDX-License-Identifier: MIT
   --></head>
-  <body onload="onLoad();">
-    <h1>Jack Bitmap Editor v2.9</h1>
+  <body onload="Init();">
+    <h4>
+      <i
+        >Idea and first code by Golan Parashi, updated by Ignacio del Valle
+        Alles, and extended by Erik Umble
+      </i>
+    </h4>
+    <h1>Jack Bitmap Editor v2.5</h1>
     <p>
-      See <a href="https://github.com/ErikUmble/JackBitmapEditor">here</a> for
-      updates, feature documentation, and contributions.
+      This is a simple bitmap editor, with a special emphasis on making
+      animation frames easier. Simply draw and the Jack code to produce the
+      drawing will be displayed on the right. Note that if your drawing does not
+      fill the canvas, the code will only be generated for the part that your
+      drawing takes up with 'location' in the code referring to the top left
+      corner of the drawing (this can be changed to refer to the bottom left
+      with the radio button below).
     </p>
+    <p>
+      Note that you can create sequencial frames of an animation by using the
+      shift buttons (a buffer is created in the code such that calling a
+      function that refers to the next animation frame will automatically erase
+      the area that the sprite has moved out of). Internally, it is just the
+      absolute shift that is considered (shifting up 5 times and then down 2
+      times will produce equivalent code to simply shifting up 3 times), so to
+      make animation frames moving in the opposite direction, first clear the
+      shift then begin shifting in that direction. Also note that you can enter
+      Inverted mode for drawing with white on a black canvas for night/dark
+      themed games (this mode expects the background to be black, erases by
+      making pixels black, and interprets the drawing as the white pixels on the
+      canvas). Rotation is only enabled for square canvas sizes (width =
+      height), and automatically clears the shift upon rotating.
+    </p>
+    <p>
+      If you would rather work on a different sized canvas, simply change the
+      height and width fields and click reload. Note that for very large canvas
+      sizes, you might need to change the canvas pixel size to a smaller value.
+      Also note that width must be a multiple of 16. 'Comments On' referes to
+      the comments in the Jack code that specify the column of the drawing that
+      the following code is for (column 1 is to the right of column 0, which is
+      to the right of column -1 and so on). If your device is running slow on
+      automatic code generation, you can use 'Pause Code Generation', draw, then
+      unselect the field when you are ready to get the code.
+    </p>
+    <p>
+      For the most optimized code, choose Hack Assembly (note that a base
+      location of Top Left is required in this mode, as it is more efficient in
+      assembly). Note that the assembly subroutine expects to find location
+      stored in R12 and code return address in R13. By taking advantage of the
+      fact that a drawing might have screen words that are on the same row, and
+      that in assembly, assigning -1, 0, or 1 is built in, and by eliminating
+      the costly function call, and with a hack assembly trick, this code can
+      take significantly less machine opperations than the corresponding Jack
+      code (though the Jack is quite optimized as well). See
+      <a href="https://github.com/ErikUmble/JackBitmapEditor">here</a> for
+      updates and tutorials.
+    </p>
+    <p>
+      <b>Whats new?:</b> now it's more clear where the 16 bit word edges are
+      (they are in red and can be made thick using the 'Obvious Word Edges'
+      checkbox) and are the leftmost side of the columns in the code. On 'Fit to
+      Drawing' mode, these edges adapt to the size of the drawing, but you can
+      move the drawing relative these edges simply by using the shift buttons.
+      Also, I found and fixed a few bugs.
+    </p>
+
     <p></p>
     <table>
       <thead>
@@ -935,20 +940,6 @@
       <tr>
         <table>
           <tr>
-            <td align="center">
-              <input
-                type="file"
-                id="inputImage"
-                accept=".bmp, .png, image/bmp, image/png"
-                style="display: none"
-              />
-              <input
-                type="button"
-                value="Import Image"
-                title="Import BMP (24-bit) or PNG (black and white) file"
-                onclick="document.getElementById('inputImage').click();"
-              />
-            </td>
             <td align="center">
               <input type="button" value="Shift left <" onclick="ShiftLeft()" />
             </td>
@@ -1047,7 +1038,7 @@
                   type="text"
                   value="32"
                 />
-
+                <button>Reload</button>
                 <label for="pixelSize">Canvas pixel size: </label>
                 <input
                   id="pixelSize"
@@ -1057,19 +1048,6 @@
                   type="text"
                   value="16"
                 />
-
-                <button
-                  title="Resize Canvas Preserving Upper-left Contents"
-                  formaction="javascript:SetSize()"
-                >
-                  Resize
-                </button>
-                <button
-                  title="Reset Canvas Size, Settings, and Clear Contents"
-                  formaction="javascript:Reset()"
-                >
-                  Reset
-                </button>
               </form>
             </td>
           </tr>
@@ -1213,6 +1191,14 @@
           </tr>
         </table>
       </tr>
+      <!--<tr>
+            <td>
+                <label class="fileButton" for="inputImage">Load from Image</label>
+                <input type="file"
+                    id="inputImage" name="inputImage"
+                    accept="image/png">
+            </td>
+        </tr>-->
     </table>
     <style>
       .fileButton label {
@@ -1227,131 +1213,5 @@
         margin: 0.4rem 0;
       }
     </style>
-    <script>
-      // Add a listener to the file import button that triggers the parsing
-      document
-        .getElementById("inputImage")
-        .addEventListener("change", function (event) {
-          const file = event.target.files[0];
-          if (!file) return;
-
-          const extension = file.name.toLowerCase().split(".").pop();
-
-          if (extension === "bmp") {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-              const buffer = new Uint8Array(e.target.result);
-              parseBMP(buffer);
-              inputImage.value = "";
-            };
-            reader.readAsArrayBuffer(file);
-          } else if (extension === "png") {
-            parsePNG(file);
-            inputImage.value = "";
-          } else {
-            alert(
-              "This file type is not supported. Please upload a .bmp (24-bit) or .png image.",
-            );
-          }
-        });
-
-      // Parse a BMP file
-      function parseBMP(bytes) {
-        // Values in a BMP file are stored in little-endian format
-        const width = bytes[18] + (bytes[19] << 8);
-        const height = bytes[22] + (bytes[23] << 8);
-        const offset = bytes[10] + (bytes[11] << 8);
-        const depth = bytes[28];
-
-        if (depth !== 24) {
-          alert(
-            "Only 24-bit BMP files are supported. Please convert your BMP file to a 24-bit depth bitmap using Paint or an online converter tool.",
-          );
-          return;
-        }
-
-        // "The size of each row is rounded up to a multiple of 4 bytes (a 32-bit DWORD) by padding" (Wikipedia: BMP file format)
-        const rowSize = Math.floor((24 * width + 31) / 32) * 4;
-
-        // Each word in memory translates to 16 pixels on the Hack screen
-        WIDTH = Math.ceil(width / 16) * 16;
-        HEIGHT = height;
-
-        grid = new Array(HEIGHT);
-        for (let i = 0; i < HEIGHT; i++) {
-          grid[i] = new Array(WIDTH).fill(false);
-        }
-
-        // Copy the BMP contents into the top-left corner of the canvas
-        for (let y = 0; y < height; y++) {
-          // "Bits fill from left-to-right, then bottom-to-top" (Wikipedia: BMP file format)
-          const row = height - 1 - y;
-          for (let x = 0; x < width; x++) {
-            const index = offset + row * rowSize + x * 3;
-            const blue = bytes[index];
-            const green = bytes[index + 1];
-            const red = bytes[index + 2];
-            const luminance = (red + green + blue) / 3;
-            grid[y][x] = luminance < 128;
-          }
-        }
-        saveState();
-        saveGrid(grid);
-        syncInputsToState();
-        DisplayGrid();
-      }
-
-      function parsePNG(file) {
-        const img = new Image();
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-          img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-
-        img.onload = function () {
-          // Use image dimensions to set canvas size
-          // Each word in memory translates to 16 pixels on the Hack screen
-          WIDTH = Math.ceil(img.width / 16) * 16;
-          HEIGHT = img.height;
-
-          // Create a temporary canvas to draw the PNG contents to
-          const canvas = document.createElement("canvas");
-          canvas.width = WIDTH;
-          canvas.height = HEIGHT;
-          const ctx = canvas.getContext("2d");
-
-          // Initialize the temporary canvas
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-          // Start copying the PNG contents at the top-left corner
-          ctx.drawImage(img, 0, 0);
-
-          const imageData = ctx.getImageData(0, 0, WIDTH, HEIGHT).data;
-
-          grid = new Array(HEIGHT);
-          for (let y = 0; y < HEIGHT; y++) {
-            grid[y] = new Array(WIDTH).fill(false);
-            for (let x = 0; x < WIDTH; x++) {
-              const index = (y * WIDTH + x) * 4;
-              const r = imageData[index];
-              const g = imageData[index + 1];
-              const b = imageData[index + 2];
-              const a = imageData[index + 3];
-
-              const luminance = (r + g + b) / 3;
-
-              grid[y][x] = a > 0 && luminance < 250 ? true : false;
-            }
-          }
-          saveGrid(grid);
-          saveState();
-          syncInputsToState();
-          DisplayGrid();
-        };
-      }
-    </script>
   </body>
 </html>

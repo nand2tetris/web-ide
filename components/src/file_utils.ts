@@ -18,7 +18,7 @@ export async function loadTestFiles(
         .replace("VME.tst", ".tst")
         .replace(".tst", ".cmp");
       cmp = await fs.readFile(cpmPath);
-    } catch (_e) {
+    } catch (e) {
       // There doesn't have to be a compare file
     }
     return Ok({ tst: tst, cmp: cmp });

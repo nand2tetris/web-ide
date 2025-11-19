@@ -1,7 +1,8 @@
 import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { resetBySuffix } from "../reset.js";
+
 import * as Mult from "./01_mult.js";
 import * as Fill from "./02_fill.js";
+import { resetBySuffix } from "../reset.js";
 
 export const TESTS = {
   Mult: {

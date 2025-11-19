@@ -22,6 +22,9 @@
     "@nand2tetris/projects": "file:../projects",
     "@types/node": "^20.14.2"
   },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
   "scripts": {
     "build": "tsc"
   }

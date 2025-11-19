@@ -1,4 +1,4 @@
-import { bin, dec, hex, int2, int10, int16, nand16 } from "./twos.js";
+import { bin, dec, hex, int10, int16, int2, nand16 } from "./twos.js";
 
 describe("twos", () => {
   it("formats as base 16", () => {

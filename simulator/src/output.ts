@@ -1,6 +1,6 @@
 import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { Test } from "./test/tst.js";
 import { bin, dec, hex } from "./util/twos.js";
+import { Test } from "./test/tst.js";
 
 export class Output {
   private readonly fmt: "B" | "X" | "D" | "S";

@@ -3,7 +3,7 @@ import { Dispatch, useEffect, useReducer, useState } from "react";
 
 export function useImmerReducer<
   T,
-  // biome-ignore lint/suspicious/noExplicitAny: reducer really doesn't care
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Reducers extends Record<string, (state: T, action?: any) => T | void>,
 >(reducers: Reducers, initialState: T) {
   return useReducer(
@@ -11,7 +11,7 @@ export function useImmerReducer<
       state: T,
       command: {
         action: keyof Reducers;
-        // biome-ignore lint/suspicious/noExplicitAny: reducer doesn't care and covariants are hard
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         payload?: any;
       },
     ): T =>

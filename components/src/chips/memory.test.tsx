@@ -20,8 +20,8 @@ describe("<Memory />", () => {
     it.skip("renders a small amount of memory", () => {
       const memory = new MemoryChip(
         new Int16Array(
-          range(0, 16).map((i) => (Math.pow(i, 12) ^ 0x9753) & 0xffff)
-        ).buffer
+          range(0, 16).map((i) => (Math.pow(i, 12) ^ 0x9753) & 0xffff),
+        ),
       );
       render(<MemoryBlock memory={memory} />);
 

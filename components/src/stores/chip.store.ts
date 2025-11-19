@@ -1,6 +1,4 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { display } from "@davidsouther/jiffies/lib/esm/display.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import {
   BUILTIN_CHIP_PROJECTS,
@@ -8,7 +6,6 @@ import {
   sortChips,
 } from "@nand2tetris/projects/base.js";
 import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
-import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import {
   Chip,
   Low,
@@ -20,16 +17,21 @@ import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
-import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { compare } from "../compare.js";
-import { sortFiles } from "../file_utils.js";
+
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
+
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { getBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
+import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { Action } from "@nand2tetris/simulator/types.js";
+import { compare } from "../compare.js";
+import { sortFiles } from "../file_utils.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext } from "./base.context.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -126,7 +128,7 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  setStatus: Action<string>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
@@ -232,14 +234,8 @@ export function makeChipStore(
       Promise.resolve().then(() => {
         setStatus(
           passed
-            ? {
-                message: `Simulation successful: The output file is identical to the compare file`,
-                severity: "SUCCESS",
-              }
-            : {
-                message: `Simulation error: The output file differs from the compare file`,
-                severity: "ERROR",
-              },
+            ? `Simulation successful: The output file is identical to the compare file`
+            : `Simulation error: The output file differs from the compare file`,
         );
       });
     },
@@ -380,10 +376,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const error = Err(maybeChip);
-        setStatus({
-          message: Err(maybeChip).message,
-          severity: "ERROR",
-        });
+        setStatus(Err(maybeChip).message);
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -427,10 +420,9 @@ export function makeChipStore(
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, dir);
       } catch (e) {
-        setStatus({
-          message: `Could not find ${name}.tst. Please load test file separately.`,
-          severity: "WARNING",
-        });
+        setStatus(
+          `Could not find ${name}.tst. Please load test file separately.`,
+        );
         console.error(e);
       }
     },
@@ -440,10 +432,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test ${Err(tst).message}`,
-          severity: "ERROR",
-        });
+        setStatus(`Failed to parse test ${Err(tst).message}`);
         invalid = true;
         return false;
       }
@@ -461,10 +450,7 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(Err(maybeTest).message);
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -495,10 +481,7 @@ export function makeChipStore(
           this.compileTest(tst, tstPath ?? _dir);
         }
       } catch (e) {
-        setStatus({
-          message: display(e),
-          severity: "ERROR",
-        });
+        setStatus(display(e));
       }
       dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
       if (!invalid) {
@@ -544,10 +527,9 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        setStatus({
-          message: `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
-          severity: "ERROR",
-        });
+        setStatus(
+          `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
+        );
         return;
       }
       this.replaceChip(Ok(nextChip));
@@ -576,10 +558,7 @@ export function makeChipStore(
         }
         return done;
       } catch (e) {
-        setStatus({
-          message: (e as Error).message,
-          severity: "ERROR",
-        });
+        setStatus((e as Error).message);
         return true;
       }
     },

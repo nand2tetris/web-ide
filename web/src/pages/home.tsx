@@ -77,8 +77,7 @@ const Home = () => {
                 ?.groups ?? {};
 
             const root = "/";
-            const dir =
-              root + (file.webkitRelativePath?.replace(base, "") ?? "");
+            const dir = root + file.webkitRelativePath?.replace(base, "") ?? "";
 
             return { name, base, ext, dir, root, file };
           })
@@ -104,7 +103,13 @@ const Home = () => {
       <form>
         <fieldset>
           <legend>Files for grading:</legend>
-          <input type="file" multiple webkitdirectory="" onChange={onChange} />
+          <input
+            type="file"
+            multiple
+            directory=""
+            webkitdirectory=""
+            onChange={onChange}
+          />
         </fieldset>
       </form>
       <figure>

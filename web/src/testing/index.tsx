@@ -43,7 +43,7 @@ export const useTestingAppContext = () => ({
     async upgradeFs() {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     closeFs(force?: boolean) {},
-    status: { message: "", severity: "INFO" },
+    status: "",
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     setStatus() {},
     storage: {},

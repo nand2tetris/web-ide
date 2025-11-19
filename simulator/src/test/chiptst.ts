@@ -1,5 +1,5 @@
 import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
-import { Bus, Chip, HIGH, LOW, Low } from "../chip/chip.js";
+import { Bus, Chip, HIGH, Low, LOW } from "../chip/chip.js";
 import { Clock } from "../chip/clock.js";
 import { Tst } from "../languages/tst.js";
 import { Action } from "../types.js";

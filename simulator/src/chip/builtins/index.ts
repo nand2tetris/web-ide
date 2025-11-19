@@ -4,13 +4,23 @@ import {
   Ok,
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
-import { parse } from "../builder.js";
 import { Chip } from "../chip.js";
+
+import { And, And16 } from "./logic/and.js";
+import { DMux, DMux4Way, DMux8Way } from "./logic/dmux.js";
+import { Mux, Mux16, Mux4Way16, Mux8Way16 } from "./logic/mux.js";
+import { Nand, Nand16 } from "./logic/nand.js";
+import { Not, Not16 } from "./logic/not.js";
+import { Or, Or16, Or8way } from "./logic/or.js";
+import { Xor, Xor16 } from "./logic/xor.js";
+
 import { Add16 } from "./arithmetic/add_16.js";
 import { ALU, ALUNoStat } from "./arithmetic/alu.js";
 import { FullAdder } from "./arithmetic/full_adder.js";
 import { HalfAdder } from "./arithmetic/half_adder.js";
 import { Inc16 } from "./arithmetic/inc16.js";
+
+import { parse } from "../builder.js";
 import { builtinOverrides } from "./builtinOverrides.js";
 import {
   Computer,
@@ -20,16 +30,9 @@ import {
   ROM32K,
   Screen,
 } from "./computer/computer.js";
-import { And, And16 } from "./logic/and.js";
-import { DMux, DMux4Way, DMux8Way } from "./logic/dmux.js";
-import { Mux, Mux4Way16, Mux8Way16, Mux16 } from "./logic/mux.js";
-import { Nand, Nand16 } from "./logic/nand.js";
-import { Not, Not16 } from "./logic/not.js";
-import { Or, Or8way, Or16 } from "./logic/or.js";
-import { Xor, Xor16 } from "./logic/xor.js";
 import { Bit, PC, Register, VRegister } from "./sequential/bit.js";
 import { DFF } from "./sequential/dff.js";
-import { RAM4K, RAM8, RAM16K, RAM64, RAM512 } from "./sequential/ram.js";
+import { RAM16K, RAM4K, RAM512, RAM64, RAM8 } from "./sequential/ram.js";
 
 export {
   Add16,

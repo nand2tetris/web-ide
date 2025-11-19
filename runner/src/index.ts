@@ -1,4 +1,4 @@
-import { ExecException, ExecOptions, exec } from "node:child_process";
+import { exec, ExecOptions, ExecException } from "node:child_process";
 import { dirname, join, parse } from "node:path";
 import type { Assignment } from "@nand2tetris/projects/base.js";
 import { Runner, RunResult } from "./types";

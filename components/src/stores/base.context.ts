@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import {
   FileSystem,
   LocalStorageFileSystemAdapter,
@@ -170,17 +171,12 @@ export function useBaseContext(): BaseContext {
 export const BaseContext = createContext<BaseContext>({
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async upgradeFs() {},
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   closeFs() {},
   status: { message: "", severity: "INFO" },
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   setStatus() {},
   storage: {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async requestPermission() {},
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   loadFs() {},
 });

@@ -2,7 +2,7 @@ import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { load } from "../fs.js";
 import { op } from "../util/asm.js";
-import { int2, int10, int16 } from "../util/twos.js";
+import { int10, int16, int2 } from "../util/twos.js";
 
 export const FORMATS = ["bin", "dec", "hex", "asm"];
 export type Format = (typeof FORMATS)[number];
@@ -98,7 +98,7 @@ export class Memory implements MemoryAdapter {
   async load(fs: FileSystem, path: string, offset?: number) {
     try {
       this.loadBytes(await load(fs, path), offset);
-    } catch (_cause) {
+    } catch (cause) {
       // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
       throw new Error(`Memory Failed to load file ${path}`);
     }
@@ -214,7 +214,7 @@ export class ROM extends Memory {
     if (program) {
       const arr = new Int16Array(ROM.SIZE);
       arr.set(program);
-      super(arr.buffer);
+      super(arr);
     } else {
       super(ROM.SIZE);
     }

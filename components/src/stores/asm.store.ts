@@ -277,7 +277,6 @@ export function makeAsmStore(
           severity: "ERROR",
         });
 
-
         failure = true;
         highlightInfo.resultHighlight = {
           start: line * 17,

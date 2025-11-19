@@ -71,11 +71,7 @@ yargs(hideBin(process.argv))
           break;
         case ".hdl": {
           const tst = fsCore.readFileSync(0, "utf8");
-          testRunnerFromSource(
-            dirname(filePath),
-            parsedPath.name,
-            tst,
-          );
+          testRunnerFromSource(dirname(filePath), parsedPath.name, tst);
           break;
         }
         default:

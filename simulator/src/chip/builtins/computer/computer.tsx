@@ -88,7 +88,7 @@ export class Memory extends ClockedChip {
       ["out[16]"],
       "Memory",
       [],
-      ["in", "load"]
+      ["in", "load"],
     );
     this.parts.push(this.keyboard);
     this.parts.push(this.screen);

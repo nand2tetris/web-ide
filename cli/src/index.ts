@@ -34,7 +34,7 @@ yargs(hideBin(process.argv))
       if (exitCode) {
         process.exit(exitCode);
       }
-    },
+    }
   )
   .command(
     "run <file>",
@@ -71,18 +71,14 @@ yargs(hideBin(process.argv))
           break;
         case ".hdl": {
           const tst = fsCore.readFileSync(0, "utf8");
-          testRunnerFromSource(
-            dirname(filePath),
-            parsedPath.name,
-            tst,
-          );
+          testRunnerFromSource(dirname(filePath), parsedPath.name, tst);
           break;
         }
         default:
           console.log("unknown", ext);
           break;
       }
-    },
+    }
   )
   .command(
     "compile <src> [dst]",
@@ -161,8 +157,8 @@ yargs(hideBin(process.argv))
             Colors.Red +
               compiled.message.replace(
                 /Line\s([\d]+):/g,
-                name + ".jack:$1" + Colors.Reset,
-              ),
+                name + ".jack:$1" + Colors.Reset
+              )
           );
           error = true;
         }
@@ -172,7 +168,7 @@ yargs(hideBin(process.argv))
       } else {
         console.log(Colors.Green + "Compiled files" + Colors.Reset);
       }
-    },
+    }
   )
   .help()
   .demandCommand(1)

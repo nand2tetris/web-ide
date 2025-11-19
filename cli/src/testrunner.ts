@@ -25,7 +25,7 @@ interface VmSourceFile {
  */
 async function loadAssignment(
   fs: FileSystem,
-  file: Assignment,
+  file: Assignment
 ): Promise<AssignmentFiles> {
   const baseDir = file.dir || process.cwd();
   const assignment = Assignments[file.name as keyof typeof Assignments];
@@ -36,14 +36,12 @@ async function loadAssignment(
   const hdl = await fs.readFile(hdlPath);
   const tst =
     (await fs.readFile(tstPath).catch(() => undefined)) ??
-    ((assignment?.[
-      `${file.name}.tst` as keyof typeof assignment
-    ] ?? "") as string);
+    ((assignment?.[`${file.name}.tst` as keyof typeof assignment] ??
+      "") as string);
   const cmp =
     (await fs.readFile(cmpPath).catch(() => undefined)) ??
-    ((assignment?.[
-      `${file.name}.cmp` as keyof typeof assignment
-    ] ?? "") as string);
+    ((assignment?.[`${file.name}.cmp` as keyof typeof assignment] ??
+      "") as string);
 
   return { ...file, hdl, tst, cmp };
 }
@@ -54,7 +52,7 @@ async function loadAssignment(
 async function loadAssignmentFromSource(
   fs: FileSystem,
   file: Assignment,
-  tst: string,
+  tst: string
 ) {
   const baseDir = file.dir || process.cwd();
   const hdl = await fs.readFile(join(baseDir, `${file.name}.hdl`));
@@ -97,7 +95,7 @@ export async function testRunner(testFilePath: string) {
 export async function testRunnerFromSource(
   dir: string,
   file: string,
-  tst: string,
+  tst: string
 ) {
   let offset = 0;
   if (!tst.trimStart().startsWith("load ")) {
@@ -148,11 +146,7 @@ export async function testRunnerFromSource(
   process.exit(!errorMessage ? 0 : 1);
 }
 
-async function runVmTest(
-  fs: FileSystem,
-  tstPath: string,
-  tstSource: string,
-) {
+async function runVmTest(fs: FileSystem, tstPath: string, tstSource: string) {
   const parsedTst = TST.parse(tstSource);
   if (isErr(parsedTst)) {
     throw Err(parsedTst);
@@ -160,7 +154,6 @@ async function runVmTest(
 
   const testDir = dirname(tstPath);
   let expectedCmp: string | undefined;
-  let vmTest: VMTest;
 
   const maybeTest = VMTest.from(unwrap(parsedTst), {
     dir: tstPath,
@@ -174,7 +167,7 @@ async function runVmTest(
         expectedCmp = await fs.readFile(cmpPath);
       } catch (error) {
         throw new Error(
-          `Unable to read compare file ${cmpPath}: ${(error as Error).message}`,
+          `Unable to read compare file ${cmpPath}: ${(error as Error).message}`
         );
       }
     },
@@ -185,7 +178,7 @@ async function runVmTest(
     },
   });
 
-  vmTest = unwrap(maybeTest).using(fs);
+  const vmTest = unwrap(maybeTest).using(fs);
   await vmTest.run();
   const out = vmTest.log();
   const pass = expectedCmp ? out.trim() === expectedCmp.trim() : true;
@@ -195,13 +188,16 @@ async function runVmTest(
   }
 }
 
-async function buildVmForTarget(fs: FileSystem, targetPath: string): Promise<Vm> {
+async function buildVmForTarget(
+  fs: FileSystem,
+  targetPath: string
+): Promise<Vm> {
   const stats = await fs.stat(targetPath).catch(() => undefined);
   const loadDir = stats?.isDirectory() ? targetPath : dirname(targetPath);
   const sources = await collectVmSources(fs, loadDir);
   if (!sources.length) {
     throw new Error(
-      `No .vm or .jack files found in ${loadDir} to execute this test.`,
+      `No .vm or .jack files found in ${loadDir} to execute this test.`
     );
   }
   const parsed: ParsedVmFile[] = [];
@@ -224,7 +220,7 @@ async function buildVmForTarget(fs: FileSystem, targetPath: string): Promise<Vm>
 
 async function collectVmSources(
   fs: FileSystem,
-  dir: string,
+  dir: string
 ): Promise<VmSourceFile[]> {
   const entries = await fs.scandir(dir).catch(() => []);
   const jackSources: Record<string, string> = {};

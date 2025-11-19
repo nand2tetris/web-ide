@@ -5,7 +5,10 @@ import {
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { useDialog } from "@nand2tetris/components/dialog";
-import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import {
+  BaseContext,
+  StatusSeverity,
+} from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import { RenderOptions, RenderResult, render } from "@testing-library/react";
 import ue from "@testing-library/user-event";
@@ -43,9 +46,10 @@ export const useTestingAppContext = () => ({
     async upgradeFs() {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     closeFs(force?: boolean) {},
-    status: "",
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    setStatus() {},
+    status: { message: "", severity: "INFO" },
+    setStatus(input?: string | { message: string; severity?: StatusSeverity }) {
+      void input;
+    },
     storage: {},
     permissionPrompt: useDialog(),
     // eslint-disable-next-line @typescript-eslint/no-empty-function

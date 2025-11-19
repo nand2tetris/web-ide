@@ -3,7 +3,10 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { useDialog } from "@nand2tetris/components/dialog";
-import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import {
+  BaseContext,
+  StatusSeverity,
+} from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -17,10 +20,16 @@ const baseContext: BaseContext = {
   async upgradeFs() {},
   closeFs() {},
   storage: {},
-  status: "",
-  setStatus: (status: string): void => {
-    // api.postMessage({ nand2tetris: true, showMessage: status });
-    console.log(status);
+  status: { message: "", severity: "INFO" },
+  setStatus: (
+    status: string | { message: string; severity?: StatusSeverity },
+  ): void => {
+    const normalized =
+      typeof status === "string"
+        ? { message: status, severity: "INFO" as StatusSeverity }
+        : { message: status.message, severity: status.severity ?? "INFO" };
+    // api.postMessage({ nand2tetris: true, showMessage: normalized });
+    console.log(normalized.message);
   },
   permissionPrompt: {} as ReturnType<typeof useDialog>,
   // eslint-disable-next-line @typescript-eslint/no-empty-function

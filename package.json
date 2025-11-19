@@ -48,7 +48,7 @@
     "web"
   ],
   "engines": {
-    "node": ">=16",
+    "node": "20.9.0",
     "npm": ">=7"
   },
   "devDependencies": {

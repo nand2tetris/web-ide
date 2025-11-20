@@ -22,7 +22,6 @@ import { PageContextProvider } from "./Page.context";
 import { Redirect } from "./pages/redirect";
 import "./pico/flex.scss";
 import "./pico/pico.scss";
-import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
 import { updateVersion } from "./versions";
 

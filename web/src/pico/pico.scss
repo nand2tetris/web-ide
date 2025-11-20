@@ -110,14 +110,14 @@
       overflow-y: hidden;
     }
 
-    > header {
+    >header {
       padding: 0;
       margin: 0;
       font-weight: bold;
       border-radius: 0;
     }
 
-    > header > *:first-child {
+    >header>*:first-child {
       padding: 0 var(--block-spacing-vertical);
     }
 
@@ -131,17 +131,16 @@
     margin-bottom: 0;
     padding-bottom: 0;
 
-    > summary {
+    >summary {
       display: flex;
       flex-direction: row;
       align-items: baseline;
       background-color: var(--card-sectionning-background-color);
-      padding: calc(var(--block-spacing-vertical) * 0.66)
-        var(--block-spacing-horizontal);
+      padding: calc(var(--block-spacing-vertical) * 0.66) var(--block-spacing-horizontal);
       font-weight: bold;
     }
 
-    > summary > *:first-child {
+    >summary>*:first-child {
       flex: 1;
       padding: 0 var(--block-spacing-horizontal);
     }
@@ -160,11 +159,11 @@
       align-items: baseline;
     }
 
-    > main {
+    >main {
       overflow: hidden;
     }
 
-    > footer {
+    >footer {
       border-top: 1px solid var(--card-border-color);
       background-color: var(--card-background-color);
       padding-top: calc(var(--block-spacing-vertical) / 2);
@@ -183,5 +182,11 @@
 
   td {
     vertical-align: top;
+  }
+
+  // Disable old tooltip pseudo-elements (using new React component instead)
+  [data-tooltip]::before,
+  [data-tooltip]::after {
+    display: none !important;
   }
 }

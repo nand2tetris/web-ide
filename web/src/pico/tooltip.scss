@@ -2,6 +2,7 @@
 
 [data-tooltip] {
   &:focus {
+
     &::before,
     &::after {
       opacity: 0;
@@ -9,6 +10,7 @@
   }
 
   &:hover {
+
     &::before,
     &::after {
       opacity: 1;
@@ -20,13 +22,14 @@
   &[data-placement="top"]::before,
   &[data-placement="top"]::after {
     display: block;
-    z-index: 99;
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
+    z-index: 9999;
+    position: fixed;
+    left: var(--tooltip-x, 50%);
+    top: var(--tooltip-y, 0);
     padding: 0.25rem 0.5rem;
-    overflow: hidden;
-    transform: translate(-50%, -0.25rem);
+    overflow: visible;
+    max-width: 300px;
+    transform: translate(-50%, calc(-100% - 0.25rem));
     border-radius: var(--border-radius);
     background: var(--tooltip-background-color);
     content: attr(data-tooltip);
@@ -36,14 +39,15 @@
     font-size: 0.875rem;
     text-decoration: none;
     text-overflow: ellipsis;
-    // white-space: nowrap;
     opacity: 0;
     pointer-events: none;
+    will-change: transform, opacity;
+    transition: opacity 0.2s ease;
   }
 
   &[data-placement="top"]::after {
     padding: 0;
-    transform: translate(-50%, 0rem);
+    transform: translate(-50%, -0.3rem);
     border-top: 0.3rem solid;
     border-right: 0.3rem solid transparent;
     border-left: 0.3rem solid transparent;
@@ -54,11 +58,15 @@
   }
 
   &[data-placement="bottom"] {
+
     &::before,
     &::after {
-      top: 100%;
-      bottom: auto;
+      position: fixed;
+      left: var(--tooltip-x, 50%);
+      top: var(--tooltip-y, 0);
       transform: translate(-50%, 0.25rem);
+      z-index: 9999;
+      max-width: 300px;
     }
 
     &:after {
@@ -69,13 +77,15 @@
   }
 
   &[data-placement="left"] {
+
     &::before,
     &::after {
-      top: 50%;
-      right: 100%;
-      bottom: auto;
-      left: auto;
-      transform: translate(-0.25rem, -50%);
+      position: fixed;
+      left: var(--tooltip-x, 0);
+      top: var(--tooltip-y, 50%);
+      transform: translate(calc(-100% - 0.25rem), -50%);
+      z-index: 9999;
+      max-width: 300px;
     }
 
     &:after {
@@ -86,13 +96,15 @@
   }
 
   &[data-placement="right"] {
+
     &::before,
     &::after {
-      top: 50%;
-      right: auto;
-      bottom: auto;
-      left: 100%;
+      position: fixed;
+      left: var(--tooltip-x, 0);
+      top: var(--tooltip-y, 50%);
       transform: translate(0.25rem, -50%);
+      z-index: 9999;
+      max-width: 300px;
     }
 
     &:after {
@@ -105,6 +117,7 @@
   @media (hover: hover) and (pointer: fine) {
     &[data-placement="top"] {
       &:hover {
+
         &::before,
         &::after {
           animation-duration: 0.2s;
@@ -119,6 +132,7 @@
 
     &[data-placement="bottom"] {
       &:hover {
+
         &::before,
         &::after {
           animation-duration: 0.2s;
@@ -133,6 +147,7 @@
 
     &[data-placement="left"] {
       &:hover {
+
         &::before,
         &::after {
           animation-duration: 0.2s;
@@ -147,6 +162,7 @@
 
     &[data-placement="right"] {
       &:hover {
+
         &::before,
         &::after {
           animation-duration: 0.2s;
@@ -161,14 +177,32 @@
   }
 }
 
-@keyframes tooltip-slide-bottom {
+@keyframes tooltip-slide-top {
   from {
-    transform: translate(-50%, -0.75rem);
     opacity: 0;
   }
 
   to {
-    transform: translate(-50%, 0.25rem);
+    opacity: 1;
+  }
+}
+
+@keyframes tooltip-caret-slide-top {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tooltip-slide-bottom {
+  from {
+    opacity: 0;
+  }
+
+  to {
     opacity: 1;
   }
 }
@@ -178,25 +212,17 @@
     opacity: 0;
   }
 
-  50% {
-    transform: translate(-50%, -0.5rem);
-    opacity: 0;
-  }
-
   to {
-    transform: translate(-50%, -0.3rem);
     opacity: 1;
   }
 }
 
 @keyframes tooltip-slide-left {
   from {
-    transform: translate(0.75rem, -50%);
     opacity: 0;
   }
 
   to {
-    transform: translate(-0.25rem, -50%);
     opacity: 1;
   }
 }
@@ -206,25 +232,17 @@
     opacity: 0;
   }
 
-  50% {
-    transform: translate(0.05rem, -50%);
-    opacity: 0;
-  }
-
   to {
-    transform: translate(0.3rem, -50%);
     opacity: 1;
   }
 }
 
 @keyframes tooltip-slide-right {
   from {
-    transform: translate(-0.75rem, -50%);
     opacity: 0;
   }
 
   to {
-    transform: translate(0.25rem, -50%);
     opacity: 1;
   }
 }
@@ -234,13 +252,7 @@
     opacity: 0;
   }
 
-  50% {
-    transform: translate(-0.05rem, -50%);
-    opacity: 0;
-  }
-
   to {
-    transform: translate(-0.3rem, -50%);
     opacity: 1;
   }
 }

@@ -14,6 +14,7 @@ import { FilePicker } from "./shell/file_select";
 import Footer from "./shell/footer";
 import Header from "./shell/header";
 import { Settings } from "./shell/settings";
+import { initTooltips } from "./shell/tooltip";
 import urls from "./urls";
 
 import { ErrorBoundary, RenderError } from "./ErrorBoundary";
@@ -46,6 +47,7 @@ function App() {
 
   useEffect(() => {
     registerLanguages();
+    initTooltips();
   }, []);
 
   useEffect(() => {

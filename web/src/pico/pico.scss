@@ -141,7 +141,7 @@
       font-weight: bold;
     }
 
-    > summary>*:first-child {
+    > summary > *:first-child {
       flex: 1;
       padding: 0 var(--block-spacing-horizontal);
     }

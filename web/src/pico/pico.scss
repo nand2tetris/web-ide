@@ -117,7 +117,7 @@
       border-radius: 0;
     }
 
-    > header>*:first-child {
+    > header > *:first-child {
       padding: 0 var(--block-spacing-vertical);
     }
 
@@ -136,7 +136,8 @@
       flex-direction: row;
       align-items: baseline;
       background-color: var(--card-sectionning-background-color);
-      padding: calc(var(--block-spacing-vertical) * 0.66) var(--block-spacing-horizontal);
+      padding: calc(var(--block-spacing-vertical) * 0.66)
+        var(--block-spacing-horizontal);
       font-weight: bold;
     }
 
@@ -159,7 +160,7 @@
       align-items: baseline;
     }
 
-    >main {
+    > main {
       overflow: hidden;
     }
 

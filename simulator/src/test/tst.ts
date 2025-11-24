@@ -17,14 +17,14 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected _log = "";
   fs: FileSystem = new FileSystem();
   protected doEcho?: Action<string>;
-  protected doCompareTo?: Action<string>;
+  protected doCompareTo?: (arg: string) => Promise<void>;
   protected dir?: string;
   protected outputFileName?: string;
 
   constructor(
     path?: string,
     doEcho?: Action<string>,
-    doCompareTo?: Action<string>,
+    doCompareTo?: (arg: string) => Promise<void>
   ) {
     this.doEcho = doEcho;
     this.doCompareTo = doCompareTo;
@@ -53,7 +53,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   async compareTo(filename: string): Promise<void> {
-    this.doCompareTo?.(filename);
+    await this.doCompareTo?.(filename);
   }
   outputFile(filename: string): void {
     this.outputFileName = filename;
@@ -83,7 +83,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
         param.lpad,
         param.rpad,
         param.builtin,
-        param.address,
+        param.address
       );
     });
   }

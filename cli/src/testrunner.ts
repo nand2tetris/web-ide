@@ -45,7 +45,7 @@ interface VmSourceFile {
  */
 async function loadAssignment(
   fs: FileSystem,
-  file: Assignment
+  file: Assignment,
 ): Promise<AssignmentFiles> {
   const baseDir = file.dir || process.cwd();
   const assignment = Assignments[file.name as keyof typeof Assignments];
@@ -72,7 +72,7 @@ async function loadAssignment(
 async function loadAssignmentFromSource(
   fs: FileSystem,
   file: Assignment,
-  tst: string
+  tst: string,
 ) {
   const baseDir = file.dir || process.cwd();
   const hdl = await fs.readFile(join(baseDir, `${file.name}.hdl`));
@@ -115,7 +115,7 @@ export async function testRunner(testFilePath: string) {
 export async function testRunnerFromSource(
   dir: string,
   file: string,
-  tst: string
+  tst: string,
 ) {
   let offset = 0;
   if (!tst.trimStart().startsWith("load ")) {
@@ -199,19 +199,19 @@ async function runVmTest(fs: FileSystem, tstPath: string, tstSource: string) {
         expectedCmp = await fs.readFile(cmpPath);
       } catch (error) {
         throw new Error(
-          `Unable to read compare file ${cmpPath}: ${(error as Error).message}`
+          `Unable to read compare file ${cmpPath}: ${(error as Error).message}`,
         );
       }
     };
 
     const isCompareTo = (
-      command: TstCommand
+      command: TstCommand,
     ): command is TstCommand & { op: TstFileOperation } =>
       command.op.op === "compare-to";
 
     const compareCommand = parsedTst.lines
       .flatMap((line) =>
-        "statements" in line ? (line.statements as TstCommand[]) : [line]
+        "statements" in line ? (line.statements as TstCommand[]) : [line],
       )
       .find(isCompareTo);
 
@@ -255,14 +255,14 @@ async function runVmTest(fs: FileSystem, tstPath: string, tstSource: string) {
 
 async function buildVmForTarget(
   fs: FileSystem,
-  targetPath: string
+  targetPath: string,
 ): Promise<Vm> {
   const stats = await fs.stat(targetPath).catch(() => undefined);
   const loadDir = stats?.isDirectory() ? targetPath : dirname(targetPath);
   const sources = await collectVmSources(fs, loadDir);
   if (!sources.length) {
     throw new Error(
-      `No .vm or .jack files found in ${loadDir} to execute this test.`
+      `No .vm or .jack files found in ${loadDir} to execute this test.`,
     );
   }
   const parsed: ParsedVmFile[] = [];
@@ -285,7 +285,7 @@ async function buildVmForTarget(
 
 async function collectVmSources(
   fs: FileSystem,
-  dir: string
+  dir: string,
 ): Promise<VmSourceFile[]> {
   const entries = await fs.scandir(dir).catch(() => []);
   const jackSources: Record<string, string> = {};

@@ -24,7 +24,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   constructor(
     path?: string,
     doEcho?: Action<string>,
-    doCompareTo?: Action<string> | AsyncAction<string>
+    doCompareTo?: Action<string> | AsyncAction<string>,
   ) {
     this.doEcho = doEcho;
     if (doCompareTo) {
@@ -85,7 +85,7 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
         param.lpad,
         param.rpad,
         param.builtin,
-        param.address
+        param.address,
       );
     });
   }

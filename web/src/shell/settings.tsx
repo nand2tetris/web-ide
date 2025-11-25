@@ -1,4 +1,4 @@
-import { i18n } from "@lingui/core";
+﻿import { i18n } from "@lingui/core";
 import { Trans, t } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -189,34 +189,9 @@ export const Settings = () => {
           </header>
           <main>
             <dl>
-              <header>
-                <Trans>Project</Trans>
-              </header>
+              {/* Projects Folder Section */}
               <dt>
-                <Trans>References</Trans>
-              </dt>
-              <dd>
-                <div>
-                  <a
-                    href="https://nand2tetris.org"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    nand2tetris.org
-                  </a>
-                </div>
-                <div>
-                  <a
-                    href="https://github.com/davidsouther/nand2tetris"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    GitHub
-                  </a>
-                </div>
-              </dd>
-              <dt>
-                <Trans>NAND2Tetris Project Files</Trans>
+                <Trans>Projects folder</Trans>
               </dt>
               <dd>
                 <a
@@ -229,66 +204,85 @@ export const Settings = () => {
                   <Trans>Download the projects folder</Trans>
                 </a>
               </dd>
+
+              {/* Storage Mode Selection */}
               <dt>
-                <Trans>Local Project Files</Trans>
+                <Trans>
+                  Select the<br /> projects folder
+                  <br />
+                  location on your PC
+                </Trans>
               </dt>
               <dd>
-                {showUpgradeFs && canUpgradeFs && (
-                  <>
-                    {localFsRoot && (
-                      <p>
-                        <Trans>Current projects folder</Trans>
-                        <code>{localFsRoot}</code>
-                      </p>
-                    )}
-                    <button
-                      disabled={upgrading}
-                      onClick={async () => {
-                        upgradeFsAction();
-                      }}
-                      data-tooltip="Load a nand2tetris project folder stored on your device"
-                      data-placement="bottom"
-                    >
-                      {localFsRoot ? (
-                        <Trans>Select a different projects folder</Trans>
-                      ) : (
-                        <Trans>Select a projects folder</Trans>
-                      )}
-                    </button>
-                    {localFsRoot && (
-                      <button
-                        onClick={async () => {
+                <div className="storage-mode-selection">
+                  <label>
+                    <input
+                      type="radio"
+                      name="storage-mode"
+                      checked={!localFsRoot}
+                      onChange={async () => {
+                        if (localFsRoot) {
                           await closeFs();
-                        }}
-                        data-tooltip={t`Close the locally opened projects folder, and instead store your files in the browser's local storage.`}
-                        data-placement="bottom"
-                      >
-                        <Trans>Use browser storage</Trans>
-                      </button>
-                    )}
-                  </>
-                )}
-                {!localFsRoot && (
-                  <button
-                    onClick={async () => {
-                      resetWarning.open();
+                        }
+                      }}
+                    />
+                    <Trans>Use browser memory only</Trans>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="storage-mode"
+                      checked={!!localFsRoot}
+                      onChange={() => {
+                        if (!localFsRoot && canUpgradeFs) {
+                          upgradeFsAction();
+                        }
+                      }}
+                    />
+                    <Trans>Use browser memory and local device storage</Trans>
+                  </label>
+                  <div
+                    className="folder-location-row"
+                    style={{
+                      opacity: localFsRoot ? 1 : 0.5,
+                      marginLeft: "2rem",
+                      marginTop: "0.5rem",
                     }}
                   >
-                    <Trans>Reset</Trans>
-                  </button>
-                )}
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                      <span>
+                        <Trans>Projects folder location (on your device)</Trans>:
+                      </span>
+                      {localFsRoot ? (
+                        <code style={{ flex: "1", minWidth: "200px" }}>{localFsRoot}</code>
+                      ) : (
+                        <span style={{ flex: "1", minWidth: "200px", fontStyle: "italic" }}>
+                          <Trans>Not selected</Trans>
+                        </span>
+                      )}
+                      {showUpgradeFs && canUpgradeFs && (
+                        <button
+                          disabled={upgrading || !localFsRoot}
+                          onClick={async () => {
+                            upgradeFsAction();
+                          }}
+                          data-tooltip={t`Select a different projects folder stored on your device`}
+                          data-placement="bottom"
+                          style={{ marginLeft: "auto" }}
+                        >
+                          {localFsRoot ? (
+                            <Trans>Change folder</Trans>
+                          ) : (
+                            <Trans>Select folder</Trans>
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </dd>
-              <dt>
-                <Trans>Language</Trans>
-              </dt>
-              <dd>
-                <button onClick={() => writeLocale("en")}>
-                  <Trans>English</Trans>
-                </button>
-                <button onClick={() => writeLocale("en-PL")}>
-                  <Trans>Pseudolocale</Trans>
-                </button>
-              </dd>
+
+              {/* Editor Section */}
               <dt>
                 <Trans>Editor</Trans>
               </dt>
@@ -305,6 +299,8 @@ export const Settings = () => {
                   <Trans>Use Monaco Editor</Trans>
                 </label>
               </dd>
+
+              {/* Theme Section */}
               <dt>
                 <Trans>Theme</Trans>
               </dt>
@@ -342,6 +338,64 @@ export const Settings = () => {
                   </label>
                 </fieldset>
               </dd>
+
+              {/* Divider for bottom section */}
+              <div style={{ borderTop: "1px solid var(--contrast-lower)", margin: "2rem 0 1rem 0" }} />
+
+              {/* Bottom Section - Utility Items */}
+              {!localFsRoot && (
+                <>
+                  <dt>
+                    <Trans>Browser Storage Reset</Trans>
+                  </dt>
+                  <dd>
+                    <button
+                      onClick={async () => {
+                        resetWarning.open();
+                      }}
+                    >
+                      <Trans>Reset browser storage files</Trans>
+                    </button>
+                  </dd>
+                </>
+              )}
+
+              <dt>
+                <Trans>Language</Trans>
+              </dt>
+              <dd>
+                <button onClick={() => writeLocale("en")}>
+                  <Trans>English</Trans>
+                </button>
+                <button onClick={() => writeLocale("en-PL")}>
+                  <Trans>Pseudolocale</Trans>
+                </button>
+              </dd>
+
+              <dt>
+                <Trans>References</Trans>
+              </dt>
+              <dd>
+                <div>
+                  <a
+                    href="https://nand2tetris.org"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    nand2tetris.org
+                  </a>
+                </div>
+                <div>
+                  <a
+                    href="https://github.com/davidsouther/nand2tetris"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    GitHub
+                  </a>
+                </div>
+              </dd>
+
               <dt>
                 <Trans>Tracking</Trans>
               </dt>

@@ -228,6 +228,9 @@ export const Settings = () => {
                       />
                       <Trans>Use PC storage</Trans>
                     </label>
+                    <div style={{ fontSize: "0.85rem", color: "#888", marginLeft: "1.8rem", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
+                      <Trans>Works on Chrome, Edge, Opera, and other Chromium-based browsers</Trans>
+                    </div>
                     <div
                       className="folder-location-row"
                       style={{
@@ -268,15 +271,14 @@ export const Settings = () => {
                     </div>
                     {/* Download Projects Folder */}
                     <div style={{ marginTop: "1rem", marginLeft: "2rem" }}>
-                      <a
-                        role="button"
-                        href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
-                        target="_blank"
-                        rel="noreferrer"
-                        download="projects.zip"
+                      <button
+                        onClick={() => window.open("https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o", "_blank")}
+                        data-tooltip={t` Must be done (one-time) before selecting "use PC Storage"`}
+                        data-placement="bottom"
+                        style={{ width: "100%" }}
                       >
                         <Trans>Download the projects folder</Trans>
-                      </a>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -340,7 +342,7 @@ export const Settings = () => {
               </dd>
 
               {/* Divider for bottom section */}
-              <div style={{ borderTop: "1px solid var(--contrast-lower)", margin: "2rem 0 1rem 0" }} />
+              <div style={{ borderTop: "1px solid var(--contrast-lower)", margin: "0.5rem 0 1rem 0" }} />
 
               {/* Bottom Section - Utility Items */}
               {!localFsRoot && (

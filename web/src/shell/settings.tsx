@@ -189,21 +189,6 @@ export const Settings = () => {
           </header>
           <main>
             <dl>
-              {/* Projects Folder Section */}
-              <dt>
-                <Trans>Projects folder</Trans>
-              </dt>
-              <dd>
-                <a
-                  role="button"
-                  href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
-                  target="_blank"
-                  rel="noreferrer"
-                  download="projects.zip"
-                >
-                  <Trans>Download the projects folder</Trans>
-                </a>
-              </dd>
 
               {/* Storage Mode Selection */}
               <dt>
@@ -226,7 +211,7 @@ export const Settings = () => {
                         }
                       }}
                     />
-                    <Trans>Use browser memory only</Trans>
+                    <Trans>Use browser storage only</Trans>
                   </label>
                   <label>
                     <input
@@ -239,7 +224,7 @@ export const Settings = () => {
                         }
                       }}
                     />
-                    <Trans>Use browser memory and local device storage</Trans>
+                    <Trans>Use browser storage and PC storage</Trans>
                   </label>
                   <div
                     className="folder-location-row"
@@ -278,6 +263,18 @@ export const Settings = () => {
                         </button>
                       )}
                     </div>
+                  </div>
+                  {/* Download Projects Folder */}
+                  <div style={{ marginTop: "1rem" }}>
+                    <a
+                      role="button"
+                      href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
+                      target="_blank"
+                      rel="noreferrer"
+                      download="projects.zip"
+                    >
+                      <Trans>Download the projects folder</Trans>
+                    </a>
                   </div>
                 </div>
               </dd>
@@ -360,17 +357,7 @@ export const Settings = () => {
                 </>
               )}
 
-              <dt>
-                <Trans>Language</Trans>
-              </dt>
-              <dd>
-                <button onClick={() => writeLocale("en")}>
-                  <Trans>English</Trans>
-                </button>
-                <button onClick={() => writeLocale("en-PL")}>
-                  <Trans>Pseudolocale</Trans>
-                </button>
-              </dd>
+
 
               <dt>
                 <Trans>References</Trans>

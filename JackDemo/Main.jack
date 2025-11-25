@@ -1,4 +1,4 @@
-class SimpleJack {
+class Main {
     function int addPair(int x, int y) {
         var int result;
         let result = x + y;

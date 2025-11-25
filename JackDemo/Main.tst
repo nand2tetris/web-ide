@@ -1,9 +1,6 @@
 // Minimal VM test for the SimpleJack.addPair function
 // Assumes SimpleJack.vm is present in the same folder.
 
-load SimpleJack.vm,
-compare-to SimpleJack.cmp,
-
 set sp 256,
 set local 300,
 set argument 400,

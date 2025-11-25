@@ -193,88 +193,91 @@ export const Settings = () => {
               {/* Storage Mode Selection */}
               <dt>
                 <Trans>
-                  Select the<br /> projects folder
-                  <br />
-                  location on your PC
+                  Project files
                 </Trans>
               </dt>
               <dd>
                 <div className="storage-mode-selection">
-                  <label>
-                    <input
-                      type="radio"
-                      name="storage-mode"
-                      checked={!localFsRoot}
-                      onChange={async () => {
-                        if (localFsRoot) {
-                          await closeFs();
-                        }
-                      }}
-                    />
-                    <Trans>Use browser storage only</Trans>
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="storage-mode"
-                      checked={!!localFsRoot}
-                      onChange={() => {
-                        if (!localFsRoot && canUpgradeFs) {
-                          upgradeFsAction();
-                        }
-                      }}
-                    />
-                    <Trans>Use browser storage and PC storage</Trans>
-                  </label>
-                  <div
-                    className="folder-location-row"
-                    style={{
-                      opacity: localFsRoot ? 1 : 0.5,
-                      marginLeft: "2rem",
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-                      <span>
-                        <Trans>Projects folder location (on your device)</Trans>:
-                      </span>
-                      {localFsRoot ? (
-                        <code style={{ flex: "1", minWidth: "200px" }}>{localFsRoot}</code>
-                      ) : (
-                        <span style={{ flex: "1", minWidth: "200px", fontStyle: "italic" }}>
-                          <Trans>Not selected</Trans>
-                        </span>
-                      )}
-                      {showUpgradeFs && canUpgradeFs && (
-                        <button
-                          disabled={upgrading || !localFsRoot}
-                          onClick={async () => {
-                            upgradeFsAction();
-                          }}
-                          data-tooltip={t`Select a different projects folder stored on your device`}
-                          data-placement="bottom"
-                          style={{ marginLeft: "auto" }}
-                        >
-                          {localFsRoot ? (
-                            <Trans>Change folder</Trans>
-                          ) : (
-                            <Trans>Select folder</Trans>
-                          )}
-                        </button>
-                      )}
-                    </div>
+                  <div className="storage-option">
+                    <label>
+                      <input
+                        type="radio"
+                        name="storage-mode"
+                        checked={!localFsRoot}
+                        onChange={async () => {
+                          if (localFsRoot) {
+                            await closeFs();
+                          }
+                        }}
+                      />
+                      <Trans>Use browser storage</Trans>
+                    </label>
                   </div>
-                  {/* Download Projects Folder */}
-                  <div style={{ marginTop: "1rem" }}>
-                    <a
-                      role="button"
-                      href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
-                      target="_blank"
-                      rel="noreferrer"
-                      download="projects.zip"
+
+                  <div className="storage-option">
+                    <label>
+                      <input
+                        type="radio"
+                        name="storage-mode"
+                        checked={!!localFsRoot}
+                        onChange={() => {
+                          if (!localFsRoot && canUpgradeFs) {
+                            upgradeFsAction();
+                          }
+                        }}
+                      />
+                      <Trans>Use PC storage</Trans>
+                    </label>
+                    <div
+                      className="folder-location-row"
+                      style={{
+                        opacity: localFsRoot ? 1 : 0.5,
+                        marginLeft: "2rem",
+                        marginTop: "0.5rem",
+                      }}
                     >
-                      <Trans>Download the projects folder</Trans>
-                    </a>
+                      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                        <span>
+                          <Trans>Projects folder location (on your PC)</Trans>:
+                        </span>
+                        {localFsRoot ? (
+                          <code style={{ flex: "1", minWidth: "200px" }}>{localFsRoot}</code>
+                        ) : (
+                          <span style={{ flex: "1", minWidth: "200px", fontStyle: "italic" }}>
+                            <Trans>Not selected</Trans>
+                          </span>
+                        )}
+                        {showUpgradeFs && canUpgradeFs && (
+                          <button
+                            disabled={upgrading || !localFsRoot}
+                            onClick={async () => {
+                              upgradeFsAction();
+                            }}
+                            data-tooltip={t`Select a different projects folder stored on your PC`}
+                            data-placement="bottom"
+                            style={{ marginLeft: "auto" }}
+                          >
+                            {localFsRoot ? (
+                              <Trans>Change folder</Trans>
+                            ) : (
+                              <Trans>Select folder</Trans>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    {/* Download Projects Folder */}
+                    <div style={{ marginTop: "1rem", marginLeft: "2rem" }}>
+                      <a
+                        role="button"
+                        href="https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o"
+                        target="_blank"
+                        rel="noreferrer"
+                        download="projects.zip"
+                      >
+                        <Trans>Download the projects folder</Trans>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </dd>

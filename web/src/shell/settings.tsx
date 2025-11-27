@@ -263,7 +263,7 @@ export const Settings = () => {
                             {localFsRoot ? (
                               <Trans>Change folder</Trans>
                             ) : (
-                              <Trans>Select folder</Trans>
+                              <Trans>Select Projects Folder</Trans>
                             )}
                           </button>
                         )}
@@ -374,7 +374,7 @@ export const Settings = () => {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    nand2tetris.org
+                    nand2tetris.org (course website)
                   </a>
                 </div>
                 <div>
@@ -383,33 +383,12 @@ export const Settings = () => {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    GitHub
+                    nand2tetris/web-IDE on Github (open source)
                   </a>
                 </div>
               </dd>
 
-              <dt>
-                <Trans>Tracking</Trans>
-              </dt>
-              <dd>
-                <label>
-                  <input
-                    type="checkbox"
-                    name="switch"
-                    role="switch"
-                    checked={tracking.canTrack}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        tracking.accept();
-                      } else {
-                        tracking.reject();
-                      }
-                    }}
-                  />
-                  <Trans>Allow anonymous interaction tracking</Trans>
-                  <TrackingDisclosure />
-                </label>
-              </dd>
+
             </dl>
           </main>
         </article>

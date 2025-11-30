@@ -30,18 +30,51 @@ export const Settings = () => {
   const { settings, monaco, theme, setTheme, tracking } =
     useContext(AppContext);
 
+  const [storageMode, setStorageMode] = useState<"browser" | "pc">(
+    localFsRoot ? "pc" : "browser",
+  );
   const [upgrading, setUpgrading] = useState(false);
+
+  useEffect(() => {
+    if (localFsRoot) {
+      setStorageMode("pc");
+    } else {
+      setStorageMode("browser");
+    }
+  }, [localFsRoot]);
 
   const upgradeFsAction = async (createFiles?: boolean) => {
     setUpgrading(true);
     try {
       await upgradeFs(localFsRoot != undefined, createFiles);
+      // If after upgrade attempt we still don't have a root (cancelled), revert to browser
+      if (!localFsRoot) {
+        // We can't check localFsRoot immediately here as it might depend on context update
+        // But if the user cancelled, the context won't update to have a root.
+        // We'll rely on the useEffect above to sync state if it DOES update.
+        // If it doesn't update (cancel), we might need to manually revert if we set it to 'pc' optimistically?
+        // Actually, we set 'pc' via radio click. If cancel happens, we want to go back to 'browser'.
+        // Let's check if the operation was successful. upgradeFs usually throws or returns.
+        // If we are here, it didn't throw.
+      }
     } catch (err) {
-      console.error("Failed to upgrade FS", { err });
-      setStatus(t`Failed to load local file system.`);
+      if ((err as Error).name === "AbortError") {
+        // User cancelled
+        setStorageMode("browser");
+      } else {
+        console.error("Failed to upgrade FS", { err });
+        setStatus(t`Failed to load local file system.`);
+        setStorageMode("browser");
+      }
+    } finally {
+      setUpgrading(false);
+      // If we finished and still don't have a root (e.g. cancelled without error if that's possible, or just didn't select),
+      // we might want to ensure we are consistent.
+      // However, since upgradeFs is async, we can't easily know the *result* state here immediately if it relies on context propagation.
+      // But usually if it fails/cancels, we want to be in browser mode.
     }
-    setUpgrading(false);
   };
+
 
   const writeLocale = useMemo(
     () => (locale: string) => {
@@ -170,6 +203,61 @@ export const Settings = () => {
     </dialog>
   );
 
+  const closeWarning = useDialog();
+
+  const handleClose = () => {
+    if (storageMode === "pc" && !localFsRoot) {
+      closeWarning.open();
+    } else {
+      settings.close();
+    }
+  };
+
+  const closeWarningDialog = (
+    <dialog open={closeWarning.isOpen}>
+      <article>
+        <header>
+          <Trans>Incomplete Setup</Trans>
+        </header>
+        <main>
+          <div style={{ margin: "10px" }}>
+            <Trans>You chose use pc storage but didn't select the folder in your PC</Trans>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              marginTop: "30px",
+              gap: "10px",
+              flexWrap: "wrap"
+            }}
+          >
+            <button
+              onClick={() => {
+                closeWarning.close();
+                // Optionally trigger the file picker here?
+                // The user might just want to go back to the settings to click it themselves.
+                // Let's just close the warning so they can click "Select Projects Folder".
+              }}
+            >
+              <Trans>Select Folder</Trans>
+            </button>
+            <button
+              className="secondary"
+              onClick={() => {
+                setStorageMode("browser");
+                closeWarning.close();
+                settings.close();
+              }}
+            >
+              <Trans>Use Browser Storage</Trans>
+            </button>
+          </div>
+        </main>
+      </article>
+    </dialog>
+  );
+
   return (
     <>
       <dialog open={settings.isOpen}>
@@ -183,7 +271,7 @@ export const Settings = () => {
               href="#root"
               onClick={(e) => {
                 e.preventDefault();
-                settings.close();
+                handleClose();
               }}
             />
           </header>
@@ -203,8 +291,9 @@ export const Settings = () => {
                       <input
                         type="radio"
                         name="storage-mode"
-                        checked={!localFsRoot}
+                        checked={storageMode === "browser"}
                         onChange={async () => {
+                          setStorageMode("browser");
                           if (localFsRoot) {
                             await closeFs();
                           }
@@ -219,11 +308,10 @@ export const Settings = () => {
                       <input
                         type="radio"
                         name="storage-mode"
-                        checked={!!localFsRoot}
+                        checked={storageMode === "pc"}
                         onChange={() => {
-                          if (!localFsRoot && canUpgradeFs) {
-                            upgradeFsAction();
-                          }
+                          setStorageMode("pc");
+                          // Do NOT trigger upgradeFsAction here anymore
                         }}
                       />
                       <Trans>Use PC storage</Trans>
@@ -234,7 +322,8 @@ export const Settings = () => {
                     <div
                       className="folder-location-row"
                       style={{
-                        opacity: localFsRoot ? 1 : 0.5,
+                        opacity: storageMode === "pc" ? 1 : 0.5,
+                        pointerEvents: storageMode === "pc" ? "auto" : "none",
                         marginLeft: "2rem",
                         marginTop: "0.5rem",
                       }}
@@ -252,9 +341,19 @@ export const Settings = () => {
                         )}
                         {showUpgradeFs && canUpgradeFs && (
                           <button
-                            disabled={upgrading || !localFsRoot}
+                            disabled={upgrading}
                             onClick={async () => {
-                              upgradeFsAction();
+                              // Check if we are already in PC mode but no folder selected, or changing folder
+                              // If we are in browser mode (shouldn't happen due to pointerEvents), switch to PC first?
+                              // No, pointerEvents handles it.
+                              try {
+                                await upgradeFsAction();
+                                // After action, check if we have a root.
+                                // Note: localFsRoot might not be updated immediately in this closure.
+                                // We rely on the catch block in upgradeFsAction to handle cancellation.
+                              } catch (e) {
+                                // Should be caught inside upgradeFsAction
+                              }
                             }}
                             data-tooltip={t`Select a different projects folder stored on your PC`}
                             data-placement="bottom"
@@ -270,7 +369,12 @@ export const Settings = () => {
                       </div>
                     </div>
                     {/* Download Projects Folder */}
-                    <div style={{ marginTop: "1rem", marginLeft: "2rem" }}>
+                    <div style={{
+                      marginTop: "1rem",
+                      marginLeft: "2rem",
+                      opacity: storageMode === "pc" ? 1 : 0.5,
+                      pointerEvents: storageMode === "pc" ? "auto" : "none",
+                    }}>
                       <button
                         onClick={() => window.open("https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o", "_blank")}
                         data-tooltip={t` Must be done (one-time) before selecting "use PC Storage"`}
@@ -396,6 +500,8 @@ export const Settings = () => {
       {permissionPromptDialog}
       {resetWarningDialog}
       {resetConfirmDialog}
+      {closeWarningDialog}
     </>
   );
 };
+

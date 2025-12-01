@@ -304,18 +304,34 @@ export const Settings = () => {
                   </div>
 
                   <div className="storage-option">
-                    <label>
-                      <input
-                        type="radio"
-                        name="storage-mode"
-                        checked={storageMode === "pc"}
-                        onChange={() => {
-                          setStorageMode("pc");
-                          // Do NOT trigger upgradeFsAction here anymore
+                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                      <label style={{ width: "auto" }}>
+                        <input
+                          type="radio"
+                          name="storage-mode"
+                          checked={storageMode === "pc"}
+                          onChange={() => {
+                            setStorageMode("pc");
+                            // Do NOT trigger upgradeFsAction here anymore
+                          }}
+                        />
+                        <Trans>Use PC storage</Trans>
+                      </label>
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          window.open(
+                            "user_guide/fle_system.pdf",
+                            "_blank",
+                            "width=1000,height=800"
+                          );
                         }}
-                      />
-                      <Trans>Use PC storage</Trans>
-                    </label>
+                        style={{ fontSize: "0.9rem" }}
+                      >
+                        <Trans>File System User Guide</Trans>
+                      </a>
+                    </div>
                     <div style={{ fontSize: "0.85rem", color: "#888", marginLeft: "1.8rem", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
                       <Trans>Works on Chrome, Edge, Opera, and other Chromium-based browsers</Trans>
                     </div>

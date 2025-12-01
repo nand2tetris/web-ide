@@ -355,7 +355,7 @@ export const Settings = () => {
                                 // Should be caught inside upgradeFsAction
                               }
                             }}
-                            data-tooltip={t`Select a different projects folder stored on your PC`}
+                            data-tooltip={t`Select the folder where the projects are stored on your PC`}
                             data-placement="bottom"
                             style={{ marginLeft: "auto" }}
                           >
@@ -377,7 +377,7 @@ export const Settings = () => {
                     }}>
                       <button
                         onClick={() => window.open("https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o", "_blank")}
-                        data-tooltip={t` Must be done (one-time) before selecting "use PC Storage"`}
+                        data-tooltip={t`Must be done (one time) if you want to use PC storage`}
                         data-placement="bottom"
                         style={{ width: "100%" }}
                       >

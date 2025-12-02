@@ -154,7 +154,7 @@ export const Settings = () => {
         <main>
           <div style={{ margin: "10px" }}>
             {
-              'The "reset files" action will result in erasing all the HDL files kept in your browser\'s memory, replacing them with a fresh set of skeletal HDL files. You may want to back-up your files before resetting them. Are you sure that you want to reset the files?'
+              'The "reset browser storage files" results in erasing all the project files stored in the browser memory (but not on your PC), replacing them with a fresh set of skeletal files. You may want to back-up your edited project files before resetting.'
             }
           </div>
           <div
@@ -172,7 +172,7 @@ export const Settings = () => {
                 resetConfirm.open();
               }}
             >
-              <Trans>Yes</Trans>
+              <Trans>RESET</Trans>
             </button>
             <button
               style={{ width: "100px" }}
@@ -180,7 +180,7 @@ export const Settings = () => {
                 resetWarning.close();
               }}
             >
-              <Trans>Cancel</Trans>
+              <Trans>CANCEL</Trans>
             </button>
           </div>
         </main>
@@ -235,7 +235,7 @@ export const Settings = () => {
             <button
               onClick={() => {
                 closeWarning.close();
-                // Optionally trigger the file picker here?
+                // Optionally trigger the file picker here? (Right now click himself...)
                 // The user might just want to go back to the settings to click it themselves.
                 // Let's just close the warning so they can click "Select Projects Folder".
               }}
@@ -283,6 +283,22 @@ export const Settings = () => {
                 <Trans>
                   Project files
                 </Trans>
+                <div style={{ marginTop: "3rem" }}>
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(
+                        process.env.PUBLIC_URL + "/user_guide/fle_system.pdf",
+                        "_blank",
+                        "width=1000,height=800"
+                      );
+                    }}
+                    style={{ fontSize: "0.9rem" }}
+                  >
+                    <Trans>File System User Guide</Trans>
+                  </a>
+                </div>
               </dt>
               <dd>
                 <div className="storage-mode-selection">
@@ -317,20 +333,6 @@ export const Settings = () => {
                         />
                         <Trans>Use PC storage</Trans>
                       </label>
-                      <a
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          window.open(
-                            process.env.PUBLIC_URL + "/user_guide/fle_system.pdf",
-                            "_blank",
-                            "width=1000,height=800"
-                          );
-                        }}
-                        style={{ fontSize: "0.9rem" }}
-                      >
-                        <Trans>File System User Guide</Trans>
-                      </a>
                     </div>
                     <div style={{ fontSize: "0.85rem", color: "#888", marginLeft: "1.8rem", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
                       <Trans>Works on Chrome, Edge, Opera, and other Chromium-based browsers</Trans>
@@ -393,7 +395,7 @@ export const Settings = () => {
                     }}>
                       <button
                         onClick={() => window.open("https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o", "_blank")}
-                        data-tooltip={t`Must be done (one time) if you want to use PC storage`}
+                        data-tooltip={t`Download (one time) before using PC Storage`}
                         data-placement="bottom"
                         style={{ width: "100%" }}
                       >

@@ -259,7 +259,7 @@ export const Settings = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       window.open(
-                        process.env.PUBLIC_URL + "/user_guide/fle_system.pdf",
+                        process.env.PUBLIC_URL + "/user_guide/file_system.pdf",
                         "_blank",
                         "width=1000,height=800"
                       );

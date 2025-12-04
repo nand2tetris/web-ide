@@ -9,15 +9,15 @@
   .storage-mode-selection {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--spacing);
   }
 
   .storage-option {
-    border: 1px solid #888;
-    border-radius: 4px;
-    padding: 1rem;
+    border: var(--border-width) solid #888;
+    border-radius: var(--border-radius);
+    padding: var(--spacing);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: calc(var(--spacing) / 2);
   }
 }

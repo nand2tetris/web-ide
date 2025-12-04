@@ -47,16 +47,7 @@ export const Settings = () => {
     setUpgrading(true);
     try {
       await upgradeFs(localFsRoot != undefined, createFiles);
-      // If after upgrade attempt we still don't have a root (cancelled), revert to browser
-      if (!localFsRoot) {
-        // We can't check localFsRoot immediately here as it might depend on context update
-        // But if the user cancelled, the context won't update to have a root.
-        // We'll rely on the useEffect above to sync state if it DOES update.
-        // If it doesn't update (cancel), we might need to manually revert if we set it to 'pc' optimistically?
-        // Actually, we set 'pc' via radio click. If cancel happens, we want to go back to 'browser'.
-        // Let's check if the operation was successful. upgradeFs usually throws or returns.
-        // If we are here, it didn't throw.
-      }
+      // If after upgrade attempt we still don't have a root (canceled), revert to browser
     } catch (err) {
       if ((err as Error).name === "AbortError") {
         // User cancelled
@@ -84,7 +75,6 @@ export const Settings = () => {
     },
     [fs],
   );
-
   useEffect(() => {
     if (localFsRoot) return;
     fs.readFile("/locale")
@@ -172,7 +162,7 @@ export const Settings = () => {
                 resetConfirm.open();
               }}
             >
-              <Trans>RESET</Trans>
+              <Trans>Reset</Trans>
             </button>
             <button
               style={{ width: "100px" }}
@@ -221,7 +211,7 @@ export const Settings = () => {
         </header>
         <main>
           <div style={{ margin: "10px" }}>
-            <Trans>You chose use pc storage but didn't select the folder in your PC</Trans>
+            <Trans>You chose use pc storage but didn't select a folder in your PC</Trans>
           </div>
           <div
             style={{

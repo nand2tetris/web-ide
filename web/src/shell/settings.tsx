@@ -104,18 +104,12 @@ export const Settings = () => {
     <dialog open={permissionPrompt.isOpen}>
       <article>
         <main>
-          <div style={{ margin: "10px" }}>
+          <div className="dialog-message">
             {"Please grant permissions to use your local projects folder"}
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              marginTop: "30px",
-            }}
-          >
+          <div className="dialog-actions">
             <button
-              style={{ width: "100px" }}
+              className="dialog-button"
               onClick={async () => {
                 await requestPermission();
                 loadFs();
@@ -125,7 +119,7 @@ export const Settings = () => {
               Ok
             </button>
             <button
-              style={{ width: "100px" }}
+              className="dialog-button"
               onClick={() => {
                 permissionPrompt.close();
               }}
@@ -142,20 +136,14 @@ export const Settings = () => {
     <dialog open={resetWarning.isOpen}>
       <article>
         <main>
-          <div style={{ margin: "10px" }}>
+          <div className="dialog-message">
             {
               'The "reset browser storage files" results in erasing all the project files stored in the browser memory (but not on your PC), replacing them with a fresh set of skeletal files. You may want to back-up your edited project files before resetting.'
             }
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              marginTop: "30px",
-            }}
-          >
+          <div className="dialog-actions">
             <button
-              style={{ width: "100px" }}
+              className="dialog-button"
               onClick={async () => {
                 await resetFiles();
                 resetWarning.close();
@@ -165,12 +153,12 @@ export const Settings = () => {
               <Trans>Reset</Trans>
             </button>
             <button
-              style={{ width: "100px" }}
+              className="dialog-button"
               onClick={() => {
                 resetWarning.close();
               }}
             >
-              <Trans>CANCEL</Trans>
+              <Trans>Cancel</Trans>
             </button>
           </div>
         </main>
@@ -210,18 +198,10 @@ export const Settings = () => {
           <Trans>Incomplete Setup</Trans>
         </header>
         <main>
-          <div style={{ margin: "10px" }}>
+          <div className="dialog-message">
             <Trans>You chose use pc storage but didn't select a folder in your PC</Trans>
           </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-around",
-              marginTop: "30px",
-              gap: "10px",
-              flexWrap: "wrap"
-            }}
-          >
+          <div className="dialog-actions">
             <button
               onClick={() => {
                 closeWarning.close();

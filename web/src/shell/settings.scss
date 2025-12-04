@@ -21,3 +21,19 @@
     gap: calc(var(--spacing) / 2);
   }
 }
+
+.dialog-message {
+  margin: var(--spacing);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: space-around;
+  margin-top: var(--block-spacing-vertical);
+  gap: var(--spacing);
+  flex-wrap: wrap;
+}
+
+.dialog-button {
+  width: 100px;
+}

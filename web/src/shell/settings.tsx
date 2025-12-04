@@ -1,4 +1,4 @@
-﻿import { i18n } from "@lingui/core";
+import { i18n } from "@lingui/core";
 import { Trans, t } from "@lingui/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";

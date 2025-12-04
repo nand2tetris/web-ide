@@ -375,8 +375,6 @@ export const Settings = () => {
                   </div>
                 </div>
               </dd>
-
-              {/* Editor Section */}
               <dt>
                 <Trans>Editor</Trans>
               </dt>

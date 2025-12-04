@@ -66,7 +66,6 @@ export const Settings = () => {
     }
   };
 
-
   const writeLocale = useMemo(
     () => (locale: string) => {
       if (localFsRoot) return;

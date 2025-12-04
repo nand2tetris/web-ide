@@ -477,8 +477,6 @@ export const Settings = () => {
                   </a>
                 </div>
               </dd>
-
-
             </dl>
           </main>
         </article>
@@ -490,4 +488,3 @@ export const Settings = () => {
     </>
   );
 };
-

@@ -184,4 +184,10 @@
   td {
     vertical-align: top;
   }
+
+  // Disable old tooltip pseudo-elements (using new React component instead)
+  [data-tooltip]::before,
+  [data-tooltip]::after {
+    display: none !important;
+  }
 }

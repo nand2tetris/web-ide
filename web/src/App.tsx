@@ -14,6 +14,7 @@ import { FilePicker } from "./shell/file_select";
 import Footer from "./shell/footer";
 import Header from "./shell/header";
 import { Settings } from "./shell/settings";
+import { Tooltip } from "./shell/Tooltip";
 import urls from "./urls";
 
 import { ErrorBoundary, RenderError } from "./ErrorBoundary";
@@ -21,7 +22,6 @@ import { PageContextProvider } from "./Page.context";
 import { Redirect } from "./pages/redirect";
 import "./pico/flex.scss";
 import "./pico/pico.scss";
-import "./pico/tooltip.scss";
 import { TrackingBanner } from "./tracking";
 import { updateVersion } from "./versions";
 
@@ -92,6 +92,7 @@ function App() {
                 <Footer />
                 <TrackingBanner />
               </Router>
+              <Tooltip />
             </PageContextProvider>
           ) : (
             <div>Initializing...</div>

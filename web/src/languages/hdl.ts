@@ -117,7 +117,7 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
 };
 
 const HdlSignatures = {
-  Add16: "Add16(a = , b = , out = );",
+  Add16: "Add16(a= , b= , out= );",
   ALU: "ALU(x= , y= , zx= , nx= , zy= , ny= , f= , no= , out= , zr= , ng= );",
   And: "And(a= , b= , out= );",
   And16: "And16(a= , b= , out= );",
@@ -153,7 +153,7 @@ const HdlSignatures = {
   Register: "Register(in= , load= , out= );",
   ROM32K: "ROM32K(address= , out= );",
   Screen: "Screen(in= , load= , address= , out= );",
-  Xor: "Xor(a = , b = , out = );",
+  Xor: "Xor(a= , b= , out= );",
 };
 
 export const HdlSnippets = {

@@ -486,6 +486,4 @@ export const Settings = () => {
       {closeWarningDialog}
     </>
   );
-
-
 };

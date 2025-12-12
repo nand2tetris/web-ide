@@ -1,5 +1,41 @@
 .settings-dialog {
+  max-width: 900px;
+  min-height: 80vh;
+
   [role="button"] {
     width: 100%;
+  }
+
+  .storage-mode-selection {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing);
+  }
+
+  .storage-option {
+    border: var(--border-width) solid #888;
+    border-radius: var(--border-radius);
+    padding: var(--spacing);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) / 2);
+  }
+}
+
+dialog {
+  .message {
+    margin: var(--spacing);
+  }
+
+  .actions {
+    display: flex;
+    justify-content: space-around;
+    margin-top: var(--block-spacing-vertical);
+    gap: var(--spacing);
+    flex-wrap: wrap;
+
+    >button {
+      width: 100px;
+    }
   }
 }

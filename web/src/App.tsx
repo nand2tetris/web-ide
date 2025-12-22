@@ -63,7 +63,7 @@ function App() {
   }, [appContext.theme]);
 
   return (
-    <I18nProvider i18n={i18n as any}>
+    <I18nProvider i18n={i18n}>
       <BaseContext.Provider value={baseContext}>
         <AppContext.Provider value={appContext}>
           {initialized ? (

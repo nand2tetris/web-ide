@@ -252,6 +252,7 @@ const VM = () => {
       >
         <Editor
           value={state.files.vm}
+          path={path ?? 'vm'}
           onChange={(source: string) => {
             actions.setVm(source);
           }}

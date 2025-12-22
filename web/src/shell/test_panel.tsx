@@ -241,6 +241,7 @@ export const TestPanel = ({
         <Tab title="Test Script" onSelect={() => setSelectedTestTab("tst")}>
           <Editor
             value={tst}
+            path={`${tstName??'test'}.tst`}
             onChange={onChange}
             grammar={TST.parser}
             language={"tst"}
@@ -251,6 +252,7 @@ export const TestPanel = ({
         <Tab title="Compare File" onSelect={() => setSelectedTestTab("cmp")}>
           <Editor
             value={cmp}
+            path={`${tstName??'test'}.cmp`}
             onChange={setCmp}
             grammar={CMP.parser}
             language={"cmp"}
@@ -266,6 +268,7 @@ export const TestPanel = ({
               return;
             }}
             language={"cmp"}
+            path={`${tstName??'test'}.out`}
             disabled={true}
             lineNumberTransform={(_) => ""}
           />
@@ -285,6 +288,7 @@ export const TestPanel = ({
               return;
             }}
             language={""}
+            path="test.txt"
             disabled={true}
             lineNumberTransform={(i) => diffDisplay?.lineNumbers[i - 1] ?? ""}
             customDecorations={diffDisplay?.decorations.map((decoration) => {

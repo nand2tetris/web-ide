@@ -71,6 +71,7 @@ export const Editor = ({
   onCursorPositionChange,
   grammar,
   language,
+  path,
   highlight,
   highlightType = "highlight",
   customDecorations = [],
@@ -82,6 +83,7 @@ export const Editor = ({
   style?: CSSProperties;
   disabled?: boolean;
   value: string;
+  path: string;
   error?: CompilationError;
   onChange: Action<string>;
   onCursorPositionChange?: (index: number) => void;
@@ -107,6 +109,7 @@ export const Editor = ({
             value={value}
             onChange={onChange}
             onCursorPositionChange={onCursorPositionChange}
+            path={path}
             language={language}
             error={error}
             disabled={disabled}

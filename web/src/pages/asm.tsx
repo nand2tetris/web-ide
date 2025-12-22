@@ -186,6 +186,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.asm}
+          path={state.path??"tmp.asm"}
           error={state.error}
           alwaysRecenter={false}
           onChange={(source: string) => {
@@ -254,6 +255,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.result}
+          path={(state.path??"tmp.asm").replace(/\.asm$/, '.hack')}
           highlight={state.resultHighlight}
           disabled={true}
           onChange={function (_source: string): void {
@@ -313,6 +315,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.compare}
+          path={(state.path??"tmp.asm").replace(/\.asm$/, '.cmp')}
           highlight={state.translating ? state.resultHighlight : undefined}
           highlightType={state.compareError ? "error" : "highlight"}
           alwaysRecenter={false}

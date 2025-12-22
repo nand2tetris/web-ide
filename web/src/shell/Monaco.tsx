@@ -70,6 +70,7 @@ export const Monaco = ({
   onChange,
   onCursorPositionChange,
   language,
+  path,
   error,
   disabled = false,
   highlight: currentHighlight,
@@ -83,6 +84,7 @@ export const Monaco = ({
   onChange: Action<string>;
   onCursorPositionChange?: (index: number) => void;
   language: string;
+  path: string;
   error?: CompilationError;
   disabled?: boolean;
   highlight?: Span | number;
@@ -263,8 +265,9 @@ export const Monaco = ({
   return (
     <MonacoEditor
       value={value}
-      onChange={onValueChange}
       language={language}
+      path={path}
+      onChange={onValueChange}
       onMount={onMount}
       height={dynamicHeight ? height : undefined}
     />

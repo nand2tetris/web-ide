@@ -261,6 +261,7 @@ export const Chip = () => {
         }}
         grammar={HDL.parser}
         language={"hdl"}
+        path={`${state.controls.project}/${state.controls.chipName}.hdl`}
         disabled={state.controls.usingBuiltin || state.controls.chipName == ""}
       />
     </Panel>

@@ -242,6 +242,7 @@ export const Compiler = () => {
             >
               <Editor
                 value={state.files[file]}
+                path={file}
                 onChange={(source: string) => {
                   actions.writeFile(file, source);
                 }}

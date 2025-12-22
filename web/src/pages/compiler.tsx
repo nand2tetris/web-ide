@@ -164,6 +164,10 @@ export const Compiler = () => {
     />
   );
 
+  useEffect(() => {
+    setEditable(true);
+  }, [state.fs]);
+
   return (
     <div className="Page CompilerPage grid">
       <input

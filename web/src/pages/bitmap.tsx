@@ -546,6 +546,12 @@ export const BitmapEditor = () => {
     setInvertMode(false);
     setComments(true);
     setGrid(createGrid(defaultState.width, defaultState.height, false));
+
+    // Reset input fields
+    if (widthInputRef.current) widthInputRef.current.value = defaultState.width.toString();
+    if (heightInputRef.current) heightInputRef.current.value = defaultState.height.toString();
+    if (pixelSizeInputRef.current) pixelSizeInputRef.current.value = defaultState.pixelSize.toString();
+    if (marginFramesInputRef.current) marginFramesInputRef.current.value = "1";
   }, []);
 
   const shiftLeft = useCallback(() => {

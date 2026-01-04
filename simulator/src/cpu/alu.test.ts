@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { alu, alua, COMMANDS, Flags } from "./alu.js";
 
 describe("alu", () => {

@@ -17,17 +17,16 @@
     "nand2tetris": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
-    "test": "jest"
+    "build": "tsc"
   },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.2.5",
     "@nand2tetris/runner": "file:../runner",
-    "@nand2tetris/simulator": "file:../simulator"
+    "@nand2tetris/simulator": "file:../simulator",
+    "@types/node": "^20.14.2",
+    "@types/yargs": "^17.0.32"
   },
   "dependencies": {
-    "@types/node": "^20.14.2",
-    "@types/yargs": "^17.0.32",
     "yargs": "^17.7.2"
   }
 }

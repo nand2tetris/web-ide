@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import {
   Key,
   ReactNode,
@@ -46,7 +45,7 @@ export interface VirtualScrollProps<T, U extends ReactNode> {
 }
 
 export function fillVirtualScrollSettings(
-  settings: Partial<VirtualScrollSettings>,
+  settings: Partial<VirtualScrollSettings>
 ): VirtualScrollSettings {
   const {
     minIndex = 0,
@@ -62,7 +61,7 @@ export function fillVirtualScrollSettings(
 
 export function initialState<T>(
   settings: VirtualScrollSettings,
-  adapter: VirtualScrollDataAdapter<T>,
+  adapter: VirtualScrollDataAdapter<T>
 ): VirtualScrollState<T> {
   // From Denis Hilt, https://blog.logrocket.com/virtual-scrolling-core-principles-and-basic-implementation-in-react/
   const { minIndex, maxIndex, startIndex, itemHeight, count, tolerance } =
@@ -100,7 +99,7 @@ export function getData<T>(
   maxIndex: number,
   offset: number,
   limit: number,
-  get: VirtualScrollDataAdapter<T>,
+  get: VirtualScrollDataAdapter<T>
 ): T[] {
   const start = Math.max(0, minIndex, offset);
   const end = Math.min(maxIndex, offset + limit - 1);
@@ -118,7 +117,7 @@ interface ScrollUpdate<T> {
 export function doScroll<T>(
   scrollTop: number,
   state: VirtualScrollState<T>,
-  get: VirtualScrollDataAdapter<T>,
+  get: VirtualScrollDataAdapter<T>
 ): ScrollUpdate<T> {
   const {
     totalHeight,
@@ -132,7 +131,7 @@ export function doScroll<T>(
   const topPaddingHeight = Math.max((index - minIndex) * itemHeight, 0);
   const bottomPaddingHeight = Math.max(
     totalHeight - (topPaddingHeight + data.length * itemHeight),
-    0,
+    0
   );
 
   return { scrollTop, topPaddingHeight, bottomPaddingHeight, data };
@@ -158,7 +157,7 @@ const scrollReducer =
   });
 
 export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
-  props: VirtualScrollProps<T, U> & { className?: string },
+  props: VirtualScrollProps<T, U> & { className?: string }
 ) => {
   const viewportRef = useRef<HTMLDivElement | null>(null);
 
@@ -186,7 +185,7 @@ export const VirtualScroll = <T extends {}, U extends ReactNode = ReactNode>(
       }
       viewportRef.current = div;
     },
-    [viewportRef, settings.startIndex, settings.itemHeight],
+    [viewportRef, settings.startIndex, settings.itemHeight]
   );
 
   const rows = state.data.map((d) => (

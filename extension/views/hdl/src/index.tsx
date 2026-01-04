@@ -12,26 +12,25 @@ import { StatusSeverity } from "@nand2tetris/components/stores/base.context";
 
 const baseContext: BaseContext = {
   fs: new FileSystem(
-    new ObjectFileSystemAdapter({ "projects/01/Not.hdl": Not.hdl }),
+    new ObjectFileSystemAdapter({ "projects/01/Not.hdl": Not.hdl })
   ),
   canUpgradeFs: false,
   async upgradeFs() {},
   closeFs() {},
   storage: {},
   status: { message: "", severity: "INFO" },
-  setStatus: (status: string | { message: string; severity?: StatusSeverity }): void => {
+  setStatus: (
+    status: string | { message: string; severity?: StatusSeverity }
+  ): void => {
     // api.postMessage({ nand2tetris: true, showMessage: status });
     if (typeof status === "string") {
       console.log(status);
     } else {
       console.log(`${status.severity}: ${status.message}`);
     }
-
   },
   permissionPrompt: {} as ReturnType<typeof useDialog>,
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async requestPermission() {},
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   loadFs() {},
 };
 

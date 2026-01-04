@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest";
 import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { Chip } from "@nand2tetris/simulator/chip/chip.js";
 import { render, screen } from "@testing-library/react";
@@ -21,7 +22,7 @@ describe("visualizations", () => {
         {vis.map(([k, v]) => (
           <div key={k}>{v}</div>
         ))}
-      </>,
+      </>
     );
     const rendered = await screen.findAllByText(/ALU/);
     expect(rendered).toBeDefined();

@@ -22,6 +22,7 @@
     // Canvas size header controls
     .canvas-size-controls {
         display: flex;
+        flex-direction: row;
         flex-wrap: nowrap;
         gap: var(--spacing);
         align-items: center;

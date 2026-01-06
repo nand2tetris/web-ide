@@ -487,15 +487,16 @@ export const BitmapEditor = () => {
   // Event handlers
   const handleCellMouseDown = useCallback(
     (i: number, j: number) => {
-      const newColor = !grid[i][j];
-      setCurrentColor(newColor);
+      // use functional update to avoid reading stale grid from closure
       setGrid((prev) => {
         const newGrid = prev.map((row) => [...row]);
+        const newColor = !newGrid[i][j];
         newGrid[i][j] = newColor;
+        setCurrentColor(newColor);
         return newGrid;
       });
     },
-    [grid]
+    []
   );
 
   const handleCellMouseOver = useCallback(
@@ -648,6 +649,14 @@ export const BitmapEditor = () => {
     if (value < 1) value = 1;
     setMarginSaveFrames(value);
   }, []);
+
+  // keep uncontrolled input refs in sync when state changes (consistent with other pages)
+  useEffect(() => {
+    if (widthInputRef.current) widthInputRef.current.value = width.toString();
+    if (heightInputRef.current) heightInputRef.current.value = height.toString();
+    if (pixelSizeInputRef.current) pixelSizeInputRef.current.value = pixelSize.toString();
+    if (marginFramesInputRef.current) marginFramesInputRef.current.value = marginSaveFrames.toString();
+  }, [width, height, pixelSize, marginSaveFrames]);
 
   // File import handlers
   const handleFileSelect = useCallback(

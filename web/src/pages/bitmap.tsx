@@ -5,7 +5,7 @@ import {
   generateJackCodeLine,
   getColumns,
   getWordValue,
-} from "../utils/bitmapCodegen";
+} from "../utils/bitmapUtils";
 import "./bitmap.scss";
 
 // Constants

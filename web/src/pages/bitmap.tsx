@@ -197,15 +197,17 @@ export const BitmapEditor = () => {
           thisCol.push([i, colIndex]);
         }
       } else {
-        // fitToDrawing
+        // fitToDrawing: collect rows that contain drawing data in this 16-px column,
+        // including extra rows needed for horizontal-shift animation frames.
         const includedIvalues = new Set<number>();
         const minI = Math.min(topI, baseI);
         const maxI = Math.max(bottomI, baseI);
 
         for (let i = minI; i <= maxI; i++) {
           if (i < 0 || i >= height) continue;
-          let thisIIn = false;
+          let thisIIn = false; // true if row i has any drawn pixel in this word
 
+          // Check pixels within the current 16-px word
           for (let j = colIndex; j < colIndex + 16; j++) {
             if (j >= 0 && j < width) {
               if (grid[i]?.[j] !== invertMode) {
@@ -213,6 +215,7 @@ export const BitmapEditor = () => {
                 break;
               }
 
+              // Also check neighboring columns that will shift into this word during animation
               if (currentJShift > 0) {
                 for (let l = colIndex + 16; l < Math.min(currentJShift, marginSaveFrames) + colIndex + 16; l++) {
                   if (l >= width) break;

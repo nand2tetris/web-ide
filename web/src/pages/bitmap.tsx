@@ -144,46 +144,38 @@ export const BitmapEditor = () => {
 
     if (marginType !== "fullCanvas") {
       // Find drawing borders
-      let breaker = false;
-      for (let j = 0; j < width && !breaker; j++) {
+      findLeft: for (let j = 0; j < width; j++) {
         for (let i = height - 1; i >= 0; i--) {
           if (grid[i]?.[j] !== invertMode) {
             leftJ = j;
-            breaker = true;
-            break;
+            break findLeft;
           }
         }
       }
 
-      breaker = false;
-      for (let j = width - 1; j >= 0 && !breaker; j--) {
+      findRight: for (let j = width - 1; j >= 0; j--) {
         for (let i = height - 1; i >= 0; i--) {
           if (grid[i]?.[j] !== invertMode) {
             rightJ = j;
-            breaker = true;
-            break;
+            break findRight;
           }
         }
       }
 
-      breaker = false;
-      for (let i = height - 1; i >= 0 && !breaker; i--) {
+      findBottom: for (let i = height - 1; i >= 0; i--) {
         for (let j = 0; j < width; j++) {
           if (grid[i]?.[j] !== invertMode) {
             bottomI = i;
-            breaker = true;
-            break;
+            break findBottom;
           }
         }
       }
 
-      breaker = false;
-      for (let i = 0; i < height && !breaker; i++) {
+      findTop: for (let i = 0; i < height; i++) {
         for (let j = 0; j < width; j++) {
           if (grid[i]?.[j] !== invertMode) {
             topI = i;
-            breaker = true;
-            break;
+            break findTop;
           }
         }
       }

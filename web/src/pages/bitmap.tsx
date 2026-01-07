@@ -344,8 +344,8 @@ export const BitmapEditor = () => {
     return edges;
   }, [obviousStyling, getUsedWords]);
 
-  // Event handlers
-  const handleCellMouseDown = useCallback(
+  // Drawing event handlers
+  const startDraw = useCallback(
     (i: number, j: number) => {
       // use functional update to avoid reading stale grid from closure
       setGrid((prev) => {
@@ -359,7 +359,7 @@ export const BitmapEditor = () => {
     []
   );
 
-  const handleCellMouseOver = useCallback(
+  const moveDraw = useCallback(
     (i: number, j: number) => {
       if (currentColor === null) return;
       setGrid((prev) => {
@@ -371,7 +371,7 @@ export const BitmapEditor = () => {
     [currentColor]
   );
 
-  const handleMouseUp = useCallback(() => {
+  const stopDraw = useCallback(() => {
     setCurrentColor(null);
   }, []);
 
@@ -629,7 +629,7 @@ export const BitmapEditor = () => {
   }, []);
 
   return (
-    <div className="Page BitmapPage grid" onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}>
+    <div className="Page BitmapPage grid" onMouseUp={stopDraw} onMouseLeave={stopDraw}>
       {/* Canvas Panel */}
       <Panel
         className="canvas-panel"
@@ -674,7 +674,7 @@ export const BitmapEditor = () => {
         <div style={{ overflow: "auto", padding: "var(--spacing)" }}>
           <table
             className={`canvas-grid ${obviousStyling ? "obvious-edges" : ""}`}
-            onMouseLeave={handleMouseUp}
+            onMouseLeave={stopDraw}
           >
             <tbody>
               {/* Column labels row */}
@@ -698,8 +698,8 @@ export const BitmapEditor = () => {
                       className={`cell ${grid[i]?.[j] ? "filled" : "empty"} ${wordEdgeColumns.has(j) ? "word-edge" : ""
                         }`}
                       style={{ width: pixelSize, height: pixelSize }}
-                      onMouseDown={() => handleCellMouseDown(i, j)}
-                      onMouseOver={() => handleCellMouseOver(i, j)}
+                      onMouseDown={() => startDraw(i, j)}
+                      onMouseOver={() => moveDraw(i, j)}
                     />
                   ))}
                 </tr>

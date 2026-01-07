@@ -24,9 +24,9 @@
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
-        //gap: var(--spacing);
+        gap: var(--spacing);
         align-items: center;
-        //padding: var(--spacing);
+        padding: var(--spacing);
 
         input[type="text"] {
             width: 3rem;

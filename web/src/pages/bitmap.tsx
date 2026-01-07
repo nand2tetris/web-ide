@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Panel } from "../shell/panel";
 import {
+  createGrid,
   generateHackAssemblyCode,
   generateJackCodeLine,
   getColumns,
@@ -70,14 +71,6 @@ export const BitmapEditor = () => {
       console.error("Error loading bitmap editor grid:", e);
     }
     return createGrid(width, height, invertMode);
-  };
-
-  const createGrid = (width: number, height: number, invertMode: boolean): boolean[][] => {
-    const newGrid: boolean[][] = [];
-    for (let i = 0; i < height; i++) {
-      newGrid[i] = new Array(width).fill(invertMode);
-    }
-    return newGrid;
   };
 
   // State

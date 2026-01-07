@@ -1,5 +1,17 @@
 const BINARY_BITS = 16;
 
+export function createGrid(
+  width: number,
+  height: number,
+  invertMode: boolean,
+): boolean[][] {
+  const newGrid: boolean[][] = [];
+  for (let i = 0; i < height; i++) {
+    newGrid[i] = new Array(width).fill(invertMode);
+  }
+  return newGrid;
+}
+
 export function getWordValue(
   grid: boolean[][],
   i: number,

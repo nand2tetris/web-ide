@@ -23,7 +23,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { TestPanel } from "src/shell/test_panel";
+import { TestPanel } from "../shell/test_panel";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";

@@ -9,6 +9,7 @@ import {
 } from "../testing";
 import "../shell/editor.mock";
 import Chip from "./chip";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe.skip("chip page", () => {
   const state = cleanState(

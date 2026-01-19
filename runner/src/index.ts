@@ -10,7 +10,7 @@ export function run(cmd: string, options: ExecOptions = {}) {
       if (error !== null || stderr.length > 0) {
         reject({ error, stderr });
       } else {
-        resolve(`${stdout}`);
+        resolve(stdout.toString("utf-8"));
       }
     });
   });

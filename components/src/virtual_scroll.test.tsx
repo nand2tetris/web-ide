@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import VirtualScroll, { arrayAdapter } from "./virtual_scroll.js";
+import { describe, expect, it } from "vitest";
 
 describe("<VirtualScroll />", () => {
   it("initializes & renders", () => {

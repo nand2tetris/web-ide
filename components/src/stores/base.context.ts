@@ -1,6 +1,7 @@
 import {
   FileSystem,
   LocalStorageFileSystemAdapter,
+  RecordFileSystemAdapter,
 } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
@@ -168,7 +169,7 @@ export function useBaseContext(): BaseContext {
 }
 
 export const BaseContext = createContext<BaseContext>({
-  fs: new FileSystem(new LocalStorageFileSystemAdapter()),
+  fs: new FileSystem(new RecordFileSystemAdapter()),
   canUpgradeFs: false,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async upgradeFs() {},

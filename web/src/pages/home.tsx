@@ -52,7 +52,6 @@ async function loadAssignment(file: ParsedPath & { file?: File }) {
 }
 
 declare module "react" {
-  // eslint-disable-next-line
   interface HTMLAttributes<T> {
     // extends React's HTMLAttributes
     directory?: string;

@@ -1,8 +1,9 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { vm as SIMPLE_FUNCTION } from "@nand2tetris/projects/project_08/20_simple_function.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm/fibonnaci.js";
 import {
+  BRANCHING_FUNCTION,
   NESTED_FUNCTION,
-  SIMPLE_FUNCTION,
   STATIC,
 } from "@nand2tetris/projects/samples/vm/vm.js";
 import { VM } from "../languages/vm.js";
@@ -207,6 +208,20 @@ test("07 / Memory Access / Pointer Test", () => {
   expect(test).toEqual([6084, 3030, 3040, 32, 46]);
 });
 
+test("08 / Branching Function", () => {
+  const { instructions } = unwrap(VM.parse(BRANCHING_FUNCTION));
+  const vm = unwrap(Vm.build(instructions));
+
+  vm.write([]);
+
+  for (let i = 0; i < 100; i++) {
+    vm.step();
+  }
+
+  const test = vm.read([0, 256]);
+  expect(test).toEqual([257, 12]);
+});
+
 const LOOP_TEST = `
 push constant 0    
 pop local 0         // initializes sum = 0
@@ -309,18 +324,11 @@ test("08 / Program Flow / Fibonacci Series", () => {
   expect(test).toEqual([0, 1, 1, 2, 3, 5]);
 });
 
-test("08 / Simple Function / Simple Function", () => {
+test("08 / Functions / SimpleFunction", () => {
   const { instructions } = unwrap(VM.parse(SIMPLE_FUNCTION));
   const vm = unwrap(Vm.build(instructions));
 
-  vm.write([]);
-
-  for (let i = 0; i < 100; i++) {
-    vm.step();
-  }
-
-  const test = vm.read([0, 256]);
-  expect(test).toEqual([257, 12]);
+  expect(() => vm.vmStack()).not.toThrow("Assertion failed");
 });
 
 test("08 / Functions / NestedCall", () => {

@@ -1,4 +1,4 @@
-export const SIMPLE_FUNCTION = `
+export const BRANCHING_FUNCTION = `
 // __implicit
   push constant 3
   push constant 4

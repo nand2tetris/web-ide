@@ -847,6 +847,7 @@ export class Vm {
       const nArg = this.segmentInitializations["argument"].n;
       const nLocal = this.segmentInitializations["local"].n;
       const nThis = this.invocation.thisN ?? 0;
+      const stackCount = frameEnd - stackBase;
       return {
         fn,
         args: {
@@ -861,8 +862,11 @@ export class Vm {
         },
         stack: {
           base: 256,
-          count: frameEnd - stackBase,
-          values: [...this.memory.map((_, v) => v, stackBase, frameEnd)],
+          count: Math.max(0, stackCount),
+          values:
+            stackCount > 0
+              ? [...this.memory.map((_, v) => v, stackBase, frameEnd)]
+              : [],
         },
         this: {
           base: THIS,

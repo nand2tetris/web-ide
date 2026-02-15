@@ -355,11 +355,15 @@ export class Compiler {
 
   compileConstructor(subroutine: Subroutine) {
     this.compileSubroutineStart(subroutine);
-    this.write(
-      `push constant ${this.fieldNum}`,
-      "call Memory.alloc 1",
-      "pop pointer 0",
-    );
+
+    if (this.fieldNum > 0)
+      this.write(
+        `push constant ${this.fieldNum}`,
+        "call Memory.alloc 1",
+        "pop pointer 0",
+      );
+    else this.write("push constant 0", "pop pointer 0");
+
     this.compileStatements(subroutine.body.statements);
   }
 
@@ -517,6 +521,20 @@ export class Compiler {
 
   compileSubroutineCall(call: SubroutineCall) {
     const attributes = this.classifySubroutineCall(call);
+
+    if (
+      attributes.className === "Memory" &&
+      attributes.subroutineName === "deAlloc" &&
+      this.fieldNum === 0
+    ) {
+      for (const param of call.parameters) {
+        this.compileExpression(param);
+        this.write("pop temp 0");
+      }
+
+      this.write("push constant 0");
+      return;
+    }
 
     if (attributes.object) {
       this.write(`push ${attributes.object}`);

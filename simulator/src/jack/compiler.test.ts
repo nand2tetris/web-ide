@@ -123,4 +123,41 @@ describe("compiler", () => {
       expect(compiled[file]).toEqual(Programs[program][file].compiled);
     }
   });
+
+  it("compiles a class with no fields", () => {
+    const compiled = compile({
+      NoField: `
+        class NoField {
+            constructor NoField new() {
+                return this;
+            }
+            method void dispose() {
+              do Memory.deAlloc(this);
+              return;
+            }
+        }
+      `,
+      Main: `
+        class Main {
+            function void main() {
+                var NoField z;
+                let z = NoField.new();
+                do z.dispose();
+                return;
+            }
+        }
+      `,
+    });
+
+    const noFieldVm = compiled["NoField"];
+    expect(noFieldVm).toContain("function NoField.new 0");
+    expect(noFieldVm).not.toContain("call Memory.alloc 1");
+    expect(noFieldVm).toContain("function NoField.dispose 0");
+    expect(noFieldVm).not.toContain("call Memory.deAlloc 1");
+
+    const mainVm = compiled["Main"];
+    expect(mainVm).toContain("function Main.main 1");
+    expect(mainVm).toContain("call NoField.new 0");
+    expect(mainVm).toContain("call NoField.dispose 1");
+  });
 });

@@ -17,9 +17,6 @@
       ]
     }
   },
-  "dependencies": {
-    "@vscode/webview-ui-toolkit": "^1.4.0"
-  },
   "devDependencies": {
     "@davidsouther/jiffies": "^2.2.5",
     "@monaco-editor/react": "^4.6.0",
@@ -34,7 +31,10 @@
     "@types/react-dom": "^18.3.0",
     "@types/vscode": "^1.89.0",
     "@types/wicg-file-system-access": "^2023.10.5",
+    "@vitejs/plugin-react": "^5.0.0",
+    "@vscode/webview-ui-toolkit": "^1.4.0",
     "immer": "^10.1.1",
+    "jsdom": "^16.7.0",
     "make-plural": "^7.4.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -47,15 +47,6 @@
   "scripts": {
     "build": "tsc",
     "postbuild": "shx rm -rf build/public && shx cp -r src/public/ build/public/",
-    "test": "react-scripts test"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2",
-      "(.*)\\.js$": "$1"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!@davidsouther)"
-    ]
+    "test": "vitest"
   }
 }

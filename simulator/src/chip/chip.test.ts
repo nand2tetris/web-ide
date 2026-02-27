@@ -1,5 +1,5 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { bin } from "../util/twos.js";
 import { And, Inc16, Mux16, Not, Not16, Or, Xor } from "./builtins/index.js";
 import { Nand } from "./builtins/logic/nand.js";
@@ -180,8 +180,6 @@ describe("Chip", () => {
         expect(width).toBe(16);
       });
     });
-
-    describe("and16", () => undefined);
   });
 
   describe("SubBus", () => {

@@ -7,6 +7,7 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import type { MatchResult } from "ohm-js";
+import { expect } from "vitest";
 import { Diff } from "./compare.js";
 
 interface CustomMatchers<R = unknown, T = unknown> {
@@ -26,10 +27,8 @@ interface CmpMatchers<R = unknown> {
 declare global {
   // biome-ignore lint/style/noNamespace: add some setup stuff
   namespace jest {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     type Expect = CustomMatchers;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     interface Matchers<R, T = unknown>
       extends CustomMatchers<R, T>,

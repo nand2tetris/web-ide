@@ -2,6 +2,7 @@ import { Memory as MemoryChip } from "@nand2tetris/simulator/cpu/memory.js";
 import { range } from "@davidsouther/jiffies/lib/esm/range.js";
 import { render, screen } from "@testing-library/react";
 import { MemoryBlock, MemoryCell } from "./memory.js";
+import { describe, expect, it } from "vitest";
 
 describe("<Memory />", () => {
   describe("<MemoryCell />", () => {

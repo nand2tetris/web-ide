@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { bin, dec, hex, int2, int10, int16, nand16 } from "./twos.js";
 
 describe("twos", () => {

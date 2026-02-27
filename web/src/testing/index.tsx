@@ -12,13 +12,8 @@ import ue from "@testing-library/user-event";
 import { ReactElement, type ReactNode } from "react";
 import { useAppContext } from "../App.context";
 
-export const userEvent = ue;
-export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
-export * from "@testing-library/react";
-export { i18nRender as render };
-
 const I18nWrapper = ({ children }: { children: ReactNode }) => (
-  <I18nProvider i18n={i18n}>{children}</I18nProvider>
+  <I18nProvider i18n={i18n as any}>{children}</I18nProvider>
 );
 
 const i18nRender: (
@@ -36,22 +31,22 @@ export const useTestingAppContext = () => ({
         "projects/01/Not/Not.hdl": Not.hdl,
         "projects/01/Not/Not.tst": Not.tst,
         "projects/01/Not/Not.cmp": Not.cmp,
-      }),
+      })
     ),
     canUpgradeFs: false,
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     async upgradeFs() {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     closeFs(force?: boolean) {},
     status: { message: "", severity: "INFO" },
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     setStatus() {},
     storage: {},
     permissionPrompt: useDialog(),
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     async requestPermission() {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     loadFs() {},
   } satisfies BaseContext,
   app: useAppContext(),
 });
+
+export const userEvent = ue;
+export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
+export * from "@testing-library/react";
+export { i18nRender as render };

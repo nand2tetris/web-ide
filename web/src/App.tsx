@@ -1,4 +1,4 @@
-import { i18n } from "@lingui/core";
+import { I18n, i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import {
   BaseContext,
@@ -27,11 +27,6 @@ import { updateVersion } from "./versions";
 
 i18n.load("en", messages.messages);
 i18n.load("en-PL", plMessages.messages);
-i18n.loadLocaleData({
-  en: { plurals: en },
-  "en-US": { plurals: en },
-  "en-PL": { plurals: en },
-});
 i18n.activate(navigator.language);
 
 type STATE = "none" | "initializing" | "initialized";

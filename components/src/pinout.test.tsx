@@ -2,6 +2,7 @@ import { Bus, HIGH } from "@nand2tetris/simulator/chip/chip.js";
 import { render, screen } from "@testing-library/react";
 import { act, useState } from "react";
 import { Pinout, reducePin } from "./pinout.js";
+import { describe, expect, it } from "vitest";
 
 describe("<Pinout />", () => {
   it("renders pins", () => {

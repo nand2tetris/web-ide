@@ -25,6 +25,7 @@ import {
   Pin,
 } from "../../chip.js";
 import { RAM, RAM16K } from "../sequential/ram.js";
+import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
 
 export class ROM32K extends RAM {
   constructor() {
@@ -186,10 +187,7 @@ export class Memory extends ClockedChip {
 }
 
 class DRegisterBus extends Bus {
-  constructor(
-    name: string,
-    private cpu: CPUState,
-  ) {
+  constructor(name: string, private cpu: CPUState) {
     super(name);
   }
 
@@ -203,10 +201,7 @@ class DRegisterBus extends Bus {
 }
 
 class ARegisterBus extends Bus {
-  constructor(
-    name: string,
-    private cpu: CPUState,
-  ) {
+  constructor(name: string, private cpu: CPUState) {
     super(name);
   }
 
@@ -220,10 +215,7 @@ class ARegisterBus extends Bus {
 }
 
 class PCBus extends Bus {
-  constructor(
-    name: string,
-    private cpu: CPUState,
-  ) {
+  constructor(name: string, private cpu: CPUState) {
     super(name);
   }
 
@@ -240,7 +232,7 @@ export class CPU extends ClockedChip {
   private _state: CPUState = emptyState();
 
   get state(): CPUState {
-    return this._state;
+    return this._state ?? emptyState();
   }
 
   constructor() {
@@ -249,20 +241,19 @@ export class CPU extends ClockedChip {
       ["outM[16]", "writeM", "addressM[15]", "pc[15]"],
       "CPU",
       [],
-      ["pc", "addressM", "reset"],
+      ["pc", "addressM", "reset"]
     );
   }
 
   override tick(): void {
-    const [state, writeM] = cpuTick(this.cpuInput(), this._state);
+    const [state, writeM] = cpuTick(this.cpuInput(), this.state);
     this._state = state;
     this.out("writeM").pull(writeM ? HIGH : LOW);
     this.out("outM").busVoltage = this._state.ALU ?? 0;
   }
 
   override tock(): void {
-    if (!this._state) return; // Skip initial tock
-    const [output, state] = cpuTock(this.cpuInput(), this._state);
+    const [output, state] = cpuTock(this.cpuInput(), this.state);
     this._state = state;
 
     this.out("addressM").busVoltage = output.addressM ?? 0;

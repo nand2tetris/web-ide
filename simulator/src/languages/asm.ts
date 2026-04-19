@@ -149,7 +149,8 @@ function getAsmOp(opN: Node) {
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
   aInstruction(_at, name): AsmAInstruction {
-    return A(name.value, span(this.source));
+    if (typeof name.value === "string") return A(name.value, span(this.source));
+    else return A(parseInt(name.value.join(""), 10), span(this.source));
   },
   cInstruction(assignN, opN, jmpN): AsmCInstruction {
     const assign = getAsmAssign(assignN);
@@ -306,8 +307,14 @@ export function emit(asm: Asm): number[] {
     .filter((op): op is number => op !== undefined);
 }
 
-const A = (source: string | number, span?: Span): AsmAInstruction =>
-  typeof source === "string"
+const A = (source: string | number, span?: Span): AsmAInstruction => {
+  if (typeof source === "number" && (source > 32767 || source < 0)) {
+    throw createError(
+      `${source} is invalid for an A instruction (should be 0 to 32767)`,
+      span,
+    );
+  }
+  return typeof source === "string"
     ? {
         type: "A",
         label: source,
@@ -318,6 +325,7 @@ const A = (source: string | number, span?: Span): AsmAInstruction =>
         value: source,
         span,
       };
+};
 
 const C = (
   assign: ASSIGN_ASM,

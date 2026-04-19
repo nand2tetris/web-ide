@@ -1,0 +1,13 @@
+# Missing Tests Files - [#585](https://github.com/nand2tetris/web-ide/issues/585) [#532](https://github.com/nand2tetris/web-ide/issues/532)
+
+- Project 9 - Jack Compiler. Create Jack compiler (and emulator?) to run programs for chapter 9. No tests.
+- Project 10 - Provide XML files & comparison.
+- Project 11 - Same as project 9, but using students' compiler.
+- Project 12 - Add CPU tests for OS operations.
+
+# Custom Chips - [#486](https://github.com/nand2tetris/web-ide/issues/486) [#486](https://github.com/nand2tetris/web-ide/issues/486)
+
+- UI
+- Storage
+
+# Browser/Desktop Storage

@@ -1,0 +1,17 @@
+{
+  "name": "@nand2tetris/e2e",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0",
+    "@types/node": "^20.0.0"
+  },
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui"
+  }
+}

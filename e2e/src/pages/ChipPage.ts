@@ -68,12 +68,8 @@ export class ChipPage {
   }
 
   async fillHdlEditor(content: string): Promise<void> {
-    const inputArea = this._page.locator(
-      "._hdl_panel .monaco-editor textarea.inputarea",
-    );
-    await expect(inputArea).not.toHaveAttribute("readonly");
-    await this._page.locator("._hdl_panel .monaco-editor").click();
-    await this._page.keyboard.press("ControlOrMeta+a");
-    await this._page.keyboard.type(content);
+    const textarea = this._page.locator('[data-testid="editor-hdl"]');
+    await expect(textarea).toBeEnabled();
+    await textarea.fill(content);
   }
 }

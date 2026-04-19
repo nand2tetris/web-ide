@@ -1,11 +1,20 @@
 import { expect } from "@playwright/test";
 import { test } from "../../fixtures/chip.fixture";
 
-test("Not chip passes built-in test script with no comparison failures", async ({
+const NOT_HDL = `CHIP Not {
+    IN in;
+    OUT out;
+
+    PARTS:
+    Nand(a=in, b=in, out=out);
+}`;
+
+test("Not chip passes test script with HDL implementation", async ({
   chipPage,
 }) => {
   await chipPage.selectProject("01");
   await chipPage.selectChip("Not");
+  await chipPage.fillHdlEditor(NOT_HDL);
 
   await chipPage.testPanel.runTest();
 
@@ -18,6 +27,7 @@ test("Not chip evaluates correct output for all input combinations", async ({
 }) => {
   await chipPage.selectProject("01");
   await chipPage.selectChip("Not");
+  await chipPage.fillHdlEditor(NOT_HDL);
 
   // Initial state after load: in=0, chip auto-evals → out=NOT(0)=1
   expect(await chipPage.getOutput("out")).toBe(1);
@@ -36,7 +46,6 @@ test("Not chip evaluates correct output for all input combinations", async ({
 test("Not chip shows syntax error for malformed HDL", async ({ chipPage }) => {
   await chipPage.selectProject("01");
   await chipPage.selectChip("Not");
-  await chipPage.disableBuiltin();
   await chipPage.fillHdlEditor("@@@NOT_VALID_HDL@@@");
   await expect(
     chipPage.page.getByText("Syntax errors in the HDL code or test"),
@@ -46,6 +55,7 @@ test("Not chip shows syntax error for malformed HDL", async ({ chipPage }) => {
 test("Not chip resets pins to default values", async ({ chipPage }) => {
   await chipPage.selectProject("01");
   await chipPage.selectChip("Not");
+  await chipPage.fillHdlEditor(NOT_HDL);
 
   // Set in=1, eval → out=0
   await chipPage.setInput("in", 1);

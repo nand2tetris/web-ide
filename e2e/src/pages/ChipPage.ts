@@ -24,11 +24,15 @@ export class ChipPage {
     await this.disableBuiltin();
   }
 
-  async setInput(pin: string, value: 0 | 1): Promise<void> {
+  private pinButton(pin: string) {
     const row = this._page
       .locator("tr")
       .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
-    const button = row.locator('[data-testid="pin-0"]');
+    return row.locator('[data-testid="pin-0"]');
+  }
+
+  async setInput(pin: string, value: 0 | 1): Promise<void> {
+    const button = this.pinButton(pin);
     const currentText = await button.textContent();
     const current = parseInt(currentText?.trim() ?? "0");
     if (current !== value) {
@@ -37,10 +41,7 @@ export class ChipPage {
   }
 
   async getOutput(pin: string): Promise<number> {
-    const row = this._page
-      .locator("tr")
-      .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
-    const button = row.locator('[data-testid="pin-0"]');
+    const button = this.pinButton(pin);
     const text = await button.textContent();
     return parseInt(text?.trim() ?? "0");
   }
@@ -54,15 +55,16 @@ export class ChipPage {
   }
 
   async disableBuiltin(): Promise<void> {
-    const builtinSwitch = this._page.getByRole("switch", { name: "Builtin" });
-    if (await builtinSwitch.isChecked()) {
-      await builtinSwitch.click();
-    }
+    await this.setBuiltin(false);
   }
 
   async enableBuiltin(): Promise<void> {
+    await this.setBuiltin(true);
+  }
+
+  private async setBuiltin(enabled: boolean): Promise<void> {
     const builtinSwitch = this._page.getByRole("switch", { name: "Builtin" });
-    if (!await builtinSwitch.isChecked()) {
+    if ((await builtinSwitch.isChecked()) !== enabled) {
       await builtinSwitch.click();
     }
   }

@@ -10,11 +10,14 @@ const AND_HDL = `CHIP And {
     Not(in=x, out=out);
 }`;
 
+test.beforeEach(async ({ chipPage }) => {
+  await chipPage.selectProject("01");
+  await chipPage.selectChip("And");
+});
+
 test("And chip passes test script with HDL implementation", async ({
   chipPage,
 }) => {
-  await chipPage.selectProject("01");
-  await chipPage.selectChip("And");
   await chipPage.fillHdlEditor(AND_HDL);
 
   await chipPage.testPanel.runTest();
@@ -26,8 +29,6 @@ test("And chip passes test script with HDL implementation", async ({
 test("And chip evaluates correct output for all input combinations", async ({
   chipPage,
 }) => {
-  await chipPage.selectProject("01");
-  await chipPage.selectChip("And");
   await chipPage.fillHdlEditor(AND_HDL);
 
   // Initial state after load: a=0, b=0, chip auto-evals → out=AND(0,0)=0
@@ -50,8 +51,6 @@ test("And chip evaluates correct output for all input combinations", async ({
 });
 
 test("And chip shows syntax error for malformed HDL", async ({ chipPage }) => {
-  await chipPage.selectProject("01");
-  await chipPage.selectChip("And");
   await chipPage.fillHdlEditor("@@@NOT_VALID_HDL@@@");
   await expect(
     chipPage.page.getByText("Syntax errors in the HDL code or test"),
@@ -59,8 +58,6 @@ test("And chip shows syntax error for malformed HDL", async ({ chipPage }) => {
 });
 
 test("And chip resets pins to default values", async ({ chipPage }) => {
-  await chipPage.selectProject("01");
-  await chipPage.selectChip("And");
   await chipPage.fillHdlEditor(AND_HDL);
 
   // Set a=1, b=1, eval → out=1

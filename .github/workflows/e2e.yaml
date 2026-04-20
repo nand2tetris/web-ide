@@ -37,7 +37,9 @@ jobs:
         run: npm run playwright:install
 
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: |
+          npm run build
+          npm run test:e2e
         env:
           CI: true
 

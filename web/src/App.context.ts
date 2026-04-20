@@ -8,7 +8,10 @@ export type Theme = "light" | "dark" | "system";
 
 export function useMonaco() {
   const canUseMonaco = true;
-  const [wantsMonaco, setWantsMonaco] = useState(canUseMonaco);
+  const monacoParam = new URLSearchParams(window.location.search).get("monaco");
+  const [wantsMonaco, setWantsMonaco] = useState(
+    canUseMonaco && monacoParam !== "0",
+  );
   const toggleMonaco = useCallback(
     (pleaseUseMonaco: boolean) => {
       if (canUseMonaco && pleaseUseMonaco) {

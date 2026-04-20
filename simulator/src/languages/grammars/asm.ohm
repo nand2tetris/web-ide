@@ -8,7 +8,7 @@ ASM <: Base {
   identifier := (letter|underscore|dot|dollar|colon) (alnum|underscore|dot|dollar|colon)*
 
   label = openParen identifier closeParen
-  aInstruction = at (identifier | decNumber)
+  aInstruction = at (identifier | digit+)
   cInstruction = assign? op jmp?
 
   assignChar = "A" | "M" | "D"

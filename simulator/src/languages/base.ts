@@ -43,6 +43,12 @@ baseSemantics.addAttribute("value", {
   identifier(_, __): string {
     return this.sourceString;
   },
+  _iter(...children) {
+    return children.map((c) => c.value);
+  },
+  _terminal() {
+    return this.sourceString;
+  },
 });
 
 baseSemantics.addAttribute("name", {

@@ -46,16 +46,18 @@ export class ChipPage {
     return parseInt(text?.trim() ?? "0");
   }
 
+  private get clockButton() {
+    return this._page.getByRole("button", { name: /Clock/ });
+  }
+
   async tickClock(): Promise<void> {
-    const btn = this._page.getByRole("button", { name: /Clock/ });
-    await expect(btn).not.toContainText("+");
-    await btn.click();
+    await expect(this.clockButton).not.toContainText("+");
+    await this.clockButton.click();
   }
 
   async tockClock(): Promise<void> {
-    const btn = this._page.getByRole("button", { name: /Clock/ });
-    await expect(btn).toContainText("+");
-    await btn.click();
+    await expect(this.clockButton).toContainText("+");
+    await this.clockButton.click();
   }
 
   async evalChip(): Promise<void> {

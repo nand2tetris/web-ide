@@ -7,6 +7,7 @@ export class TestPanel {
     await this.page.click('[data-tooltip="Run"]');
     await this.page.waitForSelector('[data-tooltip="Run"]', {
       state: "visible",
+      timeout: 30_000,
     });
   }
 

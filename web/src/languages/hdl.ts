@@ -116,7 +116,7 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
   },
 };
 
-const HdlSignatures: Record<string, string> = {
+export const HdlSignatures: Record<string, string> = {
   Add16: "Add16(a= , b= , out= );",
   ALU: "ALU(x= , y= , zx= , nx= , zy= , ny= , f= , no= , out= , zr= , ng= );",
   And: "And(a= , b= , out= );",

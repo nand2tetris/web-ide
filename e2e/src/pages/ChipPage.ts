@@ -24,11 +24,23 @@ export class ChipPage {
     await this.disableBuiltin();
   }
 
-  private pinButton(pin: string) {
-    const row = this._page
+  private pinRow(pin: string) {
+    return this._page
       .locator("tr")
       .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
-    return row.locator('[data-testid="pin-0"]');
+  }
+
+  private pinButton(pin: string) {
+    return this.pinRow(pin).locator('[data-testid="pin-0"]');
+  }
+
+  private async busInput(pin: string) {
+    const row = this.pinRow(pin);
+    const ctrl = row.locator("button.pin-control");
+    if ((await ctrl.textContent()) === "dec") {
+      await ctrl.click();
+    }
+    return row.locator("input");
   }
 
   async setInput(pin: string, value: 0 | 1): Promise<void> {
@@ -84,28 +96,14 @@ export class ChipPage {
   }
 
   async setBusInput(pin: string, value: number): Promise<void> {
-    const row = this._page
-      .locator("tr")
-      .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
-    const ctrl = row.locator("button.pin-control");
-    if ((await ctrl.textContent()) === "dec") {
-      await ctrl.click();
-    }
-    await row.locator("input").fill(String(value));
+    const input = await this.busInput(pin);
+    await input.fill(String(value));
   }
 
   async getBusOutput(pin: string): Promise<number> {
-    const row = this._page
-      .locator("tr")
-      .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
-    const ctrl = row.locator("button.pin-control");
-    if ((await ctrl.textContent()) === "dec") {
-      await ctrl.click();
-    }
-    const input = row.locator("input");
+    const input = await this.busInput(pin);
     await expect(input).not.toHaveValue("");
-    const text = await input.inputValue();
-    return parseInt(text, 10);
+    return parseInt(await input.inputValue(), 10);
   }
 
   async fillHdlEditor(content: string): Promise<void> {

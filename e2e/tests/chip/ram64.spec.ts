@@ -5,14 +5,11 @@ import { RamChipPage } from "../../src/pages/RamChipPage";
 const MID = 31;
 const MAX = 63;
 
-let ram: RamChipPage;
-
 test.beforeEach(async ({ chipPage }) => {
   await chipPage.selectProject("03");
   await chipPage.selectChip("RAM64");
   await chipPage.enableBuiltin();
   await chipPage.resetTest();
-  ram = new RamChipPage(chipPage);
 });
 
 test("RAM64 passes test script", async ({ chipPage }) => {
@@ -21,7 +18,8 @@ test("RAM64 passes test script", async ({ chipPage }) => {
   expect(await chipPage.testPanel.getFailureCount()).toBe(0);
 });
 
-test("RAM64 writes and reads distinct addresses", async () => {
+test("RAM64 writes and reads distinct addresses", async ({ chipPage }) => {
+  const ram = new RamChipPage(chipPage);
   await ram.write(0, 1111);
   await ram.write(MID, 2222);
   await ram.write(MAX, 3333);

@@ -69,6 +69,31 @@ export class ChipPage {
     }
   }
 
+  async setBusInput(pin: string, value: number): Promise<void> {
+    const row = this._page
+      .locator("tr")
+      .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
+    const ctrl = row.locator("button.pin-control");
+    if ((await ctrl.textContent()) === "dec") {
+      await ctrl.click();
+    }
+    await row.locator("input").fill(String(value));
+  }
+
+  async getBusOutput(pin: string): Promise<number> {
+    const row = this._page
+      .locator("tr")
+      .filter({ has: this._page.locator(`td:text-is("${pin}")`) });
+    const ctrl = row.locator("button.pin-control");
+    if ((await ctrl.textContent()) === "dec") {
+      await ctrl.click();
+    }
+    const input = row.locator("input");
+    await expect(input).not.toHaveValue("");
+    const text = await input.inputValue();
+    return parseInt(text, 10);
+  }
+
   async fillHdlEditor(content: string): Promise<void> {
     const textarea = this._page.locator('[data-testid="editor-hdl"]');
     await expect(textarea).toBeEnabled();

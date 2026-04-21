@@ -20,7 +20,6 @@ export class ChipPage {
     await this._page.selectOption('[data-testid="chip-picker"]', {
       label: name,
     });
-    // Start without builtin
     await this.disableBuiltin();
   }
 
@@ -55,7 +54,7 @@ export class ChipPage {
   async getOutput(pin: string): Promise<number> {
     const button = this.pinButton(pin);
     const text = await button.textContent();
-    return parseInt(text?.trim() ?? "0");
+    return Number(text ?? "0");
   }
 
   private get clockButton() {
@@ -78,6 +77,7 @@ export class ChipPage {
 
   async resetTest(): Promise<void> {
     await this._page.click('[data-tooltip="Reset"]');
+    await expect(this.clockButton).toHaveText(/Clock:\s*0/);
   }
 
   async disableBuiltin(): Promise<void> {

@@ -150,7 +150,7 @@ export const TestPanel = ({
     }
   }, [filePicker, setStatus, fs, setPath, setName, setTst, setCmp]);
 
-  const outputLineCount = out.split("\n").filter(Boolean).length;
+  const outputLineCount = (out.match(/\n/g)??[]).length;
 
   const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();
 

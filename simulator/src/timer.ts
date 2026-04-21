@@ -7,8 +7,11 @@ const clock = Clock.get();
 const BUDGET = 8; // ms allowed per tick
 
 export abstract class Timer {
+  stepsTaken = 0;
+
   frame() {
     this.tick();
+    this.stepsTaken++;
     this.finishFrame();
   }
 
@@ -68,6 +71,7 @@ export abstract class Timer {
       const startTime = performance.now();
       while (!done && steps-- > 0) {
         done = await this.tick();
+        this.stepsTaken++;
       }
       const endTime = performance.now();
 
@@ -86,6 +90,7 @@ export abstract class Timer {
   };
 
   start() {
+    this.stepsTaken = 0;
     this.#running = true;
     this.#lastUpdate = Date.now() - this.speed;
     this.#run();

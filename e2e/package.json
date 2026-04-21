@@ -11,6 +11,7 @@
     "@types/node": "^20.0.0"
   },
   "scripts": {
+    "flakes": "playwright test --repeat-each 10",
     "test": "playwright test",
     "test:ui": "playwright test --ui"
   }

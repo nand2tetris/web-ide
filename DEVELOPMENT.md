@@ -78,6 +78,9 @@ E2E tests live in `e2e/` and run with Playwright.
 | `npm test -w e2e -- --headed` | Run with a visible browser window |
 | `npm test -w e2e -- --ui` | Open Playwright UI mode for interactive debugging |
 | `npm test -w e2e -- --debug` | Run with Playwright inspector attached |
+| `npm run -w e2e flakes` | Repeat each test 10 times to idenfity flakes.
+
+Pass `-- --grep "Tests"` to any of these to limit which tests are executed.
 
 When `npm run start` is already running, `npm run test:e2e` reuses the existing server (faster). In CI (`CI=true`), it always starts a fresh server.
 

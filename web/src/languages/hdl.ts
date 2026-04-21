@@ -116,7 +116,7 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
   },
 };
 
-const HdlSignatures = {
+export const HdlSignatures: Record<string, string> = {
   Add16: "Add16(a= , b= , out= );",
   ALU: "ALU(x= , y= , zx= , nx= , zy= , ny= , f= , no= , out= , zr= , ng= );",
   And: "And(a= , b= , out= );",
@@ -155,6 +155,55 @@ const HdlSignatures = {
   Screen: "Screen(in= , load= , address= , out= );",
   Xor: "Xor(a= , b= , out= );",
 };
+
+const BuiltinChips = [...(HdlLanguage.chips as string[])];
+const BuiltinSignatures = { ...HdlSignatures };
+
+let customChipsAdded = false;
+
+export function registerCustomChip(name: string, signature: string) {
+  // Prevent re-registering the built-in chips or overriding them
+  if (BuiltinChips.includes(name)) {
+    return false;
+  }
+
+  let changed = false;
+  const chips = HdlLanguage.chips as string[];
+
+  if (!chips.includes(name)) {
+    chips.push(name);
+    changed = true;
+  }
+  if (HdlSignatures[name] !== signature) {
+    HdlSignatures[name] = signature;
+    changed = true;
+  }
+
+  if (changed) {
+    customChipsAdded = true;
+  }
+  return changed;
+}
+
+export function resetCustomChips() {
+  // No custom chips, just return
+  if (!customChipsAdded) {
+    return false;
+  }
+
+  HdlLanguage.chips = [...BuiltinChips];
+
+  // Reset Signatures
+  const currentKeys = Object.keys(HdlSignatures);
+  for (const key of currentKeys) {
+    delete HdlSignatures[key];
+  }
+  Object.assign(HdlSignatures, BuiltinSignatures);
+
+  customChipsAdded = false;
+
+  return true;
+}
 
 export const HdlSnippets = {
   provideCompletionItems: () => {

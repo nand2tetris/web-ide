@@ -23,9 +23,12 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
+import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
 import { TestPanel } from "src/shell/test_panel";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
+import { registerCustomChip, resetCustomChips } from "../languages/hdl";
+import { reloadHdlLanguage } from "../languages/loader";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 import { zip } from "../shell/zip";
@@ -55,6 +58,57 @@ export const Chip = () => {
       setTstDir(tstPath?.split("/").slice(0, -1).join("/"));
     }
   }, [tstPath]);
+
+  useEffect(() => {
+    if (!tstDir) return;
+    // Guard against race conditions when changing project
+    let active = true;
+
+    const scanAndRegister = async () => {
+      const files = await actions.getProjectFiles();
+      let changed = resetCustomChips();
+
+      for (const file of files) {
+        const chipNameFromPath = file.name.split("/").pop()?.replace(".hdl", "");
+
+        if (chipNameFromPath && hasBuiltinChip(chipNameFromPath)) {
+          continue;
+        }
+
+        const content = await file.content;
+        const parsed = HDL.parse(content);
+        if (isErr(parsed)) {
+          continue;
+        }
+
+        const hdl = Ok(parsed);
+        const chipName = hdl.name.value;
+
+        if (hasBuiltinChip(chipName)) {
+          continue;
+        }
+
+        const ins = hdl.ins.map(({ pin }: { pin: string }) => pin.toString());
+        const outs = hdl.outs.map(({ pin }: { pin: string }) => pin.toString());
+
+        const pins = [...ins, ...outs];
+        const signature = `${chipName}(${pins.map((p) => `${p}= `).join(", ")});`;
+
+        if (registerCustomChip(chipName, signature)) {
+          changed = true;
+        }
+      }
+
+      if (changed && active) {
+        reloadHdlLanguage();
+      }
+    };
+
+    scanAndRegister();
+    
+    // Cleanup function
+    return () => { active = false; };
+  }, [tstDir, actions]);
 
   useEffect(() => {
     setTool("chip");

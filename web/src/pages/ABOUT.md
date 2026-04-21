@@ -2,7 +2,8 @@
 teaching of Nand to Tetris courses. It includes the following tools:
 
 **Hardware simulator:** Used to create chips. Features a built-in HDL editor and all the necessary
-services for simulating and testing chips. Relevant Nand to Tetris projects: 1, 2, 3, 5.
+services for simulating and testing chips. If the user enables PC storage, custom chips can be loaded 
+into other HDL files within the same project. Relevant Nand to Tetris projects: 1, 2, 3, 5.
 
 **CPU Emulator:** Emulates the Hack computer (CPU, RAM, ROM, Screen, Keyboard). Allows
 loading the computer with machine language code stored in a file, or entering machine language

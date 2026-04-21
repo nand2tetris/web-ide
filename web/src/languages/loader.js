@@ -22,7 +22,6 @@ let lock = false;
 export async function registerLanguages() {
   if (lock) return;
   lock = true;
-  lock = true;
   const { loader } = await import("@monaco-editor/react");
   const { languages } = await loader.init();
   for (const [id, language] of Object.entries(LANGUAGES)) {
@@ -34,4 +33,10 @@ export async function registerLanguages() {
     }
   }
   lock = false;
+}
+
+export async function reloadHdlLanguage() {
+  const { loader } = await import("@monaco-editor/react");
+  const { languages } = await loader.init();
+  languages.setMonarchTokensProvider("hdl", HdlLanguage);
 }

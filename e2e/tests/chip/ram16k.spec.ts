@@ -13,8 +13,8 @@ test.beforeEach(async ({ chipPage }) => {
 });
 
 test("RAM16K passes test script", async ({ chipPage }) => {
-  test.setTimeout(60_000);
-  await chipPage.testPanel.runTest();
+  test.setTimeout(30_000);
+  await chipPage.testPanel.runTest({ stuckTimeoutMs: 15_000 });
   expect(await chipPage.testPanel.getFailureCount()).toBe(0);
 });
 

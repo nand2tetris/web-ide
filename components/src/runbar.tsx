@@ -20,6 +20,7 @@ export const Runbar = (props: {
   children?: ReactNode;
   overrideTooltips?: Partial<RunbarTooltipOverrides>;
   onSpeedChange?: (speed: RunSpeed) => void;
+  outputLineCount?: number;
 }) => {
   const runner = useTimer(props.runner);
   const [speedValue, setSpeed] = useStateInitializer(props.speed ?? 2);
@@ -111,6 +112,12 @@ export const Runbar = (props: {
           {/* <Icon name="fast_rewind" /> */}⏮
         </button>
       </fieldset>
+      <div
+        style={{ display: "flex", gap: "0.5rem", alignItems: "center", pointerEvents: "none" }}
+      >
+        <span data-testid="test-step-count">Steps: {runner.state.stepsTaken}</span>
+        <span data-testid="test-output-count">Outputs: {props.outputLineCount ?? 0}</span>
+      </div>
       <div
         style={{
           display: "flex",

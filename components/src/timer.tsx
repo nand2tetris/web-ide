@@ -5,6 +5,7 @@ export interface TimerStoreState {
   steps: number;
   speed: number;
   running: boolean;
+  stepsTaken: number;
 }
 
 import { Dispatch, MutableRefObject, useMemo, useRef } from "react";
@@ -21,6 +22,7 @@ const makeTimerStore = (
     running: timer.running,
     speed: timer.speed,
     steps: timer.steps,
+    stepsTaken: timer.stepsTaken,
   };
 
   const finishFrame = timer.finishFrame.bind(timer);
@@ -34,6 +36,7 @@ const makeTimerStore = (
       state.running = timer.running;
       state.speed = timer.speed;
       state.steps = timer.steps;
+      state.stepsTaken = timer.stepsTaken;
     },
     setSteps(state: TimerStoreState, steps: number) {
       state.steps = steps;

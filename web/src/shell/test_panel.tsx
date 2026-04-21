@@ -150,6 +150,8 @@ export const TestPanel = ({
     }
   }, [filePicker, setStatus, fs, setPath, setName, setTst, setCmp]);
 
+  const outputLineCount = out.split("\n").filter(Boolean).length;
+
   const [diffDisplay, setDiffDisplay] = useState<DiffDisplay>();
 
   useEffect(() => {
@@ -228,6 +230,7 @@ export const TestPanel = ({
                   </>
                 }
                 runner={runner.current}
+                outputLineCount={outputLineCount}
                 disabled={disabled}
                 speed={speed}
                 onSpeedChange={onSpeedChange}

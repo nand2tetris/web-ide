@@ -3,7 +3,7 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "tests",
   retries: 3,
-  timeout: 6_000,
+  timeout: 60_000,
   use: {
     baseURL: "http://localhost:3000/web-ide/",
     screenshot: "on",

@@ -1,10 +1,13 @@
 import { expect, type Page } from "@playwright/test";
+import { EditorPanel } from "./EditorPanel";
 import { TestPanel } from "./TestPanel";
 
 export class ChipPage {
+  editor: EditorPanel;
   testPanel: TestPanel;
 
   constructor(private _page: Page) {
+    this.editor = new EditorPanel(_page);
     this.testPanel = new TestPanel(_page);
   }
 
@@ -107,8 +110,6 @@ export class ChipPage {
   }
 
   async fillHdlEditor(content: string): Promise<void> {
-    const textarea = this._page.locator('[data-testid="editor-hdl"]');
-    await expect(textarea).toBeEnabled();
-    await textarea.fill(content);
+    await this.editor.write(content, "hdl");
   }
 }

@@ -5,7 +5,7 @@ const test = base.extend<{ chipPage: ChipPage }>({
   chipPage: async ({ page }, use) => {
     await page.goto("chip");
     const chipPage = new ChipPage(page);
-    await chipPage.editor.toggleMonaco();
+    await chipPage.editor.disableMonaco();
     await use(chipPage);
   },
 });
@@ -39,7 +39,7 @@ test("toggleMonaco re-enables Monaco editor for tests that need it", async ({
   await chipPage.selectProject("01");
   await chipPage.selectChip("And");
 
-  await chipPage.editor.toggleMonaco();
+  await chipPage.editor.enableMonaco();
   await expect(chipPage.editor.monacoEditor).toBeVisible();
 
   await chipPage.editor.write(AND_HDL, "hdl");

@@ -1,5 +1,8 @@
 import type { Page } from "@playwright/test";
 
+const START_TIMEOUT_MS = 2_000;
+const POLL_INTERVAL_MS = 500;
+
 export class TestPanel {
   constructor(private page: Page) {}
 
@@ -9,7 +12,7 @@ export class TestPanel {
     await this.page.click('[data-tooltip="Run"]');
 
     await this.page.waitForSelector('[data-tooltip="Pause"]', {
-      timeout: 2_000,
+      timeout: START_TIMEOUT_MS,
     });
 
     let lastSnapshot = await this.#progressSnapshot();
@@ -31,7 +34,7 @@ export class TestPanel {
         );
       }
 
-      await this.page.waitForTimeout(500);
+      await this.page.waitForTimeout(POLL_INTERVAL_MS);
     }
   }
 

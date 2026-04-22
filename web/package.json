@@ -26,7 +26,7 @@
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/coverage-v8": "^4.1.5",
-    "immer": "^10.2.0",
+    "immer": "^11.1.4",
     "jszip": "^3.10.1",
     "make-plural": "^7.5.0",
     "ohm-js": "^17.5.0",

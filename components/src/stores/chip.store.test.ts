@@ -6,7 +6,7 @@ import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
-import { ImmPin } from "src/pinout.js";
+import { ImmPin } from "../pinout.js";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
 
 function testChipStore(

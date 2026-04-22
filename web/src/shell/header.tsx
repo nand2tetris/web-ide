@@ -4,8 +4,8 @@ import {
 } from "@nand2tetris/components/stores/base.context";
 import { RefObject, useContext, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { AppContext, useAppContext } from "src/App.context";
-import { PageContext } from "src/Page.context";
+import { AppContext, useAppContext } from "../App.context";
+import { PageContext } from "../Page.context";
 import { Icon } from "../pico/icon";
 import URLs, { LAST_ROUTE_KEY, TOOLS, URL } from "../urls";
 

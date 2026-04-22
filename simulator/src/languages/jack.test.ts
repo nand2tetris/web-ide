@@ -1,6 +1,6 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result";
+import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { Programs } from "@nand2tetris/projects/samples/project_11/index.js";
-import { JACK } from "./jack";
+import { JACK } from "./jack.js";
 
 describe("jack language", () => {
   describe.each(Object.keys(Programs))("%s", (program) => {

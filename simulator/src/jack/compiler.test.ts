@@ -1,6 +1,6 @@
 import { Programs } from "@nand2tetris/projects/samples/project_11/index.js";
-import { JACK } from "../languages/jack";
-import { Compiler, compile } from "./compiler";
+import { JACK } from "../languages/jack.js";
+import { Compiler, compile } from "./compiler.js";
 
 function parse(code: string, rule: string) {
   return JACK.semantics(JACK.parser.match(code, rule));

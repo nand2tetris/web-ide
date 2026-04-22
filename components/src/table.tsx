@@ -1,5 +1,5 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
-import { TranslatorSymbol } from "./stores/asm.store";
+import { TranslatorSymbol } from "./stores/asm.store.js";
 
 export const Table = ({
   values = [],

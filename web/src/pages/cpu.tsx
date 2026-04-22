@@ -1,3 +1,4 @@
+import { Format } from "@nand2tetris/simulator/cpu/memory.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
@@ -9,7 +10,7 @@ import { Trans } from "@lingui/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { isPath } from "src/shell/file_select";
+import { isPath } from "../shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Accordian, Panel } from "../shell/panel";
@@ -142,7 +143,7 @@ export const CPU = () => {
         highlight={state.sim.PC}
         format={state.config.romFormat}
         fileSelect={loadFile}
-        onSetFormat={(format) => {
+        onSetFormat={(format: Format) => {
           dispatch.current({
             action: "updateConfig",
             payload: { romFormat: format },
@@ -160,7 +161,7 @@ export const CPU = () => {
         format={state.config.ramFormat}
         excludedFormats={["asm"]}
         onChange={onMemoryChange}
-        onSetFormat={(format) => {
+        onSetFormat={(format: Format) => {
           dispatch.current({
             action: "updateConfig",
             payload: { ramFormat: format },

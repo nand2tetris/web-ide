@@ -5,7 +5,7 @@ import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
 
 import { useDialog } from "@nand2tetris/components/dialog";
-import { PageContext } from "src/Page.context";
+import { PageContext } from "../Page.context";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
 import "./settings.scss";

@@ -24,7 +24,7 @@ import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
-import { TestPanel } from "src/shell/test_panel";
+import { TestPanel } from "../shell/test_panel";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { registerCustomChip, resetCustomChips } from "../languages/hdl";

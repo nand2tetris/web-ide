@@ -241,21 +241,17 @@
     "onLanguage:tst"
   ],
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.0.6",
+    "@davidsouther/jiffies": "^2.2.5",
     "@nand2tetris/simulator": "file:../simulator",
     "@types/error-cause": "^1.0.1",
-    "@types/node": "^16.11.41",
-    "@types/vscode": "^1.74.0",
+    "@types/node": "^20",
+    "@types/vscode": "^1.89",
     "@vscode/vsce": "^2.27.0",
-    "@vscode/webview-ui-toolkit": "^1.2.1",
-    "esbuild": "^0.15.18",
+    "@vscode/webview-ui-toolkit": "^1.4",
+    "esbuild": "^0.23",
     "ohm-js": "^17.1.0"
   },
-  "dependencies": {
-    "gh-pages": "6.1.1",
-    "react-scripts": "5.0.1"
-  },
   "optionalDependencies": {
-    "esbuild-windows-64": "^0.15.18"
+    "esbuild-windows-64": "^0.23.0"
   }
 }

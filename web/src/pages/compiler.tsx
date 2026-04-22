@@ -9,8 +9,8 @@ import {
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Editor } from "src/shell/editor";
-import { Tab, TabList } from "src/shell/tabs";
+import { Editor } from "../shell/editor";
+import { Tab, TabList } from "../shell/tabs";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Panel } from "../shell/panel";

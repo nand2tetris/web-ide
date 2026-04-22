@@ -1,7 +1,7 @@
 import { ALU } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { Chip } from "@nand2tetris/simulator/chip/chip.js";
 import { render, screen } from "@testing-library/react";
-import { makeVisualization, makeVisualizationsWithId } from "./visualizations";
+import { makeVisualization, makeVisualizationsWithId } from "./visualizations.js";
 
 describe("visualizations", () => {
   it("returns empty for chips with no parts", () => {

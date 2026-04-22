@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs";
+import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import {
   Err,
   isErr,
@@ -18,11 +18,11 @@ import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { ScreenScales } from "src/chips/screen.js";
-import { RunSpeed } from "src/runbar.js";
+import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
+import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 

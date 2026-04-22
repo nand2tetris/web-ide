@@ -4,7 +4,9 @@
     "outDir": "build",
     "rootDir": "src",
     "module": "CommonJS",
-    "tsBuildInfoFile": "build/.tsbuildinfo"
+    "moduleResolution": "bundler",
+    "tsBuildInfoFile": "build/.tsbuildinfo",
+    "types": ["node"]
   },
   "include": ["src"]
 }

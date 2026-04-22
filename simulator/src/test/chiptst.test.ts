@@ -1,4 +1,5 @@
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { describe, expect, it } from "vitest";
 import { Computer } from "../chip/builtins/computer/computer.js";
 import { Nand } from "../chip/builtins/logic/nand.js";
 import { TstRepeat } from "../languages/tst.js";

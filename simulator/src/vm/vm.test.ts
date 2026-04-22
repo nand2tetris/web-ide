@@ -6,6 +6,7 @@ import {
   NESTED_FUNCTION,
   STATIC,
 } from "@nand2tetris/projects/samples/vm/vm.js";
+import { describe, expect, test } from "vitest";
 import { VM } from "../languages/vm.js";
 import { Vm } from "./vm.js";
 

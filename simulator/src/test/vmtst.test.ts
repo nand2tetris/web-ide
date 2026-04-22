@@ -5,6 +5,7 @@ import {
 import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { VM_PROJECTS } from "@nand2tetris/projects/base.js";
 import { resetFiles } from "@nand2tetris/projects/full.js";
+import { describe, expect, test } from "vitest";
 import { TST } from "../languages/tst.js";
 import { VMTest } from "./vmtst.js";
 

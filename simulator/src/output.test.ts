@@ -1,4 +1,5 @@
 import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
+import { beforeEach, describe, expect, it } from "vitest";
 import { Output } from "./output.js";
 import { TestOutputInstruction } from "./test/instruction.js";
 import { Test } from "./test/tst.js";

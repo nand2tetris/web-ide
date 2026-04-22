@@ -18,9 +18,10 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "vitest run"
   },
   "devDependencies": {
+    "vitest": "^3.2.0",
     "@davidsouther/jiffies": "^2.2.5",
     "@nand2tetris/runner": "file:../runner",
     "@nand2tetris/simulator": "file:../simulator"

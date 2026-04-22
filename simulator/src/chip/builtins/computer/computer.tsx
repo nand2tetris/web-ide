@@ -254,6 +254,7 @@ export class CPU extends ClockedChip {
   }
 
   override tick(): void {
+    if (!this._state) return; // Skip initial tick before class fields are initialized
     const [state, writeM] = cpuTick(this.cpuInput(), this._state);
     this._state = state;
     this.out("writeM").pull(writeM ? HIGH : LOW);

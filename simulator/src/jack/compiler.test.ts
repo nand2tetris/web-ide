@@ -1,4 +1,5 @@
 import { Programs } from "@nand2tetris/projects/samples/project_11/index.js";
+import { describe, expect, it } from "vitest";
 import { JACK } from "../languages/jack.js";
 import { Compiler, compile } from "./compiler.js";
 

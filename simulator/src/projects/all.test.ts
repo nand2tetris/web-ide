@@ -16,6 +16,7 @@ import {
   ASM_SOLS,
 } from "@nand2tetris/projects/samples/project_06/index.js";
 import { ChipProjects as ChipProjectsSols } from "@nand2tetris/projects/testing/index.js";
+import { describe, expect, it } from "vitest";
 import { build } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { compare } from "../compare.js";

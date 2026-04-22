@@ -58,8 +58,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
     "concurrently": "^9.0.1",
-    "cross-env": "^7.0.3",
-    "shx": "^0.3.4"
+    "cross-env": "^10.1.0",
+    "shx": "^0.4.0"
   },
   "dependencies": {
     "typescript": "^6.0"

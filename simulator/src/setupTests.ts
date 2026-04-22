@@ -68,15 +68,16 @@ expect.extend({
     };
   },
   toHaveSucceeded(match: MatchResult) {
-    if (match.succeeded()) {
-      return { pass: true, message: () => "Match succeeded" };
-    } else {
+    if (match.failed()) {
       return { pass: false, message: () => match.message ?? "Match failed" };
     }
+    return { pass: true, message: () => "Match succeeded" };
   },
   toHaveFailed(match: MatchResult, message: string) {
     expect(match.failed()).toBe(true);
-    expect(match.shortMessage).toBe(message);
+    if (match.failed()) {
+      expect(match.shortMessage).toBe(message);
+    }
     return {
       pass: true,
       message: () => "Failed to parse with correct message",

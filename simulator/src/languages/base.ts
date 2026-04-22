@@ -95,11 +95,7 @@ export function makeParser<ResultType>(
   return function parse(source) {
     try {
       const match = grammar.match(source);
-      if (match.succeeded()) {
-        const parsed = semantics(match);
-        const parse = property(parsed);
-        return Ok(parse);
-      } else {
+      if (match.failed()) {
         return Err(
           createError(
             match.shortMessage ?? UNKNOWN_HDL_ERROR,
@@ -107,6 +103,9 @@ export function makeParser<ResultType>(
           ),
         );
       }
+      const parsed = semantics(match);
+      const parse = property(parsed);
+      return Ok(parse);
     } catch (e) {
       return Err(e as Error);
     }

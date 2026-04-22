@@ -241,15 +241,15 @@
     "onLanguage:tst"
   ],
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.2.5",
+    "@davidsouther/jiffies": "2.2.5",
     "@nand2tetris/simulator": "file:../simulator",
     "@types/error-cause": "^1.0.1",
-    "@types/node": "^20",
-    "@types/vscode": "^1.89",
+    "@types/node": "^20.19.39",
+    "@types/vscode": "^1.116.0",
     "@vscode/vsce": "^2.27.0",
     "@vscode/webview-ui-toolkit": "^1.4",
     "esbuild": "^0.23",
-    "ohm-js": "^17.1.0"
+    "ohm-js": "^17.5.0"
   },
   "optionalDependencies": {
     "esbuild-windows-64": "^0.23.0"

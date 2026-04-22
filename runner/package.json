@@ -25,9 +25,9 @@
     }
   },
   "dependencies": {
-    "@davidsouther/jiffies": "^2.2.5",
+    "@davidsouther/jiffies": "2.2.5",
     "@nand2tetris/projects": "file:../projects",
-    "@types/node": "^20.14.2"
+    "@types/node": "^20.19.39"
   },
   "scripts": {
     "build": "tsc"

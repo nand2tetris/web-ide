@@ -75,7 +75,7 @@ function App() {
             <PageContextProvider>
               <Settings />
               <FilePicker />
-              <Router basename={process.env.PUBLIC_URL}>
+              <Router basename={import.meta.env.BASE_URL}>
                 <Header />
                 <main className="flex flex-1">
                   <ErrorBoundary fallback={RenderError}>

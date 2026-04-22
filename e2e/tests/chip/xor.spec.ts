@@ -27,7 +27,7 @@ test("Xor chip passes test script with HDL implementation", async ({
   expect(failures).toBe(0);
 });
 
-test("Xor chip evaluates correct output for all input combinations", async ({
+test("Xor chip evaluates correct output for all input combinations", { tag: "@smoke" }, async ({
   chipPage,
 }) => {
   await chipPage.fillHdlEditor(XOR_HDL);

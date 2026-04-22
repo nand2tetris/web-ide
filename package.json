@@ -31,6 +31,7 @@
     "watch": "concurrently -k --restart-tries 3 \"npm run build -w components -- -w\" \"npm run build -w projects -- -w\" \"npm run build -w runner -- -w\" \"npm run build -w simulator -- -w\"",
     "test:ci": "cross-env CI=true npm test -w simulator && cross-env CI=true npm test -w components && cross-env CI=true npm test -w web",
     "test:e2e": "cross-env CI=true npm test -w e2e",
+    "test:e2e:smoke": "cross-env CI=true npm test -w e2e -- --grep @smoke",
     "playwright:install": "npm exec -w e2e -- playwright install chromium",
     "pretest": "npm run build",
     "test": "npm run test:ci",

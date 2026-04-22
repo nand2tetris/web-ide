@@ -17,9 +17,9 @@ function testChipStore(
   },
   storage: Record<string, string> = {},
 ) {
-  const dispatch: MutableRefObject<ChipStoreDispatch> = { current: jest.fn() };
+  const dispatch: MutableRefObject<ChipStoreDispatch> = { current: vi.fn() };
 
-  const setStatus = jest.fn();
+  const setStatus = vi.fn();
 
   const { initialState, actions, reducers } = makeChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
@@ -29,7 +29,7 @@ function testChipStore(
     false,
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
-  dispatch.current = jest.fn().mockImplementation(
+  dispatch.current = vi.fn().mockImplementation(
     // biome-ignore lint/suspicious/noExplicitAny: covariants are hard
     (command: { action: keyof typeof reducers; payload: any }) => {
       store.state = produce(store.state, (draft: typeof initialState) => {

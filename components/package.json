@@ -35,7 +35,6 @@
     "@testing-library/jest-dom": "^6.4.5",
     "@testing-library/react": "^16.0.0",
     "@types/error-cause": "^1.0.4",
-    "@types/jest": "^29.5.12",
     "@types/node": "^20.14.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -46,23 +45,17 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.23.1",
-    "react-scripts": "^5.0.1",
     "rxjs": "^7.8.1",
+    "vite": "^6.3.3",
+    "@vitejs/plugin-react": "^4.4.1",
+    "vitest": "^3.1.2",
+    "@vitest/coverage-v8": "^3.1.2",
     "sass": "^1.77.4",
     "source-map-explorer": "^2.5.3"
   },
   "scripts": {
     "build": "tsc",
     "postbuild": "shx rm -rf build/public && shx cp -r src/public/ build/public/",
-    "test": "react-scripts test"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2",
-      "(.*)\\.js$": "$1"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!@davidsouther)"
-    ]
+    "test": "vitest run"
   }
 }

@@ -60,7 +60,6 @@ test(
 TOOL_PAGES.forEach(({ path, sentinel }) => {
   test(
     `deep-link ${path} renders its sentinel`,
-    { tag: "@smoke" },
     async ({ page }) => {
       await page.goto(path.replace(/^\//, ""));
       await expect(page).toHaveURL(new RegExp(`${path}$`));
@@ -68,3 +67,19 @@ TOOL_PAGES.forEach(({ path, sentinel }) => {
     },
   );
 });
+
+test(
+  "en-PL pseudolocale renders Lingui macro strings pseudo-translated",
+  { tag: "@smoke" },
+  async ({ page }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem("/locale", "en-PL");
+    });
+
+    await page.goto("");
+    await page.locator('li[data-tooltip="Settings"]').click();
+
+    const dialogHeader = page.locator("dialog[open] article.settings-dialog header p");
+    await expect(dialogHeader).toHaveText("Śēţţĩńĝś");
+  },
+);

@@ -254,7 +254,7 @@ export class CPU extends ClockedChip {
   }
 
   override tick(): void {
-    if (!this._state) return; // Skip initial tick before class fields are initialized
+    if (!this._state) return; // Skip initial tick before class fields are set
     const [state, writeM] = cpuTick(this.cpuInput(), this._state);
     this._state = state;
     this.out("writeM").pull(writeM ? HIGH : LOW);
@@ -262,14 +262,14 @@ export class CPU extends ClockedChip {
   }
 
   override tock(): void {
-    if (!this._state) return; // Skip initial tock
+    if (!this._state) return; // Skip initial tock before class fields are set
     const [output, state] = cpuTock(this.cpuInput(), this._state);
     this._state = state;
 
     this.out("addressM").busVoltage = output.addressM ?? 0;
     this.out("outM").busVoltage = output.outM ?? 0;
     this.out("writeM").pull(output.writeM ? HIGH : LOW);
-    this.out("pc").busVoltage = this._state?.PC ?? 0;
+    this.out("pc").busVoltage = this._state.PC ?? 0;
   }
 
   private cpuInput(): CPUInput {

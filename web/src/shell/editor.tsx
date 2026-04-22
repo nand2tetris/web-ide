@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { type Grammar } from "ohm-js";
 import { CSSProperties, lazy, Suspense, useContext, useState } from "react";
 import { AppContext } from "../App.context";

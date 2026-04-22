@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 
-import { Trans, t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";

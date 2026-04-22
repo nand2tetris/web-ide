@@ -6,7 +6,7 @@ import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
 import { useContext, useEffect, useRef, useState } from "react";
 
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";

@@ -1,5 +1,5 @@
-import raw from "raw.macro";
 import Markdown from "../shell/markdown";
+import aboutContent from "./ABOUT.md?raw";
 
 const VERSION =
   document.querySelector("meta[name=version]")?.getAttribute("content") ??
@@ -14,7 +14,7 @@ export const About = () => {
   return (
     <div style={{ overflowY: "scroll" }}>
       <div className="container">
-        <Markdown>{raw("./ABOUT.md")}</Markdown>
+        <Markdown>{aboutContent}</Markdown>
         <p>
           <b>Version</b> <code>{version}</code>
         </p>

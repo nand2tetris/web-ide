@@ -6,7 +6,7 @@
     "tsBuildInfoFile": "build/.tsbuildinfo",
     "moduleResolution": "bundler",
     "module": "ESNext",
-    "types": ["wicg-file-system-access"]
+    "types": ["wicg-file-system-access", "vitest/globals"]
   },
   "include": ["src"]
 }

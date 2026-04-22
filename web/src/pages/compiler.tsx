@@ -1,5 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Trans, t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useDialog } from "@nand2tetris/components/dialog";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import {

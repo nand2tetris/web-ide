@@ -1,5 +1,7 @@
-jest.mock("@monaco-editor/react", () => {
-  const FakeEditor = jest.fn((props) => {
+import { vi } from "vitest";
+
+vi.mock("@monaco-editor/react", () => {
+  const FakeEditor = vi.fn((props) => {
     console.log(props);
     console.log("Used FakeEditor");
     return (

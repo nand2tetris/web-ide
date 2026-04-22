@@ -1,7 +1,7 @@
 import { useBaseContext } from "@nand2tetris/components/stores/base.context";
 import { DiffTable } from "@nand2tetris/components/difftable";
 import { runTests } from "@nand2tetris/simulator/projects/runner.js";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { ChangeEventHandler, useCallback, useState } from "react";
 import { AssignmentStubs } from "@nand2tetris/projects/base.js";
 import type { ParsedPath } from "path";

@@ -1,4 +1,5 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
+import type { CSSProperties } from "react";
 import { TranslatorSymbol } from "./stores/asm.store.js";
 
 export const Table = ({
@@ -42,7 +43,7 @@ const TableRow = ({
         <code
           style={{
             flex: "1",
-            ...rounded("none"),
+            ...(rounded("none") as CSSProperties),
             ...(highlight
               ? { background: "var(--mark-background-color)" }
               : {}),
@@ -59,7 +60,7 @@ const TableRow = ({
             flex: "1",
             textAlign: "right",
             padding: "3px",
-            ...rounded("none"),
+            ...(rounded("none") as CSSProperties),
             ...(highlight
               ? { background: "var(--mark-background-color)" }
               : {}),

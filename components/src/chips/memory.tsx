@@ -1,5 +1,6 @@
 import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
 import {
+  type CSSProperties,
   forwardRef,
   ReactNode,
   useCallback,
@@ -128,7 +129,7 @@ export const MemoryCell = ({
     {showLabel && (
       <code
         style={{
-          ...rounded("none"),
+          ...(rounded("none") as CSSProperties),
           ...(highlight ? { background: "var(--mark-background-color)" } : {}),
           whiteSpace: "pre",
         }}
@@ -138,7 +139,7 @@ export const MemoryCell = ({
     )}
     <code
       style={{
-        ...rounded("none"),
+        ...(rounded("none") as CSSProperties),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
         whiteSpace: "pre",
       }}
@@ -152,7 +153,7 @@ export const MemoryCell = ({
         flex: "1",
         textAlign: justifyLeft ? "left" : "right",
         color: "var(--text-color)",
-        ...rounded("none"),
+        ...(rounded("none") as CSSProperties),
         ...(highlight ? { background: "var(--mark-background-color)" } : {}),
       }}
     >

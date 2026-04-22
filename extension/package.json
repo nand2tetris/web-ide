@@ -246,7 +246,7 @@
     "@types/error-cause": "^1.0.1",
     "@types/node": "^20.19.39",
     "@types/vscode": "^1.116.0",
-    "@vscode/vsce": "^2.27.0",
+    "@vscode/vsce": "^3.9.1",
     "@vscode/webview-ui-toolkit": "^1.4",
     "esbuild": "^0.28.0",
     "ohm-js": "^17.5.0"

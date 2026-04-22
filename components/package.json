@@ -46,7 +46,7 @@
     "make-plural": "^7.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1",
+    "react-router-dom": "^7.14.2",
     "rxjs": "^7.8.1",
     "sass": "^1.99.0",
     "source-map-explorer": "^2.5.3",

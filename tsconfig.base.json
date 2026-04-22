@@ -4,8 +4,8 @@
     "composite": true,
 
     // Assume browser environment & esm
-    "lib": ["es2025", "DOM", "DOM.Iterable"],
-    "target": "es2025",
+    "lib": ["esnext", "DOM", "DOM.Iterable"],
+    "target": "esnext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "allowJs": true,

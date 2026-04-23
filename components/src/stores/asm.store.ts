@@ -28,8 +28,8 @@ import {
 import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { RunSpeed } from "src/runbar.js";
 import { useImmerReducer } from "../react.js";
+import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
 
 export interface TranslatorSymbol {

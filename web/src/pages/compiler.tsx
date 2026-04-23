@@ -1,5 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Trans, t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useDialog } from "@nand2tetris/components/dialog";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import {
@@ -9,8 +10,8 @@ import {
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Editor } from "src/shell/editor";
-import { Tab, TabList } from "src/shell/tabs";
+import { Editor } from "../shell/editor";
+import { Tab, TabList } from "../shell/tabs";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Panel } from "../shell/panel";

@@ -18,16 +18,17 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "jest"
+    "test": "vitest run"
   },
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.2.5",
+    "@davidsouther/jiffies": "2.2.5",
     "@nand2tetris/runner": "file:../runner",
-    "@nand2tetris/simulator": "file:../simulator"
+    "@nand2tetris/simulator": "file:../simulator",
+    "vitest": "^4.1.5"
   },
   "dependencies": {
-    "@types/node": "^20.14.2",
-    "@types/yargs": "^17.0.32",
-    "yargs": "^17.7.2"
+    "@types/node": "^25.6.0",
+    "@types/yargs": "^17.0.35",
+    "yargs": "^18.0.0"
   }
 }

@@ -1,11 +1,11 @@
-import raw from "raw.macro";
 import Markdown from "../../shell/markdown";
+import hardwareSimulatorGuide from "./HARDWARE_SIMULATOR.md?raw";
 
 const ChipGuide = () => {
   return (
     <div style={{ overflowY: "scroll" }}>
       <div className="container">
-        <Markdown>{raw("./HARDWARE_SIMULATOR.md")}</Markdown>
+        <Markdown>{hardwareSimulatorGuide}</Markdown>
       </div>
     </div>
   );

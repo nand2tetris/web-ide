@@ -7,6 +7,7 @@ import {
   Result,
 } from "@davidsouther/jiffies/lib/esm/result.js";
 import type { MatchResult } from "ohm-js";
+import { expect } from "vitest";
 import { Diff } from "./compare.js";
 
 interface CustomMatchers<R = unknown, T = unknown> {
@@ -23,20 +24,12 @@ interface CmpMatchers<R = unknown> {
   toHaveNoDiff(): R;
 }
 
-declare global {
-  // biome-ignore lint/style/noNamespace: add some setup stuff
-  namespace jest {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    type Expect = CustomMatchers;
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    interface Matchers<R, T = unknown>
-      extends CustomMatchers<R, T>,
-        OhmMatchers<R>,
-        CmpMatchers<R> {}
-    interface InverseAsymmetricMatchers extends CustomMatchers, OhmMatchers {}
-  }
+declare module "vitest" {
+  interface Assertion<T>
+    extends CustomMatchers<void, T>,
+      OhmMatchers<void>,
+      CmpMatchers<void> {}
+  interface AsymmetricMatchersContaining extends CustomMatchers, OhmMatchers {}
 }
 
 expect.extend({
@@ -75,15 +68,16 @@ expect.extend({
     };
   },
   toHaveSucceeded(match: MatchResult) {
-    if (match.succeeded()) {
-      return { pass: true, message: () => "Match succeeded" };
-    } else {
+    if (match.failed()) {
       return { pass: false, message: () => match.message ?? "Match failed" };
     }
+    return { pass: true, message: () => "Match succeeded" };
   },
   toHaveFailed(match: MatchResult, message: string) {
     expect(match.failed()).toBe(true);
-    expect(match.shortMessage).toBe(message);
+    if (match.failed()) {
+      expect(match.shortMessage).toBe(message);
+    }
     return {
       pass: true,
       message: () => "Failed to parse with correct message",

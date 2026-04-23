@@ -1,11 +1,12 @@
 import { i18n } from "@lingui/core";
-import { Trans, t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
 
 import { useDialog } from "@nand2tetris/components/dialog";
-import { PageContext } from "src/Page.context";
+import { PageContext } from "../Page.context";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
 import "./settings.scss";
@@ -258,7 +259,7 @@ export const Settings = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       window.open(
-                        process.env.PUBLIC_URL + "/user_guide/file_system.pdf",
+                        import.meta.env.BASE_URL + "user_guide/file_system.pdf",
                         "_blank",
                         "width=1000,height=800"
                       );

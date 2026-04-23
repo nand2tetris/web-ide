@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from "react";
 
-import { Trans, t } from "@lingui/macro";
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
 import Memory from "@nand2tetris/components/chips/memory";
 import { Screen } from "@nand2tetris/components/chips/screen.js";
@@ -8,13 +9,14 @@ import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { DEFAULT_TEST } from "@nand2tetris/components/stores/vm.store.js";
+import { Format } from "@nand2tetris/simulator/cpu/memory.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
-import { AppContext } from "src/App.context";
-import { isPath } from "src/shell/file_select";
+import { AppContext } from "../App.context";
+import { isPath } from "../shell/file_select";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
@@ -297,7 +299,7 @@ const VM = () => {
         memory={state.vm.RAM}
         initialAddr={256}
         format={state.config.ram1Format}
-        onSetFormat={(format) => {
+        onSetFormat={(format: Format) => {
           dispatch.current({
             action: "updateConfig",
             payload: { ram1Format: format },
@@ -310,7 +312,7 @@ const VM = () => {
         className="Stack"
         memory={state.vm.RAM}
         format={state.config.ram2Format}
-        onSetFormat={(format) => {
+        onSetFormat={(format: Format) => {
           dispatch.current({
             action: "updateConfig",
             payload: { ram2Format: format },

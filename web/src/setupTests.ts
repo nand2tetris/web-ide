@@ -1,12 +1,11 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
-// expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
-import "@testing-library/jest-dom";
-// import "@nand2tetris/simulator/setupTests.js";
+import "@testing-library/jest-dom/vitest";
 import { i18n } from "@lingui/core";
+import * as matchers from "@testing-library/jest-dom/matchers";
 import { en } from "make-plural/plurals";
+import { expect } from "vitest";
 import { messages } from "./locales/en/messages.mjs";
+
+expect.extend(matchers);
 
 i18n.load("en", messages);
 i18n.loadLocaleData({

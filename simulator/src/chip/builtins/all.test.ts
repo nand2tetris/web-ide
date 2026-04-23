@@ -6,6 +6,7 @@ import { Ok, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { ChipProjects } from "@nand2tetris/projects/full.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
+import { describe, expect, it } from "vitest";
 import { compare } from "../../compare.js";
 import { CMP, Cmp } from "../../languages/cmp.js";
 import { HDL, HdlParse } from "../../languages/hdl.js";

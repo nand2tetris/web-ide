@@ -12,7 +12,7 @@ const ASKED = [YES, NO];
 
 let stop = false;
 
-export const GA4_ID = process.env.GA4_ID ?? "G-0VTR5BJFQP";
+export const GA4_ID = import.meta.env.VITE_GA4_ID ?? "G-0VTR5BJFQP";
 
 export function startTracking() {
   ReactGA.initialize(GA4_ID);

@@ -5,7 +5,7 @@ export default defineConfig({
   retries: 3,
   timeout: 60_000,
   use: {
-    baseURL: "http://localhost:3000/web-ide/",
+    baseURL: "http://localhost:5173/web-ide/",
     screenshot: "on",
     trace: "on",
   },
@@ -18,7 +18,7 @@ export default defineConfig({
   webServer: {
     command: "npm run start -w web",
     cwd: "..",
-    url: "http://localhost:3000/web-ide",
+    url: "http://localhost:5173/web-ide/",
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

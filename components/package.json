@@ -8,7 +8,14 @@
   "homepage": "https://davidsouther.github.io/nand2tetris",
   "type": "module",
   "exports": {
-    "./*": "./build/*"
+    "./*.js": {
+      "types": "./build/*.d.ts",
+      "default": "./build/*.js"
+    },
+    "./*": {
+      "types": "./build/*.d.ts",
+      "default": "./build/*.js"
+    }
   },
   "typesVersions": {
     "*": {
@@ -21,41 +28,34 @@
     "@vscode/webview-ui-toolkit": "^1.4.0"
   },
   "devDependencies": {
-    "@davidsouther/jiffies": "^2.2.5",
+    "@davidsouther/jiffies": "2.2.5",
     "@monaco-editor/react": "^4.6.0",
     "@nand2tetris/projects": "file:../projects",
     "@nand2tetris/simulator": "file:../simulator",
-    "@testing-library/jest-dom": "^6.4.5",
-    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/error-cause": "^1.0.4",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.2",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/vscode": "^1.89.0",
-    "@types/wicg-file-system-access": "^2023.10.5",
-    "immer": "^10.1.1",
-    "make-plural": "^7.4.0",
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@types/vscode": "^1.116.0",
+    "@types/wicg-file-system-access": "^2023.10.7",
+    "@vitejs/plugin-react": "^5.2.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "immer": "^11.1.4",
+    "make-plural": "^7.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.23.1",
-    "react-scripts": "^5.0.1",
+    "react-router-dom": "^7.14.2",
     "rxjs": "^7.8.1",
-    "sass": "^1.77.4",
-    "source-map-explorer": "^2.5.3"
+    "sass": "^1.99.0",
+    "source-map-explorer": "^2.5.3",
+    "vite": "^7.3.2",
+    "vitest": "^4.1.5"
   },
   "scripts": {
     "build": "tsc",
     "postbuild": "shx rm -rf build/public && shx cp -r src/public/ build/public/",
-    "test": "react-scripts test"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2",
-      "(.*)\\.js$": "$1"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!@davidsouther)"
-    ]
+    "test": "vitest run"
   }
 }

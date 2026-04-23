@@ -1,4 +1,4 @@
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { Table } from "@nand2tetris/components/table";
@@ -12,7 +12,7 @@ import { Panel } from "../shell/panel";
 import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
-import { isPath } from "src/shell/file_select";
+import { isPath } from "../shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import URLs from "../urls";

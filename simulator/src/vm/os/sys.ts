@@ -1,5 +1,5 @@
 import { ERRNO } from "./errors.js";
-import { OS } from "./os";
+import { OS } from "./os.js";
 
 export class SysLib {
   private os: OS;

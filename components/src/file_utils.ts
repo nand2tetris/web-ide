@@ -1,4 +1,4 @@
-import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs";
+import { FileSystem, Stats } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
 
 interface TestFiles {

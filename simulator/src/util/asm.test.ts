@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ASSIGN, COMMANDS, JUMP } from "../cpu/alu.js";
 import { asm, makeC } from "./asm.js";
 

@@ -7,60 +7,49 @@
   "license": "ISC",
   "homepage": "https://nand2tetris.github.io/web-ide",
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "@davidsouther/jiffies": "^2.2.5",
-    "@lingui/cli": "^4.11.1",
-    "@lingui/macro": "^4.11.1",
-    "@lingui/react": "^4.11.1",
+    "@davidsouther/jiffies": "2.2.5",
+    "@lingui/cli": "^5.0.0",
+    "@lingui/macro": "^5.0.0",
+    "@lingui/react": "^5.0.0",
+    "@lingui/swc-plugin": "^6.0.0",
+    "@lingui/vite-plugin": "^5.0.0",
     "@monaco-editor/react": "^4.6.0",
     "@nand2tetris/components": "file:../components",
     "@nand2tetris/projects": "file:../projects",
     "@nand2tetris/simulator": "file:../simulator",
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@testing-library/jest-dom": "^6.4.5",
-    "@testing-library/react": "^16.0.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.5.2",
     "@types/error-cause": "^1.0.4",
-    "@types/jest": "^29.5.12",
-    "@types/node": "^20.14.2",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@types/vscode": "^1.89.0",
-    "@vscode/vsce": "^2.27.0",
-    "gh-pages": "^6.1.1",
-    "immer": "^10.1.1",
+    "@types/node": "^25.6.0",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react-swc": "^4.0.0",
+    "@vitest/coverage-v8": "^4.1.5",
+    "immer": "^11.1.4",
     "jszip": "^3.10.1",
-    "make-plural": "^7.4.0",
-    "ohm-js": "^17.1.0",
-    "raw-loader": "^4.0.2",
-    "raw.macro": "^0.5.0",
+    "make-plural": "^7.5.0",
+    "ohm-js": "^17.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-ga4": "^2.1.0",
-    "react-markdown": "^9.0.1",
-    "react-router-dom": "^6.23.1",
-    "react-scripts": "^5.0.1",
+    "react-ga4": "^3.0.1",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^7.14.2",
     "remark-gfm": "^4.0.0",
     "rxjs": "^7.8.1",
-    "sass": "^1.77.4",
+    "sass": "^1.99.0",
     "source-map-explorer": "^2.5.3",
-    "web-vitals": "^2.1.4"
+    "vite": "^8.0.9",
+    "vitest": "^4.1.5"
   },
   "scripts": {
-    "analyze": "source-map-explorer 'build/static/js/*.js'",
-    "preanalyze": "npm run map-build",
-    "start": "react-scripts start",
-    "build": "cross-env GENERATE_SOURCEMAP=false react-scripts build",
-    "map-build": "react-scripts build",
+    "start": "vite",
+    "build": "vite build",
     "postbuild": "node ./scripts/predeploy.js",
-    "preserve-pwa": "npm run build ; ln -s build web-ide",
-    "serve-pwa": "python3 -m http.server",
-    "test": "react-scripts test",
+    "test": "vitest run",
     "prebuild": "npm run extract && npm run lingui",
     "extract": "lingui extract",
-    "lingui": "lingui compile --namespace es",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "lingui": "lingui compile --namespace es"
   },
   "browserslist": {
     "production": [
@@ -94,14 +83,5 @@
       }
     ],
     "format": "po"
-  },
-  "jest": {
-    "moduleNameMapper": {
-      "^@nand2tetris/([^/]+)/(.*)": "<rootDir>/../node_modules/@nand2tetris/$1/build/$2",
-      "\\.css$": "identity-obj-proxy"
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!@davidsouther)"
-    ]
   }
 }

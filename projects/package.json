@@ -8,7 +8,14 @@
   "homepage": "https://davidsouther.github.io/nand2tetris",
   "type": "module",
   "exports": {
-    "./*": "./build/*"
+    "./*.js": {
+      "types": "./build/*.d.ts",
+      "default": "./build/*.js"
+    },
+    "./*": {
+      "types": "./build/*.d.ts",
+      "default": "./build/*.js"
+    }
   },
   "typesVersions": {
     "*": {
@@ -18,7 +25,7 @@
     }
   },
   "dependencies": {
-    "@davidsouther/jiffies": "^2.2.5"
+    "@davidsouther/jiffies": "2.2.5"
   },
   "scripts": {
     "build": "tsc"

@@ -1,5 +1,5 @@
 import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result";
-import { Trans } from "@lingui/macro";
+import { Trans } from "@lingui/react/macro";
 import {
   DecorationType,
   DiffDisplay,

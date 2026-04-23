@@ -17,5 +17,18 @@
       "onAutoForward": "notify"
     }
   },
+  "mounts": [
+    "source=n2t-npm-cache,target=/home/vscode/.npm,type=volume",
+    "source=n2t-playwright-cache,target=/home/vscode/.cache/ms-playwright,type=volume"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomejs.biome", "ms-playwright.playwright"],
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true
+      }
+    }
+  },
   "remoteUser": "vscode"
 }

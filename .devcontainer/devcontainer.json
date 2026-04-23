@@ -1,0 +1,13 @@
+{
+  "name": "nand2tetris web-ide",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "25",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "postCreateCommand": "npm ci",
+  "remoteUser": "vscode"
+}

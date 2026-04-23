@@ -9,5 +9,12 @@
     "ghcr.io/devcontainers/features/git:1": {}
   },
   "postCreateCommand": "npm ci",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite dev server",
+      "onAutoForward": "notify"
+    }
+  },
   "remoteUser": "vscode"
 }

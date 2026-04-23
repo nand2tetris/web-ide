@@ -8,7 +8,8 @@
     },
     "ghcr.io/devcontainers/features/git:1": {}
   },
-  "postCreateCommand": "npm ci",
+  "onCreateCommand": "sudo npx --yes playwright@1.52.0 install-deps chromium",
+  "postCreateCommand": "mkdir -p /home/vscode/.cache/ms-playwright && sudo chown -R vscode:vscode /home/vscode/.cache/ms-playwright && npm ci && npm run playwright:install",
   "forwardPorts": [5173],
   "portsAttributes": {
     "5173": {

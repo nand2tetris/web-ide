@@ -8,7 +8,7 @@ TypeScript npm workspaces monorepo implementing the full nand2tetris course (har
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Node | ≥22 | Runtime |
+| Node | ≥25 | Runtime |
 | npm | ≥10 | Package manager + workspaces |
 | TypeScript | ^5.9 | Language (composite project references) |
 | Biome | ^2.3 | Format + lint |

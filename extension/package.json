@@ -244,7 +244,7 @@
     "@davidsouther/jiffies": "2.2.5",
     "@nand2tetris/simulator": "file:../simulator",
     "@types/error-cause": "^1.0.1",
-    "@types/node": "^20.19.39",
+    "@types/node": "^25.6.0",
     "@types/vscode": "^1.116.0",
     "@vscode/vsce": "^3.9.1",
     "@vscode/webview-ui-toolkit": "^1.4",

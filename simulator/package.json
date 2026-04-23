@@ -28,7 +28,7 @@
     "@davidsouther/jiffies": "2.2.5",
     "@nand2tetris/projects": "file:../projects",
     "@nand2tetris/runner": "file:../runner",
-    "@types/node": "^20.19.39",
+    "@types/node": "^25.6.0",
     "ohm-js": "^17.5.0",
     "rxjs": "^7.8.1"
   },

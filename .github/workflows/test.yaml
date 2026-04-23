@@ -32,9 +32,12 @@ jobs:
         run: npm list
 
       - name: Install
-        run: npm install
+        run: npm ci
 
       - name: CI
-        run: npm run ci
+        run: |
+          npm run check
+          npm run build
+          npm run test
         env:
           CI: true

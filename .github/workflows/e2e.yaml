@@ -31,7 +31,7 @@ jobs:
         run: npm list
 
       - name: Install
-        run: npm install
+        run: npm ci
 
       - name: Install Playwright browsers
         run: npm run playwright:install

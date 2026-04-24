@@ -301,7 +301,7 @@ export const Settings = () => {
                             // Do NOT trigger upgradeFsAction here anymore
                           }}
                         />
-                        <Trans>Use PC storage</Trans>
+                        <Trans>Use Desktop Storage</Trans>
                       </label>
                     </div>
                     <div style={{ fontSize: "0.85rem", color: "#888", marginLeft: "1.8rem", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>

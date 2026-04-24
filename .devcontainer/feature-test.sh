@@ -33,9 +33,16 @@ in_container bash -lc "npm test"
 step "npm run start serves port 5173 inside the container"
 in_container bash -lc '
   set -e
+  killtree() {
+    local pid=$1
+    for child in $(pgrep -P "$pid" 2>/dev/null); do
+      killtree "$child"
+    done
+    kill "$pid" 2>/dev/null || true
+  }
   npm run start >/tmp/vite.log 2>&1 &
   VITE_PID=$!
-  trap "kill $VITE_PID 2>/dev/null || true" EXIT
+  trap "killtree $VITE_PID; true" EXIT
   for i in $(seq 1 60); do
     if curl --silent --fail --output /dev/null http://localhost:5173/; then
       echo "Vite responded on attempt $i"

@@ -1,6 +1,6 @@
 {
   "name": "nand2tetris web-ide",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "image": "mcr.microsoft.com/playwright:v1.59.1-jammy",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "25",
@@ -8,8 +8,7 @@
     },
     "ghcr.io/devcontainers/features/git:1": {}
   },
-  "onCreateCommand": "sudo npx --yes playwright@1.52.0 install-deps chromium",
-  "postCreateCommand": "mkdir -p /home/vscode/.cache/ms-playwright && sudo chown -R vscode:vscode /home/vscode/.cache/ms-playwright && npm ci && npm run playwright:install",
+  "postCreateCommand": "npm ci",
   "forwardPorts": [5173],
   "portsAttributes": {
     "5173": {
@@ -18,9 +17,13 @@
     }
   },
   "mounts": [
-    "source=n2t-npm-cache,target=/home/vscode/.npm,type=volume",
-    "source=n2t-playwright-cache,target=/home/vscode/.cache/ms-playwright,type=volume"
+    "source=n2t-npm-cache,target=/root/.npm,type=volume"
   ],
+  "containerEnv": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright",
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+  },
+  "runArgs": ["--ipc=host", "--init"],
   "customizations": {
     "vscode": {
       "extensions": ["biomejs.biome", "ms-playwright.playwright"],
@@ -29,6 +32,5 @@
         "editor.formatOnSave": true
       }
     }
-  },
-  "remoteUser": "vscode"
+  }
 }

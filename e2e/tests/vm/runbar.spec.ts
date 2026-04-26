@@ -8,7 +8,7 @@ add`;
 test("Student types SimpleAdd, steps through it, runs it, and observes the result in RAM", {tag: "@vm"}, async ({
   vmPage,
 }) => {
-  await vmPage.editor.write(SIMPLE_ADD_VM, "vm");
+  await vmPage.fillEditor(SIMPLE_ADD_VM);
 
   // Step through each of the three VM instructions and assert the
   // VM Structures panel reflects the working stack at each step.

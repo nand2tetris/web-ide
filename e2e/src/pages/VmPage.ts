@@ -1,13 +1,10 @@
 import { expect, type Locator, type Page } from "@playwright/test";
-import { EditorPanel } from "./EditorPanel";
 import { FilePicker } from "./FilePicker";
 
 export class VmPage {
-  editor: EditorPanel;
   filePicker: FilePicker;
 
   constructor(private _page: Page) {
-    this.editor = new EditorPanel(_page);
     this.filePicker = new FilePicker(_page);
   }
 
@@ -67,5 +64,11 @@ export class VmPage {
       (el) => el.nextElementSibling?.textContent?.trim() ?? "",
     );
     return Number(value);
+  }
+
+  async fillEditor(content: string): Promise<void> {
+    const textarea = this._page.locator('[data-testid="editor-vm"]');
+    await expect(textarea).toBeEnabled();
+    await textarea.fill(content);
   }
 }

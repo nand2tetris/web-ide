@@ -7,9 +7,8 @@ type VmFixtures = {
 
 export const test = base.extend<VmFixtures>({
   vmPage: async ({ page }, use) => {
-    await page.goto("vm");
+    await page.goto("vm?monaco=0");
     const vmPage = new VmPage(page);
-    await vmPage.editor.disableMonaco();
     await use(vmPage);
   },
 });

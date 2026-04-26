@@ -15,11 +15,16 @@ export class FilePicker {
   }
 
   async cd(segment: string): Promise<void> {
+    const before = (await this.cwdHeader.textContent()) ?? "";
+    const after = before === "/" ? `/${segment}` : `${before}/${segment}`;
     await this.entry(segment).dblclick();
+    await expect(this.cwdHeader).toHaveText(after);
   }
 
   async select(basename: string): Promise<void> {
-    await this.entry(basename).click();
+    const entry = this.entry(basename);
+    await entry.click();
+    await expect(entry).not.toHaveClass(/(?:^|\s)secondary(?:\s|$)/);
   }
 
   async confirm(): Promise<void> {
@@ -29,11 +34,27 @@ export class FilePicker {
     await expect(this.dialog).toBeHidden();
   }
 
-  private entry(name: string): Locator {
-    return this.dialog.getByRole("button", { name, exact: true });
+  private get cwdHeader(): Locator {
+    return this.dialog.locator("main > div > b");
   }
 
-  async selectPath(_pathSegments: string[]): Promise<void> {
-    throw new Error("not implemented");
+  private entry(name: string): Locator {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return this.dialog.locator(".files-container button").filter({
+      hasText: new RegExp(`^\\s*(?:folder|draft)\\s*${escaped}\\s*$`),
+    });
+  }
+
+  async selectPath(pathSegments: string[]): Promise<void> {
+    const directories = pathSegments.slice(0, -1);
+    const last = pathSegments[pathSegments.length - 1];
+    for (const segment of directories) {
+      const cwd = (await this.cwdHeader.textContent()) ?? "";
+      if (!cwd.endsWith(`/${segment}`)) {
+        await this.cd(segment);
+      }
+    }
+    await this.select(last);
+    await this.confirm();
   }
 }

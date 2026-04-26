@@ -1,6 +1,7 @@
 import { Trans } from "@lingui/react/macro";
+import { useStateInitializer } from "@nand2tetris/components/react";
 import { type Grammar } from "ohm-js";
-import { CSSProperties, lazy, Suspense, useContext, useState } from "react";
+import { CSSProperties, lazy, Suspense, useContext } from "react";
 import { AppContext } from "../App.context";
 
 import {
@@ -39,7 +40,7 @@ const Textarea = ({
   language: string;
   disabled?: boolean;
 }) => {
-  const [text, setText] = useState(value);
+  const [text, setText] = useStateInitializer(value);
   return (
     <textarea
       data-testid={`editor-${language}`}

@@ -14,16 +14,23 @@ export class FilePicker {
     await expect(this.dialog).toBeVisible();
   }
 
-  async cd(_segment: string): Promise<void> {
-    throw new Error("not implemented");
+  async cd(segment: string): Promise<void> {
+    await this.entry(segment).dblclick();
   }
 
-  async select(_basename: string): Promise<void> {
-    throw new Error("not implemented");
+  async select(basename: string): Promise<void> {
+    await this.entry(basename).click();
   }
 
   async confirm(): Promise<void> {
-    throw new Error("not implemented");
+    await this.dialog
+      .getByRole("button", { name: "Select", exact: true })
+      .click();
+    await expect(this.dialog).toBeHidden();
+  }
+
+  private entry(name: string): Locator {
+    return this.dialog.getByRole("button", { name, exact: true });
   }
 
   async selectPath(_pathSegments: string[]): Promise<void> {

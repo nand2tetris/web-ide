@@ -1,11 +1,14 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 import { EditorPanel } from "./EditorPanel";
+import { FilePicker } from "./FilePicker";
 
 export class VmPage {
   editor: EditorPanel;
+  filePicker: FilePicker;
 
   constructor(private _page: Page) {
     this.editor = new EditorPanel(_page);
+    this.filePicker = new FilePicker(_page);
   }
 
   get page(): Page {

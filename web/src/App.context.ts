@@ -1,10 +1,24 @@
 import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
 import { useDialog } from "@nand2tetris/components/dialog.js";
-import { createContext, useCallback, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
 import { useFilePicker } from "./shell/file_select";
 import { useTracking } from "./tracking";
 
 export type Theme = "light" | "dark" | "system";
+
+const THEME_KEY = "/theme";
+
+const isTheme = (v: unknown): v is Theme =>
+  v === "light" || v === "dark" || v === "system";
+
+function readStoredTheme(): Theme {
+  const stored = localStorage.getItem(THEME_KEY);
+  return isTheme(stored) ? stored : "system";
+}
+
+function writeStoredTheme(theme: Theme): void {
+  localStorage.setItem(THEME_KEY, theme);
+}
 
 export function useMonaco() {
   const canUseMonaco = true;
@@ -31,7 +45,11 @@ export function useMonaco() {
 }
 
 export function useAppContext(_fs: FileSystem = new FileSystem()) {
-  const [theme, setTheme] = useState<Theme>("system");
+  const [theme, setTheme] = useState<Theme>(readStoredTheme);
+
+  useEffect(() => {
+    writeStoredTheme(theme);
+  }, [theme]);
 
   return {
     monaco: useMonaco(),

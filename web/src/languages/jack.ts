@@ -1,4 +1,4 @@
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import * as monaco from "monaco-editor";
 import { base } from "./base";
 
 export const JackLanguage: monaco.languages.IMonarchLanguage = {

@@ -282,3 +282,32 @@ export const rect = `
 1110001100000001
 0000000000010111
 1110101010000111`;
+
+export const max_ram_tst = `// Tests Max.hack on the CPU emulator. Reads inputs from RAM[0] and RAM[1]
+// and asserts the maximum lands in RAM[2].
+
+load Max.hack,
+compare-to MaxRam.cmp,
+output-list RAM[0]%D2.6.2 RAM[1]%D2.6.2 RAM[2]%D2.6.2;
+
+set PC 0,
+set RAM[0] 3,
+set RAM[1] 5,
+set RAM[2] 0;
+repeat 14 {
+  ticktock;
+}
+output;
+
+set PC 0,
+set RAM[0] 23456,
+set RAM[1] 12345,
+set RAM[2] 0;
+repeat 14 {
+  ticktock;
+}
+output;`;
+
+export const max_ram_cmp = `|  RAM[0]  |  RAM[1]  |  RAM[2]  |
+|       3  |       5  |       5  |
+|   23456  |   12345  |   23456  |`;

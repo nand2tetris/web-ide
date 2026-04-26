@@ -70,11 +70,11 @@ test("Learner builds combinational, bus, and sequential chips across projects 01
   await chipPage.setBusInput("b", 0x5678);
   await chipPage.setInput("sel", 0);
   await chipPage.evalChip();
-  expect(await chipPage.getBusOutput("out")).toBe(0x1234);
+  await expect.poll(() => chipPage.getBusOutput("out")).toBe(0x1234);
 
   await chipPage.setInput("sel", 1);
   await chipPage.evalChip();
-  expect(await chipPage.getBusOutput("out")).toBe(0x5678);
+  await expect.poll(() => chipPage.getBusOutput("out")).toBe(0x5678);
 
   // Act 3: sequential (project 03, RAM8)
   await chipPage.selectProject("03");

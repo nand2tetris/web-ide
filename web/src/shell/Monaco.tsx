@@ -1,7 +1,7 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
 import { CompilationError, Span } from "@nand2tetris/simulator/languages/base";
 import { Action } from "@nand2tetris/simulator/types";
-import * as monacoT from "monaco-editor/esm/vs/editor/editor.api";
+import * as monacoT from "monaco-editor";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Decoration, HighlightType } from "./editor";

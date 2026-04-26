@@ -28,3 +28,4 @@ yarn-error.log*
 .playwright-mcp
 docs
 .tmp
+.worktrees

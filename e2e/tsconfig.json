@@ -1,15 +1,12 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "skipLibCheck": true,
-    "types": ["node"],
     "outDir": "build",
-    "rootDir": "."
+    "rootDir": ".",
+    "tsBuildInfoFile": "build/.tsbuildinfo",
+    "moduleResolution": "nodenext",
+    "module": "nodenext",
+    "types": ["node"],
   },
-  "include": [".", "fixtures", "src", "tests"]
+  "include": ["fixtures", "src", "tests"]
 }

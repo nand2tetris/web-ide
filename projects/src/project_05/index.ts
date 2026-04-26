@@ -27,6 +27,8 @@ export const CHIPS = {
   "ComputerMax.cmp": Computer.max_cmp,
   "ComputerRect.tst": Computer.rect_tst,
   "ComputerRect.cmp": Computer.rect_cmp,
+  "MaxRam.tst": Computer.max_ram_tst,
+  "MaxRam.cmp": Computer.max_ram_cmp,
   "Add.hack": Computer.add,
   "Max.hack": Computer.max,
   "Rect.hack": Computer.rect,

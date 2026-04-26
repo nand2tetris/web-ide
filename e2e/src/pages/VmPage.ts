@@ -23,6 +23,15 @@ export class VmPage {
     return this._page.locator("article.panel.program");
   }
 
+  async loadProjectFile(
+    projectId: "07" | "08",
+    name: string,
+    fileName: string,
+  ): Promise<void> {
+    await this.filePicker.open();
+    await this.filePicker.selectPath(["projects", projectId, name, fileName]);
+  }
+
   async step(): Promise<void> {
     await this.clickRunbarButton("Step");
   }

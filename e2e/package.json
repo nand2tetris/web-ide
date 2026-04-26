@@ -3,12 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": ">=25",
+    "node": ">=24",
     "npm": ">=10"
   },
   "devDependencies": {
-    "@playwright/test": "^1.52.0",
-    "@types/node": "^25.6.0"
+    "@playwright/test": "^1.52.0"
   },
   "scripts": {
     "flakes": "playwright test --repeat-each 10",

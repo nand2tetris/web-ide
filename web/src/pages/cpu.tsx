@@ -202,11 +202,11 @@ export const CPU = () => {
             <div>
               <dl>
                 <dt>PC</dt>
-                <dd>{state.sim.PC}</dd>
+                <dd data-testid="register-PC">{state.sim.PC}</dd>
                 <dt>A</dt>
-                <dd>{state.sim.A}</dd>
+                <dd data-testid="register-A">{state.sim.A}</dd>
                 <dt>D</dt>
-                <dd>{state.sim.D}</dd>
+                <dd data-testid="register-D">{state.sim.D}</dd>
               </dl>
             </div>
           </main>

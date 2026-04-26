@@ -95,7 +95,6 @@
       "beforeEach",
       "afterEach",
       "test",
-      "jest",
       "vi",
       "acquireVsCodeApi"
     ]

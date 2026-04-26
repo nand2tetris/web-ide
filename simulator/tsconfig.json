@@ -4,7 +4,7 @@
     "outDir": "build",
     "rootDir": "src",
     "tsBuildInfoFile": "build/.tsbuildinfo",
-    "types": ["jest", "node"]
+    "types": ["node"]
   },
   "include": ["src"]
 }

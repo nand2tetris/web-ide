@@ -1,7 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 export class FilePicker {
-  readonly dialog: Locator;
+  private readonly dialog: Locator;
   private readonly vmRunbar: Locator;
 
   constructor(private _page: Page) {

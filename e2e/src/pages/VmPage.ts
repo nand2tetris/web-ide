@@ -36,7 +36,20 @@ export class VmPage {
     await expect(this._page.getByText("Program halted")).toBeVisible();
   }
 
-  async readRam(_address: number): Promise<number> {
-    throw new Error("not implemented");
+  async readRam(address: number): Promise<number> {
+    const ramPanel = this._page.locator("article.panel.memory.RAM").first();
+    await ramPanel.locator("select").selectOption("dec");
+    const addrInput = ramPanel.getByPlaceholder("Addr");
+    await addrInput.fill(String(address));
+    await addrInput.press("Enter");
+    const indexCell = ramPanel
+      .locator("code:first-child")
+      .filter({ hasText: new RegExp(`^\\s*${address}\\s*$`) })
+      .first();
+    await expect(indexCell).toBeVisible();
+    const value = await indexCell.evaluate(
+      (el) => el.nextElementSibling?.textContent?.trim() ?? "",
+    );
+    return Number(value);
   }
 }

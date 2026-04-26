@@ -6,9 +6,6 @@
   "author": "David Souther <davidsouther@gmail.com>",
   "license": "ISC",
   "homepage": "https://nand2tetris.github.io/web-ide",
-  "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.6.1"
-  },
   "devDependencies": {
     "@davidsouther/jiffies": "2.2.5",
     "@lingui/cli": "^5.0.0",

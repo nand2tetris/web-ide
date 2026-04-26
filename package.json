@@ -62,7 +62,6 @@
     "shx": "^0.4.0"
   },
   "dependencies": {
-    "@types/node": "^25.6.0",
     "typescript": "^6.0"
   }
 }

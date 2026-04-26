@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { EditorPanel } from "./EditorPanel";
 
 export class VmPage {
@@ -13,23 +13,27 @@ export class VmPage {
   }
 
   get vmStructures(): Locator {
-    throw new Error("not implemented");
+    return this._page.locator("article.panel.vm");
+  }
+
+  private get vmRunbar(): Locator {
+    return this._page.locator("article.panel.program");
   }
 
   async step(): Promise<void> {
-    throw new Error("not implemented");
+    await this.vmRunbar.locator('[data-tooltip="Step"]').click();
   }
 
   async run(): Promise<void> {
-    throw new Error("not implemented");
+    await this.vmRunbar.locator('[data-tooltip="Run"]').click();
   }
 
   async reset(): Promise<void> {
-    throw new Error("not implemented");
+    await this.vmRunbar.locator('[data-tooltip="Reset"]').click();
   }
 
   async waitForHalt(): Promise<void> {
-    throw new Error("not implemented");
+    await expect(this._page.getByText("Program halted")).toBeVisible();
   }
 
   async readRam(_address: number): Promise<number> {

@@ -1,0 +1,36 @@
+{
+  "name": "nand2tetris web-ide",
+  "image": "mcr.microsoft.com/playwright:v1.59.1-jammy",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "25",
+      "nodeGypDependencies": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "postCreateCommand": "npm ci",
+  "forwardPorts": [5173],
+  "portsAttributes": {
+    "5173": {
+      "label": "Vite dev server",
+      "onAutoForward": "notify"
+    }
+  },
+  "mounts": [
+    "source=n2t-npm-cache,target=/root/.npm,type=volume"
+  ],
+  "containerEnv": {
+    "PLAYWRIGHT_BROWSERS_PATH": "/ms-playwright",
+    "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD": "1"
+  },
+  "runArgs": ["--ipc=host", "--init"],
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomejs.biome", "ms-playwright.playwright"],
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}

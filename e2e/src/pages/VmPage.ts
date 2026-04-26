@@ -21,15 +21,19 @@ export class VmPage {
   }
 
   async step(): Promise<void> {
-    await this.vmRunbar.locator('[data-tooltip="Step"]').click();
+    await this.clickRunbarButton("Step");
   }
 
   async run(): Promise<void> {
-    await this.vmRunbar.locator('[data-tooltip="Run"]').click();
+    await this.clickRunbarButton("Run");
   }
 
   async reset(): Promise<void> {
-    await this.vmRunbar.locator('[data-tooltip="Reset"]').click();
+    await this.clickRunbarButton("Reset");
+  }
+
+  private async clickRunbarButton(tooltip: string): Promise<void> {
+    await this.vmRunbar.locator(`[data-tooltip="${tooltip}"]`).click();
   }
 
   async waitForHalt(): Promise<void> {
@@ -37,7 +41,7 @@ export class VmPage {
   }
 
   async readRam(address: number): Promise<number> {
-    const ramPanel = this._page.locator("article.panel.memory.RAM").first();
+    const ramPanel = this._page.locator("article.panel.memory.RAM");
     await ramPanel.locator("select").selectOption("dec");
     const addrInput = ramPanel.getByPlaceholder("Addr");
     await addrInput.fill(String(address));

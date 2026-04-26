@@ -1,17 +1,21 @@
-import type { Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 const START_TIMEOUT_MS = 2_000;
 const POLL_INTERVAL_MS = 500;
 
 export class TestPanel {
-  constructor(private page: Page) {}
+  private readonly panel: Locator;
+
+  constructor(private page: Page) {
+    this.panel = page.locator("article._test_panel");
+  }
 
   async runTest(options?: { stuckTimeoutMs?: number }): Promise<void> {
     const stuckTimeout = options?.stuckTimeoutMs ?? 5_000;
 
-    await this.page.click('[data-tooltip="Run"]');
+    await this.panel.locator('[data-tooltip="Run"]').click();
 
-    await this.page.waitForSelector('[data-tooltip="Pause"]', {
+    await expect(this.panel.locator('[data-tooltip="Pause"]')).toBeVisible({
       timeout: START_TIMEOUT_MS,
     });
 
@@ -19,7 +23,7 @@ export class TestPanel {
     let lastProgressAt = Date.now();
 
     while (true) {
-      const pauseCount = await this.page
+      const pauseCount = await this.panel
         .locator('[data-tooltip="Pause"]')
         .count();
       if (pauseCount === 0) return;
@@ -39,8 +43,8 @@ export class TestPanel {
   }
 
   async #progressSnapshot(): Promise<string> {
-    const steps = this.page.locator('[data-testid="test-step-count"]');
-    const outputs = this.page.locator('[data-testid="test-output-count"]');
+    const steps = this.panel.locator('[data-testid="test-step-count"]');
+    const outputs = this.panel.locator('[data-testid="test-output-count"]');
     const [s, o] = await Promise.all([
       steps.textContent().catch(() => ""),
       outputs.textContent().catch(() => ""),
@@ -49,7 +53,7 @@ export class TestPanel {
   }
 
   async getFailureCount(): Promise<number> {
-    const paragraph = this.page.locator("p", {
+    const paragraph = this.panel.locator("p", {
       hasText: "comparison failure",
     });
     const count = await paragraph.count();

@@ -467,7 +467,7 @@ export const parsed = {
                   rest: [
                     {
                       op: "=",
-                      term: { termType: "numericLiteral", value: 81 },
+                      term: { termType: "numericLiteral", value: 113 },
                     },
                   ],
                 },
@@ -476,14 +476,14 @@ export const parsed = {
                     statementType: "letStatement",
                     name: {
                       value: "exit",
-                      span: { start: 2070, end: 2074, line: 57 },
+                      span: { start: 2071, end: 2075, line: 57 },
                     },
                     value: {
                       nodeType: "expression",
                       term: { termType: "keywordLiteral", value: "true" },
                       rest: [],
                     },
-                    span: { start: 2066, end: 2082, line: 57 },
+                    span: { start: 2067, end: 2083, line: 57 },
                   },
                 ],
                 else: [],
@@ -495,12 +495,12 @@ export const parsed = {
                   term: {
                     termType: "variable",
                     name: "key",
-                    span: { start: 2111, end: 2114, line: 58 },
+                    span: { start: 2112, end: 2115, line: 58 },
                   },
                   rest: [
                     {
                       op: "=",
-                      term: { termType: "numericLiteral", value: 90 },
+                      term: { termType: "numericLiteral", value: 122 },
                     },
                   ],
                 },
@@ -511,10 +511,10 @@ export const parsed = {
                       termType: "subroutineCall",
                       name: {
                         value: "square.decSize",
-                        span: { start: 2127, end: 2141, line: 58 },
+                        span: { start: 2129, end: 2143, line: 58 },
                       },
                       parameters: [],
-                      span: { start: 2127, end: 2143, line: 58 },
+                      span: { start: 2129, end: 2145, line: 58 },
                     },
                   },
                 ],
@@ -527,12 +527,12 @@ export const parsed = {
                   term: {
                     termType: "variable",
                     name: "key",
-                    span: { start: 2169, end: 2172, line: 59 },
+                    span: { start: 2171, end: 2174, line: 59 },
                   },
                   rest: [
                     {
                       op: "=",
-                      term: { termType: "numericLiteral", value: 88 },
+                      term: { termType: "numericLiteral", value: 120 },
                     },
                   ],
                 },
@@ -543,10 +543,10 @@ export const parsed = {
                       termType: "subroutineCall",
                       name: {
                         value: "square.incSize",
-                        span: { start: 2185, end: 2199, line: 59 },
+                        span: { start: 2188, end: 2202, line: 59 },
                       },
                       parameters: [],
-                      span: { start: 2185, end: 2201, line: 59 },
+                      span: { start: 2188, end: 2204, line: 59 },
                     },
                   },
                 ],
@@ -559,12 +559,12 @@ export const parsed = {
                   term: {
                     termType: "variable",
                     name: "key",
-                    span: { start: 2227, end: 2230, line: 60 },
+                    span: { start: 2230, end: 2233, line: 60 },
                   },
                   rest: [
                     {
                       op: "=",
-                      term: { termType: "numericLiteral", value: 131 },
+                      term: { termType: "numericLiteral", value: 81 },
                     },
                   ],
                 },
@@ -572,15 +572,15 @@ export const parsed = {
                   {
                     statementType: "letStatement",
                     name: {
-                      value: "direction",
-                      span: { start: 2244, end: 2253, line: 60 },
+                      value: "exit",
+                      span: { start: 2247, end: 2251, line: 60 },
                     },
                     value: {
                       nodeType: "expression",
-                      term: { termType: "numericLiteral", value: 1 },
+                      term: { termType: "keywordLiteral", value: "true" },
                       rest: [],
                     },
-                    span: { start: 2240, end: 2258, line: 60 },
+                    span: { start: 2243, end: 2259, line: 60 },
                   },
                 ],
                 else: [],
@@ -597,23 +597,22 @@ export const parsed = {
                   rest: [
                     {
                       op: "=",
-                      term: { termType: "numericLiteral", value: 133 },
+                      term: { termType: "numericLiteral", value: 90 },
                     },
                   ],
                 },
                 body: [
                   {
-                    statementType: "letStatement",
-                    name: {
-                      value: "direction",
-                      span: { start: 2305, end: 2314, line: 61 },
+                    statementType: "doStatement",
+                    call: {
+                      termType: "subroutineCall",
+                      name: {
+                        value: "square.decSize",
+                        span: { start: 2304, end: 2318, line: 61 },
+                      },
+                      parameters: [],
+                      span: { start: 2304, end: 2320, line: 61 },
                     },
-                    value: {
-                      nodeType: "expression",
-                      term: { termType: "numericLiteral", value: 2 },
-                      rest: [],
-                    },
-                    span: { start: 2301, end: 2319, line: 61 },
                   },
                 ],
                 else: [],
@@ -625,7 +624,105 @@ export const parsed = {
                   term: {
                     termType: "variable",
                     name: "key",
-                    span: { start: 2351, end: 2354, line: 62 },
+                    span: { start: 2346, end: 2349, line: 62 },
+                  },
+                  rest: [
+                    {
+                      op: "=",
+                      term: { termType: "numericLiteral", value: 88 },
+                    },
+                  ],
+                },
+                body: [
+                  {
+                    statementType: "doStatement",
+                    call: {
+                      termType: "subroutineCall",
+                      name: {
+                        value: "square.incSize",
+                        span: { start: 2362, end: 2376, line: 62 },
+                      },
+                      parameters: [],
+                      span: { start: 2362, end: 2378, line: 62 },
+                    },
+                  },
+                ],
+                else: [],
+              },
+              {
+                statementType: "ifStatement",
+                condition: {
+                  nodeType: "expression",
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2404, end: 2407, line: 63 },
+                  },
+                  rest: [
+                    {
+                      op: "=",
+                      term: { termType: "numericLiteral", value: 131 },
+                    },
+                  ],
+                },
+                body: [
+                  {
+                    statementType: "letStatement",
+                    name: {
+                      value: "direction",
+                      span: { start: 2421, end: 2430, line: 63 },
+                    },
+                    value: {
+                      nodeType: "expression",
+                      term: { termType: "numericLiteral", value: 1 },
+                      rest: [],
+                    },
+                    span: { start: 2417, end: 2435, line: 63 },
+                  },
+                ],
+                else: [],
+              },
+              {
+                statementType: "ifStatement",
+                condition: {
+                  nodeType: "expression",
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2465, end: 2468, line: 64 },
+                  },
+                  rest: [
+                    {
+                      op: "=",
+                      term: { termType: "numericLiteral", value: 133 },
+                    },
+                  ],
+                },
+                body: [
+                  {
+                    statementType: "letStatement",
+                    name: {
+                      value: "direction",
+                      span: { start: 2482, end: 2491, line: 64 },
+                    },
+                    value: {
+                      nodeType: "expression",
+                      term: { termType: "numericLiteral", value: 2 },
+                      rest: [],
+                    },
+                    span: { start: 2478, end: 2496, line: 64 },
+                  },
+                ],
+                else: [],
+              },
+              {
+                statementType: "ifStatement",
+                condition: {
+                  nodeType: "expression",
+                  term: {
+                    termType: "variable",
+                    name: "key",
+                    span: { start: 2528, end: 2531, line: 65 },
                   },
                   rest: [
                     {
@@ -639,14 +736,14 @@ export const parsed = {
                     statementType: "letStatement",
                     name: {
                       value: "direction",
-                      span: { start: 2368, end: 2377, line: 62 },
+                      span: { start: 2545, end: 2554, line: 65 },
                     },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 3 },
                       rest: [],
                     },
-                    span: { start: 2364, end: 2382, line: 62 },
+                    span: { start: 2541, end: 2559, line: 65 },
                   },
                 ],
                 else: [],
@@ -658,7 +755,7 @@ export const parsed = {
                   term: {
                     termType: "variable",
                     name: "key",
-                    span: { start: 2414, end: 2417, line: 63 },
+                    span: { start: 2591, end: 2594, line: 66 },
                   },
                   rest: [
                     {
@@ -672,14 +769,14 @@ export const parsed = {
                     statementType: "letStatement",
                     name: {
                       value: "direction",
-                      span: { start: 2431, end: 2440, line: 63 },
+                      span: { start: 2608, end: 2617, line: 66 },
                     },
                     value: {
                       nodeType: "expression",
                       term: { termType: "numericLiteral", value: 4 },
                       rest: [],
                     },
-                    span: { start: 2427, end: 2445, line: 63 },
+                    span: { start: 2604, end: 2622, line: 66 },
                   },
                 ],
                 else: [],
@@ -698,7 +795,7 @@ export const parsed = {
                         term: {
                           termType: "variable",
                           name: "key",
-                          span: { start: 2529, end: 2532, line: 66 },
+                          span: { start: 2706, end: 2709, line: 69 },
                         },
                         rest: [
                           {
@@ -716,7 +813,7 @@ export const parsed = {
                     statementType: "letStatement",
                     name: {
                       value: "key",
-                      span: { start: 2557, end: 2560, line: 67 },
+                      span: { start: 2734, end: 2737, line: 70 },
                     },
                     value: {
                       nodeType: "expression",
@@ -724,14 +821,14 @@ export const parsed = {
                         termType: "subroutineCall",
                         name: {
                           value: "Keyboard.keyPressed",
-                          span: { start: 2563, end: 2582, line: 67 },
+                          span: { start: 2740, end: 2759, line: 70 },
                         },
                         parameters: [],
-                        span: { start: 2563, end: 2584, line: 67 },
+                        span: { start: 2740, end: 2761, line: 70 },
                       },
                       rest: [],
                     },
-                    span: { start: 2553, end: 2585, line: 67 },
+                    span: { start: 2730, end: 2762, line: 70 },
                   },
                   {
                     statementType: "doStatement",
@@ -739,10 +836,10 @@ export const parsed = {
                       termType: "subroutineCall",
                       name: {
                         value: "moveSquare",
-                        span: { start: 2601, end: 2611, line: 68 },
+                        span: { start: 2778, end: 2788, line: 71 },
                       },
                       parameters: [],
-                      span: { start: 2601, end: 2613, line: 68 },
+                      span: { start: 2778, end: 2790, line: 71 },
                     },
                   },
                 ],
@@ -751,7 +848,7 @@ export const parsed = {
           },
           {
             statementType: "returnStatement",
-            span: { start: 2647, end: 2654, line: 71 },
+            span: { start: 2824, end: 2831, line: 74 },
           },
         ],
       },
@@ -859,7 +956,7 @@ label SquareGame_10
     goto SquareGame_10
 label SquareGame_11
     push local 0
-    push constant 81
+    push constant 113
     eq
     not
     if-goto SquareGame_13
@@ -870,7 +967,7 @@ label SquareGame_11
 label SquareGame_13
 label SquareGame_12
     push local 0
-    push constant 90
+    push constant 122
     eq
     not
     if-goto SquareGame_15
@@ -881,7 +978,7 @@ label SquareGame_12
 label SquareGame_15
 label SquareGame_14
     push local 0
-    push constant 88
+    push constant 120
     eq
     not
     if-goto SquareGame_17
@@ -892,59 +989,92 @@ label SquareGame_14
 label SquareGame_17
 label SquareGame_16
     push local 0
-    push constant 131
+    push constant 81
     eq
     not
     if-goto SquareGame_19
     push constant 1
-    pop this 1
+    neg
+    pop local 1
     goto SquareGame_18
 label SquareGame_19
 label SquareGame_18
     push local 0
-    push constant 133
+    push constant 90
     eq
     not
     if-goto SquareGame_21
-    push constant 2
-    pop this 1
+    push this 0
+    call Square.decSize 1
+    pop temp 0
     goto SquareGame_20
 label SquareGame_21
 label SquareGame_20
     push local 0
-    push constant 130
+    push constant 88
     eq
     not
     if-goto SquareGame_23
-    push constant 3
-    pop this 1
+    push this 0
+    call Square.incSize 1
+    pop temp 0
     goto SquareGame_22
 label SquareGame_23
 label SquareGame_22
     push local 0
-    push constant 132
+    push constant 131
     eq
     not
     if-goto SquareGame_25
-    push constant 4
+    push constant 1
     pop this 1
     goto SquareGame_24
 label SquareGame_25
 label SquareGame_24
+    push local 0
+    push constant 133
+    eq
+    not
+    if-goto SquareGame_27
+    push constant 2
+    pop this 1
+    goto SquareGame_26
+label SquareGame_27
 label SquareGame_26
+    push local 0
+    push constant 130
+    eq
+    not
+    if-goto SquareGame_29
+    push constant 3
+    pop this 1
+    goto SquareGame_28
+label SquareGame_29
+label SquareGame_28
+    push local 0
+    push constant 132
+    eq
+    not
+    if-goto SquareGame_31
+    push constant 4
+    pop this 1
+    goto SquareGame_30
+label SquareGame_31
+label SquareGame_30
+label SquareGame_32
     push local 0
     push constant 0
     eq
     not
     not
-    if-goto SquareGame_27
+    if-goto SquareGame_33
     call Keyboard.keyPressed 0
     pop local 0
     push pointer 0
     call SquareGame.moveSquare 1
     pop temp 0
-    goto SquareGame_26
-label SquareGame_27
+    goto SquareGame_32
+label SquareGame_33
     goto SquareGame_8
 label SquareGame_9
     push constant 0

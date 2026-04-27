@@ -1,5 +1,5 @@
 import { produce } from "immer";
-import { Dispatch, useEffect, useReducer, useState } from "react";
+import { Dispatch, useReducer, useState } from "react";
 
 export function useImmerReducer<
   T,
@@ -24,8 +24,13 @@ export function useImmerReducer<
 
 export function useStateInitializer<T>(init: T): [T, Dispatch<T>] {
   const [state, setState] = useState<T>(init);
-  useEffect(() => {
+  const [prevInit, setPrevInit] = useState<T>(init);
+  if (init !== prevInit) {
+    // Sync derived state during render so consumers (notably the Monaco editor
+    // path/value pair) never see a render where init has changed but state
+    // still holds the previous value.
+    setPrevInit(init);
     setState(init);
-  }, [init]);
+  }
   return [state, setState];
 }

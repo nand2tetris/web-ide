@@ -400,6 +400,18 @@ describe("debug frame views", () => {
 
     expect(vm.vmStack().length).toBe(1);
   });
+
+  test("entry frame `that` reflects memory at THAT, not the THAT pointer", () => {
+    const { instructions } = unwrap(VM.parse(FIBONACCI));
+    const vm = unwrap(Vm.build(instructions));
+    // Set the THAT pointer and the memory it points to so the two are easy
+    // to distinguish.
+    vm.memory.set(4, 12345);
+    vm.memory.set(12345, 7777);
+
+    const top = vm.vmStack()[0];
+    expect(top.that.values).toEqual([7777]);
+  });
 });
 
 test("buildFromFiles with no files returns a CompilationError", () => {

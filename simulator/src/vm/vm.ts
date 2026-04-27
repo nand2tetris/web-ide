@@ -922,7 +922,7 @@ export class Vm {
         that: {
           base: THAT,
           count: 1,
-          values: [this.memory.THAT],
+          values: [...this.memory.map((_, v) => v, THAT, THAT + 1)],
         },
         frame: {
           ARG,

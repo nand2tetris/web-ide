@@ -1,4 +1,4 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { vm as SIMPLE_FUNCTION } from "@nand2tetris/projects/project_08/20_simple_function.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm/fibonnaci.js";
 import {
@@ -399,5 +399,97 @@ describe("debug frame views", () => {
     const vm = unwrap(Vm.build(instructions));
 
     expect(vm.vmStack().length).toBe(1);
+  });
+});
+
+test("buildFromFiles with no files returns a CompilationError", () => {
+  const result = Vm.buildFromFiles([]);
+  if (!isErr(result)) throw new Error("expected Err result");
+  expect(Err(result).message).toMatch(/no\s+\.vm/i);
+});
+
+describe("Array.new / Array.dispose bridge to user Memory", () => {
+  test("Array.new dispatches to user Memory.alloc when supplied", () => {
+    const program = `
+function Memory.alloc 0
+push constant 4660
+return
+
+function Main.main 0
+push constant 7
+call Array.new 1
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const arrayNew = vm.functionMap["Array.new"];
+    expect(arrayNew).toBeDefined();
+    expect(
+      arrayNew.operations.some(
+        (op) => op.op === "call" && op.name === "Memory.alloc",
+      ),
+    ).toBe(true);
+  });
+
+  test("Array.dispose dispatches to user Memory.deAlloc when supplied", () => {
+    const program = `
+function Memory.deAlloc 0
+push constant 0
+return
+
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const arrayDispose = vm.functionMap["Array.dispose"];
+    expect(arrayDispose).toBeDefined();
+    expect(
+      arrayDispose.operations.some(
+        (op) => op.op === "call" && op.name === "Memory.deAlloc",
+      ),
+    ).toBe(true);
+  });
+
+  test("bridge is not injected when user supplies their own Array.new", () => {
+    const program = `
+function Memory.alloc 0
+push constant 4660
+return
+
+function Array.new 0
+push constant 999
+return
+
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const arrayNew = vm.functionMap["Array.new"];
+    expect(
+      arrayNew.operations.some(
+        (op) =>
+          op.op === "push" && op.segment === "constant" && op.offset === 999,
+      ),
+    ).toBe(true);
+  });
+
+  test("bridge is not injected when user does not supply Memory.alloc", () => {
+    const program = `
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    expect(vm.functionMap["Array.new"]).toBeUndefined();
+    expect(vm.functionMap["Array.dispose"]).toBeUndefined();
   });
 });

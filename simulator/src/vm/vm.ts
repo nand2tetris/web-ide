@@ -86,6 +86,34 @@ export const SYS_INIT: VmFunction = {
   ],
 };
 
+const ARRAY_NEW_BRIDGE: VmFunction = {
+  name: "Array.new",
+  labels: {},
+  nVars: 0,
+  opBase: 0,
+  operations: [
+    { op: "function", name: "Array.new", nVars: 0 },
+    { op: "push", segment: "argument", offset: 0 },
+    { op: "call", name: "Memory.alloc", nArgs: 1 },
+    { op: "return" },
+  ],
+};
+
+const ARRAY_DISPOSE_BRIDGE: VmFunction = {
+  name: "Array.dispose",
+  labels: {},
+  nVars: 0,
+  opBase: 0,
+  operations: [
+    { op: "function", name: "Array.dispose", nVars: 0 },
+    { op: "push", segment: "argument", offset: 0 },
+    { op: "call", name: "Memory.deAlloc", nArgs: 1 },
+    { op: "pop", segment: "temp", offset: 0 },
+    { op: "push", segment: "constant", offset: 0 },
+    { op: "return" },
+  ],
+};
+
 export interface ParsedVmFile {
   name: string;
   instructions: VmInstruction[];
@@ -279,13 +307,18 @@ export class Vm {
   }
 
   static buildFromFiles(files: ParsedVmFile[]): Result<Vm, CompilationError> {
+    if (files.length === 0) {
+      return Err(
+        createError("No .vm files to load. Compile your Jack files first."),
+      );
+    }
     let result = this.validateFiles(files);
     if (isErr(result)) {
       return result;
     }
     const instructions = files
       .map((file) => file.instructions)
-      .reduce((list1, list2) => list1.concat(list2));
+      .reduce((list1, list2) => list1.concat(list2), [] as VmInstruction[]);
     result = this.validateFunctions(instructions);
     if (isErr(result)) {
       return result;
@@ -532,6 +565,19 @@ export class Vm {
       this.functionMap[SYS_INIT.name] = SYS_INIT;
       this.addedSysInit = true;
       // TODO should this be an error from the compiler/OS?
+    }
+
+    if (
+      this.functionMap["Memory.alloc"] &&
+      !this.functionMap[ARRAY_NEW_BRIDGE.name]
+    ) {
+      this.functionMap[ARRAY_NEW_BRIDGE.name] = ARRAY_NEW_BRIDGE;
+    }
+    if (
+      this.functionMap["Memory.deAlloc"] &&
+      !this.functionMap[ARRAY_DISPOSE_BRIDGE.name]
+    ) {
+      this.functionMap[ARRAY_DISPOSE_BRIDGE.name] = ARRAY_DISPOSE_BRIDGE;
     }
 
     if (this.functionMap[SYS_INIT.name]) {

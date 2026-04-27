@@ -111,4 +111,10 @@ export class ChipPage {
     await expect(textarea).toBeEnabled();
     await textarea.fill(content);
   }
+
+  async expectSyntaxError(): Promise<void> {
+    await expect(
+      this._page.getByText("Syntax errors in the HDL code or test"),
+    ).toBeVisible();
+  }
 }

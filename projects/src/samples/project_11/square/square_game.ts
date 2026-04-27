@@ -9,8 +9,8 @@ export const jack = `// This file is part of www.nand2tetris.org
  * When the game starts, a square of 30 by 30 pixels is shown at the
  * top-left corner of the screen. The user controls the square as follows.
  * The 4 arrow keys are used to move the square up, down, left, and right.
- * The 'z' and 'x' keys are used, respectively, to decrement and increment
- * the square's size. The 'q' key is used to quit the game.
+ * The 'Z' and 'X' keys are used, respectively, to decrement and increment
+ * the square's size. The 'Q' key is used to quit the game.
  */
 class SquareGame {
    field Square square; // the square of this game
@@ -54,9 +54,12 @@ class SquareGame {
             let key = Keyboard.keyPressed();
             do moveSquare();
          }
-         if (key = 81)  { let exit = true; }     // q key
-         if (key = 90)  { do square.decSize(); } // z key
-         if (key = 88)  { do square.incSize(); } // x key
+         if (key = 113)  { let exit = true; }     // q key
+         if (key = 122)  { do square.decSize(); } // z key
+         if (key = 120)  { do square.incSize(); } // x key
+         if (key = 81)  { let exit = true; }     // Q key
+         if (key = 90)  { do square.decSize(); } // Z key
+         if (key = 88)  { do square.incSize(); } // X key
          if (key = 131) { let direction = 1; }   // up arrow
          if (key = 133) { let direction = 2; }   // down arrow
          if (key = 130) { let direction = 3; }   // left arrow

@@ -464,6 +464,8 @@ export const basic_tst = `// This file is part of www.nand2tetris.org
 // Specifically: Tests the ALU logic that computes the 'out' output;
 // The 'zr' and 'ng' output bits are ignored.
 
+load ALU.hdl,
+compare-to ALU-basic.cmp,
 output-list x%B1.16.1 y%B1.16.1 zx nx zy ny f no out%B1.16.1;
 
 set x %B0000000000000000,

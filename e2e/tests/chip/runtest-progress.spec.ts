@@ -1,14 +1,6 @@
+import { sol as AND_HDL } from "@nand2tetris/projects/testing/project_01/02_and.js";
 import { expect } from "@playwright/test";
 import { test } from "../../fixtures/chip.fixture";
-
-const AND_HDL = `CHIP And {
-    IN a, b;
-    OUT out;
-
-    PARTS:
-    Nand(a=a, b=b, out=x);
-    Not(in=x, out=out);
-}`;
 
 test.describe("runTest progress badges and reliable completion", () => {
   test.beforeEach(async ({ chipPage }) => {

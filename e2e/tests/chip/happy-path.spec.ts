@@ -1,15 +1,7 @@
+import { sol as AND_HDL } from "@nand2tetris/projects/testing/project_01/02_and.js";
 import { expect } from "@playwright/test";
 import { test } from "../../fixtures/chip.fixture";
 import { RamChipPage } from "../../src/pages/RamChipPage";
-
-const AND_HDL = `CHIP And {
-    IN a, b;
-    OUT out;
-
-    PARTS:
-    Nand(a=a, b=b, out=x);
-    Not(in=x, out=out);
-}`;
 
 const MUX16_HDL = `CHIP Mux16 {
     IN a[16], b[16], sel;

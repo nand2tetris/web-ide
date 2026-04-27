@@ -25,8 +25,8 @@ test("Student types SimpleAdd, steps through it, runs it, and observes the resul
 
   expect(await vmPage.readRam(0)).toBe(257);
   expect(await vmPage.readRam(256)).toBe(15);
-  await expect(vmPage.page.getByText("Program halted")).toBeVisible();
+  await vmPage.expectHalted();
 
   await vmPage.reset();
-  await expect(vmPage.page.getByText("Program halted")).toBeHidden();
+  await vmPage.expectNotHalted();
 });

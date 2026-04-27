@@ -52,6 +52,34 @@ export class TestPanel {
     return `${s}|${o}`;
   }
 
+  private get stepCountBadge(): Locator {
+    return this.panel.locator('[data-testid="test-step-count"]');
+  }
+
+  private get outputCountBadge(): Locator {
+    return this.panel.locator('[data-testid="test-output-count"]');
+  }
+
+  async expectStepCountText(text: string): Promise<void> {
+    await expect(this.stepCountBadge).toBeVisible();
+    await expect(this.stepCountBadge).toHaveText(text);
+  }
+
+  async expectOutputCountText(text: string): Promise<void> {
+    await expect(this.outputCountBadge).toBeVisible();
+    await expect(this.outputCountBadge).toHaveText(text);
+  }
+
+  async getStepCount(): Promise<number> {
+    const text = await this.stepCountBadge.textContent();
+    return parseInt(text?.replace("Steps: ", "") ?? "0", 10);
+  }
+
+  async getOutputCount(): Promise<number> {
+    const text = await this.outputCountBadge.textContent();
+    return parseInt(text?.replace("Outputs: ", "") ?? "0", 10);
+  }
+
   async getFailureCount(): Promise<number> {
     const paragraph = this.panel.locator("p", {
       hasText: "comparison failure",

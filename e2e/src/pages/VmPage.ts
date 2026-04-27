@@ -52,6 +52,14 @@ export class VmPage {
     await expect(this._page.getByText("Program halted")).toBeVisible();
   }
 
+  async expectHalted(): Promise<void> {
+    await expect(this._page.getByText("Program halted")).toBeVisible();
+  }
+
+  async expectNotHalted(): Promise<void> {
+    await expect(this._page.getByText("Program halted")).toBeHidden();
+  }
+
   async readRam(address: number): Promise<number> {
     return this.ramPanel.readAt(address);
   }

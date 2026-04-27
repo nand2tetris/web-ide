@@ -1,4 +1,4 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
 import { vm as SIMPLE_FUNCTION } from "@nand2tetris/projects/project_08/20_simple_function.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm/fibonnaci.js";
 import {
@@ -400,4 +400,10 @@ describe("debug frame views", () => {
 
     expect(vm.vmStack().length).toBe(1);
   });
+});
+
+test("buildFromFiles with no files returns a CompilationError", () => {
+  const result = Vm.buildFromFiles([]);
+  if (!isErr(result)) throw new Error("expected Err result");
+  expect(Err(result).message).toMatch(/no\s+\.vm/i);
 });

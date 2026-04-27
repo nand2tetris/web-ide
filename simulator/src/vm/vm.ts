@@ -279,13 +279,18 @@ export class Vm {
   }
 
   static buildFromFiles(files: ParsedVmFile[]): Result<Vm, CompilationError> {
+    if (files.length === 0) {
+      return Err(
+        createError("No .vm files to load. Compile your Jack files first."),
+      );
+    }
     let result = this.validateFiles(files);
     if (isErr(result)) {
       return result;
     }
     const instructions = files
       .map((file) => file.instructions)
-      .reduce((list1, list2) => list1.concat(list2));
+      .reduce((list1, list2) => list1.concat(list2), [] as VmInstruction[]);
     result = this.validateFunctions(instructions);
     if (isErr(result)) {
       return result;

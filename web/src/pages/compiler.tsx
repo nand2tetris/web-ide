@@ -98,6 +98,7 @@ export const Compiler = () => {
         files[file.name.replace(".jack", "")] = await file.text();
       }
     }
+    loadRef.current.value = "";
     actions.loadFiles(files);
   };
 

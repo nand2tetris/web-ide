@@ -400,6 +400,18 @@ describe("debug frame views", () => {
 
     expect(vm.vmStack().length).toBe(1);
   });
+
+  test("entry frame `that` reflects memory at THAT, not the THAT pointer", () => {
+    const { instructions } = unwrap(VM.parse(FIBONACCI));
+    const vm = unwrap(Vm.build(instructions));
+    // Set the THAT pointer and the memory it points to so the two are easy
+    // to distinguish.
+    vm.memory.set(4, 12345);
+    vm.memory.set(12345, 7777);
+
+    const top = vm.vmStack()[0];
+    expect(top.that.values).toEqual([7777]);
+  });
 });
 
 test("buildFromFiles with no files returns a CompilationError", () => {
@@ -491,5 +503,76 @@ return
 
     expect(vm.functionMap["Array.new"]).toBeUndefined();
     expect(vm.functionMap["Array.dispose"]).toBeUndefined();
+  });
+});
+
+describe("Output.printString bridge to user String", () => {
+  test("Output.printString dispatches to user String.charAt when supplied", () => {
+    const program = `
+function String.charAt 0
+push constant 0
+return
+
+function String.length 0
+push constant 0
+return
+
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const printString = vm.functionMap["Output.printString"];
+    expect(printString).toBeDefined();
+    expect(
+      printString.operations.some(
+        (op) => op.op === "call" && op.name === "String.charAt",
+      ),
+    ).toBe(true);
+    expect(
+      printString.operations.some(
+        (op) => op.op === "call" && op.name === "String.length",
+      ),
+    ).toBe(true);
+  });
+
+  test("bridge is not injected when user supplies their own Output.printString", () => {
+    const program = `
+function String.charAt 0
+push constant 0
+return
+
+function Output.printString 0
+push constant 999
+return
+
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const printString = vm.functionMap["Output.printString"];
+    expect(
+      printString.operations.some(
+        (op) =>
+          op.op === "push" && op.segment === "constant" && op.offset === 999,
+      ),
+    ).toBe(true);
+  });
+
+  test("bridge is not injected when user does not supply String.charAt", () => {
+    const program = `
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    expect(vm.functionMap["Output.printString"]).toBeUndefined();
   });
 });

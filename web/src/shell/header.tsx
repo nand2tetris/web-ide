@@ -50,17 +50,15 @@ const guideLinks: Record<string, string> = {
 
 const GUIDE_NOT_AVAILABLE_MESSAGE = "Guide not available for this tool";
 
-async function openGuide(context: HeaderButtonContext) {
-  if (!guideLinks[context.pathname]) {
-    context.baseContext.setStatus(GUIDE_NOT_AVAILABLE_MESSAGE);
-    return;
-  }
+function openGuide(context: HeaderButtonContext) {
   const pdfLink = guideLinks[context.pathname];
-  const response = await fetch(pdfLink);
-  if (response.status === 404) {
+  if (!pdfLink) {
     context.baseContext.setStatus(GUIDE_NOT_AVAILABLE_MESSAGE);
     return;
   }
+  // Must call window.open synchronously inside the click handler — any
+  // intervening await drops the user-gesture flag and the popup blocker
+  // silently denies the open.
   window.open(pdfLink, "_blank", "width=1000,height=800");
 }
 

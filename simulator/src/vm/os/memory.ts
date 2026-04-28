@@ -24,28 +24,31 @@ export class MemoryLib {
       return 0;
     }
 
+    let prevPtr = 0;
     let blockPtr = this.freeListPtr;
-    do {
+    while (blockPtr !== 0) {
       const nextFreeList = this.memory.get(blockPtr);
       const blockSize = this.memory.get(blockPtr + 1);
       if (blockSize >= size + 2) {
-        // We can fit this required size and overhead in this block.
         this.memory.set(blockPtr + 1, size);
 
         const newBlockPtr = blockPtr + 2 + size;
         const newBlockSize = blockSize - size - 2;
         this.memory.set(newBlockPtr, nextFreeList);
         this.memory.set(newBlockPtr + 1, newBlockSize);
-        if (this.freeListPtr === blockPtr) {
-          // Move freelist pointer to the new block.
+
+        // Unlink the allocated block by pointing the predecessor (or the
+        // free list head) at the new remainder block.
+        if (prevPtr === 0) {
           this.freeListPtr = newBlockPtr;
+        } else {
+          this.memory.set(prevPtr, newBlockPtr);
         }
         return blockPtr + 2;
-      } else {
-        // We can't fit this required size and overhead in this block.
-        blockPtr = nextFreeList;
       }
-    } while (blockPtr !== 0);
+      prevPtr = blockPtr;
+      blockPtr = nextFreeList;
+    }
 
     this.os.sys.error(ERRNO.HEAP_OVERFLOW);
     return 0;
@@ -53,17 +56,7 @@ export class MemoryLib {
 
   deAlloc(address: number) {
     const deallocBlockPtr = address - 2;
-    // This will be the last block in the free list.
-    this.memory.set(deallocBlockPtr, 0);
-
-    let blockPtr = this.freeListPtr;
-    do {
-      const nextBlockPtr = this.memory.get(blockPtr);
-      if (nextBlockPtr === 0) {
-        this.memory.set(blockPtr, deallocBlockPtr);
-        return;
-      }
-      blockPtr = nextBlockPtr;
-    } while (blockPtr !== 0);
+    this.memory.set(deallocBlockPtr, this.freeListPtr);
+    this.freeListPtr = deallocBlockPtr;
   }
 }

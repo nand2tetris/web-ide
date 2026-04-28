@@ -97,6 +97,7 @@ export const Monaco = ({
   const { theme } = useContext(AppContext);
   const monaco = useRef<typeof monacoT>();
   const [height, setHeight] = useState(0);
+  const [editorReady, setEditorReady] = useState(false);
 
   const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
   const decorations = useRef<string[]>([]);
@@ -207,6 +208,7 @@ export const Monaco = ({
       });
       const model = editor.current?.getModel();
       model?.setEOL(monacoT.editor.EndOfLineSequence.LF);
+      setEditorReady(true);
     },
     [codeTheme],
   );
@@ -255,7 +257,7 @@ export const Monaco = ({
         severity: 8, // monacoT.MarkerSeverity.Error,
       },
     ]);
-  }, [error, editor, monaco, language]);
+  }, [error, language, editorReady]);
 
   const onValueChange = (v = "") => {
     calculateHeight();

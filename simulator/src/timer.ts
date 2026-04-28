@@ -91,6 +91,7 @@ export abstract class Timer {
 
   start() {
     this.stepsTaken = 0;
+    this._steps_actual = this._steps;
     this.#running = true;
     this.#lastUpdate = Date.now() - this.speed;
     this.#run();

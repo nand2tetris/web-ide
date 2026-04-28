@@ -224,6 +224,8 @@ export const FilePicker = () => {
       });
     }
 
+    loadRef.current.value = "";
+
     filePicker[Selected].current?.(files.length == 1 ? files[0] : files);
     filePicker.close();
   };

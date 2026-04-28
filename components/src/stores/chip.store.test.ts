@@ -60,6 +60,31 @@ describe("ChipStore", () => {
       expect(store.state.files.cmp).toBe("");
       expect(store.state.files.out).toBe("");
     });
+
+    it("keeps the auto-loaded chip selected after initialize", async () => {
+      const store = testChipStore({
+        "projects/01/Not.hdl": not.hdl,
+        "projects/01/Not.tst": not.tst,
+        "projects/01/Not.cmp": not.cmp,
+      });
+
+      await store.actions.initialize();
+
+      expect(store.state.controls.project).toBe("01");
+      expect(store.state.controls.chipName).not.toBe("");
+      expect(store.state.controls.chips.length).toBeGreaterThan(0);
+    });
+
+    it("clears chip name when no projects are present", async () => {
+      const store = testChipStore({
+        "projects/README.md": "no chips here",
+      });
+
+      await store.actions.initialize();
+
+      expect(store.state.controls.chipName).toBe("");
+      expect(store.state.controls.chips).toEqual([]);
+    });
   });
 
   describe("behavior", () => {

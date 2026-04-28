@@ -316,9 +316,8 @@ export function makeChipStore(
         await actions.setProject(sortedNames[0]);
       } else {
         dispatch.current({ action: "setChips", payload: [] });
+        dispatch.current({ action: "clearChip" });
       }
-
-      dispatch.current({ action: "clearChip" });
     },
 
     reset() {
@@ -344,7 +343,7 @@ export function makeChipStore(
       dispatch.current({ action: "setChips", payload });
 
       if (chips.length > 0) {
-        this.loadChip(`${prefix}/${project}/${chips[0]}.hdl`, true);
+        await this.loadChip(`${prefix}/${project}/${chips[0]}.hdl`, true);
       }
     },
 

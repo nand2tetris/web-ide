@@ -505,3 +505,74 @@ return
     expect(vm.functionMap["Array.dispose"]).toBeUndefined();
   });
 });
+
+describe("Output.printString bridge to user String", () => {
+  test("Output.printString dispatches to user String.charAt when supplied", () => {
+    const program = `
+function String.charAt 0
+push constant 0
+return
+
+function String.length 0
+push constant 0
+return
+
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const printString = vm.functionMap["Output.printString"];
+    expect(printString).toBeDefined();
+    expect(
+      printString.operations.some(
+        (op) => op.op === "call" && op.name === "String.charAt",
+      ),
+    ).toBe(true);
+    expect(
+      printString.operations.some(
+        (op) => op.op === "call" && op.name === "String.length",
+      ),
+    ).toBe(true);
+  });
+
+  test("bridge is not injected when user supplies their own Output.printString", () => {
+    const program = `
+function String.charAt 0
+push constant 0
+return
+
+function Output.printString 0
+push constant 999
+return
+
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    const printString = vm.functionMap["Output.printString"];
+    expect(
+      printString.operations.some(
+        (op) =>
+          op.op === "push" && op.segment === "constant" && op.offset === 999,
+      ),
+    ).toBe(true);
+  });
+
+  test("bridge is not injected when user does not supply String.charAt", () => {
+    const program = `
+function Main.main 0
+push constant 0
+return
+`;
+    const { instructions } = unwrap(VM.parse(program));
+    const vm = unwrap(Vm.build(instructions));
+
+    expect(vm.functionMap["Output.printString"]).toBeUndefined();
+  });
+});

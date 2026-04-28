@@ -114,6 +114,42 @@ const ARRAY_DISPOSE_BRIDGE: VmFunction = {
   ],
 };
 
+// Walks a string by calling String.length / String.charAt so a
+// user-supplied String.jack (with a custom internal layout) is honoured by
+// the builtin Output.printString. local 0 = i, local 1 = length.
+const OUTPUT_PRINT_STRING_BRIDGE: VmFunction = {
+  name: "Output.printString",
+  labels: { LOOP: 6, END: 21 },
+  nVars: 2,
+  opBase: 0,
+  operations: [
+    { op: "function", name: "Output.printString", nVars: 2 },
+    { op: "push", segment: "argument", offset: 0 },
+    { op: "call", name: "String.length", nArgs: 1 },
+    { op: "pop", segment: "local", offset: 1 },
+    { op: "push", segment: "constant", offset: 0 },
+    { op: "pop", segment: "local", offset: 0 },
+    { op: "label", label: "LOOP" },
+    { op: "push", segment: "local", offset: 0 },
+    { op: "push", segment: "local", offset: 1 },
+    { op: "eq" },
+    { op: "if-goto", label: "END" },
+    { op: "push", segment: "argument", offset: 0 },
+    { op: "push", segment: "local", offset: 0 },
+    { op: "call", name: "String.charAt", nArgs: 2 },
+    { op: "call", name: "Output.printChar", nArgs: 1 },
+    { op: "pop", segment: "temp", offset: 0 },
+    { op: "push", segment: "local", offset: 0 },
+    { op: "push", segment: "constant", offset: 1 },
+    { op: "add" },
+    { op: "pop", segment: "local", offset: 0 },
+    { op: "goto", label: "LOOP" },
+    { op: "label", label: "END" },
+    { op: "push", segment: "constant", offset: 0 },
+    { op: "return" },
+  ],
+};
+
 export interface ParsedVmFile {
   name: string;
   instructions: VmInstruction[];
@@ -578,6 +614,13 @@ export class Vm {
       !this.functionMap[ARRAY_DISPOSE_BRIDGE.name]
     ) {
       this.functionMap[ARRAY_DISPOSE_BRIDGE.name] = ARRAY_DISPOSE_BRIDGE;
+    }
+    if (
+      this.functionMap["String.charAt"] &&
+      !this.functionMap[OUTPUT_PRINT_STRING_BRIDGE.name]
+    ) {
+      this.functionMap[OUTPUT_PRINT_STRING_BRIDGE.name] =
+        OUTPUT_PRINT_STRING_BRIDGE;
     }
 
     if (this.functionMap[SYS_INIT.name]) {

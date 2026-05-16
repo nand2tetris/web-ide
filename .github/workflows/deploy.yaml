@@ -25,20 +25,26 @@ jobs:
       - name: Install
         run: npm install
 
-      - name: CD
+      - name: build & release
         run: |
-          git config --global user.name $user_name
-          git config --global user.email $user_email
-          git remote set-url origin https://${github_token}@github.com/${repository}
-          ./stamp.sh
+          git config --global user.name "$USER_NAME"
+          git config --global user.email "$USER_EMAIL"
+
+          VERSION="$(node scripts/stamp.cjs)"
+
+          npm version $VERSION --include-workspace-root --no-git-tag-version
+          git commit --all --message "Release $VERSION"
+
           npm run build
-          npm run -w web deploy
-          VERSION=$(grep version package.json | awk -F\" '{print $4}')
-          git tag "$VERSION" main
+
+          git tag "$VERSION" HEAD
           git push origin "$VERSION"
-          git push origin main
+          git push origin
         env:
-          user_name: "github-actions[bot]"
-          user_email: "github-actions[bot]@users.noreply.github.com"
-          github_token: ${{ secrets.ACTIONS_DEPLOY_ACCESS_TOKEN }}
-          repository: ${{ github.repository }}
+          USER_NAME: "github-actions"
+          USER_EMAIL: "github-actions@noreply.github.com"
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web/build

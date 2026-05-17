@@ -7,7 +7,9 @@ type ChipFixtures = {
 
 export const test = base.extend<ChipFixtures>({
   chipPage: async ({ page }, use) => {
-    await page.goto("chip?monaco=0");
-    await use(new ChipPage(page));
+    await page.goto("chip");
+    const chipPage = new ChipPage(page);
+    await chipPage.editor.disableMonaco();
+    await use(chipPage);
   },
 });

@@ -9,7 +9,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
  * The value of the selected register is emitted by out.
  */
 CHIP RAM16K {
-    IN in[16], load, address[14];
+    IN in[16], load, address[15];
     OUT out[16];
 
     PARTS:

@@ -6,7 +6,7 @@ export default defineConfig({
   base: "/web-ide/",
   plugins: [
     react({
-      plugins: [["@lingui/swc-plugin", {}]],
+      plugins: [["@lingui/swc-plugin", { useLinguiV5IdGeneration: true }]],
     }),
     lingui(),
   ],

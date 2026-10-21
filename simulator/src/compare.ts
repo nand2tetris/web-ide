@@ -19,6 +19,12 @@ function normalLines(
   return lines;
 }
 
+function dropTrailingBlank(lines: string[]): string[] {
+  let end = lines.length;
+  while (end > 0 && lines[end - 1] === "") end--;
+  return lines.slice(0, end);
+}
+
 export type CompareResultSuccess = Record<string, never>;
 export interface CompareResultLengths {
   lenA: number;
@@ -33,8 +39,8 @@ export type CompareResult =
   | CompareResultLengths;
 
 export function compareLines(as: string, bs: string): CompareResult {
-  const resultLines = normalLines(as);
-  const compareLines = normalLines(bs);
+  const resultLines = dropTrailingBlank(normalLines(as));
+  const compareLines = dropTrailingBlank(normalLines(bs));
 
   if (resultLines.length != compareLines.length) {
     return { lenA: resultLines.length, lenB: compareLines.length };

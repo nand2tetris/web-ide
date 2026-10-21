@@ -27,6 +27,8 @@ export type CompilerStoreDispatch = Dispatch<{
   payload?: unknown;
 }>;
 
+const COMPILE_DEBOUNCE_MS = 250;
+
 function classTemplate(name: string) {
   return `class ${name} {\n\n}\n`;
 }
@@ -36,6 +38,17 @@ export function makeCompilerStore(
   dispatch: MutableRefObject<CompilerStoreDispatch>,
 ) {
   let fs: FileSystem | undefined;
+  let compileTimer: ReturnType<typeof setTimeout> | undefined;
+  // Disk writes are chained so the latest content always lands last.
+  let pendingWrite: Promise<unknown> = Promise.resolve();
+
+  const flushCompile = () => {
+    if (compileTimer !== undefined) {
+      clearTimeout(compileTimer);
+      compileTimer = undefined;
+      dispatch.current({ action: "compile" });
+    }
+  };
 
   const reducers = {
     setFs(state: CompilerPageState, fs: FileSystem) {
@@ -50,9 +63,14 @@ export function makeCompilerStore(
       state: CompilerPageState,
       { name, content }: { name: string; content: string },
     ) {
+      const isNew = !(name in state.files);
       state.files[name] = content;
       state.isCompiled = false;
-      this.compile(state);
+      // Recompiling every file per keystroke is too slow for large projects;
+      // actions.writeFile schedules a debounced compile for edits.
+      if (isNew) {
+        this.compile(state);
+      }
     },
 
     // the keys of 'files' have to be the full file path, not basename
@@ -132,17 +150,27 @@ export function makeCompilerStore(
     async writeFile(name: string, content?: string) {
       content ??= classTemplate(name);
       dispatch.current({ action: "setFile", payload: { name, content } });
+      clearTimeout(compileTimer);
+      compileTimer = setTimeout(flushCompile, COMPILE_DEBOUNCE_MS);
       if (fs) {
-        await fs.writeFile(`${name}.jack`, content);
+        const target = fs;
+        const write = pendingWrite.then(() =>
+          target.writeFile(`${name}.jack`, content),
+        );
+        pendingWrite = write.catch(() => undefined);
+        await write;
       }
     },
 
     async reset() {
+      clearTimeout(compileTimer);
+      compileTimer = undefined;
       fs = undefined;
       dispatch.current({ action: "reset" });
     },
 
     async compile() {
+      flushCompile();
       dispatch.current({ action: "writeCompiled" });
     },
   };

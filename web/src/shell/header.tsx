@@ -59,7 +59,11 @@ function openGuide(context: HeaderButtonContext) {
   // Must call window.open synchronously inside the click handler — any
   // intervening await drops the user-gesture flag and the popup blocker
   // silently denies the open.
-  window.open(pdfLink, "_blank", "width=1000,height=800");
+  window.open(
+    import.meta.env.BASE_URL + pdfLink,
+    "_blank",
+    "width=1000,height=800",
+  );
 }
 
 const headerButtons: HeaderButton[] = [

@@ -41,3 +41,26 @@ describe("compareLines", () => {
     );
   });
 });
+
+describe("compareLines trailing blank lines (#678)", () => {
+  const hack = "0000000000000001\n1110110000010000";
+
+  it("ignores a trailing newline on either side", () => {
+    expect(compareLines(hack, `${hack}\n`)).toEqual({});
+    expect(compareLines(`${hack}\n`, hack)).toEqual({});
+    expect(compareLines(`${hack}\n`, `${hack}\n`)).toEqual({});
+  });
+
+  it("ignores trailing whitespace-only lines", () => {
+    expect(compareLines(hack, `${hack}\n \r\n\n`)).toEqual({});
+  });
+
+  it("still reports genuinely different lengths", () => {
+    expect(compareLines("a\nb", "a\nb\nc")).toEqual({ lenA: 2, lenB: 3 });
+  });
+
+  it("still reports a differing line, including an interior blank line", () => {
+    expect(compareLines("a\nb\nc", "a\nx\nc")).toEqual({ line: 1 });
+    expect(compareLines("a\n\nc", "a\nc\n")).toEqual({ lenA: 3, lenB: 2 });
+  });
+});

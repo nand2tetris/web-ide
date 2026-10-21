@@ -16,7 +16,11 @@ function normalLines(
 
   if (trim) lines = lines.map((line) => line.trim());
   if (skipTrimmed) lines = lines.filter((line) => line != "");
-  return lines;
+
+  // A trailing newline is not a line: ignore trailing blank lines.
+  let end = lines.length;
+  while (end > 0 && lines[end - 1] === "") end--;
+  return lines.slice(0, end);
 }
 
 export type CompareResultSuccess = Record<string, never>;

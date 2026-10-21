@@ -29,5 +29,10 @@
 
   .sym {
     grid-area: sym;
+
+    // Override `article.panel.editor { overflow-y: hidden }` so many labels scroll.
+    &.editor {
+      overflow-y: auto;
+    }
   }
 }

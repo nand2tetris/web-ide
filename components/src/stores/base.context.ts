@@ -68,15 +68,17 @@ export function useBaseContext(): BaseContext {
   );
 
   const requestPermission = async () => {
-    attemptLoadAdapterFromIndexedDb().then(async (adapter) => {
-      if (!adapter) return;
-      await adapter.requestPermission({ mode: "readwrite" });
-    });
+    const adapter = await attemptLoadAdapterFromIndexedDb();
+    if (!adapter) return;
+    await adapter.requestPermission({ mode: "readwrite" });
   };
 
   const loadFs = () => {
     attemptLoadAdapterFromIndexedDb().then(async (adapter) => {
       if (!adapter) return;
+      // Never install a handle without permission: every access would throw.
+      const permission = await adapter.queryPermission({ mode: "readwrite" });
+      if (permission !== "granted") return;
       setLocalFs(adapter);
     });
   };

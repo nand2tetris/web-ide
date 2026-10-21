@@ -7,11 +7,22 @@ for (const tool of ["chip", "cpu", "asm", "vm", "compiler", "bitmap"]) {
   test(`guide button on /${tool}/ opens a URL under the app base`, async ({
     page,
   }) => {
+    // Record the URL passed to window.open rather than waiting on a popup,
+    // whose url() is empty until it commits (and a PDF may download instead).
+    await page.addInitScript(() => {
+      (window as unknown as { opened?: string }).opened = undefined;
+      window.open = (url?: string | URL) => {
+        (window as unknown as { opened?: string }).opened = String(url);
+        return null;
+      };
+    });
     await page.goto(`${tool}/`);
-    const popupPromise = page.waitForEvent("popup");
     await page.locator('[data-tooltip="Guide"]').click();
-    const popup = await popupPromise;
-    const url = new URL(popup.url());
+    const opened = await page.evaluate(
+      () => (window as unknown as { opened?: string }).opened,
+    );
+    expect(opened).toBeDefined();
+    const url = new URL(opened as string, page.url());
     expect(url.pathname).toMatch(/^\/web-ide\/user_guide\/[a-z_]+\.pdf$/);
   });
 }

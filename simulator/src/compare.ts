@@ -16,10 +16,8 @@ function normalLines(
 
   if (trim) lines = lines.map((line) => line.trim());
   if (skipTrimmed) lines = lines.filter((line) => line != "");
-  return lines;
-}
 
-function dropTrailingBlank(lines: string[]): string[] {
+  // A trailing newline is not a line: ignore trailing blank lines.
   let end = lines.length;
   while (end > 0 && lines[end - 1] === "") end--;
   return lines.slice(0, end);
@@ -39,8 +37,8 @@ export type CompareResult =
   | CompareResultLengths;
 
 export function compareLines(as: string, bs: string): CompareResult {
-  const resultLines = dropTrailingBlank(normalLines(as));
-  const compareLines = dropTrailingBlank(normalLines(bs));
+  const resultLines = normalLines(as);
+  const compareLines = normalLines(bs);
 
   if (resultLines.length != compareLines.length) {
     return { lenA: resultLines.length, lenB: compareLines.length };

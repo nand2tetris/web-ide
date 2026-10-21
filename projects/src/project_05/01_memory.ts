@@ -13,7 +13,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
  * into the memory location specified by address. This value becomes 
  * available through the out output from the next time step onward.
  * Address space rules:
- * Only the upper 16K+8K+1 words of the Memory chip are used. 
+ * Only the lower 16K+8K+1 words of the Memory chip are used. 
  * Access to address>0x6000 is invalid and reads 0. Access to any address
  * in the range 0x4000-0x5FFF results in accessing the screen memory 
  * map. Access to address 0x6000 results in accessing the keyboard 

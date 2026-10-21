@@ -64,7 +64,7 @@ export async function createAndStoreLocalAdapterInIndexedDB(
   );
   transaction
     .objectStore(IDB_FS_ADAPTER_OBJECT_STORE)
-    .add(handle, IDB_FS_ADAPTER_KEY);
+    .put(handle, IDB_FS_ADAPTER_KEY);
   transaction.commit();
   return new Promise<FileSystemDirectoryHandle>((resolve, reject) => {
     transaction.oncomplete = () => {

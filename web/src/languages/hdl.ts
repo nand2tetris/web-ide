@@ -8,7 +8,6 @@ export const HdlLanguage: monaco.languages.IMonarchLanguage = {
 
   chips: [
     "Nand",
-    "Nand16",
     "Not",
     "Not16",
     "And",

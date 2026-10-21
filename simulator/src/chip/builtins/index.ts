@@ -23,7 +23,7 @@ import {
 import { And, And16 } from "./logic/and.js";
 import { DMux, DMux4Way, DMux8Way } from "./logic/dmux.js";
 import { Mux, Mux4Way16, Mux8Way16, Mux16 } from "./logic/mux.js";
-import { Nand, Nand16 } from "./logic/nand.js";
+import { Nand } from "./logic/nand.js";
 import { Not, Not16 } from "./logic/not.js";
 import { Or, Or8way, Or16 } from "./logic/or.js";
 import { Xor, Xor16 } from "./logic/xor.js";
@@ -47,7 +47,6 @@ export {
   Mux8Way16,
   Mux16,
   Nand,
-  Nand16,
   Not,
   Not16,
   Or,
@@ -69,7 +68,6 @@ export const REGISTRY = new Map<string, () => Chip>(
   (
     [
       ["Nand", Nand],
-      ["Nand16", Nand16],
       ["Not", Not],
       ["Not16", Not16],
       ["And", And],

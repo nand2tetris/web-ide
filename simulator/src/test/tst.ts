@@ -11,6 +11,8 @@ import {
 
 export const DEFAULT_TIME_WIDTH = 7;
 
+const YIELD_EVERY = 1000;
+
 export abstract class Test<IS extends TestInstruction = TestInstruction> {
   protected readonly instructions: (IS | TestInstruction)[] = [];
   protected _outputList: Output[] = [];
@@ -128,7 +130,14 @@ export abstract class Test<IS extends TestInstruction = TestInstruction> {
   }
 
   async step() {
+    let iterations = 0;
     while (!this._step.done) {
+      // A script using ',' in a loop (e.g. `while ... { tick, tock, }`) never
+      // reaches a stop, so yield to the event loop now and then to let the UI
+      // and keyboard events through instead of freezing the tab.
+      if (++iterations % YIELD_EVERY === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+      }
       await this._step.value.do(this);
       this._step = this.steps.next();
 

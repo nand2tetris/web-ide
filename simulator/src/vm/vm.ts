@@ -64,6 +64,8 @@ interface VmFunctionInvocation {
   thatInitialized: boolean;
   // The size of the memory block pointed to by the function's THIS (if exists)
   thisN?: number;
+  // The highest accessed index + 1 of the function's THAT segment
+  thatN?: number;
 }
 
 export const IMPLICIT = "__implicit";
@@ -732,6 +734,12 @@ export class Vm {
         `The that segment cannot be accessed since it was not initialized`,
       );
     }
+    if (op.segment == "that") {
+      this.invocation.thatN = Math.max(
+        op.offset + 1,
+        this.invocation.thatN ?? 1,
+      );
+    }
   }
 
   setPaused(paused = true) {
@@ -788,6 +796,7 @@ export class Vm {
             this.invocation.thisN = this.memory.get(this.memory.THIS - 1);
           } else if (operation.offset == 1) {
             this.invocation.thatInitialized = true;
+            this.invocation.thatN = 1;
           }
         }
         break;
@@ -936,6 +945,7 @@ export class Vm {
       const nArg = this.segmentInitializations["argument"].n;
       const nLocal = this.segmentInitializations["local"].n;
       const nThis = this.invocation.thisN ?? 0;
+      const nThat = this.invocation.thatN ?? 1;
       const stackCount = frameEnd - stackBase;
       return {
         fn,
@@ -964,8 +974,8 @@ export class Vm {
         },
         that: {
           base: THAT,
-          count: 1,
-          values: [...this.memory.map((_, v) => v, THAT, THAT + 1)],
+          count: nThat,
+          values: [...this.memory.map((_, v) => v, THAT, THAT + nThat)],
         },
         frame: {
           ARG,
@@ -982,7 +992,7 @@ export class Vm {
       invocation.nArgs,
       fn.nVars,
       this.invocation.thisN ?? 0,
-      1,
+      this.invocation.thatN ?? 1,
       nextFrame,
     );
     frame.fn = fn;

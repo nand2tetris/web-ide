@@ -25,7 +25,7 @@ import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { compare } from "../compare.js";
-import { sortFiles } from "../file_utils.js";
+import { errorMessage, sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
@@ -576,7 +576,7 @@ export function makeChipStore(
         return done;
       } catch (e) {
         setStatus({
-          message: (e as Error).message,
+          message: errorMessage(e),
           severity: "ERROR",
         });
         return true;

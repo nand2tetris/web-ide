@@ -17,6 +17,7 @@ import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { AppContext } from "../App.context";
 import { isPath } from "../shell/file_select";
+import { baseName, readSelection } from "../shell/file_selection";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
@@ -142,34 +143,15 @@ const VM = () => {
       allowFolders: true,
     });
 
-    let files: VmFile[] = [];
+    const files: VmFile[] = (await readSelection(fs, target, ".vm")).map(
+      (file) => ({ name: file.name.replace(".vm", ""), content: file.content }),
+    );
     let title = "";
-
     if (isPath(target)) {
-      if (target.isDir) {
-        // folder
-        for (const file of (await fs.scandir(target.path)).filter(
-          (entry) => entry.isFile() && entry.name.endsWith(".vm"),
-        )) {
-          files.push({
-            name: file.name.replace(".vm", ""),
-            content: await fs.readFile(`${target.path}/${file.name}`),
-          });
-        }
-        title = `${target.path.split("/").pop()} / *.vm`;
-      } else {
-        // single file
-        files.push({
-          name: target.path.replace(".vm", ""),
-          content: await fs.readFile(target.path),
-        });
-        title = target.path.split("/").pop() ?? "";
-      }
+      title = target.isDir
+        ? `${baseName(target.path)} / *.vm`
+        : baseName(target.path);
       loadTest(target.path);
-    } else {
-      files = Array.isArray(target)
-        ? target.filter((file) => file.name.endsWith(".vm"))
-        : [target];
     }
 
     if (files.length == 0) {

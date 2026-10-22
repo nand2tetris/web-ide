@@ -20,6 +20,7 @@ import { asm } from "@nand2tetris/simulator/util/asm.js";
 import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
 
 import { useClockReset } from "../clockface.js";
+import { errorMessage } from "../file_utils.js";
 import InlineEdit from "../inline_edit.js";
 import { LOADING } from "../messages.js";
 import { useStateInitializer } from "../react.js";
@@ -260,7 +261,7 @@ export const Memory = forwardRef(
               jumpTo();
             } catch (e) {
               setStatus({
-                message: `Error loading memory: ${(e as Error).message}`,
+                message: `Error loading memory: ${errorMessage(e)}`,
                 severity: "ERROR",
               });
               return;

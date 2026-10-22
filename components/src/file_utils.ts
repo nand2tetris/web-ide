@@ -27,6 +27,25 @@ export async function loadTestFiles(
   }
 }
 
+/**
+ * Turns anything a `catch` can receive into a displayable message.
+ * `fs.stat` on a missing path rejects with `undefined`, so `(e as Error).message`
+ * would throw a TypeError from inside the handler.
+ */
+export function errorMessage(e: unknown): string {
+  if (e instanceof Error) return e.message;
+  if (typeof e === "string" && e) return e;
+  if (
+    typeof e === "object" &&
+    e !== null &&
+    "message" in e &&
+    typeof (e as { message: unknown }).message === "string"
+  ) {
+    return (e as { message: string }).message;
+  }
+  return "Unknown error";
+}
+
 export function sortFiles(files: Stats[]) {
   return files.sort((a, b) => {
     const aIsNum = /^\d+/.test(a.name);

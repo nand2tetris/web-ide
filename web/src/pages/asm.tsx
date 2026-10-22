@@ -12,7 +12,7 @@ import { Panel } from "../shell/panel";
 import { LOADING } from "@nand2tetris/components/messages.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
-import { isPath } from "../shell/file_select";
+import { readFirstSelection } from "../shell/file_selection";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import URLs from "../urls";
@@ -61,33 +61,33 @@ export const Asm = () => {
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   const loadAsm = async () => {
-    const path = await filePicker.select({ suffix: ".asm" });
+    const ref = await filePicker.selectAllowLocal({ suffix: ".asm" });
+    const file = await readFirstSelection(fs, ref, ".asm");
+    if (!file) {
+      return;
+    }
     setStatus(LOADING);
     requestAnimationFrame(async () => {
-      await actions.loadAsm(path.path);
+      if (file.path) {
+        await actions.loadAsm(file.path, file.content);
+      } else {
+        actions.loadLocalAsm(file.content);
+      }
       setStatus("");
-      dispatch.current({
-        action: "setTitle",
-        payload: path.path.split("/").pop() ?? "",
-      });
+      dispatch.current({ action: "setTitle", payload: file.name });
     });
   };
 
   const loadCompare = async () => {
-    const filesRef = await filePicker.selectAllowLocal({ suffix: "hack" });
-    if (isPath(filesRef)) {
-      const cmp = await fs.readFile(filesRef.path);
-      dispatch.current({
-        action: "setCmp",
-        payload: { cmp, name: filesRef.path.split("/").pop() },
-      });
-    } else {
-      const file = Array.isArray(filesRef) ? filesRef[0] : filesRef;
-      dispatch.current({
-        action: "setCmp",
-        payload: { cmp: file.content, name: file.name },
-      });
+    const ref = await filePicker.selectAllowLocal({ suffix: "hack" });
+    const file = await readFirstSelection(fs, ref);
+    if (!file) {
+      return;
     }
+    dispatch.current({
+      action: "setCmp",
+      payload: { cmp: file.content, name: file.name },
+    });
   };
 
   const { setStatus } = useContext(BaseContext);

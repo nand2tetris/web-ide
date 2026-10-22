@@ -10,7 +10,7 @@ import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { isPath } from "../shell/file_select";
+import { readFirstSelection } from "../shell/file_selection";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
 import { Accordian, Panel } from "../shell/panel";
@@ -115,22 +115,17 @@ export const CPU = () => {
     const file = await filePicker.selectAllowLocal({
       suffix: [".asm", ".hack"],
     });
-    const title = isPath(file)
-      ? (file.path.split("/").pop() ?? "")
-      : Array.isArray(file)
-        ? file[0].name
-        : file.name;
-    dispatch.current({ action: "setTitle", payload: title });
-    if (isPath(file)) {
-      setPath(file.path);
-      return {
-        name: file.path.split("/").pop() ?? "",
-        content: await fs.readFile(file.path),
-      };
+    const picked = await readFirstSelection(fs, file);
+    if (!picked) {
+      return { name: "", content: "" };
+    }
+    dispatch.current({ action: "setTitle", payload: picked.name });
+    if (picked.path) {
+      setPath(picked.path);
     } else {
       actions.clearTest();
-      return Array.isArray(file) ? file[0] : file;
     }
+    return picked;
   };
 
   return (

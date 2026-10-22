@@ -231,6 +231,10 @@ export function makeAsmStore(
       }
     },
 
+    clearPath(state: AsmPageState) {
+      state.path = undefined;
+    },
+
     setCmp(state: AsmPageState, { cmp, name }: { cmp: string; name: string }) {
       state.compare = cmp;
       state.compareName = name;
@@ -302,10 +306,18 @@ export function makeAsmStore(
   };
 
   const actions = {
-    async loadAsm(_path: string) {
+    async loadAsm(_path: string, content?: string) {
       path = _path;
-      const source = await fs.readFile(path);
+      const source = content ?? (await fs.readFile(path));
       actions.setAsm(source, path);
+    },
+
+    // Source that did not come from the fs (an uploaded local file): it has no
+    // path, so edits and the translated .hack must not be written back to fs.
+    loadLocalAsm(source: string) {
+      path = undefined;
+      dispatch.current({ action: "clearPath" });
+      actions.setAsm(source);
     },
 
     setAsm(asm: string, path?: string) {

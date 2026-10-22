@@ -14,7 +14,7 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
 | 682 | Failed to fetch `Monaco-*.js` | T (same cause as 694) | covered by 694 |
 | 673 | VM Emulator: "No .vm files", blank page | R (two defects) | `components/src/repro/issue-673.test.ts` |
 | 622 | Run clears program / "Cannot find /Mult.asm" (+#527) | R | `components/src/repro/issue-622.test.ts` |
-| 602 | Assembler cannot load a local file | R | `e2e/tests/bugs/issue-602-asm-local-file.spec.ts` |
+| 602 | Assembler cannot load a local file | Fixed (branch `claude/602-file-load`); repro now passes, drop `@bug` tag on merge | `e2e/tests/bugs/issue-602-asm-local-file.spec.ts` |
 | 661 | Cannot exit Monaco find mode | R (styling), click not reproduced | `e2e/tests/bugs/issue-661-find-widget.spec.ts` |
 | 561 | Memory test hangs in Chrome | X (fixed in tree; stale download) | none |
 | 488 | OutputTest ERR 14 / stack overflow | X | `simulator/src/repro/issue-488.test.ts` (passes, regression guard) |
@@ -50,10 +50,17 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
 - Fix direction: write uploads into `fs` (for example under an `/uploads` dir) and use that as the test dir,
   or have `load` fall back to the files already loaded; make the catch blocks coerce non-Errors.
 
-### #602: Assembler picker has no local option
-- `web/src/pages/asm.tsx:64` uses `filePicker.select`; CPU, VM and test panel use `selectAllowLocal`,
-  which is what shows "Select local file". `loadAsm` also expects a `Path`, so a `LocalFile` branch is needed (see `cpu.tsx:114`).
-- "No option to create a new file" in the report is a feature request, not covered.
+### #602: Assembler picker has no local option (fixed)
+- Cause: `web/src/pages/asm.tsx` opened the picker with `filePicker.select`; CPU, VM and the test panel use `selectAllowLocal`,
+  which is what shows "Select local file". `loadAsm` also assumed a `Path`.
+- Fix: `web/src/shell/file_selection.ts` adds `readSelection` / `readFirstSelection`, which turn any picker result
+  (`Path` file, `Path` folder, `LocalFile`, `LocalFile[]`) into `{name, path?, content}[]`, reading from `fs` only when needed.
+  The Assembler (load and compare), CPU `loadFile`, VM `load` and the test panel's local-upload branch use it.
+  New store action `loadLocalAsm` (`components/src/stores/asm.store.ts`) loads uploaded source with no path,
+  so it is never written over the previously loaded file.
+- Not touched on purpose: #622/#673. Uploads are still not written to `fs`; `PickedFile.path` is absent for them,
+  which is the hook a later fix can use (write the file, then fill `path`).
+- Still open from the report: "no option to create a new file" is a feature request.
 
 ### #661: Pico restyles Monaco's find widget
 - Probe on `/chip` (Chromium, Vite dev): the widget's `div[role=button]` buttons get Pico's `[role=button]` rule:

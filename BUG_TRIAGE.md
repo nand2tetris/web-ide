@@ -1,7 +1,7 @@
 # Open Bug backlog: working theories and repros
 
 Snapshot 2026-10-22, issue type `Bug`, nand2tetris/web-ide, base `dcbf864`.
-Status: **R** = reproduced by a committed test, **T** = theory from code review only, **X** = does not reproduce on main / out of this repo.
+Status: **F** = fixed on branch `claude/694-service-worker` (test no longer gated), **R** = reproduced by a committed test, **T** = theory from code review only, **X** = does not reproduce on main / out of this repo.
 
 Repro tests that fail today are wrapped so the suites stay green:
 Vitest uses `test.fails` (remove `.fails` with the fix); Playwright specs are tagged `@bug`
@@ -10,8 +10,8 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
 
 | # | Title | Status | Repro |
 |---|-------|--------|-------|
-| 694 | Service worker build in Vite | R | `e2e/tests/bugs/issue-694-service-worker.spec.ts` |
-| 682 | Failed to fetch `Monaco-*.js` | T (same cause as 694) | covered by 694 |
+| 694 | Service worker build in Vite | F (fixed: worker removed, kill-switch served) | `e2e/tests/bugs/issue-694-service-worker.spec.ts` (now in the default suite) |
+| 682 | Failed to fetch `Monaco-*.js` | F (fixed with 694: `vite:preloadError` reload-once) | covered by 694 |
 | 673 | VM Emulator: "No .vm files", blank page | R (two defects) | `components/src/repro/issue-673.test.ts` |
 | 622 | Run clears program / "Cannot find /Mult.asm" (+#527) | R | `components/src/repro/issue-622.test.ts` |
 | 602 | Assembler cannot load a local file | R | `e2e/tests/bugs/issue-602-asm-local-file.spec.ts` |
@@ -26,15 +26,24 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
 
 ## Findings
 
-### #694 and #682: service worker is never emitted by Vite
-- `web/src/index.tsx:18` calls `serviceWorkerRegistration.register()`, which registers `${BASE_URL}service-worker.js`.
-- `web/src/service-worker.ts` is a CRA Workbox file (`self.__WB_MANIFEST`). `web/vite.config.ts` has no entry or plugin for it.
-- `npm run build -w web` output (checked) has no `service-worker.js`. GitHub Pages answers 404.
-- #682: chunk names are content-hashed (`Monaco-CQMKx7kc.js` here, `Monaco-CxvvpQgB.js` in the report).
-  A stale `index.html` or an old CRA-era worker still precaching old assets points at a chunk that no longer exists.
-  #488 ("works locally, fails on the site") fits the same pattern.
-- Fix direction: build the worker with `vite-plugin-pwa` (injectManifest) or drop it and unregister old workers;
-  add a `vite:preloadError` handler that reloads once.
+### #694 and #682: service worker is never emitted by Vite (fixed)
+- Root cause: `web/src/index.tsx:18` registered `${BASE_URL}service-worker.js`, but `web/vite.config.ts` never built `web/src/service-worker.ts` (a CRA Workbox file), so GitHub Pages answered 404.
+  Worse, a 404 at the registered URL makes the browser's update check fail, so CRA-era installs kept their old worker and its stale precache and index.html forever.
+  Stale `index.html` plus old hashed chunk names is #682 ("Failed to fetch dynamically imported module .../Monaco-*.js"); #488 fits the same pattern.
+- Fix (option b, no new dependency): the app registers nothing. `web/public/service-worker.js` is a kill-switch served at the old URL
+  (skipWaiting, delete Workbox caches containing `/web-ide/` plus CRA's `images`, unregister, reload in-scope tabs).
+  `web/src/legacyServiceWorker.ts` does the same cleanup from the page. `web/src/preloadError.ts` reloads once on `vite:preloadError`
+  (sessionStorage guard, cleared after 10 s of uptime, no storage means no reload). `service-worker.ts` and the CRA registration helper are deleted.
+- Why not `vite-plugin-pwa`: it is not installed, Vite is 8.0.10 here (`web/package.json` asks ^7.3.2), it needs a precache and update policy,
+  and it reintroduces the stale-chunk hazard. The offline benefit was already gone: the editor loads from jsdelivr at runtime.
+- The old worker's CDN entries were dead: it precached `monaco-editor@0.43.0` and Material Symbols `v179`;
+  the page requests `monaco-editor@0.55.1` (from `@monaco-editor/loader` 1.7.0 defaults) and `v380`. Its `/web-ide/...` absolute paths happened to match the base.
+- Follow-up, not done: `monaco-editor` is bundled (`Monaco-*.js`, 3.7 MB, via `web/src/languages/jack.ts:1` and `web/src/shell/Monaco.tsx:4`)
+  and also fetched from jsdelivr, because no `loader.config({ monaco })` exists. Offline support would need that first.
+- Keep `public/service-worker.js` indefinitely: old installs can return at any time.
+- Test: `e2e/tests/bugs/issue-694-service-worker.spec.ts` serves a fake old CRA site, lets its worker take control, swaps in the new build,
+  and expects the worker and cache gone and the new app loaded; then blocks the first `Monaco-*.js` request and expects one reload and a working editor.
+  It skips when `web/build` is missing (CI builds first) and honours `BUILD_DIR`. Checked red against the pre-fix build and red with the listener disabled.
 
 ### #622 and #673: local uploads are never written to the virtual fs
 - `web/src/shell/test_panel.tsx` (the `File uploaded` branch) calls `setPath(tstFile.name)`: a basename, no directory.

@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import { removeLegacyServiceWorkers } from "./legacyServiceWorker";
+import { installPreloadErrorReload } from "./preloadError";
 
 import "./pico/pico.scss";
 
@@ -15,4 +16,5 @@ root.render(
   </React.StrictMode>,
 );
 
-serviceWorkerRegistration.register();
+installPreloadErrorReload();
+void removeLegacyServiceWorkers();

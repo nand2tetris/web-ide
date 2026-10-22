@@ -26,6 +26,7 @@ import { TrackingBanner } from "./tracking";
 import { updateVersion } from "./versions";
 
 i18n.load("en", messages.messages);
+i18n.load("en-US", messages.messages);
 i18n.load("en-PL", plMessages.messages);
 i18n.loadLocaleData({
   en: { plurals: en },

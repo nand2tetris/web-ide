@@ -27,6 +27,7 @@ import {
 import { AppContext } from "../App.context";
 import { Editor } from "./editor";
 import { isPath } from "./file_select";
+import { baseName, readSelection } from "./file_selection";
 import { Panel } from "./panel";
 import { Tab, TabList } from "./tabs";
 
@@ -130,15 +131,16 @@ export const TestPanel = ({
         return;
       }
       setPath?.(file.path);
-      setName(file.path.split("/").pop() ?? "");
+      setName(baseName(file.path));
       const { tst, cmp } = unwrap(files);
       setTst?.(tst);
       setCmp?.(cmp ?? "");
-    } else { // File uploaded
-      const selectedFiles = Array.isArray(file) ? file : [file];
-      const tstFile = selectedFiles.find(f => f.name.endsWith('.tst'));
-      const cmpFile = selectedFiles.find(f => f.name.endsWith('.cmp'));
-      
+    } else {
+      // File uploaded: contents are already in hand.
+      const selectedFiles = await readSelection(fs, file);
+      const tstFile = selectedFiles.find((f) => f.name.endsWith(".tst"));
+      const cmpFile = selectedFiles.find((f) => f.name.endsWith(".cmp"));
+
       if (tstFile) {
         setTst?.(tstFile.content);
         setName(tstFile.name);

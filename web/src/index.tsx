@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import { removeLegacyServiceWorker } from "./legacyServiceWorker";
 
 import "./pico/pico.scss";
 
@@ -15,4 +15,4 @@ root.render(
   </React.StrictMode>,
 );
 
-serviceWorkerRegistration.register();
+removeLegacyServiceWorker();

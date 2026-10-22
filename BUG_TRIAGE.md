@@ -3,7 +3,7 @@
 Snapshot 2026-10-22, issue type `Bug`, nand2tetris/web-ide, base `dcbf864`.
 Status: **R** = reproduced by a committed test, **T** = theory from code review only, **X** = does not reproduce on main / out of this repo.
 
-Repro tests that fail today are wrapped so the suites stay green:
+Repro tests that fail today are wrapped so the suites stay green (the #622 and #673 repros are now unwrapped and pass):
 Vitest uses `test.fails` (remove `.fails` with the fix); Playwright specs are tagged `@bug`
 and skipped unless run with `BUGS=1 npm test -w e2e -- --grep @bug`.
 Each was run un-wrapped once to confirm it fails for the stated reason.
@@ -12,8 +12,8 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
 |---|-------|--------|-------|
 | 694 | Service worker build in Vite | R | `e2e/tests/bugs/issue-694-service-worker.spec.ts` |
 | 682 | Failed to fetch `Monaco-*.js` | T (same cause as 694) | covered by 694 |
-| 673 | VM Emulator: "No .vm files", blank page | R (two defects) | `components/src/repro/issue-673.test.ts` |
-| 622 | Run clears program / "Cannot find /Mult.asm" (+#527) | R | `components/src/repro/issue-622.test.ts` |
+| 673 | VM Emulator: "No .vm files", blank page | R, store side fixed (UI follow-up below) | `components/src/repro/issue-673.test.ts` |
+| 622 | Run clears program / "Cannot find /Mult.asm" (+#527) | R, store side fixed (UI follow-up below) | `components/src/repro/issue-622.test.ts` |
 | 602 | Assembler cannot load a local file | R | `e2e/tests/bugs/issue-602-asm-local-file.spec.ts` |
 | 661 | Cannot exit Monaco find mode | R (styling), click not reproduced | `e2e/tests/bugs/issue-661-find-widget.spec.ts` |
 | 561 | Memory test hangs in Chrome | X (fixed in tree; stale download) | none |
@@ -49,6 +49,24 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
   `chip.store.ts:579` and `chips/memory.tsx:263`.
 - Fix direction: write uploads into `fs` (for example under an `/uploads` dir) and use that as the test dir,
   or have `load` fall back to the files already loaded; make the catch blocks coerce non-Errors.
+
+#### #622 and #673: store-side fix (done) and UI follow-up (open)
+Done in `components/src` only:
+- `errorMessage(e: unknown)` in `file_utils.ts` replaces every `(e as Error).message` in `vm.store.ts`, `cpu.store.ts`, `chip.store.ts` and `chips/memory.tsx`.
+  A rejection with `undefined` no longer throws out of the catch.
+- `vm.store.ts` `load()` wraps `fs.stat` in try/catch. Missing path: bare `load,` (path `""`) keeps the VM files from the last `loadVm` and only resets;
+  an explicit missing path throws `Cannot find <path>`, reported as `Runtime error: ...`. An empty folder with a bare `load,` also keeps the loaded files.
+- `cpu.store.ts` `compileTest` `doLoad`: if `fs.readFile` fails and the test path has no `/` (bare upload) and the ROM is non-empty, keep the ROM.
+  A test with a real directory, or an empty ROM, still gets `Cannot find <path>`.
+- These are fallbacks, not the real fix: they only work when the program was uploaded before the test.
+
+Still open, for after the #602 shared file-picking abstraction lands (`web/src/shell/file_select.tsx`, `test_panel.tsx`, page pickers):
+- Write `LocalFile` uploads (program, VM folder, tst, cmp) into the virtual `fs`, for example under `/uploads/<name>/`.
+- `test_panel.tsx` upload branch should call `setPath` with that fs path, not `tstFile.name`, so `dirname` is real and `load Foo.asm`, `compare-to` and `load,` resolve normally.
+  Then the bare-path fallbacks above become a safety net.
+- With uploads in `fs`, a test that `load`s a different file than the one uploaded works; today it fails with `Cannot find`.
+- Check the `compareTo` handlers in `cpu.store.ts` and `vm.store.ts`: they `fs.readFile` next to the tst and still fail for bare paths.
+- The #673 "blank page" was the unhandled TypeError; confirm in a browser (Safari/Firefox) that the error banner now shows.
 
 ### #602: Assembler picker has no local option
 - `web/src/pages/asm.tsx:64` uses `filePicker.select`; CPU, VM and test panel use `selectAllowLocal`,

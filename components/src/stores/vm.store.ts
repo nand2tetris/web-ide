@@ -26,6 +26,7 @@ import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
+import { errorMessage } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
@@ -136,6 +137,7 @@ export function makeVmStore(
   let useTest = false;
   let animate = true;
   let vmSource = "";
+  let loadedFiles: VmFile[] = [];
   let showHighlight = true;
   const reducers = {
     setVm(state: VmPageState, vm: string) {
@@ -231,7 +233,26 @@ export function makeVmStore(
       const files: VmFile[] = [];
       let title: string;
 
-      if ((await fs.stat(path)).isFile()) {
+      // `fs.stat` rejects (with `undefined`) for a missing path.
+      let stat: Awaited<ReturnType<FileSystem["stat"]>> | undefined;
+      try {
+        stat = await fs.stat(path);
+      } catch (_e) {
+        stat = undefined;
+      }
+
+      if (!stat) {
+        // A bare `load,` from a test uploaded from disk has no directory to
+        // scan. Keep the VM files the user already loaded (#673).
+        if (!path && loadedFiles.length > 0) {
+          this.reset();
+          setStatus("");
+          return;
+        }
+        throw new Error(`Cannot find ${path || "the VM files"}`);
+      }
+
+      if (stat.isFile()) {
         // single file
         files.push({
           name: assertExists(path.split("/").pop()).replace(".vm", ""),
@@ -249,6 +270,12 @@ export function makeVmStore(
           });
         }
         title = `${path.split("/").pop()} / *.vm`;
+
+        if (files.length === 0 && !path && loadedFiles.length > 0) {
+          this.reset();
+          setStatus("");
+          return;
+        }
       }
       dispatch.current({ action: "setTitle", payload: title });
       this.loadVm(files);
@@ -289,6 +316,7 @@ export function makeVmStore(
         return;
       }
       vmSource = content;
+      loadedFiles = files;
 
       const parsed = [];
 
@@ -392,10 +420,13 @@ export function makeVmStore(
         return done;
       } catch (e) {
         setStatus({
-          message: `Runtime error: ${(e as Error).message}`,
+          message: `Runtime error: ${errorMessage(e)}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: e });
+        dispatch.current({
+          action: "setError",
+          payload: e instanceof Error ? e : new Error(errorMessage(e)),
+        });
         return true;
       }
     },
@@ -420,10 +451,13 @@ export function makeVmStore(
         return done;
       } catch (e) {
         setStatus({
-          message: `Runtime error: ${(e as Error).message}`,
+          message: `Runtime error: ${errorMessage(e)}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: e });
+        dispatch.current({
+          action: "setError",
+          payload: e instanceof Error ? e : new Error(errorMessage(e)),
+        });
         return true;
       }
     },

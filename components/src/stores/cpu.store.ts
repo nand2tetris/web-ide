@@ -20,7 +20,7 @@ import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
-import { loadTestFiles } from "../file_utils.js";
+import { errorMessage, loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
@@ -199,7 +199,7 @@ export function makeCpuStore(
         return done;
       } catch (e) {
         setStatus({
-          message: (e as Error).message,
+          message: errorMessage(e),
           severity: "ERROR",
         });
         return true;
@@ -265,6 +265,12 @@ export function makeCpuStore(
           try {
             file = await fs.readFile(path);
           } catch (_e) {
+            // A test uploaded from disk has a bare path ("Mult.tst", no
+            // directory), so `path` cannot be resolved in `fs`. Keep the ROM
+            // the user already loaded rather than failing (#622).
+            if (!tstPath.includes("/") && !test.cpu.ROM.isEmpty()) {
+              return;
+            }
             throw new Error(`Cannot find ${path}`);
           }
           const loader = path.endsWith("hack")
@@ -273,7 +279,6 @@ export function makeCpuStore(
               ? loadAsm
               : loadBlob;
           const bytes = await loader(file);
-          console.log(bytes);
           test.cpu.ROM.loadBytes(bytes);
         },
         compareTo: async (file) => {

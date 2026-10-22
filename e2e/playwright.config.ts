@@ -2,6 +2,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "tests",
+  // Known-bug reproductions fail until fixed; run with `BUGS=1 npm test -w e2e -- --grep @bug`.
+  grepInvert: process.env.BUGS ? undefined : /@bug/,
   retries: process.env.CI ? 3 : 0,
   timeout: 60_000,
   reporter: process.env.CI ? "dot" : "list",

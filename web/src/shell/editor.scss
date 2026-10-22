@@ -23,6 +23,17 @@
     position: absolute;
   }
 
+  // Monaco puts button tooltips (such as the find widget's "Close (Escape)")
+  // in a `.context-view` inside this editor, so their width is capped by the
+  // editor's right edge. Monaco places the tooltip using a one-line height; if
+  // the label then wraps, the tooltip grows down over the button it describes
+  // and intercepts the click (#661). Keep these short labels on one line.
+  // Monaco sets `white-space: pre-wrap` inline on plain-text hover contents
+  // (hoverWidget.js), so `!important` is needed to override it.
+  .monaco-hover.workbench-hover.compact .hover-contents {
+    white-space: nowrap !important;
+  }
+
   .highlight {
     background-color: var(--mark-background-color);
   }

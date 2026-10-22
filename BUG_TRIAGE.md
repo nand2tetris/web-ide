@@ -15,7 +15,7 @@ Each was run un-wrapped once to confirm it fails for the stated reason.
 | 673 | VM Emulator: "No .vm files", blank page | R, store side fixed (UI follow-up below) | `components/src/repro/issue-673.test.ts` |
 | 622 | Run clears program / "Cannot find /Mult.asm" (+#527) | R, store side fixed (UI follow-up below) | `components/src/repro/issue-622.test.ts` |
 | 602 | Assembler cannot load a local file | Fixed; repro now runs in the default e2e suite | `e2e/tests/asm/local-file.spec.ts` |
-| 661 | Cannot exit Monaco find mode | R (styling), click not reproduced | `e2e/tests/bugs/issue-661-find-widget.spec.ts` |
+| 661 | Cannot exit Monaco find mode | Fixed (click); Pico restyle still R | `e2e/tests/bugs/issue-661-find-widget.spec.ts` |
 | 561 | Memory test hangs in Chrome | X (fixed in tree; stale download) | none |
 | 488 | OutputTest ERR 14 / stack overflow | X | `simulator/src/repro/issue-488.test.ts` (passes, regression guard) |
 | 659 | Wrong RAM addresses in tests | X (needs reporter's version) | none |
@@ -89,12 +89,20 @@ Still open, for after the #602 shared file-picking abstraction lands (`web/src/s
   which is the hook a later fix can use (write the file, then fill `path`).
 - Still open from the report: "no option to create a new file" is a feature request.
 
-### #661: Pico restyles Monaco's find widget
-- Probe on `/chip` (Chromium, Vite dev): the widget's `div[role=button]` buttons get Pico's `[role=button]` rule:
-  background `rgb(16, 149, 193)`, 1px border, 3px padding.
-- The "x" still closes on click in Chromium, so the reported failure is not reproduced.
-  The reporter's browser is unknown, and the maintainer reproduced it on 2026-06-12. Ask for browser and version.
-- Fix direction: scope Pico's button rules away from `.monaco-editor` (or reset `.monaco-editor [role=button]`).
+### #661: Monaco's own hover covers the find widget's "x"
+- The maintainer was right: a hover popover blocks the click. Reproduced in Chromium (Vite dev, 1280x720 and 1920x1080): hover the "x", then click.
+  Playwright: `<div class="hover-contents">Close (Escape)</div> from <div class="context-view monaco-component top left"> subtree intercepts pointer events`.
+- Intercepting element: `.context-view > .monaco-hover.workbench-hover.compact > .hover-contents`, Monaco's button tooltip (`z-index: 2576`, `pointer-events: auto`).
+  Not the app's `Tooltip.tsx` (`pointer-events: none`, `web/src/shell/Tooltip.tsx:305,319`), not an overlay.
+- Cause: the `.context-view` is inside `.Editor`, so its shrink-to-fit width is capped by the editor's right edge. Monaco places the tooltip above the "x" with a one-line height,
+  then the label wraps to two lines (94x44 instead of 109x25) and grows down over the "x" (hover y 85-129, "x" y 113-129).
+  Monaco sets `white-space: pre-wrap` inline on plain-text hover contents (`monaco-editor/esm/vs/platform/hover/browser/hoverWidget.js:133`).
+- Falsified: the Pico `[role=button]` restyle (click still blocked with it neutralised), `Tooltip.tsx`, and `fixedOverflowWidgets: true` (no effect, reverted).
+- Fix: `web/src/shell/editor.scss` keeps compact hover labels on one line (`white-space: nowrap !important` on `.monaco-hover.workbench-hover.compact .hover-contents`, scoped to `.Editor`).
+  The click test in `e2e/tests/bugs/issue-661-find-widget.spec.ts` now runs in the normal suite.
+- Still open: Pico's `[role=button]` rule gives the find widget's buttons `rgb(16, 149, 193)` background, a border and padding. Cosmetic. Its assertion stays `@bug`.
+  Fix direction: reset `.monaco-editor [role=button]`.
+- Caveat: verified on Chromium only; the reporter's browser and version are unknown.
 
 ### Not reproduced / outside this repo
 - **#561**: `projects/src/project_05/01_memory.ts:161,214` already use `tick, tock;`.

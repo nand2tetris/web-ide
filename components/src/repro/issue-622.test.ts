@@ -17,8 +17,7 @@ output-list RAM[2]%D2.6.2;
 repeat 4 { ticktock; }
 output;`;
 
-// `test.fails`: red until #622 is fixed; remove the `.fails` with the fix.
-test.fails("a locally uploaded .tst with a `load` line runs against the loaded ROM", async () => {
+test("a locally uploaded .tst with a `load` line runs against the loaded ROM", async () => {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   const setStatus = vi.fn();
   const dispatch = { current: vi.fn() as unknown as CpuStoreDispatch };
@@ -50,5 +49,48 @@ test.fails("a locally uploaded .tst with a `load` line runs against the loaded R
     .map(([s]) => (typeof s === "string" ? s : s.message))
     .filter((m) => /Cannot find/.test(m));
   expect(errors).toEqual([]);
-  expect(state.sim.ROM.get(1)).toBe(0xec10);
+  expect(state.sim.ROM.get(1) & 0xffff).toBe(0xec10); // adapter reads signed int16
+});
+
+function cpuHarness() {
+  const fs = new FileSystem(new ObjectFileSystemAdapter({}));
+  const statuses: string[] = [];
+  const setStatus = (s: string | { message: string }) =>
+    statuses.push(typeof s === "string" ? s : s.message);
+  const dispatch = { current: vi.fn() as unknown as CpuStoreDispatch };
+  const { initialState, reducers, actions } = makeCpuStore(
+    fs,
+    setStatus,
+    {},
+    dispatch,
+  );
+  let state = initialState;
+  dispatch.current = ((c: {
+    action: keyof typeof reducers;
+    payload?: unknown;
+  }) => {
+    state = produce(state, (d) => {
+      reducers[c.action].call(reducers, d, c.payload as never);
+    });
+  }) as CpuStoreDispatch;
+  return { actions, statuses, getState: () => state };
+}
+
+test("a missing file next to a real test path is still an error", async () => {
+  const { actions, statuses } = cpuHarness();
+  const rom = new ROM();
+  rom.loadBytes([0x0000]);
+  actions.replaceROM(rom);
+  expect(actions.compileTest(TST, "", "/proj/Mult.tst")).toBe(true);
+  await actions.testStep();
+  expect(statuses.some((m) => /Cannot find \/proj\/Mult\.asm/.test(m))).toBe(
+    true,
+  );
+});
+
+test("a bare-path test with no ROM loaded still reports the missing file", async () => {
+  const { actions, statuses } = cpuHarness();
+  expect(actions.compileTest(TST, "", "Mult.tst")).toBe(true);
+  await actions.testStep();
+  expect(statuses.some((m) => /Cannot find/.test(m))).toBe(true);
 });

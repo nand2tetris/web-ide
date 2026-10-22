@@ -20,8 +20,7 @@ output-list RAM[0]%D1.6.1;
 repeat 2 { vmstep; }
 output;`;
 
-// `test.fails`: red until #673 is fixed; remove the `.fails` with the fix.
-test.fails("a locally uploaded VME .tst keeps the locally uploaded VM files", async () => {
+test("a locally uploaded VME .tst keeps the locally uploaded VM files", async () => {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   const statuses: string[] = [];
   const setStatus = (s: string | { message: string }) =>
@@ -56,7 +55,7 @@ test.fails("a locally uploaded VME .tst keeps the locally uploaded VM files", as
 // Second defect behind the blank page: `fs.stat` on a missing path rejects with
 // `undefined`, and `testStep`'s catch block reads `(e as Error).message`, so the
 // handler itself throws a TypeError and escapes into the Timer (unhandled).
-test.fails("testStep reports a non-Error rejection instead of throwing", async () => {
+test("testStep reports a non-Error rejection instead of throwing", async () => {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   const statuses: string[] = [];
   const dispatch = { current: vi.fn() as unknown as VmStoreDispatch };
@@ -69,4 +68,27 @@ test.fails("testStep reports a non-Error rejection instead of throwing", async (
   actions.loadTest("MemoryTestVME.tst", "load,\nvmstep;\n");
   await expect(actions.testStep()).resolves.toBe(true);
   expect(statuses.some((s) => s.startsWith("Runtime error"))).toBe(true);
+});
+
+function vmHarness() {
+  const fs = new FileSystem(new ObjectFileSystemAdapter({}));
+  const statuses: string[] = [];
+  const dispatch = { current: vi.fn() as unknown as VmStoreDispatch };
+  const { actions } = makeVmStore(
+    fs,
+    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    {},
+    dispatch,
+  );
+  return { actions, statuses };
+}
+
+test("an explicit missing .vm file still reports Cannot find", async () => {
+  const { actions, statuses } = vmHarness();
+  expect(actions.loadVm(VM_FILES)).toBe(true);
+  actions.loadTest("/proj/T.tst", "load Missing.vm,\nvmstep;\n");
+  await expect(actions.testStep()).resolves.toBe(true);
+  expect(statuses.some((s) => /Cannot find \/proj\/Missing\.vm/.test(s))).toBe(
+    true,
+  );
 });

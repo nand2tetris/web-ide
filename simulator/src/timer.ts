@@ -86,7 +86,9 @@ export abstract class Timer {
       }
       this.#sinceLastFrame -= this.speed;
     }
-    requestAnimationFrame(this.#run);
+    if (this.#running) {
+      requestAnimationFrame(this.#run);
+    }
   };
 
   start() {

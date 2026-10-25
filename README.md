@@ -12,7 +12,7 @@ The user guides for the web IDE are available [here](https://drive.google.com/dr
 
 The user guide for the extension is coming.
 
-The parts of the user guide that describe the UI may be out of sync with the code since we keep experimenting with differtent UI's.
+The parts of the user guide that describe the UI may be out of sync with the code since we keep experimenting with different UIs.
 
 ### CLI
 
@@ -27,7 +27,7 @@ Run the CLI:
     nand2tetris grade
     nand2tetris run DMux4Way.tst
 
-Run the CLI with a nand2tetris Java install:
+Run the CLI with a nand2tetris Java install. The `--java_ide` option defaults to `$NAND2TETRIS_PATH`.
 
     cd nand2tetris/project/01
     nand2tetris grade --java_ide=${HOME}/nand2tetris
@@ -39,24 +39,21 @@ Build the web IDE:
     npm install
     npm run build && npm run start
 
-It will print the URL to the console. Any changes will automatically trigger a rebuild.
+The dev server prints its URL, <http://localhost:5173/web-ide/>, to the console. Changes in `web` reload automatically. To rebuild the libraries on change as well, run `npm run watch` in a second terminal.
+
+[CONTRIBUTING.md](./CONTRIBUTING.md) explains how to set up a development environment and send changes.
 
 ## Architecture
 
-NAND2Tetris kit is a monorepo with several projects.
-`simulator` is the core NAND2Tetris code.
-`projects` has copies of project base and test files.
-`runner` is a utility to execute chips against a Java ide install, looking for nand2tetris.jar in $NAND2TETRIS_PATH.
-`components` are reusable React UI pieces suitable for both web and extension.
-`web` is a standalone web IDE.
-`extension` is a VSCode extension with editor support.
-`cli` is a command line NodeJS program (runnable with `npx`) to grade one or more project folders.
+NAND2Tetris kit is a monorepo with several packages.
+[DEVELOPMENT.md](./DEVELOPMENT.md#package-roles) lists each package's role and the order they build in.
+The sections below describe the larger subsystems.
 
 ### Simulator
 
 Simulator has code to handle running the various emulators, regardless of interface or runtime.
-Simulator objects are also independant of language, and serve equally well to running tests as to binding to the DOM or printing to a CLI.
-`chip`, `cpu`, and `vm` cover the primary hack languages, with `compare`, `output`, and `tst` handling the common project tooling.
+Simulator objects are also independent of language, and serve equally well to running tests as to binding to the DOM or printing to a CLI.
+`chip`, `cpu`, and `vm` cover the primary hack languages, with `compare`, `output`, and `test` handling the common project tooling.
 
 #### Languages
 
@@ -67,7 +64,7 @@ Replacing or augmenting this to handle a number of errors, rather than only the 
 ### Web
 
 NAND2Tetris Web IDE is a stand-alone single-page app with separate sections for Hack Hardware, CPU, and VM emulators.
-It has a unified file system using browser local storage to save users' solutions to project work.
+It has a unified file system that saves users' solutions in browser storage or, in Chromium browsers, in a folder on the user's computer.
 Emulators share simulator code, especially to handle executing tests as well as converting between Javascript 64-bit floating point numbers and Hack 16-bit integers.
 
 The interface code is in the `pages` and `components` folders.
@@ -95,7 +92,7 @@ Specific components in the forked Pico include [`inline-buttons`](https://github
 
 A VSCode extension with language definitions and editor support.
 
-- `npm run -w extension package` builds the extension & related views into a stand-along `.vsix` file.
+- `npm run -w extension package` builds the extension & related views into a standalone `.vsix` file.
 - `Run Extension` launch configuration starts a new VSCode extension host to debug the extension.
 
 #### Languages

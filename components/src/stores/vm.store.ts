@@ -136,6 +136,7 @@ export function makeVmStore(
   let useTest = false;
   let animate = true;
   let vmSource = "";
+  let loadedFiles: VmFile[] = [];
   let showHighlight = true;
   const reducers = {
     setVm(state: VmPageState, vm: string) {
@@ -231,7 +232,10 @@ export function makeVmStore(
       const files: VmFile[] = [];
       let title: string;
 
-      if ((await fs.stat(path)).isFile()) {
+      // `fs.stat` rejects with `undefined` for a missing path.
+      const stat = await fs.stat(path).catch(() => undefined);
+
+      if (stat?.isFile()) {
         // single file
         files.push({
           name: assertExists(path.split("/").pop()).replace(".vm", ""),
@@ -240,7 +244,8 @@ export function makeVmStore(
         title = path.split("/").pop() ?? "";
       } else {
         // folder
-        for (const file of (await fs.scandir(path)).filter(
+        const entries = stat ? await fs.scandir(path) : [];
+        for (const file of entries.filter(
           (entry) => entry.isFile() && entry.name.endsWith(".vm"),
         )) {
           files.push({
@@ -249,6 +254,15 @@ export function makeVmStore(
           });
         }
         title = `${path.split("/").pop()} / *.vm`;
+
+        // A bare `load,` from a test uploaded from disk has no directory to
+        // scan. Keep the VM files the user already loaded (#673).
+        if (files.length === 0 && !path && loadedFiles.length > 0) {
+          this.reset();
+          setStatus("");
+          return;
+        }
+        if (!stat) throw new Error(`Cannot find ${path}`);
       }
       dispatch.current({ action: "setTitle", payload: title });
       this.loadVm(files);
@@ -289,6 +303,7 @@ export function makeVmStore(
         return;
       }
       vmSource = content;
+      loadedFiles = files;
 
       const parsed = [];
 
@@ -391,11 +406,12 @@ export function makeVmStore(
         }
         return done;
       } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
         setStatus({
-          message: `Runtime error: ${(e as Error).message}`,
+          message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: e });
+        dispatch.current({ action: "setError", payload: error });
         return true;
       }
     },
@@ -419,11 +435,12 @@ export function makeVmStore(
 
         return done;
       } catch (e) {
+        const error = e instanceof Error ? e : new Error(String(e));
         setStatus({
-          message: `Runtime error: ${(e as Error).message}`,
+          message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: e });
+        dispatch.current({ action: "setError", payload: error });
         return true;
       }
     },

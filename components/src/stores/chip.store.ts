@@ -196,8 +196,6 @@ export function makeChipStore(
       state: ChipPageState,
       { chipName, dir }: { chipName: string; dir: string },
     ) {
-      _dir = dir;
-      _chipName = chipName;
       state.controls.chipName = chipName;
       state.title = `${chipName}.hdl`;
       state.controls.tests = Array.from(tests);
@@ -205,7 +203,6 @@ export function makeChipStore(
     },
 
     clearChip(state: ChipPageState) {
-      _chipName = "";
       state.controls.chipName = "";
       state.title = undefined;
       state.controls.tests = [];
@@ -316,6 +313,7 @@ export function makeChipStore(
         await actions.setProject(sortedNames[0]);
       } else {
         dispatch.current({ action: "setChips", payload: [] });
+        _chipName = "";
         dispatch.current({ action: "clearChip" });
       }
     },
@@ -362,6 +360,10 @@ export function makeChipStore(
         await this.initializeTests(dir, name);
       }
 
+      // Update the closure before any dispatch: React applies reducers lazily
+      // during render, so loadBuiltin below must not depend on setChip.
+      _dir = dir;
+      _chipName = name;
       dispatch.current({
         action: "setChip",
         payload: { chipName: name, dir: dir },
@@ -369,7 +371,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { hdl } });
 
       if (usingBuiltin) {
-        this.loadBuiltin();
+        await this.loadBuiltin();
         dispatch.current({ action: "displayBuiltin" });
       }
     },

@@ -265,6 +265,9 @@ export function makeCpuStore(
           try {
             file = await fs.readFile(path);
           } catch (_e) {
+            // A test uploaded from disk has a bare path ("Mult.tst"), so
+            // `path` cannot be resolved in `fs`. Keep the loaded ROM (#622).
+            if (!tstPath.includes("/") && !test.cpu.ROM.isEmpty()) return;
             throw new Error(`Cannot find ${path}`);
           }
           const loader = path.endsWith("hack")

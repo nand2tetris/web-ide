@@ -41,7 +41,7 @@ export const RectAsm = `// This file is part of www.nand2tetris.org
    M=D
    // decrements n and loops
    @n
-   MD=M-1
+   DM=M-1
    @LOOP
    D;JGT
 (END)
@@ -76,7 +76,7 @@ D=D+A
 @17
 M=D
 @16
-MD=M-1
+DM=M-1
 @10
 D;JGT
 @23

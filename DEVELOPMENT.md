@@ -1,105 +1,110 @@
-# Nand2Tetris Web IDE — Developing
+# Nand2Tetris Web IDE Developer Guide
+
+This guide explains how the repository is built, tested, and organized. [CONTRIBUTING.md](./CONTRIBUTING.md) covers first time setup and the pull request process. [AGENTS.md](./AGENTS.md) condenses these rules for coding agents. [MANUAL_TESTING.md](./MANUAL_TESTING.md) lists checks that cannot be automated.
 
 ## Project Summary
 
-TypeScript npm workspaces monorepo implementing the full nand2tetris course (hardware simulation through OS) as a browser-based IDE. Deployed to GitHub Pages at `https://nand2tetris.github.io/web-ide`.
+The repository is a TypeScript monorepo of npm workspaces. It implements the full nand2tetris course, from hardware simulation through the operating system, as a browser IDE. GitHub Pages hosts the deployed app at <https://nand2tetris.github.io/web-ide>.
 
 ## Toolchain
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Node | ≥22 | Runtime |
-| npm | ≥10 | Package manager + workspaces |
-| TypeScript | ^5.9 | Language (composite project references) |
-| Biome | ^2.3 | Format + lint |
-| Jest | ^29 | Tests (simulator, components use react-scripts) |
-| Playwright | ^1.52 | E2E tests (chip simulator, Chromium only) |
-
-## Package Build Order
-
-Dependencies flow strictly left-to-right; always build in this sequence:
-
-```
-projects → runner → simulator → components → web
-```
-
-`cli`, `runner`, and `extension` are independent and excluded from most workflows.
-
-## Key Commands (run from repo root)
-
-| Command | What it does |
-|---------|-------------|
-| `npm run check` | format check + type check (builds all packages first) + lint |
-| `npm run format` | Formats and writes all tracked TS files |
-| `npm run fix` | Applies automated lint fixes. |
-| `npm test` | builds all packages then runs Jest across simulator + components + web |
-| `npm run test:e2e` | runs Playwright E2E tests (starts dev server automatically) |
-| `npm run build` | full production build of all packages in order |
-| `npm run start` | starts the CRA dev server for `web` |
-| `npm run all` | install + check + test + build |
-
-Only use the `npm run` commands to invoke formatter, linter, or type checking.
-
-Linting and formatting run quickly. Run them after any change (formatting enforced for Claude via hooks).
-
-`npm run check` runs `precheck:types` which builds all packages before type-checking. This is required because packages reference each other's `build/` output. Because it is slow, prefer `typescript-lsp` for checking for errors.
-
-Test files live in `src/` alongside source (`.test.ts` / `.test.tsx`), not in a separate `tests/` directory. Run tests with `npm test` or `npm test -w <project>`.
+| Node | 22 or newer | Runtime |
+| npm | 10 or newer | Package manager and workspaces |
+| TypeScript | ^6.0 | Language, with composite project references |
+| Biome | ^2.4 | Formatter and linter |
+| Vite | ^7 | Dev server and bundler for `web` |
+| Vitest | ^4 | Unit tests for `simulator`, `components`, `web`, and `cli` |
+| Playwright | ^1.52 | End to end tests for `web`, Chromium only |
 
 ## Package Roles
 
 | Package | Role |
 |---------|------|
-| `projects/` | Static data: all HDL/ASM/VM/Jack course files as TS string exports |
-| `simulator/` | Core emulation engine: chip, CPU, VM, assembler, compiler, test runner |
-| `components/` | Shared React components and Immer/RxJS state stores |
-| `web/` | CRA single-page app hosting all tools; deploys to GitHub Pages |
-| `runner/` | Bridge to reference Java implementations for conformance testing |
-| `cli/` | `npx nand2tetris grade` grading CLI |
+| `projects/` | Static data: all HDL, ASM, VM, and Jack course files as TypeScript string exports |
+| `runner/` | Bridge to the reference Java implementation for conformance testing |
+| `simulator/` | Core emulation engine: chip, CPU, VM, assembler, compiler, and test runner |
+| `components/` | Shared React components and Immer and RxJS state stores |
+| `web/` | Vite single page app hosting all tools; deploys to GitHub Pages |
+| `cli/` | `nand2tetris` grading CLI |
 | `extension/` | VS Code extension wrapping the same components |
-| `e2e/` | Playwright E2E tests for the web app |
+| `e2e/` | Playwright end to end tests for the web app |
 
-## Architecture Notes
+## Package Build Order
 
-- `Result<T, E>` from `@davidsouther/jiffies` is used instead of exceptions throughout simulator.
-- RxJS `Clock` singleton drives tick/tock; React components subscribe in `useEffect`.
-- Ohm.js grammars define all domain languages (HDL, ASM, VM, Jack, TST, CMP).
-- State stores use `useImmerReducer`; stores have no UI imports so web and extension share them.
+Each package imports a previous package's `build/` output, so packages build in this order:
 
-## E2E Tests
+```
+projects → runner → simulator → components → web
+```
 
-E2E tests live in `e2e/` and run with Playwright.
+`cli` depends on `runner` and `simulator`. `extension` depends on `simulator` and `components`. Neither is part of the default test run.
 
-**Running from the repo root:**
+## Key Commands
+
+Run these from the repository root.
 
 | Command | What it does |
 |---------|-------------|
-| `npm run test:e2e` | Starts the dev server if needed, then runs all E2E tests |
-| `npm test -w e2e -- --headed` | Run with a visible browser window |
-| `npm test -w e2e -- --ui` | Open Playwright UI mode for interactive debugging |
-| `npm test -w e2e -- --debug` | Run with Playwright inspector attached |
-| `npm run -w e2e flakes` | Repeat each test 10 times to idenfity flakes.
+| `npm run check` | Builds the libraries, then checks format, types, and lint |
+| `npm run format` | Formats TypeScript sources with Biome and writes the result |
+| `npm run fix` | Applies automated Biome lint fixes |
+| `npm test` | Runs `npm run build` (which runs `npm run check`), then Vitest in `simulator`, `components`, and `web` |
+| `npm test -w <package>` | Runs Vitest in one package without rebuilding its dependencies |
+| `npm run build` | Runs `npm run check`, then builds every package in order |
+| `npm run watch` | Rebuilds `projects`, `runner`, `simulator`, and `components` on change |
+| `npm run start` | Starts the Vite dev server for `web` at <http://localhost:5173/web-ide/> |
+| `npm run test:e2e` | Runs the Playwright end to end tests (see below) |
 
-Pass `-- --grep "Tests"` to any of these to limit which tests are executed.
+Use only these scripts to format, lint, or type check. Formatting and linting are fast, so run them after every change.
 
-When `npm run start` is already running, `npm run test:e2e` reuses the existing server (faster). In CI (`CI=true`), it always starts a fresh server.
+`npm run check` builds `projects`, `runner`, `simulator`, and `components` before it type checks, because packages reference each other's `build/` output. The build makes the check slow, so a TypeScript language server in an editor gives faster feedback while iterating.
 
-**After a failure**, Playwright writes a trace to `e2e/test-results/*/trace.zip`. View it with:
+Unit test files live in `src/` beside their source as `*.test.ts` or `*.test.tsx`, not in a separate `tests/` directory.
+
+## Architecture Notes
+
+- The simulator uses `Result<T, E>` from `@davidsouther/jiffies` instead of exceptions.
+- An RxJS `Clock` singleton drives tick and tock. React components subscribe to it in `useEffect`.
+- Ohm.js grammars define all domain languages: HDL, ASM, VM, Jack, TST, and CMP.
+- State stores use `useImmerReducer`. Stores have no UI imports, so `web` and `extension` share them.
+
+[README.md](./README.md#architecture) describes each subsystem in more depth.
+
+## End to End Tests
+
+End to end tests live in `e2e/tests/` and run with Playwright against the dev server at <http://localhost:5173/web-ide/>.
+
+| Command | What it does |
+|---------|-------------|
+| `npm run test:e2e` | Runs every test in CI mode: always starts a fresh dev server and retries failures |
+| `npm run test:e2e:smoke` | Runs only the tests tagged `@smoke`, in CI mode |
+| `npm test -w e2e` | Runs every test locally, reusing a dev server started with `npm run start` |
+| `npm test -w e2e -- --headed` | Runs with a visible browser window |
+| `npm test -w e2e -- --ui` | Opens Playwright UI mode for interactive debugging |
+| `npm test -w e2e -- --debug` | Runs with the Playwright inspector attached |
+| `npm run -w e2e flakes` | Repeats each test 10 times to identify flaky tests |
+
+Append `-- --grep "<pattern>"` to any of these commands to limit which tests run.
+
+In CI mode, Playwright records a trace when it retries a failed test. View the trace with:
 
 ```
 npx playwright show-trace e2e/test-results/<test-name>/trace.zip
 ```
 
-**Installing Playwright browsers** (once, after cloning or upgrading Playwright):
+Install the Playwright browser once after cloning, and again after upgrading Playwright:
 
 ```
 npm run playwright:install
 ```
 
-## CI / Validation Gates
+## Validation Gates
 
-A clean state means:
-- `npm run check` exits 0 — no format errors, no type errors, no lint errors
-- `npm test` exits 0 — all Jest suites pass
+A change is ready for review when both of these commands exit 0:
 
-Both must be true before claiming any task complete. E2E tests (`npm run test:e2e`) are not required for every change but must pass before merging features that touch the chip simulator UI.
+- `npm run check` reports no format, type, or lint errors.
+- `npm test` passes every Vitest suite.
+
+End to end tests are not required for every change, but they must pass before merging a feature that touches the chip simulator UI. A change to desktop storage also requires the manual checks in [MANUAL_TESTING.md](./MANUAL_TESTING.md).

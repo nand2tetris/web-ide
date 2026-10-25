@@ -8,7 +8,7 @@ Chromium (Chrome, Edge, Brave, Opera) is required. Firefox and Safari do not imp
 
 1. `npm install && npm run build`
 2. `npm run start`
-3. Open the served URL in Chromium.
+3. Open <http://localhost:5173/web-ide/> in Chromium.
 4. Create an empty scratch folder anywhere on disk. This will be the "PC projects folder" for the session. A fresh empty folder is important; the app seeds it the first time.
 
 ## Desktop Storage round-trip
@@ -44,4 +44,6 @@ Pass criteria: every step above behaves as described, no console errors, and the
 
 ## Why this is manual
 
-The native directory picker (`window.showDirectoryPicker`) requires a user gesture and returns handles that Playwright cannot mint from outside the page. A Node-side fixture that forges File System Access handles inside the page has been prototyped but is not yet production quality. See `docs/developer/2026-04-22-D-local-storage-e2e/` for the design exploration and why it was set aside.
+The native directory picker (`window.showDirectoryPicker`) requires a user gesture and returns handles that Playwright cannot mint from outside the page. A Node side fixture that forges File System Access handles inside the page has been prototyped, but it is not yet production quality.
+
+For automated tests and the other validation gates, see [DEVELOPMENT.md](./DEVELOPMENT.md#validation-gates).

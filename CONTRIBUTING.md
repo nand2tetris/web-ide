@@ -6,7 +6,7 @@
 
 ## Dependencies and Environment
 
-The Nand2Tetris Web IDE is developed in the TypeScript programming language and run on the NodeJS platform. Running the IDE and tests locally requires Node 22 or newer and npm 10 or newer. We recommend installing and updating both with the [`nvm` tool](https://github.com/nvm-sh/nvm#installing-and-updating).
+The Nand2Tetris Web IDE is developed in the TypeScript programming language and run on the NodeJS platform. Running the IDE and tests locally requires Node 24 or newer and npm 10 or newer. We recommend installing and updating both with the [`nvm` tool](https://github.com/nvm-sh/nvm#installing-and-updating).
 
 The source code is version controlled using `git`, which should be installed using the recommended way depending on your operating system. Issues, pull requests, and other project management is conducted on [GitHub](https://github.com/nand2tetris/web-ide). When developing to contribute a feature, we recommend creating a fork, cloning from your fork, creating a new branch with `git switch -c`, pushing that branch to your fork, and creating a pull request from that branch to main. See documentation on GitHub and the internet for more details.
 

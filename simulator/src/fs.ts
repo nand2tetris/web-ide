@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import * as loader from "./loader.js";
 
 export async function load(fs: FileSystem, path: string): Promise<number[]> {

@@ -27,7 +27,7 @@ export const Asm = () => {
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
 
-  const runner = useRef<Timer>();
+  const runner = useRef<Timer | undefined>(undefined);
   const [runnerAssigned, setRunnerAssigned] = useState(false);
 
   const [showSymbolTable, setShowSymbolTable] = useState(true);

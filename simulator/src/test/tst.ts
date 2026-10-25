@@ -1,5 +1,5 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Output } from "../output.js";
 import { Action } from "../types.js";
 import {

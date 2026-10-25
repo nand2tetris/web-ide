@@ -1,9 +1,4 @@
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { parse } from "../builder.js";
 import { Chip } from "../chip.js";
 import { Add16 } from "./arithmetic/add_16.js";

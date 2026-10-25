@@ -1,4 +1,4 @@
-import { rounded } from "@davidsouther/jiffies/lib/esm/dom/css/border.js";
+import { rounded } from "@davidsouther/jiffies/dom/css/border.ts";
 import {
   type CSSProperties,
   forwardRef,

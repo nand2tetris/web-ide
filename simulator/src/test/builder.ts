@@ -1,5 +1,5 @@
-import { checkExhaustive } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import { checkExhaustive } from "@davidsouther/jiffies/assert.ts";
+import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { Span } from "../languages/base.js";
 import {
   Tst,

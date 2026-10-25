@@ -4,7 +4,7 @@ import {
   Ok,
   Result,
   unwrap,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/result.ts";
 import { CompilationError, createError } from "../languages/base.js";
 import {
   IfStatement,

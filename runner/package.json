@@ -25,7 +25,7 @@
     }
   },
   "dependencies": {
-    "@davidsouther/jiffies": "2.2.5",
+    "@davidsouther/jiffies": "2026.26.1",
     "@nand2tetris/projects": "file:../projects"
   },
   "scripts": {

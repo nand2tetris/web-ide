@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 
 import * as Bit from "./01_bit.js";
 import * as Register from "./02_register.js";

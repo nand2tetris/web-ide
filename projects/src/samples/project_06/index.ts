@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 import { AddAsm, AddHack } from "./01_add.js";
 import { MaxAsm, MaxHack, MaxLAsm } from "./02_max.js";
 import { RectAsm, RectHack, RectLAsm } from "./03_rect.js";

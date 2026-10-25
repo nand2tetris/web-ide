@@ -1,7 +1,7 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { useDialog } from "@nand2tetris/components/dialog";
@@ -13,7 +13,7 @@ import { ReactElement, type ReactNode } from "react";
 import { useAppContext } from "../App.context";
 
 export const userEvent = ue;
-export { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state";
+export { cleanState } from "./clean_state";
 export * from "@testing-library/react";
 export { i18nRender as render };
 

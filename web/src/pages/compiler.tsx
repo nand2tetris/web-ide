@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useDialog } from "@nand2tetris/components/dialog";

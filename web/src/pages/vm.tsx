@@ -84,8 +84,8 @@ const VM = () => {
     }
   }, [state.controls.exitCode]);
 
-  const vmRunner = useRef<Timer>();
-  const testRunner = useRef<Timer>();
+  const vmRunner = useRef<Timer | undefined>(undefined);
+  const testRunner = useRef<Timer | undefined>(undefined);
   const [runnersAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
     vmRunner.current = new (class VMTimer extends Timer {
@@ -209,7 +209,7 @@ const VM = () => {
     actions.setAnimate(speed <= 2);
   };
 
-  const stackRef = useRef<Rerenderable>();
+  const stackRef = useRef<Rerenderable | undefined>(undefined);
 
   return (
     <div

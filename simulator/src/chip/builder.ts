@@ -1,11 +1,5 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import {
-  Err,
-  isErr,
-  isOk,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
+import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { CompilationError, createError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";

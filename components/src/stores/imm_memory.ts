@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { MemoryAdapter, SubMemory } from "@nand2tetris/simulator/cpu/memory.js";
 import { MutableRefObject } from "react";
 

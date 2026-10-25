@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 
 import * as Not from "./01_not.js";
 import * as And from "./02_and.js";

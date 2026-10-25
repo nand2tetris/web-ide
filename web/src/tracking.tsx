@@ -1,6 +1,6 @@
 import ReactGA from "react-ga4";
 
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { useCallback, useState } from "react";
 import "./tracking.scss";
 

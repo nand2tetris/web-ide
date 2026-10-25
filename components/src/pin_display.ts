@@ -1,4 +1,4 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { REGISTRY as BUILTIN_REGISTRY } from "@nand2tetris/simulator/chip/builtins/index.js";
 
 export class ChipDisplayInfo {

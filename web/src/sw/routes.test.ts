@@ -12,14 +12,12 @@ const navigate = { mode: "navigate" } as Request;
 const url = (path: string) => new URL(path, ORIGIN);
 
 describe("isAppNavigation", () => {
-  it.each([
-    "/web-ide/",
-    "/web-ide/chip",
-    "/web-ide/chip/",
-    "/web-ide/vm/?x=1",
-  ])("matches app routes: %s", (path) => {
-    expect(isAppNavigation(navigate, url(path), ORIGIN, BASE)).toBe(true);
-  });
+  it.each(["/web-ide/", "/web-ide/chip", "/web-ide/chip/", "/web-ide/vm/?x=1"])(
+    "matches app routes: %s",
+    (path) => {
+      expect(isAppNavigation(navigate, url(path), ORIGIN, BASE)).toBe(true);
+    },
+  );
 
   it.each([
     "/web-ide/user_guide/chip.pdf",

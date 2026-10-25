@@ -1,7 +1,7 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { describe, expect, it } from "vitest";
 import { HIGH } from "../../chip.js";

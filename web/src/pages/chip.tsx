@@ -24,7 +24,7 @@ import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
-import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
+import { isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import { TestPanel } from "../shell/test_panel";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
@@ -149,7 +149,7 @@ export const Chip = () => {
     actions.reset();
   }, [tst, cmp, tstDir]);
 
-  const runner = useRef<Timer>();
+  const runner = useRef<Timer | undefined>(undefined);
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
       async reset(): Promise<void> {

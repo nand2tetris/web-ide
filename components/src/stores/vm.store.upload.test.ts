@@ -1,7 +1,7 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import { expect, test, vi } from "vitest";
 import { makeVmStore, VmStoreDispatch } from "./vm.store.js";
 

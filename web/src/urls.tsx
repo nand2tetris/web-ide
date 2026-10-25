@@ -1,4 +1,4 @@
-import { lazy } from "react";
+import { type JSX, lazy } from "react";
 
 const Chip = lazy(() => import("./pages/chip"));
 const CPU = lazy(() => import("./pages/cpu"));

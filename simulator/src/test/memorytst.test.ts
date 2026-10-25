@@ -1,7 +1,7 @@
 // Regression for #561: Memory.tst keyboard loop `while out <> 75 { tick, tock, }`.
 // With ',' separators the whole while loop runs inside ONE Test.step() call; step()
 // must still yield to the event loop so keyboard events can arrive.
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, test } from "vitest";
 import { Memory } from "../chip/builtins/computer/computer.js";
 import { TST } from "../languages/tst.js";
@@ -24,7 +24,6 @@ async function stepOnce(sep: string) {
   test.reset();
   // The keyboard event arrives on a later macrotask, like a real key press.
   const timer = setTimeout(() => {
-    // biome-ignore lint/complexity/useLiteralKeys: private keyboard device
     mem["keyboard"].setKey(75);
   }, 10);
   try {

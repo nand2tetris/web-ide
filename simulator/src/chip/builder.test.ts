@@ -1,9 +1,9 @@
-import { display } from "@davidsouther/jiffies/lib/esm/display.js";
+import { display } from "@davidsouther/jiffies/display.ts";
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/fs.ts";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, it } from "vitest";
 import { HDL } from "../languages/hdl.js";
 import { bin } from "../util/twos.js";

@@ -1,9 +1,4 @@
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { RAM } from "../cpu/memory.js";
 import { Segment } from "../languages/vm.js";
 import { VmFrame } from "./vm.js";

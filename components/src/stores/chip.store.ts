@@ -1,7 +1,7 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { display } from "@davidsouther/jiffies/lib/esm/display.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Err, isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { display } from "@davidsouther/jiffies/display.ts";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
+import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import {
   BUILTIN_CHIP_PROJECTS,
   CHIP_PROJECTS,

@@ -1,4 +1,4 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { Memory } from "@nand2tetris/simulator/cpu/memory.js";
 import { useCallback, useRef, useState } from "react";
 import { useClockFrame, useClockReset } from "../clockface.js";
@@ -61,7 +61,7 @@ export const Screen = ({
   scale?: ScreenScales;
   onScale?: (scale: ScreenScales) => void;
 }) => {
-  const canvas = useRef<HTMLCanvasElement>();
+  const canvas = useRef<HTMLCanvasElement | undefined>(undefined);
   const [screenScale, setScreenScale] = useState<ScreenScales>(scale);
 
   const onScaleCB = (scale: ScreenScales) => {

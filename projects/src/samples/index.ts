@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 import * as project_06 from "./project_06/index.js";
 import * as Tst from "./tst.js";
 

@@ -1,12 +1,12 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.13/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.3/schema.json",
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": { "ignoreUnknown": false, "includes": ["**/src/**/*.ts"] },
   "formatter": { "enabled": true, "indentStyle": "space" },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": false,
+      "preset": "none",
       "complexity": {
         "noAdjacentSpacesInRegex": "error",
         "noBannedTypes": "error",

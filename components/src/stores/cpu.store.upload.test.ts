@@ -1,7 +1,7 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import * as mult from "@nand2tetris/projects/project_04/01_mult.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory.js";
 import { loadAsm } from "@nand2tetris/simulator/loader.js";

@@ -1,9 +1,4 @@
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { CompilationError, createError, Span } from "../languages/base.js";
 import {
   ArrayAccess,

@@ -1,5 +1,5 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   ASSIGN,

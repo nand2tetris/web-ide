@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
   type Dict,
   type Grammar,

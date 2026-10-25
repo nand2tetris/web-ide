@@ -1,4 +1,4 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { ASM } from "./languages/asm.js";
 import { int2, parseTwosInt } from "./util/twos.js";
 

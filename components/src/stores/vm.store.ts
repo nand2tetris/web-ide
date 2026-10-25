@@ -1,12 +1,12 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import {
   Err,
   isErr,
   Ok,
   Result,
   unwrap,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/result.ts";
 import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
   Format,

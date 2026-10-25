@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
-import { display } from "@davidsouther/jiffies/lib/esm/display.js";
+import { display } from "@davidsouther/jiffies/display.ts";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 
 export function useClock(actions: {

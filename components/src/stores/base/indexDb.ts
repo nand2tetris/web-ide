@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assert } from "@davidsouther/jiffies/assert.ts";
 
 const IDB_NAME = "NAND2TetrisIndexedDB";
 const IDB_VERSION = 1;

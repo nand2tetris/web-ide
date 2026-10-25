@@ -1,4 +1,4 @@
-import { Err, isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Err, isErr, unwrap } from "@davidsouther/jiffies/result.ts";
 import { vm as SIMPLE_FUNCTION } from "@nand2tetris/projects/project_08/20_simple_function.js";
 import { FIBONACCI } from "@nand2tetris/projects/samples/vm/fibonnaci.js";
 import {

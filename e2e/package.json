@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": ">=22",
+    "node": ">=24",
     "npm": ">=10"
   },
   "devDependencies": {
@@ -17,6 +17,6 @@
   },
   "dependencies": {
     "@nand2tetris/projects": "file:../projects",
-    "@types/node": "^25.6.0"
+    "@types/node": "^26.6.5"
   }
 }

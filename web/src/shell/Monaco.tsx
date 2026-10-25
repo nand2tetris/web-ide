@@ -1,5 +1,9 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
-import { CompilationError, Span } from "@nand2tetris/simulator/languages/base";
+import {
+  CompilationError,
+  errorList,
+  Span,
+} from "@nand2tetris/simulator/languages/base";
 import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -240,24 +244,22 @@ export const Monaco = ({
     if (!monaco.current) return;
     const model = editor.current.getModel();
     if (model === null) return;
-    if (error === undefined || error.span === undefined) {
-      monaco.current.editor.setModelMarkers(model, language, []);
-      return;
-    }
-
-    const startPos = model.getPositionAt(error.span.start);
-    const endPos = model.getPositionAt(error.span.end);
-
-    monaco.current.editor.setModelMarkers(model, language, [
-      {
-        message: error.message,
-        startColumn: startPos.column,
-        startLineNumber: startPos.lineNumber,
-        endColumn: endPos.column,
-        endLineNumber: endPos.lineNumber,
-        severity: 8, // monacoT.MarkerSeverity.Error,
-      },
-    ]);
+    const markers = errorList(error).flatMap((e) => {
+      if (e.span === undefined) return [];
+      const startPos = model.getPositionAt(e.span.start);
+      const endPos = model.getPositionAt(e.span.end);
+      return [
+        {
+          message: e.message,
+          startColumn: startPos.column,
+          startLineNumber: startPos.lineNumber,
+          endColumn: endPos.column,
+          endLineNumber: endPos.lineNumber,
+          severity: 8, // monacoT.MarkerSeverity.Error,
+        },
+      ];
+    });
+    monaco.current.editor.setModelMarkers(model, language, markers);
   }, [error, language, editorReady]);
 
   const onValueChange = (v = "") => {

@@ -6,6 +6,7 @@ import { AppContext } from "../App.context";
 
 import {
   CompilationError,
+  errorList,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 
@@ -15,13 +16,14 @@ import { Action } from "@nand2tetris/simulator/types";
 const Monaco = lazy(() => import("./Monaco"));
 
 export const ErrorPanel = ({ error }: { error?: CompilationError }) => {
-  return error ? (
+  const errors = errorList(error);
+  return errors.length > 0 ? (
     <details className="ErrorPanel" open>
       <summary role="button" className="secondary">
         <Trans>Parse Error</Trans>
       </summary>
       <pre>
-        <code>{error?.message}</code>
+        <code>{errors.map((e) => e.message).join("\n")}</code>
       </pre>
     </details>
   ) : (

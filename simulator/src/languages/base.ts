@@ -69,6 +69,49 @@ baseSemantics.addAttribute("String", {
 export interface CompilationError {
   message: string;
   span?: Span;
+  /** Every error found when recovery cannot finish, with this error first. */
+  readonly errors?: CompilationError[];
+}
+
+/** An error node that stands in the AST where recovery skipped input. */
+export interface ParseError {
+  readonly kind: "ParseError";
+  readonly error: CompilationError;
+  readonly span: Span;
+}
+
+/** A partial parse: `errors` is empty when the source is valid. */
+export interface Parsed<A> {
+  readonly ast: A;
+  readonly errors: CompilationError[];
+}
+
+/**
+ * When recovery cannot finish, this is `Err(error)`, where `error` is today's
+ * first error and `error.errors` lists every error found, itself first.
+ */
+export type ParseResult<A> = Result<Parsed<A>, CompilationError>;
+
+export function isParseError(node: unknown): node is ParseError {
+  throw new Error("not implemented");
+}
+
+/** Turns a partial AST into the strict AST type, or the first error. */
+export function requireValid<A, S>(
+  parsed: Parsed<A>,
+): Result<S, CompilationError> {
+  throw new Error("not implemented");
+}
+
+let parserRecovery = false;
+
+/** Feature flag, default false (today's behavior). */
+export function setParserRecovery(enabled: boolean): void {
+  parserRecovery = enabled;
+}
+
+export function isParserRecoveryEnabled(): boolean {
+  return parserRecovery;
 }
 
 const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;

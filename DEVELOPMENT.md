@@ -1,6 +1,6 @@
 # Nand2Tetris Web IDE Developer Guide
 
-This guide explains how the repository is built, tested, and organized. [CONTRIBUTING.md](./CONTRIBUTING.md) covers first time setup and the pull request process. [AGENTS.md](./AGENTS.md) condenses these rules for coding agents. [MANUAL_TESTING.md](./MANUAL_TESTING.md) lists checks that cannot be automated.
+This guide explains how the repository is built, tested, and organized, for human developers and coding agents alike. [CONTRIBUTING.md](./CONTRIBUTING.md) covers first time setup and the pull request process. [AGENTS.md](./AGENTS.md) adds the few rules that apply only to coding agents. [MANUAL_TESTING.md](./MANUAL_TESTING.md) lists checks that cannot be automated.
 
 ## Project Summary
 
@@ -57,20 +57,21 @@ Run these from the repository root.
 | `npm run start` | Starts the Vite dev server for `web` at <http://localhost:5173/web-ide/> |
 | `npm run test:e2e` | Runs the Playwright end to end tests (see below) |
 
-Use only these scripts to format, lint, or type check. Formatting and linting are fast, so run them after every change.
+Formatting and linting are fast, so run them after every change.
 
 `npm run check` builds `projects`, `runner`, `simulator`, and `components` before it type checks, because packages reference each other's `build/` output. The build makes the check slow, so a TypeScript language server in an editor gives faster feedback while iterating.
 
-Unit test files live in `src/` beside their source as `*.test.ts` or `*.test.tsx`, not in a separate `tests/` directory.
+## Conventions
 
-## Architecture Notes
+- Put unit tests in `src/` beside their source as `*.test.ts` or `*.test.tsx`, not in a separate `tests/` directory.
+- In `simulator`, return `Result<T, E>` from `@davidsouther/jiffies` instead of throwing exceptions.
+- Define domain languages (HDL, ASM, VM, Jack, TST, and CMP) with Ohm.js grammars in `simulator`.
+- Keep state stores in `components/src/stores` free of UI imports, so `web` and `extension` can share them. Stores use `useImmerReducer`.
+- Drive tick and tock through the RxJS `Clock` singleton (`Clock.get()`). React components subscribe to it in `useEffect`.
+- Wrap user facing text in `web` with Lingui macros, as [Internationalization](#internationalization) describes.
+- Use the existing formatter, linter, and test runners. Do not add another.
 
-- The simulator uses `Result<T, E>` from `@davidsouther/jiffies` instead of exceptions.
-- An RxJS `Clock` singleton drives tick and tock. React components subscribe to it in `useEffect`.
-- Ohm.js grammars define all domain languages: HDL, ASM, VM, Jack, TST, and CMP.
-- State stores use `useImmerReducer`. Stores have no UI imports, so `web` and `extension` share them.
-
-[README.md](./README.md#architecture) describes each subsystem in more depth.
+[README.md](./README.md#architecture) describes the architecture of each subsystem.
 
 ## Internationalization
 

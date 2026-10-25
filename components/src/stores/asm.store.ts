@@ -231,6 +231,10 @@ export function makeAsmStore(
       }
     },
 
+    clearPath(state: AsmPageState) {
+      state.path = undefined;
+    },
+
     setCmp(state: AsmPageState, { cmp, name }: { cmp: string; name: string }) {
       state.compare = cmp;
       state.compareName = name;
@@ -302,9 +306,14 @@ export function makeAsmStore(
   };
 
   const actions = {
-    async loadAsm(_path: string) {
+    // Without a path (an uploaded local file), clear the previous path so
+    // edits and the translated .hack are not written over that file.
+    async loadAsm(_path: string | undefined, content?: string) {
       path = _path;
-      const source = await fs.readFile(path);
+      if (path === undefined) {
+        dispatch.current({ action: "clearPath" });
+      }
+      const source = content ?? (path ? await fs.readFile(path) : "");
       actions.setAsm(source, path);
     },
 

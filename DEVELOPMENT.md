@@ -10,7 +10,7 @@ The repository is a TypeScript monorepo of npm workspaces. It implements the ful
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| Node | 22 or newer | Runtime |
+| Node | 24 or newer | Runtime |
 | npm | 10 or newer | Package manager and workspaces |
 | TypeScript | ^6.0 | Language, with composite project references |
 | Biome | ^2.4 | Formatter and linter |

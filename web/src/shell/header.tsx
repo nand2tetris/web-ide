@@ -38,7 +38,6 @@ function headerButtonFromURL(url: URL, icon: string, tooltip?: string) {
   };
 }
 
-// When updating these, also edit service-worker.ts
 const guideLinks: Record<string, string> = {
   chip: "user_guide/chip.pdf",
   cpu: "user_guide/cpu.pdf",

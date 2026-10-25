@@ -5,6 +5,7 @@ import * as monacoT from "monaco-editor";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { Decoration, HighlightType } from "./editor";
+import "./monacoSetup";
 
 const isRangeVisible = (
   editor: monacoT.editor.IStandaloneCodeEditor | undefined,

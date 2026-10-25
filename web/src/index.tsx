@@ -1,10 +1,13 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import * as serviceWorkerRegistration from "./serviceWorkerRegistration";
+import { installPreloadErrorReload } from "./preloadError";
+import { registerServiceWorker } from "./registerServiceWorker";
 
 import "./pico/pico.scss";
 
 import App from "./App";
+
+installPreloadErrorReload();
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
@@ -15,4 +18,6 @@ root.render(
   </React.StrictMode>,
 );
 
-serviceWorkerRegistration.register();
+window.addEventListener("load", () => {
+  registerServiceWorker();
+});

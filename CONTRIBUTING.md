@@ -12,7 +12,7 @@ The source code is version controlled using `git`, which should be installed usi
 
 After cloning the repository, `cd` to the downloaded folder and run `npm install` to install all dependencies. Run `npm run build` to compile every package. After changing `projects`, `runner`, `simulator`, or `components`, rebuild that package with `npm run build -w <name>`, or keep `npm run watch` running to rebuild them on change. Run all tests with `npm test`, or the tests for one package with `npm test -w <name>`. After building the libraries, start the web IDE with `npm run start`. The development server listens on <http://localhost:5173/web-ide/>.
 
-Before opening a pull request, confirm that `npm run check` and `npm test` both pass. [DEVELOPMENT.md](./DEVELOPMENT.md) describes every command, the package layout, and the end to end tests. [MANUAL_TESTING.md](./MANUAL_TESTING.md) lists checks that some changes require. Coding agents follow [AGENTS.md](./AGENTS.md).
+Before opening a pull request, confirm that `npm run check` and `npm test` both pass. [DEVELOPMENT.md](./DEVELOPMENT.md) describes every command, the package layout, and the end to end tests. [MANUAL_TESTING.md](./MANUAL_TESTING.md) lists checks that some changes require. Coding agents follow [AGENTS.md](./AGENTS.md). Translators should start with [Internationalization](./DEVELOPMENT.md#internationalization).
 
 ## Issues & Pull Requests
 

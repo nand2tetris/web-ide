@@ -47,6 +47,7 @@ Changes to the chip simulator UI must also pass `npm run test:e2e`. Changes to d
 - In `simulator`, return `Result<T, E>` from `@davidsouther/jiffies` instead of throwing exceptions.
 - Define domain languages (HDL, ASM, VM, Jack, TST, CMP) with Ohm grammars in `simulator`.
 - Keep stores in `components/src/stores` free of UI imports so `web` and `extension` can share them. Stores use `useImmerReducer`.
+- Wrap user facing text in `web` with Lingui's `<Trans>` or `` t`...` `` macros, and never assign message IDs. [DEVELOPMENT.md](./DEVELOPMENT.md#internationalization) explains the catalogs and translations.
 - Drive simulation timing through the `Clock` singleton (`Clock.get()`), and subscribe to it inside `useEffect`.
 
 ## Do not

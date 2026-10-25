@@ -57,9 +57,7 @@
     "build": "vite build",
     "postbuild": "node ./scripts/predeploy.js",
     "test": "vitest run",
-    "prebuild": "npm run extract && npm run lingui",
-    "extract": "lingui extract",
-    "lingui": "lingui compile --namespace es"
+    "extract": "lingui extract"
   },
   "browserslist": {
     "production": [

@@ -85,27 +85,17 @@ Formatting and linting are fast, so run them after every change.
 - Do not assign message IDs. The SWC plugin (`useLinguiV5IdGeneration` in `web/vite.config.ts`) derives each ID from the source text, which serves as the English message.
 - Do not hardcode user facing text, such as the "Select local file" button in `web/src/shell/file_select.tsx`.
 
-### Building the catalogs
+### Catalogs
 
-| Script | Input | Output |
-|--------|-------|--------|
-| `npm run extract -w web` | Macros in `web/src` and `web/public` | `web/src/locales/<locale>/messages.po` |
-| `npm run lingui -w web` | The `.po` catalogs | `web/src/locales/<locale>/messages.mjs` |
-
-`web/src/.gitignore` ignores `web/src/locales/`, so neither output is committed. Both scripts run automatically before `npm run check` and before `npm run build -w web`, so `npm test` and CI regenerate the catalogs on every run. Rerun them yourself before `npm run start` or `npm test -w web` in a fresh clone, because `web/src/App.tsx` and `web/src/setupTests.ts` import the compiled `.mjs` files. No check fails on missing translations.
+No manual step is needed. `npm run start`, `npm run build -w web`, and `npm test -w web` extract the messages into `web/src/locales/<locale>/messages.po` when they start, and the Lingui Vite plugin compiles each catalog when `web/src/locales.ts` imports it. Run `npm run extract -w web` only to inspect the catalogs without starting Vite. `web/src/.gitignore` ignores `web/src/locales/`, so the catalogs are not committed. No check fails on missing translations.
 
 ### Translations
 
-The configured locales are `en`, which is the source locale, and `en-PL`, which is a pseudolocale. `lingui compile` generates accented `en-PL` text automatically, which helps find strings that are not wrapped. No human translations exist yet. Because git ignores `web/src/locales/`, a translated `.po` file cannot be committed. Contributing a translation first requires changing `web/src/.gitignore` so that the locale's `messages.po` is tracked.
+The configured locales are `en`, which is the source locale, and `en-PL`, which is a pseudolocale with accented text that helps find strings that are not wrapped. No human translations exist yet. Because git ignores `web/src/locales/`, a translated `.po` file cannot be committed. Contributing a translation first requires changing `web/src/.gitignore` so that the locale's `messages.po` is tracked.
 
-To add a locale today:
+To add a locale, add it to `lingui.locales` in `web/package.json`, and optionally map it in `lingui.fallbackLocales`. `web/src/locales.ts` loads every catalog it finds.
 
-1. Add it to `lingui.locales` in `web/package.json`. Optionally map it in `lingui.fallbackLocales`.
-2. Run `npm run extract -w web`, then translate the `msgstr` entries in its `messages.po`.
-3. Import its `messages.mjs` in `web/src/locales.ts`, and register it with `i18n.load` and `i18n.loadLocaleData` in `web/src/App.tsx`.
-4. Run `npm run lingui -w web` and `npm run start`, and check the pages in that locale.
-
-At startup, `web/src/App.tsx` activates `navigator.language`. In browser storage mode, `web/src/shell/settings.tsx` then activates the locale stored in the browser file `/locale`, and writes `en` there when the file is missing. The app has no language picker. `lingui compile` fills a missing translation from the fallback locale or the source text.
+At startup, `web/src/App.tsx` activates `navigator.language`. In browser storage mode, `web/src/shell/settings.tsx` then activates the locale stored in the browser file `/locale`, and writes `en` there when the file is missing. The app has no language picker. A missing translation falls back to the fallback locale or the source text.
 
 ## End to End Tests
 

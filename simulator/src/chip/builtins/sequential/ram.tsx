@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assert } from "@davidsouther/jiffies/assert.ts";
 import { Memory, Memory as MemoryChip } from "../../../cpu/memory.js";
 import { Bus, ClockedChip, Pin } from "../../chip.js";
 

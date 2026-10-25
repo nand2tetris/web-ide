@@ -48,7 +48,8 @@ export class JavaRunner implements Runner {
       return { code: 0, stdout, stderr: "" };
     } catch (e: unknown) {
       const { error, stderr } = e as { error?: ExecException; stderr: string };
-      return { code: error?.code ?? 255, stderr, stdout: "" };
+      const code = typeof error?.code === "number" ? error.code : 255;
+      return { code, stderr, stdout: "" };
     }
   }
 }

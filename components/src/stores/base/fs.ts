@@ -3,7 +3,7 @@ import {
   FileSystemAdapter,
   SEP,
   Stats,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 
 function dirname(path: string): string {
   return path.split(SEP).slice(0, -1).join(SEP);

@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 
 import * as Memory from "./01_memory.js";
 import * as CPU from "./02_cpu.js";

@@ -4,7 +4,7 @@ import {
   Ok,
   Result,
   unwrap,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/result.ts";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
 import { CompilationError, createError, Span } from "../languages/base.js";
 import {

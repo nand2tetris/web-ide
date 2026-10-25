@@ -8,7 +8,7 @@ const compileSpy = vi.mocked(simCompiler.compile);
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import * as simCompiler from "@nand2tetris/simulator/jack/compiler.js";
 import { produce } from "immer";
 import { afterEach, describe, expect, it, vi } from "vitest";

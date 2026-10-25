@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 import { resetBySuffix } from "../reset.js";
 import * as basic_loop from "./11_basic_loop.js";
 import * as fibonacci_series from "./12_fibonacci_series.js";

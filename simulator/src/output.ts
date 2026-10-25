@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assert, assertExists } from "@davidsouther/jiffies/assert.ts";
 import { Test } from "./test/tst.js";
 import { bin, dec, hex } from "./util/twos.js";
 
@@ -26,9 +26,11 @@ export class Output {
       lPad === undefined &&
       rPad === undefined
     ) {
-      const { fmt, lPad, rPad, len } = format.match(
-        /^%(?<fmt>[BDXS])(?<lPad>\d+)\.(?<len>\d+)\.(?<rPad>\d+)$/,
-      )?.groups as {
+      const { fmt, lPad, rPad, len } = assertExists(
+        format.match(
+          /^%(?<fmt>[BDXS])(?<lPad>\d+)\.(?<len>\d+)\.(?<rPad>\d+)$/,
+        ),
+      ).groups as {
         fmt: "B" | "X" | "D" | "S";
         lPad: string;
         rPad: string;

@@ -1,4 +1,4 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { Programs } from "@nand2tetris/projects/samples/project_11/index.js";
 import { describe, expect, it } from "vitest";
 import { JACK } from "./jack.js";

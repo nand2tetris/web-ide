@@ -1,6 +1,6 @@
-import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
 import { grammar } from "ohm-js";
 import { beforeEach, describe, expect, it } from "vitest";
+import { cleanState } from "../clean_state.js";
 import { baseSemantics, grammars } from "./base.js";
 
 describe("Ohm Base", () => {

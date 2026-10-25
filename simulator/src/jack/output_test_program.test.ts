@@ -1,4 +1,4 @@
-import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { isErr, unwrap } from "@davidsouther/jiffies/result.ts";
 import { expect, test } from "vitest";
 import { compile } from "../jack/compiler.js";
 import { VM } from "../languages/vm.js";

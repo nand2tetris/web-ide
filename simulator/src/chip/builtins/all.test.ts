@@ -1,8 +1,8 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Ok, unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/fs.ts";
+import { Ok, unwrap } from "@davidsouther/jiffies/result.ts";
 import { CHIP_PROJECTS } from "@nand2tetris/projects/base.js";
 import { ChipProjects } from "@nand2tetris/projects/full.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";

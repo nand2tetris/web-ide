@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { NodeFileSystemAdapter } from "@davidsouther/jiffies/lib/esm/fs_node.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
+import { NodeFileSystemAdapter } from "@davidsouther/jiffies/fs_node.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import * as fsCore from "fs";
 import path, { dirname, parse, resolve } from "path";

@@ -2,8 +2,8 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/fs.ts";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { resetFiles } from "@nand2tetris/projects/full.js";
 import { describe, expect, test } from "vitest";
 import { TST } from "../languages/tst.js";
@@ -43,13 +43,13 @@ const norm = (s: string) =>
     .join("\n");
 
 describe("#659", () => {
-  test.each([
-    "StaticsTest",
-    "FibonacciElement",
-  ])("%s VME output matches cmp", async (name) => {
-    const { log, cmp } = await runVme("08", name);
-    expect(norm(log)).toEqual(norm(cmp));
-  });
+  test.each(["StaticsTest", "FibonacciElement"])(
+    "%s VME output matches cmp",
+    async (name) => {
+      const { log, cmp } = await runVme("08", name);
+      expect(norm(log)).toEqual(norm(cmp));
+    },
+  );
 });
 
 describe("#658 THAT segment", () => {

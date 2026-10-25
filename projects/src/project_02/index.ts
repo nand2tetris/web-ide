@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 
 import { resetBySuffix } from "../reset.js";
 import * as HalfAdder from "./01_half_adder.js";

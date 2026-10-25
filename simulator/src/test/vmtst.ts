@@ -1,6 +1,6 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
+import { Result } from "@davidsouther/jiffies/result.ts";
 import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";

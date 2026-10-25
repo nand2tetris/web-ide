@@ -1,4 +1,4 @@
-import { range } from "@davidsouther/jiffies/lib/esm/range.js";
+import { range } from "@davidsouther/jiffies/range.ts";
 import {
   Pin as ChipPin,
   Pins,

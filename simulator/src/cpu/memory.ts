@@ -1,5 +1,5 @@
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { assert } from "@davidsouther/jiffies/assert.ts";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { load } from "../fs.js";
 import { op } from "../util/asm.js";
 import { int2, int10, int16 } from "../util/twos.js";

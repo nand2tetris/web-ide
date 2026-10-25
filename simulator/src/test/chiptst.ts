@@ -1,4 +1,4 @@
-import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import { Result } from "@davidsouther/jiffies/result.ts";
 import { Bus, Chip, HIGH, LOW, Low } from "../chip/chip.js";
 import { Clock } from "../chip/clock.js";
 import { Tst } from "../languages/tst.js";

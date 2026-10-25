@@ -1,4 +1,4 @@
-import { isErr, unwrap } from "@davidsouther/jiffies/lib/esm/result";
+import { isErr, unwrap } from "@davidsouther/jiffies/result.ts";
 import { Trans } from "@lingui/react/macro";
 import {
   DecorationType,
@@ -69,7 +69,7 @@ export const TestPanel = ({
   const { filePicker, tracking } = useContext(AppContext);
 
   const [showHighlight, setShowHighlight] = useState(true);
-  const runner = useRef<Timer>();
+  const runner = useRef<Timer | undefined>(undefined);
   useEffect(() => {
     runner.current = new (class ChipTimer extends Timer {
       async reset(): Promise<void> {

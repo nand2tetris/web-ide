@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 
 import * as HalfAdder from "./01_half_adder.js";
 import * as FullAdder from "./02_full_adder.js";

@@ -1,4 +1,4 @@
-import { isErr, Ok } from "@davidsouther/jiffies/lib/esm/result.js";
+import { isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { CMP, Cmp } from "@nand2tetris/simulator/languages/cmp.js";
 

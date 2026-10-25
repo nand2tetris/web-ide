@@ -21,13 +21,13 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@davidsouther/jiffies": "2.2.5",
+    "@davidsouther/jiffies": "2026.26.1",
     "@nand2tetris/runner": "file:../runner",
     "@nand2tetris/simulator": "file:../simulator",
-    "vitest": "^4.1.5"
+    "vitest": "^5.0.5"
   },
   "dependencies": {
     "@types/yargs": "^17.0.35",
-    "yargs": "^18.0.0"
+    "yargs": "^18.2.0"
   }
 }

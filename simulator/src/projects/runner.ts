@@ -1,11 +1,5 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import {
-  Err,
-  isErr,
-  isOk,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
+import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
   type Assignment,
   AssignmentStubs,

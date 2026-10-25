@@ -1,11 +1,5 @@
-import { display } from "@davidsouther/jiffies/lib/esm/display.js";
-import {
-  Err,
-  isErr,
-  isOk,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { display } from "@davidsouther/jiffies/display.ts";
+import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import type { MatchResult } from "ohm-js";
 import { expect } from "vitest";
 import { Diff } from "./compare.js";
@@ -25,7 +19,7 @@ interface CmpMatchers<R = unknown> {
 }
 
 declare module "vitest" {
-  interface Assertion<T>
+  interface Assertion<R extends void | Promise<void> = void, T = unknown>
     extends CustomMatchers<void, T>,
       OhmMatchers<void>,
       CmpMatchers<void> {}

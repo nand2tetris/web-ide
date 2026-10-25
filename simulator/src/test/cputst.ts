@@ -1,5 +1,5 @@
-import { assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { Result } from "@davidsouther/jiffies/lib/esm/result.js";
+import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { Result } from "@davidsouther/jiffies/result.ts";
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";

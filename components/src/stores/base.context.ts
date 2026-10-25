@@ -1,7 +1,7 @@
 import {
   FileSystem,
   LocalStorageFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
   createContext,

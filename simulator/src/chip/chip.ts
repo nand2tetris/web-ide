@@ -1,13 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { assert, assertExists } from "@davidsouther/jiffies/lib/esm/assert.js";
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
-import { range } from "@davidsouther/jiffies/lib/esm/range.js";
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-} from "@davidsouther/jiffies/lib/esm/result.js";
+import { assert, assertExists } from "@davidsouther/jiffies/assert.ts";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
+import { range } from "@davidsouther/jiffies/range.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import type { Subscription } from "rxjs";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
@@ -205,8 +200,9 @@ export function parsePinDecl(toPin: string): {
   pin: string;
   width: number;
 } {
-  const { pin, w } = toPin.match(/(?<pin>[a-zA-Z]+)(\[(?<w>\d+)\])?/)
-    ?.groups as {
+  const { pin, w } = assertExists(
+    toPin.match(/(?<pin>[a-zA-Z]+)(\[(?<w>\d+)\])?/),
+  ).groups as {
     pin: string;
     w?: string;
   };
@@ -221,9 +217,9 @@ export function parseToPin(toPin: string): {
   start?: number;
   end?: number;
 } {
-  const { pin, i, j } = toPin.match(
-    /(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/,
-  )?.groups as { pin: string; i?: string; j?: string };
+  const { pin, i, j } = assertExists(
+    toPin.match(/(?<pin>[a-z]+)(\[(?<i>\d+)(\.\.(?<j>\d+))?\])?/),
+  ).groups as { pin: string; i?: string; j?: string };
   return {
     pin,
     start: i ? Number(i) : undefined,

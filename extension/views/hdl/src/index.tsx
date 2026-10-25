@@ -1,7 +1,7 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import { useDialog } from "@nand2tetris/components/dialog";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";

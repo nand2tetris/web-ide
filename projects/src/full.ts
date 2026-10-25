@@ -1,4 +1,4 @@
-import { FileSystem, Tree } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, Tree } from "@davidsouther/jiffies/fs.ts";
 
 import * as project_01 from "./project_01/index.js";
 import * as project_02 from "./project_02/index.js";

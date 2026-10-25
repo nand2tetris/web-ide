@@ -1,4 +1,4 @@
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, test } from "vitest";
 import { Vm } from "./vm.js";
 

@@ -1,4 +1,4 @@
-import { width } from "@davidsouther/jiffies/lib/esm/dom/css/sizing";
+import { width } from "@davidsouther/jiffies/dom/css/sizing.ts";
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { Action } from "@nand2tetris/simulator/types";
 import { useCallback, useState } from "react";

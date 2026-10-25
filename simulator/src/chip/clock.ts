@@ -1,4 +1,4 @@
-import { assert } from "@davidsouther/jiffies/lib/esm/assert.js";
+import { assert } from "@davidsouther/jiffies/assert.ts";
 import { BehaviorSubject, Observable, Subject } from "rxjs";
 import { HIGH, LOW, Voltage } from "./chip.js";
 

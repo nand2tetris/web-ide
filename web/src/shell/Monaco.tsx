@@ -96,11 +96,11 @@ export const Monaco = ({
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
-  const monaco = useRef<typeof monacoT>();
+  const monaco = useRef<typeof monacoT | undefined>(undefined);
   const [height, setHeight] = useState(0);
   const [editorReady, setEditorReady] = useState(false);
 
-  const editor = useRef<monacoT.editor.IStandaloneCodeEditor>();
+  const editor = useRef<monacoT.editor.IStandaloneCodeEditor | undefined>(undefined);
   const decorations = useRef<string[]>([]);
   const highlight = useRef<Span | number | undefined>(undefined);
   const customDecorations = useRef<Decoration[]>([]);

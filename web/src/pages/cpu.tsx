@@ -38,8 +38,8 @@ export const CPU = () => {
     actions.reset();
   }, [tst, cmp, tstPath]);
 
-  const cpuRunner = useRef<Timer>();
-  const testRunner = useRef<Timer>();
+  const cpuRunner = useRef<Timer | undefined>(undefined);
+  const testRunner = useRef<Timer | undefined>(undefined);
   const [runnersAssigned, setRunnersAssigned] = useState(false);
   useEffect(() => {
     cpuRunner.current = new (class CPUTimer extends Timer {

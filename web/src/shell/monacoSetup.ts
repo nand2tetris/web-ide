@@ -3,7 +3,7 @@
 // worker, so the editor works offline, and the app no longer loads Monaco twice.
 import { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
-import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker.js?worker";
+import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
 
 // The app only uses Monarch languages, which need the generic editor worker.
 self.MonacoEnvironment = {

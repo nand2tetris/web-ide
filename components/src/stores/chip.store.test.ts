@@ -1,11 +1,11 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
-import { cleanState } from "@davidsouther/jiffies/lib/esm/scope/state.js";
+} from "@davidsouther/jiffies/fs.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
+import { cleanState } from "../clean_state.js";
 import { ImmPin } from "../pinout.js";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
 

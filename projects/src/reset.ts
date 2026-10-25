@@ -1,4 +1,4 @@
-import { FileSystem, Tree } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, Tree } from "@davidsouther/jiffies/fs.ts";
 
 export async function resetBySuffix(
   fs: FileSystem,

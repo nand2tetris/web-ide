@@ -75,7 +75,7 @@ Formatting and linting are fast, so run them after every change.
 
 ## Internationalization
 
-`web` translates its interface with [Lingui](https://lingui.dev) 5. The Lingui configuration is the `lingui` key in `web/package.json`. `components`, `simulator`, and `extension` do not use Lingui, so their strings are not translatable. `components/src/i18n.tsx` is an unused stub.
+`web` translates its interface with [Lingui](https://lingui.dev) 6. The Lingui configuration is `web/lingui.config.ts`. `components`, `simulator`, and `extension` do not use Lingui, so their strings are not translatable. `components/src/i18n.tsx` is an unused stub.
 
 ### Adding a string
 
@@ -93,7 +93,7 @@ No manual step is needed. `npm run start`, `npm run build -w web`, and `npm test
 
 The configured locales are `en`, which is the source locale, and `en-PL`, which is a pseudolocale with accented text that helps find strings that are not wrapped. No human translations exist yet. Because git ignores `web/src/locales/`, a translated `.po` file cannot be committed. Contributing a translation first requires changing `web/src/.gitignore` so that the locale's `messages.po` is tracked.
 
-To add a locale, add it to `lingui.locales` in `web/package.json`, and optionally map it in `lingui.fallbackLocales`. `web/src/locales.ts` loads every catalog it finds.
+To add a locale, add it to `locales` in `web/lingui.config.ts`, and optionally map it in `fallbackLocales`. `web/src/locales.ts` loads every catalog it finds.
 
 At startup, `web/src/App.tsx` activates `navigator.language`. In browser storage mode, `web/src/shell/settings.tsx` then activates the locale stored in the browser file `/locale`, and writes `en` there when the file is missing. The app has no language picker. A missing translation falls back to the fallback locale or the source text.
 

@@ -1,8 +1,8 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
-import { unwrap } from "@davidsouther/jiffies/lib/esm/result.js";
+} from "@davidsouther/jiffies/fs.ts";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { VM_PROJECTS } from "@nand2tetris/projects/base.js";
 import { resetFiles } from "@nand2tetris/projects/full.js";
 import { describe, expect, test } from "vitest";

@@ -1,7 +1,7 @@
 import {
   FileSystem,
   ObjectFileSystemAdapter,
-} from "@davidsouther/jiffies/lib/esm/fs.js";
+} from "@davidsouther/jiffies/fs.ts";
 import { produce } from "immer";
 import { describe, expect, it, vi } from "vitest";
 import { AsmStoreDispatch, makeAsmStore } from "./asm.store.js";

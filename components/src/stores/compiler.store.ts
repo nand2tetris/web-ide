@@ -1,4 +1,4 @@
-import { FileSystem } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import { CompilationError } from "@nand2tetris/simulator/languages/base.js";
 import { Action } from "@nand2tetris/simulator/types.js";

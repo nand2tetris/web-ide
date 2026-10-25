@@ -1,4 +1,4 @@
-import { FileSystem, reset } from "@davidsouther/jiffies/lib/esm/fs.js";
+import { FileSystem, reset } from "@davidsouther/jiffies/fs.ts";
 
 import * as RAM16K from "../project_03/08_ram16k.js";
 import { resetBySuffix } from "../reset.js";

@@ -1,7 +1,24 @@
+import { getCatalogs } from "@lingui/cli/api";
+import { getConfig } from "@lingui/conf";
 import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react-swc";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+
+// Runs `lingui extract` when the dev server, build, or Vitest starts, so the
+// gitignored src/locales/<locale>/messages.po catalogs always exist. The
+// lingui() plugin then compiles each imported .po file on demand.
+function linguiExtract(): Plugin {
+  return {
+    name: "lingui-extract",
+    async buildStart() {
+      const config = getConfig();
+      for (const catalog of await getCatalogs(config)) {
+        await catalog.make({ orderBy: config.orderBy, clean: true });
+      }
+    },
+  };
+}
 
 export default defineConfig({
   base: "/web-ide/",
@@ -9,6 +26,7 @@ export default defineConfig({
     react({
       plugins: [["@lingui/swc-plugin", { useLinguiV5IdGeneration: true }]],
     }),
+    linguiExtract(),
     lingui(),
     VitePWA({
       // src/service-worker.ts is built to service-worker.js, the URL the CRA

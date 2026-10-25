@@ -16,7 +16,6 @@
     "precli": "npm run build -w cli",
     "cli": "node cli",
     "ci": "npm run check && npm run test:ci",
-    "precheck": "npm -w web run extract && npm -w web run lingui",
     "check": "npm run check:format && npm run check:types && npm run check:lint",
     "clean": "shx rm -rf **/node_modules **/tsconfig.tsbuildinfo **/build",
     "format": "biome format --write",

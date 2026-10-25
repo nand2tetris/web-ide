@@ -1,5 +1,15 @@
-import * as _messages from "./locales/en/messages.mjs";
-import * as _messagesPl from "./locales/en-PL/messages.mjs";
+import type { Messages } from "@lingui/core";
 
-export const messages = _messages;
-export const plMessages = _messagesPl;
+// One entry per locale in `lingui.locales` (web/package.json). The lingui()
+// Vite plugin compiles each messages.po catalog when it is imported.
+const catalogs = import.meta.glob<Messages>("./locales/*/messages.po", {
+  eager: true,
+  import: "messages",
+});
+
+export const messages: Record<string, Messages> = Object.fromEntries(
+  Object.entries(catalogs).map(([path, catalog]) => [
+    path.split("/")[2],
+    catalog,
+  ]),
+);

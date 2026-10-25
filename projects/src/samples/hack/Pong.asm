@@ -138,7 +138,7 @@ D=M-D
 @ARG
 M=D
 @SP
-MD=M+1
+DM=M+1
 @LCL
 M=D
 @R14

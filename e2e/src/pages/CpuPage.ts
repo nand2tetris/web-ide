@@ -20,7 +20,7 @@ export class CpuPage {
     await picker.selectOption(name);
     await expect(picker).toHaveValue(name);
     await expect(
-      this._page.locator('article._test_panel [data-tooltip="Run"]'),
+      this._page.locator('article._test_panel [data-tooltip="Test Run"]'),
     ).toBeEnabled();
   }
 
@@ -46,7 +46,7 @@ export class CpuPage {
   }
 
   async step(): Promise<void> {
-    await this.ioPanel.locator('[data-tooltip="Step"]').click();
+    await this.ioPanel.locator('[data-tooltip="Code Step"]').click();
   }
 
   async reset(): Promise<void> {

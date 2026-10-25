@@ -6,14 +6,17 @@ const POLL_INTERVAL_MS = 500;
 export class TestPanel {
   private readonly panel: Locator;
 
-  constructor(private page: Page) {
+  constructor(
+    private page: Page,
+    private runTooltip = "Run",
+  ) {
     this.panel = page.locator("article._test_panel");
   }
 
   async runTest(options?: { stuckTimeoutMs?: number }): Promise<void> {
     const stuckTimeout = options?.stuckTimeoutMs ?? 5_000;
 
-    await this.panel.locator('[data-tooltip="Run"]').click();
+    await this.panel.locator(`[data-tooltip="${this.runTooltip}"]`).click();
 
     await expect(this.panel.locator('[data-tooltip="Pause"]')).toBeVisible({
       timeout: START_TIMEOUT_MS,

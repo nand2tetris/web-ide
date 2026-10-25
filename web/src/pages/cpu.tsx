@@ -176,6 +176,7 @@ export const CPU = () => {
               {runnersAssigned && cpuRunner.current && (
                 <Runbar
                   runner={cpuRunner.current}
+                  overrideTooltips={{ step: "Code Step", run: "Code Run" }}
                   speed={state.config.speed}
                   onSpeedChange={(speed) => {
                     dispatch.current({
@@ -222,6 +223,7 @@ export const CPU = () => {
           tstName={state.test.name}
           disabled={!state.test.valid}
           showName={state.tests.length < 2}
+          overrideTooltips={{ step: "Test Step", run: "Test Run" }}
           speed={state.config.testSpeed}
           onSpeedChange={(speed) => {
             dispatch.current({

@@ -5,6 +5,7 @@ import {
   grammar,
   Interval,
   type MatchResult,
+  type Node,
   type Semantics,
 } from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
@@ -101,8 +102,20 @@ export function isParseError(node: unknown): node is ParseError {
   );
 }
 
+/**
+ * The strict type of a partial AST type: every `ParseError` removed from every
+ * list. A type without error nodes is its own strict type.
+ */
+export type Strict<T> = T extends ParseError
+  ? never
+  : T extends readonly (infer Item)[]
+    ? Strict<Item>[]
+    : T extends object
+      ? { [K in keyof T]: Strict<T[K]> }
+      : T;
+
 /** Turns a partial AST into the strict AST type, or the first error. */
-export function requireValid<A, S = A>(
+export function requireValid<A, S = Strict<A>>(
   parsed: Parsed<A>,
 ): Result<S, CompilationError> {
   return parsed.errors.length > 0
@@ -115,7 +128,7 @@ export function requireValid<A, S = A>(
  * unrecovered failure, is an `Err`. Use where a valid AST is required. The
  * error carries `errors`, every error found, so editors can still list them.
  */
-export function parseValid<A, S = A>(
+export function parseValid<A, S = Strict<A>>(
   result: ParseResult<A>,
 ): Result<S, CompilationError> {
   if (isErr(result)) {
@@ -175,6 +188,27 @@ function spanAt(source: string, position: number): Span {
     if (source[i] === "\n") line++;
   }
   return { start: position, end: position, line };
+}
+
+/** True for the `_fail` node a recovery point leaves in its synchronizer slot. */
+export function isFail(node: Node): boolean {
+  return node.ctorName === "_fail";
+}
+
+/**
+ * The error node for a recovery point's skip region. Reports the same message
+ * and position as the matching entry in `Parsed.errors`.
+ */
+export function parseErrorOf(fail: Node): ParseError {
+  const skipped = fail.source;
+  const failure = fail.recoveredFailure;
+  const position = failure?.position ?? skipped.startIdx;
+  const where = spanAt(skipped.sourceString, position);
+  return {
+    kind: "ParseError",
+    error: createError(failure?.shortMessage ?? UNKNOWN_HDL_ERROR, where),
+    span: span(skipped),
+  };
 }
 
 function recoveredErrors(

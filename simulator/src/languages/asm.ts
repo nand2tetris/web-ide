@@ -21,7 +21,10 @@ import {
   CompilationError,
   createError,
   grammars,
+  isFail,
   makeParser,
+  type ParseError,
+  parseErrorOf,
   Span,
   span,
 } from "./base.js";
@@ -30,9 +33,13 @@ import asmGrammar from "./grammars/asm.ohm.js";
 export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
-export interface Asm {
-  instructions: AsmInstruction[];
+/** `E` widens the instructions at the recovery point; `never` is strict. */
+export interface Asm<E = never> {
+  instructions: (AsmInstruction | E)[];
 }
+
+/** An Asm where recovery may have replaced instructions with error nodes. */
+export type AsmPartial = Asm<ParseError>;
 
 export type AsmInstruction =
   | AsmAInstruction
@@ -79,31 +86,30 @@ export interface AsmLabelInstruction {
   span?: Span;
 }
 
-asmSemantics.addAttribute<Asm>("root", {
+asmSemantics.addAttribute<AsmPartial>("root", {
   Root(_) {
     return this.asm;
   },
 });
 
-asmSemantics.addAttribute<Asm>("asm", {
-  ASM(asm, last) {
-    const instructions =
-      asm.children.map(
-        (node) => node.intermediateInstruction as AsmInstruction,
-      ) ?? [];
+asmSemantics.addAttribute<AsmPartial>("asm", {
+  ASM(asm) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: asm.children.map(
+        (node) => node.intermediateInstruction as AsmInstruction | ParseError,
+      ),
     };
   },
 });
 
-asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
-  intermediateInstruction(inst, _n) {
-    return inst.instruction;
+asmSemantics.addAttribute<AsmInstruction | ParseError>(
+  "intermediateInstruction",
+  {
+    intermediateInstruction(inst, end) {
+      return isFail(end) ? parseErrorOf(end) : inst.instruction;
+    },
   },
-});
+);
 
 function getAsmAssign(assignN: Node) {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
@@ -361,7 +367,7 @@ export const ASM = {
   grammar: asmGrammar,
   semantics: asmSemantics,
   parser: grammar,
-  parse: makeParser<Asm>(grammar, asmSemantics),
+  parse: makeParser<AsmPartial>(grammar, asmSemantics),
   passes: {
     fillLabel,
     emit,

@@ -1,9 +1,20 @@
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  isFail,
+  makeParser,
+  type ParseError,
+  parseErrorOf,
+} from "./base.js";
 
 export type Cell = string;
 export type Line = Cell[];
-export type Cmp = Line[];
+/** `E` widens the lines at the recovery point; `never` is the strict type. */
+export type Cmp<E = never> = (Line | E)[];
+
+/** A Cmp where recovery may have replaced lines with error nodes. */
+export type CmpPartial = Cmp<ParseError>;
 
 import cmpGrammar from "./grammars/cmp.ohm.js";
 export const grammar = ohmGrammar(cmpGrammar, grammars);
@@ -15,13 +26,19 @@ cmpSemantics.addAttribute<Cell>("cell", {
   },
 });
 
-cmpSemantics.addAttribute<Line>("line", {
-  line(_a, cells, _b) {
+cmpSemantics.addAttribute<Line>("cells", {
+  lineBody(_bar, cells) {
     return cells.children.map((c) => c.cell);
   },
 });
 
-cmpSemantics.addAttribute<Cmp>("root", {
+cmpSemantics.addAttribute<Line | ParseError>("line", {
+  line(body, end) {
+    return isFail(end) ? parseErrorOf(end) : body.cells;
+  },
+});
+
+cmpSemantics.addAttribute<CmpPartial>("root", {
   Root(lines) {
     return lines.children.map((c) => c.line);
   },
@@ -31,5 +48,5 @@ export const CMP = {
   grammar: cmpGrammar,
   semantics: cmpSemantics,
   parser: grammar,
-  parse: makeParser<Cmp>(grammar, cmpSemantics),
+  parse: makeParser<CmpPartial>(grammar, cmpSemantics),
 };

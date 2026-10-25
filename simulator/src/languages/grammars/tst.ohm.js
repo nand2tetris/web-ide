@@ -3,11 +3,11 @@ Tst <: Base {
   Root := Tst
   Tst = (TstStatement | TstRepeat | TstWhile)+
 
-  TstRepeat = Repeat Number? OpenBrace TstCommand+ CloseBrace
-  TstWhile = While Condition OpenBrace TstCommand+ CloseBrace
+  TstRepeat = Repeat Number? OpenBrace TstCommand+ ! &CloseBrace CloseBrace
+  TstWhile = While Condition OpenBrace TstCommand+ ! &CloseBrace CloseBrace
   TstStatement = TstCommand
 
-  TstCommand = TstOperation Separator
+  TstCommand = TstOperation ! Separator
   Separator = (Semi | Bang | Comma)
 
   TstOperation =

@@ -1,7 +1,16 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import { type Node, grammar as ohmGrammar } from "ohm-js";
+import {
+  baseSemantics,
+  grammars,
+  isFail,
+  makeParser,
+  type ParseError,
+  parseErrorOf,
+  Span,
+  span,
+} from "./base.js";
 
 export interface TstEchoOperation {
   op: "echo";
@@ -79,8 +88,12 @@ export interface TstCommand {
   span: Span;
 }
 
-export interface TstRepeat {
-  statements: TstCommand[];
+/**
+ * Recovery points widen a list's item type with `E`. The default `never` is
+ * the strict type that a valid parse produces; `ParseError` is the partial one.
+ */
+export interface TstRepeat<E = never> {
+  statements: (TstCommand | E)[];
   count: number;
   span: Span;
 }
@@ -91,17 +104,24 @@ export interface TstWhileCondition {
   right: string | number;
 }
 
-export interface TstWhileStatement {
-  statements: TstCommand[];
+export interface TstWhileStatement<E = never> {
+  statements: (TstCommand | E)[];
   condition: TstWhileCondition;
   span: Span;
 }
 
-export type TstStatement = TstCommand | TstRepeat | TstWhileStatement;
+export type TstStatement<E = never> =
+  | TstCommand
+  | E
+  | TstRepeat<E>
+  | TstWhileStatement<E>;
 
-export interface Tst {
-  lines: TstStatement[];
+export interface Tst<E = never> {
+  lines: TstStatement<E>[];
 }
+
+/** A Tst where recovery may have replaced commands with error nodes. */
+export type TstPartial = Tst<ParseError>;
 
 import tstGrammar from "./grammars/tst.ohm.js";
 export const grammar = ohmGrammar(tstGrammar, grammars);
@@ -210,8 +230,11 @@ tstSemantics.addAttribute<TstOperation>("operation", {
   },
 });
 
-tstSemantics.addAttribute<TstCommand>("command", {
+tstSemantics.addAttribute<TstCommand | ParseError>("command", {
   TstCommand(op, sep) {
+    if (isFail(sep)) {
+      return parseErrorOf(sep);
+    }
     return {
       op: op.operation,
       separator: sep.sourceString as Separator,
@@ -230,17 +253,26 @@ tstSemantics.addAttribute<TstWhileCondition>("condition", {
   },
 });
 
-tstSemantics.addAttribute<TstStatement>("statement", {
-  TstWhile(op, cond, _o, commands, _c) {
+/** The commands of a block body, with a recovered stop marker's error last. */
+function blockCommands(
+  commands: Node,
+  stop: Node,
+): (TstCommand | ParseError)[] {
+  const statements = commands.children.map((node) => node.command);
+  return isFail(stop) ? [...statements, parseErrorOf(stop)] : statements;
+}
+
+tstSemantics.addAttribute<TstStatement<ParseError>>("statement", {
+  TstWhile(op, cond, _o, commands, stop, _c) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, stop),
       condition: cond.condition,
       span: span(this.source),
     };
   },
-  TstRepeat(op, count, _o, commands, _c) {
+  TstRepeat(op, count, _o, commands, stop, _c) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, stop),
       count: count.sourceString ? Number(count.sourceString) : -1,
       span: span(this.source),
     };
@@ -250,7 +282,7 @@ tstSemantics.addAttribute<TstStatement>("statement", {
   },
 });
 
-tstSemantics.addAttribute<Tst>("tst", {
+tstSemantics.addAttribute<TstPartial>("tst", {
   Tst(lines) {
     return {
       lines: lines.children.map((n) => n.statement),
@@ -258,7 +290,7 @@ tstSemantics.addAttribute<Tst>("tst", {
   },
 });
 
-tstSemantics.addAttribute<Tst>("root", {
+tstSemantics.addAttribute<TstPartial>("root", {
   Root({ tst }) {
     return tst;
   },
@@ -268,5 +300,5 @@ export const TST = {
   grammar: tstGrammar,
   semantics: tstSemantics,
   parser: grammar,
-  parse: makeParser<Tst>(grammar, tstSemantics),
+  parse: makeParser<TstPartial>(grammar, tstSemantics),
 };

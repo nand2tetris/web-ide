@@ -7,7 +7,7 @@ import {
   MemoryKeyboard,
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import { parseValid, Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
@@ -244,7 +244,7 @@ export function makeCpuStore(
     compileTest(file: string, cmp?: string, _path?: string) {
       const tstPath = _path ?? path;
       dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
-      const tst = TST.parse(file);
+      const tst = parseValid(TST.parse(file));
 
       if (isErr(tst)) {
         setStatus({

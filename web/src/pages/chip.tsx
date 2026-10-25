@@ -1,3 +1,4 @@
+import { parseValid } from "@nand2tetris/simulator/languages/base.js";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import {
@@ -77,7 +78,7 @@ export const Chip = () => {
         }
 
         const content = await file.content;
-        const parsed = HDL.parse(content);
+        const parsed = parseValid(HDL.parse(content));
         if (isErr(parsed)) {
           continue;
         }

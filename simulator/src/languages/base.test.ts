@@ -1,7 +1,17 @@
+import { Err, Ok } from "@davidsouther/jiffies/result.ts";
 import { grammar } from "ohm-js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
-import { baseSemantics, grammars } from "./base.js";
+import {
+  baseSemantics,
+  type CompilationError,
+  grammars,
+  isParseError,
+  makeParser,
+  type ParseError,
+  requireValid,
+  setParserRecovery,
+} from "./base.js";
 
 describe("Ohm Base", () => {
   it("parses numbers", () => {
@@ -50,6 +60,60 @@ describe("Ohm Base", () => {
       ["(A,)", "Block"],
     ])("allows trailing lists", (str, tag) => {
       expect(state.repGrammar.match(str, tag)).toHaveSucceeded();
+    });
+  });
+
+  describe("partial parse result", () => {
+    const listGrammar = grammar(`Nums <: Base { Root := Number+ }`, grammars);
+    const numsSemantics = listGrammar.extendSemantics(baseSemantics);
+    numsSemantics.addAttribute<number[]>("root", {
+      Root(nums) {
+        return nums.children.map((n) => n.value);
+      },
+    });
+    const parse = makeParser<number[]>(listGrammar, numsSemantics, undefined);
+
+    beforeEach(() => setParserRecovery(false));
+
+    it("returns Ok with an empty error list for valid source", () => {
+      const result = parse("1 2 3");
+      expect(result).toBeOk();
+      expect(Ok(result)).toEqual({ ast: [1, 2, 3], errors: [] });
+    });
+
+    it("returns Err with today's message for invalid source", () => {
+      const result = parse("1 x");
+      expect(result).toBeErr();
+      expect(Err(result as Err<CompilationError>).message).toMatch(
+        /^Line 1: expected /,
+      );
+      expect(Err(result as Err<CompilationError>).errors).toBeUndefined();
+    });
+
+    it("requireValid returns the strict AST when there are no errors", () => {
+      const strict = requireValid({ ast: [1], errors: [] });
+      expect(strict).toBeOk();
+      expect(Ok(strict)).toEqual([1]);
+    });
+
+    it("requireValid returns the first error when there are errors", () => {
+      const first = { message: "Line 2: first" };
+      const second = { message: "Line 3: second" };
+      const strict = requireValid({ ast: [1], errors: [first, second] });
+      expect(strict).toBeErr();
+      expect(Err(strict)).toEqual(first);
+    });
+
+    it("isParseError recognizes a hand built error node", () => {
+      const node: ParseError = {
+        kind: "ParseError",
+        error: { message: "Line 1: bad" },
+        span: { start: 0, end: 1, line: 1 },
+      };
+      expect(isParseError(node)).toBe(true);
+      expect(isParseError({ kind: "Part" })).toBe(false);
+      expect(isParseError(undefined)).toBe(false);
+      expect(isParseError("ParseError")).toBe(false);
     });
   });
 });

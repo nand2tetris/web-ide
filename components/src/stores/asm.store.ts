@@ -18,6 +18,7 @@ import {
 } from "@nand2tetris/simulator/languages/asm.js";
 import {
   CompilationError,
+  parseValid,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 import { Action } from "@nand2tetris/simulator/types.js";
@@ -333,7 +334,7 @@ export function makeAsmStore(
 
     compileAsm(asm: string) {
       this.reset();
-      const parseResult = ASM.parse(asm);
+      const parseResult = parseValid(ASM.parse(asm));
       if (isErr(parseResult)) {
         dispatch.current({
           action: "setError",

@@ -1,9 +1,10 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
   type Dict,
   type Grammar,
   grammar,
   Interval,
+  type MatchResult,
   type Semantics,
 } from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
@@ -69,7 +70,7 @@ baseSemantics.addAttribute("String", {
 export interface CompilationError {
   message: string;
   span?: Span;
-  /** Every error found when recovery cannot finish, with this error first. */
+  /** Every error found by a recovering parse, with this error first. */
   readonly errors?: CompilationError[];
 }
 
@@ -93,14 +94,43 @@ export interface Parsed<A> {
 export type ParseResult<A> = Result<Parsed<A>, CompilationError>;
 
 export function isParseError(node: unknown): node is ParseError {
-  throw new Error("not implemented");
+  return (
+    typeof node === "object" &&
+    node !== null &&
+    (node as { kind?: unknown }).kind === "ParseError"
+  );
 }
 
 /** Turns a partial AST into the strict AST type, or the first error. */
-export function requireValid<A, S>(
+export function requireValid<A, S = A>(
   parsed: Parsed<A>,
 ): Result<S, CompilationError> {
-  throw new Error("not implemented");
+  return parsed.errors.length > 0
+    ? Err(parsed.errors[0])
+    : Ok(parsed.ast as unknown as S);
+}
+
+/**
+ * Strict view of a parse result: the first error of a partial AST, or an
+ * unrecovered failure, is an `Err`. Use where a valid AST is required. The
+ * error carries `errors`, every error found, so editors can still list them.
+ */
+export function parseValid<A, S = A>(
+  result: ParseResult<A>,
+): Result<S, CompilationError> {
+  if (isErr(result)) {
+    return result;
+  }
+  const parsed = Ok(result);
+  const strict = requireValid<A, S>(parsed);
+  return isErr(strict)
+    ? Err({ ...Err(strict), errors: parsed.errors })
+    : strict;
+}
+
+/** Every error to display for one error, which may carry the full list. */
+export function errorList(error?: CompilationError): CompilationError[] {
+  return error ? (error.errors ?? [error]) : [];
 }
 
 let parserRecovery = false;
@@ -130,25 +160,67 @@ export function createError(
   };
 }
 
+/** Recovery options that Ohm builds with Fallible accept; others ignore them. */
+interface RecoveringGrammar {
+  match(
+    input: string,
+    startRule?: string,
+    options?: { recover: boolean },
+  ): MatchResult;
+}
+
+function spanAt(source: string, position: number): Span {
+  let line = 1;
+  for (let i = 0; i < position && i < source.length; i++) {
+    if (source[i] === "\n") line++;
+  }
+  return { start: position, end: position, line };
+}
+
+function recoveredErrors(
+  source: string,
+  match: MatchResult,
+): CompilationError[] {
+  const failures =
+    (
+      match as unknown as {
+        getRecoveredFailures?(): { shortMessage: string; position: number }[];
+      }
+    ).getRecoveredFailures?.() ?? [];
+  return failures.map((failure) =>
+    createError(failure.shortMessage, spanAt(source, failure.position)),
+  );
+}
+
 export function makeParser<ResultType>(
   grammar: Grammar,
   semantics: Semantics,
   property: (obj: Dict) => ResultType = ({ root }) => root,
-): (source: string) => Result<ResultType, CompilationError> {
+): (source: string) => ParseResult<ResultType> {
   return function parse(source) {
     try {
-      const match = grammar.match(source);
+      const recover = parserRecovery;
+      const match = recover
+        ? (grammar as unknown as RecoveringGrammar).match(source, undefined, {
+            recover,
+          })
+        : grammar.match(source);
+      const errors = recover ? recoveredErrors(source, match) : [];
       if (match.failed()) {
+        const first = createError(
+          match.shortMessage ?? UNKNOWN_HDL_ERROR,
+          span(match.getInterval()),
+        );
+        // Today's first error leads the list; the final failure ends it.
         return Err(
-          createError(
-            match.shortMessage ?? UNKNOWN_HDL_ERROR,
-            span(match.getInterval()),
-          ),
+          errors.length > 0
+            ? { ...first, errors: [first, ...errors.slice(1)] }
+            : first,
         );
       }
       const parsed = semantics(match);
-      const parse = property(parsed);
-      return Ok(parse);
+      const ast = property(parsed);
+      return Ok({ ast, errors });
     } catch (e) {
       return Err(e as Error);
     }

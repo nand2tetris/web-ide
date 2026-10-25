@@ -4,6 +4,7 @@
 import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, test } from "vitest";
 import { Memory } from "../chip/builtins/computer/computer.js";
+import { parseValid } from "../languages/base.js";
 import { TST } from "../languages/tst.js";
 import { ChipTest } from "./chiptst.js";
 
@@ -19,7 +20,9 @@ output;
 async function stepOnce(sep: string) {
   const mem = new Memory();
   const test = unwrap(
-    ChipTest.from(unwrap(TST.parse(tstWith(sep))), { requireLoad: false }),
+    ChipTest.from(unwrap(parseValid(TST.parse(tstWith(sep)))), {
+      requireLoad: false,
+    }),
   ).with(mem);
   test.reset();
   // The keyboard event arrives on a later macrotask, like a real key press.

@@ -61,15 +61,20 @@ export const Asm = () => {
   const redirectRef = useRef<HTMLAnchorElement>(null);
 
   const loadAsm = async () => {
-    const path = await filePicker.select({ suffix: ".asm" });
+    const fileRef = await filePicker.selectAllowLocal({ suffix: ".asm" });
     setStatus(LOADING);
     requestAnimationFrame(async () => {
-      await actions.loadAsm(path.path);
+      let title: string;
+      if (isPath(fileRef)) {
+        await actions.loadAsm(fileRef.path);
+        title = fileRef.path.split("/").pop() ?? "";
+      } else {
+        const file = Array.isArray(fileRef) ? fileRef[0] : fileRef;
+        await actions.loadAsm(undefined, file.content);
+        title = file.name;
+      }
       setStatus("");
-      dispatch.current({
-        action: "setTitle",
-        payload: path.path.split("/").pop() ?? "",
-      });
+      dispatch.current({ action: "setTitle", payload: title });
     });
   };
 

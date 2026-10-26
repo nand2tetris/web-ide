@@ -1,5 +1,14 @@
 import { type Node, grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParsers, Span, span } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  isFail,
+  makeParsers,
+  type ParseError,
+  parseErrorOf,
+  Span,
+  span,
+} from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
 const primitives = new Set(["int", "boolean", "char"] as const);
@@ -11,11 +20,18 @@ export function isPrimitive(value: string): value is Primitive {
 
 export type Type = Primitive | string;
 
-export interface Class {
+/**
+ * `E` widens the lists at the recovery points; `never` is the strict type that
+ * a valid parse produces, `ParseError` the partial one.
+ */
+export interface Class<E = never> {
   name: { value: string; span: Span };
-  varDecs: ClassVarDec[];
-  subroutines: Subroutine[];
+  varDecs: (ClassVarDec | E)[];
+  subroutines: (Subroutine<E> | E)[];
 }
+
+/** A Class where recovery may have replaced items with error nodes. */
+export type ClassPartial = Class<ParseError>;
 
 export type ClassVarType = "static" | "field";
 
@@ -33,17 +49,17 @@ export interface Parameter {
 export type ReturnType = Type | "void";
 export type SubroutineType = "constructor" | "function" | "method";
 
-export interface Subroutine {
+export interface Subroutine<E = never> {
   type: SubroutineType;
   name: { value: string; span: Span };
   returnType: { value: ReturnType; span: Span };
   parameters: Parameter[];
-  body: SubroutineBody;
+  body: SubroutineBody<E>;
 }
 
-export interface SubroutineBody {
-  varDecs: VarDec[];
-  statements: Statement[];
+export interface SubroutineBody<E = never> {
+  varDecs: (VarDec | E)[];
+  statements: (Statement<E> | E)[];
 }
 
 export interface VarDec {
@@ -51,10 +67,10 @@ export interface VarDec {
   names: string[];
 }
 
-export type Statement =
+export type Statement<E = never> =
   | LetStatement
-  | IfStatement
-  | WhileStatement
+  | IfStatement<E>
+  | WhileStatement<E>
   | DoStatement
   | ReturnStatement;
 
@@ -66,17 +82,17 @@ export interface LetStatement {
   span: Span;
 }
 
-export interface IfStatement {
+export interface IfStatement<E = never> {
   statementType: "ifStatement";
   condition: Expression;
-  body: Statement[];
-  else: Statement[];
+  body: (Statement<E> | E)[];
+  else: (Statement<E> | E)[];
 }
 
-export interface WhileStatement {
+export interface WhileStatement<E = never> {
   statementType: "whileStatement";
   condition: Expression;
-  body: Statement[];
+  body: (Statement<E> | E)[];
 }
 
 export interface DoStatement {
@@ -163,17 +179,26 @@ export interface Expression {
 export const grammar = ohmGrammar(jackGrammar, grammars);
 export const jackSemantics = grammar.extendSemantics(baseSemantics);
 
-function statements(node: Node) {
-  return node.children.map((n) => n.statement);
+type PartialStatement = Statement<ParseError> | ParseError;
+
+/**
+ * A block's statements: the kept statements, then the synchronizer slot's
+ * error node when the block recovered.
+ */
+function block(list: Node, end: Node): PartialStatement[] {
+  const kept: PartialStatement[] = isFail(list)
+    ? []
+    : list.children.map((n) => n.statement);
+  return isFail(end) ? [...kept, parseErrorOf(end)] : kept;
 }
 
-jackSemantics.addAttribute<Class>("Root", {
+jackSemantics.addAttribute<ClassPartial>("Root", {
   Root(_) {
     return this.class;
   },
 });
 
-jackSemantics.addAttribute<Class>("class", {
+jackSemantics.addAttribute<ClassPartial>("class", {
   Class(_a, name, _b, varDecs, subroutines, _c) {
     return {
       name: { value: name.sourceString, span: span(name.source) },
@@ -183,8 +208,11 @@ jackSemantics.addAttribute<Class>("class", {
   },
 });
 
-jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
-  ClassVarDec(varType, type, name, rest, _) {
+jackSemantics.addAttribute<ClassVarDec | ParseError>("classVarDec", {
+  ClassVarDec(body, end) {
+    return isFail(end) ? parseErrorOf(end) : body.classVarDec;
+  },
+  ClassVarDecBody(varType, type, name, rest) {
     return {
       varType: varType.sourceString.trim() as ClassVarType,
       type: {
@@ -199,20 +227,27 @@ jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
   },
 });
 
-jackSemantics.addAttribute<Subroutine>("subroutineDec", {
-  SubroutineDec(type, returnType, name, _a, parameters, _b, body) {
-    return {
-      type: type.sourceString.trim() as SubroutineType,
-      returnType: {
-        value: returnType.sourceString.trim() as ReturnType,
-        span: span(returnType.source),
-      },
-      name: { value: name.sourceString, span: span(name.source) },
-      parameters: parameters.parameterList,
-      body: body.subroutineBody,
-    };
+jackSemantics.addAttribute<Subroutine<ParseError> | ParseError>(
+  "subroutineDec",
+  {
+    SubroutineDec(head, open, body) {
+      if (isFail(open)) {
+        return parseErrorOf(open);
+      }
+      const [type, returnType, name, _a, parameters] = head.children;
+      return {
+        type: type.sourceString.trim() as SubroutineType,
+        returnType: {
+          value: returnType.sourceString.trim() as ReturnType,
+          span: span(returnType.source),
+        },
+        name: { value: name.sourceString, span: span(name.source) },
+        parameters: parameters.parameterList,
+        body: body.subroutineBody,
+      };
+    },
   },
-});
+);
 
 jackSemantics.addAttribute<Parameter>("parameter", {
   Parameter(type, name) {
@@ -238,17 +273,20 @@ jackSemantics.addAttribute<Expression[]>("parameters", {
   },
 });
 
-jackSemantics.addAttribute<SubroutineBody>("subroutineBody", {
-  SubroutineBody(_a, varDecs, statementList, _b) {
+jackSemantics.addAttribute<SubroutineBody<ParseError>>("subroutineBody", {
+  SubroutineBody(_a, varDecs, statementList, end) {
     return {
       varDecs: varDecs.children.map((n) => n.varDec),
-      statements: statements(statementList),
+      statements: block(statementList, end),
     };
   },
 });
 
-jackSemantics.addAttribute<VarDec>("varDec", {
-  VarDec(_a, type, name, rest, _b) {
+jackSemantics.addAttribute<VarDec | ParseError>("varDec", {
+  VarDec(body, end) {
+    return isFail(end) ? parseErrorOf(end) : body.varDec;
+  },
+  VarDecBody(_a, type, name, rest) {
     return {
       type: {
         value: type.sourceString.trim() as Type,
@@ -268,8 +306,14 @@ jackSemantics.addAttribute<VarDec>("varDec", {
 //   }
 // })
 
-jackSemantics.addAttribute<Statement>("statement", {
-  LetStatement(_a, target, _b, value, _c) {
+jackSemantics.addAttribute<PartialStatement>("statement", {
+  LetStatement(body, end) {
+    return isFail(end)
+      ? parseErrorOf(end)
+      : { ...body.statement, span: span(this.source) };
+  },
+
+  LetBody(_a, target, _b, value) {
     if (target.term.termType == "variable") {
       return {
         statementType: "letStatement",
@@ -291,35 +335,51 @@ jackSemantics.addAttribute<Statement>("statement", {
     }
   },
 
-  IfStatement(_a, _b, condition, _c, _d, body, _e, elseBlock) {
+  IfStatement(head, open, body, end, elseBlock) {
+    if (isFail(open)) {
+      return parseErrorOf(open);
+    }
     return {
       statementType: "ifStatement",
-      condition: condition.expression,
-      body: statements(body),
+      condition: head.child(2).expression,
+      body: block(body, end),
       else: elseBlock.child(0)?.else ?? [],
     };
   },
 
-  WhileStatement(_a, _b, condition, _c, _d, body, _e) {
+  WhileStatement(head, open, body, end) {
+    if (isFail(open)) {
+      return parseErrorOf(open);
+    }
     return {
       statementType: "whileStatement",
-      condition: condition.expression,
-      body: statements(body),
+      condition: head.child(2).expression,
+      body: block(body, end),
     };
   },
 
-  DoStatement(_a, call, _b) {
+  DoStatement(body, end) {
+    return isFail(end) ? parseErrorOf(end) : body.statement;
+  },
+
+  DoBody(_a, call) {
     return { statementType: "doStatement", call: call.term as SubroutineCall };
   },
 
-  EmptyReturn(_a, _b) {
+  ReturnStatement(body, end) {
+    return isFail(end)
+      ? parseErrorOf(end)
+      : { ...body.statement, span: span(this.source) };
+  },
+
+  EmptyReturn(_a) {
     return {
       statementType: "returnStatement",
       span: span(this.source),
     };
   },
 
-  ReturnValue(_a, value, _b) {
+  ReturnValue(_a, value) {
     return {
       statementType: "returnStatement",
       value: value.expression,
@@ -328,9 +388,9 @@ jackSemantics.addAttribute<Statement>("statement", {
   },
 });
 
-jackSemantics.addAttribute<Statement[]>("else", {
-  ElseBlock(_a, _b, body, _c) {
-    return statements(body);
+jackSemantics.addAttribute<PartialStatement[]>("else", {
+  ElseBlock(_a, _b, body, end) {
+    return block(body, end);
   },
 });
 
@@ -434,5 +494,5 @@ export const JACK = {
   parser: grammar,
   grammar: jackGrammar,
   semantics: jackSemantics,
-  ...makeParsers<Class>(grammar, jackSemantics, (n) => n.class),
+  ...makeParsers<ClassPartial>(grammar, jackSemantics, (n) => n.class),
 };

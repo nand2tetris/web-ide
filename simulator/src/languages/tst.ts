@@ -5,7 +5,7 @@ import {
   baseSemantics,
   grammars,
   isFail,
-  makeParser,
+  makeParsers,
   type ParseError,
   parseErrorOf,
   Span,
@@ -300,5 +300,5 @@ export const TST = {
   grammar: tstGrammar,
   semantics: tstSemantics,
   parser: grammar,
-  parse: makeParser<TstPartial>(grammar, tstSemantics),
+  ...makeParsers<TstPartial>(grammar, tstSemantics),
 };

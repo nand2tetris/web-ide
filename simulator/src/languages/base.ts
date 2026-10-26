@@ -128,7 +128,7 @@ export function requireValid<A, S = Strict<A>>(
  * unrecovered failure, is an `Err`. Use where a valid AST is required. The
  * error carries `errors`, every error found, so editors can still list them.
  */
-export function parseValid<A, S = Strict<A>>(
+function parseValid<A, S = Strict<A>>(
   result: ParseResult<A>,
 ): Result<S, CompilationError> {
   if (isErr(result)) {
@@ -226,7 +226,7 @@ function recoveredErrors(
   );
 }
 
-export function makeParser<ResultType>(
+function makeParser<ResultType>(
   grammar: Grammar,
   semantics: Semantics,
   property: (obj: Dict) => ResultType = ({ root }) => root,
@@ -258,6 +258,26 @@ export function makeParser<ResultType>(
     } catch (e) {
       return Err(e as Error);
     }
+  };
+}
+
+/** A language's parsers: a partial `parse`, and a `parseStrict` for valid ASTs. */
+export interface Parsers<ResultType> {
+  /** Partial parse; with recovery enabled, errors are listed beside the AST. */
+  parse(source: string): ParseResult<ResultType>;
+  /** Strict AST, or an Err whose `errors` lists every error found. */
+  parseStrict(source: string): Result<Strict<ResultType>, CompilationError>;
+}
+
+export function makeParsers<ResultType>(
+  grammar: Grammar,
+  semantics: Semantics,
+  property?: (obj: Dict) => ResultType,
+): Parsers<ResultType> {
+  const parse = makeParser<ResultType>(grammar, semantics, property);
+  return {
+    parse,
+    parseStrict: (source) => parseValid<ResultType>(parse(source)),
   };
 }
 

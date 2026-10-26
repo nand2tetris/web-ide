@@ -7,7 +7,7 @@ import {
   type CompilationError,
   grammars,
   isParseError,
-  makeParser,
+  makeParsers,
   type ParseError,
   requireValid,
   setParserRecovery,
@@ -71,7 +71,7 @@ describe("Ohm Base", () => {
         return nums.children.map((n) => n.value);
       },
     });
-    const parse = makeParser<number[]>(listGrammar, numsSemantics, undefined);
+    const { parse } = makeParsers<number[]>(listGrammar, numsSemantics);
 
     beforeEach(() => setParserRecovery(false));
 

@@ -18,7 +18,6 @@ import {
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import {
   CompilationError,
-  parseValid,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
@@ -440,7 +439,7 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = parseValid(TST.parse(file));
+      const tst = TST.parseStrict(file);
       if (isErr(tst)) {
         setStatus({
           message: `Failed to parse test ${Err(tst).message}`,

@@ -3,7 +3,7 @@ import {
   baseSemantics,
   grammars,
   isFail,
-  makeParser,
+  makeParsers,
   type ParseError,
   parseErrorOf,
 } from "./base.js";
@@ -48,5 +48,5 @@ export const CMP = {
   grammar: cmpGrammar,
   semantics: cmpSemantics,
   parser: grammar,
-  parse: makeParser<CmpPartial>(grammar, cmpSemantics),
+  ...makeParsers<CmpPartial>(grammar, cmpSemantics),
 };

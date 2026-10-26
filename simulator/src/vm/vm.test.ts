@@ -7,7 +7,6 @@ import {
   STATIC,
 } from "@nand2tetris/projects/samples/vm/vm.js";
 import { describe, expect, test } from "vitest";
-import { parseValid } from "../languages/base.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "./vm.js";
 
@@ -48,7 +47,7 @@ not
 `;
 
 test("Bit Ops", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(BIT_TEST)));
+  const { instructions } = unwrap(VM.parseStrict(BIT_TEST));
   const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 11; i++) {
@@ -101,7 +100,7 @@ not
 `;
 
 test("07 / Memory Access / Stack Test", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(STACK_TEST)));
+  const { instructions } = unwrap(VM.parseStrict(STACK_TEST));
   const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 38; i++) {
@@ -145,7 +144,7 @@ add
 `;
 
 test("07 / Memory Access / Basic Test", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(BASIC_TEST)));
+  const { instructions } = unwrap(VM.parseStrict(BASIC_TEST));
   const vm = unwrap(Vm.build(instructions));
 
   vm.write([
@@ -187,7 +186,7 @@ add
 `;
 
 test("07 / Memory Access / Pointer Test", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(POINTER_TEST)));
+  const { instructions } = unwrap(VM.parseStrict(POINTER_TEST));
   const vm = unwrap(Vm.build(instructions));
 
   vm.write([
@@ -211,7 +210,7 @@ test("07 / Memory Access / Pointer Test", () => {
 });
 
 test("08 / Branching Function", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(BRANCHING_FUNCTION)));
+  const { instructions } = unwrap(VM.parseStrict(BRANCHING_FUNCTION));
   const vm = unwrap(Vm.build(instructions));
 
   vm.write([]);
@@ -242,7 +241,7 @@ push local 0
 `;
 
 test("08 / Program Flow / Basic Loop", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(LOOP_TEST)));
+  const { instructions } = unwrap(VM.parseStrict(LOOP_TEST));
   const vm = unwrap(Vm.build(instructions));
 
   vm.write([
@@ -305,7 +304,7 @@ label END_PROGRAM
 `;
 
 test("08 / Program Flow / Fibonacci Series", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(FIBONACCI_SERIES)));
+  const { instructions } = unwrap(VM.parseStrict(FIBONACCI_SERIES));
   const vm = unwrap(Vm.build(instructions));
 
   vm.write([
@@ -327,14 +326,14 @@ test("08 / Program Flow / Fibonacci Series", () => {
 });
 
 test("08 / Functions / SimpleFunction", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(SIMPLE_FUNCTION)));
+  const { instructions } = unwrap(VM.parseStrict(SIMPLE_FUNCTION));
   const vm = unwrap(Vm.build(instructions));
 
   expect(() => vm.vmStack()).not.toThrow("Assertion failed");
 });
 
 test("08 / Functions / NestedCall", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(NESTED_FUNCTION)));
+  const { instructions } = unwrap(VM.parseStrict(NESTED_FUNCTION));
   const vm = unwrap(Vm.build(instructions));
 
   const init: [number, number][] = [
@@ -371,7 +370,7 @@ test("08 / Functions / NestedCall", () => {
 });
 
 test("08 / Functions / Fib", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(FIBONACCI)));
+  const { instructions } = unwrap(VM.parseStrict(FIBONACCI));
   const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 1000; i++) {
@@ -383,7 +382,7 @@ test("08 / Functions / Fib", () => {
 });
 
 test("08 / Functions / Static", () => {
-  const { instructions } = unwrap(parseValid(VM.parse(STATIC)));
+  const { instructions } = unwrap(VM.parseStrict(STATIC));
   const vm = unwrap(Vm.build(instructions));
 
   for (let i = 0; i < 1000; i++) {
@@ -396,14 +395,14 @@ test("08 / Functions / Static", () => {
 
 describe("debug frame views", () => {
   test("top frame", () => {
-    const { instructions } = unwrap(parseValid(VM.parse(FIBONACCI)));
+    const { instructions } = unwrap(VM.parseStrict(FIBONACCI));
     const vm = unwrap(Vm.build(instructions));
 
     expect(vm.vmStack().length).toBe(1);
   });
 
   test("entry frame `that` reflects memory at THAT, not the THAT pointer", () => {
-    const { instructions } = unwrap(parseValid(VM.parse(FIBONACCI)));
+    const { instructions } = unwrap(VM.parseStrict(FIBONACCI));
     const vm = unwrap(Vm.build(instructions));
     // Set the THAT pointer and the memory it points to so the two are easy
     // to distinguish.
@@ -433,7 +432,7 @@ push constant 7
 call Array.new 1
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     const arrayNew = vm.functionMap["Array.new"];
@@ -455,7 +454,7 @@ function Main.main 0
 push constant 0
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     const arrayDispose = vm.functionMap["Array.dispose"];
@@ -481,7 +480,7 @@ function Main.main 0
 push constant 0
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     const arrayNew = vm.functionMap["Array.new"];
@@ -499,7 +498,7 @@ function Main.main 0
 push constant 0
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     expect(vm.functionMap["Array.new"]).toBeUndefined();
@@ -522,7 +521,7 @@ function Main.main 0
 push constant 0
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     const printString = vm.functionMap["Output.printString"];
@@ -553,7 +552,7 @@ function Main.main 0
 push constant 0
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     const printString = vm.functionMap["Output.printString"];
@@ -571,7 +570,7 @@ function Main.main 0
 push constant 0
 return
 `;
-    const { instructions } = unwrap(parseValid(VM.parse(program)));
+    const { instructions } = unwrap(VM.parseStrict(program));
     const vm = unwrap(Vm.build(instructions));
 
     expect(vm.functionMap["Output.printString"]).toBeUndefined();

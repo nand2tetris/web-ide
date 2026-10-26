@@ -7,7 +7,7 @@ import {
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { build as buildChip } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
-import { CompilationError, parseValid } from "../languages/base.js";
+import { CompilationError } from "../languages/base.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
@@ -46,8 +46,8 @@ export const hasTest = ({
 
 /** Try parsing the loaded files. */
 export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
-  const maybeParsedHDL = parseValid(HDL.parse(file.hdl));
-  const maybeParsedTST = parseValid(TST.parse(file.tst));
+  const maybeParsedHDL = HDL.parseStrict(file.hdl);
+  const maybeParsedTST = TST.parseStrict(file.tst);
   return { ...file, maybeParsedHDL, maybeParsedTST };
 };
 

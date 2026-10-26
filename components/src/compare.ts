@@ -1,5 +1,5 @@
 import { isErr, Ok } from "@davidsouther/jiffies/result.ts";
-import { parseValid, Span } from "@nand2tetris/simulator/languages/base.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { CMP, Cmp } from "@nand2tetris/simulator/languages/cmp.js";
 
 interface Diff {
@@ -53,8 +53,8 @@ function getDiffs(cmpData: Cmp, outData: Cmp): Diff[] {
 }
 
 export function compare(cmp: string, out: string) {
-  const cmpResult = parseValid(CMP.parse(cmp));
-  const outResult = parseValid(CMP.parse(out));
+  const cmpResult = CMP.parseStrict(cmp);
+  const outResult = CMP.parseStrict(out);
 
   if (isErr(cmpResult) || isErr(outResult)) {
     return false;
@@ -67,8 +67,8 @@ export function compare(cmp: string, out: string) {
 }
 
 export function generateDiffs(cmp: string, out: string): DiffDisplay {
-  const cmpResult = parseValid(CMP.parse(cmp));
-  const outResult = parseValid(CMP.parse(out));
+  const cmpResult = CMP.parseStrict(cmp);
+  const outResult = CMP.parseStrict(out);
 
   if (isErr(cmpResult) || isErr(outResult)) {
     return {

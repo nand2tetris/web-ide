@@ -21,7 +21,6 @@ import { build } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { compare } from "../compare.js";
 import { ASM, Asm } from "../languages/asm.js";
-import { parseValid } from "../languages/base.js";
 import { CMP, Cmp } from "../languages/cmp.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
@@ -57,9 +56,9 @@ describe("Chip Projects", () => {
         expect(tstFile).toBeDefined();
         expect(cmpFile).toBeDefined();
 
-        const hdl = parseValid(HDL.parse(hdlFile));
+        const hdl = HDL.parseStrict(hdlFile);
         expect(hdl).toBeOk();
-        const tst = parseValid(TST.parse(tstFile));
+        const tst = TST.parseStrict(tstFile);
         expect(tst).toBeOk();
 
         const chip = await build({ parts: Ok(hdl as Ok<HdlParse>) });
@@ -78,9 +77,9 @@ describe("Chip Projects", () => {
 
         const outFile = test.log();
 
-        const cmp = parseValid(CMP.parse(cmpFile));
+        const cmp = CMP.parseStrict(cmpFile);
         expect(cmp).toBeOk();
-        const out = parseValid(CMP.parse(outFile));
+        const out = CMP.parseStrict(outFile);
         expect(out).toBeOk();
 
         const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));
@@ -94,7 +93,7 @@ describe("ASM Projects", () => {
   describe.each(Object.keys(ASM_PROJECTS))("project %s", (project) => {
     it.each(Object.keys(ASM_FILES))("%s", (file_name) => {
       const source = ASM_FILES[file_name as keyof typeof ASM_FILES];
-      const parsed = parseValid(ASM.parse(source));
+      const parsed = ASM.parseStrict(source);
       expect(parsed).toBeOk();
       const asm = Ok(parsed as Ok<Asm>);
       ASM.passes.fillLabel(asm);
@@ -135,9 +134,9 @@ describe("Vm Projects", () => {
         expect(tstFile).toBeDefined();
         expect(cmpFile).toBeDefined();
 
-        const parsed = parseValid(VM.parse(vmCode));
+        const parsed = VM.parseStrict(vmCode);
         expect(parsed).toBeOk();
-        const tst = parseValid(TST.parse(tstFile));
+        const tst = TST.parseStrict(tstFile);
         expect(tst).toBeOk();
 
         const vm = await Vm.build(unwrap(parsed).instructions);
@@ -148,9 +147,9 @@ describe("Vm Projects", () => {
 
         const outFile = test.log();
 
-        const cmp = parseValid(CMP.parse(cmpFile));
+        const cmp = CMP.parseStrict(cmpFile);
         expect(cmp).toBeOk();
-        const out = parseValid(CMP.parse(outFile));
+        const out = CMP.parseStrict(outFile);
         expect(out).toBeOk();
 
         const diffs = compare(unwrap(cmp), unwrap(out));

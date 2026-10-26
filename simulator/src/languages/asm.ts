@@ -22,7 +22,7 @@ import {
   createError,
   grammars,
   isFail,
-  makeParser,
+  makeParsers,
   type ParseError,
   parseErrorOf,
   Span,
@@ -367,7 +367,7 @@ export const ASM = {
   grammar: asmGrammar,
   semantics: asmSemantics,
   parser: grammar,
-  parse: makeParser<AsmPartial>(grammar, asmSemantics),
+  ...makeParsers<AsmPartial>(grammar, asmSemantics),
   passes: {
     fillLabel,
     emit,

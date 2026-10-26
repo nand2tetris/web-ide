@@ -1,4 +1,3 @@
-import { parseValid } from "@nand2tetris/simulator/languages/base.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { display } from "@davidsouther/jiffies/display.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
@@ -16,8 +15,8 @@ export const DiffTable = ({
   className?: string;
   zeroState?: ReactElement;
 }) => {
-  const output = parseValid(CMP.parse(out));
-  const compare = parseValid(CMP.parse(cmp));
+  const output = CMP.parseStrict(out);
+  const compare = CMP.parseStrict(cmp);
 
   if (isErr(output)) {
     return (

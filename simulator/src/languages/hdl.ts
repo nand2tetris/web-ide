@@ -1,6 +1,6 @@
 /** Reads and parses HDL chip descriptions. */
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import { baseSemantics, grammars, makeParsers, Span, span } from "./base.js";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -150,5 +150,5 @@ export const HDL = {
   parser: grammar,
   grammar: hdlGrammar,
   semantics: hdlSemantics,
-  parse: makeParser<HdlParse>(grammar, hdlSemantics, (n) => n.Chip),
+  ...makeParsers<HdlParse>(grammar, hdlSemantics, (n) => n.Chip),
 };

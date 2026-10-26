@@ -1,11 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import {
-  CompilationError,
-  createError,
-  parseValid,
-  Span,
-} from "../languages/base.js";
+import { CompilationError, createError, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
@@ -32,7 +27,7 @@ export async function parse(
   name?: string,
   fs?: FileSystem,
 ): Promise<Result<Chip, CompilationError>> {
-  const parsed = parseValid(HDL.parse(code.toString()));
+  const parsed = HDL.parseStrict(code.toString());
   if (isErr(parsed)) {
     return parsed;
   }
@@ -49,7 +44,7 @@ export async function loadChip(
   }
   try {
     const file = await fs.readFile(`${dir}/${name}.hdl`);
-    const maybeParsedHDL = parseValid(HDL.parse(file));
+    const maybeParsedHDL = HDL.parseStrict(file);
 
     let maybeChip: Result<Chip, Error>;
     if (isOk(maybeParsedHDL)) {

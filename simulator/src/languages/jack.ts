@@ -1,5 +1,5 @@
 import { type Node, grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import { baseSemantics, grammars, makeParsers, Span, span } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
 const primitives = new Set(["int", "boolean", "char"] as const);
@@ -434,5 +434,5 @@ export const JACK = {
   parser: grammar,
   grammar: jackGrammar,
   semantics: jackSemantics,
-  parse: makeParser<Class>(grammar, jackSemantics, (n) => n.class),
+  ...makeParsers<Class>(grammar, jackSemantics, (n) => n.class),
 };

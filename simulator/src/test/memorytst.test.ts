@@ -4,7 +4,6 @@
 import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, test } from "vitest";
 import { Memory } from "../chip/builtins/computer/computer.js";
-import { parseValid } from "../languages/base.js";
 import { TST } from "../languages/tst.js";
 import { ChipTest } from "./chiptst.js";
 
@@ -20,7 +19,7 @@ output;
 async function stepOnce(sep: string) {
   const mem = new Memory();
   const test = unwrap(
-    ChipTest.from(unwrap(parseValid(TST.parse(tstWith(sep)))), {
+    ChipTest.from(unwrap(TST.parseStrict(tstWith(sep))), {
       requireLoad: false,
     }),
   ).with(mem);

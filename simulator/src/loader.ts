@@ -1,10 +1,9 @@
 import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { ASM } from "./languages/asm.js";
-import { parseValid } from "./languages/base.js";
 import { int2, parseTwosInt } from "./util/twos.js";
 
 export async function loadAsm(source: string): Promise<number[]> {
-  const asm = unwrap(parseValid(ASM.parse(source)));
+  const asm = unwrap(ASM.parseStrict(source));
   ASM.passes.fillLabel(asm);
   return ASM.passes.emit(asm);
 }

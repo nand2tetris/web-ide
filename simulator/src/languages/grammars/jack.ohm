@@ -4,7 +4,9 @@ Jack <: Base {
     whitespace = (lineComment | comment | space)
 
     class = "class" whitespace+
-    Class = class jackIdentifier OpenBrace ClassVarDec* SubroutineDec* CloseBrace
+    Class = class jackIdentifier OpenBrace ClassVarDec* SubroutineDec* ! ClassClose
+    ClassClose = CloseBrace end
+    recoveryStop = subroutineType
 
     type = ("int" | "char" | "boolean" | jackIdentifier) whitespace+
 

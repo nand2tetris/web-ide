@@ -199,11 +199,15 @@ jackSemantics.addAttribute<ClassPartial>("Root", {
 });
 
 jackSemantics.addAttribute<ClassPartial>("class", {
-  Class(_a, name, _b, varDecs, subroutines, _c) {
+  Class(_a, name, _b, varDecs, subroutines, close) {
+    const kept = subroutines.children.map((n) => n.subroutineDec);
+    // Skipped text after the subroutines becomes an error node; a class that
+    // only lacks its `}` keeps its subroutines as they are.
+    const skipped = isFail(close) && close.sourceString.length > 0;
     return {
       name: { value: name.sourceString, span: span(name.source) },
       varDecs: varDecs.children.map((n) => n.classVarDec),
-      subroutines: subroutines.children.map((n) => n.subroutineDec),
+      subroutines: skipped ? [...kept, parseErrorOf(close)] : kept,
     };
   },
 });

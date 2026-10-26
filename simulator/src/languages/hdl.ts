@@ -1,6 +1,15 @@
 /** Reads and parses HDL chip descriptions. */
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParsers, Span, span } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  isFail,
+  makeParsers,
+  type ParseError,
+  parseErrorOf,
+  Span,
+  span,
+} from "./base.js";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -28,13 +37,20 @@ export interface Part {
   span: Span;
 }
 
-export interface HdlParse {
+/**
+ * `E` widens the lists at the recovery points; `never` is the strict type that
+ * a valid parse produces, `ParseError` the partial one.
+ */
+export interface HdlParse<E = never> {
   name: { value: string; span?: Span };
-  ins: PinDeclaration[];
-  outs: PinDeclaration[];
-  clocked: string[];
-  parts: "BUILTIN" | Part[];
+  ins: (PinDeclaration | E)[];
+  outs: (PinDeclaration | E)[];
+  clocked: (string | E)[];
+  parts: "BUILTIN" | (Part | E)[];
 }
+
+/** An HdlParse where recovery may have replaced items with error nodes. */
+export type HdlPartial = HdlParse<ParseError>;
 
 import hdlGrammar from "./grammars/hdl.ohm.js";
 export const grammar = ohmGrammar(hdlGrammar, grammars);
@@ -74,8 +90,13 @@ hdlSemantics.addAttribute<Wire[]>("Wires", {
   },
 });
 
-hdlSemantics.addAttribute<Part>("Part", {
-  Part({ name }, _a, { Wires }, _b, _c) {
+hdlSemantics.addAttribute<Part | ParseError>("Part", {
+  Part(body, end) {
+    if (isFail(end)) {
+      return parseErrorOf(end);
+    }
+    const { name } = body.child(0);
+    const { Wires } = body.child(2);
     return {
       name: name as string,
       wires: Wires as Wire[],
@@ -84,30 +105,45 @@ hdlSemantics.addAttribute<Part>("Part", {
   },
 });
 
-hdlSemantics.addAttribute<Part[] | "BUILTIN">("Parts", {
-  Parts(_, parts) {
-    return parts.children.map((c) => c.Part);
+hdlSemantics.addAttribute<(Part | ParseError)[] | "BUILTIN">("Parts", {
+  Parts(_, parts, stop) {
+    const kept = parts.children.map((c) => c.Part as Part | ParseError);
+    return isFail(stop) ? [...kept, parseErrorOf(stop)] : kept;
   },
   BuiltinPart(_a, _b) {
     return "BUILTIN";
   },
 });
 
-hdlSemantics.addAttribute<"BUILTIN" | Part[]>("PartList", {
+hdlSemantics.addAttribute<"BUILTIN" | (Part | ParseError)[]>("PartList", {
   PartList(list) {
     return list.Parts;
   },
 });
 
-hdlSemantics.addAttribute<string[]>("Clocked", {
-  ClockedList(_a, clocked, _b) {
+hdlSemantics.addAttribute<(string | ParseError)[]>("Clocked", {
+  ClockedList(body, end) {
+    if (isFail(end)) {
+      return [parseErrorOf(end)];
+    }
     return (
-      clocked
+      body
+        .child(1)
         .asIteration()
         .children.map(
           ({ sourceString }: { sourceString: string }) => sourceString,
         ) ?? []
     );
+  },
+});
+
+/** A pin list, or the one error node of a recovered `IN` or `OUT` line. */
+hdlSemantics.addAttribute<(PinDeclaration | ParseError)[]>("Pins", {
+  InList(body, end) {
+    return isFail(end) ? [parseErrorOf(end)] : body.child(1).PinList;
+  },
+  OutList(body, end) {
+    return isFail(end) ? [parseErrorOf(end)] : body.child(1).PinList;
   },
 });
 
@@ -128,19 +164,19 @@ hdlSemantics.addAttribute<PinDeclaration[]>("PinList", {
   },
 });
 
-hdlSemantics.addAttribute<HdlParse>("Chip", {
+hdlSemantics.addAttribute<HdlPartial>("Chip", {
   Chip(_a, name, _b, body, _c) {
     return {
       name: { value: name.sourceString, span: span(name.source) },
-      ins: body.child(0).child(0)?.child(1)?.PinList ?? [],
-      outs: body.child(1).child(0)?.child(1)?.PinList ?? [],
+      ins: body.child(0).child(0)?.Pins ?? [],
+      outs: body.child(1).child(0)?.Pins ?? [],
       parts: body.child(2).PartList ?? [],
       clocked: body.child(3).child(0)?.Clocked,
     };
   },
 });
 
-hdlSemantics.addAttribute<HdlParse>("Root", {
+hdlSemantics.addAttribute<HdlPartial>("Root", {
   Root(root) {
     return root.child(0)?.Chip;
   },
@@ -150,5 +186,5 @@ export const HDL = {
   parser: grammar,
   grammar: hdlGrammar,
   semantics: hdlSemantics,
-  ...makeParsers<HdlParse>(grammar, hdlSemantics, (n) => n.Chip),
+  ...makeParsers<HdlPartial>(grammar, hdlSemantics, (n) => n.Chip),
 };

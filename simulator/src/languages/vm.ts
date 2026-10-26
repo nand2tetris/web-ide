@@ -1,15 +1,28 @@
 /** Reads tst files to apply and perform test runs. */
 
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParsers, Span, span } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  isFail,
+  makeParsers,
+  type ParseError,
+  parseErrorOf,
+  Span,
+  span,
+} from "./base.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
 export const grammar = ohmGrammar(vmGrammar, grammars);
 export const vmSemantics = grammar.extendSemantics(baseSemantics);
 
-export interface Vm {
-  instructions: VmInstruction[];
+/** `E` widens the instructions at the recovery point; `never` is strict. */
+export interface Vm<E = never> {
+  instructions: (VmInstruction | E)[];
 }
+
+/** A Vm where recovery may have replaced instructions with error nodes. */
+export type VmPartial = Vm<ParseError>;
 
 export type Segment =
   | "argument"
@@ -175,7 +188,7 @@ vmSemantics.addAttribute<
   },
 });
 
-vmSemantics.addAttribute<VmInstruction>("instruction", {
+vmSemantics.addAttribute<VmInstruction | ParseError>("instruction", {
   StackInstruction({ op }, { segment }, value) {
     return {
       op: op as "push" | "pop",
@@ -230,23 +243,22 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       span: span(this.source),
     };
   },
-  VmInstructionLine(inst, _) {
-    return inst.instruction;
+  VmInstructionLine(inst, end) {
+    return isFail(end) ? parseErrorOf(end) : inst.instruction;
   },
 });
 
-vmSemantics.addAttribute<Vm>("vm", {
-  Vm(_, lines, last) {
-    const instructions = lines.children.map((node) => node.instruction) ?? [];
+vmSemantics.addAttribute<VmPartial>("vm", {
+  Vm(_, lines) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: lines.children.map(
+        (node) => node.instruction as VmInstruction | ParseError,
+      ),
     };
   },
 });
 
-vmSemantics.addAttribute<Vm>("root", {
+vmSemantics.addAttribute<VmPartial>("root", {
   Root({ vm }) {
     return vm;
   },
@@ -256,5 +268,5 @@ export const VM = {
   grammar: vmGrammar,
   semantics: vmSemantics,
   parser: grammar,
-  ...makeParsers<Vm>(grammar, vmSemantics),
+  ...makeParsers<VmPartial>(grammar, vmSemantics),
 };

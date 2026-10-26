@@ -32,6 +32,33 @@ describe("builtins", () => {
       vm.step();
       expect(vm.read([0, 256])).toEqual([257, 2]);
     });
+    test.each([
+      [100, 7, 14],
+      [-100, 7, -14],
+      [100, -7, -14],
+      [-100, -7, 14],
+      [-7, 2, -3],
+      [50, -7, -7],
+      [-6, 3, -2],
+    ])("divide %i / %i truncates toward zero", (x, y, expected) => {
+      const push = (value: number) => [
+        { op: "push", segment: "constant", offset: Math.abs(value) } as const,
+        ...(value < 0 ? [{ op: "neg" } as const] : []),
+      ];
+      const vm = unwrap(
+        Vm.build([
+          ...push(x),
+          ...push(y),
+          { op: "call", name: "Math.divide", nArgs: 2 },
+        ]),
+      );
+
+      const steps = 3 + (x < 0 ? 1 : 0) + (y < 0 ? 1 : 0);
+      for (let i = 0; i < steps; i++) vm.step();
+      const [sp, result] = vm.read([0, 256]);
+      expect(sp).toBe(257);
+      expect(result & 0xffff).toBe(expected & 0xffff);
+    });
     test("min", () => {
       const vm = unwrap(
         Vm.build([

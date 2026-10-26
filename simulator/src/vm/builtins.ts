@@ -66,7 +66,9 @@ export const VM_BUILTINS: Record<string, VmBuiltin> = {
         os.sys.error(ERRNO.DIVIDE_BY_ZERO);
         return 0;
       }
-      return Math.floor(a / b) & 0xffff;
+      // Round toward zero, as the book's algorithm does: it divides |x| by |y|
+      // and then applies the sign.
+      return Math.trunc(a / b) & 0xffff;
     },
     args: ["int", "int"],
     returnType: "int",

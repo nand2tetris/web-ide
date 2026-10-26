@@ -45,6 +45,7 @@ export const TestPanel = ({
   showName = false,
   showLoad = true,
   showClear = false,
+  overrideTooltips,
   speed,
   onSpeedChange,
   prefix,
@@ -60,6 +61,7 @@ export const TestPanel = ({
   showName?: boolean;
   showLoad?: boolean;
   showClear?: boolean;
+  overrideTooltips?: { step?: string; run?: string };
   disabled?: boolean;
   speed?: RunSpeed;
   onSpeedChange?: (speed: number) => void;
@@ -232,6 +234,7 @@ export const TestPanel = ({
                 runner={runner.current}
                 outputLineCount={outputLineCount}
                 disabled={disabled}
+                overrideTooltips={overrideTooltips}
                 speed={speed}
                 onSpeedChange={onSpeedChange}
               />

@@ -1,6 +1,8 @@
 import { Format } from "@nand2tetris/simulator/cpu/memory.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 
+import { t } from "@lingui/core/macro";
+
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
@@ -176,6 +178,7 @@ export const CPU = () => {
               {runnersAssigned && cpuRunner.current && (
                 <Runbar
                   runner={cpuRunner.current}
+                  overrideTooltips={{ step: t`Step Code`, run: t`Run Code` }}
                   speed={state.config.speed}
                   onSpeedChange={(speed) => {
                     dispatch.current({
@@ -222,6 +225,7 @@ export const CPU = () => {
           tstName={state.test.name}
           disabled={!state.test.valid}
           showName={state.tests.length < 2}
+          overrideTooltips={{ step: t`Step Test`, run: t`Run Test` }}
           speed={state.config.testSpeed}
           onSpeedChange={(speed) => {
             dispatch.current({

@@ -10,7 +10,7 @@ test(
 
     await cpuPage.selectTst("MaxRam.tst");
 
-    const testPanel = new TestPanel(cpuPage.page);
+    const testPanel = new TestPanel(cpuPage.page, "Run Test");
     await testPanel.runTest();
 
     expect(await testPanel.getFailureCount()).toBe(0);

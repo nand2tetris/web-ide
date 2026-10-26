@@ -263,14 +263,14 @@ function blockCommands(
 }
 
 tstSemantics.addAttribute<TstStatement<ParseError>>("statement", {
-  TstWhile(op, cond, _o, commands, stop, _c) {
+  TstWhile(op, cond, _o, commands, stop) {
     return {
       statements: blockCommands(commands, stop),
       condition: cond.condition,
       span: span(this.source),
     };
   },
-  TstRepeat(op, count, _o, commands, stop, _c) {
+  TstRepeat(op, count, _o, commands, stop) {
     return {
       statements: blockCommands(commands, stop),
       count: count.sourceString ? Number(count.sourceString) : -1,

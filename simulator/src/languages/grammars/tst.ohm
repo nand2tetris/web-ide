@@ -2,8 +2,8 @@ Tst <: Base {
   Root := Tst
   Tst = (TstStatement | TstRepeat | TstWhile)+
 
-  TstRepeat = Repeat Number? OpenBrace TstCommand+ ! &CloseBrace CloseBrace
-  TstWhile = While Condition OpenBrace TstCommand+ ! &CloseBrace CloseBrace
+  TstRepeat = Repeat Number? OpenBrace TstCommand+ ! CloseBrace
+  TstWhile = While Condition OpenBrace TstCommand+ ! CloseBrace
   TstStatement = TstCommand
 
   TstCommand = TstOperation ! Separator

@@ -92,7 +92,7 @@ const UNTERMINATED_STRING = lines(
   "}",
 );
 
-/** Today's single error for `source`, with recovery off. */
+/** The single error for `source` with recovery off. */
 function plainError(source: string): CompilationError {
   const before = isParserRecoveryEnabled();
   setParserRecovery(false);
@@ -200,7 +200,7 @@ describe("Jack recovery from unbalanced blocks", () => {
     expect(first.span?.line).toBe(plain.span?.line);
   });
 
-  it("still recovers an unterminated string at its own line", () => {
+  it("recovers an unterminated string at its own line", () => {
     const parsed = recovered(UNTERMINATED_STRING);
     expect(errorLines(parsed)).toEqual([3, 5]);
     const sub = parsed.ast.subroutines[0];

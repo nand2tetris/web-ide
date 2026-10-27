@@ -263,7 +263,7 @@ export const FilePicker = () => {
       <article className="file-select flex">
         <header>
           <p>
-            <Trans>{t`Choose file`}</Trans>
+            <Trans>Choose file</Trans>
           </p>
           <a
             style={{ color: "rgba(0, 0, 0, 0)" }}
@@ -319,7 +319,9 @@ export const FilePicker = () => {
             {t`Select`}
           </button>
           {!localFsRoot && filePicker.allowLocal && (
-            <button onClick={loadLocal}>Select local file</button>
+            <button onClick={loadLocal}>
+              <Trans>Select local file</Trans>
+            </button>
           )}
           {!localFsRoot && (
             <button

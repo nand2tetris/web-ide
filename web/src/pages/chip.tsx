@@ -225,7 +225,7 @@ export const Chip = () => {
     <>
       <fieldset
         role="group"
-        data-tooltip="Open an HDL file using this menu"
+        data-tooltip={t`Open an HDL file using this menu`}
         data-placement="bottom"
       >
         <select
@@ -290,7 +290,7 @@ export const Chip = () => {
           <div className="flex-4">{selectors}</div>
           <fieldset role="group">
             <button
-              data-tooltip="Open an HDL file directly"
+              data-tooltip={t`Open an HDL file directly`}
               data-placement="bottom"
               onClick={loadFile}
             >

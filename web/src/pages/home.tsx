@@ -101,10 +101,14 @@ const Home = () => {
 
   return (
     <>
-      <h1>NAND2Tetris Web IDE</h1>
+      <h1>
+        <Trans>NAND2Tetris Web IDE</Trans>
+      </h1>
       <form>
         <fieldset>
-          <legend>Files for grading:</legend>
+          <legend>
+            <Trans>Files for grading:</Trans>
+          </legend>
           <input type="file" multiple webkitdirectory="" onChange={onChange} />
         </fieldset>
       </form>

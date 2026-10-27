@@ -4,6 +4,7 @@ import { lingui } from "@lingui/vite-plugin";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig, type Plugin } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { linguiSwcPlugin } from "./src/lingui.swc";
 
 // Runs `lingui extract` when the dev server, build, or Vitest starts, so the
 // gitignored src/locales/<locale>/messages.po catalogs always exist. The
@@ -24,7 +25,7 @@ export default defineConfig({
   base: "/web-ide/",
   plugins: [
     react({
-      plugins: [["@lingui/swc-plugin", { useLinguiV5IdGeneration: true }]],
+      plugins: [linguiSwcPlugin],
     }),
     linguiExtract(),
     lingui(),

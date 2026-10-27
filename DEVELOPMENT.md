@@ -82,7 +82,7 @@ Formatting and linting are fast, so run them after every change.
 - Wrap JSX text in `<Trans>` from `@lingui/react/macro`.
 - Wrap strings in attributes, props, and code in the `` t`...` `` macro from `@lingui/core/macro`.
 - Do not nest the two. `` <Trans>{t`Choose file`}</Trans> `` copies the whole source file into the catalog as a placeholder comment. Use `<Trans>Choose file</Trans>` instead.
-- Do not assign message IDs. The SWC plugin (`useLinguiV5IdGeneration` in `web/vite.config.ts`) derives each ID from the source text, which serves as the English message.
+- Do not assign message IDs. The SWC plugin in `web/vite.config.ts` derives each ID from the source text, which serves as the English message.
 - Do not hardcode user facing text, such as the "Select local file" button in `web/src/shell/file_select.tsx`.
 
 ### Catalogs

@@ -158,7 +158,7 @@ export const Compiler = () => {
 
   const newFileDialogComponent = (
     <NameDialog
-      title="Create New File"
+      title={t`Create New File`}
       buttonText={"Create"}
       dialog={newFileDialog}
       isValid={isNameValid}
@@ -218,7 +218,7 @@ export const Compiler = () => {
                 onClick={compileFiles}
                 disabled={!state.isValid}
               >
-                Compile
+                <Trans>Compile</Trans>
               </button>
               <Padding />
               <button
@@ -228,7 +228,7 @@ export const Compiler = () => {
                 data-placement="bottom"
                 onClick={runInVm}
               >
-                Run
+                <Trans>Run</Trans>
               </button>
             </div>
           </>

@@ -234,7 +234,7 @@ const VM = () => {
                     <button
                       className="flex-0"
                       onClick={load}
-                      data-tooltip="Load files"
+                      data-tooltip={t`Load files`}
                       data-placement="bottom"
                     >
                       📂
@@ -415,7 +415,7 @@ function CallStack({
   return (
     <section>
       <p>
-        Call-stack:
+        <Trans>Call-stack:</Trans>
         <code>{callStack(stack, addedSysInit).join(" > ")}</code>
       </p>
     </section>
@@ -435,48 +435,48 @@ function VMStackFrame({
     <section>
       <main>
         <p>
-          Stack:
+          <Trans>Stack:</Trans>
           <code>[{frame.stack.values.join(", ")}]</code>
         </p>
         {frame.usedSegments?.has("local") && (
           <p>
-            local:
+            <Trans>local:</Trans>
             <code>[{frame.locals.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("argument") && (
           <p>
-            argument:
+            <Trans>argument:</Trans>
             <code>[{frame.args.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("static") && (
           <p>
-            static:
+            <Trans>static:</Trans>
             <code>[{statics.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("pointer") && (
           <p>
-            pointer:
+            <Trans>pointer:</Trans>
             <code>[{`${frame.frame.THIS}, ${frame.frame.THAT}`}]</code>
           </p>
         )}
         {frame.usedSegments?.has("this") && (
           <p>
-            this:
+            <Trans>this:</Trans>
             <code>[{frame.this.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("that") && (
           <p>
-            that:
+            <Trans>that:</Trans>
             <code>[{frame.that.values.join(", ")}]</code>
           </p>
         )}
         {frame.usedSegments?.has("temp") && (
           <p>
-            temp:
+            <Trans>temp:</Trans>
             <code>[{temp.join(", ")}]</code>
           </p>
         )}

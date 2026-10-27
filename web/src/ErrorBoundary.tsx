@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { Component, PropsWithChildren, ReactElement } from "react";
 
 type ErrorBoundaryProps = PropsWithChildren & {
@@ -47,7 +48,9 @@ export const RenderError = ({ error }: { error?: Error }) =>
       {error.cause ? (
         <>
           <div>
-            <em>Caused by</em>
+            <em>
+              <Trans>Caused by</Trans>
+            </em>
           </div>
           <RenderError error={error.cause as Error} />
         </>
@@ -56,5 +59,7 @@ export const RenderError = ({ error }: { error?: Error }) =>
       )}
     </div>
   ) : (
-    <p>Unknown Error</p>
+    <p>
+      <Trans>Unknown Error</Trans>
+    </p>
   );

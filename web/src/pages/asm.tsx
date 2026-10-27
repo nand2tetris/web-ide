@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { LOADING } from "@nand2tetris/components/messages.js";
 import { Runbar } from "@nand2tetris/components/runbar";
@@ -162,7 +163,7 @@ export const Asm = () => {
                     <button
                       className="flex-0"
                       onClick={loadAsm}
-                      data-tooltip="Load file"
+                      data-tooltip={t`Load file`}
                       data-placement="bottom"
                     >
                       📂
@@ -177,7 +178,7 @@ export const Asm = () => {
             {!localFsRoot && (
               <fieldset role="group">
                 <button
-                  data-tooltip="Download"
+                  data-tooltip={t`Download`}
                   data-placement="left"
                   onClick={downloadAsm}
                 >
@@ -237,7 +238,7 @@ export const Asm = () => {
               />
               <fieldset role="group">
                 <button
-                  data-tooltip="Load in CPU Emulator"
+                  data-tooltip={t`Load in CPU Emulator`}
                   data-placement="left"
                   onClick={loadToCpu}
                 >
@@ -245,7 +246,7 @@ export const Asm = () => {
                 </button>
                 {!localFsRoot && (
                   <button
-                    data-tooltip="Download"
+                    data-tooltip={t`Download`}
                     data-placement="left"
                     onClick={downloadHack}
                   >
@@ -312,7 +313,9 @@ export const Asm = () => {
             </fieldset>
             <div className="flex-1" />
             <fieldset role="group">
-              <button onClick={compare}>Compare</button>
+              <button onClick={compare}>
+                <Trans>Compare</Trans>
+              </button>
             </fieldset>
           </>
         }

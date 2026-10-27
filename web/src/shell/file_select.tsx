@@ -263,7 +263,7 @@ export const FilePicker = () => {
       <article className="file-select flex">
         <header>
           <p>
-            <Trans>{t`Choose file`}</Trans>
+            <Trans>Choose file</Trans>
           </p>
           <a
             style={{ color: "rgba(0, 0, 0, 0)" }}

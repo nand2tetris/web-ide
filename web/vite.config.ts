@@ -60,7 +60,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/setupTests.ts"],
-    exclude: ["build/**", "node_modules/**"],
+    exclude: ["build/**", "web-ide/**", "node_modules/**"],
   },
   build: {
     outDir: "build",

@@ -7,9 +7,42 @@ on:
     paths:
       - simulator
       - web
+  schedule:
+    - cron: "0 7 * * *"
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.decide.outputs.deploy }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Decide whether to release
+        id: decide
+        run: |
+          if [ "$GITHUB_EVENT_NAME" != "schedule" ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Each release is tagged, so commits since the last tag are new.
+          last="$(git describe --tags --abbrev=0)"
+          count="$(git rev-list --count "$last..HEAD")"
+          echo "$count commits since $last"
+          if [ "$count" -gt 0 ]; then
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          fi
+
   deploy:
+    needs: changes
+    if: needs.changes.outputs.deploy == 'true'
     permissions:
       contents: write
     runs-on: ubuntu-latest

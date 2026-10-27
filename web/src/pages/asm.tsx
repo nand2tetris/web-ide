@@ -1,20 +1,19 @@
 import { Trans } from "@lingui/react/macro";
+import { LOADING } from "@nand2tetris/components/messages.js";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { Table } from "@nand2tetris/components/table";
+import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { ASM } from "@nand2tetris/simulator/languages/asm.js";
 import { loadHack } from "@nand2tetris/simulator/loader.js";
 import { Timer } from "@nand2tetris/simulator/timer";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Editor } from "../shell/editor";
-import { Panel } from "../shell/panel";
-
-import { LOADING } from "@nand2tetris/components/messages.js";
-import { ROM } from "@nand2tetris/simulator/cpu/memory";
 import { Link } from "react-router-dom";
-import { isPath } from "../shell/file_select";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
+import { Editor } from "../shell/editor";
+import { isPath } from "../shell/file_select";
+import { Panel } from "../shell/panel";
 import URLs from "../urls";
 import "./asm.scss";
 
@@ -191,7 +190,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.asm}
-          path={state.path??"tmp.asm"}
+          path={state.path ?? "tmp.asm"}
           error={state.error}
           alwaysRecenter={false}
           onChange={(source: string) => {
@@ -260,7 +259,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.result}
-          path={(state.path??"tmp.asm").replace(/\.asm$/, '.hack')}
+          path={(state.path ?? "tmp.asm").replace(/\.asm$/, ".hack")}
           highlight={state.resultHighlight}
           disabled={true}
           onChange={function (_source: string): void {
@@ -320,7 +319,7 @@ export const Asm = () => {
       >
         <Editor
           value={state.compare}
-          path={(state.path??"tmp.asm").replace(/\.asm$/, '.cmp')}
+          path={(state.path ?? "tmp.asm").replace(/\.asm$/, ".cmp")}
           highlight={state.translating ? state.resultHighlight : undefined}
           highlightType={state.compareError ? "error" : "highlight"}
           alwaysRecenter={false}

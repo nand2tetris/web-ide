@@ -3,9 +3,9 @@ import {
   bin,
   dec,
   hex,
+  int2,
   int10,
   int16,
-  int2,
   unsigned,
 } from "@nand2tetris/simulator/util/twos.js";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";

@@ -1,5 +1,13 @@
 import { rounded } from "@davidsouther/jiffies/dom/css/border.ts";
 import {
+  FORMATS,
+  Format,
+  MemoryAdapter,
+} from "@nand2tetris/simulator/cpu/memory.js";
+import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
+import { asm } from "@nand2tetris/simulator/util/asm.js";
+import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
+import {
   type CSSProperties,
   forwardRef,
   ReactNode,
@@ -9,15 +17,6 @@ import {
   useMemo,
   useState,
 } from "react";
-
-import {
-  Format,
-  FORMATS,
-  MemoryAdapter,
-} from "@nand2tetris/simulator/cpu/memory.js";
-import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
-import { asm } from "@nand2tetris/simulator/util/asm.js";
-import { bin, dec, hex } from "@nand2tetris/simulator/util/twos.js";
 
 import { useClockReset } from "../clockface.js";
 import InlineEdit from "../inline_edit.js";
@@ -315,8 +314,7 @@ export const Memory = forwardRef(
                 data-tooltip={loadTooltip?.value ?? "Load file"}
                 data-placement={loadTooltip?.placement ?? "bottom"}
               >
-                {/* <Icon name="upload_file" /> */}
-                📂
+                {/* <Icon name="upload_file" /> */}📂
               </button>
             )}
             {showClear && (
@@ -326,8 +324,7 @@ export const Memory = forwardRef(
                 data-tooltip={"Clear"}
                 data-placement="bottom"
               >
-                {/* <Icon name="upload_file" /> */}
-                🆑
+                {/* <Icon name="upload_file" /> */}🆑
               </button>
             )}
             <input

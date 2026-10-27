@@ -1,20 +1,17 @@
-import { Format } from "@nand2tetris/simulator/cpu/memory.js";
-import { Timer } from "@nand2tetris/simulator/timer.js";
-
 import { t } from "@lingui/core/macro";
-
+import { Trans } from "@lingui/react/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard";
 import MemoryComponent from "@nand2tetris/components/chips/memory.js";
 import { Screen, ScreenScales } from "@nand2tetris/components/chips/screen.js";
-import { useContext, useEffect, useRef, useState } from "react";
-
-import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
-import { isPath } from "../shell/file_select";
+import { Format } from "@nand2tetris/simulator/cpu/memory.js";
+import { Timer } from "@nand2tetris/simulator/timer.js";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
+import { isPath } from "../shell/file_select";
 import { Accordian, Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./cpu.scss";

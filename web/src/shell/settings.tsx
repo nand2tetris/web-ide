@@ -1,11 +1,10 @@
 import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
+import { useDialog } from "@nand2tetris/components/dialog";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { AppContext } from "../App.context";
-
-import { useDialog } from "@nand2tetris/components/dialog";
 import { PageContext } from "../Page.context";
 import "../pico/button-group.scss";
 import "../pico/property.scss";
@@ -28,8 +27,7 @@ export const Settings = () => {
     requestPermission,
     loadFs,
   } = useContext(BaseContext);
-  const { settings, monaco, theme, setTheme, tracking } =
-    useContext(AppContext);
+  const { settings, monaco, theme, setTheme } = useContext(AppContext);
 
   const [storageMode, setStorageMode] = useState<"browser" | "pc">(
     localFsRoot ? "pc" : "browser",
@@ -199,7 +197,9 @@ export const Settings = () => {
         </header>
         <main>
           <div className="dialog-message">
-            <Trans>You chose use pc storage but didn't select a folder in your PC</Trans>
+            <Trans>
+              You chose use pc storage but didn't select a folder in your PC
+            </Trans>
           </div>
           <div className="dialog-actions">
             <button
@@ -247,12 +247,9 @@ export const Settings = () => {
           </header>
           <main>
             <dl>
-
               {/* Storage Mode Selection */}
               <dt>
-                <Trans>
-                  Project files
-                </Trans>
+                <Trans>Project files</Trans>
                 <div style={{ marginTop: "3rem" }}>
                   <a
                     href="#"
@@ -261,7 +258,7 @@ export const Settings = () => {
                       window.open(
                         import.meta.env.BASE_URL + "user_guide/file_system.pdf",
                         "_blank",
-                        "width=1000,height=800"
+                        "width=1000,height=800",
                       );
                     }}
                     style={{ fontSize: "0.9rem" }}
@@ -290,7 +287,13 @@ export const Settings = () => {
                   </div>
 
                   <div className="storage-option">
-                    <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "1rem",
+                      }}
+                    >
                       <label style={{ width: "auto" }}>
                         <input
                           type="radio"
@@ -304,8 +307,19 @@ export const Settings = () => {
                         <Trans>Use Desktop Storage</Trans>
                       </label>
                     </div>
-                    <div style={{ fontSize: "0.85rem", color: "#888", marginLeft: "1.8rem", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
-                      <Trans>Works on Chrome, Edge, Opera, and other Chromium-based browsers</Trans>
+                    <div
+                      style={{
+                        fontSize: "0.85rem",
+                        color: "#888",
+                        marginLeft: "1.8rem",
+                        marginTop: "-0.5rem",
+                        marginBottom: "0.5rem",
+                      }}
+                    >
+                      <Trans>
+                        Works on Chrome, Edge, Opera, and other Chromium-based
+                        browsers
+                      </Trans>
                     </div>
                     <div
                       className="folder-location-row"
@@ -316,14 +330,29 @@ export const Settings = () => {
                         marginTop: "0.5rem",
                       }}
                     >
-                      <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "1rem",
+                          flexWrap: "wrap",
+                        }}
+                      >
                         <span>
                           <Trans>Projects folder location (on your PC)</Trans>:
                         </span>
                         {localFsRoot ? (
-                          <code style={{ flex: "1", minWidth: "200px" }}>{localFsRoot}</code>
+                          <code style={{ flex: "1", minWidth: "200px" }}>
+                            {localFsRoot}
+                          </code>
                         ) : (
-                          <span style={{ flex: "1", minWidth: "200px", fontStyle: "italic" }}>
+                          <span
+                            style={{
+                              flex: "1",
+                              minWidth: "200px",
+                              fontStyle: "italic",
+                            }}
+                          >
                             <Trans>Not selected</Trans>
                           </span>
                         )}
@@ -339,7 +368,7 @@ export const Settings = () => {
                                 // After action, check if we have a root.
                                 // Note: localFsRoot might not be updated immediately in this closure.
                                 // We rely on the catch block in upgradeFsAction to handle cancellation.
-                              } catch (e) {
+                              } catch (_e) {
                                 // Should be caught inside upgradeFsAction
                               }
                             }}
@@ -357,14 +386,21 @@ export const Settings = () => {
                       </div>
                     </div>
                     {/* Download Projects Folder */}
-                    <div style={{
-                      marginTop: "1rem",
-                      marginLeft: "2rem",
-                      opacity: storageMode === "pc" ? 1 : 0.5,
-                      pointerEvents: storageMode === "pc" ? "auto" : "none",
-                    }}>
+                    <div
+                      style={{
+                        marginTop: "1rem",
+                        marginLeft: "2rem",
+                        opacity: storageMode === "pc" ? 1 : 0.5,
+                        pointerEvents: storageMode === "pc" ? "auto" : "none",
+                      }}
+                    >
                       <button
-                        onClick={() => window.open("https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o", "_blank")}
+                        onClick={() =>
+                          window.open(
+                            "https://drive.google.com/open?id=1oD0WMJRq1UPEFEXWphKXR6paFwWpBS4o",
+                            "_blank",
+                          )
+                        }
                         data-tooltip={t`Download (one time) before using PC Storage`}
                         data-placement="bottom"
                         style={{ width: "100%" }}
@@ -432,7 +468,12 @@ export const Settings = () => {
               </dd>
 
               {/* Divider for bottom section */}
-              <div style={{ borderTop: "1px solid var(--contrast-lower)", margin: "0.5rem 0 1rem 0" }} />
+              <div
+                style={{
+                  borderTop: "1px solid var(--contrast-lower)",
+                  margin: "0.5rem 0 1rem 0",
+                }}
+              />
 
               {/* Bottom Section - Utility Items */}
               {!localFsRoot && (
@@ -451,8 +492,6 @@ export const Settings = () => {
                   </dd>
                 </>
               )}
-
-
 
               <dt>
                 <Trans>References</Trans>

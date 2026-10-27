@@ -1,9 +1,9 @@
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { AppContext } from "../App.context";
 import {
+  cleanState,
   render,
   screen,
-  cleanState,
   userEvent,
   useTestingAppContext,
 } from "../testing";

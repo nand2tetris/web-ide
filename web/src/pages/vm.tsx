@@ -1,5 +1,3 @@
-import { useContext, useEffect, useRef, useState } from "react";
-
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { Keyboard } from "@nand2tetris/components/chips/keyboard.js";
@@ -10,15 +8,15 @@ import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { DEFAULT_TEST } from "@nand2tetris/components/stores/vm.store.js";
 import { Format } from "@nand2tetris/simulator/cpu/memory.js";
+import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
 import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
-
-import { VmFile } from "@nand2tetris/simulator/test/vmtst";
+import { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
-import { isPath } from "../shell/file_select";
 import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
+import { isPath } from "../shell/file_select";
 import { Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
 import "./vm.scss";
@@ -196,7 +194,7 @@ const VM = () => {
     try {
       const test = await fs.readFile(tstPath);
       actions.loadTest(tstPath, test);
-    } catch (e) {
+    } catch (_e) {
       // No test file found.
     }
   };
@@ -254,7 +252,7 @@ const VM = () => {
       >
         <Editor
           value={state.files.vm}
-          path={path ?? 'vm'}
+          path={path ?? "vm"}
           onChange={(source: string) => {
             actions.setVm(source);
           }}

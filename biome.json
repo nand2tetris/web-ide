@@ -3,7 +3,7 @@
   "vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**/src/**/*.ts", "!**/web-ide"]
+    "includes": ["**/src/**/*.{ts,tsx}", "!**/web-ide"]
   },
   "formatter": { "enabled": true, "indentStyle": "space" },
   "linter": {

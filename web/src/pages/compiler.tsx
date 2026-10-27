@@ -2,19 +2,19 @@ import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useDialog } from "@nand2tetris/components/dialog";
-import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import {
   FileSystemAccessFileSystemAdapter,
   openNand2TetrisDirectory,
 } from "@nand2tetris/components/stores/base/fs.js";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Editor } from "../shell/editor";
-import { Tab, TabList } from "../shell/tabs";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
+import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
+import { Tab, TabList } from "../shell/tabs";
 import URLs from "../urls";
 import "./compiler.scss";
 

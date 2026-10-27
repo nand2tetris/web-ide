@@ -34,7 +34,7 @@ export class ROM32K extends RAM {
   override async load(fs: FileSystem, path: string) {
     try {
       (await load(fs, path)).map((v, i) => (this.at(i).busVoltage = v));
-    } catch (cause) {
+    } catch (_cause) {
       // throw new Error(`ROM32K Failed to load file ${path}`, { cause });
       throw new Error(`ROM32K Failed to load file ${path}`);
     }
@@ -88,7 +88,7 @@ export class Memory extends ClockedChip {
       ["out[16]"],
       "Memory",
       [],
-      ["in", "load"]
+      ["in", "load"],
     );
     this.parts.push(this.keyboard);
     this.parts.push(this.screen);

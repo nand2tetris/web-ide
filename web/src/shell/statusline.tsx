@@ -1,5 +1,5 @@
-import { useContext } from "react";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import { useContext } from "react";
 import "./statusline.scss";
 
 function StatusLine() {

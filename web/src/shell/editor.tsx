@@ -1,13 +1,12 @@
 import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
-import { type Grammar } from "ohm-js";
-import { CSSProperties, lazy, Suspense, useContext } from "react";
-import { AppContext } from "../App.context";
-
 import {
   CompilationError,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
+import { type Grammar } from "ohm-js";
+import { CSSProperties, lazy, Suspense, useContext } from "react";
+import { AppContext } from "../App.context";
 
 import "./editor.scss";
 import { Action } from "@nand2tetris/simulator/types";

@@ -1,7 +1,7 @@
-import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { display } from "@davidsouther/jiffies/display.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
+import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { ReactElement } from "react";
 
 export const DiffTable = ({

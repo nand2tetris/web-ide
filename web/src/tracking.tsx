@@ -1,7 +1,6 @@
-import ReactGA from "react-ga4";
-
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { useCallback, useState } from "react";
+import ReactGA from "react-ga4";
 import "./tracking.scss";
 
 const PATH = "/tracking/canTrack";

@@ -58,7 +58,11 @@ export const BitmapEditor = () => {
     return defaultState;
   };
 
-  const loadGrid = (width: number, height: number, invertMode: boolean): boolean[][] => {
+  const loadGrid = (
+    width: number,
+    height: number,
+    invertMode: boolean,
+  ): boolean[][] => {
     try {
       const saved = localStorage.getItem(GRID_KEY);
       if (saved) {
@@ -78,14 +82,20 @@ export const BitmapEditor = () => {
   const [width, setWidth] = useState(initialState.width);
   const [height, setHeight] = useState(initialState.height);
   const [pixelSize, setPixelSize] = useState(initialState.pixelSize);
-  const [currentIShift, setCurrentIShift] = useState(initialState.currentIShift);
-  const [currentJShift, setCurrentJShift] = useState(initialState.currentJShift);
-  const [marginSaveFrames, setMarginSaveFrames] = useState(initialState.marginSaveFrames);
+  const [currentIShift, setCurrentIShift] = useState(
+    initialState.currentIShift,
+  );
+  const [currentJShift, setCurrentJShift] = useState(
+    initialState.currentJShift,
+  );
+  const [marginSaveFrames, setMarginSaveFrames] = useState(
+    initialState.marginSaveFrames,
+  );
   const [invertMode, setInvertMode] = useState(initialState.invertMode);
   const [comments, setComments] = useState(initialState.comments);
 
   const [grid, setGrid] = useState<boolean[][]>(() =>
-    loadGrid(initialState.width, initialState.height, initialState.invertMode)
+    loadGrid(initialState.width, initialState.height, initialState.invertMode),
   );
 
   const [currentColor, setCurrentColor] = useState<boolean | null>(null);
@@ -118,7 +128,16 @@ export const BitmapEditor = () => {
       comments,
     };
     localStorage.setItem(STATE_KEY, JSON.stringify(state));
-  }, [width, height, pixelSize, currentIShift, currentJShift, marginSaveFrames, invertMode, comments]);
+  }, [
+    width,
+    height,
+    pixelSize,
+    currentIShift,
+    currentJShift,
+    marginSaveFrames,
+    invertMode,
+    comments,
+  ]);
 
   // Save grid to localStorage
   useEffect(() => {
@@ -217,7 +236,11 @@ export const BitmapEditor = () => {
 
               // Also check neighboring columns that will shift into this word during animation
               if (currentJShift > 0) {
-                for (let l = colIndex + 16; l < Math.min(currentJShift, marginSaveFrames) + colIndex + 16; l++) {
+                for (
+                  let l = colIndex + 16;
+                  l < Math.min(currentJShift, marginSaveFrames) + colIndex + 16;
+                  l++
+                ) {
                   if (l >= width) break;
                   if (grid[i]?.[l] !== invertMode) {
                     thisIIn = true;
@@ -225,7 +248,11 @@ export const BitmapEditor = () => {
                   }
                 }
               } else if (currentJShift < 0) {
-                for (let l = colIndex - 1; l > Math.max(currentJShift, -marginSaveFrames) + colIndex - 1; l--) {
+                for (
+                  let l = colIndex - 1;
+                  l > Math.max(currentJShift, -marginSaveFrames) + colIndex - 1;
+                  l--
+                ) {
                   if (l < 0) break;
                   if (grid[i]?.[l] !== invertMode) {
                     thisIIn = true;
@@ -256,7 +283,16 @@ export const BitmapEditor = () => {
 
     const drawHeight = Math.max(bottomI, baseI) - Math.min(topI, baseI);
     return { words, baseI, baseJ, columns, drawHeight };
-  }, [grid, width, height, invertMode, marginType, currentIShift, currentJShift, marginSaveFrames]);
+  }, [
+    grid,
+    width,
+    height,
+    invertMode,
+    marginType,
+    currentIShift,
+    currentJShift,
+    marginSaveFrames,
+  ]);
 
   // Generate code
   const generatedCode = useMemo(() => {
@@ -286,7 +322,10 @@ export const BitmapEditor = () => {
       return code;
     } else {
       // hack assembly
-      const rowsOfWords: Record<string, { coords: [number, number]; col: string }[]> = {};
+      const rowsOfWords: Record<
+        string,
+        { coords: [number, number]; col: string }[]
+      > = {};
       for (const col in words) {
         for (const coords of words[col]) {
           const key = coords[0].toString();
@@ -297,7 +336,8 @@ export const BitmapEditor = () => {
 
       let code = "(" + subroutineName + ")\n";
       if (comments) {
-        code += "\t// put bitmap location value in R12\n\t// put code return address in R13\n";
+        code +=
+          "\t// put bitmap location value in R12\n\t// put code return address in R13\n";
       }
       code += "\t@SCREEN\n\tD=A\n\t@R12\n\tAD=D+M\n";
 
@@ -313,13 +353,25 @@ export const BitmapEditor = () => {
         if (comments) code += "\t// row " + (row + 1) + "\n";
         for (const data of rowsOfWords[row.toString()]) {
           const { coords, col } = data;
-          const value = getWordValue(grid, coords[0], coords[1], invertMode, width);
+          const value = getWordValue(
+            grid,
+            coords[0],
+            coords[1],
+            invertMode,
+            width,
+          );
           let addrIncrement = 0;
           if (previousCoords !== null && previousCol !== null) {
             addrIncrement =
-              (coords[0] - previousCoords[0]) * 32 + (parseInt(col) - parseInt(previousCol));
+              (coords[0] - previousCoords[0]) * 32 +
+              (parseInt(col) - parseInt(previousCol));
           }
-          const hackCode = generateHackAssemblyCode(addrIncrement, value, dHoldsAddr, comments);
+          const hackCode = generateHackAssemblyCode(
+            addrIncrement,
+            value,
+            dHoldsAddr,
+            comments,
+          );
           dHoldsAddr = hackCode.dHoldsAddr;
           code += hackCode.code;
           previousCoords = coords;
@@ -331,7 +383,16 @@ export const BitmapEditor = () => {
       code += "\t@R13\n\tA=M\n\tD;JMP\n";
       return code;
     }
-  }, [grid, codeMode, comments, pauseCode, getUsedWords, invertMode, width, baseTopLeft]);
+  }, [
+    grid,
+    codeMode,
+    comments,
+    pauseCode,
+    getUsedWords,
+    invertMode,
+    width,
+    baseTopLeft,
+  ]);
 
   // Word edge columns for styling
   const wordEdgeColumns = useMemo(() => {
@@ -345,19 +406,16 @@ export const BitmapEditor = () => {
   }, [obviousStyling, getUsedWords]);
 
   // Drawing event handlers
-  const startDraw = useCallback(
-    (i: number, j: number) => {
-      // use functional update to avoid reading stale grid from closure
-      setGrid((prev) => {
-        const newGrid = prev.map((row) => [...row]);
-        const newColor = !newGrid[i][j];
-        newGrid[i][j] = newColor;
-        setCurrentColor(newColor);
-        return newGrid;
-      });
-    },
-    []
-  );
+  const startDraw = useCallback((i: number, j: number) => {
+    // use functional update to avoid reading stale grid from closure
+    setGrid((prev) => {
+      const newGrid = prev.map((row) => [...row]);
+      const newColor = !newGrid[i][j];
+      newGrid[i][j] = newColor;
+      setCurrentColor(newColor);
+      return newGrid;
+    });
+  }, []);
 
   const moveDraw = useCallback(
     (i: number, j: number) => {
@@ -368,7 +426,7 @@ export const BitmapEditor = () => {
         return newGrid;
       });
     },
-    [currentColor]
+    [currentColor],
   );
 
   const stopDraw = useCallback(() => {
@@ -376,7 +434,8 @@ export const BitmapEditor = () => {
   }, []);
 
   const handleResize = useCallback(() => {
-    const newWidth = Math.floor(parseInt(widthInputRef.current?.value || "48") / 16) * 16;
+    const newWidth =
+      Math.floor(parseInt(widthInputRef.current?.value || "48") / 16) * 16;
     const newHeight = parseInt(heightInputRef.current?.value || "32");
     const newPixelSize = parseInt(pixelSizeInputRef.current?.value || "16");
 
@@ -409,9 +468,12 @@ export const BitmapEditor = () => {
     setGrid(createGrid(defaultState.width, defaultState.height, false));
 
     // Reset input fields
-    if (widthInputRef.current) widthInputRef.current.value = defaultState.width.toString();
-    if (heightInputRef.current) heightInputRef.current.value = defaultState.height.toString();
-    if (pixelSizeInputRef.current) pixelSizeInputRef.current.value = defaultState.pixelSize.toString();
+    if (widthInputRef.current)
+      widthInputRef.current.value = defaultState.width.toString();
+    if (heightInputRef.current)
+      heightInputRef.current.value = defaultState.height.toString();
+    if (pixelSizeInputRef.current)
+      pixelSizeInputRef.current.value = defaultState.pixelSize.toString();
     if (marginFramesInputRef.current) marginFramesInputRef.current.value = "1";
   }, []);
 
@@ -513,9 +575,12 @@ export const BitmapEditor = () => {
   // keep uncontrolled input refs in sync when state changes (consistent with other pages)
   useEffect(() => {
     if (widthInputRef.current) widthInputRef.current.value = width.toString();
-    if (heightInputRef.current) heightInputRef.current.value = height.toString();
-    if (pixelSizeInputRef.current) pixelSizeInputRef.current.value = pixelSize.toString();
-    if (marginFramesInputRef.current) marginFramesInputRef.current.value = marginSaveFrames.toString();
+    if (heightInputRef.current)
+      heightInputRef.current.value = height.toString();
+    if (pixelSizeInputRef.current)
+      pixelSizeInputRef.current.value = pixelSize.toString();
+    if (marginFramesInputRef.current)
+      marginFramesInputRef.current.value = marginSaveFrames.toString();
   }, [width, height, pixelSize, marginSaveFrames]);
 
   // File import handlers
@@ -536,12 +601,14 @@ export const BitmapEditor = () => {
       } else if (extension === "png") {
         parsePNG(file);
       } else {
-        alert("This file type is not supported. Please upload a .bmp (24-bit) or .png image.");
+        alert(
+          "This file type is not supported. Please upload a .bmp (24-bit) or .png image.",
+        );
       }
 
       event.target.value = "";
     },
-    []
+    [],
   );
 
   const parseBMP = useCallback((bytes: Uint8Array) => {
@@ -552,7 +619,7 @@ export const BitmapEditor = () => {
 
     if (depth !== 24) {
       alert(
-        "Only 24-bit BMP files are supported. Please convert your BMP file to a 24-bit depth bitmap."
+        "Only 24-bit BMP files are supported. Please convert your BMP file to a 24-bit depth bitmap.",
       );
       return;
     }
@@ -629,7 +696,11 @@ export const BitmapEditor = () => {
   }, []);
 
   return (
-    <div className="Page BitmapPage grid" onMouseUp={stopDraw} onMouseLeave={stopDraw}>
+    <div
+      className="Page BitmapPage grid"
+      onMouseUp={stopDraw}
+      onMouseLeave={stopDraw}
+    >
       {/* Canvas Panel */}
       <Panel
         className="canvas-panel"
@@ -662,10 +733,16 @@ export const BitmapEditor = () => {
               maxLength={2}
               defaultValue={pixelSize}
             />
-            <button onClick={handleResize} title="Resize Canvas Preserving Upper-left Contents">
+            <button
+              onClick={handleResize}
+              title="Resize Canvas Preserving Upper-left Contents"
+            >
               Resize
             </button>
-            <button onClick={handleReset} title="Reset Canvas Size, Settings, and Clear Contents">
+            <button
+              onClick={handleReset}
+              title="Reset Canvas Size, Settings, and Clear Contents"
+            >
               Reset
             </button>
           </div>
@@ -681,7 +758,11 @@ export const BitmapEditor = () => {
               <tr>
                 <td></td>
                 {Array.from({ length: width }, (_, j) => (
-                  <td key={`col-${j}`} className="col-label" style={{ fontSize: `${pixelSize * 0.6}px` }}>
+                  <td
+                    key={`col-${j}`}
+                    className="col-label"
+                    style={{ fontSize: `${pixelSize * 0.6}px` }}
+                  >
                     {j + 1}
                   </td>
                 ))}
@@ -689,14 +770,18 @@ export const BitmapEditor = () => {
               {/* Grid rows */}
               {Array.from({ length: height }, (_, i) => (
                 <tr key={`row-${i}`}>
-                  <td className="row-label" style={{ fontSize: `${pixelSize * 0.6}px` }}>
+                  <td
+                    className="row-label"
+                    style={{ fontSize: `${pixelSize * 0.6}px` }}
+                  >
                     {i + 1}
                   </td>
                   {Array.from({ length: width }, (_, j) => (
                     <td
                       key={`cell-${i}-${j}`}
-                      className={`cell ${grid[i]?.[j] ? "filled" : "empty"} ${wordEdgeColumns.has(j) ? "word-edge" : ""
-                        }`}
+                      className={`cell ${grid[i]?.[j] ? "filled" : "empty"} ${
+                        wordEdgeColumns.has(j) ? "word-edge" : ""
+                      }`}
                       style={{ width: pixelSize, height: pixelSize }}
                       onMouseDown={() => startDraw(i, j)}
                       onMouseOver={() => moveDraw(i, j)}
@@ -729,11 +814,7 @@ export const BitmapEditor = () => {
           </div>
         }
       >
-        <textarea
-          className="generated-code"
-          readOnly
-          value={generatedCode}
-        />
+        <textarea className="generated-code" readOnly value={generatedCode} />
       </Panel>
 
       {/* Controls Panel */}
@@ -847,7 +928,9 @@ export const BitmapEditor = () => {
 
           {marginType === "fitToDrawing" && (
             <div className="input-group">
-              <label htmlFor="marginSaveFrames"># horizontal shifts per animation frame:</label>
+              <label htmlFor="marginSaveFrames">
+                # horizontal shifts per animation frame:
+              </label>
               <input
                 ref={marginFramesInputRef}
                 id="marginSaveFrames"

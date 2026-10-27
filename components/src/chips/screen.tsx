@@ -21,7 +21,7 @@ export function reduceScreen(memory: Memory, offset = 0): ScreenMemory {
 
 function get(mem: ScreenMemory, x: number, y: number): COLOR {
   const byte = mem.get(32 * y + ((x / 16) | 0));
-  const bit = byte & (1 << x % 16);
+  const bit = byte & (1 << (x % 16));
   return bit === 0 ? WHITE : BLACK;
 }
 

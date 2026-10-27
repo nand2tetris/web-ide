@@ -1,10 +1,11 @@
-import { useBaseContext } from "@nand2tetris/components/stores/base.context";
-import { DiffTable } from "@nand2tetris/components/difftable";
-import { runTests } from "@nand2tetris/simulator/projects/runner.js";
 import { Trans } from "@lingui/react/macro";
-import { ChangeEventHandler, useCallback, useState } from "react";
+import { DiffTable } from "@nand2tetris/components/difftable";
+import { useBaseContext } from "@nand2tetris/components/stores/base.context";
 import { AssignmentStubs } from "@nand2tetris/projects/base.js";
+import { runTests } from "@nand2tetris/simulator/projects/runner.js";
 import type { ParsedPath } from "path";
+import { ChangeEventHandler, useCallback, useState } from "react";
+
 // import { parse, ParsedPath } from "node:path";
 
 function hasTest({ name, ext }: { name: string; ext: string }) {
@@ -100,10 +101,14 @@ const Home = () => {
 
   return (
     <>
-      <h1><Trans>NAND2Tetris Web IDE</Trans></h1>
+      <h1>
+        <Trans>NAND2Tetris Web IDE</Trans>
+      </h1>
       <form>
         <fieldset>
-          <legend><Trans>Files for grading:</Trans></legend>
+          <legend>
+            <Trans>Files for grading:</Trans>
+          </legend>
           <input type="file" multiple webkitdirectory="" onChange={onChange} />
         </fieldset>
       </form>

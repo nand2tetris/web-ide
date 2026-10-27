@@ -17,7 +17,10 @@ export const About = () => {
       <div className="container">
         <Markdown>{aboutContent}</Markdown>
         <p>
-          <b><Trans>Version</Trans></b> <code>{version}</code>
+          <b>
+            <Trans>Version</Trans>
+          </b>{" "}
+          <code>{version}</code>
         </p>
       </div>
     </div>

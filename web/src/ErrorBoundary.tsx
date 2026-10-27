@@ -48,7 +48,9 @@ export const RenderError = ({ error }: { error?: Error }) =>
       {error.cause ? (
         <>
           <div>
-            <em><Trans>Caused by</Trans></em>
+            <em>
+              <Trans>Caused by</Trans>
+            </em>
           </div>
           <RenderError error={error.cause as Error} />
         </>
@@ -57,5 +59,7 @@ export const RenderError = ({ error }: { error?: Error }) =>
       )}
     </div>
   ) : (
-    <p><Trans>Unknown Error</Trans></p>
+    <p>
+      <Trans>Unknown Error</Trans>
+    </p>
   );

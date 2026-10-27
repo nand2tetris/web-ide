@@ -319,7 +319,9 @@ export const FilePicker = () => {
             {t`Select`}
           </button>
           {!localFsRoot && filePicker.allowLocal && (
-            <button onClick={loadLocal}><Trans>Select local file</Trans></button>
+            <button onClick={loadLocal}>
+              <Trans>Select local file</Trans>
+            </button>
           )}
           {!localFsRoot && (
             <button

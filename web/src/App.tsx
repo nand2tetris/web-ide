@@ -1,6 +1,6 @@
-import { Trans } from "@lingui/react/macro";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
+import { Trans } from "@lingui/react/macro";
 import {
   BaseContext,
   useBaseContext,
@@ -8,18 +8,17 @@ import {
 import { Suspense, useEffect, useRef, useState } from "react";
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { AppContext, useAppContext } from "./App.context";
+import { ErrorBoundary, RenderError } from "./ErrorBoundary";
 import { registerLanguages } from "./languages/loader";
 import { messages } from "./locales";
+import { PageContextProvider } from "./Page.context";
+import { Redirect } from "./pages/redirect";
 import { FilePicker } from "./shell/file_select";
 import Footer from "./shell/footer";
 import Header from "./shell/header";
 import { Settings } from "./shell/settings";
 import { Tooltip } from "./shell/Tooltip";
 import urls from "./urls";
-
-import { ErrorBoundary, RenderError } from "./ErrorBoundary";
-import { PageContextProvider } from "./Page.context";
-import { Redirect } from "./pages/redirect";
 import "./pico/flex.scss";
 import "./pico/pico.scss";
 import { TrackingBanner } from "./tracking";
@@ -74,7 +73,13 @@ function App() {
                 <Header />
                 <main className="flex flex-1">
                   <ErrorBoundary fallback={RenderError}>
-                    <Suspense fallback={<div><Trans>Loading...</Trans></div>}>
+                    <Suspense
+                      fallback={
+                        <div>
+                          <Trans>Loading...</Trans>
+                        </div>
+                      }
+                    >
                       <Routes>
                         <Route path="/" element={<Redirect />} />
                         {Object.values(urls).map(({ href, target }) => (
@@ -90,7 +95,9 @@ function App() {
               <Tooltip />
             </PageContextProvider>
           ) : (
-            <div><Trans>Initializing...</Trans></div>
+            <div>
+              <Trans>Initializing...</Trans>
+            </div>
           )}
         </AppContext.Provider>
       </BaseContext.Provider>

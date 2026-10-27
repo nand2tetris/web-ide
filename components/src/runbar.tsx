@@ -113,10 +113,19 @@ export const Runbar = (props: {
         </button>
       </fieldset>
       <div
-        style={{ display: "flex", gap: "0.5rem", alignItems: "center", pointerEvents: "none" }}
+        style={{
+          display: "flex",
+          gap: "0.5rem",
+          alignItems: "center",
+          pointerEvents: "none",
+        }}
       >
-        <span data-testid="test-step-count">Steps: {runner.state.stepsTaken}</span>
-        <span data-testid="test-output-count">Outputs: {props.outputLineCount ?? 0}</span>
+        <span data-testid="test-step-count">
+          Steps: {runner.state.stepsTaken}
+        </span>
+        <span data-testid="test-output-count">
+          Outputs: {props.outputLineCount ?? 0}
+        </span>
       </div>
       <div
         style={{

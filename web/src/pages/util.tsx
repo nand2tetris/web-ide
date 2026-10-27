@@ -4,9 +4,9 @@ import {
   bin,
   dec,
   hex,
+  int2,
   int10,
   int16,
-  int2,
   unsigned,
 } from "@nand2tetris/simulator/util/twos.js";
 import { ChangeEvent, Dispatch, SetStateAction, useState } from "react";
@@ -95,12 +95,16 @@ export const Util = () => {
   return (
     <article>
       <header>
-        <h2><Trans>Convert Hack Number Types</Trans></h2>
+        <h2>
+          <Trans>Convert Hack Number Types</Trans>
+        </h2>
       </header>
       <main>
         <dl>
           <dt>
-            <label htmlFor="util_setBin"><Trans>Binary</Trans></label>
+            <label htmlFor="util_setBin">
+              <Trans>Binary</Trans>
+            </label>
           </dt>
           <dd>
             <FormattedInput
@@ -114,7 +118,9 @@ export const Util = () => {
             />
           </dd>
           <dt>
-            <label htmlFor="util_setInt"><Trans>Decimal</Trans></label>
+            <label htmlFor="util_setInt">
+              <Trans>Decimal</Trans>
+            </label>
           </dt>
           <dd>
             <FormattedInput
@@ -128,7 +134,9 @@ export const Util = () => {
             />
           </dd>
           <dt>
-            <label htmlFor="util_setUnsigned"><Trans>Unsigned</Trans></label>
+            <label htmlFor="util_setUnsigned">
+              <Trans>Unsigned</Trans>
+            </label>
           </dt>
           <dd>
             <FormattedInput
@@ -142,7 +150,9 @@ export const Util = () => {
             />
           </dd>
           <dt>
-            <label htmlFor="util_setHex"><Trans>Hex</Trans></label>
+            <label htmlFor="util_setHex">
+              <Trans>Hex</Trans>
+            </label>
           </dt>
           <dd>
             <FormattedInput

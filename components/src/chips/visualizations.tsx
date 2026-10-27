@@ -1,6 +1,6 @@
 import {
-  CPU,
   Computer,
+  CPU,
   Keyboard,
   ROM32K,
   Screen,

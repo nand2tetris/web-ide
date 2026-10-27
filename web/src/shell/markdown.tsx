@@ -2,7 +2,10 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 const publicUrl = (href: string) => {
-  href = href.replace("%25PUBLIC_URL%25", import.meta.env.BASE_URL.replace(/\/$/, ""));
+  href = href.replace(
+    "%25PUBLIC_URL%25",
+    import.meta.env.BASE_URL.replace(/\/$/, ""),
+  );
   return defaultUrlTransform(href);
 };
 

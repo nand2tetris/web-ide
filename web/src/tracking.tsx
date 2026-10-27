@@ -1,8 +1,7 @@
-import { Trans } from "@lingui/react/macro";
-import ReactGA from "react-ga4";
-
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useState } from "react";
+import ReactGA from "react-ga4";
 import "./tracking.scss";
 
 const PATH = "/tracking/canTrack";
@@ -169,9 +168,11 @@ export function TrackingBanner() {
 export function TrackingDisclosure() {
   return (
     <p style={{ margin: 0 }}>
-      <Trans>This site uses Google Analytics to gather information that will improve
-      the user experience. This only includes anonymous interaction data, and
-      never shares your code.</Trans>{" "}
+      <Trans>
+        This site uses Google Analytics to gather information that will improve
+        the user experience. This only includes anonymous interaction data, and
+        never shares your code.
+      </Trans>{" "}
       <a href="www.google.com/policies/privacy/partners/">
         <Trans>How Google uses data.</Trans>
       </a>

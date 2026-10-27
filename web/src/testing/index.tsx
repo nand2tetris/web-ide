@@ -13,19 +13,17 @@ import { ReactElement, type ReactNode } from "react";
 import { useAppContext } from "../App.context";
 
 export const userEvent = ue;
-export { cleanState } from "./clean_state";
 export * from "@testing-library/react";
+export { cleanState } from "./clean_state";
 export { i18nRender as render };
 
 const I18nWrapper = ({ children }: { children: ReactNode }) => (
   <I18nProvider i18n={i18n}>{children}</I18nProvider>
 );
 
-const i18nRender: (
-  ui: ReactElement,
-  options?: RenderOptions,
-) => RenderResult = (ui: ReactElement, options: RenderOptions = {}) =>
-  render(ui, { wrapper: I18nWrapper, ...options });
+const i18nRender: (ui: ReactElement, options?: RenderOptions) => RenderResult =
+  (ui: ReactElement, options: RenderOptions = {}) =>
+    render(ui, { wrapper: I18nWrapper, ...options });
 
 export const useTestingAppContext = () => ({
   base: {
@@ -39,19 +37,24 @@ export const useTestingAppContext = () => ({
       }),
     ),
     canUpgradeFs: false,
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async upgradeFs() {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    closeFs(force?: boolean) {},
+    async upgradeFs() {
+      // no-op
+    },
+    closeFs(force?: boolean) {
+      // no-op
+    },
     status: { message: "", severity: "INFO" },
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    setStatus() {},
+    setStatus() {
+      // no-op
+    },
     storage: {},
     permissionPrompt: useDialog(),
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    async requestPermission() {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    loadFs() {},
+    async requestPermission() {
+      // no-op
+    },
+    loadFs() {
+      // no-op
+    },
   } satisfies BaseContext,
   app: useAppContext(),
 });

@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import ReactGA from "react-ga4";
 
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
@@ -140,7 +141,7 @@ export function TrackingBanner() {
               className="reject"
               onClick={doReject}
             >
-              Reject
+              <Trans>Reject</Trans>
             </a>
             <a
               href="#accept"
@@ -148,7 +149,7 @@ export function TrackingBanner() {
               className="accept"
               onClick={doAccept}
             >
-              Accept
+              <Trans>Accept</Trans>
             </a>
             <a
               href="#close"
@@ -168,11 +169,11 @@ export function TrackingBanner() {
 export function TrackingDisclosure() {
   return (
     <p style={{ margin: 0 }}>
-      This site uses Google Analytics to gather information that will improve
+      <Trans>This site uses Google Analytics to gather information that will improve
       the user experience. This only includes anonymous interaction data, and
-      never shares your code.{" "}
+      never shares your code.</Trans>{" "}
       <a href="www.google.com/policies/privacy/partners/">
-        How Google uses data.
+        <Trans>How Google uses data.</Trans>
       </a>
     </p>
   );

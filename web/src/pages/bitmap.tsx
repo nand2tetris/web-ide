@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro";
+import { Trans } from "@lingui/react/macro";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Panel } from "../shell/panel";
 import {
@@ -635,12 +637,12 @@ export const BitmapEditor = () => {
         className="canvas-panel"
         header={
           <div className="canvas-size-controls">
-            <label htmlFor="inputWidth">Canvas Size:</label>
+            <label htmlFor="inputWidth"><Trans>Canvas Size:</Trans></label>
             <input
               ref={widthInputRef}
               id="inputWidth"
               type="text"
-              placeholder="width"
+              placeholder={t`width`}
               maxLength={3}
               defaultValue={width}
             />
@@ -649,24 +651,24 @@ export const BitmapEditor = () => {
               ref={heightInputRef}
               id="inputHeight"
               type="text"
-              placeholder="height"
+              placeholder={t`height`}
               maxLength={3}
               defaultValue={height}
             />
-            <label htmlFor="pixelSize">Pixel size:</label>
+            <label htmlFor="pixelSize"><Trans>Pixel size:</Trans></label>
             <input
               ref={pixelSizeInputRef}
               id="pixelSize"
               type="text"
-              placeholder="px"
+              placeholder={t`px`}
               maxLength={2}
               defaultValue={pixelSize}
             />
-            <button onClick={handleResize} title="Resize Canvas Preserving Upper-left Contents">
-              Resize
+            <button onClick={handleResize} title={t`Resize Canvas Preserving Upper-left Contents`}>
+              <Trans>Resize</Trans>
             </button>
-            <button onClick={handleReset} title="Reset Canvas Size, Settings, and Clear Contents">
-              Reset
+            <button onClick={handleReset} title={t`Reset Canvas Size, Settings, and Clear Contents`}>
+              <Trans>Reset</Trans>
             </button>
           </div>
         }
@@ -718,13 +720,13 @@ export const BitmapEditor = () => {
               className={`tab-button ${codeMode === "jack" ? "active" : ""}`}
               onClick={() => setCodeMode("jack")}
             >
-              Generated Jack Code
+              <Trans>Generated Jack Code</Trans>
             </button>
             <button
               className={`tab-button ${codeMode === "hack" ? "active" : ""}`}
               onClick={() => setCodeMode("hack")}
             >
-              Generated Hack Assembly
+              <Trans>Generated Hack Assembly</Trans>
             </button>
           </div>
         }
@@ -749,27 +751,27 @@ export const BitmapEditor = () => {
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            title="Import BMP (24-bit) or PNG (black and white) file"
+            title={t`Import BMP (24-bit) or PNG (black and white) file`}
           >
-            Import Image
+            <Trans>Import Image</Trans>
           </button>
 
           <div className="button-group">
-            <button onClick={shiftLeft}>Shift left &lt;</button>
-            <button onClick={shiftRight}>Shift right &gt;</button>
-            <button onClick={shiftUp}>Shift up ^</button>
-            <button onClick={shiftDown}>Shift down v</button>
-            <button onClick={clearShifting}>Clear Shifting</button>
+            <button onClick={shiftLeft}><Trans>Shift left &lt;</Trans></button>
+            <button onClick={shiftRight}><Trans>Shift right &gt;</Trans></button>
+            <button onClick={shiftUp}><Trans>Shift up ^</Trans></button>
+            <button onClick={shiftDown}><Trans>Shift down v</Trans></button>
+            <button onClick={clearShifting}><Trans>Clear Shifting</Trans></button>
           </div>
 
           <div className="spacer" />
 
           <div className="button-group">
             <button onClick={rotateBitmapRight} disabled={width !== height}>
-              Rotate right
+              <Trans>Rotate right</Trans>
             </button>
-            <button onClick={mirrorBitmap}>Flip horizontally</button>
-            <button onClick={invertBitmap}>Invert</button>
+            <button onClick={mirrorBitmap}><Trans>Flip horizontally</Trans></button>
+            <button onClick={invertBitmap}><Trans>Invert</Trans></button>
           </div>
 
           <div className="checkbox-group">
@@ -779,7 +781,7 @@ export const BitmapEditor = () => {
                 checked={invertMode}
                 onChange={(e) => setInvertMode(e.target.checked)}
               />
-              Inverted Mode
+              <Trans>Inverted Mode</Trans>
             </label>
           </div>
 
@@ -792,7 +794,7 @@ export const BitmapEditor = () => {
                 checked={pauseCode}
                 onChange={(e) => setPauseCode(e.target.checked)}
               />
-              Pause Code Generation
+              <Trans>Pause Code Generation</Trans>
             </label>
             <label>
               <input
@@ -800,7 +802,7 @@ export const BitmapEditor = () => {
                 checked={comments}
                 onChange={(e) => setComments(e.target.checked)}
               />
-              Comments On
+              <Trans>Comments On</Trans>
             </label>
             <label>
               <input
@@ -808,7 +810,7 @@ export const BitmapEditor = () => {
                 checked={obviousStyling}
                 onChange={(e) => setObviousStyling(e.target.checked)}
               />
-              Obvious Word Edges
+              <Trans>Obvious Word Edges</Trans>
             </label>
           </div>
         </div>
@@ -823,7 +825,7 @@ export const BitmapEditor = () => {
                 checked={marginType === "fitToDrawing"}
                 onChange={() => setMarginType("fitToDrawing")}
               />
-              Fit to drawing
+              <Trans>Fit to drawing</Trans>
             </label>
             <label>
               <input
@@ -832,7 +834,7 @@ export const BitmapEditor = () => {
                 checked={marginType === "rectangular"}
                 onChange={() => setMarginType("rectangular")}
               />
-              Rectangular
+              <Trans>Rectangular</Trans>
             </label>
             <label>
               <input
@@ -841,13 +843,13 @@ export const BitmapEditor = () => {
                 checked={marginType === "fullCanvas"}
                 onChange={() => setMarginType("fullCanvas")}
               />
-              Full Canvas
+              <Trans>Full Canvas</Trans>
             </label>
           </div>
 
           {marginType === "fitToDrawing" && (
             <div className="input-group">
-              <label htmlFor="marginSaveFrames"># horizontal shifts per animation frame:</label>
+              <label htmlFor="marginSaveFrames"><Trans># horizontal shifts per animation frame:</Trans></label>
               <input
                 ref={marginFramesInputRef}
                 id="marginSaveFrames"
@@ -862,7 +864,7 @@ export const BitmapEditor = () => {
 
         {/* Row 3: Base address controls */}
         <div className="control-row">
-          <span>Base address:</span>
+          <span><Trans>Base address:</Trans></span>
           <div className="radio-group">
             <label>
               <input
@@ -871,7 +873,7 @@ export const BitmapEditor = () => {
                 checked={baseTopLeft}
                 onChange={() => setBaseTopLeft(true)}
               />
-              Top Left
+              <Trans>Top Left</Trans>
             </label>
             <label>
               <input
@@ -880,7 +882,7 @@ export const BitmapEditor = () => {
                 checked={!baseTopLeft}
                 onChange={() => setBaseTopLeft(false)}
               />
-              Bottom Left
+              <Trans>Bottom Left</Trans>
             </label>
           </div>
         </div>

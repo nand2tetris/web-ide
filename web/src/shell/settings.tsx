@@ -116,7 +116,7 @@ export const Settings = () => {
                 permissionPrompt.close();
               }}
             >
-              Ok
+              <Trans>Ok</Trans>
             </button>
             <button
               className="dialog-button"
@@ -124,7 +124,7 @@ export const Settings = () => {
                 permissionPrompt.close();
               }}
             >
-              Cancel
+              <Trans>Cancel</Trans>
             </button>
           </div>
         </main>
@@ -464,7 +464,7 @@ export const Settings = () => {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    nand2tetris.org (course website)
+                    <Trans>nand2tetris.org (course website)</Trans>
                   </a>
                 </div>
                 <div>
@@ -473,7 +473,7 @@ export const Settings = () => {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    nand2tetris/web-IDE on Github (open source)
+                    <Trans>nand2tetris/web-IDE on Github (open source)</Trans>
                   </a>
                 </div>
               </dd>

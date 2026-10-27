@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import {
@@ -73,7 +74,7 @@ function App() {
                 <Header />
                 <main className="flex flex-1">
                   <ErrorBoundary fallback={RenderError}>
-                    <Suspense fallback={<div>Loading...</div>}>
+                    <Suspense fallback={<div><Trans>Loading...</Trans></div>}>
                       <Routes>
                         <Route path="/" element={<Redirect />} />
                         {Object.values(urls).map(({ href, target }) => (
@@ -89,7 +90,7 @@ function App() {
               <Tooltip />
             </PageContextProvider>
           ) : (
-            <div>Initializing...</div>
+            <div><Trans>Initializing...</Trans></div>
           )}
         </AppContext.Provider>
       </BaseContext.Provider>

@@ -1,3 +1,4 @@
+import { Trans } from "@lingui/react/macro";
 import Markdown from "../shell/markdown";
 import aboutContent from "./ABOUT.md?raw";
 
@@ -16,7 +17,7 @@ export const About = () => {
       <div className="container">
         <Markdown>{aboutContent}</Markdown>
         <p>
-          <b>Version</b> <code>{version}</code>
+          <b><Trans>Version</Trans></b> <code>{version}</code>
         </p>
       </div>
     </div>

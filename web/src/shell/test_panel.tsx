@@ -1,5 +1,6 @@
+import { t } from "@lingui/core/macro";
 import { isErr, unwrap } from "@davidsouther/jiffies/result.ts";
-import { Trans } from "@lingui/react/macro";
+import { Plural, Trans } from "@lingui/react/macro";
 import {
   DecorationType,
   DiffDisplay,
@@ -163,11 +164,11 @@ export const TestPanel = ({
   const editWarning = (
     <dialog open={editDialog.isOpen}>
       <article>
-        <header>Warning</header>
+        <header><Trans>Warning</Trans></header>
         <main>
           <p>
-            The test script can be edited during this IDE session. In the next
-            session, the original script will be restored.
+            <Trans>The test script can be edited during this IDE session. In the next
+            session, the original script will be restored.</Trans>
             <br />
           </p>
           <div style={{ display: "flex", flexDirection: "row" }}>
@@ -178,7 +179,7 @@ export const TestPanel = ({
                 setSkipWarning(e.target.checked);
               }}
             />
-            <p>Do not show this again</p>
+            <p><Trans>Do not show this again</Trans></p>
           </div>
           <p>
             <br />
@@ -191,7 +192,7 @@ export const TestPanel = ({
               editDialog.close();
             }}
           >
-            Ok
+            <Trans>Ok</Trans>
           </button>
         </main>
       </article>
@@ -216,14 +217,14 @@ export const TestPanel = ({
                     {prefix}
                     {showClear && (
                       <button className="flex-0" onClick={clear}>
-                        Clear
+                        <Trans>Clear</Trans>
                       </button>
                     )}
                     {showLoad && (
                       <button
                         className="flex-0"
                         onClick={loadTest}
-                        data-tooltip="Load a test script"
+                        data-tooltip={t`Load a test script`}
                         data-placement="bottom"
                       >
                         📂
@@ -244,7 +245,7 @@ export const TestPanel = ({
       }
     >
       <TabList>
-        <Tab title="Test Script" onSelect={() => setSelectedTestTab("tst")}>
+        <Tab title={t`Test Script`} onSelect={() => setSelectedTestTab("tst")}>
           <Editor
             value={tst}
             path={`${tstName??'test'}.tst`}
@@ -255,7 +256,7 @@ export const TestPanel = ({
             highlight={showHighlight ? tstHighlight : undefined}
           />
         </Tab>
-        <Tab title="Compare File" onSelect={() => setSelectedTestTab("cmp")}>
+        <Tab title={t`Compare File`} onSelect={() => setSelectedTestTab("cmp")}>
           <Editor
             value={cmp}
             path={`${tstName??'test'}.cmp`}
@@ -266,8 +267,8 @@ export const TestPanel = ({
             disabled={true}
           />
         </Tab>
-        <Tab title="Output File" onSelect={() => setSelectedTestTab("out")}>
-          {out == "" && <p>Execute test script to generate output.</p>}
+        <Tab title={t`Output File`} onSelect={() => setSelectedTestTab("out")}>
+          {out == "" && <p><Trans>Execute test script to generate output.</Trans></p>}
           <Editor
             value={out}
             onChange={() => {
@@ -279,13 +280,15 @@ export const TestPanel = ({
             lineNumberTransform={(_) => ""}
           />
         </Tab>
-        <Tab title="Diff Table" onSelect={() => setSelectedTestTab("diff")}>
-          {out == "" && <p>Execute test script to compare output.</p>}
+        <Tab title={t`Diff Table`} onSelect={() => setSelectedTestTab("diff")}>
+          {out == "" && <p><Trans>Execute test script to compare output.</Trans></p>}
           {(diffDisplay?.failureNum ?? 0) > 0 && (
             <p>
-              {diffDisplay?.failureNum} comparison failure
-              {diffDisplay?.failureNum === 1 ? "" : "s"}. Scroll down for
-              details
+              <Plural
+                value={diffDisplay?.failureNum ?? 0}
+                one="# comparison failure. Scroll down for details"
+                other="# comparison failures. Scroll down for details"
+              />
             </p>
           )}
           <Editor

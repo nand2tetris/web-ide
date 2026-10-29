@@ -61,13 +61,17 @@ function fileKeyOf(dir: string | undefined, name: string): string {
   return [dir, `${name}.hdl`].filter(Boolean).join("/");
 }
 
+/** The key of a root source: the path of `name` in `dir`, or `<input>.hdl`. */
+function rootKeyOf(dir: string | undefined, name: string | undefined): string {
+  return name === undefined ? INPUT_KEY : fileKeyOf(dir, name);
+}
+
 /**
  * Builds a chip from HDL source, reporting the diagnostics of the source and
  * of every dependency it loads, each under its source key. Any diagnostic
  * withholds the chip.
  *
- * `options.file` keys the root source; without it the key is the path of
- * `name` in `dir`, or `<input>.hdl`.
+ * `options.file` keys the root source (default `rootKeyOf`).
  */
 export async function parse(
   code: string,
@@ -76,8 +80,7 @@ export async function parse(
   fs?: FileSystem,
   options?: ChipOptions & { file?: string },
 ): Promise<Result<Chip, ChipDiagnostics>> {
-  const file =
-    options?.file ?? (name === undefined ? INPUT_KEY : fileKeyOf(dir, name));
+  const file = options?.file ?? rootKeyOf(dir, name);
   const files = new FileDiagnostics();
   const { chip } = await loadSource(
     code.toString(),
@@ -121,8 +124,7 @@ export async function build(options: {
   file?: string;
 }): Promise<Result<Chip, ChipDiagnostics>> {
   const { parts, provenance = [], fs, dir, name } = options;
-  const file =
-    options.file ?? (name === undefined ? INPUT_KEY : fileKeyOf(dir, name));
+  const file = options.file ?? rootKeyOf(dir, name);
   const files = new FileDiagnostics();
   const chip = await new ChipBuilder({
     ast: parts,
@@ -398,6 +400,8 @@ class ChipBuilder {
   private wires: WireData[] = [];
   /** Pins a wire of unknown direction names: an unresolved part could drive them. */
   private mayBeDriven = new Set<string>();
+  /** True once this chip has a diagnostic of its own. */
+  private failed = false;
 
   constructor({
     ast,
@@ -428,9 +432,6 @@ class ChipBuilder {
       ast.clocked,
     );
   }
-
-  /** True once this chip has a diagnostic of its own. */
-  private failed = false;
 
   private fail(diagnostic: Diagnostic) {
     this.failed = true;

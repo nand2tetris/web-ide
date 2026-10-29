@@ -13,12 +13,13 @@ export interface Status {
  * The error status of a file that has diagnostics, such as "HDL code: 2
  * syntax errors". An editor marks each diagnostic with a span, so the status adds
  * only the messages it cannot mark. With `marked: false`, no editor shows the
- * file, and the status adds every message.
+ * file, and the status adds every message. With `head`, the status also adds
+ * the first diagnostic of the list, the earliest when the list is sorted.
  */
 export function failureStatus(
   file: string,
   diagnostics: readonly Diagnostic[],
-  { marked = true }: { marked?: boolean } = {},
+  { marked = true, head = false }: { marked?: boolean; head?: boolean } = {},
 ): Status {
   const count =
     diagnostics.length === 1
@@ -27,8 +28,13 @@ export function failureStatus(
   const unmarked = diagnostics
     .filter(({ span }) => !marked || span === undefined)
     .map(({ message }) => message);
+  const [first] = diagnostics;
+  const shown =
+    head && first !== undefined && !unmarked.includes(first.message)
+      ? [first.message, ...unmarked]
+      : unmarked;
   return {
-    message: [`${file}: ${count}`, ...unmarked].join(". "),
+    message: [`${file}: ${count}`, ...shown].join(". "),
     severity: "ERROR",
   };
 }

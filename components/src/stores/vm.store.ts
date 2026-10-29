@@ -13,8 +13,8 @@ import {
   Span,
   validOf,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import {
@@ -330,19 +330,8 @@ export function makeVmStore(
 
     loadTest(path: string, source: string) {
       dispatch.current({ action: "setTst", payload: { tst: source } });
-      const tst = validOf(TST.parse(source));
-
-      if (isErr(tst)) {
-        dispatch.current({ action: "setValid", payload: false });
-        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
-        return false;
-      }
-      dispatch.current({ action: "setValid", payload: true });
-      setStatus(`Parsed tst`);
-
-      vm.reset();
-
-      const maybeTest = VMTest.from(unwrap(tst), {
+      const maybeTest = buildTst({ name: path, content: source }, "vm", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         doLoad: async (path) => {
           await this.load(path);
@@ -355,12 +344,15 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        dispatch.current({ action: "setValid", payload: false });
+        setStatus(
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
+        );
         return false;
       } else {
+        dispatch.current({ action: "setValid", payload: true });
+        setStatus(`Parsed tst`);
+        vm.reset();
         test = Ok(maybeTest).using(fs);
         test.vm = vm;
         dispatch.current({ action: "update" });

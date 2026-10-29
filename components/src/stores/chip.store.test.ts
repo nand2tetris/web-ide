@@ -54,6 +54,29 @@ const chipWith = (name: string, ...parts: string[]) =>
     "\n",
   );
 
+describe("test script diagnostics", () => {
+  it("lists a missing closer and the missing load, and only the closer with recovery off", () => {
+    let recovery = true;
+    const store = testChipStore(undefined, {}, () => recovery);
+
+    expect(store.actions.compileTest("repeat 1 { eval;", "projects/01")).toBe(
+      false,
+    );
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      message:
+        'Test script: 2 syntax errors. Line 1: expected "}". Line 1: A test script must have a load command',
+      severity: "ERROR",
+    });
+
+    recovery = false;
+    store.actions.compileTest("repeat 1 { eval;", "projects/01");
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      message: 'Test script: 1 syntax error. Line 1: expected "}"',
+      severity: "ERROR",
+    });
+  });
+});
+
 describe("HDL diagnostics by file", () => {
   it("keeps a dependency's diagnostics out of the editor's markers", async () => {
     const child = chipWith(

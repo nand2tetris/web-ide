@@ -103,3 +103,24 @@ describe("loading several VM files", () => {
     );
   });
 });
+
+describe("test script diagnostics", () => {
+  it("lists a missing closer and the missing load, and only the closer with recovery off", () => {
+    let recovery = true;
+    const s = mk(() => recovery);
+
+    expect(s.actions.loadTest("/proj/T.tst", "repeat 1 { vmstep;")).toBe(false);
+    expect(s.setStatus).toHaveBeenLastCalledWith({
+      message:
+        'Test script: 2 syntax errors. Line 1: expected "}". Line 1: A test script must have a load command',
+      severity: "ERROR",
+    });
+
+    recovery = false;
+    s.actions.loadTest("/proj/T.tst", "repeat 1 { vmstep;");
+    expect(s.setStatus).toHaveBeenLastCalledWith({
+      message: 'Test script: 1 syntax error. Line 1: expected "}"',
+      severity: "ERROR",
+    });
+  });
+});

@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { isRecovered, type Recovery, recoveredOf } from "./base.js";
 import { HDL, prune as hdlPrune } from "./hdl.js";
 import { JACK, prune as jackPrune } from "./jack.js";
-import { TST, type TstRepeat } from "./tst.js";
+import { TST, type TstRepeat, prune as tstPrune } from "./tst.js";
 
 const RECOVER = { attemptRecovery: true };
 
@@ -29,6 +29,20 @@ describe("a null object records what it stands in for", () => {
       interval: { start: 0, end: 14 },
     });
     expect(missing.skipped?.key).toEqual(expect.any(String));
+  });
+
+  it("keeps a missing TST block closer's kind after pruning drops its null command", () => {
+    const outcome = TST.parse("repeat 1 { eval;", RECOVER);
+
+    const recovered = recoveredOf(outcome, tstPrune);
+
+    expect(recovered?.provenance).toMatchObject([
+      { kind: "TstRepeatClose", interval: { start: 16, end: 16 } },
+    ]);
+    const repeat = recovered?.ast.lines[0] as TstRepeat;
+    expect(repeat.statements.map((command) => command.op)).toEqual([
+      { op: "eval" },
+    ]);
   });
 });
 

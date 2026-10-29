@@ -4,6 +4,8 @@ import {
   carrierOf,
   grammars,
   makeParser,
+  type Outcome,
+  type Parser,
   type Recovery,
   type RecoveryPoint,
 } from "./base.js";
@@ -52,9 +54,33 @@ function emptyCmp(): Cmp {
   return [];
 }
 
+/** The low-level CMP parser. Recovery is off unless a caller opts in. */
+export const rawCMP: Parser<Cmp> = makeParser<Cmp>(
+  grammar,
+  cmpSemantics,
+  emptyCmp,
+);
+
+/** Options of the CMP final call. */
+export interface CmpParseOptions {
+  /** Recover from syntax errors to keep reading rows. Default true. */
+  attemptRecovery?: boolean;
+}
+
+/**
+ * The CMP final call. `parse` reads a compare or output file with recovery on
+ * by default, so its outcome keeps recovered rows beside every diagnostic; a
+ * consumer that needs a usable table goes through `validOf`. `parser` stays
+ * the Ohm grammar, for syntax highlighting.
+ */
 export const CMP = {
   grammar: cmpGrammar,
   semantics: cmpSemantics,
   parser: grammar,
-  ...makeParser<Cmp>(grammar, cmpSemantics, emptyCmp),
+  empty: emptyCmp,
+  parse(source: string, options: CmpParseOptions = {}): Outcome<Cmp> {
+    return rawCMP.parse(source, {
+      attemptRecovery: options.attemptRecovery ?? true,
+    });
+  },
 };

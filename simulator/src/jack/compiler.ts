@@ -3,8 +3,11 @@ import {
   createError,
   Diagnostic,
   Diagnostics,
-  isValid,
-  ParseOptions,
+  mergeDiagnostics,
+  Origin,
+  Provenance,
+  Recovered,
+  recoveredOf,
   Span,
   Valid,
 } from "../languages/base.js";
@@ -17,10 +20,12 @@ import {
   IfStatement,
   isPrimitive,
   JACK,
+  JackSkipKind,
   KeywordConstant,
   LetStatement,
   Op,
   Parameter,
+  prune,
   ReturnStatement,
   Statement,
   Subroutine,
@@ -55,96 +60,174 @@ function isOsClass(name: string): boolean {
   return osClasses.has(name);
 }
 
-function isError(value: Valid<Class> | Diagnostics): value is Diagnostics {
-  return Array.isArray(value);
-}
-
 function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/** Options of the Jack final call. */
+export interface CompileOptions {
+  /** Recover from syntax errors to keep checking. Default true. */
+  attemptRecovery?: boolean;
+}
+
 /**
- * Compiles each Jack file by name. Each value is either the file's
- * diagnostics, when it did not parse or compile, or its generated VM text.
+ * What a class's checks know of the declarations recovery damaged: each
+ * class's provenance by name, and the names of the files that built no class.
+ */
+export interface Damage {
+  readonly provenance: Readonly<Record<string, Provenance>>;
+  readonly lost: ReadonlySet<string>;
+}
+
+const NO_DAMAGE: Damage = { provenance: {}, lost: new Set() };
+
+/** Skipped nodes that could declare a variable of their scope. */
+const DECLARES_VARIABLE: ReadonlySet<string> = new Set<JackSkipKind>([
+  "ClassVarDecBody",
+  "VarDecBody",
+]);
+
+/** Skipped nodes that could declare a subroutine of their class. */
+const DECLARES_SUBROUTINE: ReadonlySet<string> = new Set<JackSkipKind>([
+  "SubroutineHead",
+  "ClassClose",
+]);
+
+/** Skipped statements, at any depth of a subroutine body, that could return. */
+const SKIPS_STATEMENT: ReadonlySet<string> = new Set<JackSkipKind>([
+  "LetBody",
+  "DoBody",
+  "ReturnBody",
+  "IfHead",
+  "WhileHead",
+  "SubroutineBodyClose",
+  "IfClose",
+  "ElseClose",
+  "WhileClose",
+]);
+
+/** A check's diagnostic on a parsed class. */
+function semanticError(description: string, span?: Span): Diagnostic {
+  return { ...createError(description, span), stage: "semantic" };
+}
+
+/**
+ * Compiles each Jack file by name. Each value is the file's VM text when the
+ * file has no diagnostic, and otherwise its merged diagnostics.
+ *
+ * A file that recovered from syntax errors still has its class checked and
+ * compiled from the pruned tree, and its intact declarations serve the other
+ * files; a file that built no class contributes none. Keys are class names.
  *
  * In future the return type should be `Record<string, JackCompileResult>`,
  * where a `JackCompileResult` holds the parsed intermediate Jack and the
  * diagnostics, with methods that give the VM string or go straight to VM
  * output.
- *
- * `options` reach each file's parse; recovery is off unless requested.
  */
 export function compile(
   files: Record<string, string>,
-  options: ParseOptions = {},
+  options: CompileOptions = {},
 ): Record<string, string | Diagnostics> {
-  const classes: Record<string, Valid<Class> | Diagnostics> = {};
+  const attemptRecovery = options.attemptRecovery ?? true;
+  const lists: Record<string, Diagnostic[]> = {};
+  const origins = new Map<Diagnostic, Origin>();
+  const classes: Record<string, Valid<Class>> = {};
+  const provenance: Record<string, Provenance> = {};
+  const lost = new Set<string>();
   for (const [name, content] of Object.entries(files)) {
-    const parsed = JACK.parse(content, options);
-    if (!isValid(parsed)) {
-      classes[name] = parsed.diagnostics;
-    } else {
-      const cls = parsed.ast;
-      const result = validateClass(cls);
-      classes[name] =
-        cls.name.value == name
-          ? isErr(result)
-            ? [Err(result)]
-            : cls
-          : [
-              createError(
-                `Class name ${cls.name.value} doesn't match file name ${name}`,
-                cls.name.span,
-              ),
-            ];
+    const outcome = JACK.parse(content, { attemptRecovery });
+    const diagnostics: Diagnostic[] = [...outcome.diagnostics];
+    lists[name] = diagnostics;
+    const recovered = recoveredOf(outcome, prune);
+    if (recovered === undefined) {
+      lost.add(name);
+      continue;
     }
-  }
-
-  const validClasses: Record<string, Valid<Class>> = {};
-  for (const [name, parsed] of Object.entries(classes)) {
-    if (!isError(parsed)) {
-      validClasses[name] = parsed;
-    }
-  }
-
-  const vms: Record<string, string | Diagnostics> = {};
-  for (const [name, parsed] of Object.entries(classes)) {
-    if (isError(parsed)) {
-      vms[name] = parsed;
-    } else {
-      try {
-        const compiled = new Compiler().compile(parsed, validClasses);
-        if (isErr(compiled)) {
-          vms[name] = [Err(compiled)];
-        } else {
-          vms[name] = Ok(compiled);
-        }
-      } catch (e) {
-        vms[name] = [e as Diagnostic];
+    for (const { diagnostic, key } of recovered.provenance) {
+      if (key !== undefined) {
+        origins.set(diagnostic, { recovery: key });
       }
+    }
+    diagnostics.push(...validateClass(recovered));
+    const cls = recovered.ast;
+    if (cls.name.value != name) {
+      diagnostics.push(
+        semanticError(
+          `Class name ${cls.name.value} doesn't match file name ${name}`,
+          cls.name.span,
+        ),
+      );
+      lost.add(name);
+      continue;
+    }
+    classes[name] = cls;
+    provenance[name] = recovered.provenance;
+  }
+
+  const damage: Damage = { provenance, lost };
+  const vms: Record<string, string | Diagnostics> = {};
+  for (const [name, list] of Object.entries(lists)) {
+    const cls = classes[name];
+    if (cls !== undefined) {
+      const compiled = new Compiler().compile(cls, classes, damage);
+      if (isErr(compiled)) {
+        list.push(...Err(compiled));
+      } else if (list.length === 0) {
+        vms[name] = Ok(compiled);
+        continue;
+      }
+    }
+    // A file without a compiled class always has a diagnostic.
+    const [first, ...rest] = list;
+    if (first !== undefined) {
+      vms[name] = mergeDiagnostics([first, ...rest], origins);
     }
   }
   return vms;
 }
 
-function validateClass(cls: Valid<Class>): Result<void, Diagnostic> {
+/**
+ * Every class level diagnostic: each repeated subroutine name, and each
+ * subroutine's control flow diagnostics.
+ */
+function validateClass({
+  ast: cls,
+  provenance,
+}: Recovered<Class>): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
   const subroutineNames = new Set<string>();
   for (const subroutine of cls.subroutines) {
-    if (subroutineNames.has(subroutine.name.value)) {
-      return Err(
-        createError(
-          `Subroutine ${subroutine.name.value} already declared`,
+    const name = subroutine.name.value;
+    if (subroutineNames.has(name)) {
+      diagnostics.push(
+        semanticError(
+          `Subroutine ${name} already declared`,
           subroutine.name.span,
         ),
       );
     }
-    subroutineNames.add(subroutine.name.value);
-    const result = validateSubroutine(subroutine);
-    if (isErr(result)) {
-      return result;
-    }
+    subroutineNames.add(name);
+    const holdsSkip = provenance.some(
+      ({ kind, scope }) => SKIPS_STATEMENT.has(kind) && scope[1] === name,
+    );
+    diagnostics.push(...validateSubroutine(subroutine, { holdsSkip }));
   }
-  return Ok();
+  return diagnostics;
+}
+
+/**
+ * Stops compiling the current declaration or statement. `diagnostic` is what
+ * stopped it, or undefined when a check was suppressed.
+ */
+class Halt extends Error {
+  constructor(readonly diagnostic?: Diagnostic) {
+    super(diagnostic?.message ?? "suppressed");
+  }
+}
+
+/** A failure while compiling, stopping the current declaration or statement. */
+function compileError(description: string, span?: Span): Halt {
+  return new Halt({ ...createError(description, span), stage: "compile" });
 }
 
 interface VariableData {
@@ -183,6 +266,12 @@ export class Compiler {
 
   className = "";
   private classes: Record<string, Class> = {};
+  private damage: Damage = NO_DAMAGE;
+  /** The subroutine being compiled, which scopes its locals' provenance. */
+  private subroutineName = "";
+  /** Declared types already reported unknown; checks that need them are withheld. */
+  private invalidTypes = new Set<string>();
+  private diagnostics: Diagnostic[] = [];
 
   private labelNum = 0;
   private fieldNum = 0;
@@ -217,9 +306,51 @@ export class Compiler {
     }
     const data = this.varData(name);
     if (!data) {
-      throw createError(`Undeclared variable ${name}`, span);
+      // Suppressed: an undeclared variable, when recovery skipped a class
+      // variable declaration of this class or a local declaration of this
+      // subroutine, either of which could have declared it. A skipped
+      // statement declares nothing and suppresses nothing.
+      throw this.mayDeclareVariable()
+        ? new Halt()
+        : compileError(`Undeclared variable ${name}`, span);
     }
     return `${data.segment} ${data.index}`;
+  }
+
+  /** True when a skipped declaration in scope could declare a variable. */
+  private mayDeclareVariable(): boolean {
+    return (this.damage.provenance[this.className] ?? []).some(
+      ({ kind, scope }) =>
+        DECLARES_VARIABLE.has(kind) &&
+        (kind === "ClassVarDecBody" || scope[1] === this.subroutineName),
+    );
+  }
+
+  /** True when a skipped header of class `className` could declare a subroutine. */
+  private mayDeclareSubroutine(className: string): boolean {
+    return (this.damage.provenance[className] ?? []).some(({ kind }) =>
+      DECLARES_SUBROUTINE.has(kind),
+    );
+  }
+
+  /**
+   * Runs one declaration's or statement's compilation, keeping its failure as
+   * a diagnostic so the next one still compiles. An unexpected error becomes a
+   * spanless `compile` diagnostic.
+   */
+  private contain(action: () => void) {
+    try {
+      action();
+    } catch (e) {
+      if (e instanceof Halt) {
+        if (e.diagnostic !== undefined) this.diagnostics.push(e.diagnostic);
+      } else {
+        this.diagnostics.push({
+          message: e instanceof Error ? e.message : String(e),
+          stage: "compile",
+        });
+      }
+    }
   }
 
   write(...lines: string[]) {
@@ -232,17 +363,28 @@ export class Compiler {
     return label;
   }
 
+  /**
+   * The class's VM text, or every diagnostic of its declarations, subroutine
+   * headers and statements. `other` holds the classes it may use, and `damage`
+   * what recovery skipped in them.
+   */
   compile(
     cls: Valid<Class>,
     other?: Record<string, Valid<Class>>,
-  ): Result<string, Diagnostic> {
+    damage: Damage = NO_DAMAGE,
+  ): Result<string, Diagnostics> {
     this.className = cls.name.value;
     this.classes = other ?? {};
+    this.damage = damage;
     for (const varDec of cls.varDecs) {
-      this.compileClassVarDec(varDec);
+      this.contain(() => this.compileClassVarDec(varDec));
     }
     for (const subroutine of cls.subroutines) {
-      this.compileSubroutineDec(subroutine);
+      this.contain(() => this.compileSubroutineDec(subroutine));
+    }
+    const [first, ...rest] = this.diagnostics;
+    if (first !== undefined) {
+      return Err([first, ...rest]);
     }
     return Ok(
       this.instructions
@@ -255,11 +397,23 @@ export class Compiler {
     );
   }
 
+  /**
+   * Suppressed: an unknown type, when a file of that name built no class: its
+   * own diagnostics report the damage.
+   */
   validateType(type: string, span?: Span) {
     if (isPrimitive(type) || isOsClass(type) || this.classes[type]) {
       return;
     }
-    throw createError(`Unknown type ${type}`, span);
+    this.invalidTypes.add(type);
+    if (!this.damage.lost.has(type)) {
+      throw compileError(`Unknown type ${type}`, span);
+    }
+  }
+
+  /** Validates a declared type, reporting its failure and going on. */
+  private checkType(type: string, span?: Span) {
+    this.contain(() => this.validateType(type, span));
   }
 
   validateReturnType(returnType: string, span?: Span) {
@@ -269,8 +423,9 @@ export class Compiler {
     this.validateType(returnType, span);
   }
 
+  /** Registers the names even when their type is invalid. */
   compileClassVarDec(dec: ClassVarDec) {
-    this.validateType(dec.type.value, dec.type.span);
+    this.checkType(dec.type.value, dec.type.span);
     for (const name of dec.names) {
       if (dec.varType == "field") {
         this.globalSymbolTable[name] = {
@@ -290,8 +445,9 @@ export class Compiler {
     }
   }
 
+  /** Registers the names even when their type is invalid. */
   compileVarDec(dec: VarDec) {
-    this.validateType(dec.type.value, dec.type.span);
+    this.checkType(dec.type.value, dec.type.span);
     for (const name of dec.names) {
       this.localSymbolTable[name] = {
         type: dec.type.value,
@@ -305,7 +461,7 @@ export class Compiler {
   registerArgs(params: Parameter[], offset = false) {
     let argNum = 0;
     for (const param of params) {
-      this.validateType(param.type.value, param.type.span);
+      this.checkType(param.type.value, param.type.span);
       this.localSymbolTable[param.name] = {
         type: param.type.value,
         segment: "argument",
@@ -315,17 +471,23 @@ export class Compiler {
     }
   }
 
+  /** Checks the return type and the OS interface, reporting each failure. */
   validateSubroutineDec(subroutine: Subroutine) {
-    this.validateReturnType(
-      subroutine.returnType.value,
-      subroutine.returnType.span,
+    this.contain(() =>
+      this.validateReturnType(
+        subroutine.returnType.value,
+        subroutine.returnType.span,
+      ),
     );
+    this.contain(() => this.validateOsInterface(subroutine));
+  }
 
+  private validateOsInterface(subroutine: Subroutine) {
     if (isOsClass(this.className)) {
       const builtin = VM_BUILTINS[`${this.className}.${subroutine.name.value}`];
 
       if (builtin && !overridesOsCorrectly(this.className, subroutine)) {
-        throw createError(
+        throw compileError(
           `OS subroutine ${this.className}.${subroutine.name.value} must follow the interface ${makeInterface(subroutine.name.value, builtin)})`,
         );
       }
@@ -347,6 +509,7 @@ export class Compiler {
   }
 
   compileSubroutineStart(subroutine: Subroutine, isMethod = false) {
+    this.subroutineName = subroutine.name.value;
     this.localSymbolTable = {};
     this.localNum = 0;
     this.registerArgs(subroutine.parameters, isMethod);
@@ -437,7 +600,7 @@ export class Compiler {
   validateArgNum(name: string, expected: number, call: SubroutineCall) {
     const received = call.parameters.length;
     if (expected != received) {
-      throw createError(
+      throw compileError(
         `${name} expected ${expected} arguments, got ${received}`,
         call.span,
       );
@@ -453,13 +616,13 @@ export class Compiler {
     const builtin = VM_BUILTINS[`${className}.${subroutineName}`];
     if (builtin) {
       if (builtin.type == "method" && !isMethod) {
-        throw createError(
+        throw compileError(
           `Method ${className}.${subroutineName} was called as a function/constructor`,
           call.name.span,
         );
       }
       if (builtin.type != "method" && isMethod) {
-        throw createError(
+        throw compileError(
           `${capitalize(
             builtin.type,
           )} ${className}.${subroutineName} was called as a method`,
@@ -476,13 +639,13 @@ export class Compiler {
       for (const subroutine of this.classes[className].subroutines) {
         if (subroutine.name.value == subroutineName) {
           if (subroutine.type == "method" && !isMethod) {
-            throw createError(
+            throw compileError(
               `Method ${className}.${subroutineName} was called as a function/constructor`,
               call.name.span,
             );
           }
           if (subroutine.type != "method" && isMethod) {
-            throw createError(
+            throw compileError(
               `${capitalize(
                 subroutine.name.value,
               )} ${className}.${subroutineName} was called as a method`,
@@ -497,12 +660,18 @@ export class Compiler {
           return;
         }
       }
-      throw createError(
-        `Class ${className} doesn't contain a function/constructor ${subroutineName}`,
-        call.name.span,
-      );
-    } else {
-      throw createError(`Class ${className} doesn't exist`, call.name.span);
+      // Suppressed: a missing subroutine, when recovery skipped a subroutine
+      // header of that class, which could have declared it.
+      if (!this.mayDeclareSubroutine(className)) {
+        throw compileError(
+          `Class ${className} doesn't contain a function/constructor ${subroutineName}`,
+          call.name.span,
+        );
+      }
+    } else if (!this.damage.lost.has(className) && !this.mayDeclareVariable()) {
+      // Suppressed: a missing class, when a file of that name built no
+      // class, or when a skipped declaration could make it a variable.
+      throw compileError(`Class ${className} doesn't exist`, call.name.span);
     }
   }
 
@@ -519,6 +688,10 @@ export class Compiler {
         // external method call
         object = this.var(prefix);
         className = varData.type;
+        if (this.invalidTypes.has(className)) {
+          // Withheld: the type is already reported unknown.
+          return { className, subroutineName, object };
+        }
       } else {
         // function / constructor call
         className = prefix;
@@ -595,9 +768,10 @@ export class Compiler {
     }
   }
 
+  /** Compiles each statement, going on after one that fails. */
   compileStatements(statements: Statement[]) {
     for (const statement of statements) {
-      this.compileStatement(statement);
+      this.contain(() => this.compileStatement(statement));
     }
   }
 
@@ -650,7 +824,8 @@ export class Compiler {
     const condTrue = this.getLabel();
     const condFalse = this.getLabel();
 
-    this.compileExpression(statement.condition);
+    // A failed condition still lets the intact bodies be checked.
+    this.contain(() => this.compileExpression(statement.condition));
     this.write("not", `if-goto ${condFalse}`);
     this.compileStatements(statement.body);
     this.write(`goto ${condTrue}`, `label ${condFalse}`);
@@ -663,7 +838,7 @@ export class Compiler {
     const exit = this.getLabel();
 
     this.write(`label ${loop}`);
-    this.compileExpression(statement.condition);
+    this.contain(() => this.compileExpression(statement.condition));
     this.write(`not`, `if-goto ${exit}`);
     this.compileStatements(statement.body);
     this.write(`goto ${loop}`, `label ${exit}`);

@@ -156,6 +156,14 @@ export interface Skip extends Skipped {
 /** Every null object's provenance in a tree, in tree order. */
 export type Provenance = readonly Skip[];
 
+/** True when `provenance` holds a skip of one of `kinds`. */
+export function skipsAny(
+  provenance: Provenance,
+  kinds: ReadonlySet<string>,
+): boolean {
+  return provenance.some(({ kind }) => kinds.has(kind));
+}
+
 /**
  * A tree a parse built, pruned to `Valid`, beside the provenance of what
  * pruning dropped. Validators and dependency tables take this pair.

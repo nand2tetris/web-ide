@@ -339,6 +339,12 @@ export function createError(description: string, span?: Span): Diagnostic {
 }
 
 /**
+ * The action errors of the parse running now, in the order the actions ran.
+ * Like `linked`, `makeParser` sets this around the semantics.
+ */
+let failedActions: Diagnostic[] | undefined;
+
+/**
  * A semantic action's error: a `semantic` diagnostic, listed in the outcome of
  * the parse running now. The action returns its language's null object with
  * it (see `failedOf`) instead of throwing, so the parse keeps its tree.
@@ -351,12 +357,6 @@ export function actionError(description: string, at: Span): Diagnostic {
   failedActions?.push(diagnostic);
   return diagnostic;
 }
-
-/**
- * The action errors of the parse running now, in the order the actions ran.
- * Like `linked`, `makeParser` sets this around the semantics.
- */
-let failedActions: Diagnostic[] | undefined;
 
 /**
  * What a merge knows about a diagnostic beyond its record, kept beside it

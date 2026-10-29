@@ -364,16 +364,25 @@ function checkMultipleAssignments(
  * drive it, and a skipped `IN` or `OUT` line could declare it.
  */
 const SUPPLIES_OWN_PIN: ReadonlySet<string> = new Set<HdlSkipKind>([
+  "ChipStart",
   "InListBody",
   "OutListBody",
   "PartBody",
   "PartsClose",
+  "ChipClose",
 ]);
 
 /** Skipped nodes that could declare a pin of a chip used as a part. */
 const DECLARES_PIN: ReadonlySet<string> = new Set<HdlSkipKind>([
+  "ChipStart",
   "InListBody",
   "OutListBody",
+]);
+
+/** Skipped nodes that could name their chip. */
+const NAMES_CHIP: ReadonlySet<string> = new Set<HdlSkipKind>([
+  "ChipHead",
+  "ChipStart",
 ]);
 
 /** True when `provenance` holds a skip of one of `kinds`. */
@@ -390,6 +399,12 @@ class ChipBuilder {
   private context: LoadContext;
 
   private chip: Chip;
+  /**
+   * True when recovery skipped the header that names this chip. The chip
+   * then takes the name it loads as, and checks of its name are suppressed.
+   */
+  private unnamed: boolean;
+  private name: string;
   private internalPins: Map<string, InternalPin> = new Map();
   private inPins: Map<string, Set<number>> = new Map();
   private outPins: Map<string, Set<number>> = new Map();
@@ -420,10 +435,12 @@ class ChipBuilder {
     this.dir = dir;
     this.file = file;
     this.context = context;
+    this.unnamed = skips(provenance, NAMES_CHIP);
+    this.name = this.unnamed ? (name ?? "") : ast.name.value;
     this.chip = new Chip(
       ast.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
       ast.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
-      ast.name.value,
+      this.name,
       [],
       ast.clocked,
     );
@@ -443,7 +460,13 @@ class ChipBuilder {
    * diagnostics is for its callers' checks only.
    */
   async build(): Promise<Chip> {
-    if (this.expectedName && this.parts.name.value != this.expectedName) {
+    // Suppressed: a wrong chip name, when recovery skipped the header that
+    // names the chip.
+    if (
+      !this.unnamed &&
+      this.expectedName &&
+      this.parts.name.value != this.expectedName
+    ) {
       // The source is not the chip asked for, so its parts are not loaded:
       // a chip that names itself as a part must not load itself forever.
       this.report(`Wrong chip name`, this.parts.name.span);
@@ -451,10 +474,12 @@ class ChipBuilder {
     }
 
     if (this.parts.parts === "BUILTIN") {
-      const builtin = await loadBuiltin(this.parts.name.value, this.context);
-      if (builtin.missing) {
+      const builtin = await loadBuiltin(this.name, this.context);
+      // Suppressed: a builtin missing from the registry, when recovery
+      // skipped the header that names it.
+      if (builtin.missing && !this.unnamed) {
         this.report(
-          `Chip ${this.parts.name.value} not in builtin registry`,
+          `Chip ${this.name} not in builtin registry`,
           this.parts.name.span,
         );
       }

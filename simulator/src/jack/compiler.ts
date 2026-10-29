@@ -87,9 +87,33 @@ const NO_DAMAGE: Damage = { provenance: {}, lost: new Set() };
 
 /** Skipped nodes that could declare a variable of their scope. */
 const DECLARES_VARIABLE: ReadonlySet<string> = new Set<JackSkipKind>([
+  "ClassStart",
   "ClassVarDecBody",
   "VarDecBody",
 ]);
+
+/** Skipped nodes that declare variables of the whole class, not of one subroutine. */
+const DECLARES_CLASS_VARIABLE: ReadonlySet<string> = new Set<JackSkipKind>([
+  "ClassStart",
+  "ClassVarDecBody",
+]);
+
+/** Skipped nodes that could name their class. */
+const NAMES_CLASS: ReadonlySet<string> = new Set<JackSkipKind>([
+  "ClassHead",
+  "ClassStart",
+]);
+
+/**
+ * The class a file built, named for the file when recovery skipped its
+ * header: the header could have named it so, and no other name lets the
+ * class serve its file.
+ */
+function namedClass({ ast, provenance }: Recovered<Class>, file: string) {
+  return provenance.some(({ kind }) => NAMES_CLASS.has(kind))
+    ? { ...ast, name: { ...ast.name, value: file } }
+    : ast;
+}
 
 /** Skipped nodes that could declare a subroutine of their class. */
 const DECLARES_SUBROUTINE: ReadonlySet<string> = new Set<JackSkipKind>([
@@ -186,7 +210,9 @@ function checkFiles(
       origins.set(diagnostic, origin);
     }
     diagnostics.push(...validateClass(recovered));
-    const cls = recovered.ast;
+    // Suppressed: a class name that does not match its file, when recovery
+    // skipped the header that names the class.
+    const cls = namedClass(recovered, name);
     if (cls.name.value != name) {
       diagnostics.push(
         semanticError(
@@ -340,7 +366,7 @@ export class Compiler {
     return (this.damage.provenance[this.className] ?? []).some(
       ({ kind, scope }) =>
         DECLARES_VARIABLE.has(kind) &&
-        (kind === "ClassVarDecBody" || scope[1] === this.subroutineName),
+        (DECLARES_CLASS_VARIABLE.has(kind) || scope[1] === this.subroutineName),
     );
   }
 

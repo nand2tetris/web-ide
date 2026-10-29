@@ -501,6 +501,99 @@ describe("Chip Builder diagnostics", () => {
     });
   });
 
+  describe("a damaged CHIP header", () => {
+    it("checks a chip whose header lost its name under the name it loads as", async () => {
+      const source = [
+        "CHIP {",
+        "  IN a; OUT out;",
+        "  PARTS:",
+        "  Nope(a=a, out=out);",
+        "}",
+      ].join("\n");
+
+      const diagnostics = await diagnosticsOf(
+        source,
+        ".",
+        "Foo",
+        filesWith({}),
+      );
+
+      expect(diagnostics).toEqual({
+        "./Foo.hdl": [
+          "Line 1: expected a letter",
+          "Line 4: Undefined chip name: Nope",
+        ],
+      });
+    });
+
+    it("loads a dependency whose header lost its name as the part names it", async () => {
+      const fs = filesWith({
+        "Child.hdl": [
+          "CHP Child {",
+          "  IN a; OUT out;",
+          "  PARTS:",
+          "  Not(in=a, out=out);",
+          "}",
+        ].join("\n"),
+      });
+      const top = topUsing("  Child(a=a, out=out);", "  Not(in=out, out=x);");
+
+      const diagnostics = await diagnosticsOf(top, ".", "Top", fs);
+
+      expect(diagnostics).toEqual({
+        "./Child.hdl": ['Line 1: expected "CHIP"'],
+        "./Top.hdl": ["Line 5: Cannot use output pin as input"],
+      });
+    });
+
+    it("loads a builtin whose header lost its name as the name it loads as", async () => {
+      const source = ["CHIP {", "  IN in; OUT out;", "  BUILTIN;", "}"].join(
+        "\n",
+      );
+
+      const named = await diagnosticsOf(source, ".", "Not", filesWith({}));
+      const unnamed = await diagnosticsOf(source);
+
+      expect(named).toEqual({ "./Not.hdl": ["Line 1: expected a letter"] });
+      expect(unnamed).toEqual({ "<input>.hdl": ["Line 1: expected a letter"] });
+    });
+
+    it("does not report a part pin a skipped chip start could declare", async () => {
+      const fs = filesWith({
+        "Child.hdl": [
+          "CHIP Child",
+          "  IN a; OUT out;",
+          "  PARTS:",
+          "  Not(in=a, out=out);",
+          "}",
+        ].join("\n"),
+      });
+      const top = topUsing("  Child(a=a, out=out);");
+
+      const diagnostics = await diagnosticsOf(top, ".", "Top", fs);
+
+      expect(diagnostics).toEqual({ "./Child.hdl": ['Line 2: expected "{"'] });
+    });
+
+    it("does not report an internal pin a part after an early closer could drive", async () => {
+      const source = [
+        "CHIP Foo {",
+        "  IN a; OUT out;",
+        "  PARTS:",
+        "  Not(in=y, out=out);",
+        "  }",
+        "  Not(in=a, out=y);",
+        "}",
+      ].join("\n");
+
+      const diagnostics = await diagnosticsOf(source);
+
+      expect(diagnostics).toEqual({
+        "<input>.hdl": ["Line 6: expected end of input"],
+      });
+    });
+  });
+
   it("bounds suppression to checks a skipped node could supply", async () => {
     const source = [
       "CHIP Foo {",

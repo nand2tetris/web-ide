@@ -37,7 +37,7 @@ export const Compiler = () => {
   const showStatus = () => {
     const current = state.compiled[state.selected];
     if (current) {
-      setStatus(current.valid ? "" : (current.error?.message ?? ""));
+      setStatus(current.valid ? "" : (current.diagnostics[0]?.message ?? ""));
     }
   };
 
@@ -252,7 +252,7 @@ export const Compiler = () => {
                 onChange={(source: string) => {
                   actions.writeFile(file, source);
                 }}
-                error={state.compiled[file].error}
+                diagnostics={state.compiled[file].diagnostics}
                 language={"jack"}
                 disabled={!editable}
               />

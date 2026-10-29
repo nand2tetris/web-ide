@@ -9,7 +9,7 @@ import { BaseContext, StatusSeverity } from "./base.context.js";
 export interface CompiledFile {
   vm?: string;
   valid: boolean;
-  error?: Diagnostic;
+  diagnostics: readonly Diagnostic[];
 }
 
 export interface CompilerPageState {
@@ -88,11 +88,12 @@ export function makeCompilerStore(
           state.compiled[name] = {
             valid: true,
             vm: compiled,
+            diagnostics: [],
           };
         } else {
           state.compiled[name] = {
             valid: false,
-            error: compiled,
+            diagnostics: [compiled],
           };
         }
       }

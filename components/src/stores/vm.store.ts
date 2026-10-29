@@ -17,6 +17,7 @@ import {
 import {
   type Diagnostic,
   Span,
+  validOf,
 } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
@@ -130,7 +131,7 @@ export function makeVmStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {
-  const parsed = unwrap(VM.parse(FIBONACCI));
+  const parsed = unwrap(validOf(VM.parse(FIBONACCI)));
   let vm = unwrap(Vm.build(parsed.instructions));
   let test = new VMTest({ doEcho: setStatus }).with(vm);
   let useTest = false;
@@ -284,10 +285,10 @@ export function makeVmStore(
       }
       vmSource = content;
 
-      const parseResult = VM.parse(content);
+      const parseResult = validOf(VM.parse(content));
 
       if (isErr(parseResult)) {
-        return compileFailed([Err(parseResult)]);
+        return compileFailed(Err(parseResult));
       }
       const instructions = unwrap(parseResult).instructions;
       const buildResult = Vm.build(instructions);
@@ -312,10 +313,10 @@ export function makeVmStore(
 
       let lineOffset = 0;
       for (const file of files) {
-        const parseResult = VM.parse(file.content);
+        const parseResult = validOf(VM.parse(file.content));
 
         if (isErr(parseResult)) {
-          return compileFailed([Err(parseResult)]);
+          return compileFailed(Err(parseResult));
         }
         const instructions = unwrap(parseResult).instructions;
 
@@ -349,7 +350,7 @@ export function makeVmStore(
 
     loadTest(path: string, source: string) {
       dispatch.current({ action: "setTst", payload: { tst: source } });
-      const tst = TST.parse(source);
+      const tst = validOf(TST.parse(source));
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });

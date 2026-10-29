@@ -183,6 +183,21 @@ const STORIES: [
     },
   ],
   [
+    "VM: a line that is not an instruction, and a call to a function that is declared nowhere",
+    vmDiagnostics,
+    lines(
+      "function Main.main 0", //  1
+      "push nowhere 2", //        2: syntax error, nowhere is not a segment
+      "call Nope.f 0", //         3: grammatical, but Nope.f is declared nowhere
+      "return", //                4
+    ),
+    {
+      syntaxLines: [2],
+      semantic: /Undefined function Nope\.f/,
+      semanticLine: 3,
+    },
+  ],
+  [
     "TST: a block missing its closer, and a script with no load command",
     tstDiagnostics,
     "repeat 1 { eval;", // 1: syntax error, no `}`; and no load command

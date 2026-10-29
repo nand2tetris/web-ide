@@ -14,6 +14,7 @@ import {
 } from "../languages/base.js";
 import {
   CallInstruction,
+  couldBeFunctionHeader,
   FunctionInstruction,
   prune,
   Segment,
@@ -195,42 +196,112 @@ export const VM_INPUT = "<input>.vm";
 /** The failure of a build: the nonempty merged diagnostics of each file. */
 export type VmFailure = Record<string, Diagnostics>;
 
-/**
- * What a build knows of the lines recovery dropped. A dropped line may have
- * been any instruction, so a check whose input a dropped line could supply is
- * suppressed, and only that check:
- *
- * - `anywhere`: some line, or a whole file, is missing, and could have
- *   declared a function or the program's entry. That suppresses the checks
- *   of an undefined function, of a builtin's argument count (a dropped
- *   function could override the builtin) and of the entry point.
- * - `functions`: the functions whose bodies held a dropped line, which could
- *   have declared a label. That suppresses the undeclared label checks of
- *   those functions only.
- */
-interface Damage {
-  readonly anywhere: boolean;
-  readonly functions: ReadonlySet<string>;
+/** A file's name without its folders and extension: `a/Sys.vm` is `Sys`. */
+function fileBasenameNoExtension(file: string): string {
+  // Files that are part of the web-ide are usually passed with folders but without extensions.
+  // e.g.: /projects/08/FibonacciElement/Sys
+  if (file.includes("/")) {
+    file = file.split("/").pop() ?? "";
+  }
+
+  // Local files on Windows are usually passed with extension.
+  // e.g.: Sys.vm
+  if (file.includes(".")) {
+    file = file.split(".")[0];
+  }
+
+  return file;
+
+  // TODO: Check if this also works for Linux and MacOS
 }
 
-const NO_DAMAGE: Damage = { anywhere: false, functions: new Set() };
+/**
+ * What a build knows of the lines recovery dropped. Provenance gives the kind
+ * of each dropped line (see `skippedKind`), and a check is suppressed only
+ * when a dropped line of a kind that could supply its input exists:
+ *
+ * - A line that could have been a `function` header (kind `FunctionInstruction`,
+ *   or `VmInstruction` when its first token is unreadable) could have declared
+ *   a function in its own file. It suppresses the undefined function check
+ *   and the builtin argument count check (a declared function overrides a
+ *   builtin) of a call only if that file could have declared the name
+ *   (`mayDeclare`), and the entry point checks (`mayChooseEntry`).
+ * - Any dropped line could have declared a label of the function that holds
+ *   it. It suppresses the undeclared label checks of that function only
+ *   (`functions`).
+ * - Any other kind of dropped line (push, pop, arithmetic, call, return, goto,
+ *   label) supplies nothing else, so it hides no other check.
+ * - A file that built no tree is unknown to the last byte, so it could have
+ *   declared any function of any file and chosen the entry (`unparsed`).
+ */
+class Damage {
+  constructor(
+    /** True when a file built no tree at all. */
+    private readonly unparsed = false,
+    /** The files holding a dropped line that could have been a `function` header. */
+    private readonly headerFiles: readonly string[] = [],
+    /**
+     * True when a function's class prefix must be its file's name, so a
+     * file's functions are only those of its own class.
+     */
+    private readonly matchFileName = false,
+    /** The functions whose bodies held a dropped line. */
+    readonly functions: ReadonlySet<string> = new Set(),
+  ) {}
+
+  /**
+   * True when a dropped header could have declared the function `name`: a
+   * file that holds one could have declared it if the class prefix of `name`
+   * is that file's name. When class prefixes need not match file names
+   * (`validateFileNames: false`), any file could have declared any name.
+   * A header of another class in that file would be a file name error of its
+   * own, which the caller's check need not repeat.
+   */
+  mayDeclare(name: string): boolean {
+    const className = name.split(".")[0];
+    return (
+      this.unparsed ||
+      this.headerFiles.some(
+        (file) =>
+          !this.matchFileName || fileBasenameNoExtension(file) === className,
+      )
+    );
+  }
+
+  /**
+   * True when a dropped header, anywhere, could have changed the entry point:
+   * it could have been `Sys.init` or `Main.main`, or the first function that
+   * makes the implicit one illegal. The entry is a property of the whole
+   * program, so no file or caller narrows it.
+   */
+  get mayChooseEntry(): boolean {
+    return this.unparsed || this.headerFiles.length > 0;
+  }
+}
+
+const NO_DAMAGE = new Damage();
 
 /**
  * The damage of parsed files. A dropped line belongs to the last function
  * declared before it, in its own file or, before a file's first function, in
  * the files before it. `unparsed` is true when a file built no tree at all.
  */
-function damageOf(files: ParsedVmFile[], unparsed: boolean): Damage {
+function damageOf(
+  files: ParsedVmFile[],
+  rules: { matchFileName: boolean; unparsed: boolean },
+): Damage {
   const functions = new Set<string>();
-  let anywhere = unparsed;
+  const headerFiles: string[] = [];
   let current = IMPLICIT;
-  for (const { instructions, skips = [] } of files) {
+  for (const { name, instructions, skips = [] } of files) {
     const headers = instructions.filter(
       (instruction): instruction is FunctionInstruction =>
         instruction.op === "function",
     );
-    for (const { interval } of skips) {
-      anywhere = true;
+    for (const { interval, kind } of skips) {
+      if (couldBeFunctionHeader(kind)) {
+        headerFiles.push(name);
+      }
       const owner = headers.filter(
         ({ span }) => span !== undefined && span.start <= interval.start,
       );
@@ -238,7 +309,12 @@ function damageOf(files: ParsedVmFile[], unparsed: boolean): Damage {
     }
     current = headers.at(-1)?.name ?? current;
   }
-  return { anywhere, functions };
+  return new Damage(
+    rules.unparsed,
+    headerFiles,
+    rules.matchFileName,
+    functions,
+  );
 }
 
 /**
@@ -335,24 +411,6 @@ export class Vm {
     }
   }
 
-  private static fileBasenameNoExtension(file: string): string {
-    // Files that are part of the web-ide are usually passed with folders but without extensions.
-    // e.g.: /projects/08/FibonacciElement/Sys
-    if (file.includes("/")) {
-      file = file.split("/").pop() ?? "";
-    }
-
-    // Local files on Windows are usually passed with extension.
-    // e.g.: Sys.vm
-    if (file.includes(".")) {
-      file = file.split(".")[0];
-    }
-
-    return file;
-
-    // TODO: Check if this also works for Linux and MacOS
-  }
-
   /**
    * Reports each function of `file` whose name is not `<class>.<name>`, and,
    * with `matchFileName`, each whose class is not the file's name.
@@ -375,7 +433,7 @@ export class Vm {
           );
         } else if (
           matchFileName &&
-          parts[0] != this.fileBasenameNoExtension(file.name)
+          parts[0] != fileBasenameNoExtension(file.name)
         ) {
           report.add(
             semanticError(
@@ -469,13 +527,14 @@ export class Vm {
       }
     }
 
-    // Suppressed under `damage.anywhere`: a dropped line could have declared
-    // the function, which also overrides any builtin of its name.
-    if (damage.anywhere) {
-      return;
-    }
     for (const call of calls) {
-      if (!functions.has(call.name)) {
+      // Suppressed when `damage.mayDeclare(call.name)`: a dropped line that
+      // could have been a `function` header could have declared the function,
+      // which also overrides any builtin of its name. That hides both the
+      // undefined function and the builtin argument count checks of this call.
+      // A dropped push, pop, arithmetic, call, return, goto or label line
+      // could not, and hides neither.
+      if (!functions.has(call.name) && !damage.mayDeclare(call.name)) {
         const builtin = VM_BUILTINS[call.name];
         if (builtin) {
           const expectedNArgs =
@@ -518,7 +577,7 @@ export class Vm {
       }
     }
     const report = new Report(owners);
-    const damage = damageOf(files, rules.unparsed);
+    const damage = damageOf(files, rules);
     if (rules.names) {
       this.validateFiles(files, rules.matchFileName, report);
     }
@@ -528,9 +587,11 @@ export class Vm {
     const vm = new Vm();
     vm.loadInto(instructions, false, report, damage);
     const booted = vm.bootstrap();
-    // Suppressed under `damage.anywhere`: a dropped line could have declared
-    // the entry point, or the first function that makes the implicit one illegal.
-    if (isErr(booted) && !damage.anywhere) {
+    // Suppressed when `damage.mayChooseEntry`: a dropped line that could have
+    // been a `function` header could have declared the entry point, or the
+    // first function that makes the implicit one illegal. A dropped push, pop,
+    // arithmetic, call, return, goto or label line could not.
+    if (isErr(booted) && !damage.mayChooseEntry) {
       report.add({ ...Err(booted), stage: "semantic" });
     }
 

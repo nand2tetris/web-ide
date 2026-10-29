@@ -16,6 +16,7 @@ function testChipStore(
     "projects/01/Not.cmp": not.cmp,
   },
   storage: Record<string, string> = {},
+  attemptRecovery?: () => boolean,
 ) {
   const dispatch: MutableRefObject<ChipStoreDispatch> = { current: vi.fn() };
 
@@ -27,6 +28,7 @@ function testChipStore(
     storage,
     dispatch,
     false,
+    attemptRecovery,
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
   dispatch.current = vi.fn().mockImplementation(
@@ -40,6 +42,36 @@ function testChipStore(
 
   return store;
 }
+
+const chipWith = (name: string, ...parts: string[]) =>
+  [`CHIP ${name} {`, "  IN a;", "  OUT out;", "  PARTS:", ...parts, "}"].join(
+    "\n",
+  );
+
+describe("HDL diagnostics by file", () => {
+  it("keeps a dependency's diagnostics out of the editor's markers", async () => {
+    const child = chipWith(
+      "Child",
+      "  Not(in=a out=x);", // line 5: syntax error, no comma
+      "  Not(in=a, out=out);",
+    );
+    const top = chipWith("Top", "  Child(a=a, out=out);");
+    const store = testChipStore({ "projects/01/Child.hdl": child });
+
+    await store.actions.compileChip(top, "projects/01", "Top");
+
+    expect(store.state.controls.diagnostics).toEqual([]);
+    expect(
+      store.state.controls.dependencyDiagnostics["projects/01/Child.hdl"],
+    ).toMatchObject([{ span: { line: 5 } }]);
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      message: expect.stringMatching(
+        /^HDL code: 1 syntax error\. projects\/01\/Child\.hdl: Line 5: /,
+      ),
+      severity: "ERROR",
+    });
+  });
+});
 
 describe("ChipStore", () => {
   describe("initialization", () => {
@@ -134,10 +166,11 @@ describe("ChipStore", () => {
 
     it.todo("compiles chips");
 
-    it("counts the syntax errors of HDL code that does not compile", async () => {
+    it("counts the syntax errors of HDL code that does not compile, and names the first", async () => {
       await state.store.actions.compileChip("CHIP Not {", "projects/01", "Not");
       expect(state.store.setStatus).toHaveBeenLastCalledWith({
-        message: "HDL code: 1 syntax error",
+        message:
+          'HDL code: 1 syntax error. Line 1: expected "PARTS:" or "BUILTIN"',
         severity: "ERROR",
       });
     });

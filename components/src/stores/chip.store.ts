@@ -58,6 +58,32 @@ function convertToBuiltin(name: string, hdl: string) {
   return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};`);
 }
 
+/**
+ * The diagnostics of the file in the editor, which marks each one, and of the
+ * other files the chip loads, by path. A dependency's spans belong to its own
+ * file, so they never mark the editor's.
+ */
+function splitFailures(
+  failures: Record<string, Diagnostics>,
+  file = "<input>.hdl",
+): {
+  root: readonly Diagnostic[];
+  dependencies: Record<string, readonly Diagnostic[]>;
+} {
+  const { [file]: root = [], ...dependencies } = failures;
+  return { root, dependencies };
+}
+
+/** The diagnostics of files no editor shows, each message naming its file. */
+function unlocated(files: Record<string, readonly Diagnostic[]>): Diagnostic[] {
+  return Object.entries(files).flatMap(([file, list]) =>
+    list.map(({ message, stage }) => ({
+      message: `${file}: ${message}`,
+      stage,
+    })),
+  );
+}
+
 export interface ChipPageState {
   title?: string;
   files: Files;
@@ -98,7 +124,10 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
+  /** The diagnostics of the file in the editor, which marks each of them. */
   diagnostics: readonly Diagnostic[];
+  /** The diagnostics of the other files the chip loads, by path. */
+  dependencyDiagnostics: Record<string, readonly Diagnostic[]>;
   visualizationParameters: Set<string>;
 }
 
@@ -132,6 +161,8 @@ export function makeChipStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
+  /** Whether the HDL final call recovers from syntax errors, read per call. */
+  attemptRecovery: () => boolean = () => true,
 ) {
   let _chipName = "";
   let _dir = "";
@@ -170,6 +201,7 @@ export function makeChipStore(
         invalid?: boolean;
         chipName?: string;
         diagnostics?: readonly Diagnostic[];
+        dependencyDiagnostics?: Record<string, readonly Diagnostic[]>;
       },
     ) {
       state.sim = reduceChip(
@@ -180,6 +212,10 @@ export function makeChipStore(
       state.controls.diagnostics = state.sim.invalid
         ? (payload?.diagnostics ?? state.controls.diagnostics)
         : [];
+      state.controls.dependencyDiagnostics = state.sim.invalid
+        ? (payload?.dependencyDiagnostics ??
+          state.controls.dependencyDiagnostics)
+        : {};
     },
 
     setProjects(state: ChipPageState, projects: string[]) {
@@ -373,16 +409,29 @@ export function makeChipStore(
 
     async compileChip(hdl: string, dir?: string, name?: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl, dir, name, fs);
+      const file =
+        name === undefined
+          ? undefined
+          : [dir, `${name}.hdl`].filter(Boolean).join("/");
+      const maybeChip = await parseChip(hdl, dir, name, fs, {
+        attemptRecovery: attemptRecovery(),
+        file,
+      });
       if (isErr(maybeChip)) {
-        // Every file's list, in key order, until markers are kept per file.
-        const [first, ...rest] = Object.values(Err(maybeChip)).flat();
-        const diagnostics: Diagnostics = [first, ...rest];
-        setStatus(failureStatus("HDL code", diagnostics));
+        const { root, dependencies } = splitFailures(Err(maybeChip), file);
+        setStatus(
+          failureStatus("HDL code", [...root, ...unlocated(dependencies)], {
+            head: true,
+          }),
+        );
         invalid = true;
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, diagnostics },
+          payload: {
+            invalid: true,
+            diagnostics: root,
+            dependencyDiagnostics: dependencies,
+          },
         });
         return;
       }
@@ -599,6 +648,7 @@ export function makeChipStore(
       usingBuiltin: false,
       runningTest: false,
       diagnostics: [],
+      dependencyDiagnostics: {},
       visualizationParameters: new Set(),
     };
 

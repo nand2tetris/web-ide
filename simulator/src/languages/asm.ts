@@ -1,5 +1,5 @@
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
-import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   ASSIGN,
@@ -22,13 +22,21 @@ import {
   carrierOf,
   createError,
   Diagnostic,
+  type Diagnostics,
   failedOf,
   grammars,
+  isRecovered,
   makeParser,
+  makePrune,
+  mergeDiagnostics,
+  type Origin,
   type Recovery,
   type RecoveryPoint,
+  recoveredOf,
   Span,
+  semanticError,
   span,
+  type Valid,
 } from "./base.js";
 import asmGrammar from "./grammars/asm.ohm.js";
 
@@ -229,10 +237,15 @@ export type Pointer =
   | "SCREEN"
   | "KBD";
 
+/**
+ * Gives each A instruction its label's value, and calls `symbolCallback` for
+ * each symbol it defines. Every repeated label is a diagnostic; the first
+ * definition of a label is the one that counts.
+ */
 export function fillLabel(
   asm: Asm,
   symbolCallback?: (name: string, value: number, isVar: boolean) => void,
-): Result<void, Diagnostic> {
+): Result<void, Diagnostics> {
   let nextLabel = 16;
   const symbols = new Map<Pointer | string, number>([
     ["R0", 0],
@@ -276,12 +289,16 @@ export function fillLabel(
   }
 
   const unfilled: AsmALabelInstruction[] = [];
+  const duplicates: Diagnostic[] = [];
   let line = 0;
   for (const instruction of asm.instructions) {
     if (instruction.type === "L") {
       if (symbols.has(instruction.label)) {
-        return Err(
-          createError(`Duplicate label ${instruction.label}`, instruction.span),
+        duplicates.push(
+          semanticError(
+            `Duplicate label ${instruction.label}`,
+            instruction.span,
+          ),
         );
       } else {
         symbols.set(instruction.label, line);
@@ -299,6 +316,10 @@ export function fillLabel(
     }
   }
 
+  const [first, ...rest] = duplicates;
+  if (first !== undefined) {
+    return Err([first, ...rest]);
+  }
   unfilled.forEach(transmuteAInstruction);
   return Ok();
 }
@@ -401,6 +422,76 @@ const L = (label: string, span?: Span): AsmLabelInstruction => ({
   label,
   span,
 });
+
+/** Options of the ASM final call. */
+export interface AssembleOptions {
+  /** Recover from syntax errors to keep checking. Default true. */
+  attemptRecovery?: boolean;
+}
+
+/**
+ * Drops recovered instructions: a skipped line and an instruction whose action
+ * failed. The result is checked and minted `Valid`.
+ */
+export const prune = makePrune<Asm>((tree) => ({
+  ...tree,
+  instructions: tree.instructions.filter(
+    (instruction) => !isRecovered(instruction),
+  ),
+}));
+
+/**
+ * The one pipeline of the ASM final call: parse, label resolution and the
+ * merged diagnostics of both. On success it gives the program with every label
+ * resolved, still holding its label instructions and source spans, and calls
+ * `symbolCallback` for each symbol as `fillLabel` does. `assemble` emits it;
+ * the translator's animation walks it.
+ *
+ * A source that built no tree has its syntax diagnostics only. A recovered
+ * tree continues from its pruned form, so a skipped line adds no label and
+ * causes no further diagnostic: no check reads what a skipped line could
+ * supply, since an unknown symbol is a variable, not an error.
+ */
+export function resolveAsm(
+  source: string,
+  options: AssembleOptions = {},
+  symbolCallback?: (name: string, value: number, isVar: boolean) => void,
+): Result<Valid<Asm>, Diagnostics> {
+  const outcome = ASM.parse(source, {
+    attemptRecovery: options.attemptRecovery ?? true,
+  });
+  const recovered = recoveredOf(outcome, prune);
+  if (recovered === undefined) {
+    return Err(outcome.diagnostics as Diagnostics);
+  }
+  const diagnostics: Diagnostic[] = [...outcome.diagnostics];
+  const origins = new Map<Diagnostic, Origin>();
+  for (const { diagnostic, key } of recovered.provenance) {
+    if (key !== undefined) {
+      origins.set(diagnostic, { recovery: key });
+    }
+  }
+  const labels = fillLabel(recovered.ast, symbolCallback);
+  if (isErr(labels)) {
+    diagnostics.push(...Err(labels));
+  }
+  const [first, ...rest] = diagnostics;
+  return first === undefined
+    ? Ok(recovered.ast)
+    : Err(mergeDiagnostics([first, ...rest], origins));
+}
+
+/**
+ * Assembles `source` to its instruction words, or to every diagnostic of it,
+ * in source order. No instructions are given when there is any diagnostic.
+ */
+export function assemble(
+  source: string,
+  options: AssembleOptions = {},
+): Result<number[], Diagnostics> {
+  const resolved = resolveAsm(source, options);
+  return isErr(resolved) ? resolved : Ok(emit(Ok(resolved)));
+}
 
 /** The null root of a parse that built no program: no instructions. */
 function emptyAsm(): Asm {

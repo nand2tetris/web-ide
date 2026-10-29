@@ -6,7 +6,7 @@ import { produce } from "immer";
 import { describe, expect, it, vi } from "vitest";
 import { AsmStoreDispatch, makeAsmStore } from "./asm.store.js";
 
-function mk() {
+function mk(attemptRecovery?: () => boolean) {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   const dispatch = { current: vi.fn() as unknown as AsmStoreDispatch };
   const setStatus = vi.fn();
@@ -15,6 +15,7 @@ function mk() {
     setStatus,
     dispatch,
     false,
+    attemptRecovery,
   );
   const store = { state: initialState, actions, fs, setStatus };
   dispatch.current = ((c: {
@@ -28,15 +29,52 @@ function mk() {
   return store;
 }
 
+const TWO_MISTAKES = "(A)\n@1\nD=Q\n(A)\n";
+
 describe("compiling asm source", () => {
   it("counts the syntax errors of ASM code that does not parse", () => {
     const s = mk();
     s.actions.compileAsm("@@");
     expect(s.setStatus).toHaveBeenLastCalledWith({
-      message: "ASM code: 1 syntax error",
+      message: expect.stringMatching(/^ASM code: 1 syntax error\. Line 1: /),
       severity: "ERROR",
     });
     expect(s.state.diagnostics).toHaveLength(1);
+  });
+
+  it("lists a syntax and a label diagnostic together, the earliest in the status", () => {
+    const s = mk();
+    s.actions.compileAsm(TWO_MISTAKES);
+    expect(s.state.diagnostics.map(({ span }) => span?.line)).toEqual([3, 4]);
+    expect(s.setStatus).toHaveBeenLastCalledWith({
+      message: expect.stringMatching(/^ASM code: 2 syntax errors\. Line 3: /),
+      severity: "ERROR",
+    });
+  });
+
+  it("compiles a program with no diagnostic to its symbols and lines", () => {
+    const s = mk();
+    s.actions.compileAsm("(TOP)\n@x\n@TOP\n");
+    expect(s.state.diagnostics).toEqual([]);
+    expect(s.setStatus).toHaveBeenLastCalledWith("");
+    expect(s.state.lineNumbers.slice(2)).toEqual([0, 1]);
+  });
+
+  it("recovers while Attempt Recovery is on, and recompiles when it changes", () => {
+    let recovery = true;
+    const s = mk(() => recovery);
+    s.actions.setAsm(TWO_MISTAKES);
+    s.actions.compileAsm(TWO_MISTAKES);
+    expect(s.state.diagnostics).toHaveLength(2);
+
+    recovery = false;
+    s.actions.recompile();
+
+    expect(s.state.diagnostics).toHaveLength(1);
+    expect(s.setStatus).toHaveBeenLastCalledWith({
+      message: expect.stringMatching(/^ASM code: 1 syntax error\. Line 3: /),
+      severity: "ERROR",
+    });
   });
 });
 

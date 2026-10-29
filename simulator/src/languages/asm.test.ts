@@ -1,7 +1,18 @@
+import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import { MaxAsm } from "@nand2tetris/projects/samples/project_06/02_max.js";
 import { describe, expect, it } from "vitest";
 import { ASSIGN, COMMANDS, JUMP } from "../cpu/alu.js";
-import { Asm, asmSemantics, emit, fillLabel, grammar } from "./asm.js";
+import {
+  ASM,
+  Asm,
+  asmSemantics,
+  assemble,
+  emit,
+  fillLabel,
+  grammar,
+  resolveAsm,
+} from "./asm.js";
+import type { Diagnostic } from "./base.js";
 
 describe("asm language", () => {
   it("parses an empty file", () => {
@@ -385,5 +396,128 @@ describe("asm language", () => {
   it("fails to parse an A instruction with a negative value", () => {
     const match = grammar.match("@-1", "aInstruction");
     expect(match.failed()).toBe(true);
+  });
+});
+
+const lines = (...l: string[]) => l.join("\n");
+const asmOf = (source: string): Asm => asmSemantics(grammar.match(source)).asm;
+
+describe("fillLabel", () => {
+  it("reports every duplicate label, not only the first", () => {
+    const source = "(A)\n(B)\n(A)\n(B)\n(A)\n";
+    const asm: Asm = asmSemantics(grammar.match(source)).asm;
+
+    const result = fillLabel(asm);
+
+    expect(isErr(result)).toBe(true);
+    expect(Err(result as Err<readonly Diagnostic[]>)).toEqual([
+      {
+        message: "Line 3: Duplicate label A",
+        span: { start: 8, end: 11, line: 3 },
+        stage: "semantic",
+      },
+      {
+        message: "Line 4: Duplicate label B",
+        span: { start: 12, end: 15, line: 4 },
+        stage: "semantic",
+      },
+      {
+        message: "Line 5: Duplicate label A",
+        span: { start: 16, end: 19, line: 5 },
+        stage: "semantic",
+      },
+    ]);
+  });
+});
+
+describe("assemble", () => {
+  const source = lines(
+    "(LOOP)", //     1
+    "@32768", //     2: action error, too large for an A instruction
+    "D=Q", //        3: syntax error
+    "(LOOP)", //     4: duplicate label
+    "@LOOP", //      5
+    "(LOOP)", //     6: duplicate label
+  );
+
+  it("lists syntax, action and label diagnostics in source order", () => {
+    const result = assemble(source);
+
+    expect(isErr(result)).toBe(true);
+    const diagnostics = Err(result as Err<readonly Diagnostic[]>);
+    expect(diagnostics.map(({ span, stage }) => [span?.line, stage])).toEqual([
+      [2, "semantic"],
+      [3, "lex"],
+      [4, "semantic"],
+      [6, "semantic"],
+    ]);
+    expect(diagnostics[2].message).toBe("Line 4: Duplicate label LOOP");
+  });
+
+  it("gives the instruction words of a program with no diagnostic", () => {
+    const result = assemble("(LOOP)\n@LOOP\n0;JMP\n");
+
+    expect(Ok(result as Ok<number[]>)).toEqual(
+      emit(asmOf("(LOOP)\n@0\n0;JMP\n")),
+    );
+    expect(Ok(result as Ok<number[]>)).toHaveLength(2);
+  });
+
+  it("gives an empty list for an empty program", () => {
+    expect(Ok(assemble("") as Ok<number[]>)).toEqual([]);
+  });
+
+  it("recovers by default and when asked, alike", () => {
+    const asked = assemble(source, { attemptRecovery: true });
+
+    expect(Err(asked as Err<readonly Diagnostic[]>)).toEqual(
+      Err(assemble(source) as Err<readonly Diagnostic[]>),
+    );
+  });
+
+  it("gives only the first syntax diagnostic without recovery", () => {
+    const strict = ASM.parse(source);
+
+    const result = assemble(source, { attemptRecovery: false });
+
+    expect(isErr(result)).toBe(true);
+    expect(Err(result as Err<readonly Diagnostic[]>)).toEqual(
+      strict.diagnostics,
+    );
+    expect(strict.diagnostics).toHaveLength(1);
+  });
+
+  it("keeps an action error and a label error with no syntax error, without recovery", () => {
+    const result = assemble("(A)\n@32768\n(A)\n", { attemptRecovery: false });
+
+    expect(
+      Err(result as Err<readonly Diagnostic[]>).map(({ span }) => span?.line),
+    ).toEqual([2, 3]);
+  });
+
+  it("gives no label diagnostic for lines that recovery skipped", () => {
+    const result = assemble("D=Q\nD=Q\n@32768\n(A)\n");
+
+    expect(
+      Err(result as Err<readonly Diagnostic[]>).map(({ span }) => span?.line),
+    ).toEqual([1, 2, 3]);
+  });
+});
+
+describe("resolveAsm", () => {
+  it("keeps labels, spans and symbols of a program for the animation", () => {
+    const symbols: [string, number, boolean][] = [];
+
+    const result = resolveAsm("(TOP)\n@x\n@TOP\n", {}, (...symbol) =>
+      symbols.push(symbol),
+    );
+
+    const { instructions } = Ok(result as Ok<Asm>);
+    expect(instructions.map(({ type }) => type)).toEqual(["L", "A", "A"]);
+    expect(instructions[1]).toMatchObject({ value: 16, span: { line: 2 } });
+    expect(symbols).toEqual([
+      ["TOP", 0, false],
+      ["x", 16, true],
+    ]);
   });
 });

@@ -39,20 +39,21 @@ function mk() {
   return store;
 }
 
+const lines = (...l: string[]) => l.join("\n");
+const main = lines(
+  "class Main {",
+  "  function void a() {",
+  "    return;",
+  "    let x = 1", // line 4: syntax error, no semicolon
+  "  }",
+  "  function void b() {",
+  "    let y = 2;", // line 7: y is not declared
+  "    return;",
+  "  }",
+  "}",
+);
+
 describe("Jack diagnostics by editor path", () => {
-  const lines = (...l: string[]) => l.join("\n");
-  const main = lines(
-    "class Main {",
-    "  function void a() {",
-    "    return;",
-    "    let x = 1", // line 4: syntax error, no semicolon
-    "  }",
-    "  function void b() {",
-    "    let y = 2;", // line 7: y is not declared
-    "    return;",
-    "  }",
-    "}",
-  );
   const util = lines(
     "class Util {",
     "  function void c() {",
@@ -125,7 +126,7 @@ describe("Attempt Recovery setting in the compiler store", () => {
       });
     }) as CompilerStoreDispatch;
     const files = {
-      Main: "class Main {\n  function void a() {\n    return;\n    let x = 1\n  }\n  function void b() {\n    let y = 2;\n    return;\n  }\n}\n",
+      Main: main,
     };
     dispatch.current({ action: "setFiles", payload: files });
     expect(state.compiled.Main.diagnostics).toHaveLength(2);
@@ -147,12 +148,10 @@ describe("Attempt Recovery setting changed while the compiler page is open", () 
         children,
       );
     const view = renderHook(() => useCompilerPageStore(), { wrapper });
-    const Main =
-      "class Main {\n  function void a() {\n    return;\n    let x = 1\n  }\n  function void b() {\n    let y = 2;\n    return;\n  }\n}\n";
     act(() =>
       view.result.current.dispatch.current({
         action: "setFiles",
-        payload: { Main },
+        payload: { Main: main },
       }),
     );
     expect(view.result.current.state.compiled.Main.diagnostics).toHaveLength(2);

@@ -161,9 +161,12 @@ describe("Jack recovery from unbalanced blocks", () => {
     expect(parsed.diagnostics.map((e) => e.message)).toEqual([
       plainError(MISSING_CLASS_CLOSE).message,
     ]);
-    expect(subroutineNames(parsed)).toEqual(["a"]);
-    // A class that only lacks its `}` keeps the AST a valid class would have.
-    expect(parsed.ast.subroutines.filter(isRecovered)).toEqual([]);
+    expect(subroutineNames(parsed)).toEqual(["a", "<error>"]);
+    // A class that only lacks its `}` keeps the subroutines a valid class
+    // would have; the missing `}` is a null subroutine that skipped nothing.
+    expect(parsed.ast.subroutines.filter(isRecovered)).toMatchObject([
+      { skipped: { kind: "MissingClassClose" } },
+    ]);
   });
 
   it("closes a subroutine missing its `}` at the next subroutine", () => {

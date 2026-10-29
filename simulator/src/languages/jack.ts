@@ -196,7 +196,8 @@ export const jackSemantics = grammar.extendSemantics(baseSemantics);
  * What a Jack null object stands in for, by the grammar slot that recovered:
  * a skipped class header before its `{`, a skipped header with the class
  * variables before the first subroutine, a skipped declaration body or
- * subroutine header, skipped input before the class closer, a skipped
+ * subroutine header, skipped input before the class closer, the class closer
+ * missing at the end of the input (which skipped nothing), a skipped
  * statement body or head, or the missing or skipped closer of a block.
  */
 export type JackSkipKind =
@@ -205,6 +206,7 @@ export type JackSkipKind =
   | "ClassVarDecBody"
   | "SubroutineHead"
   | "ClassClose"
+  | "MissingClassClose"
   | "VarDecBody"
   | "LetBody"
   | "DoBody"
@@ -223,6 +225,7 @@ type StatementSkipKind = Exclude<
   | "ClassVarDecBody"
   | "SubroutineHead"
   | "ClassClose"
+  | "MissingClassClose"
   | "VarDecBody"
 >;
 type BlockCloseKind =
@@ -250,7 +253,7 @@ function nullClassVarDec(point: RecoveryPoint): ClassVarDec {
 
 function nullSubroutine(
   point: RecoveryPoint,
-  kind: "SubroutineHead" | "ClassClose",
+  kind: "SubroutineHead" | "ClassClose" | "MissingClassClose",
 ): Subroutine {
   const { span } = point;
   return {
@@ -348,40 +351,61 @@ jackSemantics.addAttribute<Class>("Root", {
   },
 });
 
+/** A class's name, or the null name of a header skipped up to its `{`. */
+jackSemantics.addAttribute<ClassName>("className", {
+  ClassOpen(head, open) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
+    return recovered
+      ? nullName(recovered, "ClassHead")
+      : {
+          value: head.child(1).sourceString,
+          span: span(head.child(1).source),
+        };
+  },
+});
+
 /** A class's name and variables, or the null name of a skipped header. */
 type ClassStart = Pick<Class, "name" | "varDecs">;
 
 jackSemantics.addAttribute<ClassStart>("classStart", {
-  ClassStart(head, open, varDecs) {
-    const recovered: RecoveryPoint | undefined = open.recovery;
+  ClassStart(open, varDecs) {
     return {
-      name: recovered
-        ? nullName(recovered, "ClassHead")
-        : {
-            value: head.child(1).sourceString,
-            span: span(head.child(1).source),
-          },
+      name: open.className,
       varDecs: varDecs.children.map((n) => n.classVarDec),
     };
   },
 });
 
+/**
+ * The null subroutine of a recovered class closer: `ClassClose` for skipped
+ * input before the end, which could be a subroutine, or `MissingClassClose`
+ * for a `}` that is only missing at the end, which supplies nothing.
+ */
+function classCloser(close: Node): Subroutine[] {
+  const recovered: RecoveryPoint | undefined = close.recovery;
+  if (recovered === undefined) return [];
+  const kind =
+    close.sourceString.length > 0 ? "ClassClose" : "MissingClassClose";
+  return [nullSubroutine(recovered, kind)];
+}
+
 jackSemantics.addAttribute<Class>("class", {
-  Class(start, subroutinesStart, subroutines, close) {
+  Class_body(start, subroutinesStart, subroutines, close) {
     const header: RecoveryPoint | undefined = subroutinesStart.recovery;
     const kept = subroutines.children.map((n) => n.subroutineDec);
-    // Skipped text after the subroutines becomes a null subroutine; a class
-    // that only lacks its `}` keeps its subroutines as they are.
-    const recovered: RecoveryPoint | undefined = close.recovery;
-    const skipped =
-      recovered && close.sourceString.length > 0 ? recovered : undefined;
     return {
       ...(header
         ? { name: nullName(header, "ClassStart"), varDecs: [] }
         : (start.classStart as ClassStart)),
-      subroutines: skipped
-        ? [...kept, nullSubroutine(skipped, "ClassClose")]
-        : kept,
+      subroutines: [...kept, ...classCloser(close)],
+    };
+  },
+  // Reached when a class with no subroutines lacks its `}` at the end.
+  Class_unclosed(_class, open, varDecs, close) {
+    return {
+      name: open.className,
+      varDecs: varDecs.children.map((n) => n.classVarDec),
+      subroutines: classCloser(close),
     };
   },
 });
@@ -699,7 +723,8 @@ function emptyClass(): Class {
 // Tradeoff: accepting the end of input in the lookahead's join would also
 // keep this text, but every recovery scan that reaches the end would then
 // match it, so nearly every truncated Jack file would recover as an empty
-// class instead of reaching its own recovery of a missing `}`.
+// class instead of reaching `Class_unclosed`, which keeps the class's name
+// and variables and reports the missing `}`.
 //
 // To revert to the longer list: delete this block and the
 // `restoreClassCloseMessage` argument to `makeParser` below, and change the

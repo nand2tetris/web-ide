@@ -40,7 +40,7 @@ const NULL_ROOTS: [string, Language, string, unknown][] = [
   [
     "Jack",
     JACK,
-    "class {",
+    "class B",
     {
       name: { value: "", span: { start: 0, end: 0, line: 1 } },
       varDecs: [],

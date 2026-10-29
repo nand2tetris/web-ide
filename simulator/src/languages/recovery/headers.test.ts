@@ -212,11 +212,33 @@ describe("Jack recovery at unbalanced class braces", () => {
     expect(subroutineNames(parsed.ast)).toEqual(["a", "b"]);
   });
 
-  it("still builds no class from a header and `{` alone", () => {
-    const outcome = JACK.parse("class {", RECOVER);
+  it("keeps a class of variables alone missing its `}` at the end", () => {
+    const source = lines("class Main {", "  field int x;");
 
-    expect(outcome.ast).toEqual(JACK.empty());
-    expect(outcome.diagnostics[0]).toEqual(strictError(JACK, "class {"));
+    const parsed = recovered(JACK, source);
+
+    expect(parsed.diagnostics).toEqual([strictError(JACK, source)]);
+    expect(parsed.diagnostics[0].message).toBe('Line 2: expected "}"');
+    expect(parsed.ast.name.value).toBe("Main");
+    expect(parsed.ast.varDecs).toMatchObject([{ names: ["x"] }]);
+    expect(parsed.ast.subroutines).toMatchObject([
+      { skipped: { kind: "MissingClassClose" } },
+    ]);
+  });
+
+  it("keeps a class of a header and `{` alone, with a null subroutine for its `}`", () => {
+    const parsed = recovered(JACK, "class {");
+
+    expect(parsed.diagnostics[0]).toEqual(strictError(JACK, "class {"));
+    expect(parsed.ast.name).toMatchObject({ skipped: { kind: "ClassHead" } });
+    expect(parsed.ast.subroutines).toMatchObject([
+      {
+        skipped: {
+          kind: "MissingClassClose",
+          interval: { start: 7, end: 7 },
+        },
+      },
+    ]);
   });
 });
 

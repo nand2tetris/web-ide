@@ -1,9 +1,21 @@
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  makeParser,
+  type Recovery,
+  type RecoveryPoint,
+} from "./base.js";
 
 export type Cell = string;
-export type Line = Cell[];
+/** A row of cells. A recovered row is a null line (see `isRecovered`). */
+export type Line = Cell[] & Recovery;
 export type Cmp = Line[];
+
+/** The null line where recovery skipped a row: no cells, and its diagnostic. */
+function nullLine({ recovery }: RecoveryPoint): Line {
+  return Object.assign([], { recovery });
+}
 
 import cmpGrammar from "./grammars/cmp.ohm.js";
 export const grammar = ohmGrammar(cmpGrammar, grammars);
@@ -15,9 +27,16 @@ cmpSemantics.addAttribute<Cell>("cell", {
   },
 });
 
-cmpSemantics.addAttribute<Line>("line", {
-  line(_a, cells, _b) {
+cmpSemantics.addAttribute<Line>("cells", {
+  lineBody(_bar, cells) {
     return cells.children.map((c) => c.cell);
+  },
+});
+
+cmpSemantics.addAttribute<Line>("line", {
+  line(body, end) {
+    const recovered: RecoveryPoint | undefined = end.recovery;
+    return recovered ? nullLine(recovered) : body.cells;
   },
 });
 

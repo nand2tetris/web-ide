@@ -8,10 +8,14 @@ import { Runbar } from "@nand2tetris/components/runbar";
 import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { DEFAULT_TEST } from "@nand2tetris/components/stores/vm.store.js";
 import { Format } from "@nand2tetris/simulator/cpu/memory.js";
-import { VmFile } from "@nand2tetris/simulator/test/vmtst";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { ERRNO, isSysError } from "@nand2tetris/simulator/vm/os/errors.js";
-import { IMPLICIT, SYS_INIT, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import {
+  IMPLICIT,
+  SYS_INIT,
+  VmFile,
+  VmFrame,
+} from "@nand2tetris/simulator/vm/vm.js";
 import { useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { PageContext } from "../Page.context";
@@ -50,7 +54,7 @@ const VM = () => {
   const { filePicker } = useContext(AppContext);
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.vm;
-  const { setStatus, fs } = useContext(BaseContext);
+  const { setStatus, fs, attemptRecovery } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -60,6 +64,15 @@ const VM = () => {
   useEffect(() => {
     setTool("vm");
   }, [setTool]);
+
+  // Turning Attempt Recovery on or off changes the diagnostics of the open source.
+  const recovery = useRef(attemptRecovery);
+  useEffect(() => {
+    if (recovery.current !== attemptRecovery) {
+      recovery.current = attemptRecovery;
+      actions.recompile();
+    }
+  }, [attemptRecovery, actions]);
 
   useEffect(() => {
     if (path) {

@@ -5,7 +5,9 @@ import {
   baseSemantics,
   carrierOf,
   grammars,
+  isRecovered,
   makeParser,
+  makePrune,
   type Recovery,
   type RecoveryPoint,
   Span,
@@ -278,6 +280,20 @@ vmSemantics.addAttribute<Vm>("root", {
     return vm;
   },
 });
+
+/**
+ * Drops each skipped line. The result is checked and minted `Valid`.
+ *
+ * Provenance names the grammar kind `VmInstruction` for every skipped line,
+ * and a skipped line may have been any instruction, so a check whose input a
+ * skipped line could supply (a function, a label) is suppressed by any one.
+ */
+export const prune = makePrune<Vm>((tree) => ({
+  ...tree,
+  instructions: tree.instructions.filter(
+    (instruction) => !isRecovered(instruction),
+  ),
+}));
 
 /** The null root of a parse that built no program: no instructions. */
 function emptyVm(): Vm {

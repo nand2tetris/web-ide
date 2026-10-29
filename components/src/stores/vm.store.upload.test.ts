@@ -27,7 +27,9 @@ test("VM code that does not parse reports its syntax error count", () => {
   expect(actions.loadVm([{ name: "Main", content: "push nowhere 1\n" }])).toBe(
     false,
   );
-  expect(statuses).toEqual(["VM code: 1 syntax error"]);
+  expect(statuses).toEqual([
+    expect.stringMatching(/^VM code: 1 syntax error\. Line 1: /),
+  ]);
 });
 
 test("a test script that does not parse lists its syntax errors", () => {

@@ -43,6 +43,32 @@ describe("failureStatus", () => {
   });
 });
 
+describe("failureStatus with the head of the list", () => {
+  it("adds the first diagnostic ahead of the messages it cannot mark", () => {
+    expect(
+      failureStatus(
+        "HDL code",
+        [
+          { message: "Line 2: bad", span: at(2) },
+          { message: "Line 3: worse", span: at(3) },
+          { message: "No location" },
+        ],
+        { head: true },
+      ).message,
+    ).toBe("HDL code: 3 syntax errors. Line 2: bad. No location");
+  });
+
+  it("names the first diagnostic once when no editor marks the file", () => {
+    expect(
+      failureStatus(
+        "Test script",
+        [{ message: "Line 2: bad", span: at(2) }, { message: "No location" }],
+        { marked: false, head: true },
+      ).message,
+    ).toBe("Test script: 2 syntax errors. Line 2: bad. No location");
+  });
+});
+
 describe("comparisonStatus", () => {
   it("succeeds when the output matches the compare file", () => {
     expect(comparisonStatus("| a |\n| 1 |", "| a |\n| 1 |")).toEqual({

@@ -226,13 +226,16 @@ function fileBasenameNoExtension(file: string): string {
  *   and the builtin argument count check (a declared function overrides a
  *   builtin) of a call only if that file could have declared the name
  *   (`mayDeclare`), and the entry point checks (`mayChooseEntry`).
- * - Any dropped line could have declared a label of the function that holds
- *   it. It suppresses the undeclared label checks of that function only
- *   (`functions`).
+ * - Any dropped line, of any kind, suppresses the undeclared label checks of
+ *   the function that holds it (`functions`), and of that function only. This
+ *   is the settled policy (Q3): a dropped line may have been a label, and a
+ *   dropped header leaves the lines after it in the wrong function. Narrowing
+ *   it to the kinds that could be a label would need no more than a kind test
+ *   where `damageOf` fills `functions`.
  * - Any other kind of dropped line (push, pop, arithmetic, call, return, goto,
- *   label) supplies nothing else, so it hides no other check.
- * - A file that built no tree is unknown to the last byte, so it could have
- *   declared any function of any file and chosen the entry (`unparsed`).
+ *   label) supplies no function and no entry, so it hides no other check.
+ * - A file that built no tree is wholly unknown, so it could have declared
+ *   any function of any file and chosen the entry (`unparsed`).
  */
 class Damage {
   constructor(
@@ -760,8 +763,8 @@ export class Vm {
       i += 1;
     }
 
-    // Suppressed when `damaged`: a dropped line of this function could have
-    // declared the label.
+    // Suppressed when `damaged`: a dropped line of this function, of any kind
+    // (see `Damage`), may have declared the label.
     if (!damaged) {
       for (const [label, span] of usedLabels) {
         if (!declaredLabels.has(label)) {

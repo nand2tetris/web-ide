@@ -30,6 +30,7 @@ import {
 } from "../base.js";
 import { CMP } from "../cmp.js";
 import { HDL, type Part } from "../hdl.js";
+import { JACK } from "../jack.js";
 import { TST } from "../tst.js";
 import { VM } from "../vm.js";
 
@@ -226,6 +227,31 @@ const GROUPS: Record<string, Record<string, Group>> = {
       ],
     },
   },
+  "F7: Jack": {
+    Jack: {
+      language: JACK,
+      valid: [
+        "class Main {",
+        "    function void main() {",
+        "        var int x;",
+        "        let x = 1;",
+        "        do Output.printInt(x);",
+        "        return;",
+        "    }",
+        "}",
+      ],
+      edits: {
+        3: "        var int;",
+        4: "        let x 1;",
+        5: "        do Output.printInt(x;",
+      },
+      errors: [
+        { line: 3, message: SPACE },
+        { line: 4, message: 'expected "="' },
+        { line: 5, message: 'expected ")"' },
+      ],
+    },
+  },
 };
 
 describe("Fallible error recovery: every mistake from one parse", () => {
@@ -411,6 +437,109 @@ describe("Fallible error recovery: every mistake from one parse", () => {
         asError({ line: 6, message: WIRE_SEPARATOR }),
         asError({ line: 7, message: 'expected "}", "CLOCKED", or a letter' }),
       ]);
+    });
+  });
+
+  describe("F7: first-token typos and hazards in Jack", () => {
+    const STATEMENT = 'expected "}", "return", "do", "while", "if", or "let"';
+
+    it("recovers first-token typos in a class and in an if body", () => {
+      const source = [
+        "class Main {",
+        "  feld int x;",
+        "  function void main() {",
+        "    if (x) {",
+        "      evl x;",
+        "    }",
+        "    let x = 1;",
+        "    return;",
+        "  }",
+        "}",
+      ].join("\n");
+      expectErrors(JACK, source, [
+        {
+          line: 2,
+          message:
+            'expected "}", "method", "function", "constructor", "field", or "static"',
+        },
+        { line: 5, message: STATEMENT },
+      ]);
+    });
+
+    it("(b) keeps nested if, else and while blocks valid", () => {
+      const source = [
+        "class Main {",
+        "  field int x;",
+        "  function void main() {",
+        "    if (x) {",
+        "      let x = 1;",
+        "    } else {",
+        "      do f();",
+        "    }",
+        "    while (x) {",
+        "      let x = 2;",
+        "    }",
+        "    return;",
+        "  }",
+        "}",
+      ].join("\n");
+      expectErrors(JACK, source, []);
+    });
+
+    it("(a) a missing `;` at the end of a body keeps the earlier statements", () => {
+      const source = [
+        "class Main {",
+        "  function void main() {",
+        "    let x = 1;",
+        "    do f();",
+        "    let y = 2",
+        "  }",
+        "}",
+      ].join("\n");
+      expectErrors(JACK, source, [
+        {
+          line: 6,
+          message:
+            'expected ";", "=", ">", "<", "|", "&", "/", "*", "-", or "+"',
+        },
+      ]);
+    });
+
+    it("(a) a missing `;` before a while body's `}` keeps the closer", () => {
+      const source = [
+        "class Main {",
+        "  function void main() {",
+        "    while (x) {",
+        "      let x = 1",
+        "    }",
+        "    do Output.printInt(x);",
+        "    return;",
+        "  }",
+        "}",
+      ].join("\n");
+      expectErrors(JACK, source, [
+        {
+          line: 5,
+          message:
+            'expected ";", "=", ">", "<", "|", "&", "/", "*", "-", or "+"',
+        },
+      ]);
+    });
+
+    it("(a) a first-token typo before `}` does not swallow the next subroutine", () => {
+      const source = [
+        "class Main {",
+        "  function void a() {",
+        "    let x = 1;",
+        "    evl x",
+        "  }",
+        "  function void b() {",
+        "    let y = 2;",
+        "    return;",
+        "  }",
+        "}",
+      ].join("\n");
+      expectErrors(JACK, source, [{ line: 4, message: STATEMENT }]);
     });
   });
 });

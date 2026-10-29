@@ -30,6 +30,21 @@ The feature being exercised: switching storage mode from Browser to PC, seeding 
 
 Pass criteria: every step above behaves as described, no console errors, and the on-disk file contents stay in lockstep with the editor across the reload boundary.
 
+## Unified diagnostics
+
+Verifies that one source file reports every independent mistake and that the Attempt Recovery setting controls it. These checks use browser storage, so no scratch folder is needed.
+
+1. Open Settings and confirm **Attempt Recovery** appears under **Diagnostics**, switched on.
+2. Open the Hardware Simulator and select Project 1 / chip **And**.
+3. Replace the `PARTS:` section with one malformed part followed by a part that names an undefined chip, for example `Nand(a=a, b=b, out=x ?;` on one line and `Nope(in=a, out=out);` on the next.
+4. Confirm the editor shows both markers: the syntax error at the first part and `Undefined chip name: Nope` at the second. Confirm the status line names the earliest message and the count.
+5. Open Settings, switch **Attempt Recovery** off, and return to the chip page. Confirm only the syntax error remains marked.
+6. Switch **Attempt Recovery** on again and confirm both markers return without editing the file.
+7. Open the Jack compiler page with two class files, each holding one independent mistake. Confirm each file's marker sits in its own file at the right position.
+8. In a chip that uses a damaged dependency, confirm the editor shows a panel named "Errors in <path>" at the foot of the editor, and that the panel does not cover the last lines of the HDL or hide the cursor.
+
+Pass criteria: every marker appears at its own span, the toggle adds and removes the second diagnostic, and the dependency panel is readable at the foot of the editor.
+
 ## Teardown
 
 1. Settings → **Use browser storage** to revert.

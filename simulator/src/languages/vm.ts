@@ -83,16 +83,83 @@ export interface GotoInstruction extends Recovery {
 }
 
 /**
- * The null instruction where recovery skipped a line: a label with no name,
+ * What a skipped line could have been, as provenance records it. The kind of
+ * the instruction its first token names, or `VmInstruction` when that token
+ * names none, so the line could have been any instruction, a `function`
+ * declaration among them.
+ */
+export type VmSkipKind =
+  | "StackInstruction"
+  | "OpInstruction"
+  | "FunctionInstruction"
+  | "CallInstruction"
+  | "ReturnInstruction"
+  | "GotoInstruction"
+  | "LabelInstruction"
+  | "VmInstruction";
+
+/**
+ * The instruction kind each opening word names; a word that is not here names
+ * none. The words are the grammar's `push`, `pop`, `function`, ... rules and
+ * the operator rules of `OpInstruction`.
+ */
+const KIND_OF_WORD: Readonly<Record<string, VmSkipKind>> = {
+  push: "StackInstruction",
+  pop: "StackInstruction",
+  function: "FunctionInstruction",
+  call: "CallInstruction",
+  return: "ReturnInstruction",
+  goto: "GotoInstruction",
+  "if-goto": "GotoInstruction",
+  label: "LabelInstruction",
+  add: "OpInstruction",
+  sub: "OpInstruction",
+  neg: "OpInstruction",
+  lt: "OpInstruction",
+  gt: "OpInstruction",
+  eq: "OpInstruction",
+  and: "OpInstruction",
+  or: "OpInstruction",
+  not: "OpInstruction",
+};
+
+/**
+ * The kind of the skipped `line`, from its first token, the run up to the
+ * first space. The grammar cannot say: one synchronizer follows every
+ * instruction, so a failure anywhere in a line skips the whole line, and the
+ * only record of what it was is its text.
+ *
+ * A first token that is not an instruction word (a misspelled `fucntion`, a
+ * stray symbol, a word run into the next token) leaves the line possibly any
+ * instruction, a `function` header included, because that is the conservative
+ * reading. It is `VmInstruction`.
+ */
+export function skippedKind(line: string): VmSkipKind {
+  const [word] = line.trim().split(/\s/, 1);
+  return Object.hasOwn(KIND_OF_WORD, word)
+    ? KIND_OF_WORD[word]
+    : "VmInstruction";
+}
+
+/**
+ * True when a line skipped as `kind` could have been a `function` declaration:
+ * it was read as one, or its first token named no instruction.
+ */
+export function couldBeFunctionHeader(kind: string): boolean {
+  return kind === "FunctionInstruction" || kind === "VmInstruction";
+}
+
+/**
+ * The null instruction where recovery skipped `line`: a label with no name,
  * which does nothing when run. It is a label only by its op; `recovery`
  * marks it.
  */
-function nullInstruction(point: RecoveryPoint): VmInstruction {
+function nullInstruction(point: RecoveryPoint, line: string): VmInstruction {
   return {
     op: "label",
     label: "",
     span: point.span,
-    ...carrierOf(point, "VmInstruction"),
+    ...carrierOf(point, skippedKind(line)),
   };
 }
 
@@ -261,7 +328,9 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
   },
   VmInstructionLine(inst, end) {
     const recovered: RecoveryPoint | undefined = end.recovery;
-    return recovered ? nullInstruction(recovered) : inst.instruction;
+    return recovered
+      ? nullInstruction(recovered, end.sourceString)
+      : inst.instruction;
   },
 });
 
@@ -284,9 +353,9 @@ vmSemantics.addAttribute<Vm>("root", {
 /**
  * Drops each skipped line. The result is checked and minted `Valid`.
  *
- * Provenance names the grammar kind `VmInstruction` for every skipped line,
- * and a skipped line may have been any instruction, so a check whose input a
- * skipped line could supply (a function, a label) is suppressed by any one.
+ * Provenance names the kind of each skipped line (see `skippedKind`), so a
+ * check whose input a skipped line could supply is suppressed only by a line
+ * of a kind that could supply it.
  */
 export const prune = makePrune<Vm>((tree) => ({
   ...tree,

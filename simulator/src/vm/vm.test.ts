@@ -900,6 +900,25 @@ describe("loadVm", () => {
       expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
     });
 
+    test("reports an undefined function a skipped push could not have declared", () => {
+      const errors = failure([
+        {
+          name: "Main.vm",
+          content: lines(
+            "function Main.main 0",
+            "push nowhere 2",
+            "call Nope.f 0",
+            "return",
+          ),
+        },
+      ]);
+
+      expect(errors["Main.vm"].map(({ message }) => message)).toEqual([
+        expect.stringMatching(/^Line 2: /),
+        "Line 3: Undefined function Nope.f",
+      ]);
+    });
+
     test("reports an undefined function when nothing was skipped", () => {
       const errors = failure([
         {
@@ -911,18 +930,201 @@ describe("loadVm", () => {
       expect(errors["Main.vm"][0].message).toMatch(/Undefined function Main.f/);
     });
 
-    test("reports an entry point missing when nothing was skipped, not otherwise", () => {
-      const two = lines("function A.f 0", "return", "function A.g 0", "return");
+    describe("a skipped line that could be a function header", () => {
+      const MAIN = (...body: string[]) =>
+        lines("function Main.main 0", ...body, "return");
+      const messages = (list: readonly { message: string }[]) =>
+        list.map(({ message }) => message);
 
-      const whole = failure([{ name: "A.vm", content: two }]);
-      const damaged = failure([
-        { name: "A.vm", content: `${two}\npush nowhere 1\n` },
-      ]);
+      test("hides the undefined function of a caller of its file's class, not another class", () => {
+        const errors = failure([
+          {
+            name: "Main.vm",
+            content: MAIN("call Main.f 0", "call Lib.g 0", "function Main.f ?"),
+          },
+        ]);
 
-      expect(whole[VM_INPUT]).toHaveLength(1);
-      expect(whole[VM_INPUT][0].message).toMatch(/entry point/);
-      expect(damaged["A.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
-      expect(damaged[VM_INPUT]).toBeUndefined();
+        expect(messages(errors["Main.vm"])).toEqual([
+          "Line 3: Undefined function Lib.g",
+          expect.stringMatching(/^Line 4: /),
+        ]);
+      });
+
+      test("hides the undefined function of a caller in another file, attributed to that file", () => {
+        const errors = failure([
+          {
+            name: "Sys.vm",
+            content: "function Sys.init 0\nfunction Sys.x ?\n",
+          },
+          {
+            name: "Main.vm",
+            content: MAIN("call Sys.x 0", "call Main.nope 0", "call Other.f 0"),
+          },
+        ]);
+
+        expect(Object.keys(errors)).toEqual(["Sys.vm", "Main.vm"]);
+        expect(messages(errors["Main.vm"])).toEqual([
+          "Line 3: Undefined function Main.nope",
+          "Line 4: Undefined function Other.f",
+        ]);
+      });
+
+      test("hides the builtin argument count of a call its file could override", () => {
+        const damaged = (name: string) =>
+          failure([
+            { name: "Main.vm", content: MAIN("call Math.multiply 3") },
+            { name, content: "function Math.min ?\n" },
+          ]);
+
+        expect(damaged("Math.vm")["Main.vm"]).toBeUndefined();
+        expect(messages(damaged("Other.vm")["Main.vm"])).toEqual([
+          "Line 2: OS function Math.multiply expects 2 arguments, not 3",
+        ]);
+      });
+
+      test("reports a builtin argument count past a skipped push", () => {
+        const errors = failure([
+          {
+            name: "Main.vm",
+            content: MAIN("push nowhere 1", "call Math.multiply 3"),
+          },
+        ]);
+
+        expect(messages(errors["Main.vm"])).toEqual([
+          expect.stringMatching(/^Line 2: /),
+          "Line 3: OS function Math.multiply expects 2 arguments, not 3",
+        ]);
+      });
+
+      test("hides any name when file names need not match the class", () => {
+        const errors = failure(
+          [
+            {
+              name: VM_INPUT,
+              content: MAIN("call Lib.g 0", "function Main.f ?"),
+            },
+          ],
+          { validateFileNames: false },
+        );
+
+        expect(errors[VM_INPUT].map(({ stage }) => stage)).toEqual(["parse"]);
+      });
+
+      test("hides the undefined function when its first token is unreadable", () => {
+        const errors = failure([
+          { name: "Main.vm", content: MAIN("call Main.f 0", "?? ? ?") },
+        ]);
+
+        expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+      });
+    });
+
+    describe("a skipped line that is not a function header", () => {
+      test.each(["call Foo.bar ?", "return 1", "label", "goto", "add 1"])(
+        "does not hide an undefined function: %s",
+        (line) => {
+          const errors = failure([
+            {
+              name: "Main.vm",
+              content: lines(
+                "function Main.main 0",
+                line,
+                "call Nope.f 0",
+                "return",
+              ),
+            },
+          ]);
+
+          expect(errors["Main.vm"].map(({ message }) => message)).toContain(
+            "Line 3: Undefined function Nope.f",
+          );
+        },
+      );
+
+      test("hides an undeclared label of the function holding it only", () => {
+        const errors = failure([
+          {
+            name: "A.vm",
+            content: lines(
+              "function A.f 0",
+              "goto END",
+              "push nowhere 1",
+              "return",
+              "function A.g 0",
+              "goto END",
+              "return",
+            ),
+          },
+        ]);
+
+        expect(errors["A.vm"].map(({ message }) => message)).toEqual([
+          expect.stringMatching(/^Line 3: /),
+          "Line 6: Undeclared label END",
+        ]);
+      });
+
+      test("belongs, before its file's first function, to the last function of the files before", () => {
+        const errors = failure([
+          { name: "A.vm", content: "function A.f 0\ngoto END\nreturn\n" },
+          {
+            name: "B.vm",
+            content: lines(
+              "push nowhere 1",
+              "function B.g 0",
+              "goto END",
+              "return",
+            ),
+          },
+        ]);
+
+        expect(errors["A.vm"]).toBeUndefined();
+        expect(errors["B.vm"].map(({ message }) => message)).toEqual([
+          expect.stringMatching(/^Line 1: /),
+          "Line 3: Undeclared label END",
+        ]);
+      });
+    });
+
+    test("hides the undefined function of every file when a file built no tree", () => {
+      const errors = failure(
+        [
+          { name: "A.vm", content: "push nowhere 1\n" },
+          { name: "B.vm", content: "function B.f 0\ncall Nope.f 0\nreturn\n" },
+        ],
+        { attemptRecovery: false },
+      );
+
+      expect(Object.keys(errors)).toEqual(["A.vm"]);
+    });
+
+    describe("entry point", () => {
+      const TWO = lines("function A.f 0", "return", "function A.g 0", "return");
+
+      test("is reported missing when nothing was skipped", () => {
+        const whole = failure([{ name: "A.vm", content: TWO }]);
+
+        expect(whole[VM_INPUT]).toHaveLength(1);
+        expect(whole[VM_INPUT][0].message).toMatch(/entry point/);
+      });
+
+      // Changed from the program-wide policy, where any skipped line hid it.
+      test("is still reported missing when a skipped push could not have declared it", () => {
+        const damaged = failure([
+          { name: "A.vm", content: `${TWO}\npush nowhere 1\n` },
+        ]);
+
+        expect(damaged["A.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+        expect(damaged[VM_INPUT][0].message).toMatch(/entry point/);
+      });
+
+      test("is not reported missing when a skipped line could be a function header", () => {
+        const damaged = failure([
+          { name: "A.vm", content: `${TWO}\nfunction Sys.init ?\n` },
+        ]);
+
+        expect(damaged["A.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+        expect(damaged[VM_INPUT]).toBeUndefined();
+      });
     });
   });
 });

@@ -471,6 +471,19 @@ describe("compiler diagnostics", () => {
       ]);
     });
 
+    it("reports a missing subroutine when its class only lacks its `}` at the end", () => {
+      const B = lines("class B {", "  field int x;");
+
+      const compiled = messagesOf({ A: CALLER, B });
+
+      // The missing `}` supplies nothing, so the calls are still checked.
+      expect(compiled.A).toEqual([
+        "Line 4: Class B doesn't contain a function/constructor make",
+        "Line 5: Class B doesn't contain a function/constructor g",
+      ]);
+      expect(compiled.B).toEqual(['Line 2: expected "}"']);
+    });
+
     it("does not report a class whose file built no class", () => {
       const compiled = messagesOf({ A: CALLER, B: "class B" });
 

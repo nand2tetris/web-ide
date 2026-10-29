@@ -1,4 +1,4 @@
-import { createError, Diagnostic, Span } from "../languages/base.js";
+import { Diagnostic, semanticError } from "../languages/base.js";
 import {
   IfStatement,
   ReturnType,
@@ -60,11 +60,6 @@ class CFGNode {
     findLeafs(this);
     return Array.from(leafs);
   }
-}
-
-/** A check's diagnostic on a parsed class. */
-function semanticError(description: string, span?: Span): Diagnostic {
-  return { ...createError(description, span), stage: "semantic" };
 }
 
 function processIf(

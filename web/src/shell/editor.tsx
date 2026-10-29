@@ -1,9 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
 import { type Grammar } from "ohm-js";
 import { CSSProperties, lazy, Suspense, useContext } from "react";
 import { AppContext } from "../App.context";
@@ -13,7 +10,7 @@ import { Action } from "@nand2tetris/simulator/types";
 
 const Monaco = lazy(() => import("./Monaco"));
 
-export const ErrorPanel = ({ error }: { error?: CompilationError }) => {
+export const ErrorPanel = ({ error }: { error?: Diagnostic }) => {
   return error ? (
     <details className="ErrorPanel" open>
       <summary role="button" className="secondary">
@@ -84,7 +81,7 @@ export const Editor = ({
   disabled?: boolean;
   value: string;
   path: string;
-  error?: CompilationError;
+  error?: Diagnostic;
   onChange: Action<string>;
   onCursorPositionChange?: (index: number) => void;
   grammar?: Grammar;

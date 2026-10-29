@@ -14,10 +14,7 @@ import {
   MemoryAdapter,
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
@@ -72,7 +69,7 @@ export interface ControlsState {
   exitCode: number | undefined;
   animate: boolean;
   valid: boolean;
-  error?: CompilationError;
+  error?: Diagnostic;
 }
 
 export interface VMFiles {
@@ -157,7 +154,7 @@ export function makeVmStore(
     setShowHighlight(state: VmPageState, value: boolean) {
       state.vm.showHighlight = value;
     },
-    setError(state: VmPageState, error?: CompilationError) {
+    setError(state: VmPageState, error?: Diagnostic) {
       if (error) {
         state.controls.valid = false;
         setStatus({
@@ -332,7 +329,7 @@ export function makeVmStore(
       const buildResult = Vm.buildFromFiles(parsed);
       return this.replaceVm(buildResult);
     },
-    replaceVm(buildResult: Result<Vm, CompilationError>) {
+    replaceVm(buildResult: Result<Vm, Diagnostic>) {
       if (isErr(buildResult)) {
         dispatch.current({ action: "setError", payload: Err(buildResult) });
         return false;

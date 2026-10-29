@@ -16,10 +16,7 @@ import {
   isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -68,7 +65,7 @@ class Translator {
     return this.lines.join("\n");
   }
 
-  load(asm: Asm, lineNum: number): Result<void, CompilationError> {
+  load(asm: Asm, lineNum: number): Result<void, Diagnostic> {
     this.symbols = defaultSymbols();
     this.variables.clear();
     this.asm = asm;
@@ -181,7 +178,7 @@ export interface AsmPageState {
   compare: string;
   compareName: string | undefined;
   lineNumbers: number[];
-  error?: CompilationError;
+  error?: Diagnostic;
   compareError: boolean;
   title?: string;
   config: AsmPageConfig;
@@ -236,7 +233,7 @@ export function makeAsmStore(
       setStatus("Loaded compare file");
     },
 
-    setError(state: AsmPageState, error?: CompilationError) {
+    setError(state: AsmPageState, error?: Diagnostic) {
       if (error) {
         setStatus({
           message: error.message,

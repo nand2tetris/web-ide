@@ -672,13 +672,24 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { fs, setStatus, storage, localFsRoot } = useContext(BaseContext);
+  const { fs, setStatus, storage, localFsRoot, attemptRecovery } =
+    useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
+  // The store outlives a change of the setting, so it reads the latest.
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
-      makeChipStore(fs, setStatus, storage, dispatch, localFsRoot != undefined),
+      makeChipStore(
+        fs,
+        setStatus,
+        storage,
+        dispatch,
+        localFsRoot != undefined,
+        () => recovery.current,
+      ),
     [fs, setStatus, storage, dispatch],
   );
 

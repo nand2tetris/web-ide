@@ -19,7 +19,7 @@ import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { setStatus, canUpgradeFs } = useContext(BaseContext);
+  const { setStatus, canUpgradeFs, attemptRecovery } = useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;
@@ -45,7 +45,16 @@ export const Compiler = () => {
     if (!suppressStatus) {
       showStatus();
     }
-  }, [state.selected, state.files, suppressStatus]);
+  }, [state.selected, state.compiled, suppressStatus]);
+
+  // Turning Attempt Recovery on or off changes the diagnostics of the open files.
+  const recovery = useRef(attemptRecovery);
+  useEffect(() => {
+    if (recovery.current !== attemptRecovery) {
+      recovery.current = attemptRecovery;
+      actions.recompile();
+    }
+  }, [attemptRecovery, actions]);
 
   const onSelect = useCallback(
     (tab: string) => {

@@ -2,7 +2,7 @@ import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/fs_node.ts";
 import type { Assignment } from "@nand2tetris/projects/base.js";
 import { Assignments } from "@nand2tetris/projects/full.js";
-import { runner } from "@nand2tetris/simulator/projects/runner.js";
+import { runner, RunOptions } from "@nand2tetris/simulator/projects/runner.js";
 import { parse } from "path";
 
 /**
@@ -29,11 +29,15 @@ async function loadAssignment(fs: FileSystem, file: Assignment) {
 /**
  * Run a nand2tetris.tst file.
  */
-export async function testRunner(dir: string, file: string) {
+export async function testRunner(
+  dir: string,
+  file: string,
+  options: RunOptions = {},
+) {
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(dir);
   const assignment = await loadAssignment(fs, parse(file));
-  const tryRun = runner(fs);
+  const tryRun = runner(fs, undefined, options);
   const run = await tryRun(assignment);
   console.log(run);
 }

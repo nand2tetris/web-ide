@@ -230,11 +230,21 @@ function failureKey(failure: RecoveredFailure): string {
   return `${interval.startIdx}:${interval.endIdx}:${position}:${shortMessage}`;
 }
 
+/** A syntax failure's diagnostic, tagged with the stage its failures show. */
+function syntaxDiagnostic(
+  message: string,
+  at: Span,
+  failures: readonly Failure[],
+): Diagnostic {
+  return { ...createError(message, at), stage: syntaxStageOf(failures) };
+}
+
 function diagnosticOf(source: string, failure: RecoveredFailure): Diagnostic {
-  return {
-    ...createError(failure.shortMessage, spanAt(source, failure.position)),
-    stage: syntaxStageOf(failure.getRightmostFailures()),
-  };
+  return syntaxDiagnostic(
+    failure.shortMessage,
+    spanAt(source, failure.position),
+    failure.getRightmostFailures(),
+  );
 }
 
 /**
@@ -320,13 +330,11 @@ export function makeParser<T>(
         const failures = recover ? match.getRecoveredFailures() : [];
         diagnostics = failures.map((f) => diagnosticOf(source, f));
         if (match.failed()) {
-          const first: Diagnostic = {
-            ...createError(
-              match.shortMessage ?? UNKNOWN_HDL_ERROR,
-              span(match.getInterval()),
-            ),
-            stage: syntaxStageOf(match.getRightmostFailures()),
-          };
+          const first = syntaxDiagnostic(
+            match.shortMessage ?? UNKNOWN_HDL_ERROR,
+            span(match.getInterval()),
+            match.getRightmostFailures(),
+          );
           // Today's first error leads the list; the final failure ends it.
           return outcomeOf(empty(), [first, ...diagnostics.slice(1)]);
         }

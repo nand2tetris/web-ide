@@ -594,6 +594,29 @@ describe("Chip Builder diagnostics", () => {
     });
   });
 
+  describe("a chip missing its `}` at the end", () => {
+    it("checks the chip's parts and reports an internal pin nothing drives", async () => {
+      const source = [
+        "CHIP Foo {",
+        "  IN a; OUT out;",
+        "  PARTS:",
+        "  Nope(a=a, out=x);",
+        "  Not(in=y, out=out);",
+      ].join("\n");
+
+      const diagnostics = await diagnosticsOf(source);
+
+      // The missing closer supplies nothing, so the undriven `y` is reported.
+      expect(diagnostics).toEqual({
+        "<input>.hdl": [
+          "Line 4: Undefined chip name: Nope",
+          "Line 5: Undefined internal pin name: y",
+          'Line 5: expected "}" or "CLOCKED"',
+        ],
+      });
+    });
+  });
+
   it("bounds suppression to checks a skipped node could supply", async () => {
     const source = [
       "CHIP Foo {",

@@ -693,6 +693,8 @@ function emptyClass(): Class {
 // expectations came from `SubroutineDec*`, which matched nothing there, so
 // Ohm marked them fluffy and showed only `expected "}"`. Fluffy `"field"`
 // failures (the variables' own `ClassVarDec*` ended there) mark the case.
+// `makeParser` applies the rewrite with recovery on and off alike, so a
+// recovered parse still reports the strict parse's first message.
 //
 // Tradeoff: accepting the end of input in the lookahead's join would also
 // keep this text, but every recovery scan that reaches the end would then
@@ -708,7 +710,7 @@ const LOOKAHEAD_EXPECTED =
   'expected "}", "method", "function", or "constructor"';
 const CLOSER_EXPECTED = 'expected "}"';
 
-export const restoreClassCloseMessage: SyntaxMessage = (message, failures) => {
+const restoreClassCloseMessage: SyntaxMessage = (message, failures) => {
   const afterClassVariables = failures.some(
     (failure) => failure.isFluffy() && failure.toString() === '"field"',
   );

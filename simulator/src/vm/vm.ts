@@ -257,6 +257,10 @@ class Report {
     this.lists[owner].push(diagnostic);
   }
 
+  get isEmpty(): boolean {
+    return Object.keys(this.lists).length === 0;
+  }
+
   /** The first diagnostic added, for callers that stop at the first. */
   first(): Diagnostic | undefined {
     return Object.values(this.lists)[0]?.[0];
@@ -529,8 +533,7 @@ export class Vm {
       report.add({ ...Err(booted), stage: "semantic" });
     }
 
-    const failure = report.merged();
-    return Object.keys(failure).length === 0 ? Ok(vm) : Err(failure);
+    return report.isEmpty ? Ok(vm) : Err(report.merged());
   }
 
   /**
@@ -1356,7 +1359,7 @@ export function loadVm(
           report.add(diagnostic, name);
         }
       }
-    } else if (!unparsed && Object.keys(report.merged()).length === 0) {
+    } else if (report.isEmpty) {
       placed.forEach((place) => place());
       return built;
     }

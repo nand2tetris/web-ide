@@ -1,6 +1,7 @@
 import { grammar as ohmGrammar } from "ohm-js";
 import {
   baseSemantics,
+  carrierOf,
   grammars,
   makeParser,
   type Recovery,
@@ -13,8 +14,8 @@ export type Line = Cell[] & Recovery;
 export type Cmp = Line[];
 
 /** The null line where recovery skipped a row: no cells, and its diagnostic. */
-function nullLine({ recovery }: RecoveryPoint): Line {
-  return Object.assign([], { recovery });
+function nullLine(point: RecoveryPoint): Line {
+  return Object.assign([], carrierOf(point, "lineBody"));
 }
 
 import cmpGrammar from "./grammars/cmp.ohm.js";

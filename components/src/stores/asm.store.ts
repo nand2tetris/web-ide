@@ -16,7 +16,10 @@ import {
   isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
-import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  type Diagnostic,
+  Span,
+} from "@nand2tetris/simulator/languages/base.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -178,7 +181,8 @@ export interface AsmPageState {
   compare: string;
   compareName: string | undefined;
   lineNumbers: number[];
-  error?: Diagnostic;
+  /** Every diagnostic of the last compile. */
+  diagnostics: readonly Diagnostic[];
   compareError: boolean;
   title?: string;
   config: AsmPageConfig;
@@ -211,6 +215,13 @@ export function makeAsmStore(
   let translating = false;
   let failure = false;
 
+  /** Shows the diagnostics of ASM code that did not compile. */
+  const compileFailed = (diagnostics: readonly Diagnostic[]) => {
+    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    dispatch.current({ action: "setDiagnostics", payload: diagnostics });
+    compiled = false;
+  };
+
   const reducers = {
     setAsm(
       state: AsmPageState,
@@ -233,14 +244,11 @@ export function makeAsmStore(
       setStatus("Loaded compare file");
     },
 
-    setError(state: AsmPageState, error?: Diagnostic) {
-      if (error) {
-        setStatus({
-          message: error.message,
-          severity: "ERROR",
-        });
-      }
-      state.error = error;
+    setDiagnostics(
+      state: AsmPageState,
+      diagnostics: readonly Diagnostic[] = [],
+    ) {
+      state.diagnostics = diagnostics;
     },
 
     update(state: AsmPageState) {
@@ -332,11 +340,7 @@ export function makeAsmStore(
       this.reset();
       const parseResult = ASM.parse(asm);
       if (isErr(parseResult)) {
-        dispatch.current({
-          action: "setError",
-          payload: Err(parseResult),
-        });
-        compiled = false;
+        compileFailed([Err(parseResult)]);
         return;
       }
 
@@ -345,17 +349,13 @@ export function makeAsmStore(
         asm.split("\n").length,
       );
       if (isErr(loadResult)) {
-        dispatch.current({
-          action: "setError",
-          payload: Err(loadResult),
-        });
-        compiled = false;
+        compileFailed([Err(loadResult)]);
         return;
       }
 
       compiled = translator.asm.instructions.length > 0;
       setStatus("");
-      dispatch.current({ action: "setError" });
+      dispatch.current({ action: "setDiagnostics" });
       dispatch.current({ action: "update" });
     },
 
@@ -465,6 +465,7 @@ export function makeAsmStore(
     compare: "",
     compareName: undefined,
     lineNumbers: [],
+    diagnostics: [],
     compareError: false,
     config: {
       speed: 2,

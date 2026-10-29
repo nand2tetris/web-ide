@@ -311,7 +311,7 @@ export const Chip = () => {
       <Editor
         className="flex-1"
         value={hdl}
-        error={state.controls.error}
+        diagnostics={state.controls.diagnostics}
         onChange={async (source) => {
           setHdl(source);
           if (!state.controls.usingBuiltin) {

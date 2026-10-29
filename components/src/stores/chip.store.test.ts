@@ -73,6 +73,51 @@ describe("HDL diagnostics by file", () => {
   });
 });
 
+describe("HDL syntax and semantic diagnostics", () => {
+  const source = chipWith(
+    "Top",
+    "  Nand(a=a b=a, out=x);", // line 5: syntax error, no comma
+    "  Nope(a=x, out=out);", // line 6: grammatical, but Nope is not a chip
+  );
+  const offsetOf = (text: string) => source.indexOf(text);
+
+  it("marks both at their own offsets in source order, and names the first in the status", async () => {
+    const store = testChipStore();
+
+    await store.actions.compileChip(source, "projects/01", "Top");
+
+    const [syntax, semantic, ...rest] = store.state.controls.diagnostics;
+    expect(rest).toEqual([]);
+    expect(syntax.span).toEqual({
+      start: offsetOf("b=a"),
+      end: offsetOf("b=a"),
+      line: 5,
+    });
+    expect(semantic).toMatchObject({
+      message: "Line 6: Undefined chip name: Nope",
+      span: { start: offsetOf("Nope"), line: 6 },
+    });
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      message: `HDL code: 2 syntax errors. ${syntax.message}`,
+      severity: "ERROR",
+    });
+  });
+
+  it("reports only the syntax error once Attempt Recovery is turned off", async () => {
+    let recover = true;
+    const store = testChipStore(undefined, undefined, () => recover);
+    await store.actions.compileChip(source, "projects/01", "Top");
+    expect(store.state.controls.diagnostics).toHaveLength(2);
+
+    recover = false;
+    await store.actions.compileChip(source, "projects/01", "Top");
+
+    expect(store.state.controls.diagnostics).toMatchObject([
+      { span: { line: 5 } },
+    ]);
+  });
+});
+
 describe("ChipStore", () => {
   describe("initialization", () => {
     it("loads chip", async () => {

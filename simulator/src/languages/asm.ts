@@ -17,9 +17,12 @@ import {
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import {
+  actionError,
   baseSemantics,
+  carrierOf,
   createError,
   Diagnostic,
+  failedOf,
   grammars,
   makeParser,
   type Recovery,
@@ -89,8 +92,22 @@ export interface AsmLabelInstruction extends Recovery {
  * The null instruction where recovery skipped a line: a label with no name,
  * which emits no code. It is a label only by its type; `recovery` marks it.
  */
-function nullInstruction({ recovery, span }: RecoveryPoint): AsmInstruction {
-  return { type: "L", label: "", span, recovery };
+function nullInstruction(point: RecoveryPoint): AsmInstruction {
+  return {
+    type: "L",
+    label: "",
+    span: point.span,
+    ...carrierOf(point, "instruction"),
+  };
+}
+
+/** The null instruction where an instruction action of `kind` failed. */
+function failedInstruction(
+  diagnostic: Diagnostic,
+  at: Span,
+  kind: "aInstruction" | "cInstruction",
+): AsmInstruction {
+  return { type: "L", label: "", span: at, ...failedOf(diagnostic, at, kind) };
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -116,7 +133,8 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
   },
 });
 
-function getAsmAssign(assignN: Node) {
+/** The C target, or the action error of an invalid one. */
+function getAsmAssign(assignN: Node): string | Diagnostic {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
   // The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
@@ -132,7 +150,7 @@ function getAsmAssign(assignN: Node) {
     const suggestion = isAssignAsm(reversed)
       ? `. Did you mean ${reversed}?`
       : "";
-    throw createError(
+    return actionError(
       `Invalid ASM target: ${assign}${suggestion}`,
       span(assignN.source),
     );
@@ -141,7 +159,8 @@ function getAsmAssign(assignN: Node) {
   return assign;
 }
 
-function getAsmOp(opN: Node) {
+/** The C value, or the action error of an invalid one. */
+function getAsmOp(opN: Node): string | Diagnostic {
   const op = opN.sourceString;
 
   if (!isCommandAsm(op)) {
@@ -149,7 +168,7 @@ function getAsmOp(opN: Node) {
     const suggestion = isCommandAsm(reversed)
       ? `. Did you mean ${reversed}?`
       : "";
-    throw createError(
+    return actionError(
       `Invalid ASM value: ${opN.sourceString}${suggestion}`,
       span(opN.source),
     );
@@ -159,16 +178,26 @@ function getAsmOp(opN: Node) {
 }
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  aInstruction(_at, name): AsmAInstruction {
-    if (typeof name.value === "string") return A(name.value, span(this.source));
-    else return A(parseInt(name.value.join(""), 10), span(this.source));
+  aInstruction(_at, name): AsmInstruction {
+    const at = span(this.source);
+    if (typeof name.value === "string") return A(name.value, at);
+    const value = parseInt(name.value.join(""), 10);
+    const invalid = aValueError(value);
+    return invalid === undefined
+      ? A(value, at)
+      : failedInstruction(actionError(invalid, at), at, "aInstruction");
   },
-  cInstruction(assignN, opN, jmpN): AsmCInstruction {
+  cInstruction(assignN, opN, jmpN): AsmInstruction {
+    const at = span(this.source);
     const assign = getAsmAssign(assignN);
-
-    const op = getAsmOp(opN) as COMMANDS_ASM;
+    const op = getAsmOp(opN);
+    // Both are checked, so an instruction reports each invalid part.
+    const failed = [assign, op].find((part) => typeof part !== "string");
+    if (failed !== undefined) {
+      return failedInstruction(failed as Diagnostic, at, "cInstruction");
+    }
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
-    return C(assign as ASSIGN_ASM, op, jmp, span(this.source));
+    return C(assign as ASSIGN_ASM, op as COMMANDS_ASM, jmp, at);
   },
   label(_o, { name }, _c): AsmLabelInstruction {
     return L(name, span(this.source));
@@ -318,12 +347,17 @@ export function emit(asm: Asm): number[] {
     .filter((op): op is number => op !== undefined);
 }
 
+/** Why `value` cannot be an A instruction, or undefined when it can. */
+function aValueError(value: number): string | undefined {
+  return value > 32767 || value < 0
+    ? `${value} is invalid for an A instruction (should be 0 to 32767)`
+    : undefined;
+}
+
 const A = (source: string | number, span?: Span): AsmAInstruction => {
-  if (typeof source === "number" && (source > 32767 || source < 0)) {
-    throw createError(
-      `${source} is invalid for an A instruction (should be 0 to 32767)`,
-      span,
-    );
+  const invalid = typeof source === "number" ? aValueError(source) : undefined;
+  if (invalid !== undefined) {
+    throw createError(invalid, span);
   }
   return typeof source === "string"
     ? {

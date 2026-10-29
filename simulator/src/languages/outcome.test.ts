@@ -6,7 +6,13 @@
  */
 import { describe, expect, it } from "vitest";
 import { ASM } from "./asm.js";
-import { isValid, type Outcome, type ParseOptions } from "./base.js";
+import {
+  isRecovered,
+  isValid,
+  type Outcome,
+  type ParseOptions,
+  recoveryOf,
+} from "./base.js";
 import { CMP } from "./cmp.js";
 import { HDL } from "./hdl.js";
 import { JACK } from "./jack.js";
@@ -70,17 +76,52 @@ describe("a failed match", () => {
       expect(isValid(outcome)).toBe(false);
     },
   );
+});
 
-  it("gives the null root for a thrown semantic error", () => {
-    const outcome = ASM.parse("@32768\n");
-    expect(outcome.ast).toEqual(ASM.empty());
-    expect(outcome.diagnostics).toMatchObject([
-      {
-        message:
-          "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
-      },
+describe("a semantic action error", () => {
+  it.each([
+    [
+      "an A value out of range",
+      "@32768\n",
+      "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
+      { start: 0, end: 6, line: 1 },
+    ],
+    [
+      "an invalid C target",
+      "@1\nDA=M\n",
+      "Line 2: Invalid ASM target: DA. Did you mean AD?",
+      { start: 3, end: 6, line: 2 },
+    ],
+    [
+      "an invalid C value",
+      "@1\nD=M+A\n",
+      "Line 2: Invalid ASM value: M+A",
+      { start: 5, end: 8, line: 2 },
+    ],
+  ])(
+    "keeps the tree and lists %s as a semantic diagnostic",
+    (_name, source, message, at) => {
+      const outcome = ASM.parse(source);
+
+      expect(isValid(outcome)).toBe(false);
+      expect(outcome).not.toHaveProperty("nullRoot");
+      expect(outcome.diagnostics).toEqual([
+        { message, span: at, stage: "semantic" },
+      ]);
+      const broken = outcome.ast.instructions.filter(isRecovered);
+      expect(broken).toHaveLength(1);
+      expect(recoveryOf(broken[0])).toBe(outcome.diagnostics[0]);
+    },
+  );
+
+  it("keeps the instructions around a failed one", () => {
+    const outcome = ASM.parse("@1\n@32768\nD=A\n");
+
+    expect(outcome.ast.instructions.map(isRecovered)).toEqual([
+      false,
+      true,
+      false,
     ]);
-    expect(isValid(outcome)).toBe(false);
   });
 });
 

@@ -3,9 +3,11 @@ import { grammar } from "ohm-js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
+  actionError,
   baseSemantics,
   type Diagnostic,
   type Diagnostics,
+  failedOf,
   grammars,
   isRecovered,
   isValid,
@@ -16,6 +18,7 @@ import {
   type Recovery,
   type RecoveryPoint,
   recoveryOf,
+  span,
   validOf,
 } from "./base.js";
 
@@ -277,11 +280,87 @@ describe("recovering parser factory", () => {
     const outcome = failing.parse("1;2;", RECOVER);
     expect(isValid(outcome)).toBe(false);
     expect(outcome.ast).toBe("null root");
+    expect(outcome).toHaveProperty("nullRoot", true);
     expect(outcome.diagnostics).toHaveLength(3);
     expect(outcome.diagnostics.slice(0, 2)).toEqual(
       parser.parse("1;2;", RECOVER).diagnostics,
     );
-    expect(outcome.diagnostics[2]).toBe(conversionError);
+    // A non-diagnostic error becomes a spanless diagnostic.
+    expect(outcome.diagnostics[2]).toEqual({
+      message: "AST conversion failed",
+      stage: "semantic",
+    });
+  });
+});
+
+describe("a semantic action that fails", () => {
+  interface Digit extends Recovery {
+    value: number;
+  }
+  const digits = grammar(
+    `Digits <: Base { Root := (Number ! ";")* }`,
+    grammars,
+  );
+  const semantics = digits.extendSemantics(baseSemantics);
+  semantics.addAttribute<Digit>("digit", {
+    Number(_) {
+      const at = span(this.source);
+      return this.value < 10
+        ? { value: this.value }
+        : {
+            value: 0,
+            ...failedOf(
+              actionError(`${this.value} is not a digit`, at),
+              at,
+              "Number",
+            ),
+          };
+    },
+  });
+  semantics.addAttribute<Digit[]>("root", {
+    Root(numbers, _ends) {
+      return numbers.children.map((n) => n.digit);
+    },
+  });
+  const parser = makeParser<Digit[]>(digits, semantics, () => []);
+
+  it("keeps the tree, with a null object beside a semantic diagnostic", () => {
+    const outcome = parser.parse("1; 23; 4;");
+
+    expect(outcome).not.toHaveProperty("nullRoot");
+    expect(outcome.diagnostics).toEqual([
+      {
+        message: "Line 1: 23 is not a digit",
+        span: { start: 3, end: 5, line: 1 },
+        stage: "semantic",
+      },
+    ]);
+    const [one, broken, four] = outcome.ast;
+    expect([one.value, four.value]).toEqual([1, 4]);
+    expect(recoveryOf(broken)).toBe(outcome.diagnostics[0]);
+    expect(broken.skipped).toEqual({
+      kind: "Number",
+      interval: { start: 3, end: 5, line: 1 },
+    });
+  });
+
+  it("keeps an action error when a later action throws", () => {
+    const throwing = digits.extendSemantics(semantics);
+    throwing.extendAttribute<Digit[]>("root", {
+      Root(numbers, _ends) {
+        numbers.children.forEach((n) => n.digit);
+        throw new Error("unexpected");
+      },
+    });
+    const failing = makeParser<Digit[]>(digits, throwing, () => []);
+
+    const outcome = failing.parse("23;");
+
+    expect(outcome).toHaveProperty("nullRoot", true);
+    expect(outcome.diagnostics).toMatchObject([
+      { message: "Line 1: 23 is not a digit", stage: "semantic" },
+      { message: "unexpected", stage: "semantic" },
+    ]);
   });
 });
 

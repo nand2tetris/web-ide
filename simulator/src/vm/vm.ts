@@ -6,6 +6,7 @@ import {
   type Diagnostics,
   mergeByFile,
   type Origin,
+  originsOf,
   type Provenance,
   recoveredOf,
   Span,
@@ -1330,10 +1331,8 @@ export function loadVm(
       unparsed = true;
       return;
     }
-    for (const { diagnostic, key } of recovered.provenance) {
-      if (key !== undefined) {
-        origins.set(diagnostic, { recovery: key });
-      }
+    for (const [diagnostic, origin] of originsOf(recovered.provenance)) {
+      origins.set(diagnostic, origin);
     }
     const instructions = [...recovered.ast.instructions];
     parsed.push({ name, instructions, skips: recovered.provenance });

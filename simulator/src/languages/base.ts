@@ -384,6 +384,16 @@ export interface Origin {
 export type Origins = ReadonlyMap<Diagnostic, Origin>;
 
 /**
+ * The recovery identity of each syntax skip's diagnostic, as origin entries
+ * for a merge. A failed action's skip has no recovery identity and no entry.
+ */
+export function originsOf(provenance: Provenance): [Diagnostic, Origin][] {
+  return provenance.flatMap(({ diagnostic, key }): [Diagnostic, Origin][] =>
+    key === undefined ? [] : [[diagnostic, { recovery: key }]],
+  );
+}
+
+/**
  * One source file's diagnostics, ordered and deduplicated for display.
  *
  * Order: span start, spanless last, then stage (`lex`, `parse`, `semantic`,

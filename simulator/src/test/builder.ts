@@ -12,7 +12,7 @@ import {
   type Diagnostic,
   type Diagnostics,
   mergeDiagnostics,
-  type Origin,
+  originsOf,
   recoveredOf,
   type Skip,
   type Span,
@@ -187,12 +187,7 @@ export function buildTst(
     return Err(outcome.diagnostics as Diagnostics);
   }
   const diagnostics: Diagnostic[] = [...outcome.diagnostics];
-  const origins = new Map<Diagnostic, Origin>();
-  for (const { diagnostic, key } of recovered.provenance) {
-    if (key !== undefined) {
-      origins.set(diagnostic, { recovery: key });
-    }
-  }
+  const origins = new Map(originsOf(recovered.provenance));
   const built = testOf(recovered.ast, target, options);
   if (isErr(built)) {
     const error = Err(built);

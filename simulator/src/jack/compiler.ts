@@ -6,6 +6,7 @@ import {
   mergeDiagnostics,
   Origin,
   Origins,
+  originsOf,
   Provenance,
   Recovered,
   recoveredOf,
@@ -181,10 +182,8 @@ function checkFiles(
       lost.add(name);
       continue;
     }
-    for (const { diagnostic, key } of recovered.provenance) {
-      if (key !== undefined) {
-        origins.set(diagnostic, { recovery: key });
-      }
+    for (const [diagnostic, origin] of originsOf(recovered.provenance)) {
+      origins.set(diagnostic, origin);
     }
     diagnostics.push(...validateClass(recovered));
     const cls = recovered.ast;

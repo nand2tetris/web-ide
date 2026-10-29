@@ -143,6 +143,17 @@ const STORIES: [
     },
   ],
   [
+    "Jack: a class missing its `}` at the end, and a variable of a type that does not exist",
+    jackDiagnostics,
+    lines(
+      "class Main {", //            1
+      "  field int x;", //          2
+      "  field Nope y;", //         3: grammatical, but Nope is not a type;
+      //                               then the end, with no `}`
+    ),
+    { syntaxLines: [3], semantic: /Unknown type Nope/, semanticLine: 3 },
+  ],
+  [
     "ASM: an instruction that is not a command, and a label defined twice",
     asmDiagnostics,
     lines(

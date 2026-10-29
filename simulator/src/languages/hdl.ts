@@ -1,5 +1,5 @@
 /** Reads and parses HDL chip descriptions. */
-import { grammar as ohmGrammar } from "ohm-js";
+import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   baseSemantics,
   carrierOf,
@@ -274,6 +274,19 @@ hdlSemantics.addAttribute<ChipStart>("ChipOpen", {
   },
 });
 
+/**
+ * The null part of a recovered closer of a chip that lacks its `}`:
+ * `PartsClose` for skipped input before the end, which could be a part, or
+ * `MissingChipClose` for a `}` that is only missing, which supplies nothing.
+ */
+function chipCloser(close: Node): Part[] {
+  const recovered: RecoveryPoint | undefined = close.recovery;
+  if (recovered === undefined) return [];
+  const kind =
+    close.sourceString.length > 0 ? "PartsClose" : "MissingChipClose";
+  return [nullPart(recovered, kind)];
+}
+
 hdlSemantics.addAttribute<HdlParse>("Chip", {
   Chip_closed(open, body, close) {
     const parts: "BUILTIN" | Part[] = body.child(0).PartList ?? [];
@@ -289,21 +302,12 @@ hdlSemantics.addAttribute<HdlParse>("Chip", {
       clocked: body.child(1).child(0)?.Clocked,
     };
   },
-  // Reached when the chip's `}` is missing at the end of the input. Skipped
-  // input before the end is a null part that could be a part; a closer that
-  // is only missing skipped nothing, and its null part supplies nothing.
+  // Reached when the chip's `}` is missing at the end of the input.
   Chip_unclosed(open, _parts, parts, close) {
     const kept = parts.children.map((c) => c.Part as Part);
-    const recovered: RecoveryPoint | undefined = close.recovery;
-    const missing =
-      recovered &&
-      nullPart(
-        recovered,
-        close.sourceString.length > 0 ? "PartsClose" : "MissingChipClose",
-      );
     return {
       ...(open.ChipOpen as ChipStart),
-      parts: missing ? [...kept, missing] : kept,
+      parts: [...kept, ...chipCloser(close)],
       clocked: [],
     };
   },

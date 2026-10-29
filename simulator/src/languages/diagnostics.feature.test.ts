@@ -2,8 +2,8 @@
  * Feature test: a student's file with one mistake in the grammar and another
  * mistake in a part that is grammatically fine hears about both from the final
  * call, in source order, as ordinary diagnostics with spans. The final calls
- * are the ones the IDE already makes: `parse` for HDL, `compile` for Jack and
- * `assemble` for ASM.
+ * are the ones the IDE already makes: `parse` for HDL, `compile` for Jack,
+ * `assemble` for ASM and `loadVm` for VM.
  * See .ailly/developer/2026-10-29-C-unified-diagnostics/design.md.
  *
  * The final calls attempt recovery by default, without explicit setup here.
@@ -12,6 +12,7 @@ import { Err, isErr } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, it } from "vitest";
 import { parse as buildChip } from "../chip/builder.js";
 import { compile } from "../jack/compiler.js";
+import { loadVm } from "../vm/vm.js";
 import { assemble } from "./asm.js";
 import type { Diagnostic } from "./base.js";
 
@@ -36,6 +37,13 @@ const asmDiagnostics = async (
 ): Promise<readonly Diagnostic[]> => {
   const program = assemble(source);
   return isErr(program) ? Err(program) : [];
+};
+
+const vmDiagnostics = async (
+  source: string,
+): Promise<readonly Diagnostic[]> => {
+  const vm = loadVm([{ name: "Main.vm", content: source }]);
+  return isErr(vm) ? Object.values(Err(vm)).flat() : [];
 };
 
 const STORIES: [
@@ -90,6 +98,23 @@ const STORIES: [
       "0;JMP", //    5
     ),
     { syntaxLines: [3], semantic: /Duplicate label LOOP/, semanticLine: 4 },
+  ],
+  [
+    "VM: a line that is not an instruction, and a function that redeclares a label",
+    vmDiagnostics,
+    lines(
+      "function Main.main 0", //  1
+      "push constant 1", //       2
+      "push nowhere 2", //        3: syntax error, nowhere is not a segment
+      "label LOOP", //            4
+      "label LOOP", //            5: grammatical, but LOOP is already declared
+      "return", //                6
+    ),
+    {
+      syntaxLines: [3],
+      semantic: /Cannot redeclare label LOOP/,
+      semanticLine: 5,
+    },
   ],
 ];
 

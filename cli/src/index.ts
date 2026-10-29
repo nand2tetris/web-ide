@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/fs_node.ts";
-import { compile } from "@nand2tetris/simulator/jack/compiler.js";
 import * as fsCore from "fs";
 import path, { dirname, parse, resolve } from "path";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import {
+  attemptRecoveryOption,
+  compileJack,
+  resolveAttemptRecovery,
+} from "./compile.js";
 import { main } from "./grading.js";
 import { testRunner } from "./testrunner.js";
 
@@ -92,6 +96,7 @@ yargs(hideBin(process.argv))
           describe: "Path to destination folder",
           default: "",
         })
+        .option("attempt-recovery", attemptRecoveryOption)
         .coerce(["src", "dst"], function (arg) {
           return path.resolve(arg) + "/";
         })
@@ -141,29 +146,22 @@ yargs(hideBin(process.argv))
         const content = await fs.readFile(filepath);
         nameToContent[file.replace(JACK_EXT, "")] = content;
       }
-      let error = false;
-      for (const [name, compiled] of Object.entries(compile(nameToContent))) {
-        if (typeof compiled === "string") {
-          const outputFilename = name + ".vm";
-          const outpath = path.join(dst, outputFilename);
-          await fs.writeFile(outpath, compiled);
-        } else {
-          if (!error) {
-            console.error("Compilation failed\n");
-          }
-          for (const diagnostic of compiled) {
-            console.error(
-              Colors.Red +
-                diagnostic.message.replace(
-                  /Line\s([\d]+):/g,
-                  name + ".jack:$1" + Colors.Reset,
-                ),
-            );
-          }
-          error = true;
+      const { vm, errors } = compileJack(nameToContent, {
+        attemptRecovery: resolveAttemptRecovery(
+          argv["attempt-recovery"],
+          process.env,
+        ),
+      });
+      for (const [name, compiled] of Object.entries(vm)) {
+        await fs.writeFile(path.join(dst, name + ".vm"), compiled);
+      }
+      if (errors.length > 0) {
+        console.error("Compilation failed\n");
+        for (const line of errors) {
+          console.error(Colors.Red + line + Colors.Reset);
         }
       }
-      if (error) {
+      if (errors.length > 0) {
         process.exit(1);
       } else {
         console.log(Colors.Green + "Compiled files" + Colors.Reset);

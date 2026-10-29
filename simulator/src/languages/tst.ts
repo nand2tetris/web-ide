@@ -1,7 +1,18 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import { type Node, grammar as ohmGrammar } from "ohm-js";
+import {
+  baseSemantics,
+  carrierOf,
+  grammars,
+  isRecovered,
+  makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  Span,
+  span,
+} from "./base.js";
 
 export interface TstEchoOperation {
   op: "echo";
@@ -73,7 +84,7 @@ export type TstOperation =
 
 export type Separator = "," | ";" | "!";
 
-export interface TstCommand {
+export interface TstCommand extends Recovery {
   op: TstOperation;
   separator: Separator;
   span: Span;
@@ -97,11 +108,34 @@ export interface TstWhileStatement {
   span: Span;
 }
 
+/**
+ * A recovered command is a null command (see `isRecovered`), so one type
+ * serves valid and recovered tests.
+ */
 export type TstStatement = TstCommand | TstRepeat | TstWhileStatement;
 
 export interface Tst {
   lines: TstStatement[];
 }
+
+/**
+ * The null command where recovery skipped input. `eval` changes no test
+ * state, and the `,` separator joins it to the step that follows.
+ */
+function nullCommand(point: RecoveryPoint, kind: TstSkipKind): TstCommand {
+  return {
+    op: { op: "eval" },
+    separator: ",",
+    span: point.span,
+    ...carrierOf(point, kind),
+  };
+}
+
+/**
+ * What a null command stands in for: a skipped operation, or the missing or
+ * skipped closer of a `repeat` or `while` block.
+ */
+export type TstSkipKind = "TstOperation" | "TstRepeatClose" | "TstWhileClose";
 
 import tstGrammar from "./grammars/tst.ohm.js";
 export const grammar = ohmGrammar(tstGrammar, grammars);
@@ -212,6 +246,10 @@ tstSemantics.addAttribute<TstOperation>("operation", {
 
 tstSemantics.addAttribute<TstCommand>("command", {
   TstCommand(op, sep) {
+    const recovered: RecoveryPoint | undefined = sep.recovery;
+    if (recovered) {
+      return nullCommand(recovered, "TstOperation");
+    }
     return {
       op: op.operation,
       separator: sep.sourceString as Separator,
@@ -230,17 +268,28 @@ tstSemantics.addAttribute<TstWhileCondition>("condition", {
   },
 });
 
+/** The commands of a block body, with a recovered stop marker's null last. */
+function blockCommands(
+  commands: Node,
+  stop: Node,
+  kind: "TstRepeatClose" | "TstWhileClose",
+): TstCommand[] {
+  const statements = commands.children.map((node) => node.command);
+  const recovered: RecoveryPoint | undefined = stop.recovery;
+  return recovered ? [...statements, nullCommand(recovered, kind)] : statements;
+}
+
 tstSemantics.addAttribute<TstStatement>("statement", {
-  TstWhile(op, cond, _o, commands, _c) {
+  TstWhile(op, cond, _o, commands, stop) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, stop, "TstWhileClose"),
       condition: cond.condition,
       span: span(this.source),
     };
   },
-  TstRepeat(op, count, _o, commands, _c) {
+  TstRepeat(op, count, _o, commands, stop) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, stop, "TstRepeatClose"),
       count: count.sourceString ? Number(count.sourceString) : -1,
       span: span(this.source),
     };
@@ -264,9 +313,35 @@ tstSemantics.addAttribute<Tst>("root", {
   },
 });
 
+/**
+ * Drops each null command, at the top level and in block bodies. The result
+ * is checked and minted `Valid`. Provenance keeps each one's kind first, so a
+ * missing block closer (`TstRepeatClose`, `TstWhileClose`) stays apart from a
+ * skipped command (`TstOperation`).
+ */
+export const prune = makePrune<Tst>((tree) => ({
+  ...tree,
+  lines: tree.lines.flatMap((line): TstStatement[] =>
+    "statements" in line
+      ? [{ ...line, statements: line.statements.filter(isIntact) }]
+      : isIntact(line)
+        ? [line]
+        : [],
+  ),
+}));
+
+function isIntact(command: TstCommand): boolean {
+  return !isRecovered(command);
+}
+
+/** The null root of a parse that built no test: a test with no statements. */
+function emptyTst(): Tst {
+  return { lines: [] };
+}
+
 export const TST = {
   grammar: tstGrammar,
   semantics: tstSemantics,
   parser: grammar,
-  parse: makeParser<Tst>(grammar, tstSemantics),
+  ...makeParser<Tst>(grammar, tstSemantics, emptyTst),
 };

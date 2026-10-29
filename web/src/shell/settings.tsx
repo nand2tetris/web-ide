@@ -26,6 +26,8 @@ export const Settings = () => {
     permissionPrompt,
     requestPermission,
     loadFs,
+    attemptRecovery,
+    setAttemptRecovery,
   } = useContext(BaseContext);
   const { settings, monaco, theme, setTheme } = useContext(AppContext);
 
@@ -426,6 +428,29 @@ export const Settings = () => {
                   />
                   <Trans>Use Monaco Editor</Trans>
                 </label>
+              </dd>
+
+              {/* Diagnostics Section */}
+              <dt>
+                <Trans>Diagnostics</Trans>
+              </dt>
+              <dd>
+                <label>
+                  <input
+                    type="checkbox"
+                    name="attempt-recovery"
+                    role="switch"
+                    checked={attemptRecovery}
+                    onChange={(e) => setAttemptRecovery(e.target.checked)}
+                  />
+                  <Trans>Attempt Recovery</Trans>
+                </label>
+                <small>
+                  <Trans>
+                    Keep checking the rest of a file after a syntax mistake, so
+                    that later mistakes are reported too.
+                  </Trans>
+                </small>
               </dd>
 
               {/* Theme Section */}

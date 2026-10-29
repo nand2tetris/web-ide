@@ -1,12 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-  unwrap,
-} from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.ts";
 import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
   Format,
@@ -15,21 +9,29 @@ import {
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import {
-  CompilationError,
+  type Diagnostic,
   Span,
+  validOf,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
-import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
+import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
-import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import {
+  joinedDiagnostics,
+  loadVm,
+  VM_INPUT,
+  Vm,
+  VmFile,
+  VmFrame,
+} from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -72,7 +74,8 @@ export interface ControlsState {
   exitCode: number | undefined;
   animate: boolean;
   valid: boolean;
-  error?: CompilationError;
+  /** Every diagnostic of the last compile or run. */
+  diagnostics: readonly Diagnostic[];
 }
 
 export interface VMFiles {
@@ -102,10 +105,9 @@ function reduceVMTest(
   try {
     stack = vmTest.vm.vmStack().reverse();
   } catch (_e) {
-    dispatch.current({
-      action: "setError",
-      payload: new Error("Runtime error: Invalid stack"),
-    });
+    const error = new Error("Runtime error: Invalid stack");
+    setStatus({ message: error.message, severity: "ERROR" });
+    dispatch.current({ action: "setDiagnostics", payload: [error] });
   }
 
   return {
@@ -129,8 +131,9 @@ export function makeVmStore(
   setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
+  attemptRecovery: () => boolean = () => true,
 ) {
-  const parsed = unwrap(VM.parse(FIBONACCI));
+  const parsed = unwrap(validOf(VM.parse(FIBONACCI)));
   let vm = unwrap(Vm.build(parsed.instructions));
   let test = new VMTest({ doEcho: setStatus }).with(vm);
   let useTest = false;
@@ -138,6 +141,16 @@ export function makeVmStore(
   let vmSource = "";
   let loadedFiles: VmFile[] = [];
   let showHighlight = true;
+  /** The last source compiled, for `recompile`. */
+  let compiled: { files: VmFile[]; single: boolean } | undefined;
+
+  /** Shows the diagnostics of VM code that did not compile. */
+  const compileFailed = (diagnostics: readonly Diagnostic[]) => {
+    setStatus(failureStatus("VM code", diagnostics, { head: true }));
+    dispatch.current({ action: "setDiagnostics", payload: diagnostics });
+    return false;
+  };
+
   const reducers = {
     setVm(state: VmPageState, vm: string) {
       state.files.vm = vm;
@@ -157,17 +170,12 @@ export function makeVmStore(
     setShowHighlight(state: VmPageState, value: boolean) {
       state.vm.showHighlight = value;
     },
-    setError(state: VmPageState, error?: CompilationError) {
-      if (error) {
-        state.controls.valid = false;
-        setStatus({
-          message: error?.message,
-          severity: "ERROR",
-        });
-      } else {
-        state.controls.valid = true;
-      }
-      state.controls.error = error;
+    setDiagnostics(
+      state: VmPageState,
+      diagnostics: readonly Diagnostic[] = [],
+    ) {
+      state.controls.valid = diagnostics.length === 0;
+      state.controls.diagnostics = diagnostics;
     },
     update(state: VmPageState) {
       state.vm = reduceVMTest(test, dispatch, setStatus, showHighlight);
@@ -180,18 +188,7 @@ export function makeVmStore(
       state.files.out = test.log();
     },
     testFinished(state: VmPageState) {
-      const passed = compare(state.files.cmp.trim(), state.files.out);
-      setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
-      );
+      setStatus(comparisonStatus(state.files.cmp.trim(), state.files.out));
     },
 
     setTitle(state: VmPageState, title: string) {
@@ -209,6 +206,7 @@ export function makeVmStore(
       runningTest: false,
       animate: true,
       valid: true,
+      diagnostics: [],
     },
     test: {
       highlight: undefined,
@@ -280,15 +278,8 @@ export function makeVmStore(
       }
       vmSource = content;
 
-      const parseResult = VM.parse(content);
-
-      if (isErr(parseResult)) {
-        dispatch.current({ action: "setError", payload: Err(parseResult) });
-        return false;
-      }
-      const instructions = unwrap(parseResult).instructions;
-      const buildResult = Vm.build(instructions);
-      return this.replaceVm(buildResult);
+      // One buffer has no file name for its functions' class prefixes to match.
+      return this.compile([{ name: VM_INPUT, content }], true);
     },
     loadVm(files: VmFile[]) {
       showHighlight = false;
@@ -305,65 +296,42 @@ export function makeVmStore(
       vmSource = content;
       loadedFiles = files;
 
-      const parsed = [];
-
-      let lineOffset = 0;
-      for (const file of files) {
-        const parseResult = VM.parse(file.content);
-
-        if (isErr(parseResult)) {
-          dispatch.current({ action: "setError", payload: Err(parseResult) });
-          return false;
-        }
-        const instructions = unwrap(parseResult).instructions;
-
-        for (const instruction of instructions) {
-          if (instruction.span?.line != undefined) {
-            instruction.span.line += lineOffset;
-          }
-        }
-        lineOffset += file.content.split("\n").length;
-
-        parsed.push({
-          name: file.name,
-          instructions,
-        });
-      }
-      const buildResult = Vm.buildFromFiles(parsed);
-      return this.replaceVm(buildResult);
+      return this.compile(files, false);
     },
-    replaceVm(buildResult: Result<Vm, CompilationError>) {
-      if (isErr(buildResult)) {
-        dispatch.current({ action: "setError", payload: Err(buildResult) });
-        return false;
+    /**
+     * Loads `files` to a VM, or shows every diagnostic of them. A `single`
+     * buffer skips only the check of function class prefixes against file names.
+     */
+    compile(files: VmFile[], single: boolean) {
+      compiled = { files, single };
+      const loaded = loadVm(files, {
+        attemptRecovery: attemptRecovery(),
+        validateFileNames: !single,
+      });
+      if (isErr(loaded)) {
+        // The editor shows the files as one joined buffer.
+        return compileFailed(joinedDiagnostics(files, Err(loaded)));
       }
-      dispatch.current({ action: "setError" });
+      dispatch.current({ action: "setDiagnostics" });
       // setStatus("Compiled VM code successfully");
 
-      vm = unwrap(buildResult);
+      vm = unwrap(loaded);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;
     },
+    /** Compiles the source again, as when the Attempt Recovery setting changes. */
+    recompile() {
+      if (compiled) {
+        showHighlight = false;
+        this.compile(compiled.files, compiled.single);
+      }
+    },
 
     loadTest(path: string, source: string) {
       dispatch.current({ action: "setTst", payload: { tst: source } });
-      const tst = TST.parse(source);
-
-      if (isErr(tst)) {
-        dispatch.current({ action: "setValid", payload: false });
-        setStatus({
-          message: `Failed to parse test`,
-          severity: "ERROR",
-        });
-        return false;
-      }
-      dispatch.current({ action: "setValid", payload: true });
-      setStatus(`Parsed tst`);
-
-      vm.reset();
-
-      const maybeTest = VMTest.from(unwrap(tst), {
+      const maybeTest = buildTst({ name: path, content: source }, "vm", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         doLoad: async (path) => {
           await this.load(path);
@@ -376,12 +344,15 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        dispatch.current({ action: "setValid", payload: false });
+        setStatus(
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
+        );
         return false;
       } else {
+        dispatch.current({ action: "setValid", payload: true });
+        setStatus(`Parsed tst`);
+        vm.reset();
         test = Ok(maybeTest).using(fs);
         test.vm = vm;
         dispatch.current({ action: "update" });
@@ -411,7 +382,7 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: error });
+        dispatch.current({ action: "setDiagnostics", payload: [error] });
         return true;
       }
     },
@@ -440,7 +411,7 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: error });
+        dispatch.current({ action: "setDiagnostics", payload: [error] });
         return true;
       }
     },
@@ -466,12 +437,15 @@ export function makeVmStore(
 }
 
 export function useVmPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, storage, attemptRecovery } = useContext(BaseContext);
 
   const dispatch = useRef<VmStoreDispatch>(() => undefined);
+  // The store outlives a change of the setting, so it reads the latest.
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeVmStore(fs, setStatus, storage, dispatch),
+    () => makeVmStore(fs, setStatus, storage, dispatch, () => recovery.current),
     [fs, setStatus, storage, dispatch],
   );
 

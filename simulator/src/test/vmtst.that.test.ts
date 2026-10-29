@@ -6,6 +6,7 @@ import {
 import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { resetFiles } from "@nand2tetris/projects/full.js";
 import { describe, expect, test } from "vitest";
+import { validOf } from "../languages/base.js";
 import { TST } from "../languages/tst.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "../vm/vm.js";
@@ -24,11 +25,13 @@ async function runVme(project: string, name: string) {
     const src = await fs.readFile(`${dir}/${f}`);
     parsed.push({
       name: f.replace(".vm", ""),
-      instructions: unwrap(VM.parse(src)).instructions,
+      instructions: unwrap(validOf(VM.parse(src))).instructions,
     });
   }
   const vm = unwrap(Vm.buildFromFiles(parsed));
-  const tst = unwrap(TST.parse(await fs.readFile(`${dir}/${name}VME.tst`)));
+  const tst = unwrap(
+    validOf(TST.parse(await fs.readFile(`${dir}/${name}VME.tst`))),
+  );
   const test = unwrap(VMTest.from(tst)).using(fs).with(vm);
   await test.run();
   const cmp = await fs.readFile(`${dir}/${name}.cmp`);
@@ -55,7 +58,8 @@ describe("#659", () => {
 describe("#658 THAT segment", () => {
   test("pop that 2 / pop that 5 are visible in the THAT segment", () => {
     const { instructions } = unwrap(
-      VM.parse(`
+      validOf(
+        VM.parse(`
 push constant 4000
 pop pointer 1
 push constant 11
@@ -63,6 +67,7 @@ pop that 2
 push constant 22
 pop that 5
 `),
+      ),
     );
     const vm = unwrap(Vm.build(instructions));
     for (let i = 0; i < 6; i++) vm.step();

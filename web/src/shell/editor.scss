@@ -68,6 +68,16 @@
     position: relative;
   }
 
+  // Other files' diagnostics sit over the foot of the editor, which fills it.
+  .dependency-diagnostics {
+    position: absolute;
+    inset: auto 0 0 0;
+    z-index: 2;
+    max-height: 40%;
+    overflow: auto;
+    background-color: var(--background-color, Canvas);
+  }
+
   .overlay {
     position: absolute;
     inset: 0;

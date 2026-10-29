@@ -1,21 +1,39 @@
-const jack = `Jack <: Base {
+const jack = `
+Jack <: Base {
     Root := Class
 
     whitespace = (lineComment | comment | space)
 
     class = "class" whitespace+
-    Class = class jackIdentifier OpenBrace ClassVarDec* SubroutineDec* CloseBrace
+    Class = ClassStart ! &SubroutinesStart SubroutineDec* ! ClassClose  -- body
+          | &class ~MembersAhead ClassOpen ClassVarDec* ! UnclosedEnd  -- unclosed
+    ClassStart = ClassOpen ClassVarDec*
+    ClassOpen = ClassHead ! OpenBrace
+    // Class_unclosed applies only to a file with no subroutine keyword and no "}"
+    // token, where Class_body cannot recover, so the two never compete. Its
+    // guard follows the class keyword, where no strict failure can be.
+    MembersAhead = (~SubroutinesStart (recoveryToken | any))* SubroutinesStart
+    // Repeats the lookahead of Class_body so a strict failure lists its
+    // expected text in the same order as before this alternative existed.
+    UnclosedEnd = &SubroutinesStart ClassClose
+    ClassHead = class jackIdentifier
+    SubroutinesStart = subroutineType | CloseBrace
+    ClassClose = CloseBrace end
+    recoveryStop = subroutineType
+    recoveryToken = lineComment | comment | stringConstant | jackIdentifier | integerConstant
 
     type = ("int" | "char" | "boolean" | jackIdentifier) whitespace+
 
     classVarType = ("static" | "field") whitespace+
-    ClassVarDec = classVarType type jackIdentifier TrailingIdentifier* Semi
+    ClassVarDec = ClassVarDecBody ! Semi
+    ClassVarDecBody = classVarType type jackIdentifier TrailingIdentifier*
     TrailingIdentifier = Comma jackIdentifier
 
     void = "void" whitespace+
     returnType = (type | void) 
     subroutineType = ("constructor" | "function" | "method") whitespace+
-    SubroutineDec = subroutineType returnType jackIdentifier OpenParen ParameterList CloseParen SubroutineBody
+    SubroutineDec = SubroutineHead ! &OpenBrace SubroutineBody
+    SubroutineHead = subroutineType returnType jackIdentifier OpenParen ParameterList CloseParen
 
 
     Parameter = type jackIdentifier
@@ -23,10 +41,11 @@ const jack = `Jack <: Base {
     TrailingParameter = Comma Parameter
     ParameterList = Parameters?
 
-    SubroutineBody = OpenBrace VarDec* Statement* CloseBrace
+    SubroutineBody = OpenBrace VarDec* Statement* ! CloseBrace
 
     var = "var" whitespace+
-    VarDec = var type jackIdentifier TrailingIdentifier* Semi
+    VarDec = VarDecBody ! Semi
+    VarDecBody = var type jackIdentifier TrailingIdentifier*
 
     Statement = LetStatement | IfStatement | WhileStatement | DoStatement | ReturnStatement
 
@@ -35,21 +54,26 @@ const jack = `Jack <: Base {
 
     let = "let" whitespace+
     LetTarget = ArrayAccess | jackIdentifier
-    LetStatement = let LetTarget Equal Expression Semi
+    LetStatement = LetBody ! Semi
+    LetBody = let LetTarget Equal Expression
 
-    IfStatement = "if" OpenParen Expression CloseParen OpenBrace Statement* CloseBrace ElseBlock?
-    ElseBlock = "else" OpenBrace Statement* CloseBrace
+    IfStatement = IfHead ! OpenBrace Statement* ! CloseBrace ElseBlock?
+    IfHead = "if" OpenParen Expression CloseParen
+    ElseBlock = "else" OpenBrace Statement* ! CloseBrace
 
-    WhileStatement = "while" OpenParen Expression CloseParen OpenBrace Statement* CloseBrace
+    WhileStatement = WhileHead ! OpenBrace Statement* ! CloseBrace
+    WhileHead = "while" OpenParen Expression CloseParen
 
     do = "do" whitespace+
-    DoStatement = do SubroutineCall Semi
+    DoStatement = DoBody ! Semi
+    DoBody = do SubroutineCall
 
     return = "return"
     returnWithSpace = "return" whitespace+
-    ReturnStatement = EmptyReturn | ReturnValue
-    EmptyReturn = return Semi
-    ReturnValue = returnWithSpace Expression Semi
+    ReturnStatement = ReturnBody ! Semi
+    ReturnBody = ReturnValue | EmptyReturn
+    EmptyReturn = return
+    ReturnValue = returnWithSpace Expression
 
     op = "+" | "-" | "*" | "/" | "&" | "|" | "<" | ">" | "="
     ExpressionPart = op Term
@@ -76,5 +100,4 @@ const jack = `Jack <: Base {
 
     jackIdentifier = letter (alnum | underscore)*
 }`;
-
 export default jack;

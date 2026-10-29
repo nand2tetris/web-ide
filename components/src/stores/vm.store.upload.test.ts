@@ -22,6 +22,24 @@ function vmHarness(fs = new FileSystem(new ObjectFileSystemAdapter({}))) {
   return { actions, statuses };
 }
 
+test("VM code that does not parse reports its syntax error count", () => {
+  const { actions, statuses } = vmHarness();
+  expect(actions.loadVm([{ name: "Main", content: "push nowhere 1\n" }])).toBe(
+    false,
+  );
+  expect(statuses).toEqual([
+    expect.stringMatching(/^VM code: 1 syntax error\. Line 1: /),
+  ]);
+});
+
+test("a test script that does not parse lists its syntax errors", () => {
+  const { actions, statuses } = vmHarness();
+  expect(actions.loadTest("/proj/T.tst", "set in")).toBe(false);
+  expect(statuses.at(-1)).toMatch(
+    /^Test script: 1 syntax error\. Line 1: expected /,
+  );
+});
+
 test("a bare `load,` keeps the loaded VM files", async () => {
   const { actions, statuses } = vmHarness();
   expect(actions.loadVm(VM_FILES)).toBe(true);

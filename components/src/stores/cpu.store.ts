@@ -8,18 +8,18 @@ import {
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import { Span } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 function makeTst() {
   return `repeat {
@@ -93,6 +93,8 @@ export function makeCpuStore(
   setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
+  /** Whether the TST final call recovers from syntax errors, read per call. */
+  attemptRecovery: () => boolean = () => true,
 ) {
   let test = new CPUTest();
   let animate = true;
@@ -130,18 +132,7 @@ export function makeCpuStore(
       if (state.test.cmp.trim() === "") {
         return;
       }
-      const passed = compare(state.test.cmp.trim(), test.log().trim());
-      setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
-      );
+      setStatus(comparisonStatus(state.test.cmp.trim(), test.log().trim()));
     },
 
     setTitle(state: CpuPageState, title?: string) {
@@ -244,20 +235,8 @@ export function makeCpuStore(
     compileTest(file: string, cmp?: string, _path?: string) {
       const tstPath = _path ?? path;
       dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
-      const tst = TST.parse(file);
-
-      if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test - ${Err(tst).message}`,
-          severity: "ERROR",
-        });
-        valid = false;
-        dispatch.current({ action: "update" });
-        return false;
-      }
-      valid = true;
-
-      const maybeTest = CPUTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: tstPath, content: file }, "cpu", {
+        attemptRecovery: attemptRecovery(),
         dir: tstPath,
         rom: test.cpu.ROM,
         doEcho: setStatus,
@@ -291,12 +270,14 @@ export function makeCpuStore(
       });
 
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
+        );
+        valid = false;
+        dispatch.current({ action: "update" });
         return false;
       } else {
+        valid = true;
         test = Ok(maybeTest);
         test.fileLoaded = _title != undefined;
         dispatch.current({ action: "update" });
@@ -345,12 +326,16 @@ export function makeCpuStore(
 }
 
 export function useCpuPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, storage, attemptRecovery } = useContext(BaseContext);
 
   const dispatch = useRef<CpuStoreDispatch>(() => undefined);
+  // The store outlives a change of the setting, so it reads the latest.
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeCpuStore(fs, setStatus, storage, dispatch),
+    () =>
+      makeCpuStore(fs, setStatus, storage, dispatch, () => recovery.current),
     [fs, setStatus, storage, dispatch],
   );
 

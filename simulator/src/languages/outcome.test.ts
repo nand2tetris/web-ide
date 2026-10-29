@@ -4,9 +4,9 @@
  * that says why, so an unparsed file differs from an empty file only in its
  * diagnostics.
  */
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { ASM } from "./asm.js";
-import { isValid, type Outcome } from "./base.js";
+import { isValid, type Outcome, setParserRecovery } from "./base.js";
 import { CMP } from "./cmp.js";
 import { HDL } from "./hdl.js";
 import { JACK } from "./jack.js";
@@ -48,6 +48,8 @@ const NULL_ROOTS: [string, Language, string, unknown][] = [
 ];
 
 describe("a failed match", () => {
+  afterEach(() => setParserRecovery(false));
+
   it.each(NULL_ROOTS)(
     "%s gives its null root and a diagnostic",
     (_name, language, source, root) => {
@@ -57,6 +59,18 @@ describe("a failed match", () => {
       expect(outcome.ast).toEqual(language.empty());
       expect(outcome.diagnostics).not.toHaveLength(0);
       expect(outcome.diagnostics[0].message).toMatch(/^Line 1: /);
+    },
+  );
+
+  // Recovery finishes most line based sources, so these fail with it on too.
+  it.each(NULL_ROOTS.slice(0, 3))(
+    "%s gives its null root with recovery on",
+    (_name, language, source, root) => {
+      setParserRecovery(true);
+      const outcome = language.parse(source);
+      expect(outcome.ast).toEqual(root);
+      expect(outcome.diagnostics).not.toHaveLength(0);
+      expect(isValid(outcome)).toBe(false);
     },
   );
 

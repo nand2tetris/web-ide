@@ -3,7 +3,7 @@
  * mistake in a part that is grammatically fine hears about both from the final
  * call, in source order, as ordinary diagnostics with spans. The final calls
  * are the ones the IDE already makes: `parse` for HDL, `compile` for Jack,
- * `assemble` for ASM and `loadVm` for VM.
+ * `assemble` for ASM, `loadVm` for VM and `buildTst` for a test script.
  * See .ailly/developer/2026-10-29-C-unified-diagnostics/design.md.
  *
  * The final calls attempt recovery by default, without explicit setup here.
@@ -12,6 +12,7 @@ import { Err, isErr } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, it } from "vitest";
 import { parse as buildChip } from "../chip/builder.js";
 import { compile } from "../jack/compiler.js";
+import { buildTst } from "../test/builder.js";
 import { loadVm } from "../vm/vm.js";
 import { assemble } from "./asm.js";
 import type { Diagnostic } from "./base.js";
@@ -44,6 +45,13 @@ const vmDiagnostics = async (
 ): Promise<readonly Diagnostic[]> => {
   const vm = loadVm([{ name: "Main.vm", content: source }]);
   return isErr(vm) ? Object.values(Err(vm)).flat() : [];
+};
+
+const tstDiagnostics = async (
+  source: string,
+): Promise<readonly Diagnostic[]> => {
+  const test = buildTst({ name: "Foo.tst", content: source }, "chip");
+  return isErr(test) ? Err(test) : [];
 };
 
 const STORIES: [
@@ -114,6 +122,16 @@ const STORIES: [
       syntaxLines: [3],
       semantic: /Cannot redeclare label LOOP/,
       semanticLine: 5,
+    },
+  ],
+  [
+    "TST: a block missing its closer, and a script with no load command",
+    tstDiagnostics,
+    "repeat 1 { eval;", // 1: syntax error, no `}`; and no load command
+    {
+      syntaxLines: [1],
+      semantic: /A test script must have a load command/,
+      semanticLine: 1,
     },
   ],
 ];

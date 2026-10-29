@@ -5,7 +5,9 @@ import {
   baseSemantics,
   carrierOf,
   grammars,
+  isRecovered,
   makeParser,
+  makePrune,
   type Recovery,
   type RecoveryPoint,
   Span,
@@ -310,6 +312,27 @@ tstSemantics.addAttribute<Tst>("root", {
     return tst;
   },
 });
+
+/**
+ * Drops each null command, at the top level and in block bodies. The result
+ * is checked and minted `Valid`. Provenance keeps each one's kind first, so a
+ * missing block closer (`TstRepeatClose`, `TstWhileClose`) stays apart from a
+ * skipped command (`TstOperation`).
+ */
+export const prune = makePrune<Tst>((tree) => ({
+  ...tree,
+  lines: tree.lines.flatMap((line): TstStatement[] =>
+    "statements" in line
+      ? [{ ...line, statements: line.statements.filter(isIntact) }]
+      : isIntact(line)
+        ? [line]
+        : [],
+  ),
+}));
+
+function isIntact(command: TstCommand): boolean {
+  return !isRecovered(command);
+}
 
 /** The null root of a parse that built no test: a test with no statements. */
 function emptyTst(): Tst {

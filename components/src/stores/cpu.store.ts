@@ -7,9 +7,9 @@ import {
   MemoryKeyboard,
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span, validOf } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -93,6 +93,8 @@ export function makeCpuStore(
   setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
+  /** Whether the TST final call recovers from syntax errors, read per call. */
+  attemptRecovery: () => boolean = () => true,
 ) {
   let test = new CPUTest();
   let animate = true;
@@ -233,17 +235,8 @@ export function makeCpuStore(
     compileTest(file: string, cmp?: string, _path?: string) {
       const tstPath = _path ?? path;
       dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
-      const tst = validOf(TST.parse(file));
-
-      if (isErr(tst)) {
-        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
-        valid = false;
-        dispatch.current({ action: "update" });
-        return false;
-      }
-      valid = true;
-
-      const maybeTest = CPUTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: tstPath, content: file }, "cpu", {
+        attemptRecovery: attemptRecovery(),
         dir: tstPath,
         rom: test.cpu.ROM,
         doEcho: setStatus,
@@ -277,12 +270,14 @@ export function makeCpuStore(
       });
 
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
+        );
+        valid = false;
+        dispatch.current({ action: "update" });
         return false;
       } else {
+        valid = true;
         test = Ok(maybeTest);
         test.fileLoaded = _title != undefined;
         dispatch.current({ action: "update" });
@@ -331,12 +326,16 @@ export function makeCpuStore(
 }
 
 export function useCpuPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, storage, attemptRecovery } = useContext(BaseContext);
 
   const dispatch = useRef<CpuStoreDispatch>(() => undefined);
+  // The store outlives a change of the setting, so it reads the latest.
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeCpuStore(fs, setStatus, storage, dispatch),
+    () =>
+      makeCpuStore(fs, setStatus, storage, dispatch, () => recovery.current),
     [fs, setStatus, storage, dispatch],
   );
 

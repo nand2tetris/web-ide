@@ -20,9 +20,8 @@ import {
   Diagnostic,
   Diagnostics,
   Span,
-  validOf,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -482,13 +481,8 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = validOf(TST.parse(file));
-      if (isErr(tst)) {
-        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
-        invalid = true;
-        return false;
-      }
-      const maybeTest = ChipTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: path, content: file }, "chip", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         setStatus: setStatus,
         loadAction: async (file) => {
@@ -502,10 +496,9 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
+        );
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();

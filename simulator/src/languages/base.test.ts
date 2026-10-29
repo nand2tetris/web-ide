@@ -4,12 +4,15 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
   baseSemantics,
+  type Diagnostic,
   type Diagnostics,
   grammars,
   isRecovered,
   isValid,
   makeParser,
   makePrune,
+  mergeByFile,
+  mergeDiagnostics,
   type Recovery,
   type RecoveryPoint,
   recoveryOf,
@@ -402,5 +405,270 @@ describe("the recovery attribute", () => {
     const outcome = parser.parse("{ a 1; c; }");
     expect(isValid(outcome)).toBe(false);
     expect(outcome.ast).toEqual([]);
+  });
+});
+
+describe("merging a file's diagnostics", () => {
+  const at = (start: number, end = start, line = 1) => ({ start, end, line });
+
+  it("orders by span start with spanless records last", () => {
+    const spanless: Diagnostic = { message: "no place", stage: "parse" };
+    const late: Diagnostic = { message: "late", span: at(9), stage: "parse" };
+    const early: Diagnostic = { message: "early", span: at(2), stage: "parse" };
+
+    const merged = mergeDiagnostics([spanless, late, early]);
+
+    expect(merged).toEqual([early, late, spanless]);
+  });
+
+  it("orders records at one start by stage, absent last, then input", () => {
+    const unstaged: Diagnostic = { message: "unstaged", span: at(4) };
+    const compile: Diagnostic = {
+      message: "compile",
+      span: at(4),
+      stage: "compile",
+    };
+    const semantic: Diagnostic = {
+      message: "semantic",
+      span: at(4),
+      stage: "semantic",
+    };
+    const parse: Diagnostic = { message: "parse", span: at(4), stage: "parse" };
+    const lex: Diagnostic = { message: "lex", span: at(4), stage: "lex" };
+    const otherParse: Diagnostic = {
+      message: "other parse",
+      span: at(4, 6),
+      stage: "parse",
+    };
+
+    const merged = mergeDiagnostics([
+      unstaged,
+      compile,
+      semantic,
+      parse,
+      otherParse,
+      lex,
+    ]);
+
+    expect(merged).toEqual([
+      lex,
+      parse,
+      otherParse,
+      semantic,
+      compile,
+      unstaged,
+    ]);
+  });
+
+  it("orders spanless records among themselves by stage", () => {
+    const compile: Diagnostic = { message: "compile", stage: "compile" };
+    const unstaged: Diagnostic = { message: "unstaged" };
+    const parse: Diagnostic = { message: "parse", stage: "parse" };
+
+    const merged = mergeDiagnostics([compile, unstaged, parse]);
+
+    expect(merged).toEqual([parse, compile, unstaged]);
+  });
+
+  it("keeps the earlier stage of records with one message and span", () => {
+    const semantic: Diagnostic = {
+      message: "Line 3: same",
+      span: at(8, 11, 3),
+      stage: "semantic",
+    };
+    const parse: Diagnostic = {
+      message: "Line 3: same",
+      span: at(8, 11, 3),
+      stage: "parse",
+    };
+
+    const merged = mergeDiagnostics([semantic, parse]);
+
+    expect(merged).toEqual([parse]);
+    expect(merged[0]).toBe(parse);
+  });
+
+  it("keeps distinct messages at one point", () => {
+    const first: Diagnostic = { message: "one", span: at(5), stage: "parse" };
+    const second: Diagnostic = {
+      message: "two",
+      span: at(5),
+      stage: "semantic",
+    };
+
+    const merged = mergeDiagnostics([first, second]);
+
+    expect(merged).toEqual([first, second]);
+  });
+
+  it("compares the complete span, not only its start", () => {
+    const point: Diagnostic = {
+      message: "m",
+      span: at(5, 5, 2),
+      stage: "parse",
+    };
+    const longer: Diagnostic = {
+      message: "m",
+      span: at(5, 9, 2),
+      stage: "parse",
+    };
+    const otherLine: Diagnostic = {
+      message: "m",
+      span: at(5, 5, 3),
+      stage: "parse",
+    };
+
+    const merged = mergeDiagnostics([point, longer, otherLine]);
+
+    expect(merged).toEqual([point, longer, otherLine]);
+  });
+
+  it("keeps the first input of equal records at one stage", () => {
+    const first: Diagnostic = { message: "m", span: at(5), stage: "semantic" };
+    const second: Diagnostic = { ...first };
+
+    const merged = mergeDiagnostics([first, second]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toBe(first);
+  });
+
+  it("lets an absent stage inherit nothing and yield to a staged record", () => {
+    const unstaged: Diagnostic = { message: "m", span: at(5) };
+    const compile: Diagnostic = { message: "m", span: at(5), stage: "compile" };
+
+    const merged = mergeDiagnostics([unstaged, compile]);
+
+    expect(merged).toEqual([compile]);
+    expect(merged[0]?.stage).toBe("compile");
+    expect(unstaged).not.toHaveProperty("stage");
+  });
+
+  it("keeps spanless records with equal text", () => {
+    const first: Diagnostic = { message: "m", stage: "compile" };
+    const second: Diagnostic = { message: "m", stage: "compile" };
+    const spanned: Diagnostic = { message: "m", span: at(1), stage: "compile" };
+
+    const merged = mergeDiagnostics([first, second, spanned]);
+
+    expect(merged).toEqual([spanned, first, second]);
+  });
+
+  it("merges a spanless record only with proof of one cause", () => {
+    const first: Diagnostic = { message: "m", stage: "compile" };
+    const second: Diagnostic = { message: "m", stage: "compile" };
+    const third: Diagnostic = { message: "n", stage: "compile" };
+    const origins = new Map([
+      [first, { cause: "k" }],
+      [third, { cause: "k" }],
+    ]);
+
+    const merged = mergeDiagnostics([first, second, third], origins);
+
+    expect(merged).toEqual([first, second]);
+    expect(merged[0]).toBe(first);
+  });
+
+  it("merges one record listed twice, spanless or not", () => {
+    const spanless: Diagnostic = { message: "m", stage: "compile" };
+    const spanned: Diagnostic = { message: "n", span: at(2), stage: "parse" };
+
+    const merged = mergeDiagnostics([spanless, spanned, spanless, spanned]);
+
+    expect(merged).toEqual([spanned, spanless]);
+  });
+
+  it("merges differently worded records only when a cause links them", () => {
+    const parse: Diagnostic = { message: "one", span: at(3), stage: "parse" };
+    const semantic: Diagnostic = {
+      message: "two",
+      span: at(7),
+      stage: "semantic",
+    };
+    const linked = new Map([
+      [parse, { cause: "k" }],
+      [semantic, { cause: "k" }],
+    ]);
+    const unlinked = new Map([
+      [parse, { cause: "k" }],
+      [semantic, { cause: "j" }],
+    ]);
+
+    expect(mergeDiagnostics([semantic, parse], linked)).toEqual([parse]);
+    expect(mergeDiagnostics([semantic, parse], unlinked)).toEqual([
+      parse,
+      semantic,
+    ]);
+    expect(mergeDiagnostics([semantic, parse])).toEqual([parse, semantic]);
+  });
+
+  it("keeps records of equal message and span from distinct skipped regions", () => {
+    const first: Diagnostic = { message: "m", span: at(4), stage: "parse" };
+    const second: Diagnostic = { message: "m", span: at(4), stage: "parse" };
+    const again: Diagnostic = { message: "m", span: at(4), stage: "parse" };
+    const bare: Diagnostic = { message: "m", span: at(4), stage: "parse" };
+    const origins = new Map([
+      [first, { recovery: "4:9" }],
+      [second, { recovery: "4:12" }],
+      [again, { recovery: "4:9" }],
+    ]);
+
+    const merged = mergeDiagnostics([first, second, again, bare], origins);
+
+    expect(merged).toEqual([first, second, bare]);
+    expect(merged[0]).toBe(first);
+    expect(merged[1]).toBe(second);
+    expect(merged[2]).toBe(bare);
+  });
+
+  it("does not change its input", () => {
+    const late: Diagnostic = { message: "late", span: at(9), stage: "parse" };
+    const early: Diagnostic = { message: "early", span: at(2) };
+    const input: readonly Diagnostic[] = [late, early, late];
+
+    mergeDiagnostics(input);
+
+    expect(input).toEqual([late, early, late]);
+    expect(early).toEqual({ message: "early", span: at(2) });
+  });
+});
+
+describe("merging diagnostics by file", () => {
+  it("never merges records of different files", () => {
+    const place = { start: 3, end: 6, line: 2 };
+    const top: Diagnostic = { message: "m", span: place, stage: "parse" };
+    const child: Diagnostic = { message: "m", span: place, stage: "parse" };
+    const topLater: Diagnostic = {
+      message: "m",
+      span: place,
+      stage: "semantic",
+    };
+
+    const merged = mergeByFile({
+      "Top.hdl": [topLater, top],
+      "Child.hdl": [child],
+    });
+
+    expect(Object.keys(merged)).toEqual(["Top.hdl", "Child.hdl"]);
+    expect(merged["Top.hdl"]).toEqual([top]);
+    expect(merged["Child.hdl"]).toEqual([child]);
+    expect(merged["Child.hdl"][0]).toBe(child);
+  });
+
+  it("does not link causes across files", () => {
+    const top: Diagnostic = { message: "one", stage: "parse" };
+    const child: Diagnostic = { message: "two", stage: "parse" };
+    const origins = new Map([
+      [top, { cause: "k" }],
+      [child, { cause: "k" }],
+    ]);
+
+    const merged = mergeByFile(
+      { "Top.hdl": [top], "Child.hdl": [child] },
+      origins,
+    );
+
+    expect(merged["Top.hdl"]).toEqual([top]);
+    expect(merged["Child.hdl"]).toEqual([child]);
   });
 });

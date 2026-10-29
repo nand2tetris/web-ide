@@ -35,7 +35,7 @@ export function gradeCommand(
           describe:
             "When set, look for the java IDE jars in this path and compare both runs.",
         })
-        .option("attempt-recovery", attemptRecoveryOption) as never,
+        .option("attempt-recovery", attemptRecoveryOption),
     handler: (argv) =>
       grade(argv.directory, argv.java_ide, recoveryOptions(argv, env)),
   };
@@ -79,7 +79,7 @@ export function runCommand(
           describe:
             "When set, look for the java IDE jars in this path and compare both runs.",
         })
-        .option("attempt-recovery", attemptRecoveryOption) as never,
+        .option("attempt-recovery", attemptRecoveryOption),
     handler: (argv) => run(argv.file, recoveryOptions(argv, env)),
   };
 }

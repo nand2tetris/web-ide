@@ -226,3 +226,25 @@ describe("a pruned Jack header", () => {
     ]);
   });
 });
+
+describe("the strict Jack message at a class with no subroutines", () => {
+  // Pinned literally: the text the grammar gave before the class header
+  // recovery added its `&SubroutinesStart` lookahead.
+  it.each([
+    ["its `{`", "class Main {", 1],
+    ["a class variable's `;`", "class Main {\n  field int x;", 2],
+  ])(
+    'is today\'s `expected "}"` right after %s at the end',
+    (_, source, line) => {
+      const outcome = JACK.parse(source);
+
+      expect(outcome.diagnostics).toEqual([
+        {
+          message: `Line ${line}: expected "}"`,
+          span: expect.objectContaining({ line }),
+          stage: "parse",
+        },
+      ]);
+    },
+  );
+});

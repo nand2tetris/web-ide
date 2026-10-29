@@ -66,7 +66,8 @@ export interface HdlParse {
  * What an HDL null object stands in for: a skipped `CHIP` header before its
  * `{`, a skipped header with the `IN` and `OUT` lines before `PARTS:` or
  * `BUILTIN`, a skipped `IN` or `OUT` line, a skipped part, skipped input
- * before the end of the parts, or skipped input after the chip's closer.
+ * before the end of the parts, skipped input after the chip's closer, or the
+ * chip's closer missing at the end of the input, which skipped nothing.
  */
 export type HdlSkipKind =
   | "ChipHead"
@@ -75,7 +76,8 @@ export type HdlSkipKind =
   | "OutListBody"
   | "PartBody"
   | "PartsClose"
-  | "ChipClose";
+  | "ChipClose"
+  | "MissingChipClose";
 
 /** Null objects for the recovered positions. */
 function nullPin(
@@ -87,7 +89,7 @@ function nullPin(
 
 function nullPart(
   point: RecoveryPoint,
-  kind: "PartBody" | "PartsClose" | "ChipClose",
+  kind: "PartBody" | "PartsClose" | "ChipClose" | "MissingChipClose",
 ): Part {
   return { name: "", wires: [], span: point.span, ...carrierOf(point, kind) };
 }
@@ -262,22 +264,47 @@ hdlSemantics.addAttribute<ChipStart>("ChipStart", {
   },
 });
 
-hdlSemantics.addAttribute<HdlParse>("Chip", {
-  Chip(start, partsStart, body, close) {
+/** A chip's start, or a null name with no pins when it lacks its `{`. */
+hdlSemantics.addAttribute<ChipStart>("ChipOpen", {
+  ChipOpen(start, partsStart) {
     const recovered: RecoveryPoint | undefined = partsStart.recovery;
+    return recovered
+      ? { name: nullName(recovered, "ChipStart"), ins: [], outs: [] }
+      : (start.ChipStart as ChipStart);
+  },
+});
+
+hdlSemantics.addAttribute<HdlParse>("Chip", {
+  Chip_closed(open, body, close) {
     const parts: "BUILTIN" | Part[] = body.child(0).PartList ?? [];
     // Skipped input after the closer becomes a null part. A builtin chip has
     // no part list to hold it, and nothing it skipped could reach a check.
     const trailing: RecoveryPoint | undefined = close.child(1).recovery;
     return {
-      ...(recovered
-        ? { name: nullName(recovered, "ChipStart"), ins: [], outs: [] }
-        : (start.ChipStart as ChipStart)),
+      ...(open.ChipOpen as ChipStart),
       parts:
         trailing && parts !== "BUILTIN"
           ? [...parts, nullPart(trailing, "ChipClose")]
           : parts,
       clocked: body.child(1).child(0)?.Clocked,
+    };
+  },
+  // Reached when the chip's `}` is missing at the end of the input. Skipped
+  // input before the end is a null part that could be a part; a closer that
+  // is only missing skipped nothing, and its null part supplies nothing.
+  Chip_unclosed(open, _parts, parts, close) {
+    const kept = parts.children.map((c) => c.Part as Part);
+    const recovered: RecoveryPoint | undefined = close.recovery;
+    const missing =
+      recovered &&
+      nullPart(
+        recovered,
+        close.sourceString.length > 0 ? "PartsClose" : "MissingChipClose",
+      );
+    return {
+      ...(open.ChipOpen as ChipStart),
+      parts: missing ? [...kept, missing] : kept,
+      clocked: [],
     };
   },
 });

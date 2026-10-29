@@ -141,7 +141,7 @@ describe("a recovered tree beside a null root", () => {
     const files: Record<string, string> = {
       Damaged:
         "class Damaged {\n  function void a() {\n    let x = ;\n    return;\n  }\n}",
-      Broken: "class {",
+      Broken: "class B",
     };
 
     const table = Object.fromEntries(

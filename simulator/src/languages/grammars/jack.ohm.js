@@ -5,8 +5,17 @@ Jack <: Base {
     whitespace = (lineComment | comment | space)
 
     class = "class" whitespace+
-    Class = ClassStart ! &SubroutinesStart SubroutineDec* ! ClassClose
-    ClassStart = ClassHead ! OpenBrace ClassVarDec*
+    Class = ClassStart ! &SubroutinesStart SubroutineDec* ! ClassClose  -- body
+          | &class ~MembersAhead ClassOpen ClassVarDec* ! UnclosedEnd  -- unclosed
+    ClassStart = ClassOpen ClassVarDec*
+    ClassOpen = ClassHead ! OpenBrace
+    // Class_unclosed applies only to a file with no subroutine keyword and no "}"
+    // token, where Class_body cannot recover, so the two never compete. Its
+    // guard follows the class keyword, where no strict failure can be.
+    MembersAhead = (~SubroutinesStart (recoveryToken | any))* SubroutinesStart
+    // Repeats the lookahead of Class_body so a strict failure lists its
+    // expected text in the same order as before this alternative existed.
+    UnclosedEnd = &SubroutinesStart ClassClose
     ClassHead = class jackIdentifier
     SubroutinesStart = subroutineType | CloseBrace
     ClassClose = CloseBrace end

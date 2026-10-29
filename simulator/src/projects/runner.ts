@@ -7,7 +7,7 @@ import {
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { build as buildChip } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
-import { CompilationError } from "../languages/base.js";
+import { Diagnostic } from "../languages/base.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
@@ -19,8 +19,8 @@ export interface AssignmentFiles extends Assignment {
 }
 
 export interface AssignmentParse extends AssignmentFiles {
-  maybeParsedHDL: Result<HdlParse, CompilationError>;
-  maybeParsedTST: Result<Tst, CompilationError>;
+  maybeParsedHDL: Result<HdlParse, Diagnostic>;
+  maybeParsedTST: Result<Tst, Diagnostic>;
 }
 
 export interface AssignmentBuild extends AssignmentParse {

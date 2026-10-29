@@ -1,5 +1,5 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
-import { CompilationError, Span } from "@nand2tetris/simulator/languages/base";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base";
 import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -86,7 +86,7 @@ export const Monaco = ({
   onCursorPositionChange?: (index: number) => void;
   language: string;
   path: string;
-  error?: CompilationError;
+  error?: Diagnostic;
   disabled?: boolean;
   highlight?: Span | number;
   highlightType?: HighlightType;

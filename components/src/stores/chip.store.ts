@@ -16,10 +16,7 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
@@ -96,7 +93,7 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
-  error?: CompilationError;
+  error?: Diagnostic;
   visualizationParameters: Set<string>;
 }
 
@@ -167,7 +164,7 @@ export function makeChipStore(
         pending?: boolean;
         invalid?: boolean;
         chipName?: string;
-        error?: CompilationError | undefined;
+        error?: Diagnostic | undefined;
       },
     ) {
       state.sim = reduceChip(

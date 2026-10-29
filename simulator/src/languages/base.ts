@@ -207,6 +207,121 @@ export function createError(description: string, span?: Span): Diagnostic {
   };
 }
 
+/**
+ * What a merge knows about a diagnostic beyond its record, kept beside it
+ * because `Diagnostic` has no field for it.
+ */
+export interface Origin {
+  /**
+   * Recovery identity: the key of the skipped interval that gave the record.
+   * Records with equal message and span but different or absent keys stay apart.
+   */
+  readonly recovery?: string;
+  /**
+   * Cause link: records that share a cause key arose from one cause, whatever
+   * their wording or position, and merge into the first.
+   */
+  readonly cause?: string;
+}
+
+/** The origins of diagnostics, by record. A record without an entry has none. */
+export type Origins = ReadonlyMap<Diagnostic, Origin>;
+
+/**
+ * One source file's diagnostics, ordered and deduplicated for display.
+ *
+ * Order: span start, spanless last, then stage (`lex`, `parse`, `semantic`,
+ * `compile`, absent last), then input order. A record merges into an earlier
+ * one when it is the same object, shares its cause key, or has the same message,
+ * span and recovery key. Merging keeps the earlier record unchanged, so an
+ * absent stage inherits nothing. Spanless records otherwise stay. Differently
+ * worded records stay unless a cause key links them.
+ *
+ * Call once per file: records of different files never merge (see `mergeByFile`).
+ */
+export function mergeDiagnostics(
+  diagnostics: Diagnostics,
+  origins?: Origins,
+): Diagnostics;
+export function mergeDiagnostics(
+  diagnostics: readonly Diagnostic[],
+  origins?: Origins,
+): readonly Diagnostic[];
+export function mergeDiagnostics(
+  diagnostics: readonly Diagnostic[],
+  origins?: Origins,
+): readonly Diagnostic[] {
+  const kept = new Set<Diagnostic>();
+  const identities = new Set<string>();
+  const causes = new Set<string>();
+  for (const diagnostic of [...diagnostics].sort(byPosition)) {
+    const origin = origins?.get(diagnostic);
+    const identity = identityOf(diagnostic, origin);
+    const repeats =
+      kept.has(diagnostic) ||
+      (origin?.cause !== undefined && causes.has(origin.cause)) ||
+      (identity !== undefined && identities.has(identity));
+    if (!repeats) {
+      kept.add(diagnostic);
+      if (identity !== undefined) identities.add(identity);
+      if (origin?.cause !== undefined) causes.add(origin.cause);
+    }
+  }
+  return [...kept];
+}
+
+/**
+ * The baseline identity: exact message, complete span and recovery key. A
+ * spanless record has none, since equal text alone is no evidence of location.
+ */
+function identityOf(
+  { message, span }: Diagnostic,
+  origin: Origin | undefined,
+): string | undefined {
+  return span === undefined
+    ? undefined
+    : JSON.stringify([
+        message,
+        span.start,
+        span.end,
+        span.line,
+        origin?.recovery ?? null,
+      ]);
+}
+
+const STAGE_ORDER: readonly Stage[] = ["lex", "parse", "semantic", "compile"];
+
+/** Position of a stage in the pipeline; an absent stage sorts after every one. */
+function stageRank(stage: Stage | undefined): number {
+  return stage === undefined ? STAGE_ORDER.length : STAGE_ORDER.indexOf(stage);
+}
+
+/**
+ * Span start first with spanless last, then stage. Array sort is stable, so
+ * the remaining ties keep input order.
+ */
+function byPosition(a: Diagnostic, b: Diagnostic): number {
+  const starts = Number(a.span === undefined) - Number(b.span === undefined);
+  return (
+    starts ||
+    (a.span && b.span ? a.span.start - b.span.start : 0) ||
+    stageRank(a.stage) - stageRank(b.stage)
+  );
+}
+
+/** `mergeDiagnostics` for each file of a keyed list, never across files. */
+export function mergeByFile(
+  files: Readonly<Record<string, Diagnostics>>,
+  origins?: Origins,
+): Record<string, Diagnostics> {
+  return Object.fromEntries(
+    Object.entries(files).map(([file, diagnostics]) => [
+      file,
+      mergeDiagnostics(diagnostics, origins),
+    ]),
+  );
+}
+
 /** Recovery options that Ohm builds with Fallible accept; others ignore them. */
 interface RecoveringGrammar {
   match(

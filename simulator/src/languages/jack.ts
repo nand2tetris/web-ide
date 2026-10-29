@@ -23,11 +23,20 @@ export function isPrimitive(value: string): value is Primitive {
 export type Type = Primitive | string;
 
 /**
+ * A class's name. A recovered class header leaves a null name: its value is
+ * empty and it stands in for the skipped header.
+ */
+export interface ClassName extends Recovery {
+  value: string;
+  span: Span;
+}
+
+/**
  * One type for valid and recovered classes: a recovered list item is a null
  * object of its item type (see `isRecovered`).
  */
 export interface Class {
-  name: { value: string; span: Span };
+  name: ClassName;
   varDecs: ClassVarDec[];
   subroutines: Subroutine[];
 }
@@ -184,11 +193,14 @@ export const jackSemantics = grammar.extendSemantics(baseSemantics);
 
 /**
  * What a Jack null object stands in for, by the grammar slot that recovered:
- * a skipped declaration body or subroutine header, skipped input before the
- * class closer, a skipped statement body or head, or the missing or skipped
- * closer of a block.
+ * a skipped class header before its `{`, a skipped header with the class
+ * variables before the first subroutine, a skipped declaration body or
+ * subroutine header, skipped input before the class closer, a skipped
+ * statement body or head, or the missing or skipped closer of a block.
  */
 export type JackSkipKind =
+  | "ClassHead"
+  | "ClassStart"
   | "ClassVarDecBody"
   | "SubroutineHead"
   | "ClassClose"
@@ -205,7 +217,12 @@ export type JackSkipKind =
 
 type StatementSkipKind = Exclude<
   JackSkipKind,
-  "ClassVarDecBody" | "SubroutineHead" | "ClassClose" | "VarDecBody"
+  | "ClassHead"
+  | "ClassStart"
+  | "ClassVarDecBody"
+  | "SubroutineHead"
+  | "ClassClose"
+  | "VarDecBody"
 >;
 type BlockCloseKind =
   | "SubroutineBodyClose"
@@ -214,6 +231,13 @@ type BlockCloseKind =
   | "WhileClose";
 
 /** Null objects for the recovered positions. */
+function nullName(
+  point: RecoveryPoint,
+  kind: "ClassHead" | "ClassStart",
+): ClassName {
+  return { value: "", span: point.span, ...carrierOf(point, kind) };
+}
+
 function nullClassVarDec(point: RecoveryPoint): ClassVarDec {
   return {
     varType: "field",
@@ -302,6 +326,9 @@ function scopeOf(node: object): string | undefined {
 export const prune = makePrune<Class>(
   (tree) => ({
     ...tree,
+    name: isRecovered(tree.name)
+      ? { value: "", span: tree.name.span }
+      : tree.name,
     varDecs: keep(tree.varDecs),
     subroutines: keep(tree.subroutines).map((sub) => ({
       ...sub,
@@ -320,8 +347,27 @@ jackSemantics.addAttribute<Class>("Root", {
   },
 });
 
+/** A class's name and variables, or the null name of a skipped header. */
+type ClassStart = Pick<Class, "name" | "varDecs">;
+
+jackSemantics.addAttribute<ClassStart>("classStart", {
+  ClassStart(head, open, varDecs) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
+    return {
+      name: recovered
+        ? nullName(recovered, "ClassHead")
+        : {
+            value: head.child(1).sourceString,
+            span: span(head.child(1).source),
+          },
+      varDecs: varDecs.children.map((n) => n.classVarDec),
+    };
+  },
+});
+
 jackSemantics.addAttribute<Class>("class", {
-  Class(_a, name, _b, varDecs, subroutines, close) {
+  Class(start, subroutinesStart, subroutines, close) {
+    const header: RecoveryPoint | undefined = subroutinesStart.recovery;
     const kept = subroutines.children.map((n) => n.subroutineDec);
     // Skipped text after the subroutines becomes a null subroutine; a class
     // that only lacks its `}` keeps its subroutines as they are.
@@ -329,8 +375,9 @@ jackSemantics.addAttribute<Class>("class", {
     const skipped =
       recovered && close.sourceString.length > 0 ? recovered : undefined;
     return {
-      name: { value: name.sourceString, span: span(name.source) },
-      varDecs: varDecs.children.map((n) => n.classVarDec),
+      ...(header
+        ? { name: nullName(header, "ClassStart"), varDecs: [] }
+        : (start.classStart as ClassStart)),
       subroutines: skipped
         ? [...kept, nullSubroutine(skipped, "ClassClose")]
         : kept,

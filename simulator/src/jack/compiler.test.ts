@@ -403,7 +403,7 @@ describe("compiler diagnostics", () => {
     });
 
     it("does not report a class whose file built no class", () => {
-      const compiled = messagesOf({ A: CALLER, B: "class {" });
+      const compiled = messagesOf({ A: CALLER, B: "class B" });
 
       expect(compiled.A).toEqual(expect.stringContaining("call B.g 1"));
       expect(compiled.B).toHaveLength(1);

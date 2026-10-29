@@ -2,7 +2,8 @@
  * Feature test: a student's file with one mistake in the grammar and another
  * mistake in a part that is grammatically fine hears about both from the final
  * call, in source order, as ordinary diagnostics with spans. The final calls
- * are the ones the IDE already makes: `parse` for HDL and `compile` for Jack.
+ * are the ones the IDE already makes: `parse` for HDL, `compile` for Jack and
+ * `assemble` for ASM.
  * See .ailly/developer/2026-10-29-C-unified-diagnostics/design.md.
  *
  * The final calls attempt recovery by default, without explicit setup here.
@@ -11,6 +12,7 @@ import { Err, isErr } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, it } from "vitest";
 import { parse as buildChip } from "../chip/builder.js";
 import { compile } from "../jack/compiler.js";
+import { assemble } from "./asm.js";
 import type { Diagnostic } from "./base.js";
 
 const lines = (...l: string[]) => l.join("\n");
@@ -27,6 +29,13 @@ const jackDiagnostics = async (
 ): Promise<readonly Diagnostic[]> => {
   const vm = compile({ Main: source }).Main;
   return typeof vm === "string" ? [] : vm;
+};
+
+const asmDiagnostics = async (
+  source: string,
+): Promise<readonly Diagnostic[]> => {
+  const program = assemble(source);
+  return isErr(program) ? Err(program) : [];
 };
 
 const STORIES: [
@@ -69,6 +78,18 @@ const STORIES: [
       "}", //                          10
     ),
     { syntaxLines: [4, 5], semantic: /Undeclared variable y/, semanticLine: 7 },
+  ],
+  [
+    "ASM: an instruction that is not a command, and a label defined twice",
+    asmDiagnostics,
+    lines(
+      "(LOOP)", //   1
+      "@1", //       2
+      "D=Q", //      3: syntax error, Q is not a value
+      "(LOOP)", //   4: grammatical, but LOOP is already defined
+      "0;JMP", //    5
+    ),
+    { syntaxLines: [3], semantic: /Duplicate label LOOP/, semanticLine: 4 },
   ],
 ];
 

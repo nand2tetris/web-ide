@@ -27,6 +27,7 @@ import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
+import { failureStatus } from "./status.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -218,7 +219,7 @@ export function makeAsmStore(
 
   /** Shows the diagnostics of ASM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    setStatus(failureStatus("ASM code", diagnostics));
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     compiled = false;
   };

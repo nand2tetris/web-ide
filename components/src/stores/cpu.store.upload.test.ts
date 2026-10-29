@@ -33,6 +33,20 @@ async function runTest(tstPath: string) {
   return actions.testStep().then(() => statuses);
 }
 
+test("a test script that does not parse lists its syntax errors", () => {
+  const statuses: string[] = [];
+  const { actions } = makeCpuStore(
+    new FileSystem(new ObjectFileSystemAdapter({})),
+    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    {},
+    { current: vi.fn() as unknown as CpuStoreDispatch },
+  );
+  expect(actions.compileTest("set A", "", "/proj/T.tst")).toBe(false);
+  expect(statuses.at(-1)).toMatch(
+    /^Test script: 1 syntax error\. Line 1: expected /,
+  );
+});
+
 test("a bare test path keeps the loaded ROM", async () => {
   const statuses = await runTest("Mult.tst");
   expect(statuses.filter((m) => /Cannot find/.test(m))).toEqual([]);

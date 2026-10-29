@@ -9,13 +9,14 @@ import { AsmStoreDispatch, makeAsmStore } from "./asm.store.js";
 function mk() {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   const dispatch = { current: vi.fn() as unknown as AsmStoreDispatch };
+  const setStatus = vi.fn();
   const { initialState, reducers, actions } = makeAsmStore(
     fs,
-    vi.fn(),
+    setStatus,
     dispatch,
     false,
   );
-  const store = { state: initialState, actions, fs };
+  const store = { state: initialState, actions, fs, setStatus };
   dispatch.current = ((c: {
     action: keyof typeof reducers;
     payload: unknown;
@@ -26,6 +27,18 @@ function mk() {
   }) as AsmStoreDispatch;
   return store;
 }
+
+describe("compiling asm source", () => {
+  it("counts the syntax errors of ASM code that does not parse", () => {
+    const s = mk();
+    s.actions.compileAsm("@@");
+    expect(s.setStatus).toHaveBeenLastCalledWith({
+      message: "ASM code: 1 syntax error",
+      severity: "ERROR",
+    });
+    expect(s.state.diagnostics).toHaveLength(1);
+  });
+});
 
 describe("loading asm source (#602)", () => {
   it("loads a Path from the fs, remembering its path", async () => {

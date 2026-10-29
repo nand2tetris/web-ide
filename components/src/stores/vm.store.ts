@@ -26,11 +26,11 @@ import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -142,7 +142,7 @@ export function makeVmStore(
 
   /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    setStatus(failureStatus("VM code", diagnostics));
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
   };
@@ -184,18 +184,7 @@ export function makeVmStore(
       state.files.out = test.log();
     },
     testFinished(state: VmPageState) {
-      const passed = compare(state.files.cmp.trim(), state.files.out);
-      setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
-      );
+      setStatus(comparisonStatus(state.files.cmp.trim(), state.files.out));
     },
 
     setTitle(state: VmPageState, title: string) {
@@ -354,10 +343,7 @@ export function makeVmStore(
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });
-        setStatus({
-          message: `Failed to parse test`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
         return false;
       }
       dispatch.current({ action: "setValid", payload: true });

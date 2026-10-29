@@ -134,6 +134,24 @@ describe("ChipStore", () => {
 
     it.todo("compiles chips");
 
+    it("counts the syntax errors of HDL code that does not compile", async () => {
+      await state.store.actions.compileChip("CHIP Not {", "projects/01", "Not");
+      expect(state.store.setStatus).toHaveBeenLastCalledWith({
+        message: "HDL code: 1 syntax error",
+        severity: "ERROR",
+      });
+    });
+
+    it("lists the syntax errors of a test script that does not parse", () => {
+      state.store.actions.compileTest("set in", "projects/01");
+      expect(state.store.setStatus).toHaveBeenLastCalledWith({
+        message: expect.stringMatching(
+          /^Test script: 1 syntax error\. Line 1: expected /,
+        ),
+        severity: "ERROR",
+      });
+    });
+
     it("steps tests", async () => {
       const bits = (pins: ImmPin[]) =>
         pins.map((pin) => pin.bits.map((bit) => bit[1]));

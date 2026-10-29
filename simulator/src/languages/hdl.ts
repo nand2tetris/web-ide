@@ -40,13 +40,22 @@ export interface Part extends Recovery {
 }
 
 /**
+ * A chip's name. A recovered `CHIP` header leaves a null name: its value is
+ * empty and it stands in for the skipped header.
+ */
+export interface ChipName extends Recovery {
+  value: string;
+  span?: Span;
+}
+
+/**
  * One type for valid and recovered chips: a recovered list item is a null
  * object of its item type (see `isRecovered`). `clocked` holds strings, which
  * cannot carry a diagnostic, so a recovered `CLOCKED` clause is empty and its
  * diagnostic is only in the outcome's list.
  */
 export interface HdlParse {
-  name: { value: string; span?: Span };
+  name: ChipName;
   ins: PinDeclaration[];
   outs: PinDeclaration[];
   clocked: string[];
@@ -54,14 +63,19 @@ export interface HdlParse {
 }
 
 /**
- * What an HDL null object stands in for: a skipped `IN` or `OUT` line, a
- * skipped part, or skipped input before the end of the parts.
+ * What an HDL null object stands in for: a skipped `CHIP` header before its
+ * `{`, a skipped header with the `IN` and `OUT` lines before `PARTS:` or
+ * `BUILTIN`, a skipped `IN` or `OUT` line, a skipped part, skipped input
+ * before the end of the parts, or skipped input after the chip's closer.
  */
 export type HdlSkipKind =
+  | "ChipHead"
+  | "ChipStart"
   | "InListBody"
   | "OutListBody"
   | "PartBody"
-  | "PartsClose";
+  | "PartsClose"
+  | "ChipClose";
 
 /** Null objects for the recovered positions. */
 function nullPin(
@@ -71,8 +85,18 @@ function nullPin(
   return { pin: "", width: 1, ...carrierOf(point, kind) };
 }
 
-function nullPart(point: RecoveryPoint, kind: "PartBody" | "PartsClose"): Part {
+function nullPart(
+  point: RecoveryPoint,
+  kind: "PartBody" | "PartsClose" | "ChipClose",
+): Part {
   return { name: "", wires: [], span: point.span, ...carrierOf(point, kind) };
+}
+
+function nullName(
+  point: RecoveryPoint,
+  kind: "ChipHead" | "ChipStart",
+): ChipName {
+  return { value: "", ...carrierOf(point, kind) };
 }
 
 /** A chip opens a scope named for it. */
@@ -87,6 +111,7 @@ function scopeOf(node: object): string | undefined {
 export const prune = makePrune<HdlParse>(
   (tree) => ({
     ...tree,
+    name: isRecovered(tree.name) ? { value: "" } : tree.name,
     ins: tree.ins.filter((pin) => !isRecovered(pin)),
     outs: tree.outs.filter((pin) => !isRecovered(pin)),
     parts:
@@ -218,14 +243,41 @@ hdlSemantics.addAttribute<PinDeclaration[]>("PinList", {
   },
 });
 
-hdlSemantics.addAttribute<HdlParse>("Chip", {
-  Chip(_a, name, _b, body, _c) {
+/** A chip's name, `IN` pins and `OUT` pins, or the null name of a skipped header. */
+type ChipStart = Pick<HdlParse, "name" | "ins" | "outs">;
+
+hdlSemantics.addAttribute<ChipStart>("ChipStart", {
+  ChipStart(head, open, pins) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
     return {
-      name: { value: name.sourceString, span: span(name.source) },
-      ins: body.child(0).child(0)?.Pins ?? [],
-      outs: body.child(1).child(0)?.Pins ?? [],
-      parts: body.child(2).PartList ?? [],
-      clocked: body.child(3).child(0)?.Clocked,
+      name: recovered
+        ? nullName(recovered, "ChipHead")
+        : {
+            value: head.child(1).sourceString,
+            span: span(head.child(1).source),
+          },
+      ins: pins.child(0).child(0)?.Pins ?? [],
+      outs: pins.child(1).child(0)?.Pins ?? [],
+    };
+  },
+});
+
+hdlSemantics.addAttribute<HdlParse>("Chip", {
+  Chip(start, partsStart, body, close) {
+    const recovered: RecoveryPoint | undefined = partsStart.recovery;
+    const parts: "BUILTIN" | Part[] = body.child(0).PartList ?? [];
+    // Skipped input after the closer becomes a null part. A builtin chip has
+    // no part list to hold it, and nothing it skipped could reach a check.
+    const trailing: RecoveryPoint | undefined = close.child(1).recovery;
+    return {
+      ...(recovered
+        ? { name: nullName(recovered, "ChipStart"), ins: [], outs: [] }
+        : (start.ChipStart as ChipStart)),
+      parts:
+        trailing && parts !== "BUILTIN"
+          ? [...parts, nullPart(trailing, "ChipClose")]
+          : parts,
+      clocked: body.child(1).child(0)?.Clocked,
     };
   },
 });

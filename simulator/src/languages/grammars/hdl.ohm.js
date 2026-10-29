@@ -3,8 +3,13 @@ Hdl <: Base{
   Root := Chip
   identifier := (letter) (alnum)*
   Name := identifier
-  Chip = "CHIP" Name OpenBrace ChipBody CloseBrace
-  ChipBody = InList? OutList? PartList ClockedList?
+  Chip = ChipStart ! &PartsStart ChipBody ChipClose
+  ChipStart = ChipHead ! OpenBrace ChipPins
+  ChipHead = "CHIP" Name
+  ChipPins = InList? OutList?
+  PartsStart = "BUILTIN" | "PARTS:"
+  ChipBody = PartList ClockedList?
+  ChipClose = CloseBrace ! end
   InList = InListBody ! Semi
   InListBody = "IN" PinList
   OutList = OutListBody ! Semi

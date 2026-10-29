@@ -10,6 +10,7 @@ import {
   isRecovered,
   isValid,
   makeParser,
+  makePrune,
   type Recovery,
   type RecoveryPoint,
   recoveryOf,
@@ -147,6 +148,36 @@ describe("Ohm Base", () => {
       expect(recoveryOf(broken)).toBe(recovery);
       expect(isRecovered(clean)).toBe(false);
       expect(recoveryOf(clean)).toBeUndefined();
+    });
+  });
+
+  describe("prune", () => {
+    interface Item extends Recovery {
+      name: string;
+    }
+    interface Tree {
+      items: Item[];
+      last?: Item;
+    }
+    const recovery = { message: "Line 1: bad" };
+    const tree: Tree = {
+      items: [{ name: "a" }, { name: "", recovery }, { name: "b" }],
+    };
+
+    it("returns the tree with no recovered item", () => {
+      const prune = makePrune<Tree>((t) => ({
+        ...t,
+        items: t.items.filter((item) => !isRecovered(item)),
+      }));
+      expect(prune(tree)).toEqual({ items: [{ name: "a" }, { name: "b" }] });
+    });
+
+    it("refuses a tree whose drop leaves a recovered node", () => {
+      const prune = makePrune<Tree>((t) => ({
+        items: [],
+        last: t.items[1],
+      }));
+      expect(() => prune(tree)).toThrow(/recovered/);
     });
   });
 });

@@ -104,7 +104,7 @@ export function isRecovered(node: Recovery): boolean {
 
 declare const valid: unique symbol;
 
-/** A tree with no recovered node. Only `makeParser` mints it. */
+/** A tree with no recovered node. Only `makeParser` and `makePrune` mint it. */
 export type Valid<T> = T & { readonly [valid]: true };
 
 /**
@@ -132,6 +132,34 @@ export function isValid<T>(
 /** The Result view of an outcome, for consumers that need a valid tree. */
 export function validOf<T>(outcome: Outcome<T>): Result<Valid<T>, Diagnostics> {
   return isValid(outcome) ? Ok(outcome.ast) : Err(outcome.diagnostics);
+}
+
+/**
+ * A language's `prune`: `drop` removes the recovered items from each list,
+ * then a run time walk checks that no recovered node remains before the tree
+ * is minted `Valid`.
+ */
+export function makePrune<T>(drop: (tree: T) => T): (tree: T) => Valid<T> {
+  return (tree) => {
+    const pruned = drop(tree);
+    if (containsRecovered(pruned)) {
+      throw new Error("prune left a recovered node outside a list");
+    }
+    return mint(pruned);
+  };
+}
+
+/** Run time walk: true when any object in the tree carries `recovery`. */
+function containsRecovered(value: unknown): boolean {
+  if (Array.isArray(value)) {
+    return value.some(containsRecovered);
+  }
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  return Object.entries(value).some(([key, child]) =>
+    key === "recovery" ? child !== undefined : containsRecovered(child),
+  );
 }
 
 /** The trust point: the only cast to `Valid`. */

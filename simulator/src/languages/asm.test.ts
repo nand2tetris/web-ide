@@ -366,15 +366,20 @@ describe("asm language", () => {
     expect(bin).toEqual(file);
   });
 
-  it("fails to parse an A instruction with a value too large", () => {
-    expect(() => {
-      const match = grammar.match("@32768", "aInstruction");
-      if (match.succeeded()) {
-        asmSemantics(match).instruction;
-      }
-    }).toThrow(
-      "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
-    );
+  it("gives a null instruction for an A instruction with a value too large", () => {
+    const match = grammar.match("@32768", "aInstruction");
+    expect(match.succeeded()).toBe(true);
+
+    const instruction = asmSemantics(match).instruction;
+
+    expect(instruction).toMatchObject({
+      recovery: {
+        message:
+          "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
+        stage: "semantic",
+      },
+      skipped: { kind: "aInstruction" },
+    });
   });
 
   it("fails to parse an A instruction with a negative value", () => {

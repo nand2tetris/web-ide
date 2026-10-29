@@ -126,7 +126,7 @@ const MISTAKES: Record<string, [Language, string][]> = {
 };
 
 describe("recovery leaves the first error byte for byte", () => {
-  it("keeps every syntax diagnostic when AST conversion fails", () => {
+  it("keeps every syntax diagnostic and the tree when an action fails", () => {
     const source = "@@\n@@\n@32768\n";
     const plain = ASM.parse(source);
     const recovered = ASM.parse(source, RECOVER);
@@ -135,7 +135,11 @@ describe("recovery leaves the first error byte for byte", () => {
     if (isValid(plain)) throw new Error("parse is valid");
     const first = plain.diagnostics[0];
     if (isValid(recovered)) throw new Error("parse is valid");
-    expect(recovered.ast).toEqual(ASM.empty());
+    expect(recovered.ast.instructions.map(isRecovered)).toEqual([
+      true,
+      true,
+      true,
+    ]);
     expect(strict).toBeErr();
     for (const errors of [
       recovered.diagnostics,
@@ -148,6 +152,7 @@ describe("recovery leaves the first error byte for byte", () => {
         {
           message:
             "Line 3: 32768 is invalid for an A instruction (should be 0 to 32767)",
+          stage: "semantic",
         },
       ]);
     }

@@ -87,18 +87,82 @@ export interface Diagnostic {
 export type Diagnostics = readonly [Diagnostic, ...Diagnostic[]];
 
 /**
- * A node type that recovery may stand in for. `recovery` is set only on a null
- * object that recovery left where input was skipped, and it is the same object
- * that the outcome lists in `diagnostics`.
+ * What a null object stands in for: the grammar kind of the construct the tree
+ * lost, the full interval of its input and, for a syntax recovery, the
+ * recovery identity of the failure (the key `Origin.recovery` holds).
+ */
+export interface Skipped {
+  /**
+   * The construct that was lost, named by the action that built the null
+   * object for the slot that recovered (for example `PartBody` for a skipped
+   * HDL part, `TstRepeatClose` for a missing block closer), or by the action
+   * that failed. It is never inferred from the null object's own type.
+   */
+  readonly kind: string;
+  /** The full interval the tree lost, not the diagnostic's point. */
+  readonly interval: Span;
+  /** The recovery identity; absent when a semantic action failed. */
+  readonly key?: string;
+}
+
+/**
+ * A node type that a null object may stand in for. `recovery` is set only on
+ * a null object, left where recovery skipped input or where a semantic action
+ * failed, and it is the same object that the outcome lists in `diagnostics`.
+ * `skipped` says what the null object stands in for.
  */
 export interface Recovery {
   readonly recovery?: Diagnostic;
+  readonly skipped?: Skipped;
 }
 
-/** What a `_fail` node gives its parent: the diagnostic and the skipped span. */
+/**
+ * What a `_fail` node gives its parent: the diagnostic, the full skipped span
+ * and the recovery identity.
+ */
 export interface RecoveryPoint {
   readonly recovery: Diagnostic;
   readonly span: Span;
+  readonly key: string;
+}
+
+/** The fields of a null object for a recovered slot of grammar kind `kind`. */
+export function carrierOf(
+  { recovery, span, key }: RecoveryPoint,
+  kind: string,
+): Required<Recovery> {
+  return { recovery, skipped: { kind, interval: span, key } };
+}
+
+/** The fields of a null object for a semantic action of kind `kind` that failed. */
+export function failedOf(
+  diagnostic: Diagnostic,
+  interval: Span,
+  kind: string,
+): Required<Recovery> {
+  return { recovery: diagnostic, skipped: { kind, interval } };
+}
+
+/**
+ * A null object's provenance, captured from the tree before pruning drops it:
+ * what it stands in for, its diagnostic, and its enclosing scopes, outermost
+ * first (for example `["Main", "run"]` for a statement of `Main.run`).
+ */
+export interface Skip extends Skipped {
+  readonly diagnostic: Diagnostic;
+  readonly scope: readonly string[];
+}
+
+/** Every null object's provenance in a tree, in tree order. */
+export type Provenance = readonly Skip[];
+
+/**
+ * A tree a parse built, pruned to `Valid`, beside the provenance of what
+ * pruning dropped. Validators and dependency tables take this pair.
+ */
+export interface Recovered<T> {
+  readonly ast: Valid<T>;
+  readonly provenance: Provenance;
 }
 
 /** The diagnostic of a null object, or undefined for a node a valid parse made. */
@@ -123,7 +187,16 @@ export type Valid<T> = T & { readonly [valid]: true };
  */
 export type Outcome<T> =
   | { readonly ast: Valid<T>; readonly diagnostics: readonly [] }
-  | { readonly ast: T; readonly diagnostics: Diagnostics };
+  | {
+      readonly ast: T;
+      readonly diagnostics: Diagnostics;
+      /**
+       * Set when the parse built no tree and `ast` is the language's null
+       * root. Such a root takes the syntax-only path: it never enters a chip
+       * or class table nor reaches a later stage (see `recoveredOf`).
+       */
+      readonly nullRoot?: true;
+    };
 
 /** Options of a low-level parse. */
 export interface ParseOptions {
@@ -149,19 +222,51 @@ export function validOf<T>(outcome: Outcome<T>): Result<Valid<T>, Diagnostics> {
   return isValid(outcome) ? Ok(outcome.ast) : Err(outcome.diagnostics);
 }
 
+/** A language's `prune`, and the capture of what it drops. */
+export interface Prune<T> {
+  (tree: T): Valid<T>;
+  /** The provenance of every null object in the unpruned tree. */
+  provenance(tree: T): Provenance;
+}
+
+/**
+ * The scope a node opens, such as a class or subroutine name, or undefined
+ * for a node that opens none.
+ */
+export type ScopeOf = (node: object) => string | undefined;
+
 /**
  * A language's `prune`: `drop` removes the recovered items from each list,
  * then a run time walk checks that no recovered node remains before the tree
- * is minted `Valid`.
+ * is minted `Valid`. `scopeOf` names the scopes that provenance records.
  */
-export function makePrune<T>(drop: (tree: T) => T): (tree: T) => Valid<T> {
-  return (tree) => {
+export function makePrune<T>(
+  drop: (tree: T) => T,
+  scopeOf: ScopeOf = () => undefined,
+): Prune<T> {
+  const prune = (tree: T) => {
     const pruned = drop(tree);
     if (containsRecovered(pruned)) {
       throw new Error("prune left a recovered node outside a list");
     }
     return mint(pruned);
   };
+  return Object.assign(prune, {
+    provenance: (_tree: T): Provenance => {
+      throw new Error("not implemented");
+    },
+  });
+}
+
+/**
+ * The pruned tree and its provenance, or undefined for a null root: a parse
+ * that built no tree contributes nothing to a chip or class table.
+ */
+export function recoveredOf<T>(
+  outcome: Outcome<T>,
+  prune: Prune<T>,
+): Recovered<T> | undefined {
+  throw new Error("not implemented");
 }
 
 /** Run time walk: true when any object in the tree carries `recovery`. */
@@ -206,6 +311,26 @@ export function createError(description: string, span?: Span): Diagnostic {
     span: span,
   };
 }
+
+/**
+ * A semantic action's error: a `semantic` diagnostic, listed in the outcome of
+ * the parse running now. The action returns its language's null object with
+ * it (see `failedOf`) instead of throwing, so the parse keeps its tree.
+ */
+export function actionError(description: string, at: Span): Diagnostic {
+  const diagnostic: Diagnostic = {
+    ...createError(description, at),
+    stage: "semantic",
+  };
+  failedActions?.push(diagnostic);
+  return diagnostic;
+}
+
+/**
+ * The action errors of the parse running now, in the order the actions ran.
+ * Like `linked`, `makeParser` sets this around the semantics.
+ */
+let failedActions: Diagnostic[] | undefined;
 
 /**
  * What a merge knows about a diagnostic beyond its record, kept beside it
@@ -381,7 +506,7 @@ function recoveryFor(fail: Node): RecoveryPoint | undefined {
   const recovery =
     linked?.get(failureKey(failure)) ??
     diagnosticOf(fail.source.sourceString, failure);
-  return { recovery, span: span(fail.source) };
+  return { recovery, span: span(fail.source), key: failureKey(failure) };
 }
 
 /**
@@ -418,6 +543,27 @@ function outcomeOf<T>(ast: T, diagnostics: readonly Diagnostic[]): Outcome<T> {
     : { ast, diagnostics: [first, ...rest] };
 }
 
+/** The null root of a parse that built no tree, and why. */
+function nullRootOf<T>(empty: T, diagnostics: Diagnostics): Outcome<T> {
+  return { ast: empty, diagnostics, nullRoot: true };
+}
+
+/**
+ * A thrown value as a diagnostic: a thrown diagnostic is kept, tagged
+ * `semantic` when it has no stage, and any other error becomes a spanless
+ * `semantic` diagnostic with its message.
+ */
+function thrownDiagnostic(e: unknown): Diagnostic {
+  if (e instanceof Error) {
+    return { message: e.message, stage: "semantic" };
+  }
+  if (typeof e === "object" && e !== null && "message" in e) {
+    const diagnostic = e as Diagnostic;
+    return { ...diagnostic, stage: diagnostic.stage ?? "semantic" };
+  }
+  return { message: String(e), stage: "semantic" };
+}
+
 /**
  * A parser reading `attribute` from the semantics of a successful match. A
  * failed match or a thrown semantic error gives `empty()` as the tree.
@@ -432,9 +578,11 @@ export function makeParser<T>(
     empty,
     parse(source, options) {
       // Share diagnostics across try and catch so semantic conversion failures
-      // retain the recovered syntax errors.
+      // retain the recovered syntax errors and the earlier action errors.
       let diagnostics: Diagnostic[] = [];
+      const failed: Diagnostic[] = [];
       const outer = linked;
+      const outerActions = failedActions;
       try {
         const recover = options?.attemptRecovery ?? false;
         const match = recover
@@ -451,21 +599,30 @@ export function makeParser<T>(
             match.getRightmostFailures(),
           );
           // Today's first error leads the list; the final failure ends it.
-          return outcomeOf(empty(), [first, ...diagnostics.slice(1)]);
+          return nullRootOf(empty(), [first, ...diagnostics.slice(1)]);
         }
         linked = new Map(
           failures.map((f, i) => [failureKey(f), diagnostics[i]]),
         );
+        failedActions = failed;
         // Ohm attributes are untyped, so the tree is taken to be `T`.
         const ast: T = semantics(match)[attribute];
-        return outcomeOf(ast, diagnostics);
+        // Action errors follow the syntax diagnostics, so a recovered parse
+        // keeps today's first syntax error first.
+        return outcomeOf(ast, [...diagnostics, ...failed]);
       } catch (e) {
         if (isMissingFailAction(e)) {
           throw e;
         }
-        return outcomeOf(empty(), [...diagnostics, e as Error]);
+        const [first, ...rest] = [...diagnostics, ...failed];
+        const thrown = thrownDiagnostic(e);
+        return nullRootOf(
+          empty(),
+          first === undefined ? [thrown] : [first, ...rest, thrown],
+        );
       } finally {
         linked = outer;
+        failedActions = outerActions;
       }
     },
   };

@@ -1,9 +1,10 @@
-const asm = `ASM <: Base {
+const asm = `
+ASM <: Base {
   Root := ASM
-  ASM = intermediateInstruction* instruction?
+  ASM = intermediateInstruction*
   
   instruction = label|aInstruction|cInstruction
-  intermediateInstruction = instruction space+
+  intermediateInstruction = instruction ! (space+ | end)
 
   identifier := (letter|underscore|dot|dollar|colon) (alnum|underscore|dot|dollar|colon)*
 

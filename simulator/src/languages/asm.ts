@@ -29,7 +29,7 @@ import {
   makeParser,
   makePrune,
   mergeDiagnostics,
-  type Origin,
+  originsOf,
   type Recovery,
   type RecoveryPoint,
   recoveredOf,
@@ -465,12 +465,7 @@ export function resolveAsm(
     return Err(outcome.diagnostics as Diagnostics);
   }
   const diagnostics: Diagnostic[] = [...outcome.diagnostics];
-  const origins = new Map<Diagnostic, Origin>();
-  for (const { diagnostic, key } of recovered.provenance) {
-    if (key !== undefined) {
-      origins.set(diagnostic, { recovery: key });
-    }
-  }
+  const origins = new Map(originsOf(recovered.provenance));
   const labels = fillLabel(recovered.ast, symbolCallback);
   if (isErr(labels)) {
     diagnostics.push(...Err(labels));

@@ -10,6 +10,7 @@ import {
   recoveredOf,
   Span,
   semanticError,
+  skipsAny,
   Valid,
 } from "../languages/base.js";
 import {
@@ -385,11 +386,6 @@ const NAMES_CHIP: ReadonlySet<string> = new Set<HdlSkipKind>([
   "ChipStart",
 ]);
 
-/** True when `provenance` holds a skip of one of `kinds`. */
-function skips(provenance: Provenance, kinds: ReadonlySet<string>): boolean {
-  return provenance.some(({ kind }) => kinds.has(kind));
-}
-
 class ChipBuilder {
   private parts: Valid<HdlParse>;
   private provenance: Provenance;
@@ -435,7 +431,7 @@ class ChipBuilder {
     this.dir = dir;
     this.file = file;
     this.context = context;
-    this.unnamed = skips(provenance, NAMES_CHIP);
+    this.unnamed = skipsAny(provenance, NAMES_CHIP);
     this.name = this.unnamed ? (name ?? "") : ast.name.value;
     this.chip = new Chip(
       ast.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
@@ -588,7 +584,7 @@ class ChipBuilder {
         // Suppressed: an undefined pin of the part, when the part's chip
         // skipped an `IN` or `OUT` line that could have declared it. Either
         // way the wire's direction is unknown, so its pin may be driven.
-        if (!skips(partProvenance, DECLARES_PIN)) {
+        if (!skipsAny(partProvenance, DECLARES_PIN)) {
           this.report(`Undefined pin name: ${lhs.pin}`, lhs.span);
         }
         this.mayBeDriven.add(rhs.pin);
@@ -773,7 +769,7 @@ class ChipBuilder {
    * Also suppressed: one only a part of unknown chip or pins could drive.
    */
   private validateInternalPins() {
-    if (skips(this.provenance, SUPPLIES_OWN_PIN)) {
+    if (skipsAny(this.provenance, SUPPLIES_OWN_PIN)) {
       return;
     }
     for (const [name, pinData] of this.internalPins) {

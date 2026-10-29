@@ -12,6 +12,7 @@ import {
   recoveredOf,
   Span,
   semanticError,
+  skipsAny,
   Valid,
 } from "../languages/base.js";
 import {
@@ -103,17 +104,6 @@ const NAMES_CLASS: ReadonlySet<string> = new Set<JackSkipKind>([
   "ClassHead",
   "ClassStart",
 ]);
-
-/**
- * The class a file built, named for the file when recovery skipped its
- * header: the header could have named it so, and no other name lets the
- * class serve its file.
- */
-function namedClass({ ast, provenance }: Recovered<Class>, file: string) {
-  return provenance.some(({ kind }) => NAMES_CLASS.has(kind))
-    ? { ...ast, name: { ...ast.name, value: file } }
-    : ast;
-}
 
 /** Skipped nodes that could declare a subroutine of their class. */
 const DECLARES_SUBROUTINE: ReadonlySet<string> = new Set<JackSkipKind>([
@@ -228,6 +218,17 @@ function checkFiles(
   }
 
   return { lists, origins, classes, damage: { provenance, lost } };
+}
+
+/**
+ * The class a file built, named for the file when recovery skipped its
+ * header: the header could have named it so, and no other name lets the
+ * class serve its file.
+ */
+function namedClass({ ast, provenance }: Recovered<Class>, file: string) {
+  return skipsAny(provenance, NAMES_CLASS)
+    ? { ...ast, name: { ...ast.name, value: file } }
+    : ast;
 }
 
 /**
@@ -372,8 +373,9 @@ export class Compiler {
 
   /** True when a skipped header of class `className` could declare a subroutine. */
   private mayDeclareSubroutine(className: string): boolean {
-    return (this.damage.provenance[className] ?? []).some(({ kind }) =>
-      DECLARES_SUBROUTINE.has(kind),
+    return skipsAny(
+      this.damage.provenance[className] ?? [],
+      DECLARES_SUBROUTINE,
     );
   }
 

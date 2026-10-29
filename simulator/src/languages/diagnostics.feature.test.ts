@@ -126,6 +126,23 @@ const STORIES: [
     { syntaxLines: [1], semantic: /Undeclared variable y/, semanticLine: 3 },
   ],
   [
+    "HDL: a chip missing its `}` at the end, and a part naming a chip that does not exist",
+    hdlDiagnostics,
+    lines(
+      "CHIP Foo {", //              1
+      "  IN a;", //                 2
+      "  OUT out;", //              3
+      "  PARTS:", //                4
+      "  Nope(a=a, out=out);", //   5: grammatical, but Nope is not a chip;
+      //                               then the end, with no `}`
+    ),
+    {
+      syntaxLines: [5],
+      semantic: /Undefined chip name: Nope/,
+      semanticLine: 5,
+    },
+  ],
+  [
     "ASM: an instruction that is not a command, and a label defined twice",
     asmDiagnostics,
     lines(
@@ -173,11 +190,16 @@ describe("one call reports syntax and semantic diagnostics together", () => {
     // The skipped Jack statement must not report its own undeclared `x`;
     // the skipped HDL part must not cause an undriven-`x` cascade.
     expect(diagnostics).toHaveLength(2);
-    const [syntax, semantic] = diagnostics;
+    const starts = diagnostics.map(({ span }) => span?.start ?? Infinity);
+    expect(starts).toEqual([...starts].sort((a, b) => a - b));
+    // A missing `}` at the end follows the semantic error in source order.
+    const semantic = diagnostics.find(({ message }) =>
+      expected.semantic.test(message),
+    );
+    const syntax = diagnostics.find((diagnostic) => diagnostic !== semantic);
 
-    expect(expected.syntaxLines).toContain(syntax.span?.line);
-    expect(semantic.span?.line).toBe(expected.semanticLine);
-    expect(semantic.message).toMatch(expected.semantic);
-    expect(syntax.message).not.toMatch(expected.semantic);
+    expect(expected.syntaxLines).toContain(syntax?.span?.line);
+    expect(semantic?.span?.line).toBe(expected.semanticLine);
+    expect(syntax?.message).not.toMatch(expected.semantic);
   });
 });

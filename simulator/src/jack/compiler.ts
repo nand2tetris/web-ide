@@ -1,5 +1,11 @@
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { createError, Diagnostic, Span } from "../languages/base.js";
+import {
+  createError,
+  Diagnostic,
+  isValid,
+  Span,
+  Valid,
+} from "../languages/base.js";
 import {
   ArrayAccess,
   Class,
@@ -58,13 +64,13 @@ function capitalize(s: string) {
 export function compile(
   files: Record<string, string>,
 ): Record<string, string | Diagnostic> {
-  const classes: Record<string, Class | Diagnostic> = {};
+  const classes: Record<string, Valid<Class> | Diagnostic> = {};
   for (const [name, content] of Object.entries(files)) {
     const parsed = JACK.parse(content);
-    if (isErr(parsed)) {
-      classes[name] = Err(parsed);
+    if (!isValid(parsed)) {
+      classes[name] = parsed.diagnostics[0];
     } else {
-      const cls = Ok(parsed);
+      const cls = parsed.ast;
       const result = validateClass(cls);
       classes[name] =
         cls.name.value == name
@@ -78,9 +84,9 @@ export function compile(
     }
   }
 
-  const validClasses: Record<string, Class> = Object.fromEntries(
+  const validClasses: Record<string, Valid<Class>> = Object.fromEntries(
     Object.entries(classes).filter(([_, parsed]) => !isError(parsed)),
-  ) as Record<string, Class>;
+  ) as Record<string, Valid<Class>>;
 
   const vms: Record<string, string | Diagnostic> = {};
   for (const [name, parsed] of Object.entries(classes)) {
@@ -102,7 +108,7 @@ export function compile(
   return vms;
 }
 
-function validateClass(cls: Class): Result<void, Diagnostic> {
+function validateClass(cls: Valid<Class>): Result<void, Diagnostic> {
   const subroutineNames = new Set<string>();
   for (const subroutine of cls.subroutines) {
     if (subroutineNames.has(subroutine.name.value)) {
@@ -208,8 +214,8 @@ export class Compiler {
   }
 
   compile(
-    cls: Class,
-    other?: Record<string, Class>,
+    cls: Valid<Class>,
+    other?: Record<string, Valid<Class>>,
   ): Result<string, Diagnostic> {
     this.className = cls.name.value;
     this.classes = other ?? {};

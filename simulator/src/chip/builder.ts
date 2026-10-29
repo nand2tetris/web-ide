@@ -1,6 +1,12 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { createError, Diagnostic, Span } from "../languages/base.js";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import {
+  createError,
+  Diagnostic,
+  isValid,
+  Span,
+  Valid,
+} from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
@@ -27,11 +33,11 @@ export async function parse(
   name?: string,
   fs?: FileSystem,
 ): Promise<Result<Chip, Diagnostic>> {
-  const parsed = HDL.parse(code.toString());
-  if (isErr(parsed)) {
-    return parsed;
+  const outcome = HDL.parse(code.toString());
+  if (!isValid(outcome)) {
+    return Err(outcome.diagnostics[0]);
   }
-  return build({ parts: Ok(parsed), dir, name, fs });
+  return build({ parts: outcome.ast, dir, name, fs });
 }
 
 export async function loadChip(
@@ -44,12 +50,12 @@ export async function loadChip(
   }
   try {
     const file = await fs.readFile(`${dir}/${name}.hdl`);
-    const maybeParsedHDL = HDL.parse(file);
+    const outcome = HDL.parse(file);
 
     let maybeChip: Result<Chip, Error>;
-    if (isOk(maybeParsedHDL)) {
+    if (isValid(outcome)) {
       const maybeBuilt = await build({
-        parts: Ok(maybeParsedHDL),
+        parts: outcome.ast,
         dir,
         name,
         fs,
@@ -187,7 +193,7 @@ class ChipBuilder {
   private wires: WireData[] = [];
 
   static build(options: {
-    parts: HdlParse;
+    parts: Valid<HdlParse>;
     fs?: FileSystem;
     dir?: string;
     name?: string;
@@ -201,7 +207,7 @@ class ChipBuilder {
     dir,
     name,
   }: {
-    parts: HdlParse;
+    parts: Valid<HdlParse>;
     fs?: FileSystem;
     dir?: string;
     name?: string;

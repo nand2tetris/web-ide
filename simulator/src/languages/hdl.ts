@@ -146,9 +146,14 @@ hdlSemantics.addAttribute<HdlParse>("Root", {
   },
 });
 
+/** The null root of a parse that built no chip: a chip with no name or pins. */
+function emptyChip(): HdlParse {
+  return { name: { value: "" }, ins: [], outs: [], clocked: [], parts: [] };
+}
+
 export const HDL = {
   parser: grammar,
   grammar: hdlGrammar,
   semantics: hdlSemantics,
-  parse: makeParser<HdlParse>(grammar, hdlSemantics, (n) => n.Chip),
+  ...makeParser<HdlParse>(grammar, hdlSemantics, emptyChip, "Chip"),
 };

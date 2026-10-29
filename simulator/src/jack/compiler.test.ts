@@ -359,6 +359,75 @@ describe("compiler diagnostics", () => {
     ]);
   });
 
+  describe("a damaged class header", () => {
+    it("checks a class whose header lost its name under its file's name", () => {
+      const source = lines(
+        "class {",
+        "  function void a() {",
+        "    let y = 2;",
+        "    return;",
+        "  }",
+        "}",
+      );
+
+      const compiled = messagesOf({ Main: source });
+
+      expect(compiled.Main).toEqual([
+        "Line 1: expected a letter",
+        "Line 3: Undeclared variable y",
+      ]);
+    });
+
+    it("serves a class whose header lost its name to its callers", () => {
+      const caller = lines(
+        "class A {",
+        "  function void f() {",
+        "    var B b;",
+        "    let b = B.make();",
+        "    do b.g();",
+        "    do B.h();",
+        "    return;",
+        "  }",
+        "}",
+      );
+      const B = lines(
+        "class 1B {",
+        "  function B make() { return null; }",
+        "  method void g() { return; }",
+        "}",
+      );
+
+      const compiled = messagesOf({ A: caller, B });
+
+      expect(compiled.A).toEqual([
+        "Line 6: Class B doesn't contain a function/constructor h",
+      ]);
+      expect(compiled.B).toEqual(["Line 1: expected a letter"]);
+    });
+
+    it("does not report an undeclared variable a skipped class start could declare", () => {
+      const source = lines(
+        "class Main",
+        "  field int x;",
+        "  method void a() {",
+        "    let x = 1;",
+        "    return;",
+        "  }",
+        "  function int b() {",
+        "    let x = 2;",
+        "  }",
+        "}",
+      );
+
+      const compiled = messagesOf({ Main: source });
+
+      expect(compiled.Main).toEqual([
+        'Line 2: expected "{"',
+        "Line 7: Subroutine b: not all code paths return a value",
+      ]);
+    });
+  });
+
   describe("across files", () => {
     const CALLER = lines(
       "class A {",

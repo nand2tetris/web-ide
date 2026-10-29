@@ -96,6 +96,36 @@ const STORIES: [
     { syntaxLines: [4, 5], semantic: /Undeclared variable y/, semanticLine: 7 },
   ],
   [
+    "HDL: a CHIP header with no name, and a part naming a chip that does not exist",
+    hdlDiagnostics,
+    lines(
+      "CHIP {", //                  1: syntax error, no chip name
+      "  IN a;", //                 2
+      "  OUT out;", //              3
+      "  PARTS:", //                4
+      "  Nope(a=a, out=out);", //   5: grammatical, but Nope is not a chip
+      "}", //                       6
+    ),
+    {
+      syntaxLines: [1],
+      semantic: /Undefined chip name: Nope/,
+      semanticLine: 5,
+    },
+  ],
+  [
+    "Jack: a class header with no name, and a subroutine using an undeclared variable",
+    jackDiagnostics,
+    lines(
+      "class {", //                 1: syntax error, no class name
+      "  function void a() {", //   2
+      "    let y = 2;", //          3: grammatical, but y is not declared
+      "    return;", //             4
+      "  }", //                     5
+      "}", //                       6
+    ),
+    { syntaxLines: [1], semantic: /Undeclared variable y/, semanticLine: 3 },
+  ],
+  [
     "ASM: an instruction that is not a command, and a label defined twice",
     asmDiagnostics,
     lines(

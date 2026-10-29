@@ -4,14 +4,8 @@
  * parts, which `build` accepts as `Valid<HdlParse>`.
  */
 import { unwrap } from "@davidsouther/jiffies/result.ts";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import {
-  isParserRecoveryEnabled,
-  isRecovered,
-  isValid,
-  recoveryOf,
-  setParserRecovery,
-} from "../languages/base.js";
+import { describe, expect, it } from "vitest";
+import { isRecovered, isValid, recoveryOf } from "../languages/base.js";
 import { HDL, prune } from "../languages/hdl.js";
 import { build } from "./builder.js";
 import { HIGH, LOW } from "./chip.js";
@@ -26,16 +20,11 @@ const PROBE = [
   "}",
 ].join("\n");
 
-describe("partial AST probe", () => {
-  let before = false;
-  beforeEach(() => {
-    before = isParserRecoveryEnabled();
-    setParserRecovery(true);
-  });
-  afterEach(() => setParserRecovery(before));
+const RECOVER = { attemptRecovery: true };
 
+describe("partial AST probe", () => {
   it("simulates the parts that recovered cleanly", async () => {
-    const outcome = HDL.parse(PROBE);
+    const outcome = HDL.parse(PROBE, RECOVER);
     expect(isValid(outcome)).toBe(false);
     expect(outcome.ast).not.toEqual(HDL.empty());
     expect(outcome.diagnostics).toMatchObject([
@@ -63,7 +52,7 @@ describe("partial AST probe", () => {
   });
 
   it("refuses at compile time a tree not known to be valid", () => {
-    const outcome = HDL.parse(PROBE);
+    const outcome = HDL.parse(PROBE, RECOVER);
     // Never called: the compile time check is the assertion.
     const _unchecked = () =>
       // @ts-expect-error a tree beside diagnostics is not `Valid<HdlParse>`

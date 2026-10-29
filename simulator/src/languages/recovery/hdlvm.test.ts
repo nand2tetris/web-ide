@@ -5,13 +5,12 @@
 import * as full from "@nand2tetris/projects/full.js";
 import * as samples from "@nand2tetris/projects/samples/index.js";
 import * as testing from "@nand2tetris/projects/testing/index.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   type Diagnostic,
-  isParserRecoveryEnabled,
   isValid,
   type Outcome,
-  setParserRecovery,
+  type ParseOptions,
   validOf,
 } from "../base.js";
 import { HDL } from "../hdl.js";
@@ -38,7 +37,7 @@ const firstOf = (result: Outcome<unknown>): Diagnostic => {
 };
 
 interface Language {
-  parse: (source: string) => Outcome<unknown>;
+  parse: (source: string, options?: ParseOptions) => Outcome<unknown>;
 }
 
 const LANGUAGES: Record<string, Language> = { hdl: HDL, vm: VM };
@@ -67,11 +66,9 @@ function courseFiles(): Map<string, string> {
 
 const extension = (name: string) => name.slice(name.lastIndexOf(".") + 1);
 
-describe("HDL and VM recovery over the course files", () => {
-  const before = isParserRecoveryEnabled();
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(before));
+const RECOVER = { attemptRecovery: true };
 
+describe("HDL and VM recovery over the course files", () => {
   const files = courseFiles();
 
   it("finds the course files", () => {
@@ -84,7 +81,7 @@ describe("HDL and VM recovery over the course files", () => {
   });
 
   it.each([...files.entries()])("%s parses with no errors", (name, source) => {
-    const result = LANGUAGES[extension(name)].parse(source);
+    const result = LANGUAGES[extension(name)].parse(source, RECOVER);
     expectValid(result);
     expect(parsedOf(result).errors).toEqual([]);
   });
@@ -131,12 +128,8 @@ const MISTAKES: [string, Language, string][] = [
 
 describe("recovery leaves the first error byte for byte", () => {
   it.each(MISTAKES)("%s", (_name, language, source) => {
-    const before = isParserRecoveryEnabled();
-    setParserRecovery(false);
     const strict = language.parse(source);
-    setParserRecovery(true);
-    const recovering = language.parse(source);
-    setParserRecovery(before);
+    const recovering = language.parse(source, RECOVER);
     expectFailed(strict);
     const expected: Diagnostic = firstOf(strict);
     // Recovery may finish (first error in the list) or not (today's first).
@@ -147,13 +140,10 @@ describe("recovery leaves the first error byte for byte", () => {
 });
 
 describe("VM last line with no trailing newline", () => {
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(false));
-
   it("parses a valid last line with no errors", () => {
-    const result = VM.parse("push constant 7\nadd");
+    const result = VM.parse("push constant 7\nadd", RECOVER);
     expectValid(result);
     expect(parsedOf(result).errors).toEqual([]);
-    expect(validOf(VM.parse("push constant 7\nadd"))).toBeOk();
+    expect(validOf(VM.parse("push constant 7\nadd", RECOVER))).toBeOk();
   });
 });

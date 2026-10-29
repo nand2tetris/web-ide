@@ -1,5 +1,6 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
+  type Failure,
   type Grammar,
   grammar,
   Interval,
@@ -68,10 +69,18 @@ baseSemantics.addAttribute("String", {
   },
 });
 
+/**
+ * The stage that found a diagnostic: `lex` for a malformed token, `parse` for
+ * missing or unexpected input, `semantic` for a well formed but invalid
+ * program, and `compile` for a failure while generating output.
+ */
+export type Stage = "lex" | "parse" | "semantic" | "compile";
+
 /** One diagnostic: a message and, when known, where it applies. */
 export interface Diagnostic {
   message: string;
   span?: Span;
+  stage?: Stage;
 }
 
 /** One or more diagnostics, first error first. */
@@ -116,9 +125,15 @@ export type Outcome<T> =
   | { readonly ast: Valid<T>; readonly diagnostics: readonly [] }
   | { readonly ast: T; readonly diagnostics: Diagnostics };
 
+/** Options of a low-level parse. */
+export interface ParseOptions {
+  /** Recover from syntax errors to keep parsing. Default false. */
+  attemptRecovery?: boolean;
+}
+
 /** A language's one entry point, and the null root a failed parse gives. */
 export interface Parser<T> {
-  parse(source: string): Outcome<T>;
+  parse(source: string, options?: ParseOptions): Outcome<T>;
   empty(): T;
 }
 
@@ -167,15 +182,16 @@ function mint<T>(ast: T): Valid<T> {
   return ast as Valid<T>;
 }
 
-let parserRecovery = false;
-
-/** Feature flag, default false (today's behavior). */
-export function setParserRecovery(enabled: boolean): void {
-  parserRecovery = enabled;
-}
-
-export function isParserRecoveryEnabled(): boolean {
-  return parserRecovery;
+/**
+ * The stage of a syntax failure from its expected failures: `lex` when every
+ * expectation shown in the message failed inside a token that had begun, and
+ * `parse` otherwise, including mixed and empty expectations.
+ */
+export function syntaxStageOf(failures: readonly Failure[]): "lex" | "parse" {
+  const shown = failures.filter((failure) => !failure.isFluffy());
+  return shown.length > 0 && shown.every((failure) => failure.isLexical())
+    ? "lex"
+    : "parse";
 }
 
 const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
@@ -215,7 +231,10 @@ function failureKey(failure: RecoveredFailure): string {
 }
 
 function diagnosticOf(source: string, failure: RecoveredFailure): Diagnostic {
-  return createError(failure.shortMessage, spanAt(source, failure.position));
+  return {
+    ...createError(failure.shortMessage, spanAt(source, failure.position)),
+    stage: syntaxStageOf(failure.getRightmostFailures()),
+  };
 }
 
 /**
@@ -286,13 +305,13 @@ export function makeParser<T>(
 ): Parser<T> {
   return {
     empty,
-    parse(source) {
+    parse(source, options) {
       // Share diagnostics across try and catch so semantic conversion failures
       // retain the recovered syntax errors.
       let diagnostics: Diagnostic[] = [];
       const outer = linked;
       try {
-        const recover = parserRecovery;
+        const recover = options?.attemptRecovery ?? false;
         const match = recover
           ? (grammar as unknown as RecoveringGrammar).match(source, undefined, {
               recover,
@@ -301,10 +320,13 @@ export function makeParser<T>(
         const failures = recover ? match.getRecoveredFailures() : [];
         diagnostics = failures.map((f) => diagnosticOf(source, f));
         if (match.failed()) {
-          const first = createError(
-            match.shortMessage ?? UNKNOWN_HDL_ERROR,
-            span(match.getInterval()),
-          );
+          const first: Diagnostic = {
+            ...createError(
+              match.shortMessage ?? UNKNOWN_HDL_ERROR,
+              span(match.getInterval()),
+            ),
+            stage: syntaxStageOf(match.getRightmostFailures()),
+          };
           // Today's first error leads the list; the final failure ends it.
           return outcomeOf(empty(), [first, ...diagnostics.slice(1)]);
         }

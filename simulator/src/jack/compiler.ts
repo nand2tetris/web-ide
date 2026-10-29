@@ -4,6 +4,7 @@ import {
   Diagnostic,
   Diagnostics,
   isValid,
+  ParseOptions,
   Span,
   Valid,
 } from "../languages/base.js";
@@ -70,13 +71,16 @@ function capitalize(s: string) {
  * where a `JackCompileResult` holds the parsed intermediate Jack and the
  * diagnostics, with methods that give the VM string or go straight to VM
  * output.
+ *
+ * `options` reach each file's parse; recovery is off unless requested.
  */
 export function compile(
   files: Record<string, string>,
+  options: ParseOptions = {},
 ): Record<string, string | Diagnostics> {
   const classes: Record<string, Valid<Class> | Diagnostics> = {};
   for (const [name, content] of Object.entries(files)) {
-    const parsed = JACK.parse(content);
+    const parsed = JACK.parse(content, options);
     if (!isValid(parsed)) {
       classes[name] = parsed.diagnostics;
     } else {

@@ -5,21 +5,21 @@
  */
 import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { Programs } from "@nand2tetris/projects/samples/project_11/index.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { compile } from "../../jack/compiler.js";
 import {
   type Diagnostic,
-  isParserRecoveryEnabled,
   isRecovered,
   isValid,
   type Outcome,
   recoveryOf,
-  setParserRecovery,
   validOf,
 } from "../base.js";
 import { type Class, JACK } from "../jack.js";
 
 const lines = (...l: string[]) => l.join("\n");
+
+const RECOVER = { attemptRecovery: true };
 
 /** A recovered parse: diagnostics beside a tree that is not the null root. */
 const expectRecovered = (outcome: Outcome<Class>) => {
@@ -37,19 +37,15 @@ const COURSE: [string, string, unknown][] = Object.entries(Programs).flatMap(
 );
 
 describe("Jack recovery over the course files", () => {
-  const before = isParserRecoveryEnabled();
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(before));
-
   it("finds the course files", () => {
     expect(COURSE.length).toBeGreaterThan(10);
   });
 
   it.each(COURSE)("%s parses with no errors", (_name, source, expected) => {
-    const result = JACK.parse(source);
+    const result = JACK.parse(source, RECOVER);
     expect(isValid(result)).toBe(true);
     expect(result.diagnostics).toEqual([]);
-    const strict = validOf(JACK.parse(source));
+    const strict = validOf(JACK.parse(source, RECOVER));
     expect(strict).toBeOk();
     expect(unwrap(strict)).toEqual(expected);
   });
@@ -89,12 +85,8 @@ const JACK_MISTAKES = [
 
 describe("Jack recovery leaves the first error byte for byte", () => {
   it.each(JACK_MISTAKES.map((s, i) => [i, s]))("Jack %i", (_i, source) => {
-    const before = isParserRecoveryEnabled();
-    setParserRecovery(false);
     const strict = JACK.parse(source as string);
-    setParserRecovery(true);
-    const recovering = JACK.parse(source as string);
-    setParserRecovery(before);
+    const recovering = JACK.parse(source as string, RECOVER);
     if (isValid(strict)) throw new Error("parse is valid");
     if (isValid(recovering)) throw new Error("parse is valid");
     const expected: Diagnostic = strict.diagnostics[0];
@@ -105,12 +97,8 @@ describe("Jack recovery leaves the first error byte for byte", () => {
 });
 
 describe("Jack partial AST", () => {
-  const before = isParserRecoveryEnabled();
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(before));
-
   const astOf = (source: string) => {
-    const outcome = JACK.parse(source);
+    const outcome = JACK.parse(source, RECOVER);
     expectRecovered(outcome);
     return outcome.ast;
   };
@@ -191,7 +179,7 @@ describe("Jack partial AST", () => {
       "  }",
       "}",
     );
-    const outcome = JACK.parse(source);
+    const outcome = JACK.parse(source, RECOVER);
     expectRecovered(outcome);
     expect(outcome.diagnostics.map((e) => e.span?.line)).toEqual([2, 7]);
     const [a, b] = outcome.ast.subroutines;
@@ -214,7 +202,7 @@ describe("Jack partial AST", () => {
       "  }",
       "}",
     );
-    const outcome = JACK.parse(source);
+    const outcome = JACK.parse(source, RECOVER);
     expectRecovered(outcome);
     expect(outcome.diagnostics.map((e) => e.span?.line)).toEqual([3]);
     const sub = outcome.ast.subroutines[0];
@@ -235,31 +223,30 @@ describe("Jack partial AST", () => {
       "  }",
       "}",
     );
-    const outcome = JACK.parse(source);
+    const outcome = JACK.parse(source, RECOVER);
     expectRecovered(outcome);
     expect(outcome.diagnostics).toHaveLength(1);
   });
 });
 
 describe("compiler reports every parse error per file", () => {
-  const before = isParserRecoveryEnabled();
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(before));
-
   it("lists each file's recovered errors on its compile error", () => {
-    const compiled = compile({
-      Main: lines(
-        "class Main {",
-        "  function void main() {",
-        "    var int;",
-        "    let x 1;",
-        "    do Output.printInt(x;",
-        "    return;",
-        "  }",
-        "}",
-      ),
-      Other: "class Other { function void f() { return; } }",
-    });
+    const compiled = compile(
+      {
+        Main: lines(
+          "class Main {",
+          "  function void main() {",
+          "    var int;",
+          "    let x 1;",
+          "    do Output.printInt(x;",
+          "    return;",
+          "  }",
+          "}",
+        ),
+        Other: "class Other { function void f() { return; } }",
+      },
+      RECOVER,
+    );
     expect(typeof compiled.Other).toBe("string");
     const diagnostics = compiled.Main;
     if (typeof diagnostics === "string") throw new Error("Main compiled");

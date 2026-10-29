@@ -1,10 +1,14 @@
-const jack = `Jack <: Base {
+const jack = `
+Jack <: Base {
     Root := Class
 
     whitespace = (lineComment | comment | space)
 
     class = "class" whitespace+
-    Class = class jackIdentifier OpenBrace ClassVarDec* SubroutineDec* ! ClassClose
+    Class = ClassStart ! &SubroutinesStart SubroutineDec* ! ClassClose
+    ClassStart = ClassHead ! OpenBrace ClassVarDec*
+    ClassHead = class jackIdentifier
+    SubroutinesStart = subroutineType | CloseBrace
     ClassClose = CloseBrace end
     recoveryStop = subroutineType
     recoveryToken = lineComment | comment | stringConstant | jackIdentifier | integerConstant
@@ -87,5 +91,4 @@ const jack = `Jack <: Base {
 
     jackIdentifier = letter (alnum | underscore)*
 }`;
-
 export default jack;

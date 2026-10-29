@@ -5,10 +5,12 @@ import {
   Diagnostics,
   mergeDiagnostics,
   Origin,
+  Origins,
   Provenance,
   Recovered,
   recoveredOf,
   Span,
+  semanticError,
   Valid,
 } from "../languages/base.js";
 import {
@@ -72,7 +74,8 @@ export interface CompileOptions {
 
 /**
  * What a class's checks know of the declarations recovery damaged: each
- * class's provenance by name, and the names of the files that built no class.
+ * class's provenance by name, and the names of the files that built no class
+ * of that name.
  */
 export interface Damage {
   readonly provenance: Readonly<Record<string, Provenance>>;
@@ -106,11 +109,6 @@ const SKIPS_STATEMENT: ReadonlySet<string> = new Set<JackSkipKind>([
   "WhileClose",
 ]);
 
-/** A check's diagnostic on a parsed class. */
-function semanticError(description: string, span?: Span): Diagnostic {
-  return { ...createError(description, span), stage: "semantic" };
-}
-
 /**
  * Compiles each Jack file by name. Each value is the file's VM text when the
  * file has no diagnostic, and otherwise its merged diagnostics.
@@ -128,7 +126,47 @@ export function compile(
   files: Record<string, string>,
   options: CompileOptions = {},
 ): Record<string, string | Diagnostics> {
-  const attemptRecovery = options.attemptRecovery ?? true;
+  const { lists, origins, classes, damage } = checkFiles(
+    files,
+    options.attemptRecovery ?? true,
+  );
+  const vms: Record<string, string | Diagnostics> = {};
+  for (const [name, list] of Object.entries(lists)) {
+    const cls = classes[name];
+    if (cls !== undefined) {
+      const compiled = new Compiler().compile(cls, classes, damage);
+      if (isErr(compiled)) {
+        list.push(...Err(compiled));
+      } else if (list.length === 0) {
+        vms[name] = Ok(compiled);
+        continue;
+      }
+    }
+    // A file without a compiled class always has a diagnostic.
+    const [first, ...rest] = list;
+    if (first !== undefined) {
+      vms[name] = mergeDiagnostics([first, ...rest], origins);
+    }
+  }
+  return vms;
+}
+
+/** Each file's parse and class diagnostics, and the classes other files may use. */
+interface CheckedFiles {
+  readonly lists: Record<string, Diagnostic[]>;
+  readonly origins: Origins;
+  readonly classes: Record<string, Valid<Class>>;
+  readonly damage: Damage;
+}
+
+/**
+ * Parses and checks each file. A class enters the table when its file built
+ * one under its own name; otherwise the file's name is lost.
+ */
+function checkFiles(
+  files: Record<string, string>,
+  attemptRecovery: boolean,
+): CheckedFiles {
   const lists: Record<string, Diagnostic[]> = {};
   const origins = new Map<Diagnostic, Origin>();
   const classes: Record<string, Valid<Class>> = {};
@@ -164,26 +202,7 @@ export function compile(
     provenance[name] = recovered.provenance;
   }
 
-  const damage: Damage = { provenance, lost };
-  const vms: Record<string, string | Diagnostics> = {};
-  for (const [name, list] of Object.entries(lists)) {
-    const cls = classes[name];
-    if (cls !== undefined) {
-      const compiled = new Compiler().compile(cls, classes, damage);
-      if (isErr(compiled)) {
-        list.push(...Err(compiled));
-      } else if (list.length === 0) {
-        vms[name] = Ok(compiled);
-        continue;
-      }
-    }
-    // A file without a compiled class always has a diagnostic.
-    const [first, ...rest] = list;
-    if (first !== undefined) {
-      vms[name] = mergeDiagnostics([first, ...rest], origins);
-    }
-  }
-  return vms;
+  return { lists, origins, classes, damage: { provenance, lost } };
 }
 
 /**

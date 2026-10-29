@@ -9,6 +9,7 @@ import {
   Provenance,
   recoveredOf,
   Span,
+  semanticError,
   Valid,
 } from "../languages/base.js";
 import {
@@ -22,11 +23,6 @@ import {
 import { builtinOverrides } from "./builtins/builtinOverrides.js";
 import { hasBuiltinChip, REGISTRY } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
-
-/** A diagnostic of a check on a parsed chip. */
-function semanticError(description: string, span?: Span): Diagnostic {
-  return { ...createError(description, span), stage: "semantic" };
-}
 
 function pinWidth(pin: PinParts): Result<number | undefined, Diagnostic> {
   const start = pin.start ?? 0;

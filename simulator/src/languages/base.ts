@@ -338,6 +338,11 @@ export function createError(description: string, span?: Span): Diagnostic {
   };
 }
 
+/** A diagnostic of a check on a well formed program. */
+export function semanticError(description: string, span?: Span): Diagnostic {
+  return { ...createError(description, span), stage: "semantic" };
+}
+
 /**
  * The action errors of the parse running now, in the order the actions ran.
  * Like `linked`, `makeParser` sets this around the semantics.

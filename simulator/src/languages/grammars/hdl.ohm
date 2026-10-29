@@ -2,7 +2,12 @@ Hdl <: Base{
   Root := Chip
   identifier := (letter) (alnum)*
   Name := identifier
-  Chip = ChipStart ! &PartsStart ChipBody ChipClose
+  Chip = ChipOpen ChipBody ChipClose  -- closed
+       | ChipOpen "PARTS:" Part* ! UnclosedEnd  -- unclosed
+  ChipOpen = ChipStart ! &PartsStart
+  // Repeats the lookahead of Parts so a strict failure lists its expected
+  // text in the same order as before this alternative existed.
+  UnclosedEnd = &("CLOCKED" | CloseBrace) CloseBrace
   ChipStart = ChipHead ! OpenBrace ChipPins
   ChipHead = "CHIP" Name
   ChipPins = InList? OutList?

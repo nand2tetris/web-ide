@@ -420,7 +420,7 @@ describe("Fallible error recovery: every mistake from one parse", () => {
       expect(parsed.ast.parts.filter(isRecovered)).toHaveLength(3);
     });
 
-    it("reports every error, today's first, when recovery cannot finish", () => {
+    it("reports every error, today's first, and keeps a chip missing its `}` at the end", () => {
       const source = [
         "CHIP K {",
         "    IN a;",
@@ -432,7 +432,12 @@ describe("Fallible error recovery: every mistake from one parse", () => {
       ].join("\n");
       const result = HDL.parse(source, RECOVER);
       expect(isValid(result)).toBe(false);
-      expect(result.ast).toEqual(HDL.empty());
+      expect(result.ast.name.value).toBe("K");
+      expect(result.ast.parts).toMatchObject([
+        { skipped: { kind: "PartBody" } },
+        { skipped: { kind: "PartBody" } },
+        { skipped: { kind: "MissingChipClose" } },
+      ]);
       expect(result.diagnostics[0]).toMatchObject(
         asError({ line: 5, message: WIRE_SEPARATOR }),
       );

@@ -116,13 +116,20 @@ describe("HDL recovery at unbalanced chip braces", () => {
     expect(parts[1].skipped).toMatchObject({ kind: "ChipClose" });
   });
 
-  it("still builds no chip when the closer is missing at the end", () => {
+  it("keeps a chip missing its `}` at the end, with a null part for the closer", () => {
     const source = lines("CHIP Not {", ...CHIP_BODY.slice(0, -1));
 
-    const outcome = HDL.parse(source, RECOVER);
+    const parsed = recovered(HDL, source);
 
-    expect(outcome.ast).toEqual(HDL.empty());
-    expect(outcome.diagnostics).toEqual([strictError(HDL, source)]);
+    expect(parsed.diagnostics).toEqual([strictError(HDL, source)]);
+    expect(parsed.ast.name.value).toBe("Not");
+    expect(parsed.ast.ins).toEqual([{ pin: "a", width: 1 }]);
+    expect(partNames(parsed.ast)).toEqual(["Not", "<error>"]);
+    const parts = parsed.ast.parts as Part[];
+    expect(parts[1].skipped).toMatchObject({
+      kind: "MissingChipClose",
+      interval: { start: source.length, end: source.length },
+    });
   });
 });
 

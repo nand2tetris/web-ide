@@ -1,12 +1,11 @@
 import { Err, Ok } from "@davidsouther/jiffies/result.ts";
 import { grammar } from "ohm-js";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
   baseSemantics,
   type Diagnostics,
   grammars,
-  isParserRecoveryEnabled,
   isRecovered,
   isValid,
   makeParser,
@@ -14,7 +13,6 @@ import {
   type Recovery,
   type RecoveryPoint,
   recoveryOf,
-  setParserRecovery,
   validOf,
 } from "./base.js";
 
@@ -69,7 +67,6 @@ describe("Ohm Base", () => {
   });
 
   describe("partial parse result", () => {
-    beforeEach(() => setParserRecovery(false));
     const listGrammar = grammar(`Nums <: Base { Root := Number+ }`, grammars);
     const numsSemantics = listGrammar.extendSemantics(baseSemantics);
     numsSemantics.addAttribute<number[]>("root", {
@@ -97,6 +94,18 @@ describe("Ohm Base", () => {
       expect(outcome.diagnostics).toHaveLength(1);
       expect(outcome.diagnostics[0].message).toMatch(/^Line 1: expected /);
       expect(outcome.diagnostics[0]).not.toHaveProperty("errors");
+    });
+
+    it("tags a failure inside a begun token as lex", () => {
+      const outcome = parse("1 %XZ");
+
+      expect(outcome.diagnostics).toEqual([
+        {
+          message: "Line 1: expected a hexadecimal digit",
+          span: { start: 4, end: 4, line: 1 },
+          stage: "lex",
+        },
+      ]);
     });
 
     it("validOf returns the AST for valid source", () => {
@@ -181,16 +190,6 @@ describe("Ohm Base", () => {
     });
   });
 });
-describe("parser recovery opt-in", () => {
-  it("starts disabled and can be reset after opting in", () => {
-    expect(isParserRecoveryEnabled()).toBe(false);
-    setParserRecovery(true);
-    expect(isParserRecoveryEnabled()).toBe(true);
-    setParserRecovery(false);
-    expect(isParserRecoveryEnabled()).toBe(false);
-  });
-});
-
 describe("recovering parser factory", () => {
   const recoveringGrammar = grammar(
     `Words { Root = (word ! ";")+ word = letter+ }`,
@@ -207,22 +206,28 @@ describe("recovering parser factory", () => {
     () => "null root",
   );
 
-  beforeEach(() => setParserRecovery(false));
-  afterEach(() => setParserRecovery(false));
+  const RECOVER = { attemptRecovery: true };
 
-  it("keeps recovery disabled until opted in", () => {
-    const strict = parser.parse("1;2;");
+  it.each([
+    ["omitted", undefined],
+    ["empty", {}],
+    ["false", { attemptRecovery: false }],
+  ])("keeps recovery off with options %s", (_, options) => {
+    const strict = parser.parse("1;2;", options);
+
     expect(strict.ast).toBe("null root");
     expect(strict.diagnostics).toHaveLength(1);
-    setParserRecovery(true);
-    const outcome = parser.parse("1;2;");
+  });
+
+  it("recovers when a caller opts in", () => {
+    const outcome = parser.parse("1;2;", RECOVER);
+
     expect(outcome.ast).toBe("partial AST");
     expect(outcome.diagnostics).toHaveLength(2);
   });
 
   it("validOf rejects a recovered AST and the outcome retains every diagnostic", () => {
-    setParserRecovery(true);
-    const recovered = parser.parse("1;2;");
+    const recovered = parser.parse("1;2;", RECOVER);
     expect(isValid(recovered)).toBe(false);
     expect(recovered.ast).toBe("partial AST");
     const result = validOf(recovered);
@@ -248,8 +253,7 @@ describe("recovering parser factory", () => {
       () => [],
     );
     expect(isValid(unhandled.parse("a;b;"))).toBe(true);
-    setParserRecovery(true);
-    expect(() => unhandled.parse("a 1;b;")).toThrow(
+    expect(() => unhandled.parse("a 1;b;", RECOVER)).toThrow(
       /Missing semantic action for _fail/,
     );
   });
@@ -267,15 +271,58 @@ describe("recovering parser factory", () => {
       throwing,
       () => "null root",
     );
-    setParserRecovery(true);
-    const outcome = failing.parse("1;2;");
+    const outcome = failing.parse("1;2;", RECOVER);
     expect(isValid(outcome)).toBe(false);
     expect(outcome.ast).toBe("null root");
     expect(outcome.diagnostics).toHaveLength(3);
     expect(outcome.diagnostics.slice(0, 2)).toEqual(
-      parser.parse("1;2;").diagnostics,
+      parser.parse("1;2;", RECOVER).diagnostics,
     );
     expect(outcome.diagnostics[2]).toBe(conversionError);
+  });
+});
+
+describe("syntax stages", () => {
+  const stages = grammar(
+    `Stages <: Base {
+      Root := (Item ! semi)*
+      Item = Number | Pair | pair | arrow
+      Pair = "<" "a"
+      pair = "<" "b"
+      arrow = "=" ">"
+    }`,
+    grammars,
+  );
+  const semantics = stages.extendSemantics(baseSemantics);
+  semantics.addAttribute<string>("root", {
+    Root(_items, _ends) {
+      return "partial AST";
+    },
+  });
+  const parser = makeParser<string>(stages, semantics, () => "null root");
+
+  it.each([
+    ["a malformed token", "%XZ;", ["lex"]],
+    ["a missing separator", "1 2;", ["parse"]],
+    ["a token continuation beside a structural expectation", "<c;", ["parse"]],
+    ["a terminal inside a token", "=x;", ["lex"]],
+    ["a terminal at a token boundary", "1 =;", ["parse"]],
+    ["each recovered failure", "%XZ; 1 2; =x;", ["lex", "parse", "lex"]],
+  ])("tags %s", (_, source, expected) => {
+    const outcome = parser.parse(source, { attemptRecovery: true });
+
+    expect(outcome.ast).toBe("partial AST");
+    expect(outcome.diagnostics.map((d) => d.stage)).toEqual(expected);
+  });
+
+  it.each([
+    ["lex", "1; %XZ"],
+    ["parse", "1; 2 3"],
+  ])("tags an unrecoverable failure as %s", (stage, source) => {
+    const outcome = parser.parse(source, { attemptRecovery: true });
+
+    expect(outcome.ast).toBe("null root");
+    expect(outcome.diagnostics.at(-1)?.stage).toBe(stage);
   });
 });
 
@@ -317,11 +364,10 @@ describe("the recovery attribute", () => {
     () => [],
   );
 
-  beforeEach(() => setParserRecovery(true));
-  afterEach(() => setParserRecovery(false));
+  const RECOVER = { attemptRecovery: true };
 
   it("is undefined everywhere in a valid parse", () => {
-    const outcome = parser.parse("{ a; { b; } }");
+    const outcome = parser.parse("{ a; { b; } }", RECOVER);
     expect(outcome).toEqual({
       ast: [undefined, undefined, undefined, undefined, undefined, undefined],
       diagnostics: [],
@@ -329,7 +375,7 @@ describe("the recovery attribute", () => {
   });
 
   it("is undefined for an empty placeholder and links a recovery to its diagnostic", () => {
-    const outcome = parser.parse("{ a 1; c; }");
+    const outcome = parser.parse("{ a 1; c; }", RECOVER);
     expect(outcome.ast).toHaveLength(5);
     expect(outcome.diagnostics).toHaveLength(1);
     const [body, end, ...rest] = outcome.ast;
@@ -342,7 +388,7 @@ describe("the recovery attribute", () => {
   it("links equal failures that Ohm listed once to the one diagnostic", () => {
     // Both blocks lack `}` at the end of input. Ohm lists the failure once and
     // each `_fail` node holds its own copy.
-    const outcome = parser.parse("{ a; { b;");
+    const outcome = parser.parse("{ a; { b;", RECOVER);
     expect(outcome.ast).not.toHaveLength(0);
     expect(outcome.diagnostics).toHaveLength(1);
     const closers = outcome.ast.filter((slot) => slot !== undefined);
@@ -353,7 +399,6 @@ describe("the recovery attribute", () => {
   });
 
   it("is never read with recovery off", () => {
-    setParserRecovery(false);
     const outcome = parser.parse("{ a 1; c; }");
     expect(isValid(outcome)).toBe(false);
     expect(outcome.ast).toEqual([]);

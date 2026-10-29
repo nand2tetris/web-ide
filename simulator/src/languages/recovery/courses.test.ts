@@ -6,16 +6,15 @@ import { Err } from "@davidsouther/jiffies/result.ts";
 import * as full from "@nand2tetris/projects/full.js";
 import * as samples from "@nand2tetris/projects/samples/index.js";
 import * as testing from "@nand2tetris/projects/testing/index.js";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ASM, type Asm } from "../asm.js";
 import {
   type Diagnostic,
   type Diagnostics,
-  isParserRecoveryEnabled,
   isRecovered,
   isValid,
   type Outcome,
-  setParserRecovery,
+  type ParseOptions,
   validOf,
 } from "../base.js";
 import { CMP } from "../cmp.js";
@@ -32,7 +31,7 @@ const expectValid = (result: Outcome<unknown>) =>
   expect(isValid(result)).toBe(true);
 
 interface Language {
-  parse: (source: string) => Outcome<unknown>;
+  parse: (source: string, options?: ParseOptions) => Outcome<unknown>;
 }
 
 const LANGUAGES: Record<string, Language> = {
@@ -65,11 +64,9 @@ function courseFiles(): Map<string, string> {
 
 const extension = (name: string) => name.slice(name.lastIndexOf(".") + 1);
 
-describe("TST, CMP and ASM recovery over the course files", () => {
-  const before = isParserRecoveryEnabled();
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(before));
+const RECOVER = { attemptRecovery: true };
 
+describe("TST, CMP and ASM recovery over the course files", () => {
   const files = courseFiles();
 
   it("finds the course files", () => {
@@ -82,7 +79,7 @@ describe("TST, CMP and ASM recovery over the course files", () => {
   });
 
   it.each([...files.entries()])("%s parses with no errors", (name, source) => {
-    const result = LANGUAGES[extension(name)].parse(source);
+    const result = LANGUAGES[extension(name)].parse(source, RECOVER);
     expectValid(result);
     expect(parsedOf(result).errors).toEqual([]);
   });
@@ -131,13 +128,9 @@ const MISTAKES: Record<string, [Language, string][]> = {
 describe("recovery leaves the first error byte for byte", () => {
   it("keeps every syntax diagnostic when AST conversion fails", () => {
     const source = "@@\n@@\n@32768\n";
-    const before = isParserRecoveryEnabled();
-    setParserRecovery(false);
     const plain = ASM.parse(source);
-    setParserRecovery(true);
-    const recovered = ASM.parse(source);
-    const strict = validOf(ASM.parse(source));
-    setParserRecovery(before);
+    const recovered = ASM.parse(source, RECOVER);
+    const strict = validOf(ASM.parse(source, RECOVER));
 
     if (isValid(plain)) throw new Error("parse is valid");
     const first = plain.diagnostics[0];
@@ -165,12 +158,8 @@ describe("recovery leaves the first error byte for byte", () => {
       cases.map(([language, source], i) => [`${name} ${i}`, language, source]),
     ) as [string, Language, string][],
   )("%s", (_name, language, source) => {
-    const before = isParserRecoveryEnabled();
-    setParserRecovery(false);
     const strict = language.parse(source);
-    setParserRecovery(true);
-    const recovering = language.parse(source);
-    setParserRecovery(before);
+    const recovering = language.parse(source, RECOVER);
     if (isValid(strict)) throw new Error("parse is valid");
     if (isValid(recovering)) throw new Error("parse is valid");
     const expected: Diagnostic = strict.diagnostics[0];
@@ -182,18 +171,15 @@ describe("recovery leaves the first error byte for byte", () => {
 });
 
 describe("ASM last line with no trailing newline", () => {
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(false));
-
   it("parses a valid last line with no errors", () => {
-    const result = ASM.parse("@2\nD=A");
+    const result = ASM.parse("@2\nD=A", RECOVER);
     expectValid(result);
     expect(parsedOf(result).errors).toEqual([]);
     expect((parsedOf(result).ast as Asm).instructions).toHaveLength(2);
   });
 
   it("recovers a broken last line like any other line", () => {
-    const result = ASM.parse("@2\nM=D;JUMP");
+    const result = ASM.parse("@2\nM=D;JUMP", RECOVER);
     expect(result.ast).not.toEqual(ASM.empty());
     expect(parsedOf(result).errors).toMatchObject([
       { message: `Line 2: ${JUMP}` },

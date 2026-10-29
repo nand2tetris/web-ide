@@ -10,9 +10,16 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
 import * as simCompiler from "@nand2tetris/simulator/jack/compiler.js";
+import { act, renderHook } from "@testing-library/react";
 import { produce } from "immer";
+import { createElement, ReactNode, useContext } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CompilerStoreDispatch, makeCompilerStore } from "./compiler.store.js";
+import { BaseContext } from "./base.context.js";
+import {
+  CompilerStoreDispatch,
+  makeCompilerStore,
+  useCompilerPageStore,
+} from "./compiler.store.js";
 
 function mk() {
   const dispatch = { current: vi.fn() as unknown as CompilerStoreDispatch };
@@ -31,6 +38,132 @@ function mk() {
   }) as CompilerStoreDispatch;
   return store;
 }
+
+describe("Jack diagnostics by editor path", () => {
+  const lines = (...l: string[]) => l.join("\n");
+  const main = lines(
+    "class Main {",
+    "  function void a() {",
+    "    return;",
+    "    let x = 1", // line 4: syntax error, no semicolon
+    "  }",
+    "  function void b() {",
+    "    let y = 2;", // line 7: y is not declared
+    "    return;",
+    "  }",
+    "}",
+  );
+  const util = lines(
+    "class Util {",
+    "  function void c() {",
+    "    let z = 3;", // line 3: z is not declared
+    "    return;",
+    "  }",
+    "}",
+  );
+
+  it("files each list under the path its editor shows, with offsets local to the file", () => {
+    const s = mk();
+
+    s.dispatch.current({
+      action: "setFiles",
+      payload: { "proj/Main": main, "proj/Util": util },
+    });
+
+    const [syntax, semantic, ...rest] =
+      s.state.compiled["proj/Main"].diagnostics;
+    expect(rest).toEqual([]);
+    expect([4, 5]).toContain(syntax.span?.line);
+    expect(semantic).toMatchObject({
+      message: "Line 7: Undeclared variable y",
+      span: { start: main.indexOf("let y") + 4, line: 7 },
+    });
+    expect(s.state.compiled["proj/Util"].diagnostics).toMatchObject([
+      {
+        message: "Line 3: Undeclared variable z",
+        span: { start: util.indexOf("let z") + 4 },
+      },
+    ]);
+  });
+});
+
+describe("Jack files that share a class name", () => {
+  it("compiles the first and reports the repeat, so every path has a result", () => {
+    const s = mk();
+    const empty = "class Main {\n}\n";
+
+    s.dispatch.current({
+      action: "setFiles",
+      payload: { "a/Main": empty, "b/Main": empty },
+    });
+
+    expect(s.state.compiled["a/Main"].valid).toBe(true);
+    expect(s.state.compiled["b/Main"]).toMatchObject({
+      valid: false,
+      diagnostics: [{ message: "b/Main repeats the class file a/Main" }],
+    });
+    expect(s.state.isValid).toBe(false);
+  });
+});
+
+describe("Attempt Recovery setting in the compiler store", () => {
+  it("reaches the next compile, so only the syntax error remains once it is off", () => {
+    let recover = true;
+    const dispatch = { current: vi.fn() as unknown as CompilerStoreDispatch };
+    const { initialState, reducers } = makeCompilerStore(
+      vi.fn(),
+      dispatch,
+      () => recover,
+    );
+    let state = initialState;
+    dispatch.current = ((c: {
+      action: keyof typeof reducers;
+      payload: unknown;
+    }) => {
+      state = produce(state, (d: typeof initialState) => {
+        reducers[c.action].call(reducers, d, c.payload as never);
+      });
+    }) as CompilerStoreDispatch;
+    const files = {
+      Main: "class Main {\n  function void a() {\n    return;\n    let x = 1\n  }\n  function void b() {\n    let y = 2;\n    return;\n  }\n}\n",
+    };
+    dispatch.current({ action: "setFiles", payload: files });
+    expect(state.compiled.Main.diagnostics).toHaveLength(2);
+
+    recover = false;
+    dispatch.current({ action: "compile" });
+
+    expect(state.compiled.Main.diagnostics).toHaveLength(1);
+  });
+});
+
+describe("Attempt Recovery setting changed while the compiler page is open", () => {
+  it("recompiles the files already loaded under the new setting", () => {
+    let attemptRecovery = true;
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(
+        BaseContext.Provider,
+        { value: { ...useContext(BaseContext), attemptRecovery } },
+        children,
+      );
+    const view = renderHook(() => useCompilerPageStore(), { wrapper });
+    const Main =
+      "class Main {\n  function void a() {\n    return;\n    let x = 1\n  }\n  function void b() {\n    let y = 2;\n    return;\n  }\n}\n";
+    act(() =>
+      view.result.current.dispatch.current({
+        action: "setFiles",
+        payload: { Main },
+      }),
+    );
+    expect(view.result.current.state.compiled.Main.diagnostics).toHaveLength(2);
+
+    attemptRecovery = false;
+    view.rerender();
+    act(() => view.result.current.actions.recompile());
+
+    expect(view.result.current.state.compiled.Main.diagnostics).toHaveLength(1);
+  });
+});
 
 describe("keystroke edits (#447)", () => {
   afterEach(() => vi.useRealTimers());

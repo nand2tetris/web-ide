@@ -1,7 +1,15 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockInstance,
+  vi,
+} from "vitest";
 import { main } from "./grading.js";
 
 const lines = (...l: string[]) => l.join("\n");
@@ -19,12 +27,12 @@ const twoErrors = lines(
 
 describe("grading a folder", () => {
   let folder: string;
-  let log: ReturnType<typeof vi.spyOn>;
+  let log: MockInstance<typeof console.log>;
 
   beforeEach(async () => {
     folder = await mkdtemp(join(tmpdir(), "nand2tetris-grade-"));
     await writeFile(join(folder, "Not.hdl"), twoErrors);
-    log = vi.spyOn(console, "log").mockImplementation(() => {});
+    log = vi.spyOn(console, "log").mockImplementation(() => undefined);
   });
 
   afterEach(async () => {

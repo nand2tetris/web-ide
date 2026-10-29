@@ -1,12 +1,5 @@
 import { describe, expect, it } from "vitest";
-import yargs from "yargs";
-import {
-  ATTEMPT_RECOVERY_ENV,
-  attemptRecoveryOption,
-  compileJack,
-  describeDiagnostic,
-  resolveAttemptRecovery,
-} from "./compile.js";
+import { compileJack, describeDiagnostic } from "./compile.js";
 
 const lines = (...l: string[]) => l.join("\n");
 
@@ -62,39 +55,5 @@ describe("an error line", () => {
     expect(describeDiagnostic("Main", { message: "No main function" })).toBe(
       "Main.jack: No main function",
     );
-  });
-});
-
-describe("the Attempt Recovery setting", () => {
-  const env = (value?: string) => ({ [ATTEMPT_RECOVERY_ENV]: value });
-
-  it("is on when neither the flag nor the environment says otherwise", () => {
-    expect(resolveAttemptRecovery(undefined, {})).toBe(true);
-    expect(resolveAttemptRecovery(undefined, env(""))).toBe(true);
-    expect(resolveAttemptRecovery(undefined, env("true"))).toBe(true);
-  });
-
-  it.each(["false", "0", "no", "OFF"])(
-    "is off when the environment says %s",
-    (value) => {
-      expect(resolveAttemptRecovery(undefined, env(value))).toBe(false);
-    },
-  );
-
-  it.each([
-    [["--attempt-recovery"], true],
-    [["--no-attempt-recovery"], false],
-    [[], undefined],
-  ])("reads the flags %j as %s", (args, expected) => {
-    const argv = yargs(args)
-      .option("attempt-recovery", attemptRecoveryOption)
-      .parseSync();
-
-    expect(argv["attempt-recovery"]).toBe(expected);
-  });
-
-  it("follows the flag over the environment", () => {
-    expect(resolveAttemptRecovery(true, env("false"))).toBe(true);
-    expect(resolveAttemptRecovery(false, env("true"))).toBe(false);
   });
 });

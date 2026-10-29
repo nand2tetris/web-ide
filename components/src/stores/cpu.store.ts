@@ -14,12 +14,12 @@ import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 function makeTst() {
   return `repeat {
@@ -130,18 +130,7 @@ export function makeCpuStore(
       if (state.test.cmp.trim() === "") {
         return;
       }
-      const passed = compare(state.test.cmp.trim(), test.log().trim());
-      setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
-      );
+      setStatus(comparisonStatus(state.test.cmp.trim(), test.log().trim()));
     },
 
     setTitle(state: CpuPageState, title?: string) {
@@ -247,10 +236,7 @@ export function makeCpuStore(
       const tst = validOf(TST.parse(file));
 
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test - ${Err(tst)[0].message}`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
         valid = false;
         dispatch.current({ action: "update" });
         return false;

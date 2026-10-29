@@ -25,12 +25,12 @@ import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -225,20 +225,13 @@ export function makeChipStore(
 
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
-      const passed = compare(state.files.cmp.trim(), state.files.out.trim());
+      const status = comparisonStatus(
+        state.files.cmp.trim(),
+        state.files.out.trim(),
+      );
       // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
-        setStatus(
-          passed
-            ? {
-                message: `Simulation successful: The output file is identical to the compare file`,
-                severity: "SUCCESS",
-              }
-            : {
-                message: `Simulation error: The output file differs from the compare file`,
-                severity: "ERROR",
-              },
-        );
+        setStatus(status);
       });
     },
 
@@ -382,10 +375,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const diagnostics = Err(maybeChip);
-        setStatus({
-          message: diagnostics[0].message,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus("HDL code", diagnostics));
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -442,10 +432,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = validOf(TST.parse(file));
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test ${Err(tst)[0].message}`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
         invalid = true;
         return false;
       }

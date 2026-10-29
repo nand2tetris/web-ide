@@ -252,10 +252,34 @@ export function makePrune<T>(
     return mint(pruned);
   };
   return Object.assign(prune, {
-    provenance: (_tree: T): Provenance => {
-      throw new Error("not implemented");
-    },
+    provenance: (tree: T): Provenance => skipsIn(tree, [], scopeOf),
   });
+}
+
+/**
+ * Run time walk: the provenance of every null object in the tree, in tree
+ * order, each with the scopes that enclose it. A null object without
+ * `skipped` was not built by a language's semantics and records nothing.
+ */
+function skipsIn(
+  value: unknown,
+  scope: readonly string[],
+  scopeOf: ScopeOf,
+): Skip[] {
+  if (typeof value !== "object" || value === null) {
+    return [];
+  }
+  const { recovery, skipped } = value as Recovery;
+  if (recovery !== undefined) {
+    return skipped === undefined
+      ? []
+      : [{ ...skipped, diagnostic: recovery, scope }];
+  }
+  const name = Array.isArray(value) ? undefined : scopeOf(value);
+  const inner = name === undefined ? scope : [...scope, name];
+  return Object.values(value).flatMap((child) =>
+    skipsIn(child, inner, scopeOf),
+  );
 }
 
 /**
@@ -266,7 +290,9 @@ export function recoveredOf<T>(
   outcome: Outcome<T>,
   prune: Prune<T>,
 ): Recovered<T> | undefined {
-  throw new Error("not implemented");
+  return "nullRoot" in outcome && outcome.nullRoot
+    ? undefined
+    : { ast: prune(outcome.ast), provenance: prune.provenance(outcome.ast) };
 }
 
 /** Run time walk: true when any object in the tree carries `recovery`. */

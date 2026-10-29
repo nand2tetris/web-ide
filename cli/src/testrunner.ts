@@ -2,7 +2,7 @@ import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/fs_node.ts";
 import type { Assignment } from "@nand2tetris/projects/base.js";
 import { Assignments } from "@nand2tetris/projects/full.js";
-import { runner, RunOptions } from "@nand2tetris/simulator/projects/runner.js";
+import { RunOptions, runner } from "@nand2tetris/simulator/projects/runner.js";
 import { parse } from "path";
 
 /**

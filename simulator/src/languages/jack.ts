@@ -9,6 +9,7 @@ import {
   type Recovery,
   type RecoveryPoint,
   Span,
+  type SyntaxMessage,
   span,
 } from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
@@ -681,9 +682,51 @@ function emptyClass(): Class {
   };
 }
 
+// ---------------------------------------------------------------------------
+// Restored message: `expected "}"` right after a class's variables.
+//
+// What changed: `Class = ClassStart ! &SubroutinesStart ...` checks for a
+// subroutine keyword or `}` where the class's variables end. Where they end
+// exactly at the failure (no space or comment between, as in `class Main {`
+// or `field int x;` at the end of the file), that lookahead adds `"method"`,
+// `"function"` and `"constructor"` to the expected text. Before it, those
+// expectations came from `SubroutineDec*`, which matched nothing there, so
+// Ohm marked them fluffy and showed only `expected "}"`. Fluffy `"field"`
+// failures (the variables' own `ClassVarDec*` ended there) mark the case.
+//
+// Tradeoff: accepting the end of input in the lookahead's join would also
+// keep this text, but every recovery scan that reaches the end would then
+// match it, so nearly every truncated Jack file would recover as an empty
+// class instead of reaching its own recovery of a missing `}`.
+//
+// To revert to the longer list: delete this block and the
+// `restoreClassCloseMessage` argument to `makeParser` below, and change the
+// literal `expected "}"` in the test "the strict Jack message at a class
+// with no subroutines" (`recovery/headers.test.ts`) to
+// `expected "}", "method", "function", or "constructor"`.
+const LOOKAHEAD_EXPECTED =
+  'expected "}", "method", "function", or "constructor"';
+const CLOSER_EXPECTED = 'expected "}"';
+
+export const restoreClassCloseMessage: SyntaxMessage = (message, failures) => {
+  const afterClassVariables = failures.some(
+    (failure) => failure.isFluffy() && failure.toString() === '"field"',
+  );
+  return afterClassVariables && message.endsWith(LOOKAHEAD_EXPECTED)
+    ? message.slice(0, -LOOKAHEAD_EXPECTED.length) + CLOSER_EXPECTED
+    : message;
+};
+// ---------------------------------------------------------------------------
+
 export const JACK = {
   parser: grammar,
   grammar: jackGrammar,
   semantics: jackSemantics,
-  ...makeParser<Class>(grammar, jackSemantics, emptyClass, "class"),
+  ...makeParser<Class>(
+    grammar,
+    jackSemantics,
+    emptyClass,
+    "class",
+    restoreClassCloseMessage,
+  ),
 };

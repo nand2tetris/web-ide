@@ -519,20 +519,41 @@ function failureKey(failure: RecoveredFailure): string {
   return `${interval.startIdx}:${interval.endIdx}:${position}:${shortMessage}`;
 }
 
+/**
+ * A language's rewrite of an Ohm syntax message, given the failures behind
+ * it, fluffy ones included. `makeParser` applies it to the strict failure and
+ * to every recovered failure, so both report the same text.
+ */
+export type SyntaxMessage = (
+  message: string,
+  failures: readonly Failure[],
+) => string;
+
+const ohmMessage: SyntaxMessage = (message) => message;
+
 /** A syntax failure's diagnostic, tagged with the stage its failures show. */
 function syntaxDiagnostic(
   message: string,
   at: Span,
   failures: readonly Failure[],
+  messageOf: SyntaxMessage = ohmMessage,
 ): Diagnostic {
-  return { ...createError(message, at), stage: syntaxStageOf(failures) };
+  return {
+    ...createError(messageOf(message, failures), at),
+    stage: syntaxStageOf(failures),
+  };
 }
 
-function diagnosticOf(source: string, failure: RecoveredFailure): Diagnostic {
+function diagnosticOf(
+  source: string,
+  failure: RecoveredFailure,
+  messageOf: SyntaxMessage = ohmMessage,
+): Diagnostic {
   return syntaxDiagnostic(
     failure.shortMessage,
     spanAt(source, failure.position),
     failure.getRightmostFailures(),
+    messageOf,
   );
 }
 
@@ -616,12 +637,14 @@ function thrownDiagnostic(e: unknown): Diagnostic {
 /**
  * A parser reading `attribute` from the semantics of a successful match. A
  * failed match or a thrown semantic error gives `empty()` as the tree.
+ * `messageOf` rewrites each syntax message; by default Ohm's text is kept.
  */
 export function makeParser<T>(
   grammar: Grammar,
   semantics: Semantics,
   empty: () => T,
   attribute = "root",
+  messageOf: SyntaxMessage = ohmMessage,
 ): Parser<T> {
   return {
     empty,
@@ -640,12 +663,13 @@ export function makeParser<T>(
             })
           : grammar.match(source);
         const failures = recover ? match.getRecoveredFailures() : [];
-        diagnostics = failures.map((f) => diagnosticOf(source, f));
+        diagnostics = failures.map((f) => diagnosticOf(source, f, messageOf));
         if (match.failed()) {
           const first = syntaxDiagnostic(
             match.shortMessage ?? UNKNOWN_HDL_ERROR,
             span(match.getInterval()),
             match.getRightmostFailures(),
+            messageOf,
           );
           // Today's first error leads the list; the final failure ends it.
           return nullRootOf(empty(), [first, ...diagnostics.slice(1)]);

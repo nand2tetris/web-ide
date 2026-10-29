@@ -18,6 +18,7 @@ import {
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import {
   Diagnostic,
+  Diagnostics,
   Span,
   validOf,
 } from "@nand2tetris/simulator/languages/base.js";
@@ -374,7 +375,9 @@ export function makeChipStore(
       chip.remove();
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
-        const diagnostics = Err(maybeChip);
+        // Every file's list, in key order, until markers are kept per file.
+        const [first, ...rest] = Object.values(Err(maybeChip)).flat();
+        const diagnostics: Diagnostics = [first, ...rest];
         setStatus(failureStatus("HDL code", diagnostics));
         invalid = true;
         dispatch.current({

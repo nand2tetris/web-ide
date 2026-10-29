@@ -62,7 +62,8 @@ export const maybeBuild =
         fs,
       });
       if (isErr(maybeBuilt)) {
-        maybeChip = Err(new Error(Err(maybeBuilt).message));
+        const [[file, [first]]] = Object.entries(Err(maybeBuilt));
+        maybeChip = Err(new Error(`${file}: ${first.message}`));
       } else {
         maybeChip = maybeBuilt;
       }

@@ -3,7 +3,7 @@ import { I18nProvider } from "@lingui/react";
 import type { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ErrorPanel } from "./editor";
+import { Editor, ErrorPanel } from "./editor";
 import { Monaco } from "./Monaco";
 
 const fixture = vi.hoisted(() => {
@@ -28,7 +28,12 @@ const fixture = vi.hoisted(() => {
 
 vi.mock("../App.context", async () => {
   const { createContext } = await import("react");
-  return { AppContext: createContext({ theme: "light" }) };
+  return {
+    AppContext: createContext({
+      theme: "light",
+      monaco: { canUse: true, wants: true },
+    }),
+  };
 });
 vi.mock("./monacoSetup", () => ({}));
 vi.mock("monaco-editor", () => ({ editor: { EndOfLineSequence: { LF: 0 } } }));
@@ -152,5 +157,37 @@ describe("parser diagnostic panel", () => {
     );
     view.rerender(panel());
     expect(view.container.querySelector("details")).toBeNull();
+  });
+});
+
+describe("diagnostics of a file the editor does not show", () => {
+  it("marks only this file's spans, and names the other file above its messages", async () => {
+    const view = render(
+      <I18nProvider i18n={i18n}>
+        <Editor
+          value="broken"
+          onChange={() => undefined}
+          language="hdl"
+          path="Top.hdl"
+          diagnostics={[first]}
+          dependencyDiagnostics={{ "projects/Child.hdl": [second, unlocated] }}
+        />
+      </I18nProvider>,
+    );
+
+    await waitFor(() =>
+      expect(fixture.monaco.editor.setModelMarkers).toHaveBeenLastCalledWith(
+        fixture.model,
+        "hdl",
+        [expect.objectContaining({ message: "First error" })],
+      ),
+    );
+    const panel = view.container.querySelector(".dependency-diagnostics");
+    expect(panel?.querySelector("summary")?.textContent).toBe(
+      "Errors in projects/Child.hdl",
+    );
+    expect(panel?.querySelector("code")?.textContent).toBe(
+      "Second error\nNo location",
+    );
   });
 });

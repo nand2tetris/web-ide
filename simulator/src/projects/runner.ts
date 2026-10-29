@@ -5,10 +5,9 @@ import {
   AssignmentStubs,
 } from "@nand2tetris/projects/base.js";
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
-import { build as buildChip } from "../chip/builder.js";
+import { parse as buildChip, type ChipDiagnostics } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import { Diagnostics, Valid, validOf } from "../languages/base.js";
-import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
 
@@ -19,7 +18,6 @@ export interface AssignmentFiles extends Assignment {
 }
 
 export interface AssignmentParse extends AssignmentFiles {
-  maybeParsedHDL: Result<Valid<HdlParse>, Diagnostics>;
   maybeParsedTST: Result<Valid<Tst>, Diagnostics>;
 }
 
@@ -44,32 +42,31 @@ export const hasTest = ({
   AssignmentStubs[name as keyof typeof AssignmentStubs] !== undefined &&
   [".hdl", ".tst"].includes(ext);
 
-/** Try parsing the loaded files. */
+/** Try parsing the loaded test script. */
 export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
-  const maybeParsedHDL = validOf(HDL.parse(file.hdl));
   const maybeParsedTST = validOf(TST.parse(file.tst));
-  return { ...file, maybeParsedHDL, maybeParsedTST };
+  return { ...file, maybeParsedTST };
 };
 
-/** After parsing the assignment, compile the Chip and Tst. */
+/** Every diagnostic of a chip and its dependencies, a line each naming its file. */
+function describeFailures(failures: ChipDiagnostics): string {
+  return Object.entries(failures)
+    .flatMap(([file, diagnostics]) =>
+      diagnostics.map(({ message }) => `${file}: ${message}`),
+    )
+    .join("\n");
+}
+
+/** After parsing the test script, build the Chip from its source, and the Tst. */
 export const maybeBuild =
   (fs: FileSystem) =>
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
-    let maybeChip: Result<Chip, Error>;
-    if (isOk(file.maybeParsedHDL)) {
-      const maybeBuilt = await buildChip({
-        parts: Ok(file.maybeParsedHDL),
-        fs,
-      });
-      if (isErr(maybeBuilt)) {
-        const [[file, [first]]] = Object.entries(Err(maybeBuilt));
-        maybeChip = Err(new Error(`${file}: ${first.message}`));
-      } else {
-        maybeChip = maybeBuilt;
-      }
-    } else {
-      maybeChip = Err(new Error("HDL Was not parsed"));
-    }
+    const built = await buildChip(file.hdl, undefined, undefined, fs, {
+      file: `${file.name}.hdl`,
+    });
+    const maybeChip: Result<Chip, Error> = isErr(built)
+      ? Err(new Error(describeFailures(Err(built))))
+      : built;
     const maybeTest = isOk(file.maybeParsedTST)
       ? ChipTest.from(Ok(file.maybeParsedTST))
       : Err(new Error("TST Was not parsed"));

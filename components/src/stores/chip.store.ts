@@ -381,9 +381,9 @@ export function makeChipStore(
       chip.remove();
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
-        const diagnostics = [Err(maybeChip)];
+        const diagnostics = Err(maybeChip);
         setStatus({
-          message: Err(maybeChip).message,
+          message: diagnostics[0].message,
           severity: "ERROR",
         });
         invalid = true;

@@ -3,6 +3,7 @@ import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
   createError,
   Diagnostic,
+  Diagnostics,
   isValid,
   Span,
   Valid,
@@ -32,12 +33,13 @@ export async function parse(
   dir?: string,
   name?: string,
   fs?: FileSystem,
-): Promise<Result<Chip, Diagnostic>> {
+): Promise<Result<Chip, Diagnostics>> {
   const outcome = HDL.parse(code.toString());
   if (!isValid(outcome)) {
-    return Err(outcome.diagnostics[0]);
+    return Err(outcome.diagnostics);
   }
-  return build({ parts: outcome.ast, dir, name, fs });
+  const chip = await build({ parts: outcome.ast, dir, name, fs });
+  return isErr(chip) ? Err([Err(chip)]) : chip;
 }
 
 export async function loadChip(

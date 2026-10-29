@@ -29,7 +29,9 @@ import {
   validOf,
 } from "../base.js";
 import { CMP } from "../cmp.js";
+import { HDL, type Part } from "../hdl.js";
 import { TST } from "../tst.js";
+import { VM } from "../vm.js";
 
 interface Expected {
   line: number;
@@ -104,12 +106,17 @@ function expectValidGroup({ language, valid }: Group) {
 const SEPARATOR = 'expected ",", "!", or ";"';
 const ALU_OP = 'expected "&", "|", "+", "-", "!", "1", "0", "D", "M", or "A"';
 const JUMP = 'expected "JMP", "JLE", "JNE", "JLT", "JGE", "JEQ", or "JGT"';
+const WIRE_SEPARATOR = 'expected ")", ",", or "["';
+const _WIRE_VALUE = 'expected "false", "true", or a letter';
+const SPACE = 'expected a space, "/*", or "//"';
 const END = "expected end of input";
 const TST_SETTING = 'expected "%B", ".", a digit, or "%X"';
 const TST_OPERATIONS =
   '"resetRam", "ROM32K", "clear-echo", "echo", "output", "set", "vmstep", "tock", "tick", "ticktock", "eval", "output-list", "compare-to", "output-file", or "load"';
 const TST_COMMAND = `expected ${TST_OPERATIONS}`;
 const TST_ANY = `expected end of input, "while", "repeat", ${TST_OPERATIONS}`;
+const SEGMENT =
+  'expected "temp", "pointer", "that", "this", "constant", "static", "local", or "argument"';
 
 const NOT_TST = [
   "load Not.hdl,",
@@ -170,6 +177,55 @@ const GROUPS: Record<string, Record<string, Group>> = {
       ],
     },
   },
+  "F6: HDL and VM": {
+    HDL: {
+      language: HDL,
+      valid: [
+        "CHIP Xor {",
+        "    IN a, b;",
+        "    OUT out;",
+        "",
+        "    PARTS:",
+        "    Not(in=a, out=nota);",
+        "    Not(in=b, out=notb);",
+        "    And(a=a, b=notb, out=w1);",
+        "    And(a=nota, b=b, out=w2);",
+        "    Or(a=w1, b=w2, out=out);",
+        "}",
+      ],
+      // Line 7 is a typo in the part's first token.
+      edits: {
+        6: "    Not(in=a out=nota);",
+        7: "    1Not(in=b, out=notb);",
+        10: "    Or(a=w1 b=w2, out=out);",
+      },
+      errors: [
+        { line: 6, message: WIRE_SEPARATOR },
+        { line: 7, message: 'expected "}", "CLOCKED", or a letter' },
+        { line: 10, message: WIRE_SEPARATOR },
+      ],
+    },
+    VM: {
+      language: VM,
+      valid: [
+        "// Adds two numbers",
+        "push constant 7",
+        "push constant 8",
+        "add",
+        "pop local 0",
+        "label END",
+        "goto END",
+        "",
+      ],
+      // Line 3 is a typo in the instruction's first token.
+      edits: { 2: "push constant", 3: "psh constant 8", 5: "pop locl 0" },
+      errors: [
+        { line: 2, message: SPACE },
+        { line: 3, message: END },
+        { line: 5, message: SEGMENT },
+      ],
+    },
+  },
 };
 
 describe("Fallible error recovery: every mistake from one parse", () => {
@@ -197,11 +253,14 @@ describe("Fallible error recovery: every mistake from one parse", () => {
     return [...own, ...children.flatMap(recoveredNodes)];
   };
 
-  describe("null objects in TST, CMP and ASM", () => {
-    it.each(["TST", "CMP", "ASM"])(
+  describe("null objects in TST, CMP, ASM and VM", () => {
+    it.each(["TST", "CMP", "ASM", "VM"])(
       "%s leaves one null object per mistake, holding its listed diagnostic",
       (name) => {
-        const group = GROUPS["F5: TST, CMP and ASM"][name];
+        const group = {
+          ...GROUPS["F5: TST, CMP and ASM"],
+          ...GROUPS["F6: HDL and VM"],
+        }[name];
         const result = group.language.parse(inject(group.valid, group.edits));
         expect(isValid(result)).toBe(false);
         expectFinished(group.language, result);
@@ -270,5 +329,88 @@ describe("Fallible error recovery: every mistake from one parse", () => {
         expectErrors(TST, source, [{ line: 1, message }]);
       },
     );
+  });
+
+  describe("F6: hazards in HDL, and null parts", () => {
+    it.each([
+      "CHIP K { OUT out; PARTS: Nand(a=true, b=true, out=out); }",
+      "CHIP K { IN a; OUT out; PARTS: DFF(in=a, out=out); CLOCKED a; }",
+    ])("still parses %s", (source) => {
+      expectValid(HDL.parse(source));
+      expect(parsedOf(HDL.parse(source)).errors).toEqual([]);
+    });
+
+    it("(b) leaves a CLOCKED line to the clocked list", () => {
+      expectErrors(
+        HDL,
+        "CHIP K {\n IN a;\n OUT out;\n PARTS:\n DFF(in=a out=out);\n CLOCKED a;\n}",
+        [{ line: 5, message: WIRE_SEPARATOR }],
+      );
+    });
+
+    it("(a) stops at the chip's closer when the last part lacks `;`", () => {
+      expectErrors(
+        HDL,
+        "CHIP K {\n IN a;\n OUT out;\n PARTS:\n Nand(a=a, b=a, out=x);\n Nand(a=x, b=x, out=out)\n}",
+        [{ line: 7, message: 'expected ";"' }],
+      );
+    });
+
+    it("(a) reports a broken part and a first-token typo before `}`, in order", () => {
+      expectErrors(
+        HDL,
+        "CHIP K {\n IN a;\n OUT out;\n PARTS:\n Nand(a=a b=a, out=x);\n 1Nand(a=x, b=x, out=out)\n}",
+        [
+          { line: 5, message: WIRE_SEPARATOR },
+          { line: 6, message: 'expected "}", "CLOCKED", or a letter' },
+        ],
+      );
+    });
+
+    it("(a) keeps the parts before a last part that lacks its closer", () => {
+      const source = [
+        "CHIP Xor {",
+        "    IN a, b;",
+        "    OUT out;",
+        "    PARTS:",
+        "    Not(in=a, out=nota);",
+        "    Not(in=b, out=notb);",
+        "    Or(a=nota, b=notb, out=out",
+        "}",
+      ].join("\n");
+      expectErrors(HDL, source, [{ line: 8, message: WIRE_SEPARATOR }]);
+      const parts = parsedOf(HDL.parse(source)).ast.parts;
+      expect(parts.filter(isRecovered)).toHaveLength(1);
+      expect(parts.filter((part: Part) => !isRecovered(part))).toHaveLength(2);
+    });
+
+    it("puts one null part in the parts list per broken part", () => {
+      const { valid, edits } = GROUPS["F6: HDL and VM"].HDL;
+      const parsed = parsedOf(HDL.parse(inject(valid, edits)));
+      expect(parsed.ast.parts.filter(isRecovered)).toHaveLength(3);
+    });
+
+    it("reports every error, today's first, when recovery cannot finish", () => {
+      const source = [
+        "CHIP K {",
+        "    IN a;",
+        "    OUT out;",
+        "    PARTS:",
+        "    Nand(a=a b=a, out=x);",
+        "    Nand(a=x b=x, out=out);",
+        "",
+      ].join("\n");
+      const result = HDL.parse(source);
+      expect(isValid(result)).toBe(false);
+      expect(result.ast).toEqual(HDL.empty());
+      expect(result.diagnostics[0]).toMatchObject(
+        asError({ line: 5, message: WIRE_SEPARATOR }),
+      );
+      expect(result.diagnostics).toMatchObject([
+        asError({ line: 5, message: WIRE_SEPARATOR }),
+        asError({ line: 6, message: WIRE_SEPARATOR }),
+        asError({ line: 7, message: 'expected "}", "CLOCKED", or a letter' }),
+      ]);
+    });
   });
 });

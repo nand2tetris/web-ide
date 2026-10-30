@@ -16,10 +16,7 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
@@ -96,7 +93,7 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
-  error?: CompilationError;
+  diagnostics: readonly Diagnostic[];
   visualizationParameters: Set<string>;
 }
 
@@ -167,7 +164,7 @@ export function makeChipStore(
         pending?: boolean;
         invalid?: boolean;
         chipName?: string;
-        error?: CompilationError | undefined;
+        diagnostics?: readonly Diagnostic[];
       },
     ) {
       state.sim = reduceChip(
@@ -175,9 +172,9 @@ export function makeChipStore(
         payload?.pending ?? state.sim.pending,
         payload?.invalid ?? state.sim.invalid,
       );
-      state.controls.error = state.sim.invalid
-        ? (payload?.error ?? state.controls.error)
-        : undefined;
+      state.controls.diagnostics = state.sim.invalid
+        ? (payload?.diagnostics ?? state.controls.diagnostics)
+        : [];
     },
 
     setProjects(state: ChipPageState, projects: string[]) {
@@ -380,7 +377,7 @@ export function makeChipStore(
       chip.remove();
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
-        const error = Err(maybeChip);
+        const diagnostics = [Err(maybeChip)];
         setStatus({
           message: Err(maybeChip).message,
           severity: "ERROR",
@@ -388,7 +385,7 @@ export function makeChipStore(
         invalid = true;
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, error },
+          payload: { invalid: true, diagnostics },
         });
         return;
       }
@@ -607,7 +604,7 @@ export function makeChipStore(
       testName: "",
       usingBuiltin: false,
       runningTest: false,
-      error: undefined,
+      diagnostics: [],
       visualizationParameters: new Set(),
     };
 

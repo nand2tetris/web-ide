@@ -259,7 +259,7 @@ const VM = () => {
           language={"vm"}
           highlight={state.vm.showHighlight ? state.vm.highlight : undefined}
           highlightType={state.controls.valid ? "highlight" : "error"}
-          error={state.controls.error}
+          diagnostics={state.controls.diagnostics}
         />
       </Panel>
       <Panel className="vm" header={<Trans>VM Structures</Trans>}>

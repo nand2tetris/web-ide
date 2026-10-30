@@ -11,7 +11,7 @@
  * every error the parse found.
  */
 import { Err, isErr, type Result } from "@davidsouther/jiffies/result.ts";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ASM } from "../asm.js";
 import {
   type Diagnostic,
@@ -19,9 +19,9 @@ import {
   isRecovered,
   isValid,
   type Outcome,
+  type ParseOptions,
   type Recovery,
   recoveryOf,
-  setParserRecovery,
   validOf,
 } from "../base.js";
 import { CMP } from "../cmp.js";
@@ -30,6 +30,8 @@ import { JACK } from "../jack.js";
 import { TST } from "../tst.js";
 import { VM } from "../vm.js";
 
+const RECOVER = { attemptRecovery: true };
+
 interface Expected {
   line: number;
   message: string;
@@ -37,7 +39,7 @@ interface Expected {
 
 interface Language {
   // biome-ignore lint/suspicious/noExplicitAny: each language has its own AST type
-  parse: (source: string) => Outcome<any>;
+  parse: (source: string, options?: ParseOptions) => Outcome<any>;
   empty: () => unknown;
 }
 
@@ -90,7 +92,7 @@ const asError = ({ line, message }: Expected) => ({
 });
 
 function expectRecovered({ language, valid, edits, errors }: Group) {
-  const result = language.parse(inject(valid, edits));
+  const result = language.parse(inject(valid, edits), RECOVER);
   expectFinished(language, result);
   const parsed = parsedOf(result);
   expect(parsed.errors.map(described)).toMatchObject(errors.map(asError));
@@ -102,7 +104,7 @@ function expectRecovered({ language, valid, edits, errors }: Group) {
 }
 
 function expectValidGroup({ language, valid }: Group) {
-  const result = language.parse(valid.join("\n"));
+  const result = language.parse(valid.join("\n"), RECOVER);
   expectValid(result);
   expect(parsedOf(result).errors).toEqual([]);
   expect(strictOf(result)).toBeOk();
@@ -259,9 +261,6 @@ const GROUPS: Record<string, Record<string, Group>> = {
 };
 
 describe("Fallible error recovery: every mistake from one parse", () => {
-  // The release flag is off by default; this test exercises the flag on.
-  beforeAll(() => setParserRecovery(true));
-
   for (const [step, languages] of Object.entries(GROUPS)) {
     describe(step, () => {
       for (const [name, group] of Object.entries(languages)) {
@@ -291,7 +290,10 @@ describe("Fallible error recovery: every mistake from one parse", () => {
           ...GROUPS["F5: TST, CMP and ASM"],
           ...GROUPS["F6: HDL and VM"],
         }[name];
-        const result = group.language.parse(inject(group.valid, group.edits));
+        const result = group.language.parse(
+          inject(group.valid, group.edits),
+          RECOVER,
+        );
         expect(isValid(result)).toBe(false);
         expectFinished(group.language, result);
         const { ast, errors } = parsedOf(result);
@@ -310,7 +312,7 @@ describe("Fallible error recovery: every mistake from one parse", () => {
     source: string,
     errors: Expected[],
   ) => {
-    const result = language.parse(source);
+    const result = language.parse(source, RECOVER);
     expectFinished(language, result);
     expect(parsedOf(result).errors.map(described)).toMatchObject(
       errors.map(asError),
@@ -319,7 +321,9 @@ describe("Fallible error recovery: every mistake from one parse", () => {
 
   describe("F5: hazards in TST", () => {
     it("(a) stops at a block's closer instead of swallowing it", () => {
-      expectValid(TST.parse("repeat 2 {\n  tick,\n  tock;\n}\noutput;"));
+      expectValid(
+        TST.parse("repeat 2 {\n  tick,\n  tock;\n}\noutput;", RECOVER),
+      );
       // The missing separator is reported where the next token, `}`, begins.
       expectErrors(TST, "repeat 2 {\n  tick,\n  tock\n}\noutput;", [
         { line: 4, message: SEPARATOR },
@@ -368,8 +372,8 @@ describe("Fallible error recovery: every mistake from one parse", () => {
       "CHIP K { OUT out; PARTS: Nand(a=true, b=true, out=out); }",
       "CHIP K { IN a; OUT out; PARTS: DFF(in=a, out=out); CLOCKED a; }",
     ])("still parses %s", (source) => {
-      expectValid(HDL.parse(source));
-      expect(parsedOf(HDL.parse(source)).errors).toEqual([]);
+      expectValid(HDL.parse(source, RECOVER));
+      expect(parsedOf(HDL.parse(source, RECOVER)).errors).toEqual([]);
     });
 
     it("(b) leaves a CLOCKED line to the clocked list", () => {
@@ -411,14 +415,14 @@ describe("Fallible error recovery: every mistake from one parse", () => {
         "}",
       ].join("\n");
       expectErrors(HDL, source, [{ line: 8, message: WIRE_SEPARATOR }]);
-      const parts = parsedOf(HDL.parse(source)).ast.parts;
+      const parts = parsedOf(HDL.parse(source, RECOVER)).ast.parts;
       expect(parts.filter(isRecovered)).toHaveLength(1);
       expect(parts.filter((part: Part) => !isRecovered(part))).toHaveLength(2);
     });
 
     it("puts one null part in the parts list per broken part", () => {
       const { valid, edits } = GROUPS["F6: HDL and VM"].HDL;
-      const parsed = parsedOf(HDL.parse(inject(valid, edits)));
+      const parsed = parsedOf(HDL.parse(inject(valid, edits), RECOVER));
       expect(parsed.ast.parts.filter(isRecovered)).toHaveLength(3);
     });
 
@@ -432,7 +436,7 @@ describe("Fallible error recovery: every mistake from one parse", () => {
         "    Nand(a=x b=x, out=out);",
         "",
       ].join("\n");
-      const result = HDL.parse(source);
+      const result = HDL.parse(source, RECOVER);
       expect(isValid(result)).toBe(false);
       expect(result.ast).toEqual(HDL.empty());
       expect(described(result.diagnostics[0] as Diagnostic)).toMatchObject(

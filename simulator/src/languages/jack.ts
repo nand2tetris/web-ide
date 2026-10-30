@@ -1,6 +1,7 @@
 import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   baseSemantics,
+  carrierOf,
   grammars,
   guardedRecovery,
   isRecovered,
@@ -182,28 +183,79 @@ export interface Expression {
 export const grammar = ohmGrammar(jackGrammar, grammars);
 export const jackSemantics = grammar.extendSemantics(baseSemantics);
 
+/**
+ * What a Jack null object stands in for, by the grammar slot that recovered:
+ * a skipped declaration body or subroutine header, skipped input before the
+ * class closer, a skipped statement body or head, or the missing or skipped
+ * closer of a block.
+ */
+export type JackSkipKind =
+  | "ClassVarDecBody"
+  | "SubroutineHead"
+  | "ClassClose"
+  | "VarDecBody"
+  | "LetBody"
+  | "DoBody"
+  | "ReturnBody"
+  | "IfHead"
+  | "WhileHead"
+  | "SubroutineBodyClose"
+  | "IfClose"
+  | "ElseClose"
+  | "WhileClose";
+
+type StatementSkipKind = Exclude<
+  JackSkipKind,
+  "ClassVarDecBody" | "SubroutineHead" | "ClassClose" | "VarDecBody"
+>;
+type BlockCloseKind =
+  | "SubroutineBodyClose"
+  | "IfClose"
+  | "ElseClose"
+  | "WhileClose";
+
 /** Null objects for the recovered positions. */
-function nullClassVarDec({ recovery, span }: RecoveryPoint): ClassVarDec {
-  return { varType: "field", type: { value: "", span }, names: [], recovery };
+function nullClassVarDec(point: RecoveryPoint): ClassVarDec {
+  return {
+    varType: "field",
+    type: { value: "", span: point.span },
+    names: [],
+    ...carrierOf(point, "ClassVarDecBody"),
+  };
 }
 
-function nullSubroutine({ recovery, span }: RecoveryPoint): Subroutine {
+function nullSubroutine(
+  point: RecoveryPoint,
+  kind: "SubroutineHead" | "ClassClose",
+): Subroutine {
+  const { span } = point;
   return {
     type: "function",
     name: { value: "", span },
     returnType: { value: "void", span },
     parameters: [],
     body: { varDecs: [], statements: [] },
-    recovery,
+    ...carrierOf(point, kind),
   };
 }
 
-function nullVarDec({ recovery, span }: RecoveryPoint): VarDec {
-  return { type: { value: "", span }, names: [], recovery };
+function nullVarDec(point: RecoveryPoint): VarDec {
+  return {
+    type: { value: "", span: point.span },
+    names: [],
+    ...carrierOf(point, "VarDecBody"),
+  };
 }
 
-function nullStatement({ recovery, span }: RecoveryPoint): Statement {
-  return { statementType: "returnStatement", span, recovery };
+function nullStatement(
+  point: RecoveryPoint,
+  kind: StatementSkipKind,
+): Statement {
+  return {
+    statementType: "returnStatement",
+    span: point.span,
+    ...carrierOf(point, kind),
+  };
 }
 
 /**
@@ -211,10 +263,14 @@ function nullStatement({ recovery, span }: RecoveryPoint): Statement {
  * null statement when the block recovered. The guarded list retains its
  * successfully matched statements.
  */
-function block(list: Node, correction: Node): Statement[] {
+function block(
+  list: Node,
+  correction: Node,
+  kind: BlockCloseKind,
+): Statement[] {
   const kept: Statement[] = list.children.map((n) => n.statement);
   const recovered: RecoveryPoint | undefined = correction.recovery;
-  return recovered ? [...kept, nullStatement(recovered)] : kept;
+  return recovered ? [...kept, nullStatement(recovered, kind)] : kept;
 }
 
 const keep = <T extends Recovery>(items: T[]): T[] =>
@@ -237,18 +293,31 @@ function pruneStatements(statements: Statement[]): Statement[] {
   });
 }
 
-/** Drops recovered items from every list; the result is checked and minted `Valid`. */
-export const prune = makePrune<Class>((tree) => ({
-  ...tree,
-  varDecs: keep(tree.varDecs),
-  subroutines: keep(tree.subroutines).map((sub) => ({
-    ...sub,
-    body: {
-      varDecs: keep(sub.body.varDecs),
-      statements: pruneStatements(sub.body.statements),
-    },
-  })),
-}));
+/** A class and each subroutine open a scope named for them. */
+function scopeOf(node: object): string | undefined {
+  return "subroutines" in node || "parameters" in node
+    ? (node as Class | Subroutine).name.value
+    : undefined;
+}
+
+/**
+ * Drops recovered items from every list; the result is checked and minted
+ * `Valid`. Its provenance scopes each skip by its class and subroutine.
+ */
+export const prune = makePrune<Class>(
+  (tree) => ({
+    ...tree,
+    varDecs: keep(tree.varDecs),
+    subroutines: keep(tree.subroutines).map((sub) => ({
+      ...sub,
+      body: {
+        varDecs: keep(sub.body.varDecs),
+        statements: pruneStatements(sub.body.statements),
+      },
+    })),
+  }),
+  scopeOf,
+);
 
 jackSemantics.addAttribute<Class>("Root", {
   Root(_) {
@@ -267,7 +336,9 @@ jackSemantics.addAttribute<Class>("class", {
     return {
       name: { value: name.sourceString, span: span(name.source) },
       varDecs: varDecs.children.map((n) => n.classVarDec),
-      subroutines: skipped ? [...kept, nullSubroutine(skipped)] : kept,
+      subroutines: skipped
+        ? [...kept, nullSubroutine(skipped, "ClassClose")]
+        : kept,
     };
   },
 });
@@ -302,7 +373,7 @@ jackSemantics.addAttribute<Subroutine>("subroutineDec", {
       correction,
     );
     if (recovered) {
-      return nullSubroutine(recovered);
+      return nullSubroutine(recovered, "SubroutineHead");
     }
     const [type, returnType, name, _a, parameters] = head.children;
     return {
@@ -346,7 +417,7 @@ jackSemantics.addAttribute<SubroutineBody>("subroutineBody", {
   SubroutineBody(_a, varDecs, statementList, correction, _end) {
     return {
       varDecs: varDecs.children.map((n) => n.varDec),
-      statements: block(statementList, correction),
+      statements: block(statementList, correction, "SubroutineBodyClose"),
     };
   },
 });
@@ -380,7 +451,7 @@ jackSemantics.addAttribute<Statement>("statement", {
       correction,
     );
     return recovered
-      ? nullStatement(recovered)
+      ? nullStatement(recovered, "LetBody")
       : { ...body.statement, span: span(this.source) };
   },
 
@@ -412,12 +483,12 @@ jackSemantics.addAttribute<Statement>("statement", {
       correction,
     );
     if (recovered) {
-      return nullStatement(recovered);
+      return nullStatement(recovered, "IfHead");
     }
     return {
       statementType: "ifStatement",
       condition: head.child(2).expression,
-      body: block(body, bodyCorrection),
+      body: block(body, bodyCorrection, "IfClose"),
       else: elseBlock.child(0)?.else ?? [],
     };
   },
@@ -428,12 +499,12 @@ jackSemantics.addAttribute<Statement>("statement", {
       correction,
     );
     if (recovered) {
-      return nullStatement(recovered);
+      return nullStatement(recovered, "WhileHead");
     }
     return {
       statementType: "whileStatement",
       condition: head.child(2).expression,
-      body: block(body, bodyCorrection),
+      body: block(body, bodyCorrection, "WhileClose"),
     };
   },
 
@@ -442,7 +513,7 @@ jackSemantics.addAttribute<Statement>("statement", {
       body,
       correction,
     );
-    return recovered ? nullStatement(recovered) : body.statement;
+    return recovered ? nullStatement(recovered, "DoBody") : body.statement;
   },
 
   DoBody(_a, call) {
@@ -455,7 +526,7 @@ jackSemantics.addAttribute<Statement>("statement", {
       correction,
     );
     return recovered
-      ? nullStatement(recovered)
+      ? nullStatement(recovered, "ReturnBody")
       : { ...body.statement, span: span(this.source) };
   },
 
@@ -477,7 +548,7 @@ jackSemantics.addAttribute<Statement>("statement", {
 
 jackSemantics.addAttribute<Statement[]>("else", {
   ElseBlock(_a, _b, body, bodyCorrection, _end) {
-    return block(body, bodyCorrection);
+    return block(body, bodyCorrection, "ElseClose");
   },
 });
 

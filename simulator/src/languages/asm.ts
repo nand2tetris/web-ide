@@ -17,9 +17,12 @@ import {
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import {
+  actionError,
   baseSemantics,
+  carrierOf,
   Diagnostic,
   diagnostic,
+  failedOf,
   grammars,
   guardedRecovery,
   makeParser,
@@ -91,8 +94,22 @@ export interface AsmLabelInstruction extends Recovery {
  * The null instruction where recovery skipped a line: a label with no name,
  * which emits no code. It is a label only by its type; `recovery` marks it.
  */
-function nullInstruction({ recovery, span }: RecoveryPoint): AsmInstruction {
-  return { type: "L", label: "", span, recovery };
+function nullInstruction(point: RecoveryPoint): AsmInstruction {
+  return {
+    type: "L",
+    label: "",
+    span: point.span,
+    ...carrierOf(point, "instruction"),
+  };
+}
+
+/** The null instruction where an instruction action of `kind` failed. */
+function failedInstruction(
+  diagnostic: Diagnostic,
+  at: Span,
+  kind: "aInstruction" | "cInstruction",
+): AsmInstruction {
+  return { type: "L", label: "", span: at, ...failedOf(diagnostic, at, kind) };
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -121,7 +138,8 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
   },
 });
 
-function getAsmAssign(assignN: Node) {
+/** The C target, or the action error of an invalid one. */
+function getAsmAssign(assignN: Node): string | Diagnostic {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
   // The book (figure 4.5) specifies DM and ADM as the destination forms, but
@@ -134,7 +152,7 @@ function getAsmAssign(assignN: Node) {
   }
   if (assign != "" && !isAssignAsm(assign)) {
     const reversed = assign.split("").reverse().join("");
-    throw diagnostic(
+    return actionError(
       "asm.invalidTarget",
       {
         target: assign,
@@ -147,12 +165,13 @@ function getAsmAssign(assignN: Node) {
   return assign;
 }
 
-function getAsmOp(opN: Node) {
+/** The C value, or the action error of an invalid one. */
+function getAsmOp(opN: Node): string | Diagnostic {
   const op = opN.sourceString;
 
   if (!isCommandAsm(op)) {
     const reversed = op.split("").reverse().join("");
-    throw diagnostic(
+    return actionError(
       "asm.invalidValue",
       {
         value: opN.sourceString,
@@ -166,16 +185,29 @@ function getAsmOp(opN: Node) {
 }
 
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  aInstruction(_at, name): AsmAInstruction {
-    if (typeof name.value === "string") return A(name.value, span(this.source));
-    else return A(parseInt(name.value.join(""), 10), span(this.source));
+  aInstruction(_at, name): AsmInstruction {
+    const at = span(this.source);
+    if (typeof name.value === "string") return A(name.value, at);
+    const value = parseInt(name.value.join(""), 10);
+    return isAValue(value)
+      ? A(value, at)
+      : failedInstruction(
+          actionError("asm.aValueRange", { value }, at),
+          at,
+          "aInstruction",
+        );
   },
-  cInstruction(assignN, opN, jmpN): AsmCInstruction {
+  cInstruction(assignN, opN, jmpN): AsmInstruction {
+    const at = span(this.source);
     const assign = getAsmAssign(assignN);
-
-    const op = getAsmOp(opN) as COMMANDS_ASM;
+    const op = getAsmOp(opN);
+    // Both are checked, so an instruction reports each invalid part.
+    const failed = [assign, op].find((part) => typeof part !== "string");
+    if (failed !== undefined) {
+      return failedInstruction(failed as Diagnostic, at, "cInstruction");
+    }
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
-    return C(assign as ASSIGN_ASM, op, jmp, span(this.source));
+    return C(assign as ASSIGN_ASM, op as COMMANDS_ASM, jmp, at);
   },
   label(_o, { name }, _c): AsmLabelInstruction {
     return L(name, span(this.source));
@@ -329,8 +361,13 @@ export function emit(asm: Asm): number[] {
     .filter((op): op is number => op !== undefined);
 }
 
+/** True when `value` fits an A instruction. */
+function isAValue(value: number): boolean {
+  return !(value > 32767 || value < 0);
+}
+
 const A = (source: string | number, span?: Span): AsmAInstruction => {
-  if (typeof source === "number" && (source > 32767 || source < 0)) {
+  if (typeof source === "number" && !isAValue(source)) {
     throw diagnostic("asm.aValueRange", { value: source }, span);
   }
   return typeof source === "string"

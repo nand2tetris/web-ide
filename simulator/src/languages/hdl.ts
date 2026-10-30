@@ -2,6 +2,7 @@
 import { grammar as ohmGrammar } from "ohm-js";
 import {
   baseSemantics,
+  carrierOf,
   grammars,
   guardedRecovery,
   isRecovered,
@@ -53,25 +54,49 @@ export interface HdlParse {
   parts: "BUILTIN" | Part[];
 }
 
+/**
+ * What an HDL null object stands in for: a skipped `IN` or `OUT` line, a
+ * skipped part, or skipped input before the end of the parts.
+ */
+export type HdlSkipKind =
+  | "InListBody"
+  | "OutListBody"
+  | "PartBody"
+  | "PartsClose";
+
 /** Null objects for the recovered positions. */
-function nullPin({ recovery }: RecoveryPoint): PinDeclaration {
-  return { pin: "", width: 1, recovery };
+function nullPin(
+  point: RecoveryPoint,
+  kind: "InListBody" | "OutListBody",
+): PinDeclaration {
+  return { pin: "", width: 1, ...carrierOf(point, kind) };
 }
 
-function nullPart({ recovery, span }: RecoveryPoint): Part {
-  return { name: "", wires: [], span, recovery };
+function nullPart(point: RecoveryPoint, kind: "PartBody" | "PartsClose"): Part {
+  return { name: "", wires: [], span: point.span, ...carrierOf(point, kind) };
 }
 
-/** Drops recovered pins and parts; the result is checked and minted `Valid`. */
-export const prune = makePrune<HdlParse>((tree) => ({
-  ...tree,
-  ins: tree.ins.filter((pin) => !isRecovered(pin)),
-  outs: tree.outs.filter((pin) => !isRecovered(pin)),
-  parts:
-    tree.parts === "BUILTIN"
-      ? tree.parts
-      : tree.parts.filter((part) => !isRecovered(part)),
-}));
+/** A chip opens a scope named for it. */
+function scopeOf(node: object): string | undefined {
+  return "parts" in node ? (node as HdlParse).name.value : undefined;
+}
+
+/**
+ * Drops recovered pins and parts; the result is checked and minted `Valid`.
+ * Its provenance scopes each skip by its chip.
+ */
+export const prune = makePrune<HdlParse>(
+  (tree) => ({
+    ...tree,
+    ins: tree.ins.filter((pin) => !isRecovered(pin)),
+    outs: tree.outs.filter((pin) => !isRecovered(pin)),
+    parts:
+      tree.parts === "BUILTIN"
+        ? tree.parts
+        : tree.parts.filter((part) => !isRecovered(part)),
+  }),
+  scopeOf,
+);
 
 import hdlGrammar from "./grammars/hdl.ohm.js";
 export const grammar = ohmGrammar(hdlGrammar, grammars);
@@ -118,7 +143,7 @@ hdlSemantics.addAttribute<Part>("Part", {
       correction,
     );
     if (recovered) {
-      return nullPart(recovered);
+      return nullPart(recovered, "PartBody");
     }
     const { name } = body.child(0);
     const { Wires } = body.child(2);
@@ -134,7 +159,7 @@ hdlSemantics.addAttribute<Part[] | "BUILTIN">("Parts", {
   Parts(_, parts, correction, _stop) {
     const kept = parts.children.map((c) => c.Part as Part);
     const recovered: RecoveryPoint | undefined = correction.recovery;
-    return recovered ? [...kept, nullPart(recovered)] : kept;
+    return recovered ? [...kept, nullPart(recovered, "PartsClose")] : kept;
   },
   BuiltinPart(_a, _b) {
     return "BUILTIN";
@@ -170,14 +195,18 @@ hdlSemantics.addAttribute<PinDeclaration[]>("Pins", {
       body,
       correction,
     );
-    return recovered ? [nullPin(recovered)] : body.child(1).PinList;
+    return recovered
+      ? [nullPin(recovered, "InListBody")]
+      : body.child(1).PinList;
   },
   OutList(body, correction, _end) {
     const recovered: RecoveryPoint | undefined = guardedRecovery(
       body,
       correction,
     );
-    return recovered ? [nullPin(recovered)] : body.child(1).PinList;
+    return recovered
+      ? [nullPin(recovered, "OutListBody")]
+      : body.child(1).PinList;
   },
 });
 

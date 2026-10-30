@@ -42,7 +42,8 @@ interface CompileInput {
 }
 
 export const Chip = () => {
-  const { fs, setStatus, localFsRoot } = useContext(BaseContext);
+  const { fs, setStatus, localFsRoot, attemptRecovery } =
+    useContext(BaseContext);
   const { stores, setTool } = useContext(PageContext);
   const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
@@ -139,6 +140,15 @@ export const Chip = () => {
     compile.current({ tst, cmp, tstDir });
     actions.reset();
   }, [tst, cmp, tstDir]);
+
+  // Turning Attempt Recovery on or off changes the diagnostics of the open chip.
+  const recovery = useRef(attemptRecovery);
+  useEffect(() => {
+    if (recovery.current !== attemptRecovery) {
+      recovery.current = attemptRecovery;
+      compile.current();
+    }
+  }, [attemptRecovery]);
 
   const runner = useRef<Timer | undefined>(undefined);
   useEffect(() => {

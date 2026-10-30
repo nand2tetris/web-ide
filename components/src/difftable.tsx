@@ -1,3 +1,4 @@
+import { display } from "@davidsouther/jiffies/display.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import {

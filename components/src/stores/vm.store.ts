@@ -451,12 +451,14 @@ export function makeVmStore(
 }
 
 export function useVmPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, storage, attemptRecovery } = useContext(BaseContext);
 
   const dispatch = useRef<VmStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeVmStore(fs, setStatus, storage, dispatch),
+    () => makeVmStore(fs, setStatus, storage, dispatch, () => recovery.current),
     [fs, setStatus, storage, dispatch],
   );
 

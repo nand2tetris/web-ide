@@ -3,6 +3,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
 import { useDialog } from "@nand2tetris/components/dialog";
+import { StatusSeverity } from "@nand2tetris/components/stores/base.context";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import {
   NO_STATUS,

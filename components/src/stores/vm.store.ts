@@ -14,11 +14,13 @@ import {
   MemoryAdapter,
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
+import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import {
   type Diagnostic,
+  DiagnosticCode,
+  diagnostic,
   Span,
-  validOf,
-} from "@nand2tetris/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
@@ -26,12 +28,12 @@ import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 import type { StatusActions } from "./status.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -50,6 +52,11 @@ export interface VmSim {
 
 export interface VMTestSim {
   highlight: Span | undefined;
+}
+
+/** A runtime failure as a diagnostic that carries only its programmer facing message. */
+function unexpected({ message }: Error): Diagnostic {
+  return diagnostic(DiagnosticCode.Error.UNEXPECTED, { message });
 }
 
 export interface VmPageState {
@@ -107,7 +114,10 @@ function reduceVMTest(
   } catch (_e) {
     const error = new Error("Runtime error: Invalid stack");
     status.setStatus({ message: error.message, severity: "ERROR" });
-    dispatch.current({ action: "setDiagnostics", payload: [error] });
+    dispatch.current({
+      action: "setDiagnostics",
+      payload: [unexpected(error)],
+    });
   }
 
   return {
@@ -145,7 +155,7 @@ export function makeVmStore(
 
   /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    status.setFailureStatus(...diagnostics);
+    status.setFailureStatus("vm", diagnostics);
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
   };
@@ -187,17 +197,8 @@ export function makeVmStore(
       state.files.out = test.log();
     },
     testFinished(state: VmPageState) {
-      const passed = compare(state.files.cmp.trim(), state.files.out);
       status.setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
+        comparisonStatus(state.files.cmp.trim(), state.files.out),
       );
     },
 
@@ -357,7 +358,7 @@ export function makeVmStore(
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });
-        status.setFailureStatus(...Err(tst));
+        status.setFailureStatus("tst", Err(tst), { marked: false });
         return false;
       }
       dispatch.current({ action: "setValid", payload: true });
@@ -378,7 +379,9 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        status.setFailureStatus(Err(maybeTest));
+        status.setFailureStatus("tst", [Err(maybeTest)], {
+          marked: false,
+        });
         return false;
       } else {
         test = Ok(maybeTest).using(fs);
@@ -410,7 +413,10 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },
@@ -439,7 +445,10 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },

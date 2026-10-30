@@ -1,20 +1,37 @@
-import { display } from "@davidsouther/jiffies/display.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
+import {
+  type Diagnostic,
+  type Diagnostics,
+  describeDiagnostic,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { ReactElement } from "react";
+
+/** Every message of a failed parse, one per line. */
+const messages = (
+  diagnostics: Diagnostics,
+  describe: (diagnostic: Diagnostic) => string,
+) => diagnostics.map(describe).join("\n");
 
 export const DiffTable = ({
   className = "",
   out,
   cmp,
   zeroState,
+  describe = describeDiagnostic,
 }: {
   out: string;
   cmp: string;
   className?: string;
   zeroState?: ReactElement;
+  /**
+   * Turns the diagnostic of an unparsable file into the text shown for it.
+   * Defaults to `describeDiagnostic`; pass a translating function to show the
+   * text in another language.
+   */
+  describe?: (diagnostic: Diagnostic) => string;
 }) => {
   const output = validOf(CMP.parse(out));
   const compare = validOf(CMP.parse(cmp));
@@ -23,7 +40,7 @@ export const DiffTable = ({
     return (
       <details>
         <summary>Failed to parse output</summary>
-        <pre>{Err(output).map(display).join("\n")}</pre>
+        <pre>{messages(Err(output), describe)}</pre>
         <code>
           <pre>{out}</pre>
         </code>
@@ -36,7 +53,7 @@ export const DiffTable = ({
       <details>
         <summary>Failed to parse compare</summary>
         <code>
-          <pre>{Err(compare).map(display).join("\n")}</pre>
+          <pre>{messages(Err(compare), describe)}</pre>
           <pre>{cmp}</pre>
         </code>
       </details>

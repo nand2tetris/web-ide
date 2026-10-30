@@ -5,6 +5,7 @@ import { AssignmentStubs } from "@nand2tetris/projects/base.js";
 import { runTests } from "@nand2tetris/simulator/projects/runner.js";
 import type { ParsedPath } from "path";
 import { ChangeEventHandler, useCallback, useState } from "react";
+import { describeDiagnostic } from "../shell/diagnostics";
 
 // import { parse, ParsedPath } from "node:path";
 
@@ -35,7 +36,7 @@ const TestResult = (props: {
         <code>{props.tst}</code>
       </pre>
     </div>
-    <DiffTable cmp={props.cmp} out={props.out} />
+    <DiffTable cmp={props.cmp} out={props.out} describe={describeDiagnostic} />
   </details>
 );
 

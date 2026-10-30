@@ -7,9 +7,10 @@ import { compare } from "../compare.js";
 
 export type StatusSeverity = "SUCCESS" | "WARNING" | "ERROR" | "INFO";
 
-/** A diagnostic a status lists. */
+/** A diagnostic a status lists, with the file it belongs to when that is not the open one. */
 export interface StatusDiagnostic {
   diagnostic: Diagnostic;
+  file?: string;
 }
 
 /**
@@ -40,20 +41,46 @@ export interface StatusContext extends StatusActions {
 
 /**
  * What `setStatus` takes to report the diagnostics of a file, which it shows
- * as an error. An editor marks each diagnostic that has a span, so the status
- * lists only the others; with `marked: false` no editor shows the file and
- * every diagnostic is listed.
+ * as an error. An editor marks each
+ * diagnostic that has a span, so the status lists only the others; with
+ * `marked: false` no editor shows the file and every diagnostic is listed.
+ * `head` also lists the first diagnostic. `others` holds diagnostics of other
+ * files by path; no editor marks them, so they are all listed and counted.
  */
 export function failureStatus(
   file: string,
   diagnostics: readonly Diagnostic[],
-  { marked = true }: { marked?: boolean } = {},
+  {
+    marked = true,
+    head = false,
+    others = {},
+  }: {
+    marked?: boolean;
+    head?: boolean;
+    others?: Record<string, readonly Diagnostic[]>;
+  } = {},
 ): Status {
-  return {
-    heading: { file, count: diagnostics.length },
-    diagnostics: diagnostics
+  const unmarked: StatusDiagnostic[] = [
+    ...diagnostics
       .filter(({ span }) => !marked || span === undefined)
       .map((diagnostic) => ({ diagnostic })),
+    ...Object.entries(others).flatMap(([path, list]) =>
+      list.map((diagnostic) => ({ diagnostic, file: path })),
+    ),
+  ];
+  const [first = Object.values(others).flat()[0]] = diagnostics;
+  const listed =
+    head &&
+    first !== undefined &&
+    !unmarked.some(({ diagnostic }) => diagnostic === first)
+      ? [{ diagnostic: first }, ...unmarked]
+      : unmarked;
+  const count =
+    diagnostics.length +
+    Object.values(others).reduce((sum, list) => sum + list.length, 0);
+  return {
+    heading: { file, count },
+    diagnostics: listed,
   };
 }
 

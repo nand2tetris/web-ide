@@ -13,7 +13,7 @@ import {
   type ParseOptions,
   recoveryOf,
 } from "./base.js";
-import { CMP } from "./cmp.js";
+import { rawCMP } from "./cmp.js";
 import {
   DiagnosticCode,
   describeDiagnostic,
@@ -54,7 +54,7 @@ const NULL_ROOTS: [string, Language, string, unknown][] = [
     },
   ],
   ["TST", TST, "set a", { lines: [] }],
-  ["CMP", CMP, "| a", []],
+  ["CMP", rawCMP, "| a", []],
   ["ASM", ASM, "@@", { instructions: [] }],
   ["VM", VM, "push nowhere 1", { instructions: [] }],
 ];
@@ -136,7 +136,7 @@ describe("a semantic action error", () => {
 
 describe("an empty file", () => {
   it.each([
-    ["CMP", CMP],
+    ["CMP", rawCMP],
     ["ASM", ASM],
     ["VM", VM],
   ] as [string, Language][])(

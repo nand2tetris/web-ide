@@ -104,6 +104,7 @@ export const DiagnosticCode = Object.freeze({
     DUPLICATE_SUBROUTINE: "jack.duplicateSubroutine",
     MISSING_RETURN_VALUE: "jack.missingReturnValue",
     MISSING_RETURN_PATH: "jack.missingReturnPath",
+    DUPLICATE_CLASS_FILE: "jack.duplicateClassFile",
   }),
 });
 
@@ -208,6 +209,7 @@ export interface DiagnosticArgs {
   };
   [DiagnosticCode.Jack.UNDEFINED_CLASS]: { name: string };
   [DiagnosticCode.Jack.CLASS_NAME_MISMATCH]: { name: string; file: string };
+  [DiagnosticCode.Jack.DUPLICATE_CLASS_FILE]: { path: string; other: string };
   [DiagnosticCode.Jack.DUPLICATE_SUBROUTINE]: { name: string };
   [DiagnosticCode.Jack.MISSING_RETURN_VALUE]: Record<string, never>;
   [DiagnosticCode.Jack.MISSING_RETURN_PATH]: { name: string };
@@ -432,6 +434,8 @@ export const ENGLISH: Catalog = {
       `Class ${name} doesn't exist`,
     [DiagnosticCode.Jack.CLASS_NAME_MISMATCH]: ({ name, file }) =>
       `Class name ${name} doesn't match file name ${file}`,
+    [DiagnosticCode.Jack.DUPLICATE_CLASS_FILE]: ({ path, other }) =>
+      `${path} repeats the class file ${other}`,
     [DiagnosticCode.Jack.DUPLICATE_SUBROUTINE]: ({ name }) =>
       `Subroutine ${name} already declared`,
     [DiagnosticCode.Jack.MISSING_RETURN_VALUE]: () =>

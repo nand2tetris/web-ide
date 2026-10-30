@@ -85,6 +85,10 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Jack.MISSING_SUBROUTINE]: { class: "B", subroutine: "h" },
   [DiagnosticCode.Jack.UNDEFINED_CLASS]: { name: "Nope" },
   [DiagnosticCode.Jack.CLASS_NAME_MISMATCH]: { name: "Foo", file: "Main" },
+  [DiagnosticCode.Jack.DUPLICATE_CLASS_FILE]: {
+    path: "b/Main",
+    other: "a/Main",
+  },
   [DiagnosticCode.Jack.DUPLICATE_SUBROUTINE]: { name: "a" },
   [DiagnosticCode.Jack.MISSING_RETURN_VALUE]: {},
   [DiagnosticCode.Jack.MISSING_RETURN_PATH]: { name: "main" },

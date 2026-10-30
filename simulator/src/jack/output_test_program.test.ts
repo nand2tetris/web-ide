@@ -5,9 +5,8 @@ import { validOf } from "../languages/base.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "../vm/vm.js";
 
-// https://github.com/nand2tetris/web-ide/issues/488
-// Regression test: the projects/12 OutputTest Main.jack (reported to halt with ERR 14)
-// compiles and runs to exit code 0 against the built-in OS.
+// The projects/12 OutputTest Main.jack compiles and runs to exit code 0
+// against the built-in OS.
 const MAIN =
   String.raw`class Main {
     function void main() {

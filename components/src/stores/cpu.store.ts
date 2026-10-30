@@ -7,20 +7,21 @@ import {
   MemoryKeyboard,
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span, validOf } from "@nand2tetris/simulator/languages/base.js";
+import { validOf } from "@nand2tetris/simulator/languages/base.js";
+import { Span } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 import type { StatusActions } from "./status.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 function makeTst() {
   return `repeat {
@@ -131,17 +132,8 @@ export function makeCpuStore(
       if (state.test.cmp.trim() === "") {
         return;
       }
-      const passed = compare(state.test.cmp.trim(), test.log().trim());
       status.setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
+        comparisonStatus(state.test.cmp.trim(), test.log().trim()),
       );
     },
 
@@ -248,7 +240,7 @@ export function makeCpuStore(
       const tst = validOf(TST.parse(file));
 
       if (isErr(tst)) {
-        status.setFailureStatus(...Err(tst));
+        status.setFailureStatus("tst", Err(tst), { marked: false });
         valid = false;
         dispatch.current({ action: "update" });
         return false;
@@ -289,7 +281,9 @@ export function makeCpuStore(
       });
 
       if (isErr(maybeTest)) {
-        status.setFailureStatus(Err(maybeTest));
+        status.setFailureStatus("tst", [Err(maybeTest)], {
+          marked: false,
+        });
         return false;
       } else {
         test = Ok(maybeTest);

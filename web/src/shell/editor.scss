@@ -77,15 +77,27 @@
     position: relative;
   }
 
-  .dependency-diagnostics {
+  > .ErrorPanel,
+  > .dependency-diagnostics {
     flex: 0 1 auto;
     max-height: 40%;
     overflow: auto;
     background-color: var(--background-color, Canvas);
     color: var(--text-color, CanvasText);
+  }
+
+  .ErrorPanel {
+    margin-bottom: 0;
 
     summary {
       color: inherit;
+    }
+
+    ol {
+      margin: 0;
+      padding: 0.5rem 0.5rem 0.5rem 2rem;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
     }
   }
 

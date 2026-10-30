@@ -28,7 +28,6 @@ const i18nRender: (ui: ReactElement, options?: RenderOptions) => RenderResult =
 
 export const useTestingAppContext = () => ({
   base: {
-    attemptRecovery: false,
     fs: new FileSystem(
       new ObjectFileSystemAdapter({
         "chip/project": "01",
@@ -47,6 +46,10 @@ export const useTestingAppContext = () => ({
     },
     ...NO_STATUS,
     storage: {},
+    attemptRecovery: false,
+    setAttemptRecovery() {
+      // no-op
+    },
     permissionPrompt: useDialog(),
     async requestPermission() {
       // no-op

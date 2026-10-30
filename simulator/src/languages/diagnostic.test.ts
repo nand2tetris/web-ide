@@ -4,6 +4,7 @@ import {
   DiagnosticCode,
   describeDiagnostic,
   diagnostic,
+  faultKey,
   Stage,
 } from "./diagnostic.js";
 
@@ -184,5 +185,33 @@ describe("diagnostic", () => {
       span,
       stage: Stage.SEMANTIC,
     });
+  });
+});
+
+describe("faultKey", () => {
+  it("is equal for equal code and arguments whatever their key order", () => {
+    const a = diagnostic(DiagnosticCode.Vm.OS_ARG_COUNT, {
+      name: "f",
+      expected: 1,
+      received: 2,
+    });
+    const b = diagnostic(DiagnosticCode.Vm.OS_ARG_COUNT, {
+      received: 2,
+      expected: 1,
+      name: "f",
+    });
+
+    expect(faultKey(a)).toBe(faultKey(b));
+  });
+
+  it("differs for a different argument or code", () => {
+    const base = diagnostic(DiagnosticCode.Chip.NOT_FOUND, { name: "x" });
+
+    expect(faultKey(base)).not.toBe(
+      faultKey(diagnostic(DiagnosticCode.Chip.NOT_FOUND, { name: "y" })),
+    );
+    expect(faultKey(base)).not.toBe(
+      faultKey(diagnostic(DiagnosticCode.Chip.NOT_BUILTIN, { name: "x" })),
+    );
   });
 });

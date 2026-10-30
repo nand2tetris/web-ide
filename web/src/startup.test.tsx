@@ -10,22 +10,18 @@ vi.mock("./registerServiceWorker", () => ({ registerServiceWorker: vi.fn() }));
 afterEach(() => vi.unstubAllEnvs());
 
 describe("parser recovery startup configuration", () => {
-  it.each([
-    [undefined, false],
-    ["false", false],
-    ["true", true],
-    ["TRUE", false],
-  ])(
-    "VITE_PARSER_RECOVERY=%s enables recovery: %s",
-    async (setting, enabled) => {
+  it.each([undefined, "false", "true"])(
+    "VITE_PARSER_RECOVERY=%s leaves a low-level parse strict",
+    async (setting) => {
       vi.resetModules();
       vi.stubEnv("VITE_PARSER_RECOVERY", setting);
-      const { isParserRecoveryEnabled } = await import(
-        "@nand2tetris/simulator/languages/base.js"
-      );
-      expect(isParserRecoveryEnabled()).toBe(false);
       await import("./index");
-      expect(isParserRecoveryEnabled()).toBe(enabled);
+      const { HDL } = await import("@nand2tetris/simulator/languages/hdl.js");
+
+      const outcome = HDL.parse("CHIP Not { PARTS: Nand(a=a b=a, out=x); }");
+
+      expect(outcome.ast).toEqual(HDL.empty());
+      expect(outcome.diagnostics).toHaveLength(1);
     },
   );
 });

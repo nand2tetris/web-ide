@@ -4,18 +4,29 @@
  * that says why, so an unparsed file differs from an empty file only in its
  * diagnostics.
  */
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { ASM } from "./asm.js";
-import { isValid, type Outcome, setParserRecovery } from "./base.js";
+import {
+  isRecovered,
+  isValid,
+  type Outcome,
+  type ParseOptions,
+  recoveryOf,
+} from "./base.js";
 import { CMP } from "./cmp.js";
-import { DiagnosticCode, describeDiagnostic, Stage } from "./diagnostic.js";
+import {
+  DiagnosticCode,
+  describeDiagnostic,
+  fault,
+  Stage,
+} from "./diagnostic.js";
 import { HDL } from "./hdl.js";
 import { JACK } from "./jack.js";
 import { TST } from "./tst.js";
 import { VM } from "./vm.js";
 
 interface Language {
-  parse: (source: string) => Outcome<unknown>;
+  parse: (source: string, options?: ParseOptions) => Outcome<unknown>;
   empty: () => unknown;
 }
 
@@ -49,8 +60,6 @@ const NULL_ROOTS: [string, Language, string, unknown][] = [
 ];
 
 describe("a failed match", () => {
-  afterEach(() => setParserRecovery(false));
-
   it.each(NULL_ROOTS)(
     "%s gives its null root and a diagnostic",
     (_name, language, source, root) => {
@@ -67,26 +76,61 @@ describe("a failed match", () => {
   it.each(NULL_ROOTS.slice(0, 3))(
     "%s gives its null root with recovery on",
     (_name, language, source, root) => {
-      setParserRecovery(true);
-      const outcome = language.parse(source);
+      const outcome = language.parse(source, { attemptRecovery: true });
       expect(outcome.ast).toEqual(root);
       expect(outcome.diagnostics).not.toHaveLength(0);
       expect(isValid(outcome)).toBe(false);
     },
   );
+});
 
-  it("gives the null root for a thrown semantic error", () => {
-    const outcome = ASM.parse("@32768\n");
-    expect(outcome.ast).toEqual(ASM.empty());
-    expect(outcome.diagnostics).toEqual([
-      {
-        code: DiagnosticCode.Asm.A_VALUE_RANGE,
-        args: { value: 32768 },
-        span: { start: 0, end: 6, line: 1 },
-        stage: Stage.SEMANTIC,
-      },
+describe("a semantic action error", () => {
+  it.each([
+    [
+      "an A value out of range",
+      "@32768\n",
+      fault(DiagnosticCode.Asm.A_VALUE_RANGE, { value: 32768 }),
+      { start: 0, end: 6, line: 1 },
+    ],
+    [
+      "an invalid C target",
+      "@1\nDA=M\n",
+      fault(DiagnosticCode.Asm.INVALID_TARGET, {
+        target: "DA",
+        suggestion: "AD",
+      }),
+      { start: 3, end: 6, line: 2 },
+    ],
+    [
+      "an invalid C value",
+      "@1\nD=M+A\n",
+      fault(DiagnosticCode.Asm.INVALID_VALUE, { value: "M+A" }),
+      { start: 5, end: 8, line: 2 },
+    ],
+  ])(
+    "keeps the tree and lists %s as a semantic diagnostic",
+    (_name, source, expectedFault, at) => {
+      const outcome = ASM.parse(source);
+
+      expect(isValid(outcome)).toBe(false);
+      expect(outcome).not.toHaveProperty("nullRoot");
+      expect(outcome.diagnostics).toEqual([
+        { ...expectedFault, span: at, stage: Stage.SEMANTIC },
+      ]);
+      const broken = outcome.ast.instructions.filter(isRecovered);
+      expect(broken).toHaveLength(1);
+      expect(recoveryOf(broken[0])).toBe(outcome.diagnostics[0]);
+    },
+  );
+
+  it("keeps the instructions around a failed one", () => {
+    const outcome = ASM.parse("@1\n@32768\nD=A\n");
+
+    expect(outcome.ast.instructions.map(isRecovered)).toEqual([
+      false,
+      true,
+      false,
     ]);
-    expect(isValid(outcome)).toBe(false);
   });
 });
 

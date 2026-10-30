@@ -1,6 +1,6 @@
 import { Err, Ok } from "@davidsouther/jiffies/result.ts";
 import { grammar } from "ohm-js";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
   baseSemantics,
@@ -9,10 +9,17 @@ import {
   describeEnglish,
   diagnostic,
   grammars,
+  isParserRecoveryEnabled,
+  isRecovered,
   isValid,
   makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  recoveryOf,
   type Span,
   type Stage,
+  setParserRecovery,
   span,
   validOf,
 } from "./base.js";
@@ -75,6 +82,7 @@ describe("Ohm Base", () => {
   });
 
   describe("partial parse result", () => {
+    beforeEach(() => setParserRecovery(false));
     const listGrammar = grammar(`Nums <: Base { Root := Number+ }`, grammars);
     const numsSemantics = listGrammar.extendSemantics(baseSemantics);
     numsSemantics.addAttribute<number[]>("root", {
@@ -162,6 +170,252 @@ describe("Ohm Base", () => {
       expect(unparsed.diagnostics).not.toHaveLength(0);
       expect(isValid(unparsed)).toBe(false);
     });
+
+    it("isRecovered and recoveryOf read a hand built null object", () => {
+      const recovery = named("bad");
+      const broken: Recovery = { recovery };
+      const clean: Recovery = {};
+      expect(isRecovered(broken)).toBe(true);
+      expect(recoveryOf(broken)).toBe(recovery);
+      expect(isRecovered(clean)).toBe(false);
+      expect(recoveryOf(clean)).toBeUndefined();
+    });
+  });
+
+  describe("prune", () => {
+    interface Item extends Recovery {
+      name: string;
+    }
+    interface Tree {
+      items: Item[];
+      last?: Item;
+    }
+    const recovery = named("bad");
+    const tree: Tree = {
+      items: [{ name: "a" }, { name: "", recovery }, { name: "b" }],
+    };
+
+    it("returns the tree with no recovered item", () => {
+      const prune = makePrune<Tree>((t) => ({
+        ...t,
+        items: t.items.filter((item) => !isRecovered(item)),
+      }));
+      expect(prune(tree)).toEqual({ items: [{ name: "a" }, { name: "b" }] });
+    });
+
+    it("refuses a tree whose drop leaves a recovered node", () => {
+      const prune = makePrune<Tree>((t) => ({
+        items: [],
+        last: t.items[1],
+      }));
+      expect(() => prune(tree)).toThrow(/recovered/);
+    });
+  });
+});
+describe("parser recovery opt-in", () => {
+  it("starts disabled and can be reset after opting in", () => {
+    expect(isParserRecoveryEnabled()).toBe(false);
+    setParserRecovery(true);
+    expect(isParserRecoveryEnabled()).toBe(true);
+    setParserRecovery(false);
+    expect(isParserRecoveryEnabled()).toBe(false);
+  });
+});
+
+describe("recovering parser factory", () => {
+  const recoveringGrammar = grammar(
+    `Words { Root = (word ! ";")+ word = letter+ }`,
+  );
+  const semantics = recoveringGrammar.createSemantics();
+  semantics.addAttribute<string>("root", {
+    Root(_words, _corrections, _ends) {
+      return "partial AST";
+    },
+  });
+  const parser = makeParser<string>(
+    recoveringGrammar,
+    semantics,
+    () => "null root",
+  );
+
+  beforeEach(() => setParserRecovery(false));
+  afterEach(() => setParserRecovery(false));
+
+  it("keeps recovery disabled until opted in", () => {
+    const strict = parser.parse("1;2;");
+    expect(strict.ast).toBe("null root");
+    expect(strict.diagnostics).toHaveLength(1);
+    setParserRecovery(true);
+    const outcome = parser.parse("1;2;");
+    expect(outcome.ast).toBe("partial AST");
+    expect(outcome.diagnostics).toHaveLength(2);
+  });
+
+  it("validOf rejects a recovered AST and the outcome retains every diagnostic", () => {
+    setParserRecovery(true);
+    const recovered = parser.parse("1;2;");
+    expect(isValid(recovered)).toBe(false);
+    expect(recovered.ast).toBe("partial AST");
+    const result = validOf(recovered);
+    expect(result).toBeErr();
+    expect(Err(result as Err<Diagnostics>)).toBe(recovered.diagnostics);
+  });
+
+  it("rethrows Ohm's missing `_correction` action", () => {
+    const visiting = recoveringGrammar.createSemantics();
+    visiting.addAttribute<string[]>("root", {
+      Root(_words, corrections, _ends) {
+        return corrections.children.map((correction) => correction.text);
+      },
+    });
+    visiting.addAttribute<string>("text", {
+      _terminal() {
+        return this.sourceString;
+      },
+      _iter(...children) {
+        return children.map((child) => child.text).join("");
+      },
+    });
+    const unhandled = makeParser<string[]>(
+      recoveringGrammar,
+      visiting,
+      () => [],
+    );
+    expect(isValid(unhandled.parse("a;b;"))).toBe(true);
+    setParserRecovery(true);
+    expect(() => unhandled.parse("a 1;b;")).toThrow(
+      /Missing semantic action for _correction/,
+    );
+  });
+
+  it("keeps syntax diagnostics ahead of an AST conversion error", () => {
+    const conversionError = new Error("AST conversion failed");
+    const throwing = recoveringGrammar.createSemantics();
+    throwing.addAttribute<string>("root", {
+      Root(_words, _corrections, _ends) {
+        throw conversionError;
+      },
+    });
+    const failing = makeParser<string>(
+      recoveringGrammar,
+      throwing,
+      () => "null root",
+    );
+    setParserRecovery(true);
+    const outcome = failing.parse("1;2;");
+    expect(isValid(outcome)).toBe(false);
+    expect(outcome.ast).toBe("null root");
+    expect(outcome.diagnostics).toHaveLength(3);
+    expect(outcome.diagnostics.slice(0, 2)).toEqual(
+      parser.parse("1;2;").diagnostics,
+    );
+    expect(outcome.diagnostics[2]).toEqual(
+      diagnostic(
+        "error.unexpected",
+        { message: "AST conversion failed" },
+        undefined,
+        "semantic",
+      ),
+    );
+  });
+});
+
+describe("the recovery attribute", () => {
+  const blocks = grammar(
+    `Blocks <: Base {
+      Root := Block
+      Block = "{" Item* ! "}"
+      Item = Block | Stmt
+      Stmt = Body ! ";"
+      Body = letter+
+    }`,
+    grammars,
+  );
+  const semantics = blocks.extendSemantics(baseSemantics);
+  /** Each statement's body and correction slots, then each block's correction slot. */
+  semantics.addAttribute<(RecoveryPoint | undefined)[]>("slots", {
+    Root(block) {
+      return block.slots;
+    },
+    Block(_open, items, correction, _close) {
+      return [
+        ...items.children.flatMap((item) => item.slots),
+        correction.recovery,
+      ];
+    },
+    Item(item) {
+      return item.slots;
+    },
+    Stmt(body, correction, _end) {
+      return [body.recovery, correction.recovery];
+    },
+  });
+  semantics.addAttribute("root", {
+    Root(_) {
+      return this.slots;
+    },
+  });
+  const parser = makeParser<(RecoveryPoint | undefined)[]>(
+    blocks,
+    semantics,
+    () => [],
+  );
+
+  beforeEach(() => setParserRecovery(true));
+  afterEach(() => setParserRecovery(false));
+
+  it("is undefined everywhere in a valid parse", () => {
+    const outcome = parser.parse("{ a; { b; } }");
+    expect(outcome).toEqual({
+      ast: [undefined, undefined, undefined, undefined, undefined, undefined],
+      diagnostics: [],
+    });
+  });
+
+  it("links only the correction slot to its diagnostic", () => {
+    const outcome = parser.parse("{ a 1; c; }");
+    expect(outcome.ast).toHaveLength(5);
+    expect(outcome.diagnostics).toHaveLength(1);
+    const [body, correction, ...rest] = outcome.ast;
+    expect(body).toBeUndefined();
+    expect(correction?.recovery).toBe(outcome.diagnostics[0]);
+    expect(correction?.span).toMatchObject({ start: 4, end: 5 });
+    expect(rest).toEqual([undefined, undefined, undefined]);
+  });
+
+  it("returns the null root when nested blocks have no matching join", () => {
+    const outcome = parser.parse("{ a; { b;");
+
+    expect(outcome.ast).toEqual([]);
+    expect(outcome.diagnostics.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the guarded prefix and the real join beside the correction", () => {
+    const bindings = blocks.extendSemantics(semantics);
+    bindings.addAttribute("bindings", {
+      Block(_open, items, correction, close) {
+        return {
+          items: items.children.map((item) => item.sourceString),
+          correction: correction.recoveredFailure,
+          join: close.sourceString,
+        };
+      },
+    });
+
+    const match = blocks.match("{ a; 1 }", undefined, { recover: true });
+    expect(match.succeeded()).toBe(true);
+    expect(bindings(match).child(0).bindings).toMatchObject({
+      items: ["a;"],
+      correction: { position: 5 },
+      join: "}",
+    });
+  });
+
+  it("is never read with recovery off", () => {
+    setParserRecovery(false);
+    const outcome = parser.parse("{ a 1; c; }");
+    expect(isValid(outcome)).toBe(false);
+    expect(outcome.ast).toEqual([]);
   });
 });
 

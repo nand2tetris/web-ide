@@ -1,12 +1,25 @@
-/** Reads tst files to apply and perform test runs. */
+/** Reads and parses VM programs. */
 
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  guardedRecovery,
+  makeParser,
+  type Recovery,
+  type RecoveryPoint,
+  Span,
+  span,
+} from "./base.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
 export const grammar = ohmGrammar(vmGrammar, grammars);
 export const vmSemantics = grammar.extendSemantics(baseSemantics);
 
+/**
+ * One type for valid and recovered programs: a recovered line is a null
+ * instruction (see `isRecovered`).
+ */
 export interface Vm {
   instructions: VmInstruction[];
 }
@@ -30,41 +43,50 @@ export type VmInstruction =
   | GotoInstruction
   | LabelInstruction;
 
-export interface StackInstruction {
+export interface StackInstruction extends Recovery {
   op: "push" | "pop";
   segment: Segment;
   offset: number;
   span?: Span;
 }
-export interface OpInstruction {
+export interface OpInstruction extends Recovery {
   op: "add" | "sub" | "neg" | "lt" | "gt" | "eq" | "and" | "or" | "not";
   span?: Span;
 }
-export interface FunctionInstruction {
+export interface FunctionInstruction extends Recovery {
   op: "function";
   name: string;
   nVars: number;
   span?: Span;
 }
-export interface CallInstruction {
+export interface CallInstruction extends Recovery {
   op: "call";
   name: string;
   nArgs: number;
   span?: Span;
 }
-export interface ReturnInstruction {
+export interface ReturnInstruction extends Recovery {
   op: "return";
   span?: Span;
 }
-export interface LabelInstruction {
+export interface LabelInstruction extends Recovery {
   op: "label";
   label: string;
   span?: Span;
 }
-export interface GotoInstruction {
+export interface GotoInstruction extends Recovery {
   op: "goto" | "if-goto";
   label: string;
   span?: Span;
+}
+
+/**
+ * The null instruction where recovery skipped a line: a label with no name,
+ * which does nothing when run. It is a label only by its op; `recovery`
+ * marks it.
+ */
+function nullInstruction({ recovery, span }: RecoveryPoint): VmInstruction {
+  return { op: "label", label: "", span, recovery };
 }
 
 vmSemantics.addAttribute<
@@ -218,11 +240,9 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
   ReturnInstruction(_) {
     return { op: "return", span: span(this.source) };
   },
-  // LabelInstruction = Label Name
   LabelInstruction(_, { name: label }) {
     return { op: "label", label, span: span(this.source) };
   },
-  // GotoInstruction = (Goto | IfGoto) Name
   GotoInstruction({ op }, { name: label }) {
     return {
       op: op as "goto" | "if-goto",
@@ -230,18 +250,21 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       span: span(this.source),
     };
   },
-  VmInstructionLine(inst, _) {
-    return inst.instruction;
+  VmInstructionLine(inst, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      inst,
+      correction,
+    );
+    return recovered ? nullInstruction(recovered) : inst.instruction;
   },
 });
 
 vmSemantics.addAttribute<Vm>("vm", {
-  Vm(_, lines, last) {
-    const instructions = lines.children.map((node) => node.instruction) ?? [];
+  Vm(_, lines) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: lines.children.map(
+        (node) => node.instruction as VmInstruction,
+      ),
     };
   },
 });

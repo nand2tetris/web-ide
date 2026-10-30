@@ -1,7 +1,16 @@
 /** Reads tst files to apply and perform test runs. */
 
-import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import { type Node, grammar as ohmGrammar } from "ohm-js";
+import {
+  baseSemantics,
+  grammars,
+  guardedRecovery,
+  makeParser,
+  type Recovery,
+  type RecoveryPoint,
+  Span,
+  span,
+} from "./base.js";
 
 export interface TstEchoOperation {
   op: "echo";
@@ -73,7 +82,7 @@ export type TstOperation =
 
 export type Separator = "," | ";" | "!";
 
-export interface TstCommand {
+export interface TstCommand extends Recovery {
   op: TstOperation;
   separator: Separator;
   span: Span;
@@ -97,10 +106,22 @@ export interface TstWhileStatement {
   span: Span;
 }
 
+/**
+ * A recovered command is a null command (see `isRecovered`), so one type
+ * serves valid and recovered tests.
+ */
 export type TstStatement = TstCommand | TstRepeat | TstWhileStatement;
 
 export interface Tst {
   lines: TstStatement[];
+}
+
+/**
+ * The null command where recovery skipped input. `eval` changes no test
+ * state, and the `,` separator joins it to the step that follows.
+ */
+function nullCommand({ recovery, span }: RecoveryPoint): TstCommand {
+  return { op: { op: "eval" }, separator: ",", span, recovery };
 }
 
 import tstGrammar from "./grammars/tst.ohm.js";
@@ -211,7 +232,14 @@ tstSemantics.addAttribute<TstOperation>("operation", {
 });
 
 tstSemantics.addAttribute<TstCommand>("command", {
-  TstCommand(op, sep) {
+  TstCommand(op, correction, sep) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      op,
+      correction,
+    );
+    if (recovered) {
+      return nullCommand(recovered);
+    }
     return {
       op: op.operation,
       separator: sep.sourceString as Separator,
@@ -230,17 +258,24 @@ tstSemantics.addAttribute<TstWhileCondition>("condition", {
   },
 });
 
+/** The matched commands of a block body, with a correction's null command last. */
+function blockCommands(commands: Node, correction: Node): TstCommand[] {
+  const statements = commands.children.map((node) => node.command);
+  const recovered: RecoveryPoint | undefined = correction.recovery;
+  return recovered ? [...statements, nullCommand(recovered)] : statements;
+}
+
 tstSemantics.addAttribute<TstStatement>("statement", {
-  TstWhile(op, cond, _o, commands, _c) {
+  TstWhile(op, cond, _o, commands, correction, _stop) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, correction),
       condition: cond.condition,
       span: span(this.source),
     };
   },
-  TstRepeat(op, count, _o, commands, _c) {
+  TstRepeat(op, count, _o, commands, correction, _stop) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, correction),
       count: count.sourceString ? Number(count.sourceString) : -1,
       span: span(this.source),
     };

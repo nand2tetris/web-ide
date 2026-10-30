@@ -12,7 +12,6 @@ import {
 
 import "./chip.scss";
 
-import { isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
 import { Clockface } from "@nand2tetris/components/clockface.js";
 import {
@@ -23,6 +22,7 @@ import {
 import { useStateInitializer } from "@nand2tetris/components/react.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
+import { isValid } from "@nand2tetris/simulator/languages/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { AppContext } from "../App.context";
@@ -81,11 +81,11 @@ export const Chip = () => {
 
         const content = await file.content;
         const parsed = HDL.parse(content);
-        if (isErr(parsed)) {
+        if (!isValid(parsed)) {
           continue;
         }
 
-        const hdl = Ok(parsed);
+        const hdl = parsed.ast;
         const chipName = hdl.name.value;
 
         if (hasBuiltinChip(chipName)) {

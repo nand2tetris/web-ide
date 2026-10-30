@@ -1,4 +1,4 @@
-import { Err, unwrap } from "@davidsouther/jiffies/result.ts";
+import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { MaxAsm } from "@nand2tetris/projects/samples/project_06/02_max.js";
 import { describe, expect, it } from "vitest";
 import { ASSIGN, COMMANDS, JUMP } from "../cpu/alu.js";
@@ -373,14 +373,14 @@ describe("asm language", () => {
   });
 
   it("fails to parse an A instruction with a value too large", () => {
-    const failed = Err(ASM.parse("@32768") as Err<Diagnostic>);
+    const { diagnostics } = ASM.parse("@32768");
 
-    expect(failed).toMatchObject({
+    expect(diagnostics[0]).toMatchObject({
       code: DiagnosticCode.Asm.A_VALUE_RANGE,
       args: { value: 32768 },
       span: { line: 1 },
     });
-    expect(describeDiagnostic(failed)).toBe(
+    expect(describeDiagnostic(diagnostics[0] as Diagnostic)).toBe(
       "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
     );
   });

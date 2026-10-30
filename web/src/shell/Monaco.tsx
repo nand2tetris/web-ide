@@ -269,6 +269,7 @@ export const Monaco = ({
 
   return (
     <MonacoEditor
+      options={{ readOnly: disabled }}
       value={value}
       language={language}
       path={path}

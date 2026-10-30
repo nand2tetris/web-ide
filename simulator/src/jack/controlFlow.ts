@@ -5,7 +5,7 @@ import {
   Result,
   unwrap,
 } from "@davidsouther/jiffies/result.ts";
-import { CompilationError, createError } from "../languages/base.js";
+import { createError, Diagnostic } from "../languages/base.js";
 import {
   IfStatement,
   ReturnType,
@@ -73,7 +73,7 @@ function processIf(
   statement: IfStatement,
   returnType: ReturnType,
   current: CFGNode,
-): Result<CFGNode, CompilationError> {
+): Result<CFGNode, Diagnostic> {
   const ifStart = new CFGNode();
   current.children.push(ifStart);
   current = ifStart;
@@ -100,7 +100,7 @@ function processWhile(
   statement: WhileStatement,
   returnType: ReturnType,
   current: CFGNode,
-): Result<CFGNode, CompilationError> {
+): Result<CFGNode, Diagnostic> {
   const whileStart = new CFGNode();
   current.children.push(whileStart);
   current = whileStart;
@@ -121,11 +121,11 @@ function processWhile(
 function buildCFG(
   statements: Statement[],
   returnType: ReturnType,
-): Result<CFGNode, CompilationError> {
+): Result<CFGNode, Diagnostic> {
   const root = new CFGNode();
   let current = root;
 
-  let result: Result<CFGNode, CompilationError> | undefined;
+  let result: Result<CFGNode, Diagnostic> | undefined;
   for (const statement of statements) {
     switch (statement.statementType) {
       case "letStatement":
@@ -163,7 +163,7 @@ function buildCFG(
 
 export function validateSubroutine(
   subroutine: Subroutine,
-): Result<void, CompilationError> {
+): Result<void, Diagnostic> {
   const cfg = buildCFG(subroutine.body.statements, subroutine.returnType.value);
   if (isErr(cfg)) {
     return cfg;

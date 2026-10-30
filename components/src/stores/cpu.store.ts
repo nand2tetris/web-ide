@@ -7,9 +7,9 @@ import {
   MemoryKeyboard,
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span, validOf } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { Span } from "@nand2tetris/simulator/languages/base.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -93,6 +93,7 @@ export function makeCpuStore(
   setStatus: Action<StatusInput>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
+  attemptRecovery: () => boolean = () => true,
 ) {
   let test = new CPUTest();
   let animate = true;
@@ -102,7 +103,7 @@ export function makeCpuStore(
   let tstName = "";
   let _title: string | undefined;
   // False when the ROM holds a program from outside `fs`, such as a disk
-  // upload or an unsaved Assembler program. A test's `load` keeps it (#622).
+  // upload or an unsaved Assembler program. A test's `load` keeps it.
   let romFromFs = true;
 
   const reducers = {
@@ -217,7 +218,7 @@ export function makeCpuStore(
       dispatch.current({ action: "setTitle", payload: undefined });
     },
 
-    // The CPU page calls this before a disk upload fills the ROM.
+    // Call before a disk upload fills the ROM: the ROM then no longer comes from `fs`.
     clearTest() {
       romFromFs = false;
       tstName = "";
@@ -233,17 +234,8 @@ export function makeCpuStore(
     compileTest(file: string, cmp?: string, _path?: string) {
       const tstPath = _path ?? path;
       dispatch.current({ action: "setTest", payload: { tst: file, cmp } });
-      const tst = validOf(TST.parse(file));
-
-      if (isErr(tst)) {
-        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
-        valid = false;
-        dispatch.current({ action: "update" });
-        return false;
-      }
-      valid = true;
-
-      const maybeTest = CPUTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: tstPath, content: file }, "cpu", {
+        attemptRecovery: attemptRecovery(),
         dir: tstPath,
         rom: test.cpu.ROM,
         doEcho: setStatus,
@@ -254,7 +246,7 @@ export function makeCpuStore(
             file = await fs.readFile(path);
           } catch (_e) {
             // A test uploaded from disk has a bare path ("Mult.tst"), so
-            // `path` cannot be resolved in `fs`. Keep the loaded ROM (#622).
+            // `path` cannot be resolved in `fs`. Keep the loaded ROM.
             if (!tstPath.includes("/") && !test.cpu.ROM.isEmpty()) return;
             throw new Error(`Cannot find ${path}`);
           }
@@ -278,10 +270,13 @@ export function makeCpuStore(
 
       if (isErr(maybeTest)) {
         setStatus(
-          failureStatus("Test script", [Err(maybeTest)], { marked: false }),
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
         );
+        valid = false;
+        dispatch.current({ action: "update" });
         return false;
       } else {
+        valid = true;
         test = Ok(maybeTest);
         test.fileLoaded = _title != undefined;
         dispatch.current({ action: "update" });

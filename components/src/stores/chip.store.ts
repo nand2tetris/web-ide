@@ -18,10 +18,10 @@ import {
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import {
   Diagnostic,
+  Diagnostics,
   Span,
-  validOf,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -55,6 +55,22 @@ export function isBuiltinOnly(
 
 function convertToBuiltin(name: string, hdl: string) {
   return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};`);
+}
+
+/**
+ * The diagnostics of the file in the editor, which marks each one, and of the
+ * other files the chip loads, by path. A dependency's spans belong to its own
+ * file, so they never mark the editor's.
+ */
+function splitFailures(
+  failures: Record<string, Diagnostics>,
+  file = "<input>.hdl",
+): {
+  root: readonly Diagnostic[];
+  dependencies: Record<string, readonly Diagnostic[]>;
+} {
+  const { [file]: root = [], ...dependencies } = failures;
+  return { root, dependencies };
 }
 
 export interface ChipPageState {
@@ -99,6 +115,8 @@ export interface ControlsState {
   span?: Span;
   /** The diagnostics of the file in the editor, which marks each of them. */
   diagnostics: readonly Diagnostic[];
+  /** The diagnostics of the other files the chip loads, by path. */
+  dependencyDiagnostics: Record<string, readonly Diagnostic[]>;
   visualizationParameters: Set<string>;
 }
 
@@ -132,6 +150,7 @@ export function makeChipStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
+  attemptRecovery: () => boolean = () => true,
 ) {
   let _chipName = "";
   let _dir = "";
@@ -170,6 +189,7 @@ export function makeChipStore(
         invalid?: boolean;
         chipName?: string;
         diagnostics?: readonly Diagnostic[];
+        dependencyDiagnostics?: Record<string, readonly Diagnostic[]>;
       },
     ) {
       state.sim = reduceChip(
@@ -180,6 +200,10 @@ export function makeChipStore(
       state.controls.diagnostics = state.sim.invalid
         ? (payload?.diagnostics ?? state.controls.diagnostics)
         : [];
+      state.controls.dependencyDiagnostics = state.sim.invalid
+        ? (payload?.dependencyDiagnostics ??
+          state.controls.dependencyDiagnostics)
+        : {};
     },
 
     setProjects(state: ChipPageState, projects: string[]) {
@@ -230,7 +254,6 @@ export function makeChipStore(
         state.files.cmp.trim(),
         state.files.out.trim(),
       );
-      // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
         setStatus(status);
       });
@@ -373,14 +396,30 @@ export function makeChipStore(
 
     async compileChip(hdl: string, dir?: string, name?: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl, dir, name, fs);
+      const file =
+        name === undefined
+          ? undefined
+          : [dir, `${name}.hdl`].filter(Boolean).join("/");
+      const maybeChip = await parseChip(hdl, dir, name, fs, {
+        attemptRecovery: attemptRecovery(),
+        file,
+      });
       if (isErr(maybeChip)) {
-        const diagnostics = Err(maybeChip);
-        setStatus(failureStatus("HDL code", diagnostics));
+        const { root, dependencies } = splitFailures(Err(maybeChip), file);
+        setStatus(
+          failureStatus("HDL code", root, {
+            head: true,
+            others: dependencies,
+          }),
+        );
         invalid = true;
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, diagnostics },
+          payload: {
+            invalid: true,
+            diagnostics: root,
+            dependencyDiagnostics: dependencies,
+          },
         });
         return;
       }
@@ -431,13 +470,8 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = validOf(TST.parse(file));
-      if (isErr(tst)) {
-        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
-        invalid = true;
-        return false;
-      }
-      const maybeTest = ChipTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: path, content: file }, "chip", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         setStatus: setStatus,
         loadAction: async (file) => {
@@ -452,7 +486,7 @@ export function makeChipStore(
       if (isErr(maybeTest)) {
         invalid = true;
         setStatus(
-          failureStatus("Test script", [Err(maybeTest)], { marked: false }),
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
         );
         return false;
       } else {
@@ -533,9 +567,10 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        setStatus(
-          failureStatus("Built-in chip", [Err(nextChip)], { marked: false }),
-        );
+        setStatus({
+          message: `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
+          severity: "ERROR",
+        });
         return;
       }
       this.replaceChip(Ok(nextChip));
@@ -595,6 +630,7 @@ export function makeChipStore(
       usingBuiltin: false,
       runningTest: false,
       diagnostics: [],
+      dependencyDiagnostics: {},
       visualizationParameters: new Set(),
     };
 

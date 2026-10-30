@@ -31,9 +31,10 @@ export interface TextStatus {
   severity: StatusSeverity;
 }
 
-/** A diagnostic a status lists. */
+/** A diagnostic a status lists, with the file it belongs to when that is not the open one. */
 export interface StatusDiagnostic {
   diagnostic: Diagnostic;
+  file?: string;
 }
 
 /**

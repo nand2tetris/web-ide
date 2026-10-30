@@ -1,10 +1,3 @@
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-  unwrap,
-} from "@davidsouther/jiffies/result.ts";
 import { Diagnostic, semanticError } from "../languages/base.js";
 import {
   IfStatement,
@@ -73,59 +66,47 @@ function processIf(
   statement: IfStatement,
   returnType: ReturnType,
   current: CFGNode,
-): Result<CFGNode, Diagnostic> {
+  diagnostics: Diagnostic[],
+): CFGNode {
   const ifStart = new CFGNode();
   current.children.push(ifStart);
-  current = ifStart;
-  const result1 = buildCFG(statement.body, returnType);
-  const result2 = buildCFG(statement.else, returnType);
-  if (isErr(result1)) {
-    return result1;
-  }
-  if (isErr(result2)) {
-    return result2;
-  }
-  const path1 = unwrap(result1);
-  const path2 = unwrap(result2);
-  current.children.push(path1, path2);
+  const path1 = buildCFG(statement.body, returnType, diagnostics);
+  const path2 = buildCFG(statement.else, returnType, diagnostics);
+  ifStart.children.push(path1, path2);
   const leafs = path1.getLeafs().concat(path2.getLeafs());
-  current = new CFGNode();
+  const next = new CFGNode();
   for (const leaf of leafs) {
-    leaf.children.push(current);
+    leaf.children.push(next);
   }
-  return Ok(current);
+  return next;
 }
 
 function processWhile(
   statement: WhileStatement,
   returnType: ReturnType,
   current: CFGNode,
-): Result<CFGNode, Diagnostic> {
+  diagnostics: Diagnostic[],
+): CFGNode {
   const whileStart = new CFGNode();
   current.children.push(whileStart);
-  current = whileStart;
-  const result = buildCFG(statement.body, returnType);
-  if (isErr(result)) {
-    return result;
-  }
-  const body = unwrap(result);
+  const body = buildCFG(statement.body, returnType, diagnostics);
   for (const leaf of body.getLeafs()) {
-    leaf.children.push(current);
+    leaf.children.push(whileStart);
   }
   const next = new CFGNode();
-  current.children.push(body, next);
-  current = next;
-  return Ok(current);
+  whileStart.children.push(body, next);
+  return next;
 }
 
+/** The control flow graph of `statements`, adding each bad return to `diagnostics`. */
 function buildCFG(
   statements: Statement[],
   returnType: ReturnType,
-): Result<CFGNode, Diagnostic> {
+  diagnostics: Diagnostic[],
+): CFGNode {
   const root = new CFGNode();
   let current = root;
 
-  let result: Result<CFGNode, Diagnostic> | undefined;
   for (const statement of statements) {
     switch (statement.statementType) {
       case "letStatement":
@@ -133,40 +114,42 @@ function buildCFG(
         break;
       case "returnStatement":
         if (returnType != "void" && statement.value == undefined) {
-          return Err(
+          diagnostics.push(
             semanticError("jack.missingReturnValue", {}, statement.span),
           );
         }
         current.hasReturn = true;
         break;
       case "ifStatement":
-        result = processIf(statement, returnType, current);
-        if (isErr(result)) {
-          return result;
-        }
-        current = unwrap(result);
+        current = processIf(statement, returnType, current, diagnostics);
         break;
       case "whileStatement":
-        result = processWhile(statement, returnType, current);
-        if (isErr(result)) {
-          return result;
-        }
-        current = unwrap(result);
+        current = processWhile(statement, returnType, current, diagnostics);
         break;
     }
   }
-  return Ok(root);
+  return root;
 }
 
+/**
+ * Every control flow diagnostic of a subroutine: each return without a value
+ * in a non void subroutine, then a path that does not return.
+ *
+ * Suppressed: the missing return check, when `holdsSkip` says recovery skipped
+ * a statement of this subroutine, at any depth, which could have returned.
+ */
 export function validateSubroutine(
   subroutine: Subroutine,
-): Result<void, Diagnostic> {
-  const cfg = buildCFG(subroutine.body.statements, subroutine.returnType.value);
-  if (isErr(cfg)) {
-    return cfg;
-  }
-  if (!unwrap(cfg).alwaysReturns()) {
-    return Err(
+  { holdsSkip = false }: { holdsSkip?: boolean } = {},
+): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+  const cfg = buildCFG(
+    subroutine.body.statements,
+    subroutine.returnType.value,
+    diagnostics,
+  );
+  if (!holdsSkip && !cfg.alwaysReturns()) {
+    diagnostics.push(
       semanticError(
         "jack.missingReturnPath",
         { name: subroutine.name.value },
@@ -174,5 +157,5 @@ export function validateSubroutine(
       ),
     );
   }
-  return Ok();
+  return diagnostics;
 }

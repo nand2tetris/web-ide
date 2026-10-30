@@ -1,12 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-  unwrap,
-} from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.ts";
 import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
   Format,
@@ -20,11 +14,18 @@ import {
   Span,
   validOf,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
-import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
+import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
-import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import {
+  joinedDiagnostics,
+  loadVm,
+  VM_INPUT,
+  Vm,
+  VmFile,
+  VmFrame,
+} from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
 import { useImmerReducer } from "../react.js";
@@ -139,6 +140,7 @@ export function makeVmStore(
   setStatus: Action<StatusInput>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
+  attemptRecovery: () => boolean = () => true,
 ) {
   const parsed = unwrap(validOf(VM.parse(FIBONACCI)));
   let vm = unwrap(Vm.build(parsed.instructions));
@@ -148,10 +150,12 @@ export function makeVmStore(
   let vmSource = "";
   let loadedFiles: VmFile[] = [];
   let showHighlight = true;
+  /** The last source compiled, for `recompile`. */
+  let compiled: { files: VmFile[]; single: boolean } | undefined;
 
   /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus(failureStatus("VM code", diagnostics));
+    setStatus(failureStatus("VM code", diagnostics, { head: true }));
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
   };
@@ -259,7 +263,7 @@ export function makeVmStore(
         title = `${path.split("/").pop()} / *.vm`;
 
         // A bare `load,` from a test uploaded from disk has no directory to
-        // scan. Keep the VM files the user already loaded (#673).
+        // scan. Keep the VM files the user already loaded.
         if (files.length === 0 && !path && loadedFiles.length > 0) {
           this.reset();
           setStatus("");
@@ -283,14 +287,8 @@ export function makeVmStore(
       }
       vmSource = content;
 
-      const parseResult = validOf(VM.parse(content));
-
-      if (isErr(parseResult)) {
-        return compileFailed(Err(parseResult));
-      }
-      const instructions = unwrap(parseResult).instructions;
-      const buildResult = Vm.build(instructions);
-      return this.replaceVm(buildResult);
+      // One buffer has no file name for its functions' class prefixes to match.
+      return this.compile([{ name: VM_INPUT, content }], true);
     },
     loadVm(files: VmFile[]) {
       showHighlight = false;
@@ -307,60 +305,41 @@ export function makeVmStore(
       vmSource = content;
       loadedFiles = files;
 
-      const parsed = [];
-
-      let lineOffset = 0;
-      for (const file of files) {
-        const parseResult = validOf(VM.parse(file.content));
-
-        if (isErr(parseResult)) {
-          return compileFailed(Err(parseResult));
-        }
-        const instructions = unwrap(parseResult).instructions;
-
-        for (const instruction of instructions) {
-          if (instruction.span?.line != undefined) {
-            instruction.span.line += lineOffset;
-          }
-        }
-        lineOffset += file.content.split("\n").length;
-
-        parsed.push({
-          name: file.name,
-          instructions,
-        });
-      }
-      const buildResult = Vm.buildFromFiles(parsed);
-      return this.replaceVm(buildResult);
+      return this.compile(files, false);
     },
-    replaceVm(buildResult: Result<Vm, Diagnostic>) {
-      if (isErr(buildResult)) {
-        return compileFailed([Err(buildResult)]);
+    /**
+     * Loads `files` to a VM, or shows every diagnostic of them. A `single`
+     * buffer skips only the check of function class prefixes against file names.
+     */
+    compile(files: VmFile[], single: boolean) {
+      compiled = { files, single };
+      const loaded = loadVm(files, {
+        attemptRecovery: attemptRecovery(),
+        validateFileNames: !single,
+      });
+      if (isErr(loaded)) {
+        // The editor shows the files as one joined buffer.
+        return compileFailed(joinedDiagnostics(files, Err(loaded)));
       }
       dispatch.current({ action: "setDiagnostics" });
-      // setStatus("Compiled VM code successfully");
 
-      vm = unwrap(buildResult);
+      vm = unwrap(loaded);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;
     },
+    /** Recompiles the source with the current settings. */
+    recompile() {
+      if (compiled) {
+        showHighlight = false;
+        this.compile(compiled.files, compiled.single);
+      }
+    },
 
     loadTest(path: string, source: string) {
       dispatch.current({ action: "setTst", payload: { tst: source } });
-      const tst = validOf(TST.parse(source));
-
-      if (isErr(tst)) {
-        dispatch.current({ action: "setValid", payload: false });
-        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
-        return false;
-      }
-      dispatch.current({ action: "setValid", payload: true });
-      setStatus(`Parsed tst`);
-
-      vm.reset();
-
-      const maybeTest = VMTest.from(unwrap(tst), {
+      const maybeTest = buildTst({ name: path, content: source }, "vm", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         doLoad: async (path) => {
           await this.load(path);
@@ -373,11 +352,15 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
+        dispatch.current({ action: "setValid", payload: false });
         setStatus(
-          failureStatus("Test script", [Err(maybeTest)], { marked: false }),
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
         );
         return false;
       } else {
+        dispatch.current({ action: "setValid", payload: true });
+        setStatus(`Parsed tst`);
+        vm.reset();
         test = Ok(maybeTest).using(fs);
         test.vm = vm;
         dispatch.current({ action: "update" });

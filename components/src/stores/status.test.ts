@@ -38,6 +38,47 @@ describe("failureStatus", () => {
         .diagnostics,
     ).toEqual([{ diagnostic: marked }, { diagnostic: spanless }]);
   });
+
+  it("lists the diagnostics of other files by path and counts them", () => {
+    const [own, other] = [bad(2), bad(5)];
+    expect(
+      failureStatus("HDL code", [own], { others: { "a/Child.hdl": [other] } }),
+    ).toEqual({
+      severity: "ERROR",
+      heading: { file: "HDL code", count: 2 },
+      diagnostics: [{ diagnostic: other, file: "a/Child.hdl" }],
+    });
+  });
+});
+
+describe("failureStatus with the head of the list", () => {
+  it("lists the first diagnostic ahead of the ones it cannot mark", () => {
+    const [first, second, spanless] = [bad(2), bad(3), nowhere("A")];
+    expect(
+      failureStatus("HDL code", [first, second, spanless], { head: true })
+        .diagnostics,
+    ).toEqual([{ diagnostic: first }, { diagnostic: spanless }]);
+  });
+
+  it("lists the first diagnostic once when no editor marks the file", () => {
+    const [first, spanless] = [bad(2), nowhere("A")];
+    expect(
+      failureStatus("Test script", [first, spanless], {
+        marked: false,
+        head: true,
+      }).diagnostics,
+    ).toEqual([{ diagnostic: first }, { diagnostic: spanless }]);
+  });
+
+  it("lists a dependency's first diagnostic once when the file has none", () => {
+    const only = bad(5);
+    expect(
+      failureStatus("HDL code", [], {
+        head: true,
+        others: { "a/Child.hdl": [only] },
+      }).diagnostics,
+    ).toEqual([{ diagnostic: only, file: "a/Child.hdl" }]);
+  });
 });
 
 describe("comparisonStatus", () => {

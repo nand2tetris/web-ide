@@ -5,16 +5,14 @@ import {
   AssignmentStubs,
 } from "@nand2tetris/projects/base.js";
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
-import { build as buildChip } from "../chip/builder.js";
+import { parse as buildChip, type ChipDiagnostics } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
 import {
-  Diagnostic,
   Diagnostics,
   describeEnglish,
   Valid,
   validOf,
 } from "../languages/base.js";
-import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
 
@@ -25,13 +23,12 @@ export interface AssignmentFiles extends Assignment {
 }
 
 export interface AssignmentParse extends AssignmentFiles {
-  maybeParsedHDL: Result<Valid<HdlParse>, Diagnostics>;
   maybeParsedTST: Result<Valid<Tst>, Diagnostics>;
 }
 
 export interface AssignmentBuild extends AssignmentParse {
-  maybeChip: Result<Chip, Diagnostics>;
-  maybeTest: Result<ChipTest, Diagnostics>;
+  maybeChip: Result<Chip, Error>;
+  maybeTest: Result<ChipTest, Error>;
 }
 
 export interface AssignmentRun extends AssignmentBuild {
@@ -50,36 +47,37 @@ export const hasTest = ({
   AssignmentStubs[name as keyof typeof AssignmentStubs] !== undefined &&
   [".hdl", ".tst"].includes(ext);
 
-/** Try parsing the loaded files. */
 export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
-  const maybeParsedHDL = validOf(HDL.parse(file.hdl));
   const maybeParsedTST = validOf(TST.parse(file.tst));
-  return { ...file, maybeParsedHDL, maybeParsedTST };
+  return { ...file, maybeParsedTST };
 };
 
-/** A result whose failure is one diagnostic, with its failure as a list. */
-const listed = <T>(result: Result<T, Diagnostic>): Result<T, Diagnostics> =>
-  isErr(result) ? Err([Err(result)]) : result;
+/** Every diagnostic of a chip and its dependencies, a line each naming its file. */
+function describeFailures(failures: ChipDiagnostics): string {
+  return Object.entries(failures)
+    .flatMap(([file, diagnostics]) =>
+      diagnostics.map((found) => `${file}: ${describeEnglish(found)}`),
+    )
+    .join("\n");
+}
 
-/** Every diagnostic of a failure, one per line. */
-const describeAll = (diagnostics: Diagnostics): string =>
-  diagnostics.map(describeEnglish).join("\n");
-
-/** After parsing the assignment, compile the Chip and Tst. */
 export const maybeBuild =
   (fs: FileSystem) =>
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
-    const maybeChip: Result<Chip, Diagnostics> = isOk(file.maybeParsedHDL)
-      ? listed(await buildChip({ parts: Ok(file.maybeParsedHDL), fs }))
-      : file.maybeParsedHDL;
-    const maybeTest: Result<ChipTest, Diagnostics> = isOk(file.maybeParsedTST)
-      ? listed(ChipTest.from(Ok(file.maybeParsedTST)))
-      : file.maybeParsedTST;
+    const built = await buildChip(file.hdl, undefined, undefined, fs, {
+      file: `${file.name}.hdl`,
+    });
+    const maybeChip: Result<Chip, Error> = isErr(built)
+      ? Err(new Error(describeFailures(Err(built))))
+      : built;
+    const maybeTest = isOk(file.maybeParsedTST)
+      ? ChipTest.from(Ok(file.maybeParsedTST))
+      : Err(new Error("TST Was not parsed"));
 
     return { ...file, maybeChip, maybeTest };
   };
 
-/** If the assignment parsed, run it! */
+/** Runs a built assignment; a failed chip or test build is its result, not a throw. */
 export const tryRun =
   (fs: FileSystem) =>
   async (assignment: AssignmentBuild): Promise<AssignmentRun> => {
@@ -87,14 +85,14 @@ export const tryRun =
       return {
         ...assignment,
         pass: false,
-        out: describeAll(Err(assignment.maybeChip)),
+        out: Err(assignment.maybeChip).message,
       };
     }
     if (isErr(assignment.maybeTest)) {
       return {
         ...assignment,
         pass: false,
-        out: describeAll(Err(assignment.maybeTest)),
+        out: Err(assignment.maybeTest).message,
       };
     }
     const test = Ok(assignment.maybeTest)

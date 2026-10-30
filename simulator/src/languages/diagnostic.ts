@@ -97,6 +97,7 @@ export interface DiagnosticArgs {
   "jack.missingSubroutine": { class: string; subroutine: string };
   "jack.undefinedClass": { name: string };
   "jack.classNameMismatch": { name: string; file: string };
+  "jack.duplicateClassFile": { path: string; other: string };
   "jack.duplicateSubroutine": { name: string };
   "jack.missingReturnValue": Record<string, never>;
   "jack.missingReturnPath": { name: string };
@@ -284,6 +285,8 @@ const ENGLISH: { [C in DiagnosticCode]: (args: DiagnosticArgs[C]) => string } =
     "jack.undefinedClass": ({ name }) => `Class ${name} doesn't exist`,
     "jack.classNameMismatch": ({ name, file }) =>
       `Class name ${name} doesn't match file name ${file}`,
+    "jack.duplicateClassFile": ({ path, other }) =>
+      `${path} repeats the class file ${other}`,
     "jack.duplicateSubroutine": ({ name }) =>
       `Subroutine ${name} already declared`,
     "jack.missingReturnValue": () =>

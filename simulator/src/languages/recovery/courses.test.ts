@@ -18,7 +18,7 @@ import {
   type ParseOptions,
   validOf,
 } from "../base.js";
-import { CMP } from "../cmp.js";
+import { rawCMP } from "../cmp.js";
 import { TST } from "../tst.js";
 
 /** The tree and the error list of a parse. */
@@ -37,8 +37,8 @@ interface Language {
 
 const LANGUAGES: Record<string, Language> = {
   tst: TST,
-  cmp: CMP,
-  out: CMP,
+  cmp: rawCMP,
+  out: rawCMP,
   asm: ASM,
 };
 
@@ -110,9 +110,9 @@ const MISTAKES: Record<string, [Language, string][]> = {
     [TST, `load Not.hdl,\n${",\n;\n!\n".repeat(3)}output;`],
   ],
   CMP: [
-    [CMP, "|  in  | out |\n    0  |   1 |\n"],
-    [CMP, "|  in  | out |\n|   0  |   1 |\n|   1  |   0  "],
-    [CMP, "|  in  | out |\n|   0  |   1 |\nxyz\n"],
+    [rawCMP, "|  in  | out |\n    0  |   1 |\n"],
+    [rawCMP, "|  in  | out |\n|   0  |   1 |\n|   1  |   0  "],
+    [rawCMP, "|  in  | out |\n|   0  |   1 |\nxyz\n"],
   ],
   ASM: [
     [ASM, "@2\nD=Q\n@3\n"],

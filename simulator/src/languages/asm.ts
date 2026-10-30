@@ -18,11 +18,12 @@ import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import {
   baseSemantics,
-  createError,
   Diagnostic,
+  diagnostic,
   grammars,
   makeParser,
   Span,
+  semanticError,
   span,
 } from "./base.js";
 import asmGrammar from "./grammars/asm.ohm.js";
@@ -108,8 +109,8 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
 function getAsmAssign(assignN: Node) {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
-  // The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
-  // but since the desktop simulators accept only MD and AMD we have decided to accept both */
+  // The book (figure 4.5) specifies DM and ADM as the destination forms, but
+  // the desktop simulators accept only MD and AMD, so both are accepted.
   if (assign == "DM") {
     assign = "MD";
   }
@@ -118,11 +119,12 @@ function getAsmAssign(assignN: Node) {
   }
   if (assign != "" && !isAssignAsm(assign)) {
     const reversed = assign.split("").reverse().join("");
-    const suggestion = isAssignAsm(reversed)
-      ? `. Did you mean ${reversed}?`
-      : "";
-    throw createError(
-      `Invalid ASM target: ${assign}${suggestion}`,
+    throw diagnostic(
+      "asm.invalidTarget",
+      {
+        target: assign,
+        ...(isAssignAsm(reversed) ? { suggestion: reversed } : {}),
+      },
       span(assignN.source),
     );
   }
@@ -135,11 +137,12 @@ function getAsmOp(opN: Node) {
 
   if (!isCommandAsm(op)) {
     const reversed = op.split("").reverse().join("");
-    const suggestion = isCommandAsm(reversed)
-      ? `. Did you mean ${reversed}?`
-      : "";
-    throw createError(
-      `Invalid ASM value: ${opN.sourceString}${suggestion}`,
+    throw diagnostic(
+      "asm.invalidValue",
+      {
+        value: opN.sourceString,
+        ...(isCommandAsm(reversed) ? { suggestion: reversed } : {}),
+      },
       span(opN.source),
     );
   }
@@ -241,7 +244,11 @@ export function fillLabel(
     if (instruction.type === "L") {
       if (symbols.has(instruction.label)) {
         return Err(
-          createError(`Duplicate label ${instruction.label}`, instruction.span),
+          semanticError(
+            "asm.duplicateLabel",
+            { label: instruction.label },
+            instruction.span,
+          ),
         );
       } else {
         symbols.set(instruction.label, line);
@@ -309,10 +316,7 @@ export function emit(asm: Asm): number[] {
 
 const A = (source: string | number, span?: Span): AsmAInstruction => {
   if (typeof source === "number" && (source > 32767 || source < 0)) {
-    throw createError(
-      `${source} is invalid for an A instruction (should be 0 to 32767)`,
-      span,
-    );
+    throw diagnostic("asm.aValueRange", { value: source }, span);
   }
   return typeof source === "string"
     ? {

@@ -1,12 +1,34 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
   type Dict,
+  type Failure,
   type Grammar,
   grammar,
   Interval,
   type Semantics,
 } from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
+import {
+  type Diagnostic,
+  type DiagnosticArgs,
+  type DiagnosticCode,
+  diagnostic,
+  type Span,
+  type Stage,
+} from "./diagnostic.js";
+
+export {
+  type Diagnostic,
+  type DiagnosticArgs,
+  type DiagnosticCode,
+  describeEnglish,
+  diagnostic,
+  type Fault,
+  fault,
+  located,
+  type Span,
+  type Stage,
+} from "./diagnostic.js";
 
 import baseGrammar from "./grammars/base.ohm.js";
 export const grammars = {
@@ -66,23 +88,60 @@ baseSemantics.addAttribute("String", {
   },
 });
 
-/** One diagnostic: a message and, when known, where it applies. */
-export interface Diagnostic {
-  message: string;
-  span?: Span;
+/**
+ * The stage of a syntax failure from its expected failures: `lex` when every
+ * expectation shown in the message failed inside a token that had begun, and
+ * `parse` otherwise, including mixed and empty expectations.
+ */
+export function syntaxStageOf(failures: readonly Failure[]): "lex" | "parse" {
+  const shown = failures.filter((failure) => !failure.isFluffy());
+  return shown.length > 0 && shown.every((failure) => failure.isLexical())
+    ? "lex"
+    : "parse";
 }
 
-const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
+/** A diagnostic of a check on a well formed program. */
+export function semanticError<C extends DiagnosticCode>(
+  code: C,
+  args: DiagnosticArgs[C],
+  span?: Span,
+): Diagnostic {
+  return diagnostic(code, args, span, "semantic");
+}
 
-export function createError(description: string, span?: Span): Diagnostic {
-  const match = description.match(/Line \d+, col \d+: (?<message>.*)/);
-  const message = match?.groups?.message ? match.groups.message : description;
-  return {
-    message: `${
-      span?.line != undefined ? `Line ${span.line}: ` : ""
-    }${message}`,
-    span: span,
-  };
+/**
+ * A syntax failure's diagnostic, tagged with the stage its failures show. It
+ * expects what the failures expected, other than fluffy ones, which Ohm omits
+ * from its own message.
+ */
+function syntaxDiagnostic(at: Span, failures: readonly Failure[]): Diagnostic {
+  const expected = failures
+    .filter((failure) => !failure.isFluffy())
+    .map((failure) => failure.toString());
+  return diagnostic(
+    "syntax.expected",
+    { expected },
+    at,
+    syntaxStageOf(failures),
+  );
+}
+
+/**
+ * A thrown value as a diagnostic: a thrown diagnostic is kept, tagged
+ * `semantic` when it has no stage, and any other value becomes a spanless
+ * `semantic` diagnostic of code `error.unexpected` with its message.
+ */
+function thrownDiagnostic(e: unknown): Diagnostic {
+  if (typeof e === "object" && e !== null && "code" in e && "args" in e) {
+    const thrown = e as Diagnostic;
+    return { ...thrown, stage: thrown.stage ?? "semantic" };
+  }
+  return diagnostic(
+    "error.unexpected",
+    { message: e instanceof Error ? e.message : String(e) },
+    undefined,
+    "semantic",
+  );
 }
 
 export function makeParser<ResultType>(
@@ -95,9 +154,9 @@ export function makeParser<ResultType>(
       const match = grammar.match(source);
       if (match.failed()) {
         return Err(
-          createError(
-            match.shortMessage ?? UNKNOWN_HDL_ERROR,
+          syntaxDiagnostic(
             span(match.getInterval()),
+            match.getRightmostFailures(),
           ),
         );
       }
@@ -105,15 +164,9 @@ export function makeParser<ResultType>(
       const parse = property(parsed);
       return Ok(parse);
     } catch (e) {
-      return Err(e as Error);
+      return Err(thrownDiagnostic(e));
     }
   };
-}
-
-export interface Span {
-  start: number;
-  end: number;
-  line: number;
 }
 
 export function span(span: Interval): Span {

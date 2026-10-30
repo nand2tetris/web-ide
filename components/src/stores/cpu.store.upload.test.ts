@@ -20,7 +20,10 @@ async function runTest(tstPath: string) {
   const statuses: string[] = [];
   const { actions } = makeCpuStore(
     fs,
-    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    (s) =>
+      statuses.push(
+        typeof s === "string" ? s : "message" in s ? s.message : "",
+      ),
     {},
     { current: vi.fn() as unknown as CpuStoreDispatch },
   );
@@ -105,7 +108,10 @@ test("a test loaded from the file system keeps an uploaded program", async () =>
   const dispatch = { current: vi.fn() as unknown as CpuStoreDispatch };
   const { initialState, reducers, actions } = makeCpuStore(
     fs,
-    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    (s) =>
+      statuses.push(
+        typeof s === "string" ? s : "message" in s ? s.message : "",
+      ),
     {},
     dispatch,
   );

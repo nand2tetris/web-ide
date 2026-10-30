@@ -2,6 +2,7 @@ import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Result } from "@davidsouther/jiffies/result.ts";
 import { RAM } from "../cpu/memory.js";
+import type { Diagnostic } from "../languages/base.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";
 import { Action, AsyncAction } from "../types.js";
@@ -28,7 +29,7 @@ export class VMTest extends Test<VMTestInstruction> {
       doEcho?: Action<string>;
       compareTo?: Action<string>;
     } = {},
-  ): Result<VMTest, Error> {
+  ): Result<VMTest, Diagnostic> {
     const test = new VMTest(options);
     return fill(test, tst);
   }

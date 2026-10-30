@@ -7,7 +7,7 @@ import {
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { build as buildChip } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
-import { Diagnostic } from "../languages/base.js";
+import { Diagnostic, describeEnglish } from "../languages/base.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
@@ -24,8 +24,8 @@ export interface AssignmentParse extends AssignmentFiles {
 }
 
 export interface AssignmentBuild extends AssignmentParse {
-  maybeChip: Result<Chip, Error>;
-  maybeTest: Result<ChipTest, Error>;
+  maybeChip: Result<Chip, Diagnostic>;
+  maybeTest: Result<ChipTest, Diagnostic>;
 }
 
 export interface AssignmentRun extends AssignmentBuild {
@@ -55,23 +55,12 @@ export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
 export const maybeBuild =
   (fs: FileSystem) =>
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
-    let maybeChip: Result<Chip, Error>;
-    if (isOk(file.maybeParsedHDL)) {
-      const maybeBuilt = await buildChip({
-        parts: Ok(file.maybeParsedHDL),
-        fs,
-      });
-      if (isErr(maybeBuilt)) {
-        maybeChip = Err(new Error(Err(maybeBuilt).message));
-      } else {
-        maybeChip = maybeBuilt;
-      }
-    } else {
-      maybeChip = Err(new Error("HDL Was not parsed"));
-    }
-    const maybeTest = isOk(file.maybeParsedTST)
+    const maybeChip: Result<Chip, Diagnostic> = isOk(file.maybeParsedHDL)
+      ? await buildChip({ parts: Ok(file.maybeParsedHDL), fs })
+      : file.maybeParsedHDL;
+    const maybeTest: Result<ChipTest, Diagnostic> = isOk(file.maybeParsedTST)
       ? ChipTest.from(Ok(file.maybeParsedTST))
-      : Err(new Error("TST Was not parsed"));
+      : file.maybeParsedTST;
 
     return { ...file, maybeChip, maybeTest };
   };
@@ -84,14 +73,14 @@ export const tryRun =
       return {
         ...assignment,
         pass: false,
-        out: Err(assignment.maybeChip).message,
+        out: describeEnglish(Err(assignment.maybeChip)),
       };
     }
     if (isErr(assignment.maybeTest)) {
       return {
         ...assignment,
         pass: false,
-        out: Err(assignment.maybeTest).message,
+        out: describeEnglish(Err(assignment.maybeTest)),
       };
     }
     const test = Ok(assignment.maybeTest)

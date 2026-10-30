@@ -4,6 +4,7 @@ import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
+import { describeDiagnostic } from "./diagnostics";
 import { Decoration, HighlightType } from "./editor";
 import "./monacoSetup";
 
@@ -51,7 +52,6 @@ export const makeDecorations = (
   for (const decoration of additionalDecorations) {
     const range = monaco?.Range.fromPositions(
       model.getPositionAt(decoration.span.start),
-      // editor.getSc
       model.getPositionAt(decoration.span.end),
     );
     if (range) {
@@ -141,11 +141,9 @@ export const Monaco = ({
     decorations.current = makeDecorations(
       monaco.current || null,
       editor.current,
-      // I'm not sure why this makes things work, but it is load bearing.
-      // Removing the empty span will cause the initial first-statement
-      // highlight in the test view to not show. Setting it to [0, 1] will
-      // cause a 1-character highlight in the editor view, so don't do that
-      // either.
+      // The empty span is load bearing. Removing it hides the initial
+      // first-statement highlight in the test view, and setting it to [0, 1]
+      // draws a 1-character highlight in the editor view.
       newHighlight ?? { start: 0, end: 0, line: 0 },
       customDecorations.current,
       decorations.current,
@@ -174,7 +172,6 @@ export const Monaco = ({
     doDecorations();
   }, [currentCustomDecorations]);
 
-  // Set options when mounting
   const onMount: OnMount = useCallback(
     (ed, mon) => {
       monaco.current = mon;
@@ -223,13 +220,11 @@ export const Monaco = ({
     editor.current.updateOptions({ lineNumbers: lineNumberTransform ?? "on" });
   }, [lineNumberTransform]);
 
-  // Set themes
   useEffect(() => {
     if (editor.current === undefined) return;
     editor.current.updateOptions({ theme: codeTheme() });
   }, [editor, codeTheme]);
 
-  // Prevent editing disabled editors
   useEffect(() => {
     if (editor.current === undefined) return;
     editor.current.updateOptions({
@@ -238,7 +233,6 @@ export const Monaco = ({
     });
   }, [editor, disabled]);
 
-  // Add error markers on parse failure
   useEffect(() => {
     if (!editor.current) return;
     if (!monaco.current) return;
@@ -250,7 +244,7 @@ export const Monaco = ({
       const endPos = model.getPositionAt(e.span.end);
       return [
         {
-          message: e.message,
+          message: describeDiagnostic(e),
           startColumn: startPos.column,
           startLineNumber: startPos.lineNumber,
           endColumn: endPos.column,

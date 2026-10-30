@@ -5,7 +5,7 @@ import {
   Result,
   unwrap,
 } from "@davidsouther/jiffies/result.ts";
-import { createError, Diagnostic } from "../languages/base.js";
+import { Diagnostic, semanticError } from "../languages/base.js";
 import {
   IfStatement,
   ReturnType,
@@ -134,10 +134,7 @@ function buildCFG(
       case "returnStatement":
         if (returnType != "void" && statement.value == undefined) {
           return Err(
-            createError(
-              `A non void subroutine must return a value`,
-              statement.span,
-            ),
+            semanticError("jack.missingReturnValue", {}, statement.span),
           );
         }
         current.hasReturn = true;
@@ -170,8 +167,9 @@ export function validateSubroutine(
   }
   if (!unwrap(cfg).alwaysReturns()) {
     return Err(
-      createError(
-        `Subroutine ${subroutine.name.value}: not all code paths return a value`,
+      semanticError(
+        "jack.missingReturnPath",
+        { name: subroutine.name.value },
         subroutine.name.span,
       ),
     );

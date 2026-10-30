@@ -1,5 +1,7 @@
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { RAM } from "../cpu/memory.js";
+import type { Fault } from "../languages/diagnostic.js";
+import { describeEnglish, fault } from "../languages/diagnostic.js";
 import { Segment } from "../languages/vm.js";
 import { VmFrame } from "./vm.js";
 
@@ -57,13 +59,9 @@ export class VmMemory extends RAM {
     this.set(SP, 256);
   }
 
-  baseSegment(segment: Segment, offset: number): Result<number, Error> {
+  baseSegment(segment: Segment, offset: number): Result<number, Fault> {
     if (this.strict && (offset < 0 || offset > 32767))
-      return Err(
-        new Error(
-          `Illegal offset value ${offset} (must be between 0 and 32767)`,
-        ),
-      );
+      return Err(fault("vm.illegalOffset", { offset }));
     switch (segment) {
       case "argument":
         return Ok(this.ARG + offset);
@@ -73,21 +71,15 @@ export class VmMemory extends RAM {
         return Ok(this.LCL + offset);
       case "pointer":
         if (this.strict && offset > 1)
-          throw new Error(
-            `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`,
-          );
+          return Err(fault("vm.pointerOutOfBounds", { offset }));
         return Ok(offset === 0 ? THIS : THAT);
       case "static":
         if (this.strict && offset > 255 - 16)
-          return Err(new Error(`Cannot access statics beyond 239: ${offset}`));
+          return Err(fault("vm.staticOutOfBounds", { offset }));
         return Ok(16 + offset);
       case "temp":
         if (this.strict && offset > 7)
-          return Err(
-            new Error(
-              `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`,
-            ),
-          );
+          return Err(fault("vm.tempOutOfBounds", { offset }));
         return Ok(5 + offset);
       case "that":
         return Ok(this.THAT + offset);
@@ -99,21 +91,19 @@ export class VmMemory extends RAM {
   getSegment(segment: Segment, offset: number): number {
     if (segment === "constant") {
       if (this.strict && (offset < 0 || offset > 32767))
-        throw new Error(
-          `Illegal offset value ${offset} (must be between 0 and 32767)`,
-        );
+        throw new Error(describeEnglish(fault("vm.illegalOffset", { offset })));
       return offset;
     }
     const base = this.baseSegment(segment, offset);
     if (isErr(base)) {
-      throw Err(base);
+      throw new Error(describeEnglish(Err(base)));
     }
     return this.get(Ok(base));
   }
   setSegment(segment: Segment, offset: number, value: number) {
     const base = this.baseSegment(segment, offset);
     if (isErr(base)) {
-      throw Err(base);
+      throw new Error(describeEnglish(Err(base)));
     }
     this.set(Ok(base), value);
   }

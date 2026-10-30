@@ -3,8 +3,9 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
-import { unwrap } from "@davidsouther/jiffies/result.ts";
+import { Err, unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, it } from "vitest";
+import { type Diagnostic, describeEnglish } from "../languages/base.js";
 import { HDL } from "../languages/hdl.js";
 import { bin } from "../util/twos.js";
 import { build, parse } from "./builder.js";
@@ -242,3 +243,47 @@ const COPY_HDL = `CHIP Copy {
     IN in; OUT out;
     PARTS: Or(a=in, b=in, out=out);
 }`;
+
+describe("Chip Builder diagnostics", () => {
+  const diagnosticOf = async (source: string) => {
+    const chip = await parse(source);
+    expect(chip).toBeErr();
+    return Err(chip as Err<Diagnostic>);
+  };
+
+  it("describes an undefined chip by code and argument", async () => {
+    const found = await diagnosticOf(
+      "CHIP Foo {\n  IN a; OUT out;\n  PARTS:\n  Nope(a=a, out=out);\n}",
+    );
+
+    expect(found).toEqual({
+      code: "chip.notFound",
+      args: { name: "Nope" },
+      span: expect.objectContaining({ line: 4 }),
+      stage: "semantic",
+    });
+    expect(describeEnglish(found)).toBe("Line 4: Undefined chip name: Nope");
+  });
+
+  it("describes a bus width mismatch with the widths", async () => {
+    const found = await diagnosticOf(
+      "CHIP Foo {\n  IN in[3]; OUT out;\n  PARTS:\n  Or8Way(in=in, out=out);\n}",
+    );
+
+    expect(found).toMatchObject({
+      code: "chip.busWidthMismatch",
+      args: { lhs: "in", lhsWidth: 8, rhs: "in", rhsWidth: 3 },
+    });
+  });
+
+  it("describes a wiring failure of a chip by its code", async () => {
+    const found = await diagnosticOf(
+      "CHIP Foo {\n  IN a; OUT out;\n  PARTS:\n  Not(in=a[0..3], out=out);\n}",
+    );
+
+    expect(found).toMatchObject({
+      code: "chip.subBusRange",
+      stage: "semantic",
+    });
+  });
+});

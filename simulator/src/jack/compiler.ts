@@ -1,5 +1,12 @@
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { createError, Diagnostic, Span } from "../languages/base.js";
+import {
+  Diagnostic,
+  DiagnosticArgs,
+  DiagnosticCode,
+  diagnostic,
+  Span,
+  semanticError,
+} from "../languages/base.js";
 import {
   ArrayAccess,
   Class,
@@ -48,11 +55,16 @@ function isOsClass(name: string): boolean {
 }
 
 function isError(value: unknown): value is Diagnostic {
-  return (value as Diagnostic).message != undefined;
+  return (value as Diagnostic).code != undefined;
 }
 
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1);
+/** A failure while generating code for a class. */
+function compileError<C extends DiagnosticCode>(
+  code: C,
+  args: DiagnosticArgs[C],
+  span?: Span,
+): Diagnostic {
+  return diagnostic(code, args, span, "compile");
 }
 
 export function compile(
@@ -71,8 +83,9 @@ export function compile(
           ? isErr(result)
             ? Err(result)
             : cls
-          : createError(
-              `Class name ${cls.name.value} doesn't match file name ${name}`,
+          : semanticError(
+              "jack.classNameMismatch",
+              { name: cls.name.value, file: name },
               cls.name.span,
             );
     }
@@ -95,7 +108,11 @@ export function compile(
           vms[name] = Ok(compiled);
         }
       } catch (e) {
-        vms[name] = e as Diagnostic;
+        vms[name] = isError(e)
+          ? e
+          : compileError("error.unexpected", {
+              message: e instanceof Error ? e.message : String(e),
+            });
       }
     }
   }
@@ -107,8 +124,9 @@ function validateClass(cls: Class): Result<void, Diagnostic> {
   for (const subroutine of cls.subroutines) {
     if (subroutineNames.has(subroutine.name.value)) {
       return Err(
-        createError(
-          `Subroutine ${subroutine.name.value} already declared`,
+        semanticError(
+          "jack.duplicateSubroutine",
+          { name: subroutine.name.value },
           subroutine.name.span,
         ),
       );
@@ -192,7 +210,7 @@ export class Compiler {
     }
     const data = this.varData(name);
     if (!data) {
-      throw createError(`Undeclared variable ${name}`, span);
+      throw compileError("jack.undeclaredVariable", { name }, span);
     }
     return `${data.segment} ${data.index}`;
   }
@@ -234,7 +252,7 @@ export class Compiler {
     if (isPrimitive(type) || isOsClass(type) || this.classes[type]) {
       return;
     }
-    throw createError(`Unknown type ${type}`, span);
+    throw compileError("jack.unknownType", { type }, span);
   }
 
   validateReturnType(returnType: string, span?: Span) {
@@ -300,9 +318,11 @@ export class Compiler {
       const builtin = VM_BUILTINS[`${this.className}.${subroutine.name.value}`];
 
       if (builtin && !overridesOsCorrectly(this.className, subroutine)) {
-        throw createError(
-          `OS subroutine ${this.className}.${subroutine.name.value} must follow the interface ${makeInterface(subroutine.name.value, builtin)})`,
-        );
+        throw compileError("jack.osInterface", {
+          class: this.className,
+          subroutine: subroutine.name.value,
+          signature: makeInterface(subroutine.name.value, builtin),
+        });
       }
     }
   }
@@ -412,8 +432,9 @@ export class Compiler {
   validateArgNum(name: string, expected: number, call: SubroutineCall) {
     const received = call.parameters.length;
     if (expected != received) {
-      throw createError(
-        `${name} expected ${expected} arguments, got ${received}`,
+      throw compileError(
+        "jack.argCount",
+        { name, expected, received },
         call.span,
       );
     }
@@ -428,16 +449,16 @@ export class Compiler {
     const builtin = VM_BUILTINS[`${className}.${subroutineName}`];
     if (builtin) {
       if (builtin.type == "method" && !isMethod) {
-        throw createError(
-          `Method ${className}.${subroutineName} was called as a function/constructor`,
+        throw compileError(
+          "jack.methodCalledAsFunction",
+          { name: `${className}.${subroutineName}` },
           call.name.span,
         );
       }
       if (builtin.type != "method" && isMethod) {
-        throw createError(
-          `${capitalize(
-            builtin.type,
-          )} ${className}.${subroutineName} was called as a method`,
+        throw compileError(
+          "jack.calledAsMethod",
+          { kind: builtin.type, name: `${className}.${subroutineName}` },
           call.name.span,
         );
       }
@@ -451,16 +472,16 @@ export class Compiler {
       for (const subroutine of this.classes[className].subroutines) {
         if (subroutine.name.value == subroutineName) {
           if (subroutine.type == "method" && !isMethod) {
-            throw createError(
-              `Method ${className}.${subroutineName} was called as a function/constructor`,
+            throw compileError(
+              "jack.methodCalledAsFunction",
+              { name: `${className}.${subroutineName}` },
               call.name.span,
             );
           }
           if (subroutine.type != "method" && isMethod) {
-            throw createError(
-              `${capitalize(
-                subroutine.name.value,
-              )} ${className}.${subroutineName} was called as a method`,
+            throw compileError(
+              "jack.calledAsMethod",
+              { kind: subroutine.type, name: `${className}.${subroutineName}` },
               call.name.span,
             );
           }
@@ -472,12 +493,17 @@ export class Compiler {
           return;
         }
       }
-      throw createError(
-        `Class ${className} doesn't contain a function/constructor ${subroutineName}`,
+      throw compileError(
+        "jack.missingSubroutine",
+        { class: className, subroutine: subroutineName },
         call.name.span,
       );
     } else {
-      throw createError(`Class ${className} doesn't exist`, call.name.span);
+      throw compileError(
+        "jack.undefinedClass",
+        { name: className },
+        call.name.span,
+      );
     }
   }
 

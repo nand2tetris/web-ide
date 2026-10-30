@@ -1,6 +1,7 @@
 import { checkExhaustive } from "@davidsouther/jiffies/assert.ts";
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { Span } from "../languages/base.js";
+import type { Diagnostic } from "../languages/base.js";
+import { Span, semanticError } from "../languages/base.js";
 import {
   Tst,
   TstCommand,
@@ -84,7 +85,7 @@ export function fill<T extends Test>(
   test: T,
   tst: Tst,
   requireLoad = true,
-): Result<T, Error> {
+): Result<T, Diagnostic> {
   let span: Span | undefined;
   let stepInstructions: TestInstruction[] = [];
 
@@ -145,7 +146,7 @@ export function fill<T extends Test>(
   }
 
   if (requireLoad && !hasLoad) {
-    return Err(new Error("A test script must have a load command"));
+    return Err(semanticError("tst.missingLoad", {}));
   }
 
   test.reset();

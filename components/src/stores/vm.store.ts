@@ -16,6 +16,7 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import {
   type Diagnostic,
+  diagnostic,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
@@ -28,8 +29,9 @@ import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext, type StatusInput } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -48,6 +50,11 @@ export interface VmSim {
 
 export interface VMTestSim {
   highlight: Span | undefined;
+}
+
+/** A runtime failure as a diagnostic that carries only its programmer facing message. */
+function unexpected({ message }: Error): Diagnostic {
+  return diagnostic("error.unexpected", { message });
 }
 
 export interface VmPageState {
@@ -91,7 +98,7 @@ export type VmStoreDispatch = Dispatch<{
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  setStatus: Action<StatusInput>,
   showHighlight: boolean,
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
@@ -105,7 +112,10 @@ function reduceVMTest(
   } catch (_e) {
     const error = new Error("Runtime error: Invalid stack");
     setStatus({ message: error.message, severity: "ERROR" });
-    dispatch.current({ action: "setDiagnostics", payload: [error] });
+    dispatch.current({
+      action: "setDiagnostics",
+      payload: [unexpected(error)],
+    });
   }
 
   return {
@@ -126,7 +136,7 @@ function reduceVMTest(
 
 export function makeVmStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  setStatus: Action<StatusInput>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {
@@ -141,7 +151,7 @@ export function makeVmStore(
 
   /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    setStatus(failureStatus(diagnostics[0]));
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
   };
@@ -353,10 +363,7 @@ export function makeVmStore(
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });
-        setStatus({
-          message: `Failed to parse test`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(tst)));
         return false;
       }
       dispatch.current({ action: "setValid", payload: true });
@@ -377,10 +384,7 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(maybeTest)));
         return false;
       } else {
         test = Ok(maybeTest).using(fs);
@@ -412,7 +416,10 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },
@@ -441,7 +448,10 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },

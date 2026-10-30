@@ -1,4 +1,5 @@
-import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { type Diagnostic, semanticError } from "../../languages/base.js";
 import { parse } from "../builder.js";
 import { Chip } from "../chip.js";
 import { Add16 } from "./arithmetic/add_16.js";
@@ -121,16 +122,12 @@ export function hasBuiltinChip(name: string): boolean {
   return REGISTRY.has(name);
 }
 
-export async function getBuiltinChip(name: string): Promise<Result<Chip>> {
+export async function getBuiltinChip(
+  name: string,
+): Promise<Result<Chip, Diagnostic>> {
   if (builtinOverrides[name]) {
-    const result = await parse(builtinOverrides[name], name);
-    if (isErr(result)) {
-      return Err(new Error(Err(result).message));
-    }
-    return result;
+    return await parse(builtinOverrides[name], name);
   }
   const chip = REGISTRY.get(name);
-  return chip
-    ? Ok(chip())
-    : Err(new Error(`Chip ${name} not in builtin registry`));
+  return chip ? Ok(chip()) : Err(semanticError("chip.notBuiltin", { name }));
 }

@@ -37,7 +37,12 @@ export const Compiler = () => {
   const showStatus = () => {
     const current = state.compiled[state.selected];
     if (current) {
-      setStatus(current.valid ? "" : (current.diagnostics[0]?.message ?? ""));
+      const [first] = current.diagnostics;
+      setStatus(
+        current.valid || first === undefined
+          ? ""
+          : { severity: "INFO", diagnostics: [first] },
+      );
     }
   };
 

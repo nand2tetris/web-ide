@@ -2,6 +2,7 @@ import { MaxAsm } from "@nand2tetris/projects/samples/project_06/02_max.js";
 import { describe, expect, it } from "vitest";
 import { ASSIGN, COMMANDS, JUMP } from "../cpu/alu.js";
 import { Asm, asmSemantics, emit, fillLabel, grammar } from "./asm.js";
+import { type Diagnostic, describeEnglish } from "./base.js";
 
 describe("asm language", () => {
   it("parses an empty file", () => {
@@ -367,12 +368,22 @@ describe("asm language", () => {
   });
 
   it("fails to parse an A instruction with a value too large", () => {
-    expect(() => {
-      const match = grammar.match("@32768", "aInstruction");
-      if (match.succeeded()) {
-        asmSemantics(match).instruction;
-      }
-    }).toThrow(
+    const match = grammar.match("@32768", "aInstruction");
+    expect(match.succeeded()).toBe(true);
+
+    let thrown: unknown;
+    try {
+      asmSemantics(match).instruction;
+    } catch (e) {
+      thrown = e;
+    }
+
+    expect(thrown).toMatchObject({
+      code: "asm.aValueRange",
+      args: { value: 32768 },
+      span: { line: 1 },
+    });
+    expect(describeEnglish(thrown as Diagnostic)).toBe(
       "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
     );
   });

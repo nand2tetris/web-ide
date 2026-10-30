@@ -1,4 +1,4 @@
-// Regression tests for nand2tetris/web-ide#592 (stored directory handle permission).
+// A stored directory handle becomes fs only after permission is granted.
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 

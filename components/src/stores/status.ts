@@ -1,4 +1,4 @@
-import type { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
+import type { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
 import type { Action } from "@nand2tetris/simulator/types.js";
 import { useMemo, useState } from "react";
 

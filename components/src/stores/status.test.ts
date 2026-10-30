@@ -1,11 +1,14 @@
-import type { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
+import {
+  type Diagnostic,
+  DiagnosticCode,
+  diagnostic as makeDiagnostic,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { describe, expect, it, vi } from "vitest";
 import { failureStatus, statusActions } from "./status.js";
 
-const diagnostic: Diagnostic = {
-  message: "Unknown chip",
-  span: { start: 0, end: 4, line: 1 },
-};
+const diagnostic: Diagnostic = makeDiagnostic(DiagnosticCode.Chip.NOT_FOUND, {
+  name: "Unknown chip",
+});
 
 describe("failureStatus", () => {
   it("holds the diagnostics as data and leaves the severity to setStatus", () => {

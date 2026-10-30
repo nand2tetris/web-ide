@@ -16,8 +16,10 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import {
   type Diagnostic,
+  DiagnosticCode,
+  diagnostic,
   Span,
-} from "@nand2tetris/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
@@ -31,6 +33,7 @@ import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -49,6 +52,11 @@ export interface VmSim {
 
 export interface VMTestSim {
   highlight: Span | undefined;
+}
+
+/** A runtime failure as a diagnostic that carries only its programmer facing message. */
+function unexpected({ message }: Error): Diagnostic {
+  return diagnostic(DiagnosticCode.Error.UNEXPECTED, { message });
 }
 
 export interface VmPageState {
@@ -106,7 +114,10 @@ function reduceVMTest(
   } catch (_e) {
     const error = new Error("Runtime error: Invalid stack");
     status.setStatus({ message: error.message, severity: "ERROR" });
-    dispatch.current({ action: "setDiagnostics", payload: [error] });
+    dispatch.current({
+      action: "setDiagnostics",
+      payload: [unexpected(error)],
+    });
   }
 
   return {
@@ -409,7 +420,10 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },
@@ -438,7 +452,10 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },

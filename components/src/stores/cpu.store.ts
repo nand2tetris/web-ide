@@ -7,7 +7,7 @@ import {
   MemoryKeyboard,
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import { Span } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
@@ -21,6 +21,7 @@ import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
 import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 function makeTst() {
   return `repeat {

@@ -16,7 +16,10 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  Diagnostic,
+  Span,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
@@ -28,6 +31,7 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -94,6 +98,7 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
+  /** The diagnostics of the file in the editor, which marks each of them. */
   diagnostics: readonly Diagnostic[];
   visualizationParameters: Set<string>;
 }

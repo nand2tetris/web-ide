@@ -1,4 +1,4 @@
-import { Span } from "../languages/base.js";
+import { Span } from "../languages/diagnostic.js";
 import { TstOutputSpec } from "../languages/tst.js";
 import { Test } from "./tst.js";
 

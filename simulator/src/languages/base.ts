@@ -7,6 +7,14 @@ import {
   type Semantics,
 } from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
+import {
+  type Diagnostic,
+  type DiagnosticArgs,
+  DiagnosticCode,
+  diagnostic,
+  type Span,
+  Stage,
+} from "./diagnostic.js";
 
 import baseGrammar from "./grammars/base.ohm.js";
 export const grammars = {
@@ -66,23 +74,61 @@ baseSemantics.addAttribute("String", {
   },
 });
 
-/** One diagnostic: a message and, when known, where it applies. */
-export interface Diagnostic {
-  message: string;
-  span?: Span;
+/** A diagnostic of a check on a well formed program. */
+export function semanticError<C extends DiagnosticCode>(
+  code: C,
+  args: DiagnosticArgs[C],
+  span?: Span,
+): Diagnostic {
+  return diagnostic(code, args, span, Stage.SEMANTIC);
 }
 
-const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
+/**
+ * The action errors of the parse running now, in the order the actions ran.
+ * `makeParser` sets this around the semantics.
+ */
+let failedActions: Diagnostic[] | undefined;
 
-export function createError(description: string, span?: Span): Diagnostic {
-  const match = description.match(/Line \d+, col \d+: (?<message>.*)/);
-  const message = match?.groups?.message ? match.groups.message : description;
-  return {
-    message: `${
-      span?.line != undefined ? `Line ${span.line}: ` : ""
-    }${message}`,
-    span: span,
-  };
+/**
+ * A semantic action's error: a `semantic` diagnostic that the parse running now
+ * ends with. The action returns a placeholder of its own instead of throwing.
+ */
+export function actionError<C extends DiagnosticCode>(
+  code: C,
+  args: DiagnosticArgs[C],
+  at: Span,
+): Diagnostic {
+  const failed = semanticError(code, args, at);
+  failedActions?.push(failed);
+  return failed;
+}
+
+/** A syntax failure's public expected text, retaining its failure span. */
+function syntaxDiagnostic(at: Span, expected: string): Diagnostic {
+  return diagnostic(
+    DiagnosticCode.Syntax.EXPECTED,
+    { expected: [expected] },
+    at,
+    Stage.PARSE,
+  );
+}
+
+/**
+ * A thrown value as a diagnostic: a thrown diagnostic is kept, tagged
+ * `semantic` when it has no stage, and any other value becomes a spanless
+ * `semantic` diagnostic of code `error.unexpected` with its message.
+ */
+function thrownDiagnostic(e: unknown): Diagnostic {
+  if (typeof e === "object" && e !== null && "code" in e && "args" in e) {
+    const thrown = e as Diagnostic;
+    return { ...thrown, stage: thrown.stage ?? Stage.SEMANTIC };
+  }
+  return diagnostic(
+    DiagnosticCode.Error.UNEXPECTED,
+    { message: e instanceof Error ? e.message : String(e) },
+    undefined,
+    Stage.SEMANTIC,
+  );
 }
 
 export function makeParser<ResultType>(
@@ -91,29 +137,25 @@ export function makeParser<ResultType>(
   property: (obj: Dict) => ResultType = ({ root }) => root,
 ): (source: string) => Result<ResultType, Diagnostic> {
   return function parse(source) {
+    const outer = failedActions;
+    const failed: Diagnostic[] = [];
+    failedActions = failed;
     try {
       const match = grammar.match(source);
       if (match.failed()) {
         return Err(
-          createError(
-            match.shortMessage ?? UNKNOWN_HDL_ERROR,
-            span(match.getInterval()),
-          ),
+          syntaxDiagnostic(span(match.getInterval()), match.getExpectedText()),
         );
       }
       const parsed = semantics(match);
       const parse = property(parsed);
-      return Ok(parse);
+      return failed.length > 0 ? Err(failed[0]) : Ok(parse);
     } catch (e) {
-      return Err(e as Error);
+      return Err(thrownDiagnostic(e));
+    } finally {
+      failedActions = outer;
     }
   };
-}
-
-export interface Span {
-  start: number;
-  end: number;
-  line: number;
 }
 
 export function span(span: Interval): Span {

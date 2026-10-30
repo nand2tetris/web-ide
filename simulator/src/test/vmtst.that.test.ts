@@ -1,4 +1,4 @@
-// Regression tests: #659 (project 8 Statics/Fibonacci .cmp) and #658 (THAT segment view)
+// Project 8 Statics/Fibonacci .cmp output and the THAT segment view.
 import {
   FileSystem,
   ObjectFileSystemAdapter,

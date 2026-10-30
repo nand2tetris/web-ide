@@ -1,4 +1,4 @@
-import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { type Diagnostic, semanticError } from "../../languages/base.js";
 import { parse } from "../builder.js";
 import { Chip } from "../chip.js";
@@ -126,7 +126,8 @@ export async function getBuiltinChip(
   name: string,
 ): Promise<Result<Chip, Diagnostic>> {
   if (builtinOverrides[name]) {
-    return await parse(builtinOverrides[name], name);
+    const result = await parse(builtinOverrides[name], name);
+    return isErr(result) ? Err(Err(result)[0]) : result;
   }
   const chip = REGISTRY.get(name);
   return chip ? Ok(chip()) : Err(semanticError("chip.notBuiltin", { name }));

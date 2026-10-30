@@ -5,7 +5,11 @@ import {
 } from "@davidsouther/jiffies/fs.ts";
 import { Err, unwrap } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, it } from "vitest";
-import { type Diagnostic, describeEnglish } from "../languages/base.js";
+import {
+  type Diagnostics,
+  describeEnglish,
+  validOf,
+} from "../languages/base.js";
 import { HDL } from "../languages/hdl.js";
 import { bin } from "../util/twos.js";
 import { build, parse } from "./builder.js";
@@ -129,7 +133,7 @@ describe("Chip Builder", () => {
     let foo: Chip;
 
     try {
-      const chip = unwrap(await HDL.parse(USE_COPY_HDL));
+      const chip = unwrap(validOf(HDL.parse(USE_COPY_HDL)));
       foo = unwrap(await build({ parts: chip, dir: ".", fs }));
     } catch (e) {
       throw new Error(asDisplay(e));
@@ -147,10 +151,12 @@ describe("Chip Builder", () => {
   it("returns error for mismatching input width", async () => {
     try {
       const chip = unwrap(
-        HDL.parse(`CHIP Foo {
+        validOf(
+          HDL.parse(`CHIP Foo {
         IN in[3]; OUT out;
         PARTS: Or8Way(in=in, out=out);
       }`),
+        ),
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
@@ -162,10 +168,12 @@ describe("Chip Builder", () => {
   it("returns error for mismatching output width", async () => {
     try {
       const chip = unwrap(
-        HDL.parse(`CHIP Foo {
+        validOf(
+          HDL.parse(`CHIP Foo {
         IN in; OUT out[5];
         PARTS: Not(in=in, out=out);
       }`),
+        ),
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
@@ -177,12 +185,14 @@ describe("Chip Builder", () => {
   it("returns error for wire loop", async () => {
     try {
       const chip = unwrap(
-        HDL.parse(`CHIP Not {
+        validOf(
+          HDL.parse(`CHIP Not {
         IN in;
         OUT out;
         PARTS:
         Nand(a=in, b=myNand, out=myNand);
       }`),
+        ),
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
@@ -194,13 +204,15 @@ describe("Chip Builder", () => {
   it("returns error for part loop", async () => {
     try {
       const chip = unwrap(
-        HDL.parse(`CHIP Not {
+        validOf(
+          HDL.parse(`CHIP Not {
         IN in;
         OUT out;
         PARTS:
         Nand(a=in, b=b, out=c);
         Nand(a=in, b=c, out=b);
       }`),
+        ),
       );
       const foo = await build({ parts: chip });
       expect(foo).toBeErr();
@@ -212,12 +224,14 @@ describe("Chip Builder", () => {
   it("sorts after wiring", async () => {
     try {
       const chip = unwrap(
-        HDL.parse(`CHIP Or { IN a, b; OUT out;
+        validOf(
+          HDL.parse(`CHIP Or { IN a, b; OUT out;
   PARTS:
   Not(in =b , out = net2);
   Nand(a = net, b =net2 , out =out );
   Not(in =a , out = net);
 }`),
+        ),
       );
       const orA = await build({ parts: chip });
       expect(orA).toBeOk();
@@ -248,7 +262,7 @@ describe("Chip Builder diagnostics", () => {
   const diagnosticOf = async (source: string) => {
     const chip = await parse(source);
     expect(chip).toBeErr();
-    return Err(chip as Err<Diagnostic>);
+    return Err(chip as Err<Diagnostics>)[0];
   };
 
   it("describes an undefined chip by code and argument", async () => {

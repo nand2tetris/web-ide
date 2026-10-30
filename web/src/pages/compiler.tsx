@@ -41,7 +41,7 @@ export const Compiler = () => {
       setStatus(
         current.valid || first === undefined
           ? ""
-          : { severity: "INFO", diagnostics: [first] },
+          : { severity: "INFO", diagnostics: [{ diagnostic: first }] },
       );
     }
   };

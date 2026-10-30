@@ -1,6 +1,5 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import {
-  type Dict,
   type Failure,
   type Grammar,
   grammar,
@@ -12,6 +11,7 @@ import {
   type Diagnostic,
   type DiagnosticArgs,
   type DiagnosticCode,
+  type Diagnostics,
   diagnostic,
   type Span,
   type Stage,
@@ -21,6 +21,7 @@ export {
   type Diagnostic,
   type DiagnosticArgs,
   type DiagnosticCode,
+  type Diagnostics,
   describeEnglish,
   diagnostic,
   type Fault,
@@ -109,6 +110,42 @@ export function semanticError<C extends DiagnosticCode>(
   return diagnostic(code, args, span, "semantic");
 }
 
+declare const valid: unique symbol;
+
+/** A tree that parsed with no diagnostics. Only `makeParser` mints it. */
+export type Valid<T> = T & { readonly [valid]: true };
+
+/**
+ * A parse outcome: a tree and its diagnostics. With no diagnostics the tree is
+ * valid. Otherwise the tree is the language's null root.
+ */
+export type Outcome<T> =
+  | { readonly ast: Valid<T>; readonly diagnostics: readonly [] }
+  | { readonly ast: T; readonly diagnostics: Diagnostics };
+
+/** A language's one entry point, and the null root a failed parse gives. */
+export interface Parser<T> {
+  parse(source: string): Outcome<T>;
+  empty(): T;
+}
+
+/** True when the outcome has no diagnostics, so its tree is valid. */
+export function isValid<T>(
+  outcome: Outcome<T>,
+): outcome is { readonly ast: Valid<T>; readonly diagnostics: readonly [] } {
+  return outcome.diagnostics.length === 0;
+}
+
+/** The Result view of an outcome, for consumers that need a valid tree. */
+export function validOf<T>(outcome: Outcome<T>): Result<Valid<T>, Diagnostics> {
+  return isValid(outcome) ? Ok(outcome.ast) : Err(outcome.diagnostics);
+}
+
+/** The trust point: the only cast to `Valid`. */
+function mint<T>(ast: T): Valid<T> {
+  return ast as Valid<T>;
+}
+
 /**
  * A syntax failure's diagnostic, tagged with the stage its failures show. It
  * expects what the failures expected, other than fluffy ones, which Ohm omits
@@ -144,28 +181,44 @@ function thrownDiagnostic(e: unknown): Diagnostic {
   );
 }
 
-export function makeParser<ResultType>(
+/** A tree and its diagnostics, valid only when the list is empty. */
+function outcomeOf<T>(ast: T, diagnostics: readonly Diagnostic[]): Outcome<T> {
+  const [first, ...rest] = diagnostics;
+  return first === undefined
+    ? { ast: mint(ast), diagnostics: [] }
+    : { ast, diagnostics: [first, ...rest] };
+}
+
+/**
+ * A parser reading `attribute` from the semantics of a successful match. A
+ * failed match or a thrown semantic error gives `empty()` as the tree.
+ */
+export function makeParser<T>(
   grammar: Grammar,
   semantics: Semantics,
-  property: (obj: Dict) => ResultType = ({ root }) => root,
-): (source: string) => Result<ResultType, Diagnostic> {
-  return function parse(source) {
-    try {
-      const match = grammar.match(source);
-      if (match.failed()) {
-        return Err(
-          syntaxDiagnostic(
-            span(match.getInterval()),
-            match.getRightmostFailures(),
-          ),
-        );
+  empty: () => T,
+  attribute = "root",
+): Parser<T> {
+  return {
+    empty,
+    parse(source) {
+      try {
+        const match = grammar.match(source);
+        if (match.failed()) {
+          return outcomeOf(empty(), [
+            syntaxDiagnostic(
+              span(match.getInterval()),
+              match.getRightmostFailures(),
+            ),
+          ]);
+        }
+        // Ohm attributes are untyped, so the tree is taken to be `T`.
+        const ast: T = semantics(match)[attribute];
+        return outcomeOf(ast, []);
+      } catch (e) {
+        return outcomeOf(empty(), [thrownDiagnostic(e)]);
       }
-      const parsed = semantics(match);
-      const parse = property(parsed);
-      return Ok(parse);
-    } catch (e) {
-      return Err(thrownDiagnostic(e));
-    }
+    },
   };
 }
 

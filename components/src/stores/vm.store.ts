@@ -18,6 +18,7 @@ import {
   type Diagnostic,
   diagnostic,
   Span,
+  validOf,
 } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
@@ -26,12 +27,11 @@ import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
-import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, type StatusInput } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
-import { failureStatus } from "./status.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -140,7 +140,7 @@ export function makeVmStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {
-  const parsed = unwrap(VM.parse(FIBONACCI));
+  const parsed = unwrap(validOf(VM.parse(FIBONACCI)));
   let vm = unwrap(Vm.build(parsed.instructions));
   let test = new VMTest({ doEcho: setStatus }).with(vm);
   let useTest = false;
@@ -151,7 +151,7 @@ export function makeVmStore(
 
   /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus(failureStatus(diagnostics[0]));
+    setStatus(failureStatus("VM code", diagnostics));
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
   };
@@ -193,18 +193,7 @@ export function makeVmStore(
       state.files.out = test.log();
     },
     testFinished(state: VmPageState) {
-      const passed = compare(state.files.cmp.trim(), state.files.out);
-      setStatus(
-        passed
-          ? {
-              message: `Simulation successful: The output file is identical to the compare file`,
-              severity: "SUCCESS",
-            }
-          : {
-              message: `Simulation error: The output file differs from the compare file`,
-              severity: "ERROR",
-            },
-      );
+      setStatus(comparisonStatus(state.files.cmp.trim(), state.files.out));
     },
 
     setTitle(state: VmPageState, title: string) {
@@ -294,10 +283,10 @@ export function makeVmStore(
       }
       vmSource = content;
 
-      const parseResult = VM.parse(content);
+      const parseResult = validOf(VM.parse(content));
 
       if (isErr(parseResult)) {
-        return compileFailed([Err(parseResult)]);
+        return compileFailed(Err(parseResult));
       }
       const instructions = unwrap(parseResult).instructions;
       const buildResult = Vm.build(instructions);
@@ -322,10 +311,10 @@ export function makeVmStore(
 
       let lineOffset = 0;
       for (const file of files) {
-        const parseResult = VM.parse(file.content);
+        const parseResult = validOf(VM.parse(file.content));
 
         if (isErr(parseResult)) {
-          return compileFailed([Err(parseResult)]);
+          return compileFailed(Err(parseResult));
         }
         const instructions = unwrap(parseResult).instructions;
 
@@ -359,11 +348,11 @@ export function makeVmStore(
 
     loadTest(path: string, source: string) {
       dispatch.current({ action: "setTst", payload: { tst: source } });
-      const tst = TST.parse(source);
+      const tst = validOf(TST.parse(source));
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });
-        setStatus(failureStatus(Err(tst)));
+        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
         return false;
       }
       dispatch.current({ action: "setValid", payload: true });
@@ -384,7 +373,9 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        setStatus(failureStatus(Err(maybeTest)));
+        setStatus(
+          failureStatus("Test script", [Err(maybeTest)], { marked: false }),
+        );
         return false;
       } else {
         test = Ok(maybeTest).using(fs);

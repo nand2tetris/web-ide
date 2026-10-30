@@ -3,9 +3,12 @@ import {
   Diagnostic,
   DiagnosticArgs,
   DiagnosticCode,
+  Diagnostics,
   diagnostic,
+  isValid,
   Span,
   semanticError,
+  Valid,
 } from "../languages/base.js";
 import {
   ArrayAccess,
@@ -54,7 +57,11 @@ function isOsClass(name: string): boolean {
   return osClasses.has(name);
 }
 
-function isError(value: unknown): value is Diagnostic {
+function isError(value: Valid<Class> | Diagnostics): value is Diagnostics {
+  return Array.isArray(value);
+}
+
+function isDiagnostic(value: unknown): value is Diagnostic {
   return (value as Diagnostic).code != undefined;
 }
 
@@ -67,35 +74,44 @@ function compileError<C extends DiagnosticCode>(
   return diagnostic(code, args, span, "compile");
 }
 
+/**
+ * Compiles each Jack file by name. Each value is either the file's
+ * diagnostics, when it did not parse or compile, or its generated VM text.
+ */
 export function compile(
   files: Record<string, string>,
-): Record<string, string | Diagnostic> {
-  const classes: Record<string, Class | Diagnostic> = {};
+): Record<string, string | Diagnostics> {
+  const classes: Record<string, Valid<Class> | Diagnostics> = {};
   for (const [name, content] of Object.entries(files)) {
     const parsed = JACK.parse(content);
-    if (isErr(parsed)) {
-      classes[name] = Err(parsed);
+    if (!isValid(parsed)) {
+      classes[name] = parsed.diagnostics;
     } else {
-      const cls = Ok(parsed);
+      const cls = parsed.ast;
       const result = validateClass(cls);
       classes[name] =
         cls.name.value == name
           ? isErr(result)
-            ? Err(result)
+            ? [Err(result)]
             : cls
-          : semanticError(
-              "jack.classNameMismatch",
-              { name: cls.name.value, file: name },
-              cls.name.span,
-            );
+          : [
+              semanticError(
+                "jack.classNameMismatch",
+                { name: cls.name.value, file: name },
+                cls.name.span,
+              ),
+            ];
     }
   }
 
-  const validClasses: Record<string, Class> = Object.fromEntries(
-    Object.entries(classes).filter(([_, parsed]) => !isError(parsed)),
-  ) as Record<string, Class>;
+  const validClasses: Record<string, Valid<Class>> = {};
+  for (const [name, parsed] of Object.entries(classes)) {
+    if (!isError(parsed)) {
+      validClasses[name] = parsed;
+    }
+  }
 
-  const vms: Record<string, string | Diagnostic> = {};
+  const vms: Record<string, string | Diagnostics> = {};
   for (const [name, parsed] of Object.entries(classes)) {
     if (isError(parsed)) {
       vms[name] = parsed;
@@ -103,23 +119,25 @@ export function compile(
       try {
         const compiled = new Compiler().compile(parsed, validClasses);
         if (isErr(compiled)) {
-          vms[name] = Err(compiled);
+          vms[name] = [Err(compiled)];
         } else {
           vms[name] = Ok(compiled);
         }
       } catch (e) {
-        vms[name] = isError(e)
-          ? e
-          : compileError("error.unexpected", {
-              message: e instanceof Error ? e.message : String(e),
-            });
+        vms[name] = [
+          isDiagnostic(e)
+            ? e
+            : compileError("error.unexpected", {
+                message: e instanceof Error ? e.message : String(e),
+              }),
+        ];
       }
     }
   }
   return vms;
 }
 
-function validateClass(cls: Class): Result<void, Diagnostic> {
+function validateClass(cls: Valid<Class>): Result<void, Diagnostic> {
   const subroutineNames = new Set<string>();
   for (const subroutine of cls.subroutines) {
     if (subroutineNames.has(subroutine.name.value)) {
@@ -226,8 +244,8 @@ export class Compiler {
   }
 
   compile(
-    cls: Class,
-    other?: Record<string, Class>,
+    cls: Valid<Class>,
+    other?: Record<string, Valid<Class>>,
   ): Result<string, Diagnostic> {
     this.className = cls.name.value;
     this.classes = other ?? {};

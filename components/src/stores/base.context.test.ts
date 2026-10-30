@@ -70,3 +70,21 @@ describe("#592 stored handle permission flow", () => {
     expect(result.current.localFsRoot).toBeUndefined();
   });
 });
+
+describe("Attempt Recovery setting", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("is on by default", () => {
+    const { result } = renderHook(() => useBaseContext());
+    expect(result.current.attemptRecovery).toBe(true);
+  });
+
+  it("is stored with the settings, and read back by the next session", () => {
+    const first = renderHook(() => useBaseContext());
+    act(() => first.result.current.setAttemptRecovery(false));
+    expect(first.result.current.attemptRecovery).toBe(false);
+
+    const next = renderHook(() => useBaseContext());
+    expect(next.result.current.attemptRecovery).toBe(false);
+  });
+});

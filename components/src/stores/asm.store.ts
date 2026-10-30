@@ -484,10 +484,18 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus, clearStatus, setFailureStatus, fs, localFsRoot } =
-    useContext(BaseContext);
+  const {
+    setStatus,
+    clearStatus,
+    setFailureStatus,
+    fs,
+    localFsRoot,
+    attemptRecovery,
+  } = useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
@@ -496,6 +504,7 @@ export function useAsmPageStore() {
         { setStatus, clearStatus, setFailureStatus },
         dispatch,
         localFsRoot != undefined,
+        () => recovery.current,
       ),
     [setStatus, clearStatus, setFailureStatus, dispatch, fs],
   );

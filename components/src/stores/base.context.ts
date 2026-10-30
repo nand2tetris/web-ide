@@ -23,6 +23,16 @@ import {
 } from "./base/indexDb.js";
 import { NO_STATUS, type StatusContext, useStatus } from "./status.js";
 
+/** Storage key of the Attempt Recovery setting. */
+export const ATTEMPT_RECOVERY_KEY = "/attemptRecovery";
+
+/** Attempt Recovery is on unless the stored setting says otherwise. */
+export function readAttemptRecovery(
+  storage: Pick<Storage, "getItem">,
+): boolean {
+  return storage.getItem(ATTEMPT_RECOVERY_KEY) !== "false";
+}
+
 export interface BaseContext extends StatusContext {
   fs: FileSystem;
   localFsRoot?: string;
@@ -30,6 +40,13 @@ export interface BaseContext extends StatusContext {
   upgradeFs: (force?: boolean, createFiles?: boolean) => Promise<void>;
   closeFs: () => void;
   storage: Record<string, string>;
+  /**
+   * Whether a syntax mistake still allows the later diagnostics. A store
+   * outlives a change of this value, so each store reads it through a ref per
+   * call instead of capturing it once.
+   */
+  attemptRecovery: boolean;
+  setAttemptRecovery: Action<boolean>;
   permissionPrompt: ReturnType<typeof useDialog>;
   requestPermission: AsyncAction<void>;
   loadFs: Action<void>;
@@ -134,11 +151,21 @@ export function useBaseContext(): BaseContext {
     setFs(new FileSystem(localAdapter));
   }, [root]);
 
+  const [attemptRecovery, setAttemptRecoveryState] = useState(() =>
+    readAttemptRecovery(localStorage),
+  );
+  const setAttemptRecovery = useCallback((value: boolean) => {
+    localStorage.setItem(ATTEMPT_RECOVERY_KEY, String(value));
+    setAttemptRecoveryState(value);
+  }, []);
+
   return {
     fs,
     localFsRoot: root,
     ...statusContext,
     storage: localStorage,
+    attemptRecovery,
+    setAttemptRecovery,
     canUpgradeFs,
     permissionPrompt,
     upgradeFs,
@@ -157,6 +184,9 @@ export const BaseContext = createContext<BaseContext>({
   closeFs() {},
   ...NO_STATUS,
   storage: {},
+  attemptRecovery: true,
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
+  setAttemptRecovery() {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async requestPermission() {},

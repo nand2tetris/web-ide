@@ -328,10 +328,18 @@ export function makeCpuStore(
 }
 
 export function useCpuPageStore() {
-  const { fs, setStatus, clearStatus, setFailureStatus, storage } =
-    useContext(BaseContext);
+  const {
+    fs,
+    setStatus,
+    clearStatus,
+    setFailureStatus,
+    storage,
+    attemptRecovery,
+  } = useContext(BaseContext);
 
   const dispatch = useRef<CpuStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
@@ -340,6 +348,7 @@ export function useCpuPageStore() {
         { setStatus, clearStatus, setFailureStatus },
         storage,
         dispatch,
+        () => recovery.current,
       ),
     [fs, setStatus, clearStatus, setFailureStatus, storage, dispatch],
   );

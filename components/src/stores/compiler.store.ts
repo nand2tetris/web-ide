@@ -240,13 +240,20 @@ export function makeCompilerStore(
 }
 
 export function useCompilerPageStore() {
-  const { setStatus, clearStatus, setFailureStatus } = useContext(BaseContext);
+  const { setStatus, clearStatus, setFailureStatus, attemptRecovery } =
+    useContext(BaseContext);
 
   const dispatch = useRef<CompilerStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
-      makeCompilerStore({ setStatus, clearStatus, setFailureStatus }, dispatch),
+      makeCompilerStore(
+        { setStatus, clearStatus, setFailureStatus },
+        dispatch,
+        () => recovery.current,
+      ),
     [setStatus, clearStatus, setFailureStatus, dispatch],
   );
 

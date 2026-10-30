@@ -1,7 +1,8 @@
 const cmp = `
 Cmp <: Base {
   Root := line*
-  line = bar cell+ newline?
+  line = lineBody ! (newline | end)
+  lineBody = bar cell+
   cell = cellvalue bar
   cellvalue = (~(bar|newline) any)*
 }`;

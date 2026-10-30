@@ -1,13 +1,15 @@
 const tst = `
 Tst <: Base {
   Root := Tst
+  recoveryToken = lineComment | comment | quotedLine | filename
+  quotedLine = doubleQuote (~doubleQuote ~newline any)* doubleQuote
   Tst = (TstStatement | TstRepeat | TstWhile)+
 
-  TstRepeat = Repeat Number? OpenBrace TstCommand+ CloseBrace
-  TstWhile = While Condition OpenBrace TstCommand+ CloseBrace
+  TstRepeat = Repeat Number? OpenBrace TstCommand+ ! CloseBrace
+  TstWhile = While Condition OpenBrace TstCommand+ ! CloseBrace
   TstStatement = TstCommand
 
-  TstCommand = TstOperation Separator
+  TstCommand = TstOperation ! Separator
   Separator = (Semi | Bang | Comma)
 
   TstOperation =

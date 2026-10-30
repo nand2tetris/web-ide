@@ -19,8 +19,13 @@ import { makeC } from "../util/asm.js";
 import {
   actionError,
   baseSemantics,
+  carrierOf,
+  failedOf,
   grammars,
+  guardedRecovery,
   makeParser,
+  type Recovery,
+  type RecoveryPoint,
   semanticError,
   span,
 } from "./base.js";
@@ -30,6 +35,10 @@ import asmGrammar from "./grammars/asm.ohm.js";
 export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
+/**
+ * One type for valid and recovered programs: a recovered line is a null
+ * instruction (see `isRecovered`).
+ */
 export interface Asm {
   instructions: AsmInstruction[];
 }
@@ -40,13 +49,13 @@ export type AsmInstruction =
   | AsmLabelInstruction;
 
 export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
-export interface AsmALabelInstruction {
+export interface AsmALabelInstruction extends Recovery {
   type: "A";
   label: string;
   span?: Span;
 }
 
-export interface AsmAValueInstruction {
+export interface AsmAValueInstruction extends Recovery {
   type: "A";
   value: number;
   span?: Span;
@@ -64,7 +73,7 @@ function isALabelInstruction(
   return inst.type == "A" && (inst as AsmALabelInstruction).label !== undefined;
 }
 
-export interface AsmCInstruction {
+export interface AsmCInstruction extends Recovery {
   type: "C";
   op: COMMANDS_OP;
   isM: boolean;
@@ -73,10 +82,32 @@ export interface AsmCInstruction {
   span?: Span;
 }
 
-export interface AsmLabelInstruction {
+export interface AsmLabelInstruction extends Recovery {
   type: "L";
   label: string;
   span?: Span;
+}
+
+/**
+ * The null instruction where recovery skipped a line: a label with no name,
+ * which emits no code. It is a label only by its type; `recovery` marks it.
+ */
+function nullInstruction(point: RecoveryPoint): AsmInstruction {
+  return {
+    type: "L",
+    label: "",
+    span: point.span,
+    ...carrierOf(point, "instruction"),
+  };
+}
+
+/** The null instruction where an instruction action of `kind` failed. */
+function failedInstruction(
+  diagnostic: Diagnostic,
+  at: Span,
+  kind: "aInstruction" | "cInstruction",
+): AsmInstruction {
+  return { type: "L", label: "", span: at, ...failedOf(diagnostic, at, kind) };
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -86,22 +117,22 @@ asmSemantics.addAttribute<Asm>("root", {
 });
 
 asmSemantics.addAttribute<Asm>("asm", {
-  ASM(asm, last) {
-    const instructions =
-      asm.children.map(
-        (node) => node.intermediateInstruction as AsmInstruction,
-      ) ?? [];
+  ASM(asm) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: asm.children.map(
+        (node) => node.intermediateInstruction as AsmInstruction,
+      ),
     };
   },
 });
 
 asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
-  intermediateInstruction(inst, _n) {
-    return inst.instruction;
+  intermediateInstruction(inst, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      inst,
+      correction,
+    );
+    return recovered ? nullInstruction(recovered) : inst.instruction;
   },
 });
 
@@ -151,30 +182,27 @@ function getAsmOp(opN: Node): string | Diagnostic {
   return op;
 }
 
-/** The placeholder of an action that failed; the parse ends with its error, so nothing reads it. */
-const failedInstruction = (at: Span): AsmInstruction => ({
-  type: "L",
-  label: "",
-  span: at,
-});
-
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
   aInstruction(_at, name): AsmInstruction {
     const at = span(this.source);
     if (typeof name.value === "string") return makeA(name.value, at);
     const value = parseInt(name.value.join(""), 10);
-    if (!isAValue(value)) {
-      actionError(DiagnosticCode.Asm.A_VALUE_RANGE, { value }, at);
-      return failedInstruction(at);
-    }
-    return makeA(value, at);
+    return isAValue(value)
+      ? makeA(value, at)
+      : failedInstruction(
+          actionError(DiagnosticCode.Asm.A_VALUE_RANGE, { value }, at),
+          at,
+          "aInstruction",
+        );
   },
   cInstruction(assignN, opN, jmpN): AsmInstruction {
     const at = span(this.source);
     const assign = getAsmAssign(assignN);
     const op = getAsmOp(opN);
-    if (typeof assign !== "string" || typeof op !== "string") {
-      return failedInstruction(at);
+    // Both are checked, so an instruction reports each invalid part.
+    const failed = [assign, op].find((part) => typeof part !== "string");
+    if (failed !== undefined) {
+      return failedInstruction(failed as Diagnostic, at, "cInstruction");
     }
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
     return C(assign as ASSIGN_ASM, op as COMMANDS_ASM, jmp, at);

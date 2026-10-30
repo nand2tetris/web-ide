@@ -1,5 +1,10 @@
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { isValid, semanticError, Valid } from "../languages/base.js";
+import {
+  isValid,
+  ParseOptions,
+  semanticError,
+  Valid,
+} from "../languages/base.js";
 import {
   Diagnostic,
   DiagnosticArgs,
@@ -76,13 +81,16 @@ function compileError<C extends DiagnosticCode>(
 /**
  * Compiles each Jack file by name. Each value is either the file's
  * diagnostics, when it did not parse or compile, or its generated VM text.
+ *
+ * `options` reach each file's parse; recovery is off unless requested.
  */
 export function compile(
   files: Record<string, string>,
+  options: ParseOptions = {},
 ): Record<string, string | Diagnostics> {
   const classes: Record<string, Valid<Class> | Diagnostics> = {};
   for (const [name, content] of Object.entries(files)) {
-    const parsed = JACK.parse(content);
+    const parsed = JACK.parse(content, options);
     if (!isValid(parsed)) {
       classes[name] = parsed.diagnostics;
     } else {

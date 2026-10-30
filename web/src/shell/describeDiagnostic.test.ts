@@ -121,10 +121,13 @@ describe("describeStatus in English", () => {
       describeStatus({
         severity: "ERROR",
         heading: { file: "HDL code", count: 3 },
-        diagnostics: [{ diagnostic: own }, { diagnostic: other }],
+        diagnostics: [
+          { diagnostic: own },
+          { diagnostic: other, file: "a.hdl" },
+        ],
       }),
     ).toBe(
-      "HDL code: 3 syntax errors. Wrong chip name. Line 4: Undefined chip name: Foo",
+      "HDL code: 3 syntax errors. Wrong chip name. a.hdl: Line 4: Undefined chip name: Foo",
     );
   });
 

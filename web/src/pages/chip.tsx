@@ -298,6 +298,7 @@ export const Chip = () => {
         className="flex-1"
         value={hdl}
         diagnostics={state.controls.diagnostics}
+        dependencyDiagnostics={state.controls.dependencyDiagnostics}
         onChange={async (source) => {
           setHdl(source);
           if (!state.controls.usingBuiltin) {

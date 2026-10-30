@@ -18,8 +18,8 @@ import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import {
   baseSemantics,
-  CompilationError,
   createError,
+  Diagnostic,
   grammars,
   makeParser,
   Span,
@@ -192,7 +192,7 @@ export type Pointer =
 export function fillLabel(
   asm: Asm,
   symbolCallback?: (name: string, value: number, isVar: boolean) => void,
-): Result<void, CompilationError> {
+): Result<void, Diagnostic> {
   let nextLabel = 16;
   const symbols = new Map<Pointer | string, number>([
     ["R0", 0],

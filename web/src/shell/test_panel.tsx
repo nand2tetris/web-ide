@@ -22,6 +22,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -68,7 +69,13 @@ export const TestPanel = ({
   onSpeedChange?: (speed: number) => void;
   prefix?: ReactNode;
 }) => {
-  const { fs, setStatus } = useContext(BaseContext);
+  const { fs, setStatus, attemptRecovery } = useContext(BaseContext);
+  // No script loaded is not a script with a problem.
+  const tstDiagnostics = useMemo(
+    () =>
+      tst.trim() === "" ? [] : TST.parse(tst, { attemptRecovery }).diagnostics,
+    [tst, attemptRecovery],
+  );
   const { filePicker, tracking } = useContext(AppContext);
 
   const [showHighlight, setShowHighlight] = useState(true);
@@ -259,6 +266,7 @@ export const TestPanel = ({
             onChange={onChange}
             grammar={TST.parser}
             language={"tst"}
+            diagnostics={tstDiagnostics}
             disabled={true}
             highlight={showHighlight ? tstHighlight : undefined}
           />

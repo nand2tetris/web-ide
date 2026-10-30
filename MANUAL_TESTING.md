@@ -30,6 +30,23 @@ The feature being exercised: switching storage mode from Browser to PC, seeding 
 
 Pass criteria: every step above behaves as described, no console errors, and the on-disk file contents stay in lockstep with the editor across the reload boundary.
 
+## Problems under each editor
+
+Verifies the first/all display choices and file attribution. These checks use browser storage, so no scratch folder is needed. Counts describe only problems already found for that editor's text.
+
+1. Open Settings. Under **Problems**, confirm **Show First Problem** is selected on a fresh browser profile.
+2. Open the Hardware Simulator and select Project 1 / chip **And**.
+3. Replace the `PARTS:` section with two syntactically valid parts that name undefined chips: `Nope(a=a, out=x);` on one line and `Never(a=a, out=out);` on the next.
+4. Confirm a **Problems** list appears below the editor. It should say **First problem: Line …: Undefined chip name: Nope (and 1 more)**. Only that first problem should have a marker. Compilation must remain blocked.
+5. In Settings, select **Show All Problems**. Confirm both found messages appear below the editor in source order and both have markers. Reload and confirm the choice persists.
+6. Replace the first part with a malformed part, for example `Nand(a=a, b=b, out=x ?;`, and leave `Never(a=a, out=out);` on the next line. With **Show All Problems**, confirm the syntax problem and the later undefined-chip problem are listed and marked.
+7. Select **Show First Problem** again. Confirm the syntax problem is the only listed and marked problem. The additional count, if shown, counts only other messages already found in this mode; strict parsing may find fewer messages.
+8. In Settings, turn off **Use Monaco Editor**. Confirm the textarea also has its own **Problems** list below it. Restore Monaco afterward.
+9. Open the Jack compiler page with two class files, each holding an independent mistake. Confirm each file's list, count, and markers describe only its own text.
+10. In a chip that uses a damaged dependency, confirm the separate panel says **Problems in <path>**. Its messages and count must stay separate from the parent editor's own list and markers. Confirm the panels remain readable without covering the last source line or cursor, including in a narrow window.
+
+Pass criteria: first/all choices update each editor's list and markers together, counts stay within their named file, and all panels remain below usable editor content.
+
 ## Teardown
 
 1. Settings → **Use browser storage** to revert.

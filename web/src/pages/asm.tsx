@@ -22,7 +22,7 @@ export const Asm = () => {
   const { filePicker } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, actions, dispatch } = stores.asm;
-  const { fs, localFsRoot } = useContext(BaseContext);
+  const { fs, localFsRoot, attemptRecovery } = useContext(BaseContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -35,6 +35,11 @@ export const Asm = () => {
   useEffect(() => {
     setTool("asm");
   }, [setTool]);
+
+  // The retained store may have compiled before recovery changed on another route.
+  useEffect(() => {
+    actions.recompile({ onlyIfRecoveryChanged: true });
+  }, [attemptRecovery, actions]);
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {

@@ -22,7 +22,7 @@ import {
   recoveryOf,
   validOf,
 } from "../base.js";
-import { CMP } from "../cmp.js";
+import { rawCMP } from "../cmp.js";
 import { type Diagnostic, describeDiagnostic } from "../diagnostic.js";
 import { HDL, type Part } from "../hdl.js";
 import { JACK } from "../jack.js";
@@ -153,7 +153,7 @@ const GROUPS: Record<string, Record<string, Group>> = {
       ],
     },
     CMP: {
-      language: CMP,
+      language: rawCMP,
       valid: ["|  in  | out |", "|   0  |   1 |", "|   1  |   0 |"],
       // Line 2 is missing its first token, the leading bar.
       edits: { 2: "    0  |   1 |", 3: "|   1  |   0  " },

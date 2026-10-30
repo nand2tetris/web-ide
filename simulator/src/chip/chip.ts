@@ -4,6 +4,7 @@ import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import type { Subscription } from "rxjs";
+import { DiagnosticCode, type Fault, fault } from "../languages/diagnostic.js";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
 
@@ -267,10 +268,15 @@ function validateWidth(
   start: number,
   width: number,
   pin: Pin,
-): Result<void, string> {
+): Result<void, Fault> {
   return start + width <= pin.width
     ? Ok()
-    : Err(`Sub-bus index out of range (${pin.name} has width ${pin.width})`);
+    : Err(
+        fault(DiagnosticCode.Chip.SUB_BUS_RANGE, {
+          pin: pin.name,
+          width: pin.width,
+        }),
+      );
 }
 
 let id = 0;
@@ -278,11 +284,11 @@ let id = 0;
 export interface PartWireError {
   wireIndex: number;
   lhs: boolean;
-  message: string;
+  fault: Fault;
 }
 
 export interface WireError {
-  message: string;
+  fault: Fault;
   lhs: boolean;
 }
 export class Chip {
@@ -462,7 +468,7 @@ export class Chip {
           return Err({
             wireIndex: i,
             lhs: Err(result).lhs,
-            message: Err(result).message,
+            fault: Err(result).fault,
           });
         }
       } else {
@@ -471,7 +477,7 @@ export class Chip {
           return Err({
             wireIndex: i,
             lhs: Err(result).lhs,
-            message: Err(result).message,
+            fault: Err(result).fault,
           });
         }
       }
@@ -573,7 +579,7 @@ export class Chip {
 
     if (chipPin instanceof ConstantBus) {
       return Err({
-        message: `Cannot wire to constant bus`,
+        fault: fault(DiagnosticCode.Chip.CONSTANT_BUS_TARGET, {}),
         lhs: true,
       });
     }
@@ -588,7 +594,7 @@ export class Chip {
       const result = validateWidth(from.start, from.width, chipPin);
       if (isErr(result)) {
         return Err({
-          message: Err(result),
+          fault: Err(result),
           lhs: true,
         });
       }
@@ -600,7 +606,7 @@ export class Chip {
       const result = validateWidth(to.start, to.width, partPin);
       if (isErr(result)) {
         return Err({
-          message: Err(result),
+          fault: Err(result),
           lhs: false,
         });
       }
@@ -619,7 +625,10 @@ export class Chip {
       const partToOuts = this.partToOuts.get(part) ?? new Set();
       partToOuts.delete(chipPin.name);
       this.partToOuts.set(part, partToOuts);
-      return Err({ message: "Circular pin dependency", lhs: false });
+      return Err({
+        fault: fault(DiagnosticCode.Chip.CIRCULAR_PINS, {}),
+        lhs: false,
+      });
     } else {
       partPin.connect(chipPin);
     }
@@ -647,7 +656,7 @@ export class Chip {
       const result = validateWidth(to.start, to.width, partPin);
       if (isErr(result)) {
         return Err({
-          message: Err(result),
+          fault: Err(result),
           lhs: true,
         });
       }
@@ -660,7 +669,7 @@ export class Chip {
         const result = validateWidth(from.start, from.width, chipPin);
         if (isErr(result)) {
           return Err({
-            message: Err(result),
+            fault: Err(result),
             lhs: false,
           });
         }
@@ -680,7 +689,10 @@ export class Chip {
       const pinsToPart = this.insToPart.get(chipPin.name) ?? new Set();
       pinsToPart.delete(part);
       this.insToPart.set(chipPin.name, pinsToPart);
-      return Err({ message: "Circular pin dependency", lhs: true });
+      return Err({
+        fault: fault(DiagnosticCode.Chip.CIRCULAR_PINS, {}),
+        lhs: true,
+      });
     } else {
       chipPin.connect(partPin);
     }

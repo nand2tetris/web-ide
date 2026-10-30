@@ -5,13 +5,14 @@ import {
 import { produce } from "immer";
 import { describe, expect, it, vi } from "vitest";
 import { AsmStoreDispatch, makeAsmStore } from "./asm.store.js";
+import { statusActions } from "./status.js";
 
 function mk() {
   const fs = new FileSystem(new ObjectFileSystemAdapter({}));
   const dispatch = { current: vi.fn() as unknown as AsmStoreDispatch };
   const { initialState, reducers, actions } = makeAsmStore(
     fs,
-    vi.fn(),
+    statusActions(vi.fn()),
     dispatch,
     false,
   );

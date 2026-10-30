@@ -2,6 +2,7 @@ import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
+import type { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
   createContext,
@@ -21,17 +22,14 @@ import {
   createAndStoreLocalAdapterInIndexedDB,
   removeLocalAdapterFromIndexedDB,
 } from "./base/indexDb.js";
+import { NO_STATUS, type StatusContext, useStatus } from "./status.js";
 
-export type StatusSeverity = "SUCCESS" | "WARNING" | "ERROR" | "INFO";
-
-export interface BaseContext {
+export interface BaseContext extends StatusContext {
   fs: FileSystem;
   localFsRoot?: string;
   canUpgradeFs: boolean;
   upgradeFs: (force?: boolean, createFiles?: boolean) => Promise<void>;
   closeFs: () => void;
-  status: { message: string; severity: StatusSeverity };
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>;
   storage: Record<string, string>;
   permissionPrompt: ReturnType<typeof useDialog>;
   requestPermission: AsyncAction<void>;
@@ -39,6 +37,8 @@ export interface BaseContext {
 }
 
 export function useBaseContext(): BaseContext {
+  const statusContext = useStatus();
+  const { setStatus } = statusContext;
   const localAdapter = useMemo(() => new LocalStorageFileSystemAdapter(), []);
   const [fs, setFs] = useState(new FileSystem(localAdapter));
   const [root, setRoot] = useState<string>();
@@ -135,30 +135,10 @@ export function useBaseContext(): BaseContext {
     setFs(new FileSystem(localAdapter));
   }, [root]);
 
-  const [status, setStatusInternal] = useState<{
-    message: string;
-    severity: StatusSeverity;
-  }>({ message: "", severity: "INFO" });
-
-  const setStatus = useCallback(
-    (input: string | { message: string; severity?: StatusSeverity }) => {
-      if (typeof input === "string") {
-        setStatusInternal({ message: input, severity: "INFO" });
-      } else {
-        setStatusInternal({
-          message: input.message,
-          severity: input.severity || "INFO",
-        });
-      }
-    },
-    [],
-  );
-
   return {
     fs,
     localFsRoot: root,
-    status,
-    setStatus,
+    ...statusContext,
     storage: localStorage,
     canUpgradeFs,
     permissionPrompt,
@@ -176,9 +156,7 @@ export const BaseContext = createContext<BaseContext>({
   async upgradeFs() {},
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   closeFs() {},
-  status: { message: "", severity: "INFO" },
-  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
-  setStatus() {},
+  ...NO_STATUS,
   storage: {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base

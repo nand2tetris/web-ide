@@ -1,9 +1,13 @@
 import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
-import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  Diagnostic,
+  Span,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { type Grammar } from "ohm-js";
 import { CSSProperties, lazy, Suspense, useContext } from "react";
 import { AppContext } from "../App.context";
+import { describeDiagnostic } from "./diagnostics";
 
 import "./editor.scss";
 import { Action } from "@nand2tetris/simulator/types";
@@ -23,7 +27,7 @@ export const ErrorPanel = ({
         <Trans>Parse Error</Trans>
       </summary>
       <pre>
-        <code>{diagnostics.map((e) => e.message).join("\n")}</code>
+        <code>{diagnostics.map(describeDiagnostic).join("\n")}</code>
       </pre>
     </details>
   ) : (
@@ -87,7 +91,6 @@ export const Editor = ({
   disabled?: boolean;
   value: string;
   path: string;
-  /** Every diagnostic. */
   diagnostics?: readonly Diagnostic[];
   onChange: Action<string>;
   onCursorPositionChange?: (index: number) => void;

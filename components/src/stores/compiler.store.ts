@@ -1,10 +1,11 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
-import { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext } from "./base.context.js";
+import type { StatusActions } from "./status.js";
 
 export interface CompiledFile {
   vm?: string;
@@ -34,7 +35,7 @@ function classTemplate(name: string) {
 }
 
 export function makeCompilerStore(
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  status: StatusActions,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
 ) {
   let fs: FileSystem | undefined;
@@ -188,13 +189,14 @@ export function makeCompilerStore(
 }
 
 export function useCompilerPageStore() {
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, clearStatus, setFailureStatus } = useContext(BaseContext);
 
   const dispatch = useRef<CompilerStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeCompilerStore(setStatus, dispatch),
-    [setStatus, dispatch],
+    () =>
+      makeCompilerStore({ setStatus, clearStatus, setFailureStatus }, dispatch),
+    [setStatus, clearStatus, setFailureStatus, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

@@ -5,6 +5,10 @@ import {
 import { useDialog } from "@nand2tetris/components/dialog";
 import { StatusSeverity } from "@nand2tetris/components/stores/base.context";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import {
+  NO_STATUS,
+  statusActions,
+} from "@nand2tetris/components/stores/status.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -22,17 +26,13 @@ const baseContext: BaseContext = {
     // no-op
   },
   storage: {},
-  status: { message: "", severity: "INFO" },
-  setStatus: (
-    status: string | { message: string; severity?: StatusSeverity },
-  ): void => {
-    // api.postMessage({ nand2tetris: true, showMessage: status });
-    if (typeof status === "string") {
-      console.log(status);
-    } else {
-      console.log(`${status.severity}: ${status.message}`);
-    }
-  },
+  status: NO_STATUS.status,
+  ...statusActions((shown) => {
+    // api.postMessage({ nand2tetris: true, showMessage: shown });
+    console.log(
+      `${shown.severity}: ${shown.message ?? `${shown.diagnostics?.length ?? 0} diagnostics`}`,
+    );
+  }),
   permissionPrompt: {} as ReturnType<typeof useDialog>,
   async requestPermission() {
     // no-op

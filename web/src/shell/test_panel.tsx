@@ -11,8 +11,8 @@ import { loadTestFiles } from "@nand2tetris/components/file_utils";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { Runbar, RunSpeed } from "@nand2tetris/components/runbar.js";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
-import { Span } from "@nand2tetris/simulator/languages/base";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
+import { Span } from "@nand2tetris/simulator/languages/diagnostic";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import {
@@ -129,7 +129,7 @@ export const TestPanel = ({
     if (isPath(file)) {
       const files = await loadTestFiles(fs, file.path);
       if (isErr(files)) {
-        setStatus(`Failed to load test`);
+        setStatus({ message: `Failed to load test` });
         return;
       }
       setPath?.(file.path);

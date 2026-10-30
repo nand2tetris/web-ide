@@ -19,13 +19,15 @@ import {
 import {
   type Diagnostic,
   Span,
-} from "@nand2tetris/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext } from "./base.context.js";
+import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -113,11 +115,11 @@ class Translator {
     const instruction = this.asm.instructions[this.current];
     if (instruction.type === "A" || instruction.type === "C") {
       highlightInfo.sourceHighlight = instruction.span;
-      const result = translateInstruction(this.asm.instructions[this.current]);
-      if (result === undefined) {
+      const word = translateInstruction(this.asm.instructions[this.current]);
+      if (isErr(word) || Ok(word) === undefined) {
         return;
       }
-      this.lines.push(`${bin(result)}`);
+      this.lines.push(`${bin(Ok(word) as number)}`);
       highlightInfo.resultHighlight = {
         start: this.current * 17,
         end: (this.current + 1) * 17,
@@ -199,7 +201,7 @@ export type AsmStoreDispatch = Dispatch<{
 
 export function makeAsmStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  status: StatusActions,
   dispatch: MutableRefObject<AsmStoreDispatch>,
   upgraded: boolean,
 ) {
@@ -217,7 +219,7 @@ export function makeAsmStore(
 
   /** Shows the diagnostics of ASM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    status.setFailureStatus(diagnostics[0]);
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     compiled = false;
   };
@@ -241,7 +243,7 @@ export function makeAsmStore(
     setCmp(state: AsmPageState, { cmp, name }: { cmp: string; name: string }) {
       state.compare = cmp;
       state.compareName = name;
-      setStatus("Loaded compare file");
+      status.setStatus({ message: "Loaded compare file" });
     },
 
     setDiagnostics(
@@ -267,7 +269,7 @@ export function makeAsmStore(
 
       if ((comparison as CompareResultLengths).lenA) {
         failure = true;
-        setStatus({
+        status.setStatus({
           message: "Comparison failed - different lengths",
           severity: "ERROR",
         });
@@ -276,7 +278,7 @@ export function makeAsmStore(
 
       const { line } = comparison as CompareResultLine;
       if (line) {
-        setStatus({
+        status.setStatus({
           message: `Comparison failure: Line ${line}`,
           severity: "ERROR",
         });
@@ -290,7 +292,7 @@ export function makeAsmStore(
         return;
       }
 
-      setStatus({
+      status.setStatus({
         message: "Comparison successful",
         severity: "SUCCESS",
       });
@@ -354,7 +356,7 @@ export function makeAsmStore(
       }
 
       compiled = translator.asm.instructions.length > 0;
-      setStatus("");
+      status.clearStatus();
       dispatch.current({ action: "setDiagnostics" });
       dispatch.current({ action: "update" });
     },
@@ -381,7 +383,7 @@ export function makeAsmStore(
       }
 
       if (translator.done) {
-        setStatus({
+        status.setStatus({
           message: "Translation done.",
           severity: "SUCCESS",
         });
@@ -422,7 +424,7 @@ export function makeAsmStore(
     reset() {
       failure = false;
       translating = false;
-      setStatus("Reset");
+      status.setStatus({ message: "Reset" });
       translator.reset();
       this.resetHighlightInfo();
       dispatch.current({ action: "update" });
@@ -476,13 +478,20 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus, fs, localFsRoot } = useContext(BaseContext);
+  const { setStatus, clearStatus, setFailureStatus, fs, localFsRoot } =
+    useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeAsmStore(fs, setStatus, dispatch, localFsRoot != undefined),
-    [setStatus, dispatch, fs],
+    () =>
+      makeAsmStore(
+        fs,
+        { setStatus, clearStatus, setFailureStatus },
+        dispatch,
+        localFsRoot != undefined,
+      ),
+    [setStatus, clearStatus, setFailureStatus, dispatch, fs],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

@@ -7,7 +7,7 @@ import {
   MemoryKeyboard,
   ROM,
 } from "@nand2tetris/simulator/cpu/memory.js";
-import { Span } from "@nand2tetris/simulator/languages/base.js";
+import { Span } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { loadAsm, loadBlob, loadHack } from "@nand2tetris/simulator/loader.js";
 import { CPUTest } from "@nand2tetris/simulator/test/cputst.js";
@@ -18,8 +18,10 @@ import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 function makeTst() {
   return `repeat {
@@ -90,7 +92,7 @@ export type CpuStoreDispatch = Dispatch<{
 
 export function makeCpuStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  status: StatusActions,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
 ) {
@@ -131,7 +133,7 @@ export function makeCpuStore(
         return;
       }
       const passed = compare(state.test.cmp.trim(), test.log().trim());
-      setStatus(
+      status.setStatus(
         passed
           ? {
               message: `Simulation successful: The output file is identical to the compare file`,
@@ -197,7 +199,7 @@ export function makeCpuStore(
         }
         return done;
       } catch (e) {
-        setStatus({
+        status.setStatus({
           message: (e as Error).message,
           severity: "ERROR",
         });
@@ -208,7 +210,7 @@ export function makeCpuStore(
     resetRAM() {
       test.cpu.RAM.loadBytes([]);
       dispatch.current({ action: "update" });
-      setStatus("Reset RAM");
+      status.setStatus({ message: "Reset RAM" });
     },
 
     toggleUseTest() {
@@ -247,10 +249,7 @@ export function makeCpuStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test - ${Err(tst).message}`,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(tst));
         valid = false;
         dispatch.current({ action: "update" });
         return false;
@@ -260,7 +259,7 @@ export function makeCpuStore(
       const maybeTest = CPUTest.from(Ok(tst), {
         dir: tstPath,
         rom: test.cpu.ROM,
-        doEcho: setStatus,
+        doEcho: (message) => status.setStatus({ message }),
         doLoad: async (path) => {
           if (!romFromFs && !test.cpu.ROM.isEmpty()) return;
           let file;
@@ -291,10 +290,7 @@ export function makeCpuStore(
       });
 
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(maybeTest));
         return false;
       } else {
         test = Ok(maybeTest);
@@ -308,7 +304,7 @@ export function makeCpuStore(
       const dir = path.split("/").slice(0, -1).join("/");
       const files = await loadTestFiles(fs, `${dir}/${name}`);
       if (isErr(files)) {
-        setStatus({
+        status.setStatus({
           message: `Failed to load test`,
           severity: "ERROR",
         });
@@ -345,13 +341,20 @@ export function makeCpuStore(
 }
 
 export function useCpuPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, clearStatus, setFailureStatus, storage } =
+    useContext(BaseContext);
 
   const dispatch = useRef<CpuStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeCpuStore(fs, setStatus, storage, dispatch),
-    [fs, setStatus, storage, dispatch],
+    () =>
+      makeCpuStore(
+        fs,
+        { setStatus, clearStatus, setFailureStatus },
+        storage,
+        dispatch,
+      ),
+    [fs, setStatus, clearStatus, setFailureStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

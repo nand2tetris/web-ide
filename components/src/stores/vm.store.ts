@@ -16,8 +16,10 @@ import {
 } from "@nand2tetris/simulator/cpu/memory.js";
 import {
   type Diagnostic,
+  DiagnosticCode,
+  diagnostic,
   Span,
-} from "@nand2tetris/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
@@ -28,8 +30,10 @@ import { ScreenScales } from "../chips/screen.js";
 import { compare } from "../compare.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 export const DEFAULT_TEST = "repeat {\n\tvmstep;\n}";
 
@@ -48,6 +52,11 @@ export interface VmSim {
 
 export interface VMTestSim {
   highlight: Span | undefined;
+}
+
+/** A runtime failure as a diagnostic that carries only its programmer facing message. */
+function unexpected({ message }: Error): Diagnostic {
+  return diagnostic(DiagnosticCode.Error.UNEXPECTED, { message });
 }
 
 export interface VmPageState {
@@ -91,7 +100,7 @@ export type VmStoreDispatch = Dispatch<{
 function reduceVMTest(
   vmTest: VMTest,
   dispatch: MutableRefObject<VmStoreDispatch>,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  status: StatusActions,
   showHighlight: boolean,
 ): VmSim {
   const RAM = new ImmMemory(vmTest.vm.RAM, dispatch);
@@ -104,8 +113,11 @@ function reduceVMTest(
     stack = vmTest.vm.vmStack().reverse();
   } catch (_e) {
     const error = new Error("Runtime error: Invalid stack");
-    setStatus({ message: error.message, severity: "ERROR" });
-    dispatch.current({ action: "setDiagnostics", payload: [error] });
+    status.setStatus({ message: error.message, severity: "ERROR" });
+    dispatch.current({
+      action: "setDiagnostics",
+      payload: [unexpected(error)],
+    });
   }
 
   return {
@@ -126,13 +138,15 @@ function reduceVMTest(
 
 export function makeVmStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  status: StatusActions,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
 ) {
   const parsed = unwrap(VM.parse(FIBONACCI));
   let vm = unwrap(Vm.build(parsed.instructions));
-  let test = new VMTest({ doEcho: setStatus }).with(vm);
+  let test = new VMTest({
+    doEcho: (message) => status.setStatus({ message }),
+  }).with(vm);
   let useTest = false;
   let animate = true;
   let vmSource = "";
@@ -141,7 +155,7 @@ export function makeVmStore(
 
   /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    status.setFailureStatus(diagnostics[0]);
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
   };
@@ -173,7 +187,7 @@ export function makeVmStore(
       state.controls.diagnostics = diagnostics;
     },
     update(state: VmPageState) {
-      state.vm = reduceVMTest(test, dispatch, setStatus, showHighlight);
+      state.vm = reduceVMTest(test, dispatch, status, showHighlight);
       state.test.highlight = test.currentStep?.span;
     },
     setAnimate(state: VmPageState, value: boolean) {
@@ -184,7 +198,7 @@ export function makeVmStore(
     },
     testFinished(state: VmPageState) {
       const passed = compare(state.files.cmp.trim(), state.files.out);
-      setStatus(
+      status.setStatus(
         passed
           ? {
               message: `Simulation successful: The output file is identical to the compare file`,
@@ -206,7 +220,7 @@ export function makeVmStore(
     },
   };
   const initialState: VmPageState = {
-    vm: reduceVMTest(test, dispatch, setStatus, true),
+    vm: reduceVMTest(test, dispatch, status, true),
     controls: {
       exitCode: undefined,
       runningTest: false,
@@ -263,7 +277,7 @@ export function makeVmStore(
         // scan. Keep the VM files the user already loaded (#673).
         if (files.length === 0 && !path && loadedFiles.length > 0) {
           this.reset();
-          setStatus("");
+          status.clearStatus();
           return;
         }
         if (!stat) throw new Error(`Cannot find ${path}`);
@@ -271,7 +285,7 @@ export function makeVmStore(
       dispatch.current({ action: "setTitle", payload: title });
       this.loadVm(files);
       this.reset();
-      setStatus("");
+      status.clearStatus();
     },
     setVm(content: string) {
       showHighlight = false;
@@ -353,14 +367,11 @@ export function makeVmStore(
 
       if (isErr(tst)) {
         dispatch.current({ action: "setValid", payload: false });
-        setStatus({
-          message: `Failed to parse test`,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(tst));
         return false;
       }
       dispatch.current({ action: "setValid", payload: true });
-      setStatus(`Parsed tst`);
+      status.setStatus({ message: `Parsed tst` });
 
       vm.reset();
 
@@ -369,7 +380,7 @@ export function makeVmStore(
         doLoad: async (path) => {
           await this.load(path);
         },
-        doEcho: setStatus,
+        doEcho: (message) => status.setStatus({ message }),
         compareTo: async (file) => {
           const dir = path.split("/").slice(0, -1).join("/");
           const cmp = await fs.readFile(`${dir}/${file}`);
@@ -377,10 +388,7 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(maybeTest));
         return false;
       } else {
         test = Ok(maybeTest).using(fs);
@@ -408,11 +416,14 @@ export function makeVmStore(
         return done;
       } catch (e) {
         const error = e instanceof Error ? e : new Error(String(e));
-        setStatus({
+        status.setStatus({
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },
@@ -437,11 +448,14 @@ export function makeVmStore(
         return done;
       } catch (e) {
         const error = e instanceof Error ? e : new Error(String(e));
-        setStatus({
+        status.setStatus({
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setDiagnostics", payload: [error] });
+        dispatch.current({
+          action: "setDiagnostics",
+          payload: [unexpected(error)],
+        });
         return true;
       }
     },
@@ -467,13 +481,20 @@ export function makeVmStore(
 }
 
 export function useVmPageStore() {
-  const { fs, setStatus, storage } = useContext(BaseContext);
+  const { fs, setStatus, clearStatus, setFailureStatus, storage } =
+    useContext(BaseContext);
 
   const dispatch = useRef<VmStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
-    () => makeVmStore(fs, setStatus, storage, dispatch),
-    [fs, setStatus, storage, dispatch],
+    () =>
+      makeVmStore(
+        fs,
+        { setStatus, clearStatus, setFailureStatus },
+        storage,
+        dispatch,
+      ),
+    [fs, setStatus, clearStatus, setFailureStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

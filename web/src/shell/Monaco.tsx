@@ -1,5 +1,5 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
-import { CompilationError, Span } from "@nand2tetris/simulator/languages/base";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base";
 import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor";
 import { useCallback, useContext, useEffect, useRef, useState } from "react";
@@ -66,13 +66,15 @@ export const makeDecorations = (
 
 export const MONACO_LIGHT_THEME = "vs";
 export const MONACO_DARK_THEME = "vs-dark";
+const NO_DIAGNOSTICS: readonly Diagnostic[] = [];
+
 export const Monaco = ({
   value,
   onChange,
   onCursorPositionChange,
   language,
   path,
-  error,
+  diagnostics = NO_DIAGNOSTICS,
   disabled = false,
   highlight: currentHighlight,
   highlightType = "highlight",
@@ -86,7 +88,7 @@ export const Monaco = ({
   onCursorPositionChange?: (index: number) => void;
   language: string;
   path: string;
-  error?: CompilationError;
+  diagnostics?: readonly Diagnostic[];
   disabled?: boolean;
   highlight?: Span | number;
   highlightType?: HighlightType;
@@ -242,25 +244,23 @@ export const Monaco = ({
     if (!monaco.current) return;
     const model = editor.current.getModel();
     if (model === null) return;
-    if (error === undefined || error.span === undefined) {
-      monaco.current.editor.setModelMarkers(model, language, []);
-      return;
-    }
-
-    const startPos = model.getPositionAt(error.span.start);
-    const endPos = model.getPositionAt(error.span.end);
-
-    monaco.current.editor.setModelMarkers(model, language, [
-      {
-        message: error.message,
-        startColumn: startPos.column,
-        startLineNumber: startPos.lineNumber,
-        endColumn: endPos.column,
-        endLineNumber: endPos.lineNumber,
-        severity: 8, // monacoT.MarkerSeverity.Error,
-      },
-    ]);
-  }, [error, language, editorReady]);
+    const markers = diagnostics.flatMap((e) => {
+      if (e.span === undefined) return [];
+      const startPos = model.getPositionAt(e.span.start);
+      const endPos = model.getPositionAt(e.span.end);
+      return [
+        {
+          message: e.message,
+          startColumn: startPos.column,
+          startLineNumber: startPos.lineNumber,
+          endColumn: endPos.column,
+          endLineNumber: endPos.lineNumber,
+          severity: 8, // monacoT.MarkerSeverity.Error,
+        },
+      ];
+    });
+    monaco.current.editor.setModelMarkers(model, language, markers);
+  }, [diagnostics, language, editorReady]);
 
   const onValueChange = (v = "") => {
     calculateHeight();

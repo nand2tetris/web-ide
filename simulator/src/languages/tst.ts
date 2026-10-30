@@ -3,6 +3,7 @@
 import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   baseSemantics,
+  carrierOf,
   grammars,
   guardedRecovery,
   makeParser,
@@ -120,9 +121,19 @@ export interface Tst {
  * The null command where recovery skipped input. `eval` changes no test
  * state, and the `,` separator joins it to the step that follows.
  */
-function nullCommand({ recovery, span }: RecoveryPoint): TstCommand {
-  return { op: { op: "eval" }, separator: ",", span, recovery };
+function nullCommand(point: RecoveryPoint, kind: TstSkipKind): TstCommand {
+  return {
+    op: { op: "eval" },
+    separator: ",",
+    span: point.span,
+    ...carrierOf(point, kind),
+  };
 }
+
+/**
+ * What a null command stands in for, named by the slot that recovered.
+ */
+export type TstSkipKind = "TstOperation" | "TstRepeatClose" | "TstWhileClose";
 
 import tstGrammar from "./grammars/tst.ohm.js";
 export const grammar = ohmGrammar(tstGrammar, grammars);
@@ -238,7 +249,7 @@ tstSemantics.addAttribute<TstCommand>("command", {
       correction,
     );
     if (recovered) {
-      return nullCommand(recovered);
+      return nullCommand(recovered, "TstOperation");
     }
     return {
       op: op.operation,
@@ -259,23 +270,27 @@ tstSemantics.addAttribute<TstWhileCondition>("condition", {
 });
 
 /** The matched commands of a block body, with a correction's null command last. */
-function blockCommands(commands: Node, correction: Node): TstCommand[] {
+function blockCommands(
+  commands: Node,
+  correction: Node,
+  kind: "TstRepeatClose" | "TstWhileClose",
+): TstCommand[] {
   const statements = commands.children.map((node) => node.command);
   const recovered: RecoveryPoint | undefined = correction.recovery;
-  return recovered ? [...statements, nullCommand(recovered)] : statements;
+  return recovered ? [...statements, nullCommand(recovered, kind)] : statements;
 }
 
 tstSemantics.addAttribute<TstStatement>("statement", {
   TstWhile(op, cond, _o, commands, correction, _stop) {
     return {
-      statements: blockCommands(commands, correction),
+      statements: blockCommands(commands, correction, "TstWhileClose"),
       condition: cond.condition,
       span: span(this.source),
     };
   },
   TstRepeat(op, count, _o, commands, correction, _stop) {
     return {
-      statements: blockCommands(commands, correction),
+      statements: blockCommands(commands, correction, "TstRepeatClose"),
       count: count.sourceString ? Number(count.sourceString) : -1,
       span: span(this.source),
     };

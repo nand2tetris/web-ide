@@ -157,6 +157,16 @@ export function located(found: Fault, span?: Span, stage?: Stage): Diagnostic {
   } as Diagnostic;
 }
 
+/** A stable text of a diagnostic's code and arguments, for identity checks. */
+export function faultKey({ code, args }: Fault): string {
+  return JSON.stringify([
+    code,
+    Object.entries(args as Record<string, unknown>).sort(([a], [b]) =>
+      a < b ? -1 : a > b ? 1 : 0,
+    ),
+  ]);
+}
+
 /** Expectations as Ohm words them: `a`, `a or b`, `a, b, or c`. */
 function listOf(items: readonly string[]): string {
   return items

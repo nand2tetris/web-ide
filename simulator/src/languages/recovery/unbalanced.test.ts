@@ -3,19 +3,19 @@
  * parser finds it missing and the structure after it stays intact, and a `;`
  * or `}` inside a string literal never ends a skipped region.
  */
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   type Diagnostic,
   describeEnglish,
-  isParserRecoveryEnabled,
   isRecovered,
   isValid,
   type Outcome,
-  setParserRecovery,
 } from "../base.js";
 import { type Class, JACK } from "../jack.js";
 
 const lines = (...l: string[]) => l.join("\n");
+
+const RECOVER = { attemptRecovery: true };
 
 const MISSING_CLASS_CLOSE = lines(
   "class Main {",
@@ -130,10 +130,7 @@ const MISSING_CLASS_AND_SUBROUTINE_CLOSE = lines(
 
 /** The single error for `source` with recovery off. */
 function plainError(source: string): Diagnostic {
-  const before = isParserRecoveryEnabled();
-  setParserRecovery(false);
   const result = JACK.parse(source);
-  setParserRecovery(before);
   if (isValid(result)) throw new Error("parse is valid");
   return result.diagnostics[0];
 }
@@ -142,7 +139,7 @@ function plainError(source: string): Diagnostic {
 type Recovered = Exclude<Outcome<Class>, { diagnostics: readonly [] }>;
 
 function recovered(source: string): Recovered {
-  const outcome = JACK.parse(source);
+  const outcome = JACK.parse(source, RECOVER);
   if (isValid(outcome)) throw new Error("parse is valid");
   const messages = outcome.diagnostics
     .map((e) => describeEnglish(e))
@@ -162,13 +159,10 @@ const subroutineNames = (parsed: Recovered) =>
   );
 
 describe("Jack recovery from unbalanced blocks", () => {
-  const before = isParserRecoveryEnabled();
-  beforeAll(() => setParserRecovery(true));
-  afterAll(() => setParserRecovery(before));
-
   it("returns the null root when a class has no matching closer", () => {
-    const parsed = JACK.parse(MISSING_CLASS_CLOSE);
+    const parsed = JACK.parse(MISSING_CLASS_CLOSE, RECOVER);
 
+    expect(parsed).toHaveProperty("nullRoot", true);
     expect(parsed.ast).toEqual(JACK.empty());
     expect(parsed.diagnostics[0]).toEqual(plainError(MISSING_CLASS_CLOSE));
   });
@@ -247,7 +241,7 @@ describe("Jack recovery from unbalanced blocks", () => {
     ],
     ["text after the class", "class Main { }\nfoo"],
   ])("leaves the first error of %s unchanged", (_, source) => {
-    const result = JACK.parse(source);
+    const result = JACK.parse(source, RECOVER);
     if (isValid(result)) throw new Error("parse is valid");
     const first: Diagnostic = result.diagnostics[0];
     const plain = plainError(source);
@@ -289,8 +283,9 @@ describe("Jack recovery from unbalanced blocks", () => {
   });
 
   it("returns the null root when nested blocks have no matching closer", () => {
-    const parsed = JACK.parse(MISSING_CLASS_AND_SUBROUTINE_CLOSE);
+    const parsed = JACK.parse(MISSING_CLASS_AND_SUBROUTINE_CLOSE, RECOVER);
 
+    expect(parsed).toHaveProperty("nullRoot", true);
     expect(parsed.ast).toEqual(JACK.empty());
     expect(parsed.diagnostics[0]).toEqual(
       plainError(MISSING_CLASS_AND_SUBROUTINE_CLOSE),

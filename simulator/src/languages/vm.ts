@@ -3,6 +3,7 @@
 import { grammar as ohmGrammar } from "ohm-js";
 import {
   baseSemantics,
+  carrierOf,
   grammars,
   guardedRecovery,
   makeParser,
@@ -85,8 +86,13 @@ export interface GotoInstruction extends Recovery {
  * which does nothing when run. It is a label only by its op; `recovery`
  * marks it.
  */
-function nullInstruction({ recovery, span }: RecoveryPoint): VmInstruction {
-  return { op: "label", label: "", span, recovery };
+function nullInstruction(point: RecoveryPoint): VmInstruction {
+  return {
+    op: "label",
+    label: "",
+    span: point.span,
+    ...carrierOf(point, "VmInstruction"),
+  };
 }
 
 vmSemantics.addAttribute<

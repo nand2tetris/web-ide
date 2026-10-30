@@ -4,6 +4,7 @@ import {
   type DiagnosticCode,
   describeEnglish,
   diagnostic,
+  faultKey,
 } from "./diagnostic.js";
 
 /** One argument object for every code; a new code must add its sample here. */
@@ -155,5 +156,33 @@ describe("diagnostic", () => {
       span,
       stage: "semantic",
     });
+  });
+});
+
+describe("faultKey", () => {
+  it("is equal for equal code and arguments whatever their key order", () => {
+    const a = diagnostic("vm.osArgCount", {
+      name: "f",
+      expected: 1,
+      received: 2,
+    });
+    const b = diagnostic("vm.osArgCount", {
+      received: 2,
+      expected: 1,
+      name: "f",
+    });
+
+    expect(faultKey(a)).toBe(faultKey(b));
+  });
+
+  it("differs for a different argument or code", () => {
+    const base = diagnostic("chip.notFound", { name: "x" });
+
+    expect(faultKey(base)).not.toBe(
+      faultKey(diagnostic("chip.notFound", { name: "y" })),
+    );
+    expect(faultKey(base)).not.toBe(
+      faultKey(diagnostic("chip.notBuiltin", { name: "x" })),
+    );
   });
 });

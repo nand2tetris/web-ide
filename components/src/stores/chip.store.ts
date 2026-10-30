@@ -16,18 +16,21 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  Diagnostic,
+  Span,
+  validOf,
+} from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, type StatusInput } from "./base.context.js";
-import { failureStatus } from "./status.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -223,20 +226,13 @@ export function makeChipStore(
 
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
-      const passed = compare(state.files.cmp.trim(), state.files.out.trim());
+      const status = comparisonStatus(
+        state.files.cmp.trim(),
+        state.files.out.trim(),
+      );
       // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
-        setStatus(
-          passed
-            ? {
-                message: `Simulation successful: The output file is identical to the compare file`,
-                severity: "SUCCESS",
-              }
-            : {
-                message: `Simulation error: The output file differs from the compare file`,
-                severity: "ERROR",
-              },
-        );
+        setStatus(status);
       });
     },
 
@@ -379,8 +375,8 @@ export function makeChipStore(
       chip.remove();
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
-        const diagnostics = [Err(maybeChip)];
-        setStatus(failureStatus(...diagnostics));
+        const diagnostics = Err(maybeChip);
+        setStatus(failureStatus("HDL code", diagnostics));
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -435,9 +431,9 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = TST.parse(file);
+      const tst = validOf(TST.parse(file));
       if (isErr(tst)) {
-        setStatus(failureStatus(Err(tst)));
+        setStatus(failureStatus("Test script", Err(tst), { marked: false }));
         invalid = true;
         return false;
       }
@@ -455,7 +451,9 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus(failureStatus(Err(maybeTest)));
+        setStatus(
+          failureStatus("Test script", [Err(maybeTest)], { marked: false }),
+        );
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -535,7 +533,9 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        setStatus(failureStatus(Err(nextChip)));
+        setStatus(
+          failureStatus("Built-in chip", [Err(nextChip)], { marked: false }),
+        );
         return;
       }
       this.replaceChip(Ok(nextChip));

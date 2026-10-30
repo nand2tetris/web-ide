@@ -152,13 +152,15 @@ yargs(hideBin(process.argv))
           if (!error) {
             console.error("Compilation failed\n");
           }
-          console.error(
-            Colors.Red +
-              describeEnglish(compiled).replace(
-                /Line\s([\d]+):/g,
-                name + ".jack:$1" + Colors.Reset,
-              ),
-          );
+          for (const diagnostic of compiled) {
+            console.error(
+              Colors.Red +
+                describeEnglish(diagnostic).replace(
+                  /Line\s([\d]+):/g,
+                  name + ".jack:$1" + Colors.Reset,
+                ),
+            );
+          }
           error = true;
         }
       }

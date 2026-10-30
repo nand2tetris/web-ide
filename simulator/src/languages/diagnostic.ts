@@ -119,6 +119,9 @@ export type Diagnostic = Fault & {
   stage?: Stage;
 };
 
+/** One or more diagnostics, first error first. */
+export type Diagnostics = readonly [Diagnostic, ...Diagnostic[]];
+
 /** A fault of `code`; the arguments must be those of the code. */
 export function fault<C extends DiagnosticCode>(
   code: C,

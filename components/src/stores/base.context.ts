@@ -31,10 +31,20 @@ export interface TextStatus {
   severity: StatusSeverity;
 }
 
-/** A status that is data about diagnostics, which the UI words. */
+/** A diagnostic a status lists. */
+export interface StatusDiagnostic {
+  diagnostic: Diagnostic;
+}
+
+/**
+ * A status that is data about diagnostics, which the UI words. It leads with a
+ * heading, the file and how many diagnostics that file has, when `heading` is
+ * present, and then lists each diagnostic in order.
+ */
 export interface DiagnosticStatus {
   severity: StatusSeverity;
-  diagnostics: readonly Diagnostic[];
+  heading?: { file: string; count: number };
+  diagnostics: readonly StatusDiagnostic[];
 }
 
 /** What the status line shows. */

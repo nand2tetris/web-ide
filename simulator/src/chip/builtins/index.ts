@@ -1,5 +1,5 @@
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { type Diagnostic, semanticError } from "../../languages/base.js";
+import { describeEnglish } from "../../languages/base.js";
 import { parse } from "../builder.js";
 import { Chip } from "../chip.js";
 import { Add16 } from "./arithmetic/add_16.js";
@@ -122,13 +122,30 @@ export function hasBuiltinChip(name: string): boolean {
   return REGISTRY.has(name);
 }
 
-export async function getBuiltinChip(
-  name: string,
-): Promise<Result<Chip, Diagnostic>> {
-  if (builtinOverrides[name]) {
-    const result = await parse(builtinOverrides[name], name);
-    return isErr(result) ? Err(Err(result)[0]) : result;
+/**
+ * A builtin chip, or an `Error` naming its first diagnostic. Loading a chip's
+ * parts keeps every diagnostic by file instead (see `loadChip`).
+ */
+export async function getBuiltinChip(name: string): Promise<Result<Chip>> {
+  if (Object.hasOwn(builtinOverrides, name)) {
+    const file = `builtin:${name}.hdl`;
+    const result = await parse(
+      builtinOverrides[name],
+      undefined,
+      name,
+      undefined,
+      {
+        file,
+      },
+    );
+    if (isErr(result)) {
+      const [[key, [first]]] = Object.entries(Err(result));
+      return Err(new Error(`${key}: ${describeEnglish(first)}`));
+    }
+    return result;
   }
   const chip = REGISTRY.get(name);
-  return chip ? Ok(chip()) : Err(semanticError("chip.notBuiltin", { name }));
+  return chip
+    ? Ok(chip())
+    : Err(new Error(`Chip ${name} not in builtin registry`));
 }

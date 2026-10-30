@@ -6,8 +6,8 @@ import { expect, test, vi } from "vitest";
 import type { DiagnosticStatus } from "./base.context.js";
 import { makeVmStore, VmStoreDispatch } from "./vm.store.js";
 
-// #673: a VME .tst uploaded from disk reaches the store as a bare basename, so
-// a bare `load,` scanned "" instead of the VM files the user already loaded.
+// A VME .tst uploaded from disk reaches the store as a bare basename, so a
+// bare `load,` must keep the VM files the user already loaded, not scan "".
 const VM_FILES = [
   { name: "Main", content: "function Main.main 0\npush constant 7\nreturn\n" },
 ];
@@ -18,13 +18,9 @@ function vmHarness(fs = new FileSystem(new ObjectFileSystemAdapter({}))) {
   const { actions } = makeVmStore(
     fs,
     (s) => {
-      if (typeof s === "object" && "diagnostics" in s) {
-        failures.push(s);
-      } else {
-        statuses.push(
-          typeof s === "string" ? s : "message" in s ? s.message : "",
-        );
-      }
+      if (typeof s === "string") statuses.push(s);
+      else if ("diagnostics" in s) failures.push(s);
+      else statuses.push(s.message);
     },
     {},
     { current: vi.fn() as unknown as VmStoreDispatch },
@@ -39,7 +35,10 @@ test("VM code that does not parse reports its syntax error count", () => {
   );
   expect(statuses).toEqual([]);
   expect(failures).toMatchObject([
-    { heading: { file: "VM code", count: 1 }, diagnostics: [] },
+    {
+      heading: { file: "VM code", count: 1 },
+      diagnostics: [{ diagnostic: { span: { line: 1 } } }],
+    },
   ]);
 });
 

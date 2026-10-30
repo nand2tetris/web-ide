@@ -1,6 +1,9 @@
 import { i18n } from "@lingui/core";
 import { t } from "@lingui/core/macro";
-import type { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
+import {
+  type Diagnostic,
+  describeEnglish,
+} from "@nand2tetris/simulator/languages/base.js";
 
 /** The expectations of a failed match as a list in the active locale: `a, b, or c`. */
 function listOf(items: readonly string[]): string {
@@ -238,6 +241,8 @@ function messageOf(found: Diagnostic): string {
       const { name, file } = found.args;
       return t`Class name ${name} doesn't match file name ${file}`;
     }
+    case "jack.duplicateClassFile":
+      return describeEnglish({ code: found.code, args: found.args });
     case "jack.duplicateSubroutine": {
       const { name } = found.args;
       return t`Subroutine ${name} already declared`;

@@ -70,6 +70,7 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   "jack.missingSubroutine": { class: "B", subroutine: "h" },
   "jack.undefinedClass": { name: "Nope" },
   "jack.classNameMismatch": { name: "Foo", file: "Main" },
+  "jack.duplicateClassFile": { path: "b/Main", other: "a/Main" },
   "jack.duplicateSubroutine": { name: "a" },
   "jack.missingReturnValue": {},
   "jack.missingReturnPath": { name: "main" },

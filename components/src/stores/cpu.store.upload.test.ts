@@ -10,8 +10,8 @@ import { expect, test, vi } from "vitest";
 import type { DiagnosticStatus } from "./base.context.js";
 import { CpuPageState, CpuStoreDispatch, makeCpuStore } from "./cpu.store.js";
 
-// #622: a .tst uploaded from disk reaches the store as a bare basename and is
-// never written to `fs`, so `load Mult.asm` resolved to the missing /Mult.asm.
+// A .tst uploaded from disk reaches the store as a bare basename and is never
+// written to `fs`, so its `load Mult.asm` must keep the ROM already loaded.
 const TST = "load Mult.asm,\nticktock;\n";
 
 async function runTest(tstPath: string) {
@@ -56,6 +56,37 @@ test("a test script that does not parse lists its syntax errors", () => {
   });
 });
 
+test("a test script lists every syntax error while Attempt Recovery is on", () => {
+  let recovery = true;
+  const failures: DiagnosticStatus[] = [];
+  const { actions } = makeCpuStore(
+    new FileSystem(new ObjectFileSystemAdapter({})),
+    (s) => {
+      if (typeof s === "object" && "diagnostics" in s) failures.push(s);
+    },
+    {},
+    { current: vi.fn() as unknown as CpuStoreDispatch },
+    () => recovery,
+  );
+  const tst = "set A,\nticktock;\nset D,\nticktock;\n";
+
+  expect(actions.compileTest(tst, "", "/proj/T.tst")).toBe(false);
+  expect(failures.at(-1)).toMatchObject({
+    heading: { file: "Test script", count: 2 },
+    diagnostics: [
+      { diagnostic: { span: { line: 1 } } },
+      { diagnostic: { span: { line: 3 } } },
+    ],
+  });
+
+  recovery = false;
+  actions.compileTest(tst, "", "/proj/T.tst");
+  expect(failures.at(-1)).toMatchObject({
+    heading: { file: "Test script", count: 1 },
+    diagnostics: [{ diagnostic: { span: { line: 1 } } }],
+  });
+});
+
 test("a bare test path keeps the loaded ROM", async () => {
   const statuses = await runTest("Mult.tst");
   expect(statuses.filter((m) => /Cannot find/.test(m))).toEqual([]);
@@ -93,8 +124,8 @@ test("a program the test loaded is reloaded on the next run", async () => {
   expect(rom.get(0)).toBe(9);
 });
 
-// #622: in browser storage, the starter Mult.asm (only comments) sits next to
-// Mult.tst, so `load Mult.asm` replaced an uploaded program with an empty ROM.
+// In browser storage, the starter Mult.asm (only comments) sits next to
+// Mult.tst, and its `load Mult.asm` must not replace an uploaded program.
 const MULT = `
 @R2
 M=0
@@ -142,12 +173,12 @@ test("a test loaded from the file system keeps an uploaded program", async () =>
     });
   }) as CpuStoreDispatch;
 
-  // The CPU page uploads a program from disk: it clears the test, then the
-  // ROM panel writes the assembled program into the ROM.
+  // An upload from disk clears the test, then writes the assembled program
+  // into the ROM.
   actions.clearTest();
   initialState.sim.ROM.loadBytes(await loadAsm(MULT));
 
-  // The test panel picks Mult.tst from the browser file system.
+  // Pick Mult.tst from the browser file system.
   expect(actions.compileTest(mult.tst, "", "/projects/04/Mult/Mult.tst")).toBe(
     true,
   );

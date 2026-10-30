@@ -171,6 +171,14 @@ export interface Skip extends Skipped {
 /** Every null object's provenance in a tree, in tree order. */
 export type Provenance = readonly Skip[];
 
+/** True when `provenance` holds a skip of one of `kinds`. */
+export function skipsAny(
+  provenance: Provenance,
+  kinds: ReadonlySet<string>,
+): boolean {
+  return provenance.some(({ kind }) => kinds.has(kind));
+}
+
 /**
  * A tree a parse built, pruned to `Valid`, beside the provenance of what
  * pruning dropped. Validators and dependency tables take this pair.
@@ -389,6 +397,16 @@ export interface Origin {
 
 /** The origins of diagnostics, by record. A record without an entry has none. */
 export type Origins = ReadonlyMap<Diagnostic, Origin>;
+
+/**
+ * The recovery identity of each syntax skip's diagnostic, as origin entries
+ * for a merge. A failed action's skip has no recovery identity and no entry.
+ */
+export function originsOf(provenance: Provenance): [Diagnostic, Origin][] {
+  return provenance.flatMap(({ diagnostic, key }): [Diagnostic, Origin][] =>
+    key === undefined ? [] : [[diagnostic, { recovery: key }]],
+  );
+}
 
 /**
  * One source file's diagnostics, ordered and deduplicated for display.

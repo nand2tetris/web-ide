@@ -7,9 +7,15 @@ import {
   STATIC,
 } from "@nand2tetris/projects/samples/vm/vm.js";
 import { describe, expect, test } from "vitest";
-import { describeEnglish, validOf } from "../languages/base.js";
+import {
+  type Diagnostic,
+  describeEnglish,
+  diagnostic,
+  semanticError,
+  validOf,
+} from "../languages/base.js";
 import { VM } from "../languages/vm.js";
-import { Vm } from "./vm.js";
+import { joinedDiagnostics, loadVm, VM_INPUT, Vm, type VmFile } from "./vm.js";
 
 test("Simple Adder VM", () => {
   const vm = unwrap(
@@ -415,11 +421,11 @@ describe("debug frame views", () => {
   });
 });
 
-test("buildFromFiles with no files returns a Diagnostic", () => {
+test("buildFromFiles with no files returns a Diagnostic under the input key", () => {
   const result = Vm.buildFromFiles([]);
   if (!isErr(result)) throw new Error("expected Err result");
-  expect(Err(result)).toMatchObject({ code: "vm.noFiles" });
-  expect(describeEnglish(Err(result))).toMatch(/no\s+\.vm/i);
+  expect(Object.keys(Err(result))).toEqual([VM_INPUT]);
+  expect(describeEnglish(Err(result)[VM_INPUT][0])).toMatch(/no\s+\.vm/i);
 });
 
 describe("Array.new / Array.dispose bridge to user Memory", () => {
@@ -576,5 +582,563 @@ return
     const vm = unwrap(Vm.build(instructions));
 
     expect(vm.functionMap["Output.printString"]).toBeUndefined();
+  });
+});
+
+const lines = (...l: string[]) => l.join("\n");
+
+describe("loadVm", () => {
+  const MAIN = "function Main.main 0\npush constant 7\nreturn\n";
+  const failure = (files: VmFile[], options?: Parameters<typeof loadVm>[1]) => {
+    const loaded = loadVm(files, options);
+    if (!isErr(loaded)) throw new Error("expected Err result");
+    return Err(loaded);
+  };
+
+  test("loads valid files to a Vm", () => {
+    const loaded = loadVm([{ name: "Main.vm", content: MAIN }]);
+
+    expect(isErr(loaded)).toBe(false);
+    expect(unwrap(loaded).functionMap["Main.main"]).toBeDefined();
+  });
+
+  test("loads no files to one diagnostic under the input key", () => {
+    const errors = failure([]);
+
+    expect(Object.keys(errors)).toEqual([VM_INPUT]);
+  });
+
+  test("reports every semantic diagnostic of a file, not the first", () => {
+    const errors = failure([
+      {
+        name: "Main.vm",
+        content: lines(
+          "function Main.main 0",
+          "push pointer 5",
+          "goto NOWHERE",
+          "call Main.f 0",
+          "label A",
+          "label A",
+          "return",
+        ),
+      },
+    ]);
+
+    expect(errors["Main.vm"].map(({ span }) => span?.line)).toEqual([
+      2, 3, 4, 6,
+    ]);
+    expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual([
+      "semantic",
+      "semantic",
+      "semantic",
+      "semantic",
+    ]);
+  });
+
+  describe("file names", () => {
+    const SINGLE = "function Foo.bar 0\npush constant 1\nreturn\n";
+
+    test("accepts a valid function in a buffer of another name with the check off", () => {
+      const loaded = loadVm([{ name: VM_INPUT, content: SINGLE }], {
+        validateFileNames: false,
+      });
+
+      expect(isErr(loaded)).toBe(false);
+    });
+
+    test("rejects the same buffer with the check on, which is the default", () => {
+      const byDefault = failure([{ name: "Other.vm", content: SINGLE }]);
+      const explicit = failure([{ name: "Other.vm", content: SINGLE }], {
+        validateFileNames: true,
+      });
+
+      expect(describeEnglish(byDefault["Other.vm"][0])).toMatch(
+        /File name Other\.vm doesn't match class name Foo/,
+      );
+      expect(explicit).toEqual(byDefault);
+    });
+
+    test("rejects a malformed function name even with the check off", () => {
+      const errors = failure(
+        [{ name: VM_INPUT, content: "function bar 0\nreturn\n" }],
+        { validateFileNames: false },
+      );
+
+      expect(errors[VM_INPUT]).toHaveLength(1);
+      expect(describeEnglish(errors[VM_INPUT][0])).toMatch(
+        /Illegal subroutine name bar/,
+      );
+      expect(errors[VM_INPUT][0].span?.line).toBe(1);
+    });
+
+    test("the raw build still accepts a name of any shape", () => {
+      const { instructions } = unwrap(
+        validOf(VM.parse("function bar 0\npush constant 1\nreturn\n")),
+      );
+
+      expect(isErr(Vm.build(instructions))).toBe(false);
+    });
+
+    test("reports a repeated file name under that name", () => {
+      const errors = failure([
+        { name: "Main.vm", content: MAIN },
+        { name: "Main.vm", content: MAIN },
+      ]);
+
+      expect(
+        errors["Main.vm"].map((found) => describeEnglish(found)),
+      ).toContain("File Main.vm already exists");
+    });
+  });
+
+  describe("two files", () => {
+    // Each file's error is the goto, at the same local line and offsets. The
+    // first function lines have equal length.
+    const A = "function Sys.init  0\ngoto NOWHERE\nreturn\n"; // 41 long
+    const B = "function Main.main 0\ngoto NOWHERE\nreturn";
+    const LOCAL = { start: 21, end: 33, line: 2 };
+
+    test("attributes equal local spans to each own file", () => {
+      const errors = failure([
+        { name: "Sys.vm", content: A },
+        { name: "Main.vm", content: B },
+      ]);
+
+      expect(Object.keys(errors)).toEqual(["Sys.vm", "Main.vm"]);
+      expect(errors["Sys.vm"]).toHaveLength(1);
+      expect(errors["Main.vm"]).toHaveLength(1);
+      expect(errors["Sys.vm"][0].span).toEqual(LOCAL);
+      expect(errors["Main.vm"][0].span).toEqual(LOCAL);
+    });
+
+    test("maps both span ends and the line to the joined buffer", () => {
+      const files = [
+        { name: "Sys.vm", content: A }, // ends with a newline
+        { name: "Main.vm", content: B }, // does not
+      ];
+      const errors = failure(files);
+
+      const inSys = joinedDiagnostics(files, { "Sys.vm": errors["Sys.vm"] });
+      const inMain = joinedDiagnostics(files, { "Main.vm": errors["Main.vm"] });
+
+      // Sys starts the buffer: its base is zero.
+      expect(inSys[0].span).toEqual(LOCAL);
+      // Main follows Sys's 41 characters and the separator, so starts at 42.
+      // Sys has 3 newlines, so Main starts 4 lines on: a trailing newline and
+      // the separator make one blank line.
+      expect(inMain[0].span).toEqual({ start: 63, end: 75, line: 6 });
+      expect(describeEnglish(inMain[0])).toBe(
+        "Line 6: Undeclared label NOWHERE",
+      );
+    });
+
+    test("counts the separator after a file with or without a trailing newline", () => {
+      const withNewline = { name: "A.vm", content: "return\n" };
+      const without = { name: "B.vm", content: "return" };
+      const bad = { name: "C.vm", content: "goto X" };
+      const unplaced = semanticError(
+        "vm.undeclaredLabel",
+        { label: "x" },
+        { start: 0, end: 6, line: 1 },
+      );
+
+      const placed = (files: VmFile[]) =>
+        joinedDiagnostics(files, { "C.vm": [unplaced] })[0].span;
+
+      // "return\n" + "\n" + "goto X": a blank line between.
+      expect(placed([withNewline, bad])).toEqual({
+        start: 8,
+        end: 14,
+        line: 3,
+      });
+      // "return" + "\n" + "goto X": none.
+      expect(placed([without, bad])).toEqual({ start: 7, end: 13, line: 2 });
+    });
+
+    test("leaves the file-local diagnostics unchanged", () => {
+      const files = [
+        { name: "Sys.vm", content: A },
+        { name: "Main.vm", content: B },
+      ];
+      const errors = failure(files);
+      const before = JSON.stringify(errors);
+
+      joinedDiagnostics(files, errors);
+
+      expect(JSON.stringify(errors)).toBe(before);
+    });
+
+    test("keeps a spanless diagnostic spanless", () => {
+      const files = [{ name: "Sys.vm", content: A }];
+
+      const noEntry = diagnostic("vm.noEntryPoint", {});
+      const listed = joinedDiagnostics(files, {
+        [VM_INPUT]: [noEntry],
+      });
+
+      expect(listed).toEqual([noEntry]);
+    });
+
+    test("moves the instructions of a loaded Vm into the joined buffer", () => {
+      const vm = unwrap(
+        loadVm([
+          { name: "Sys.vm", content: "function Sys.init 0\nreturn\n" },
+          { name: "B.vm", content: "function B.g 0\nreturn" },
+        ]),
+      );
+
+      const lines = vm.functions
+        .flatMap(({ operations }) => operations.map(({ span }) => span?.line))
+        .filter((line) => line !== undefined)
+        .sort();
+
+      // Sys has two newlines, so B starts on line 4 (3 is blank).
+      expect(lines).toEqual([1, 2, 4, 5]);
+    });
+
+    test("merges a file's list in source order before it is mapped", () => {
+      const errors = failure([
+        { name: "A.vm", content: "function bad 0\npush nowhere 1\n" },
+      ]);
+
+      // The syntax diagnostic is listed first by the parse, but follows by position.
+      expect(errors["A.vm"].map(({ span }) => span?.line)).toEqual([1, 2]);
+      expect(errors["A.vm"].map(({ stage }) => stage)).toEqual([
+        "semantic",
+        "parse",
+      ]);
+    });
+  });
+
+  describe("recovery", () => {
+    const TWO_MISTAKES = lines(
+      "function Main.main 0",
+      "push nowhere 1",
+      "label A",
+      "label A",
+      "return",
+    );
+
+    test("lists the syntax and the semantic diagnostic when omitted", () => {
+      const errors = failure([{ name: "Main.vm", content: TWO_MISTAKES }]);
+
+      expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual([
+        "parse",
+        "semantic",
+      ]);
+    });
+
+    test("equals the explicit true", () => {
+      const files = [{ name: "Main.vm", content: TWO_MISTAKES }];
+
+      expect(failure(files, { attemptRecovery: true })).toEqual(failure(files));
+    });
+
+    test("gives only the first syntax diagnostic when off", () => {
+      const errors = failure([{ name: "Main.vm", content: TWO_MISTAKES }], {
+        attemptRecovery: false,
+      });
+
+      expect(errors["Main.vm"]).toHaveLength(1);
+      expect(errors["Main.vm"][0].span?.line).toBe(2);
+      expect(errors["Main.vm"][0].stage).toMatch(/lex|parse/);
+    });
+
+    test("checks the other file when one file has a syntax error", () => {
+      const errors = failure(
+        [
+          { name: "A.vm", content: "push nowhere 1\n" },
+          { name: "B.vm", content: "function B.f 0\ngoto X\nreturn\n" },
+        ],
+        { attemptRecovery: false },
+      );
+
+      expect(Object.keys(errors)).toEqual(["A.vm", "B.vm"]);
+      expect(describeEnglish(errors["B.vm"][0])).toMatch(/Undeclared label X/);
+    });
+
+    test("does not report an undeclared label a skipped line could declare", () => {
+      const errors = failure([
+        {
+          name: "Main.vm",
+          content: lines(
+            "function Main.main 0",
+            "goto END",
+            "lable END",
+            "return",
+          ),
+        },
+      ]);
+
+      expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+    });
+
+    test("still reports an undeclared label of another function", () => {
+      const errors = failure([
+        {
+          name: "Main.vm",
+          content: lines(
+            "function Main.main 0",
+            "lable END",
+            "return",
+            "function Main.other 0",
+            "goto END",
+            "return",
+          ),
+        },
+      ]);
+
+      expect(errors["Main.vm"].map((found) => describeEnglish(found))).toEqual([
+        expect.stringMatching(/^Line 2: /),
+        "Line 5: Undeclared label END",
+      ]);
+    });
+
+    test("does not report an undefined function a skipped line could declare", () => {
+      const errors = failure([
+        {
+          name: "Main.vm",
+          content: lines(
+            "function Main.main 0",
+            "call Main.f 0",
+            "fucntion Main.f 0",
+            "return",
+          ),
+        },
+      ]);
+
+      expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+    });
+
+    test("reports an undefined function a skipped push could not have declared", () => {
+      const errors = failure([
+        {
+          name: "Main.vm",
+          content: lines(
+            "function Main.main 0",
+            "push nowhere 2",
+            "call Nope.f 0",
+            "return",
+          ),
+        },
+      ]);
+
+      expect(errors["Main.vm"].map((found) => describeEnglish(found))).toEqual([
+        expect.stringMatching(/^Line 2: /),
+        "Line 3: Undefined function Nope.f",
+      ]);
+    });
+
+    test("reports an undefined function when nothing was skipped", () => {
+      const errors = failure([
+        {
+          name: "Main.vm",
+          content: lines("function Main.main 0", "call Main.f 0", "return"),
+        },
+      ]);
+
+      expect(describeEnglish(errors["Main.vm"][0])).toMatch(
+        /Undefined function Main.f/,
+      );
+    });
+
+    describe("a skipped line that could be a function header", () => {
+      const MAIN = (...body: string[]) =>
+        lines("function Main.main 0", ...body, "return");
+      const messages = (list: readonly Diagnostic[]) =>
+        list.map((found) => describeEnglish(found));
+
+      test.each(["function Main.f ?", "function Main.f 0 junk"])(
+        "hides an undefined function of its file's class after skipping %s",
+        (header) => {
+          const errors = failure([
+            {
+              name: "Main.vm",
+              content: MAIN("call Main.f 0", "call Lib.g 0", header),
+            },
+          ]);
+
+          expect(messages(errors["Main.vm"])).toEqual([
+            "Line 3: Undefined function Lib.g",
+            expect.stringMatching(/^Line 4: /),
+          ]);
+        },
+      );
+
+      test("hides the undefined function of a caller in another file, attributed to that file", () => {
+        const errors = failure([
+          {
+            name: "Sys.vm",
+            content: "function Sys.init 0\nfunction Sys.x ?\n",
+          },
+          {
+            name: "Main.vm",
+            content: MAIN("call Sys.x 0", "call Main.nope 0", "call Other.f 0"),
+          },
+        ]);
+
+        expect(Object.keys(errors)).toEqual(["Sys.vm", "Main.vm"]);
+        expect(messages(errors["Main.vm"])).toEqual([
+          "Line 3: Undefined function Main.nope",
+          "Line 4: Undefined function Other.f",
+        ]);
+      });
+
+      test("hides the builtin argument count of a call its file could override", () => {
+        const damaged = (name: string) =>
+          failure([
+            { name: "Main.vm", content: MAIN("call Math.multiply 3") },
+            { name, content: "function Math.min ?\n" },
+          ]);
+
+        expect(damaged("Math.vm")["Main.vm"]).toBeUndefined();
+        expect(messages(damaged("Other.vm")["Main.vm"])).toEqual([
+          "Line 2: OS function Math.multiply expects 2 arguments, not 3",
+        ]);
+      });
+
+      test("reports a builtin argument count past a skipped push", () => {
+        const errors = failure([
+          {
+            name: "Main.vm",
+            content: MAIN("push nowhere 1", "call Math.multiply 3"),
+          },
+        ]);
+
+        expect(messages(errors["Main.vm"])).toEqual([
+          expect.stringMatching(/^Line 2: /),
+          "Line 3: OS function Math.multiply expects 2 arguments, not 3",
+        ]);
+      });
+
+      test("hides any name when file names need not match the class", () => {
+        const errors = failure(
+          [
+            {
+              name: VM_INPUT,
+              content: MAIN("call Lib.g 0", "function Main.f ?"),
+            },
+          ],
+          { validateFileNames: false },
+        );
+
+        expect(errors[VM_INPUT].map(({ stage }) => stage)).toEqual(["parse"]);
+      });
+
+      test("hides the undefined function when its first token is unreadable", () => {
+        const errors = failure([
+          { name: "Main.vm", content: MAIN("call Main.f 0", "?? ? ?") },
+        ]);
+
+        expect(errors["Main.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+      });
+    });
+
+    describe("a skipped line that is not a function header", () => {
+      test.each(["call Foo.bar ?", "return 1", "label", "goto", "add 1"])(
+        "does not hide an undefined function: %s",
+        (line) => {
+          const errors = failure([
+            {
+              name: "Main.vm",
+              content: lines(
+                "function Main.main 0",
+                line,
+                "call Nope.f 0",
+                "return",
+              ),
+            },
+          ]);
+
+          expect(
+            errors["Main.vm"].map((found) => describeEnglish(found)),
+          ).toContain("Line 3: Undefined function Nope.f");
+        },
+      );
+
+      test("hides an undeclared label of the function holding it only", () => {
+        const errors = failure([
+          {
+            name: "A.vm",
+            content: lines(
+              "function A.f 0",
+              "goto END",
+              "push nowhere 1",
+              "return",
+              "function A.g 0",
+              "goto END",
+              "return",
+            ),
+          },
+        ]);
+
+        expect(errors["A.vm"].map((found) => describeEnglish(found))).toEqual([
+          expect.stringMatching(/^Line 3: /),
+          "Line 6: Undeclared label END",
+        ]);
+      });
+
+      test("belongs, before its file's first function, to the last function of the files before", () => {
+        const errors = failure([
+          { name: "A.vm", content: "function A.f 0\ngoto END\nreturn\n" },
+          {
+            name: "B.vm",
+            content: lines(
+              "push nowhere 1",
+              "function B.g 0",
+              "goto END",
+              "return",
+            ),
+          },
+        ]);
+
+        expect(errors["A.vm"]).toBeUndefined();
+        expect(errors["B.vm"].map((found) => describeEnglish(found))).toEqual([
+          expect.stringMatching(/^Line 1: /),
+          "Line 3: Undeclared label END",
+        ]);
+      });
+    });
+
+    test("hides the undefined function of every file when a file built no tree", () => {
+      const errors = failure(
+        [
+          { name: "A.vm", content: "push nowhere 1\n" },
+          { name: "B.vm", content: "function B.f 0\ncall Nope.f 0\nreturn\n" },
+        ],
+        { attemptRecovery: false },
+      );
+
+      expect(Object.keys(errors)).toEqual(["A.vm"]);
+    });
+
+    describe("entry point", () => {
+      const TWO = lines("function A.f 0", "return", "function A.g 0", "return");
+
+      test("is reported missing when nothing was skipped", () => {
+        const whole = failure([{ name: "A.vm", content: TWO }]);
+
+        expect(whole[VM_INPUT]).toHaveLength(1);
+        expect(describeEnglish(whole[VM_INPUT][0])).toMatch(/entry point/);
+      });
+
+      test("is still reported missing when a skipped push could not have declared it", () => {
+        const damaged = failure([
+          { name: "A.vm", content: `${TWO}\npush nowhere 1\n` },
+        ]);
+
+        expect(damaged["A.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+        expect(describeEnglish(damaged[VM_INPUT][0])).toMatch(/entry point/);
+      });
+
+      test("is not reported missing when a skipped line could be a function header", () => {
+        const damaged = failure([
+          { name: "A.vm", content: `${TWO}\nfunction Sys.init ?\n` },
+        ]);
+
+        expect(damaged["A.vm"].map(({ stage }) => stage)).toEqual(["parse"]);
+        expect(damaged[VM_INPUT]).toBeUndefined();
+      });
+    });
   });
 });

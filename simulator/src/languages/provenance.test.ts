@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import { isRecovered, recoveredOf } from "./base.js";
 import { HDL, prune as hdlPrune } from "./hdl.js";
 import { JACK, prune as jackPrune } from "./jack.js";
-import { TST, type TstRepeat } from "./tst.js";
+import { TST, type TstRepeat, prune as tstPrune } from "./tst.js";
 
 const RECOVER = { attemptRecovery: true };
 
@@ -24,6 +24,13 @@ describe("a null object records what it stands in for", () => {
       key: expect.any(String),
     });
     expect(repeat.statements[0].op).toEqual({ op: "eval" });
+  });
+
+  it("builds no pruned tree or provenance when a block has no real closer", () => {
+    const outcome = TST.parse("repeat 1 { eval;", RECOVER);
+
+    expect(outcome).toHaveProperty("nullRoot", true);
+    expect(recoveredOf(outcome, tstPrune)).toBeUndefined();
   });
 });
 

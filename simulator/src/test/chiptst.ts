@@ -1,7 +1,6 @@
 import { Result } from "@davidsouther/jiffies/result.ts";
 import { Bus, Chip, HIGH, LOW, Low } from "../chip/chip.js";
 import { Clock } from "../chip/clock.js";
-import type { Diagnostic } from "../languages/base.js";
 import { Tst } from "../languages/tst.js";
 import { Action } from "../types.js";
 import { fill } from "./builder.js";
@@ -27,7 +26,7 @@ export class ChipTest extends Test<ChipTestInstruction> {
       compareTo?: Action<string>;
       requireLoad?: boolean;
     } = {},
-  ): Result<ChipTest, Diagnostic> {
+  ): Result<ChipTest, Error> {
     const test = new ChipTest(options);
 
     return fill(test, tst, options.requireLoad);

@@ -2,19 +2,15 @@ import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Result } from "@davidsouther/jiffies/result.ts";
 import { RAM } from "../cpu/memory.js";
-import type { Diagnostic } from "../languages/base.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";
 import { Action, AsyncAction } from "../types.js";
-import { Vm } from "../vm/vm.js";
+import { Vm, type VmFile } from "../vm/vm.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
 
-export interface VmFile {
-  name: string;
-  content: string;
-}
+export type { VmFile };
 
 export class VMTest extends Test<VMTestInstruction> {
   vm: Vm = new Vm();
@@ -29,7 +25,7 @@ export class VMTest extends Test<VMTestInstruction> {
       doEcho?: Action<string>;
       compareTo?: Action<string>;
     } = {},
-  ): Result<VMTest, Diagnostic> {
+  ): Result<VMTest, Error> {
     const test = new VMTest(options);
     return fill(test, tst);
   }

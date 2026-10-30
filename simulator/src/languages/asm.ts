@@ -20,7 +20,10 @@ import {
   actionError,
   baseSemantics,
   grammars,
+  guardedRecovery,
   makeParser,
+  type Recovery,
+  type RecoveryPoint,
   semanticError,
   span,
 } from "./base.js";
@@ -30,6 +33,10 @@ import asmGrammar from "./grammars/asm.ohm.js";
 export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
+/**
+ * One type for valid and recovered programs: a recovered line is a null
+ * instruction (see `isRecovered`).
+ */
 export interface Asm {
   instructions: AsmInstruction[];
 }
@@ -40,13 +47,13 @@ export type AsmInstruction =
   | AsmLabelInstruction;
 
 export type AsmAInstruction = AsmALabelInstruction | AsmAValueInstruction;
-export interface AsmALabelInstruction {
+export interface AsmALabelInstruction extends Recovery {
   type: "A";
   label: string;
   span?: Span;
 }
 
-export interface AsmAValueInstruction {
+export interface AsmAValueInstruction extends Recovery {
   type: "A";
   value: number;
   span?: Span;
@@ -64,7 +71,7 @@ function isALabelInstruction(
   return inst.type == "A" && (inst as AsmALabelInstruction).label !== undefined;
 }
 
-export interface AsmCInstruction {
+export interface AsmCInstruction extends Recovery {
   type: "C";
   op: COMMANDS_OP;
   isM: boolean;
@@ -73,10 +80,18 @@ export interface AsmCInstruction {
   span?: Span;
 }
 
-export interface AsmLabelInstruction {
+export interface AsmLabelInstruction extends Recovery {
   type: "L";
   label: string;
   span?: Span;
+}
+
+/**
+ * The null instruction where recovery skipped a line: a label with no name,
+ * which emits no code. It is a label only by its type; `recovery` marks it.
+ */
+function nullInstruction({ recovery, span }: RecoveryPoint): AsmInstruction {
+  return { type: "L", label: "", span, recovery };
 }
 
 asmSemantics.addAttribute<Asm>("root", {
@@ -86,22 +101,22 @@ asmSemantics.addAttribute<Asm>("root", {
 });
 
 asmSemantics.addAttribute<Asm>("asm", {
-  ASM(asm, last) {
-    const instructions =
-      asm.children.map(
-        (node) => node.intermediateInstruction as AsmInstruction,
-      ) ?? [];
+  ASM(asm) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: asm.children.map(
+        (node) => node.intermediateInstruction as AsmInstruction,
+      ),
     };
   },
 });
 
 asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
-  intermediateInstruction(inst, _n) {
-    return inst.instruction;
+  intermediateInstruction(inst, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      inst,
+      correction,
+    );
+    return recovered ? nullInstruction(recovered) : inst.instruction;
   },
 });
 

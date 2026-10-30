@@ -1,12 +1,12 @@
 const vm = `Vm <: Base {
   Root := Vm
 
-  Vm = newline* VmInstructionLine* VmInstruction?
+  Vm = newline* VmInstructionLine*
 
   space := comment | " " | "\t"
   whitespace = lineComment | comment | space
 
-  VmInstructionLine = VmInstruction newline+
+  VmInstructionLine = VmInstruction ! (newline+ | end)
   VmInstruction =
     | StackInstruction
     | OpInstruction

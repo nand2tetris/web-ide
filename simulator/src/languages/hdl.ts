@@ -1,6 +1,17 @@
 /** Reads and parses HDL chip descriptions. */
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import {
+  baseSemantics,
+  grammars,
+  guardedRecovery,
+  isRecovered,
+  makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  Span,
+  span,
+} from "./base.js";
 
 export interface PinIndex {
   start?: number | undefined;
@@ -12,7 +23,7 @@ export interface PinParts extends PinIndex {
   span: Span;
 }
 
-export interface PinDeclaration {
+export interface PinDeclaration extends Recovery {
   pin: string | string;
   width: number;
 }
@@ -22,12 +33,18 @@ export interface Wire {
   rhs: PinParts;
 }
 
-export interface Part {
+export interface Part extends Recovery {
   name: string;
   wires: Wire[];
   span: Span;
 }
 
+/**
+ * One type for valid and recovered chips: a recovered list item is a null
+ * object of its item type (see `isRecovered`). `clocked` holds strings, which
+ * cannot carry a diagnostic, so a recovered `CLOCKED` clause is empty and its
+ * diagnostic is only in the outcome's list.
+ */
 export interface HdlParse {
   name: { value: string; span?: Span };
   ins: PinDeclaration[];
@@ -35,6 +52,26 @@ export interface HdlParse {
   clocked: string[];
   parts: "BUILTIN" | Part[];
 }
+
+/** Null objects for the recovered positions. */
+function nullPin({ recovery }: RecoveryPoint): PinDeclaration {
+  return { pin: "", width: 1, recovery };
+}
+
+function nullPart({ recovery, span }: RecoveryPoint): Part {
+  return { name: "", wires: [], span, recovery };
+}
+
+/** Drops recovered pins and parts; the result is checked and minted `Valid`. */
+export const prune = makePrune<HdlParse>((tree) => ({
+  ...tree,
+  ins: tree.ins.filter((pin) => !isRecovered(pin)),
+  outs: tree.outs.filter((pin) => !isRecovered(pin)),
+  parts:
+    tree.parts === "BUILTIN"
+      ? tree.parts
+      : tree.parts.filter((part) => !isRecovered(part)),
+}));
 
 import hdlGrammar from "./grammars/hdl.ohm.js";
 export const grammar = ohmGrammar(hdlGrammar, grammars);
@@ -75,7 +112,16 @@ hdlSemantics.addAttribute<Wire[]>("Wires", {
 });
 
 hdlSemantics.addAttribute<Part>("Part", {
-  Part({ name }, _a, { Wires }, _b, _c) {
+  Part(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    if (recovered) {
+      return nullPart(recovered);
+    }
+    const { name } = body.child(0);
+    const { Wires } = body.child(2);
     return {
       name: name as string,
       wires: Wires as Wire[],
@@ -85,8 +131,10 @@ hdlSemantics.addAttribute<Part>("Part", {
 });
 
 hdlSemantics.addAttribute<Part[] | "BUILTIN">("Parts", {
-  Parts(_, parts) {
-    return parts.children.map((c) => c.Part);
+  Parts(_, parts, correction, _stop) {
+    const kept = parts.children.map((c) => c.Part as Part);
+    const recovered: RecoveryPoint | undefined = correction.recovery;
+    return recovered ? [...kept, nullPart(recovered)] : kept;
   },
   BuiltinPart(_a, _b) {
     return "BUILTIN";
@@ -100,14 +148,36 @@ hdlSemantics.addAttribute<"BUILTIN" | Part[]>("PartList", {
 });
 
 hdlSemantics.addAttribute<string[]>("Clocked", {
-  ClockedList(_a, clocked, _b) {
+  ClockedList(body, correction, _end) {
+    if (correction.recovery) {
+      return [];
+    }
     return (
-      clocked
+      body
+        .child(1)
         .asIteration()
         .children.map(
           ({ sourceString }: { sourceString: string }) => sourceString,
         ) ?? []
     );
+  },
+});
+
+/** A pin list, or the one null pin of a recovered `IN` or `OUT` line. */
+hdlSemantics.addAttribute<PinDeclaration[]>("Pins", {
+  InList(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered ? [nullPin(recovered)] : body.child(1).PinList;
+  },
+  OutList(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered ? [nullPin(recovered)] : body.child(1).PinList;
   },
 });
 
@@ -132,8 +202,8 @@ hdlSemantics.addAttribute<HdlParse>("Chip", {
   Chip(_a, name, _b, body, _c) {
     return {
       name: { value: name.sourceString, span: span(name.source) },
-      ins: body.child(0).child(0)?.child(1)?.PinList ?? [],
-      outs: body.child(1).child(0)?.child(1)?.PinList ?? [],
+      ins: body.child(0).child(0)?.Pins ?? [],
+      outs: body.child(1).child(0)?.Pins ?? [],
       parts: body.child(2).PartList ?? [],
       clocked: body.child(3).child(0)?.Clocked,
     };

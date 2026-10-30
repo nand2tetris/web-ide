@@ -15,7 +15,10 @@ function vmHarness(fs = new FileSystem(new ObjectFileSystemAdapter({}))) {
   const statuses: string[] = [];
   const { actions } = makeVmStore(
     fs,
-    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    (s) =>
+      statuses.push(
+        typeof s === "string" ? s : "message" in s ? s.message : "",
+      ),
     {},
     { current: vi.fn() as unknown as VmStoreDispatch },
   );

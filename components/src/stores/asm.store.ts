@@ -25,7 +25,8 @@ import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext, type StatusInput } from "./base.context.js";
+import { failureStatus } from "./status.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -199,7 +200,7 @@ export type AsmStoreDispatch = Dispatch<{
 
 export function makeAsmStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  setStatus: Action<StatusInput>,
   dispatch: MutableRefObject<AsmStoreDispatch>,
   upgraded: boolean,
 ) {
@@ -217,7 +218,7 @@ export function makeAsmStore(
 
   /** Shows the diagnostics of ASM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    setStatus(failureStatus(diagnostics[0]));
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     compiled = false;
   };

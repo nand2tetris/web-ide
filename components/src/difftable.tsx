@@ -1,6 +1,9 @@
-import { display } from "@davidsouther/jiffies/display.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
+import {
+  type Diagnostic,
+  describeEnglish,
+} from "@nand2tetris/simulator/languages/base.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { ReactElement } from "react";
 
@@ -9,11 +12,14 @@ export const DiffTable = ({
   out,
   cmp,
   zeroState,
+  describe = describeEnglish,
 }: {
   out: string;
   cmp: string;
   className?: string;
   zeroState?: ReactElement;
+  /** Words a diagnostic; English unless the caller translates. */
+  describe?: (diagnostic: Diagnostic) => string;
 }) => {
   const output = CMP.parse(out);
   const compare = CMP.parse(cmp);
@@ -22,7 +28,7 @@ export const DiffTable = ({
     return (
       <details>
         <summary>Failed to parse output</summary>
-        <pre>{display(Err(output))}</pre>
+        <pre>{describe(Err(output))}</pre>
         <code>
           <pre>{out}</pre>
         </code>
@@ -35,7 +41,7 @@ export const DiffTable = ({
       <details>
         <summary>Failed to parse compare</summary>
         <code>
-          <pre>{display(Err(compare))}</pre>
+          <pre>{describe(Err(compare))}</pre>
           <pre>{cmp}</pre>
         </code>
       </details>

@@ -1,6 +1,9 @@
 import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
-import type { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
+import {
+  type Diagnostic,
+  diagnostic,
+} from "@nand2tetris/simulator/languages/base.js";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ErrorPanel } from "./editor";
@@ -28,7 +31,12 @@ const fixture = vi.hoisted(() => {
 
 vi.mock("../App.context", async () => {
   const { createContext } = await import("react");
-  return { AppContext: createContext({ theme: "light" }) };
+  return {
+    AppContext: createContext({
+      theme: "light",
+      monaco: { canUse: true, wants: true },
+    }),
+  };
 });
 vi.mock("./monacoSetup", () => ({}));
 vi.mock("monaco-editor", () => ({ editor: { EndOfLineSequence: { LF: 0 } } }));
@@ -46,15 +54,17 @@ vi.mock("@monaco-editor/react", async () => {
   };
 });
 
-const first: Diagnostic = {
-  message: "First error",
-  span: { start: 0, end: 1, line: 1 },
-};
-const second: Diagnostic = {
-  message: "Second error",
-  span: { start: 2, end: 3, line: 3 },
-};
-const unlocated: Diagnostic = { message: "No location" };
+const first = diagnostic(
+  "chip.notFound",
+  { name: "First" },
+  { start: 0, end: 1, line: 1 },
+);
+const second = diagnostic(
+  "chip.notFound",
+  { name: "Second" },
+  { start: 2, end: 3, line: 3 },
+);
+const unlocated = diagnostic("chip.wrongName", {});
 const multiple = [first, unlocated, second];
 
 afterEach(cleanup);
@@ -85,7 +95,7 @@ describe("parser diagnostic markers", () => {
         "hdl",
         [
           {
-            message: "First error",
+            message: "Line 1: Undefined chip name: First",
             startLineNumber: 1,
             startColumn: 1,
             endLineNumber: 2,
@@ -93,7 +103,7 @@ describe("parser diagnostic markers", () => {
             severity: 8,
           },
           {
-            message: "Second error",
+            message: "Line 3: Undefined chip name: Second",
             startLineNumber: 3,
             startColumn: 1,
             endLineNumber: 4,
@@ -141,14 +151,14 @@ describe("parser diagnostic panel", () => {
   it("shows all messages, including errors without spans", () => {
     const view = render(panel(multiple));
     expect(view.container.querySelector("code")?.textContent).toBe(
-      "First error\nNo location\nSecond error",
+      "Line 1: Undefined chip name: First\nWrong chip name\nLine 3: Undefined chip name: Second",
     );
   });
 
   it("supports a single error and clears on valid input", () => {
     const view = render(panel([first]));
     expect(view.container.querySelector("code")?.textContent).toBe(
-      "First error",
+      "Line 1: Undefined chip name: First",
     );
     view.rerender(panel());
     expect(view.container.querySelector("details")).toBeNull();

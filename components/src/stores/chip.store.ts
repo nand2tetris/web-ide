@@ -26,7 +26,8 @@ import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext, type StatusInput } from "./base.context.js";
+import { failureStatus } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -93,6 +94,7 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
+  /** The diagnostics of the file in the editor, which marks each of them. */
   diagnostics: readonly Diagnostic[];
   visualizationParameters: Set<string>;
 }
@@ -123,7 +125,7 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  setStatus: Action<StatusInput>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
@@ -378,10 +380,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const diagnostics = [Err(maybeChip)];
-        setStatus({
-          message: Err(maybeChip).message,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(...diagnostics));
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -438,10 +437,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test ${Err(tst).message}`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(tst)));
         invalid = true;
         return false;
       }
@@ -459,10 +455,7 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(maybeTest)));
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -542,10 +535,7 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        setStatus({
-          message: `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(nextChip)));
         return;
       }
       this.replaceChip(Ok(nextChip));

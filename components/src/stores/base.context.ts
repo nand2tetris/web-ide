@@ -2,6 +2,7 @@ import {
   FileSystem,
   LocalStorageFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
+import type { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
 import { Action, AsyncAction } from "@nand2tetris/simulator/types.js";
 import {
   createContext,
@@ -24,14 +25,35 @@ import {
 
 export type StatusSeverity = "SUCCESS" | "WARNING" | "ERROR" | "INFO";
 
+/** A status that is a sentence. */
+export interface TextStatus {
+  message: string;
+  severity: StatusSeverity;
+}
+
+/** A status that is data about diagnostics, which the UI words. */
+export interface DiagnosticStatus {
+  severity: StatusSeverity;
+  diagnostics: readonly Diagnostic[];
+}
+
+/** What the status line shows. */
+export type Status = TextStatus | DiagnosticStatus;
+
+/** What a store can report as a status: a sentence, or a status object. */
+export type StatusInput =
+  | string
+  | { message: string; severity?: StatusSeverity }
+  | DiagnosticStatus;
+
 export interface BaseContext {
   fs: FileSystem;
   localFsRoot?: string;
   canUpgradeFs: boolean;
   upgradeFs: (force?: boolean, createFiles?: boolean) => Promise<void>;
   closeFs: () => void;
-  status: { message: string; severity: StatusSeverity };
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>;
+  status: Status;
+  setStatus: Action<StatusInput>;
   storage: Record<string, string>;
   permissionPrompt: ReturnType<typeof useDialog>;
   requestPermission: AsyncAction<void>;
@@ -135,24 +157,23 @@ export function useBaseContext(): BaseContext {
     setFs(new FileSystem(localAdapter));
   }, [root]);
 
-  const [status, setStatusInternal] = useState<{
-    message: string;
-    severity: StatusSeverity;
-  }>({ message: "", severity: "INFO" });
+  const [status, setStatusInternal] = useState<Status>({
+    message: "",
+    severity: "INFO",
+  });
 
-  const setStatus = useCallback(
-    (input: string | { message: string; severity?: StatusSeverity }) => {
-      if (typeof input === "string") {
-        setStatusInternal({ message: input, severity: "INFO" });
-      } else {
-        setStatusInternal({
-          message: input.message,
-          severity: input.severity || "INFO",
-        });
-      }
-    },
-    [],
-  );
+  const setStatus = useCallback((input: StatusInput) => {
+    if (typeof input === "string") {
+      setStatusInternal({ message: input, severity: "INFO" });
+    } else if ("diagnostics" in input) {
+      setStatusInternal(input);
+    } else {
+      setStatusInternal({
+        message: input.message,
+        severity: input.severity || "INFO",
+      });
+    }
+  }, []);
 
   return {
     fs,

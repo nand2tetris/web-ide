@@ -2,6 +2,7 @@ import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { Result } from "@davidsouther/jiffies/result.ts";
 import { CPU } from "../cpu/cpu.js";
 import { ROM } from "../cpu/memory.js";
+import type { Diagnostic } from "../languages/base.js";
 import { Tst } from "../languages/tst.js";
 import { Action, AsyncAction } from "../types.js";
 import { fill, isTstCommand } from "./builder.js";
@@ -25,7 +26,7 @@ export class CPUTest extends Test<CPUTestInstruction> {
       compareTo?: Action<string>;
       requireLoad?: boolean;
     } = {},
-  ): Result<CPUTest, Error> {
+  ): Result<CPUTest, Diagnostic> {
     const test = new CPUTest(options);
 
     test.hasLoad = tst.lines.some(

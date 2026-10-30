@@ -18,8 +18,9 @@ import { compare } from "../compare.js";
 import { loadTestFiles } from "../file_utils.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext, type StatusInput } from "./base.context.js";
 import { ImmMemory } from "./imm_memory.js";
+import { failureStatus } from "./status.js";
 
 function makeTst() {
   return `repeat {
@@ -90,7 +91,7 @@ export type CpuStoreDispatch = Dispatch<{
 
 export function makeCpuStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  setStatus: Action<StatusInput>,
   storage: Record<string, string>,
   dispatch: MutableRefObject<CpuStoreDispatch>,
 ) {
@@ -247,10 +248,7 @@ export function makeCpuStore(
       const tst = TST.parse(file);
 
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test - ${Err(tst).message}`,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(tst)));
         valid = false;
         dispatch.current({ action: "update" });
         return false;
@@ -291,10 +289,7 @@ export function makeCpuStore(
       });
 
       if (isErr(maybeTest)) {
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(failureStatus(Err(maybeTest)));
         return false;
       } else {
         test = Ok(maybeTest);

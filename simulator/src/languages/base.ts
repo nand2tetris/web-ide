@@ -513,26 +513,48 @@ function failureKey(failure: RecoveredFailure): string {
 }
 
 /**
+ * A language's rewrite of the expectations of a syntax error. It sees every
+ * failure, including the fluffy ones Ohm leaves out of its own message, and
+ * `makeParser` applies it to the strict failure and to each recovered failure
+ * so both report the same expectations.
+ */
+export type SyntaxExpected = (
+  expected: readonly string[],
+  failures: readonly Failure[],
+) => readonly string[];
+
+const ohmExpected: SyntaxExpected = (expected) => expected;
+
+/**
  * A syntax failure's diagnostic, tagged with the stage its failures show. It
  * expects what the failures expected, other than fluffy ones, which Ohm omits
  * from its own message.
  */
-function syntaxDiagnostic(at: Span, failures: readonly Failure[]): Diagnostic {
+function syntaxDiagnostic(
+  at: Span,
+  failures: readonly Failure[],
+  expectedOf: SyntaxExpected = ohmExpected,
+): Diagnostic {
   const shown = failures
     .filter((failure) => !failure.isFluffy())
     .map((failure) => failure.toString());
   return diagnostic(
     "syntax.expected",
-    { expected: shown },
+    { expected: expectedOf(shown, failures) },
     at,
     syntaxStageOf(failures),
   );
 }
 
-function diagnosticOf(source: string, failure: RecoveredFailure): Diagnostic {
+function diagnosticOf(
+  source: string,
+  failure: RecoveredFailure,
+  expectedOf: SyntaxExpected = ohmExpected,
+): Diagnostic {
   return syntaxDiagnostic(
     spanAt(source, failure.position),
     failure.getRightmostFailures(),
+    expectedOf,
   );
 }
 
@@ -627,12 +649,15 @@ function thrownDiagnostic(e: unknown): Diagnostic {
 /**
  * A parser reading `attribute` from the semantics of a successful match. A
  * failed match or a thrown semantic error gives `empty()` as the tree.
+ * `expectedOf` rewrites the expectations of each syntax error; by default
+ * Ohm's are kept.
  */
 export function makeParser<T>(
   grammar: Grammar,
   semantics: Semantics,
   empty: () => T,
   attribute = "root",
+  expectedOf: SyntaxExpected = ohmExpected,
 ): Parser<T> {
   return {
     empty,
@@ -651,11 +676,12 @@ export function makeParser<T>(
             })
           : grammar.match(source);
         const failures = recover ? match.getRecoveredFailures() : [];
-        diagnostics = failures.map((f) => diagnosticOf(source, f));
+        diagnostics = failures.map((f) => diagnosticOf(source, f, expectedOf));
         if (match.failed()) {
           const first = syntaxDiagnostic(
             span(match.getInterval()),
             match.getRightmostFailures(),
+            expectedOf,
           );
           // The strict parse's first error stays first; the final failure ends the list.
           return nullRootOf(empty(), [first, ...diagnostics.slice(1)]);

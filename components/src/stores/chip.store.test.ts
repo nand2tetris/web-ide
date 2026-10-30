@@ -4,11 +4,17 @@ import {
 } from "@davidsouther/jiffies/fs.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
 import { describeEnglish } from "@nand2tetris/simulator/languages/base.js";
+import { act, renderHook } from "@testing-library/react";
 import { produce } from "immer";
-import { MutableRefObject } from "react";
+import { createElement, MutableRefObject, ReactNode, useContext } from "react";
 import { cleanState } from "../clean_state.js";
 import { ImmPin } from "../pinout.js";
-import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
+import { BaseContext } from "./base.context.js";
+import {
+  ChipStoreDispatch,
+  makeChipStore,
+  useChipPageStore,
+} from "./chip.store.js";
 
 function testChipStore(
   fs: Record<string, string> = {
@@ -158,6 +164,33 @@ describe("HDL syntax and semantic diagnostics", () => {
     expect(store.state.controls.diagnostics).toMatchObject([
       { span: { line: 5 } },
     ]);
+  });
+});
+
+describe("Attempt Recovery setting in the chip page store", () => {
+  const source = chipWith(
+    "Top",
+    "  Nand(a=a b=a, out=x);", // line 5: syntax error
+    "  Nope(a=x, out=out);", // line 6: semantic error
+  );
+
+  it("reaches the next compile of a store that outlives the setting's change", async () => {
+    let attemptRecovery = true;
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(
+        BaseContext.Provider,
+        { value: { ...useContext(BaseContext), attemptRecovery } },
+        children,
+      );
+    const view = renderHook(() => useChipPageStore(), { wrapper });
+    await act(() => view.result.current.actions.compileChip(source));
+    expect(view.result.current.state.controls.diagnostics).toHaveLength(2);
+
+    attemptRecovery = false;
+    view.rerender();
+    await act(() => view.result.current.actions.compileChip(source));
+
+    expect(view.result.current.state.controls.diagnostics).toHaveLength(1);
   });
 });
 

@@ -140,7 +140,7 @@ describe("describeDiagnostic in English", () => {
 });
 
 describe("describeStatus in English", () => {
-  it("lists each diagnostic in order", () => {
+  it("leads with the file and its count, then lists each diagnostic", () => {
     const own = diagnostic(DiagnosticCode.Chip.WRONG_NAME, {});
     const other = diagnostic(
       DiagnosticCode.Chip.NOT_FOUND,
@@ -148,7 +148,27 @@ describe("describeStatus in English", () => {
       span,
     );
     expect(
-      describeStatus({ severity: "ERROR", diagnostics: [own, other] }),
-    ).toBe("Wrong chip name. Line 4: Undefined chip name: Foo");
+      describeStatus({
+        severity: "ERROR",
+        heading: { file: "HDL code", count: 3 },
+        diagnostics: [{ diagnostic: own }, { diagnostic: other }],
+      }),
+    ).toBe(
+      "HDL code: 3 syntax errors. Wrong chip name. Line 4: Undefined chip name: Foo",
+    );
+  });
+
+  it("counts a single syntax error and omits an absent heading", () => {
+    const only = diagnostic(DiagnosticCode.Chip.WRONG_NAME, {});
+    expect(
+      describeStatus({
+        severity: "ERROR",
+        heading: { file: "ASM code", count: 1 },
+        diagnostics: [],
+      }),
+    ).toBe("ASM code: 1 syntax error");
+    expect(
+      describeStatus({ severity: "INFO", diagnostics: [{ diagnostic: only }] }),
+    ).toBe("Wrong chip name");
   });
 });

@@ -1,6 +1,7 @@
 import { isErr, unwrap } from "@davidsouther/jiffies/result.ts";
 import { expect, test } from "vitest";
 import { compile } from "../jack/compiler.js";
+import { validOf } from "../languages/base.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "../vm/vm.js";
 
@@ -40,7 +41,10 @@ test("OutputTest Main.jack runs to completion without a Sys error", () => {
   const compiled = compile({ Main: MAIN });
   const files = Object.entries(compiled).map(([name, vm]) => {
     if (typeof vm !== "string") throw new Error(JSON.stringify(vm));
-    return { name, instructions: unwrap(VM.parse(vm)).instructions };
+    return {
+      name,
+      instructions: unwrap(validOf(VM.parse(vm))).instructions,
+    };
   });
   const built = Vm.buildFromFiles(files);
   expect(isErr(built)).toBe(false);

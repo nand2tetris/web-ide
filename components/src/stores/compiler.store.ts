@@ -94,7 +94,7 @@ export function makeCompilerStore(
         } else {
           state.compiled[name] = {
             valid: false,
-            diagnostics: [compiled],
+            diagnostics: compiled,
           };
         }
       }

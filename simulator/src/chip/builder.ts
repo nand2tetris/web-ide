@@ -1,9 +1,10 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { semanticError } from "../languages/base.js";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { isValid, semanticError, Valid } from "../languages/base.js";
 import {
   Diagnostic,
   DiagnosticCode,
+  Diagnostics,
   diagnostic,
   located,
   Span,
@@ -29,12 +30,13 @@ export async function parse(
   dir?: string,
   name?: string,
   fs?: FileSystem,
-): Promise<Result<Chip, Diagnostic>> {
-  const parsed = HDL.parse(code.toString());
-  if (isErr(parsed)) {
-    return parsed;
+): Promise<Result<Chip, Diagnostics>> {
+  const outcome = HDL.parse(code.toString());
+  if (!isValid(outcome)) {
+    return Err(outcome.diagnostics);
   }
-  return build({ parts: Ok(parsed), dir, name, fs });
+  const chip = await build({ parts: outcome.ast, dir, name, fs });
+  return isErr(chip) ? Err([Err(chip)]) : chip;
 }
 
 export async function loadChip(
@@ -47,11 +49,11 @@ export async function loadChip(
   }
   try {
     const file = await fs.readFile(`${dir}/${name}.hdl`);
-    const maybeParsedHDL = HDL.parse(file);
-    if (isErr(maybeParsedHDL)) {
-      return maybeParsedHDL;
+    const outcome = HDL.parse(file);
+    if (!isValid(outcome)) {
+      return Err(outcome.diagnostics[0]);
     }
-    return await build({ parts: Ok(maybeParsedHDL), dir, name, fs });
+    return await build({ parts: outcome.ast, dir, name, fs });
   } catch (_e) {
     return Err(
       diagnostic(DiagnosticCode.Chip.NOT_LOADED, { file: `${name}.hdl` }),
@@ -179,7 +181,7 @@ class ChipBuilder {
   private wires: WireData[] = [];
 
   static build(options: {
-    parts: HdlParse;
+    parts: Valid<HdlParse>;
     fs?: FileSystem;
     dir?: string;
     name?: string;
@@ -193,7 +195,7 @@ class ChipBuilder {
     dir,
     name,
   }: {
-    parts: HdlParse;
+    parts: Valid<HdlParse>;
     fs?: FileSystem;
     dir?: string;
     name?: string;

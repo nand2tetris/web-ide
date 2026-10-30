@@ -3,6 +3,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
+import { DiagnosticCode } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
 import { cleanState } from "../clean_state.js";
@@ -134,6 +135,31 @@ describe("ChipStore", () => {
     }, beforeEach);
 
     it.todo("compiles chips");
+
+    it("counts the syntax errors of HDL code that does not compile", async () => {
+      await state.store.actions.compileChip("CHIP Not {", "projects/01", "Not");
+      expect(state.store.setStatus).toHaveBeenLastCalledWith({
+        severity: "ERROR",
+        heading: { file: "HDL code", count: 1 },
+        diagnostics: [],
+      });
+    });
+
+    it("lists the syntax errors of a test script that does not parse", () => {
+      state.store.actions.compileTest("set in", "projects/01");
+      expect(state.store.setStatus).toHaveBeenLastCalledWith({
+        severity: "ERROR",
+        heading: { file: "Test script", count: 1 },
+        diagnostics: [
+          {
+            diagnostic: expect.objectContaining({
+              code: DiagnosticCode.Syntax.EXPECTED,
+              span: expect.objectContaining({ line: 1 }),
+            }),
+          },
+        ],
+      });
+    });
 
     it("steps tests", async () => {
       const bits = (pins: ImmPin[]) =>

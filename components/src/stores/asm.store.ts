@@ -16,6 +16,7 @@ import {
   isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
+import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import {
   type Diagnostic,
   Span,
@@ -219,7 +220,7 @@ export function makeAsmStore(
 
   /** Shows the diagnostics of ASM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    status.setFailureStatus(diagnostics[0]);
+    status.setFailureStatus("ASM code", diagnostics);
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     compiled = false;
   };
@@ -340,9 +341,9 @@ export function makeAsmStore(
 
     compileAsm(asm: string) {
       this.reset();
-      const parseResult = ASM.parse(asm);
+      const parseResult = validOf(ASM.parse(asm));
       if (isErr(parseResult)) {
-        compileFailed([Err(parseResult)]);
+        compileFailed(Err(parseResult));
         return;
       }
 

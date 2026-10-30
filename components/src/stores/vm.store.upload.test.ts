@@ -2,7 +2,9 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
+import { DiagnosticCode } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { expect, test, vi } from "vitest";
+import type { Status } from "./status.js";
 import { statusActions } from "./status.js";
 import { makeVmStore, VmStoreDispatch } from "./vm.store.js";
 
@@ -14,14 +16,41 @@ const VM_FILES = [
 
 function vmHarness(fs = new FileSystem(new ObjectFileSystemAdapter({}))) {
   const statuses: string[] = [];
+  const failures: Status[] = [];
   const { actions } = makeVmStore(
     fs,
-    statusActions((s) => statuses.push(s.message ?? "")),
+    statusActions((s) => {
+      if (typeof s === "object" && "diagnostics" in s) {
+        failures.push(s);
+      } else {
+        statuses.push(s.message ?? "");
+      }
+    }),
     {},
     { current: vi.fn() as unknown as VmStoreDispatch },
   );
-  return { actions, statuses };
+  return { actions, statuses, failures };
 }
+
+test("VM code that does not parse reports its syntax error count", () => {
+  const { actions, statuses, failures } = vmHarness();
+  expect(actions.loadVm([{ name: "Main", content: "push nowhere 1\n" }])).toBe(
+    false,
+  );
+  expect(statuses).toEqual([]);
+  expect(failures).toMatchObject([
+    { heading: { file: "VM code", count: 1 }, diagnostics: [] },
+  ]);
+});
+
+test("a test script that does not parse lists its syntax errors", () => {
+  const { actions, failures } = vmHarness();
+  expect(actions.loadTest("/proj/T.tst", "set in")).toBe(false);
+  expect(failures.at(-1)).toMatchObject({
+    heading: { file: "Test script", count: 1 },
+    diagnostics: [{ diagnostic: { code: DiagnosticCode.Syntax.EXPECTED } }],
+  });
+});
 
 test("a bare `load,` keeps the loaded VM files", async () => {
   const { actions, statuses } = vmHarness();

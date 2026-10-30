@@ -4,10 +4,12 @@ import {
 } from "@davidsouther/jiffies/fs.ts";
 import * as mult from "@nand2tetris/projects/project_04/01_mult.js";
 import { ROM } from "@nand2tetris/simulator/cpu/memory.js";
+import { DiagnosticCode } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { loadAsm } from "@nand2tetris/simulator/loader.js";
 import { produce } from "immer";
 import { expect, test, vi } from "vitest";
 import { CpuPageState, CpuStoreDispatch, makeCpuStore } from "./cpu.store.js";
+import type { Status } from "./status.js";
 import { statusActions } from "./status.js";
 
 // #622: a .tst uploaded from disk reaches the store as a bare basename and is
@@ -33,6 +35,27 @@ async function runTest(tstPath: string) {
   expect(actions.compileTest(TST, "", tstPath)).toBe(true);
   return actions.testStep().then(() => statuses);
 }
+
+test("a test script that does not parse lists its syntax errors", () => {
+  const failures: Status[] = [];
+  const { actions } = makeCpuStore(
+    new FileSystem(new ObjectFileSystemAdapter({})),
+    statusActions((s) => {
+      if (typeof s === "object" && "diagnostics" in s) failures.push(s);
+    }),
+    {},
+    { current: vi.fn() as unknown as CpuStoreDispatch },
+  );
+  expect(actions.compileTest("set A", "", "/proj/T.tst")).toBe(false);
+  expect(failures.at(-1)).toMatchObject({
+    heading: { file: "Test script", count: 1 },
+    diagnostics: [
+      {
+        diagnostic: { code: DiagnosticCode.Syntax.EXPECTED, span: { line: 1 } },
+      },
+    ],
+  });
+});
 
 test("a bare test path keeps the loaded ROM", async () => {
   const statuses = await runTest("Mult.tst");

@@ -1,10 +1,23 @@
-const jack = `Jack <: Base {
+const jack = `
+Jack <: Base {
     Root := Class
 
     whitespace = (lineComment | comment | space)
 
     class = "class" whitespace+
-    Class = class jackIdentifier OpenBrace ClassVarDec* SubroutineDec* ! ClassClose
+    Class = ClassStart ! &SubroutinesStart SubroutineDec* ! ClassClose  -- body
+          | &class ~MembersAhead ClassOpen ClassVarDec* ! UnclosedEnd  -- unclosed
+    ClassStart = ClassOpen ClassVarDec*
+    ClassOpen = ClassHead ! OpenBrace
+    // Class_unclosed applies only to a file with no subroutine keyword and no "}"
+    // token, where Class_body cannot recover, so the two never compete. Its
+    // guard follows the class keyword, where no strict failure can be.
+    MembersAhead = (~SubroutinesStart (recoveryToken | any))* SubroutinesStart
+    // Repeats the lookahead of Class_body so a strict failure lists its
+    // expected text in the same order as before this alternative existed.
+    UnclosedEnd = &SubroutinesStart ClassClose
+    ClassHead = class jackIdentifier
+    SubroutinesStart = subroutineType | CloseBrace
     ClassClose = CloseBrace end
     recoveryStop = subroutineType
     recoveryToken = lineComment | comment | stringConstant | jackIdentifier | integerConstant
@@ -87,5 +100,4 @@ const jack = `Jack <: Base {
 
     jackIdentifier = letter (alnum | underscore)*
 }`;
-
 export default jack;

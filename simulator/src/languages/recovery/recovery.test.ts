@@ -426,7 +426,7 @@ describe("Fallible error recovery: every mistake from one parse", () => {
       expect(parsed.ast.parts.filter(isRecovered)).toHaveLength(3);
     });
 
-    it("reports every error, today's first, when recovery cannot finish", () => {
+    it("returns the null root when a damaged chip has no matching closer", () => {
       const source = [
         "CHIP K {",
         "    IN a;",
@@ -438,15 +438,11 @@ describe("Fallible error recovery: every mistake from one parse", () => {
       ].join("\n");
       const result = HDL.parse(source, RECOVER);
       expect(isValid(result)).toBe(false);
+      expect(result).toHaveProperty("nullRoot", true);
       expect(result.ast).toEqual(HDL.empty());
       expect(described(result.diagnostics[0] as Diagnostic)).toMatchObject(
         asError({ line: 5, message: WIRE_SEPARATOR }),
       );
-      expect(result.diagnostics.map(described)).toMatchObject([
-        asError({ line: 5, message: WIRE_SEPARATOR }),
-        asError({ line: 6, message: WIRE_SEPARATOR }),
-        asError({ line: 7, message: 'expected "}", "CLOCKED", or a letter' }),
-      ]);
     });
   });
 

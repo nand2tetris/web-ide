@@ -1,7 +1,6 @@
 /**
- * Recovery from unbalanced blocks in Jack: a missing `}` is reported where the
- * parser finds it missing and the structure after it stays intact, and a `;`
- * or `}` inside a string literal never ends a skipped region.
+ * Unbalanced Jack blocks fail when their join cannot match. A `;` or `}`
+ * inside a string literal never ends a skipped region.
  */
 import { describe, expect, it } from "vitest";
 import {

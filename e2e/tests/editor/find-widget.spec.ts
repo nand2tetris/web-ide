@@ -11,7 +11,10 @@ import { expect, type Page, test } from "@playwright/test";
 async function openFindWidget(page: Page) {
   await page.goto("chip");
   await page.locator(".monaco-editor").first().click();
-  await page.keyboard.press("ControlOrMeta+f");
+  const modifier = await page.evaluate(() =>
+    navigator.userAgent.includes("Macintosh") ? "Meta" : "Control",
+  );
+  await page.keyboard.press(`${modifier}+f`);
   const widget = page.locator(".monaco-editor .find-widget.visible");
   await expect(widget).toBeVisible();
   return widget;

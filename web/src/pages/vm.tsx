@@ -50,7 +50,7 @@ const VM = () => {
   const { filePicker } = useContext(AppContext);
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.vm;
-  const { setStatus, fs } = useContext(BaseContext);
+  const { setStatus, clearStatus, fs } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.files.tst);
   const [out, setOut] = useStateInitializer(state.files.out);
@@ -70,15 +70,16 @@ const VM = () => {
 
   useEffect(() => {
     if (state.controls.exitCode !== undefined) {
-      setStatus(
-        state.controls.exitCode == 0
-          ? "Program halted"
-          : `Program exited with error code ${state.controls.exitCode}${
-              isSysError(state.controls.exitCode)
-                ? `: ${ERROR_MESSAGES[state.controls.exitCode]}`
-                : ""
-            }`,
-      );
+      setStatus({
+        message:
+          state.controls.exitCode == 0
+            ? "Program halted"
+            : `Program exited with error code ${state.controls.exitCode}${
+                isSysError(state.controls.exitCode)
+                  ? `: ${ERROR_MESSAGES[state.controls.exitCode]}`
+                  : ""
+              }`,
+      });
     }
   }, [state.controls.exitCode]);
 
@@ -96,7 +97,7 @@ const VM = () => {
       }
 
       override reset() {
-        setStatus("Reset");
+        setStatus({ message: "Reset" });
         actions.reset();
       }
 
@@ -116,7 +117,7 @@ const VM = () => {
       }
 
       override reset() {
-        setStatus("Reset");
+        setStatus({ message: "Reset" });
         actions.reset();
       }
 
@@ -178,7 +179,7 @@ const VM = () => {
 
     actions.loadVm(files);
     actions.reset();
-    setStatus("");
+    clearStatus();
   };
 
   const loadTest = async (path: string) => {

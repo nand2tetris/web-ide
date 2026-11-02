@@ -13,11 +13,12 @@ import * as simCompiler from "@nand2tetris/simulator/jack/compiler.js";
 import { produce } from "immer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CompilerStoreDispatch, makeCompilerStore } from "./compiler.store.js";
+import { statusActions } from "./status.js";
 
 function mk() {
   const dispatch = { current: vi.fn() as unknown as CompilerStoreDispatch };
   const { initialState, reducers, actions } = makeCompilerStore(
-    vi.fn(),
+    statusActions(vi.fn()),
     dispatch,
   );
   const store = { state: initialState, reducers, actions, dispatch };

@@ -4,7 +4,7 @@ export const cmp = `|in |out|
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Not.hdl
+// File name: Not.hdl
 /**
  * Not gate:
  * if (in) out = 0, else out = 1

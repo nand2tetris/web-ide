@@ -6,7 +6,7 @@ export const cmp = `| a | b |out|
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Or.hdl
+// File name: Or.hdl
 /**
  * Or gate:
  * if (a or b) out = 1, else out = 0 

@@ -8,7 +8,7 @@ export const cmp = `|        a         |        b         |       out        |
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Or16.hdl
+// File name: Or16.hdl
 /**
  * 16-bit Or gate:
  * for i = 0, ..., 15:

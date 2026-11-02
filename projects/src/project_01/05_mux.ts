@@ -10,7 +10,7 @@ export const cmp = `| a | b |sel|out|
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Mux.hdl
+// File name: Mux.hdl
 /** 
  * Multiplexor:
  * if (sel = 0) out = a, else out = b

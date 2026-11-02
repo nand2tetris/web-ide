@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/And.hdl
+// File name: And.hdl
 /**
  * And gate:
  * if (a and b) out = 1, else out = 0 

@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/Inc16.hdl
+// File name: Inc16.hdl
 /**
  * 16-bit incrementer:
  * out = in + 1

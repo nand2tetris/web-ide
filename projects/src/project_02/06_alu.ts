@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/ALU.hdl
+// File name: ALU.hdl
 /**
  * ALU (Arithmetic Logic Unit):
  * Computes out = one of the following functions:
@@ -30,11 +30,11 @@ CHIP ALU {
     IN  
         x[16], y[16],  // 16-bit inputs        
         zx, // zero the x input?
-        nx, // negate the x input?
+        nx, // flip the bits of the x input?
         zy, // zero the y input?
-        ny, // negate the y input?
+        ny, // flip the bits of the y input?
         f,  // compute (out = x + y) or (out = x & y)?
-        no; // negate the out output?
+        no; // flip the bits of the out output?
     OUT 
         out[16], // 16-bit output
         zr,      // if (out == 0) equals 1, else 0

@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/a/RAM64.hdl
+// File name: RAM64.hdl
 /**
  * Memory of sixty four 16-bit registers.
  * If load is asserted, the value of the register selected by

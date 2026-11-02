@@ -1,13 +1,15 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/a/PC.hdl
+// File name: PC.hdl
 /**
  * A 16-bit counter.
  * if      reset(t): out(t+1) = 0
  * else if load(t):  out(t+1) = in(t)
  * else if inc(t):   out(t+1) = out(t) + 1
  * else              out(t+1) = out(t)
+ * Usage advice: When asserting one of the three control bits,
+ * set the other two bits to 0
  */
 CHIP PC {
     IN in[16], reset, load, inc;

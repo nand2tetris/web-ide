@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/01/Not16.hdl
+// File name: Not16.hdl
 /**
  * 16-bit Not gate:
  * for i = 0, ..., 15:

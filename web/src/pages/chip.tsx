@@ -12,7 +12,6 @@ import {
 
 import "./chip.scss";
 
-import { isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import { makeVisualizationsWithId } from "@nand2tetris/components/chips/visualizations.js";
 import { Clockface } from "@nand2tetris/components/clockface.js";
 import {
@@ -26,6 +25,7 @@ import { hasBuiltinChip } from "@nand2tetris/simulator/chip/builtins/index.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { Timer } from "@nand2tetris/simulator/timer.js";
 import { AppContext } from "../App.context";
+import { customChipOf } from "../languages/customChips";
 import { registerCustomChip, resetCustomChips } from "../languages/hdl";
 import { reloadHdlLanguage } from "../languages/loader";
 import { PageContext } from "../Page.context";
@@ -42,7 +42,8 @@ interface CompileInput {
 }
 
 export const Chip = () => {
-  const { setStatus, localFsRoot } = useContext(BaseContext);
+  const { fs, setStatus, localFsRoot, attemptRecovery } =
+    useContext(BaseContext);
   const { stores, setTool } = useContext(PageContext);
   const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
@@ -79,26 +80,12 @@ export const Chip = () => {
           continue;
         }
 
-        const content = await file.content;
-        const parsed = HDL.parse(content);
-        if (isErr(parsed)) {
+        const custom = await customChipOf(await file.content, state.dir, fs);
+        if (custom === undefined || hasBuiltinChip(custom.name)) {
           continue;
         }
 
-        const hdl = Ok(parsed);
-        const chipName = hdl.name.value;
-
-        if (hasBuiltinChip(chipName)) {
-          continue;
-        }
-
-        const ins = hdl.ins.map(({ pin }: { pin: string }) => pin.toString());
-        const outs = hdl.outs.map(({ pin }: { pin: string }) => pin.toString());
-
-        const pins = [...ins, ...outs];
-        const signature = `${chipName}(${pins.map((p) => `${p}= `).join(", ")});`;
-
-        if (registerCustomChip(chipName, signature)) {
+        if (registerCustomChip(custom.name, custom.signature)) {
           changed = true;
         }
       }
@@ -153,6 +140,15 @@ export const Chip = () => {
     compile.current({ tst, cmp, tstDir });
     actions.reset();
   }, [tst, cmp, tstDir]);
+
+  // Turning Attempt Recovery on or off changes the diagnostics of the open chip.
+  const recovery = useRef(attemptRecovery);
+  useEffect(() => {
+    if (recovery.current !== attemptRecovery) {
+      recovery.current = attemptRecovery;
+      compile.current();
+    }
+  }, [attemptRecovery]);
 
   const runner = useRef<Timer | undefined>(undefined);
   useEffect(() => {
@@ -311,7 +307,8 @@ export const Chip = () => {
       <Editor
         className="flex-1"
         value={hdl}
-        error={state.controls.error}
+        diagnostics={state.controls.diagnostics}
+        dependencyDiagnostics={state.controls.dependencyDiagnostics}
         onChange={async (source) => {
           setHdl(source);
           if (!state.controls.usingBuiltin) {

@@ -6,6 +6,7 @@ import { unwrap } from "@davidsouther/jiffies/result.ts";
 import { VM_PROJECTS } from "@nand2tetris/projects/base.js";
 import { resetFiles } from "@nand2tetris/projects/full.js";
 import { describe, expect, test } from "vitest";
+import { validOf } from "../languages/base.js";
 import { TST } from "../languages/tst.js";
 import { VMTest } from "./vmtst.js";
 
@@ -14,7 +15,7 @@ async function prepare(project: "07" | "08", name: string): Promise<VMTest> {
   await resetFiles(fs);
   fs.cd(`/projects/${project}/${name}`);
   const vm_tst = await fs.readFile(name + "VME.tst");
-  const tst = unwrap(TST.parse(vm_tst));
+  const tst = unwrap(validOf(TST.parse(vm_tst)));
   const test = unwrap(VMTest.from(tst)).using(fs);
   await test.load();
   return test;

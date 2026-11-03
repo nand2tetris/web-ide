@@ -1,0 +1,278 @@
+/**
+ * Recovery from unbalanced blocks in Jack: a missing `}` is reported where the
+ * parser finds it missing and the structure after it stays intact, and a `;`
+ * or `}` inside a string literal never ends a skipped region.
+ */
+import { describe, expect, it } from "vitest";
+import {
+  type Diagnostic,
+  isRecovered,
+  isValid,
+  type Outcome,
+} from "../base.js";
+import { type Class, JACK } from "../jack.js";
+
+const lines = (...l: string[]) => l.join("\n");
+
+const RECOVER = { attemptRecovery: true };
+
+const MISSING_CLASS_CLOSE = lines(
+  "class Main {",
+  "  function void a() {",
+  "    return;",
+  "  }",
+);
+
+const MISSING_SUBROUTINE_CLOSE = lines(
+  "class Main {",
+  "  function void a() {",
+  "    let x = 1;",
+  "  function void b() {",
+  "    retrn;",
+  "  }",
+  "}",
+);
+
+const MISSING_IF_CLOSE = lines(
+  "class Main {",
+  "  function void a() {",
+  "    if (x) {",
+  "      let y = 1;",
+  "    let z = 2;",
+  "    return;",
+  "  }",
+  "  function void b() {",
+  "    retrn;",
+  "  }",
+  "}",
+);
+
+const MISSING_WHILE_CLOSE = lines(
+  "class Main {",
+  "  function void a() {",
+  "    while (x) {",
+  "      let y = 1;",
+  "    return;",
+  "  }",
+  "  function void b() {",
+  "    return;",
+  "  }",
+  "}",
+);
+
+const SEMI_IN_STRING = lines(
+  "class Main {",
+  "  function void a() {",
+  '    do Output.printString("a;b" x);',
+  "    let y = 1;",
+  "    retrn;",
+  "  }",
+  "}",
+);
+
+const BRACE_IN_STRING = lines(
+  "class Main {",
+  "  function void a() {",
+  '    do Output.printString("a}b" x);',
+  "    let y = 1;",
+  "    retrn;",
+  "  }",
+  "}",
+);
+
+const UNTERMINATED_STRING = lines(
+  "class Main {",
+  "  function void a() {",
+  '    do Output.printString("abc);',
+  "    let y = 1;",
+  "    retrn;",
+  "    return;",
+  "  }",
+  "}",
+);
+
+/** A call whose failure comes before a string argument holding `text`. */
+const stringAfterFailure = (text: string) =>
+  lines(
+    "class Main {",
+    "  function void a() {",
+    `    do f(x y, "${text}");`,
+    "    let y = 1;",
+    "    retrn;",
+    "  }",
+    "  function void b() {",
+    "    retrn;",
+    "  }",
+    "}",
+  );
+
+const BRACE_IN_STRING_AFTER_MISSING_CLOSE = lines(
+  "class Main {",
+  "  function void a() {",
+  "    if (x) {",
+  "      let y = 1;",
+  '      retrn "}";',
+  "    return;",
+  "  }",
+  "  function void b() {",
+  "    retrn;",
+  "  }",
+  "}",
+);
+
+const MISSING_CLASS_AND_SUBROUTINE_CLOSE = lines(
+  "class Main {",
+  "  function void a() {",
+  "    let x = 1;",
+  "    retrn;",
+);
+
+/** The single error for `source` with recovery off. */
+function plainError(source: string): Diagnostic {
+  const result = JACK.parse(source);
+  if (isValid(result)) throw new Error("parse is valid");
+  return result.diagnostics[0];
+}
+
+/** A parse with diagnostics. */
+type Recovered = Exclude<Outcome<Class>, { diagnostics: readonly [] }>;
+
+function recovered(source: string): Recovered {
+  const outcome = JACK.parse(source, RECOVER);
+  if (isValid(outcome)) throw new Error("parse is valid");
+  const messages = outcome.diagnostics.map((e) => e.message).join(" | ");
+  expect(outcome.ast, `parse did not recover: ${messages}`).not.toEqual(
+    JACK.empty(),
+  );
+  return outcome;
+}
+
+const errorLines = (parsed: Recovered) =>
+  parsed.diagnostics.map((e) => e.span?.line);
+
+const subroutineNames = (parsed: Recovered) =>
+  parsed.ast.subroutines.map((s) =>
+    isRecovered(s) ? "<error>" : s.name.value,
+  );
+
+describe("Jack recovery from unbalanced blocks", () => {
+  it("reports a class missing its `}` and keeps its subroutines", () => {
+    const parsed = recovered(MISSING_CLASS_CLOSE);
+    expect(parsed.diagnostics.map((e) => e.message)).toEqual([
+      plainError(MISSING_CLASS_CLOSE).message,
+    ]);
+    expect(subroutineNames(parsed)).toEqual(["a", "<error>"]);
+    // A class that only lacks its `}` keeps the subroutines a valid class
+    // would have; the missing `}` is a null subroutine that skipped nothing.
+    expect(parsed.ast.subroutines.filter(isRecovered)).toMatchObject([
+      { skipped: { kind: "MissingClassClose" } },
+    ]);
+  });
+
+  it("closes a subroutine missing its `}` at the next subroutine", () => {
+    const parsed = recovered(MISSING_SUBROUTINE_CLOSE);
+    expect(errorLines(parsed)).toEqual([4, 5]);
+    expect(parsed.diagnostics[0].message).toBe(
+      plainError(MISSING_SUBROUTINE_CLOSE).message,
+    );
+    expect(subroutineNames(parsed)).toEqual(["a", "b"]);
+  });
+
+  it("keeps the next subroutine when an `if` body lacks its `}`", () => {
+    const parsed = recovered(MISSING_IF_CLOSE);
+    expect(errorLines(parsed)).toEqual([8, 9]);
+    expect(subroutineNames(parsed)).toEqual(["a", "b"]);
+  });
+
+  it("keeps the next subroutine when a `while` body lacks its `}`", () => {
+    const parsed = recovered(MISSING_WHILE_CLOSE);
+    expect(errorLines(parsed)).toEqual([7]);
+    expect(subroutineNames(parsed)).toEqual(["a", "b"]);
+  });
+
+  it.each([
+    ["`;`", SEMI_IN_STRING],
+    ["`}`", BRACE_IN_STRING],
+  ])(
+    "does not end a skipped statement at a %s inside a string",
+    (_, source) => {
+      const parsed = recovered(source);
+      expect(errorLines(parsed)).toEqual([3, 5]);
+      expect(parsed.diagnostics[0].message).toBe(plainError(source).message);
+      const sub = parsed.ast.subroutines[0];
+      if (isRecovered(sub)) throw new Error("subroutine lost");
+      expect(sub.body.statements).toHaveLength(3);
+      expect(sub.body.statements[1]).toMatchObject({
+        statementType: "letStatement",
+        name: { value: "y" },
+      });
+    },
+  );
+
+  it.each([
+    [
+      "a stray `}` between subroutines",
+      lines(
+        "class Main {",
+        "  function void a() {",
+        "    return;",
+        "  }",
+        "  }",
+        "  function void b() {",
+        "    return;",
+        "  }",
+        "}",
+      ),
+    ],
+    ["text after the class", "class Main { }\nfoo"],
+  ])("leaves the first error of %s unchanged", (_, source) => {
+    const result = JACK.parse(source, RECOVER);
+    if (isValid(result)) throw new Error("parse is valid");
+    const first: Diagnostic = result.diagnostics[0];
+    const plain = plainError(source);
+    expect(first.message).toBe(plain.message);
+    expect(first.span?.line).toBe(plain.span?.line);
+  });
+
+  it.each([["a;b"], ["a}b"], ["a function b"], ["a//b"]])(
+    "skips a string holding %s after the failure point whole",
+    (text) => {
+      const source = stringAfterFailure(text);
+      const parsed = recovered(source);
+      expect(errorLines(parsed)).toEqual([3, 5, 8]);
+      expect(parsed.diagnostics[0].message).toBe(plainError(source).message);
+      expect(subroutineNames(parsed)).toEqual(["a", "b"]);
+      const sub = parsed.ast.subroutines[0];
+      if (isRecovered(sub)) throw new Error("subroutine lost");
+      expect(sub.body.statements[1]).toMatchObject({
+        statementType: "letStatement",
+        name: { value: "y" },
+      });
+    },
+  );
+
+  it("skips a `}` inside a string while closing a block that lacks its `}`", () => {
+    const source = BRACE_IN_STRING_AFTER_MISSING_CLOSE;
+    const parsed = recovered(source);
+    expect(errorLines(parsed)).toEqual([5, 8, 9]);
+    expect(parsed.diagnostics[0].message).toBe(plainError(source).message);
+    expect(subroutineNames(parsed)).toEqual(["a", "b"]);
+  });
+
+  it("reports blocks missing their `}` at one place once", () => {
+    const parsed = recovered(MISSING_CLASS_AND_SUBROUTINE_CLOSE);
+    expect(errorLines(parsed)).toEqual([4, 4]);
+    expect(new Set(parsed.diagnostics.map((e) => e.span?.start)).size).toBe(2);
+  });
+
+  it("recovers an unterminated string at its own line", () => {
+    const parsed = recovered(UNTERMINATED_STRING);
+    expect(errorLines(parsed)).toEqual([3, 5]);
+    const sub = parsed.ast.subroutines[0];
+    if (isRecovered(sub)) throw new Error("subroutine lost");
+    expect(sub.body.statements[1]).toMatchObject({
+      statementType: "letStatement",
+      name: { value: "y" },
+    });
+  });
+});

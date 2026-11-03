@@ -19,7 +19,7 @@ import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { setStatus, canUpgradeFs } = useContext(BaseContext);
+  const { setStatus, canUpgradeFs, attemptRecovery } = useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;
@@ -37,7 +37,7 @@ export const Compiler = () => {
   const showStatus = () => {
     const current = state.compiled[state.selected];
     if (current) {
-      setStatus(current.valid ? "" : (current.error?.message ?? ""));
+      setStatus(current.valid ? "" : (current.diagnostics[0]?.message ?? ""));
     }
   };
 
@@ -45,7 +45,16 @@ export const Compiler = () => {
     if (!suppressStatus) {
       showStatus();
     }
-  }, [state.selected, state.files, suppressStatus]);
+  }, [state.selected, state.compiled, suppressStatus]);
+
+  // Turning Attempt Recovery on or off changes the diagnostics of the open files.
+  const recovery = useRef(attemptRecovery);
+  useEffect(() => {
+    if (recovery.current !== attemptRecovery) {
+      recovery.current = attemptRecovery;
+      actions.recompile();
+    }
+  }, [attemptRecovery, actions]);
 
   const onSelect = useCallback(
     (tab: string) => {
@@ -252,7 +261,7 @@ export const Compiler = () => {
                 onChange={(source: string) => {
                   actions.writeFile(file, source);
                 }}
-                error={state.compiled[file].error}
+                diagnostics={state.compiled[file].diagnostics}
                 language={"jack"}
                 disabled={!editable}
               />

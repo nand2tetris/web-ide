@@ -24,6 +24,16 @@ import {
 
 export type StatusSeverity = "SUCCESS" | "WARNING" | "ERROR" | "INFO";
 
+/** Where the Attempt Recovery setting is stored, beside the other settings. */
+export const ATTEMPT_RECOVERY_KEY = "/attemptRecovery";
+
+/** Attempt Recovery is on unless the stored setting says otherwise. */
+export function readAttemptRecovery(
+  storage: Pick<Storage, "getItem">,
+): boolean {
+  return storage.getItem(ATTEMPT_RECOVERY_KEY) !== "false";
+}
+
 export interface BaseContext {
   fs: FileSystem;
   localFsRoot?: string;
@@ -33,6 +43,12 @@ export interface BaseContext {
   status: { message: string; severity: StatusSeverity };
   setStatus: Action<string | { message: string; severity?: StatusSeverity }>;
   storage: Record<string, string>;
+  /**
+   * Whether a syntax mistake still allows the later diagnostics. Each store
+   * passes it to its final call.
+   */
+  attemptRecovery: boolean;
+  setAttemptRecovery: Action<boolean>;
   permissionPrompt: ReturnType<typeof useDialog>;
   requestPermission: AsyncAction<void>;
   loadFs: Action<void>;
@@ -135,6 +151,14 @@ export function useBaseContext(): BaseContext {
     setFs(new FileSystem(localAdapter));
   }, [root]);
 
+  const [attemptRecovery, setAttemptRecoveryState] = useState(() =>
+    readAttemptRecovery(localStorage),
+  );
+  const setAttemptRecovery = useCallback((value: boolean) => {
+    localStorage.setItem(ATTEMPT_RECOVERY_KEY, String(value));
+    setAttemptRecoveryState(value);
+  }, []);
+
   const [status, setStatusInternal] = useState<{
     message: string;
     severity: StatusSeverity;
@@ -160,6 +184,8 @@ export function useBaseContext(): BaseContext {
     status,
     setStatus,
     storage: localStorage,
+    attemptRecovery,
+    setAttemptRecovery,
     canUpgradeFs,
     permissionPrompt,
     upgradeFs,
@@ -180,6 +206,9 @@ export const BaseContext = createContext<BaseContext>({
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   setStatus() {},
   storage: {},
+  attemptRecovery: true,
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
+  setAttemptRecovery() {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async requestPermission() {},

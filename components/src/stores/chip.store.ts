@@ -17,19 +17,20 @@ import {
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import {
-  CompilationError,
+  Diagnostic,
+  Diagnostics,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext, StatusSeverity } from "./base.context.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -54,6 +55,32 @@ export function isBuiltinOnly(
 
 function convertToBuiltin(name: string, hdl: string) {
   return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};`);
+}
+
+/**
+ * The diagnostics of the file in the editor, which marks each one, and of the
+ * other files the chip loads, by path. A dependency's spans belong to its own
+ * file, so they never mark the editor's.
+ */
+function splitFailures(
+  failures: Record<string, Diagnostics>,
+  file = "<input>.hdl",
+): {
+  root: readonly Diagnostic[];
+  dependencies: Record<string, readonly Diagnostic[]>;
+} {
+  const { [file]: root = [], ...dependencies } = failures;
+  return { root, dependencies };
+}
+
+/** The diagnostics of files no editor shows, each message naming its file. */
+function unlocated(files: Record<string, readonly Diagnostic[]>): Diagnostic[] {
+  return Object.entries(files).flatMap(([file, list]) =>
+    list.map(({ message, stage }) => ({
+      message: `${file}: ${message}`,
+      stage,
+    })),
+  );
 }
 
 export interface ChipPageState {
@@ -96,7 +123,10 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
-  error?: CompilationError;
+  /** The diagnostics of the file in the editor, which marks each of them. */
+  diagnostics: readonly Diagnostic[];
+  /** The diagnostics of the other files the chip loads, by path. */
+  dependencyDiagnostics: Record<string, readonly Diagnostic[]>;
   visualizationParameters: Set<string>;
 }
 
@@ -130,6 +160,8 @@ export function makeChipStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
+  /** Whether the HDL final call recovers from syntax errors, read per call. */
+  attemptRecovery: () => boolean = () => true,
 ) {
   let _chipName = "";
   let _dir = "";
@@ -167,7 +199,8 @@ export function makeChipStore(
         pending?: boolean;
         invalid?: boolean;
         chipName?: string;
-        error?: CompilationError | undefined;
+        diagnostics?: readonly Diagnostic[];
+        dependencyDiagnostics?: Record<string, readonly Diagnostic[]>;
       },
     ) {
       state.sim = reduceChip(
@@ -175,9 +208,13 @@ export function makeChipStore(
         payload?.pending ?? state.sim.pending,
         payload?.invalid ?? state.sim.invalid,
       );
-      state.controls.error = state.sim.invalid
-        ? (payload?.error ?? state.controls.error)
-        : undefined;
+      state.controls.diagnostics = state.sim.invalid
+        ? (payload?.diagnostics ?? state.controls.diagnostics)
+        : [];
+      state.controls.dependencyDiagnostics = state.sim.invalid
+        ? (payload?.dependencyDiagnostics ??
+          state.controls.dependencyDiagnostics)
+        : {};
     },
 
     setProjects(state: ChipPageState, projects: string[]) {
@@ -224,20 +261,13 @@ export function makeChipStore(
 
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
-      const passed = compare(state.files.cmp.trim(), state.files.out.trim());
+      const status = comparisonStatus(
+        state.files.cmp.trim(),
+        state.files.out.trim(),
+      );
       // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
-        setStatus(
-          passed
-            ? {
-                message: `Simulation successful: The output file is identical to the compare file`,
-                severity: "SUCCESS",
-              }
-            : {
-                message: `Simulation error: The output file differs from the compare file`,
-                severity: "ERROR",
-              },
-        );
+        setStatus(status);
       });
     },
 
@@ -378,17 +408,29 @@ export function makeChipStore(
 
     async compileChip(hdl: string, dir?: string, name?: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl, dir, name, fs);
+      const file =
+        name === undefined
+          ? undefined
+          : [dir, `${name}.hdl`].filter(Boolean).join("/");
+      const maybeChip = await parseChip(hdl, dir, name, fs, {
+        attemptRecovery: attemptRecovery(),
+        file,
+      });
       if (isErr(maybeChip)) {
-        const error = Err(maybeChip);
-        setStatus({
-          message: Err(maybeChip).message,
-          severity: "ERROR",
-        });
+        const { root, dependencies } = splitFailures(Err(maybeChip), file);
+        setStatus(
+          failureStatus("HDL code", [...root, ...unlocated(dependencies)], {
+            head: true,
+          }),
+        );
         invalid = true;
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, error },
+          payload: {
+            invalid: true,
+            diagnostics: root,
+            dependencyDiagnostics: dependencies,
+          },
         });
         return;
       }
@@ -439,16 +481,8 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = TST.parse(file);
-      if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test ${Err(tst).message}`,
-          severity: "ERROR",
-        });
-        invalid = true;
-        return false;
-      }
-      const maybeTest = ChipTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: path, content: file }, "chip", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         setStatus: setStatus,
         loadAction: async (file) => {
@@ -462,10 +496,9 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        setStatus(
+          failureStatus("Test script", Err(maybeTest), { marked: false }),
+        );
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -607,7 +640,8 @@ export function makeChipStore(
       testName: "",
       usingBuiltin: false,
       runningTest: false,
-      error: undefined,
+      diagnostics: [],
+      dependencyDiagnostics: {},
       visualizationParameters: new Set(),
     };
 
@@ -631,13 +665,24 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { fs, setStatus, storage, localFsRoot } = useContext(BaseContext);
+  const { fs, setStatus, storage, localFsRoot, attemptRecovery } =
+    useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
+  // The store outlives a change of the setting, so it reads the latest.
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
-      makeChipStore(fs, setStatus, storage, dispatch, localFsRoot != undefined),
+      makeChipStore(
+        fs,
+        setStatus,
+        storage,
+        dispatch,
+        localFsRoot != undefined,
+        () => recovery.current,
+      ),
     [fs, setStatus, storage, dispatch],
   );
 

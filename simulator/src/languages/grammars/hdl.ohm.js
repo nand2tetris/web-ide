@@ -3,23 +3,37 @@ Hdl <: Base{
   Root := Chip
   identifier := (letter) (alnum)*
   Name := identifier
-  Chip = "CHIP" Name OpenBrace ChipBody CloseBrace
-  ChipBody = InList? OutList? PartList ClockedList?
-  InList = "IN" PinList Semi
-  OutList = "OUT" PinList Semi
+  Chip = ChipOpen ChipBody ChipClose  -- closed
+       | ChipOpen "PARTS:" Part* ! UnclosedEnd  -- unclosed
+  ChipOpen = ChipStart ! &PartsStart
+  // Repeats the lookahead of Parts so a strict failure lists its expected
+  // text in the same order as before this alternative existed.
+  UnclosedEnd = &("CLOCKED" | CloseBrace) CloseBrace
+  ChipStart = ChipHead ! OpenBrace ChipPins
+  ChipHead = "CHIP" Name
+  ChipPins = InList? OutList?
+  PartsStart = "BUILTIN" | "PARTS:"
+  ChipBody = PartList ClockedList?
+  ChipClose = CloseBrace ! end
+  InList = InListBody ! Semi
+  InListBody = "IN" PinList
+  OutList = OutListBody ! Semi
+  OutListBody = "OUT" PinList
   PartList = BuiltinPart | Parts
   PinList = List<PinDecl, Comma>
   PinDecl = Name PinWidth?
   PinWidth = OpenSquare decNumber CloseSquare
   BuiltinPart = "BUILTIN" Semi
-  Parts = "PARTS:" Part*
-  Part = Name "(" Wires ")" Semi
+  Parts = "PARTS:" Part* ! &("CLOCKED" | CloseBrace)
+  Part = PartBody ! Semi
+  PartBody = Name "(" Wires ")"
   Wires = List<Wire, Comma>
   Wire = WireSide Equal (WireSide | True | False) 
   WireSide = Name SubBus? 
   SubBus = OpenSquare decNumber subBusRest? CloseSquare
   subBusRest = ".." decNumber
-  ClockedList = "CLOCKED" SimplePinList Semi
+  ClockedList = ClockedBody ! Semi
+  ClockedBody = "CLOCKED" SimplePinList
   SimplePinList = List<Name, Comma>
 }`;
 export default hdl;

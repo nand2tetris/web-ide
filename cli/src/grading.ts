@@ -6,6 +6,7 @@ import { JavaRunner } from "@nand2tetris/runner/index.js";
 import {
   AssignmentFiles,
   hasTest,
+  RunOptions,
   runTests,
 } from "@nand2tetris/simulator/projects/runner.js";
 import { join, parse } from "path";
@@ -33,7 +34,11 @@ const loadAssignment = (fs: FileSystem) =>
  *
  * Returns 1 if at least one test was failed or no tests were found to run. Returns 0 otherwise.
  */
-export async function main(folder = process.cwd(), java_ide = "") {
+export async function main(
+  folder = process.cwd(),
+  java_ide = "",
+  options: RunOptions = {},
+) {
   const fs = new FileSystem(new NodeFileSystemAdapter());
   fs.cd(folder);
 
@@ -46,7 +51,13 @@ export async function main(folder = process.cwd(), java_ide = "") {
     .filter(hasTest);
 
   const ideRunner = await JavaRunner.try_init(java_ide);
-  const tests = await runTests(files, loadAssignment(fs), fs, ideRunner);
+  const tests = await runTests(
+    files,
+    loadAssignment(fs),
+    fs,
+    ideRunner,
+    options,
+  );
 
   if (!tests.length) {
     console.log("No tests have run!");

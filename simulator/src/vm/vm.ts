@@ -1,17 +1,25 @@
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-  unwrap,
-} from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { CompilationError, createError, Span } from "../languages/base.js";
+import {
+  createError,
+  Diagnostic,
+  type Diagnostics,
+  mergeByFile,
+  type Origin,
+  originsOf,
+  type Provenance,
+  recoveredOf,
+  Span,
+  semanticError,
+} from "../languages/base.js";
 import {
   CallInstruction,
+  couldBeFunctionHeader,
   FunctionInstruction,
+  prune,
   Segment,
   StackInstruction,
+  VM,
   VmInstruction,
 } from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
@@ -152,9 +160,202 @@ const OUTPUT_PRINT_STRING_BRIDGE: VmFunction = {
   ],
 };
 
+/**
+ * A parsed VM file. `skips` is the provenance of the lines that recovery
+ * dropped from `instructions`; only `loadVm`, which reports their syntax
+ * diagnostics, gives it.
+ */
 export interface ParsedVmFile {
   name: string;
   instructions: VmInstruction[];
+  skips?: Provenance;
+}
+
+/** A named VM source, as the editor and the file pickers hold it. */
+export interface VmFile {
+  name: string;
+  content: string;
+}
+
+/** Options of the VM final call. */
+export interface LoadVmOptions {
+  /** Recover from syntax errors to keep checking. Default true. */
+  attemptRecovery?: boolean;
+  /**
+   * Check that each function's class prefix names its file. Default true. A
+   * single editor buffer has no file name to match, so it passes false. This
+   * disables only that equality: a function name of the wrong shape is
+   * rejected either way.
+   */
+  validateFileNames?: boolean;
+}
+
+/** The key of every diagnostic that has no source file of its own. */
+export const VM_INPUT = "<input>.vm";
+
+/** The failure of a build: the nonempty merged diagnostics of each file. */
+export type VmFailure = Record<string, Diagnostics>;
+
+/** A file's name without its folders and extension: `a/Sys.vm` is `Sys`. */
+function fileBasenameNoExtension(file: string): string {
+  // Files that are part of the web-ide are usually passed with folders but without extensions.
+  // e.g.: /projects/08/FibonacciElement/Sys
+  if (file.includes("/")) {
+    file = file.split("/").pop() ?? "";
+  }
+
+  // Local files on Windows are usually passed with extension.
+  // e.g.: Sys.vm
+  if (file.includes(".")) {
+    file = file.split(".")[0];
+  }
+
+  return file;
+
+  // TODO: Check if this also works for Linux and MacOS
+}
+
+/**
+ * What a build knows of the lines recovery dropped. Provenance gives the kind
+ * of each dropped line (see `skippedKind`), and a check is suppressed only
+ * when a dropped line of a kind that could supply its input exists:
+ *
+ * - A line that could have been a `function` header (kind `FunctionInstruction`,
+ *   or `VmInstruction` when its first token is unreadable) could have declared
+ *   a function in its own file. It suppresses the undefined function check
+ *   and the builtin argument count check (a declared function overrides a
+ *   builtin) of a call only if that file could have declared the name
+ *   (`mayDeclare`), and the entry point checks (`mayChooseEntry`).
+ * - Any dropped line, of any kind, suppresses the undeclared label checks of
+ *   the function that holds it (`functions`), and of that function only. This
+ *   is the settled policy (Q3): a dropped line may have been a label, and a
+ *   dropped header leaves the lines after it in the wrong function. Narrowing
+ *   it to the kinds that could be a label would need no more than a kind test
+ *   where `damageOf` fills `functions`.
+ * - Any other kind of dropped line (push, pop, arithmetic, call, return, goto,
+ *   label) supplies no function and no entry, so it hides no other check.
+ * - A file that built no tree is wholly unknown, so it could have declared
+ *   any function of any file and chosen the entry (`unparsed`).
+ */
+class Damage {
+  constructor(
+    /** True when a file built no tree at all. */
+    private readonly unparsed = false,
+    /** The files holding a dropped line that could have been a `function` header. */
+    private readonly headerFiles: readonly string[] = [],
+    /**
+     * True when a function's class prefix must be its file's name, so a
+     * file's functions are only those of its own class.
+     */
+    private readonly matchFileName = false,
+    /** The functions whose bodies held a dropped line. */
+    readonly functions: ReadonlySet<string> = new Set(),
+  ) {}
+
+  /**
+   * True when a dropped header could have declared the function `name`: a
+   * file that holds one could have declared it if the class prefix of `name`
+   * is that file's name. When class prefixes need not match file names
+   * (`validateFileNames: false`), any file could have declared any name.
+   * A header of another class in that file would be a file name error of its
+   * own, which the caller's check need not repeat.
+   */
+  mayDeclare(name: string): boolean {
+    const className = name.split(".")[0];
+    return (
+      this.unparsed ||
+      this.headerFiles.some(
+        (file) =>
+          !this.matchFileName || fileBasenameNoExtension(file) === className,
+      )
+    );
+  }
+
+  /**
+   * True when a dropped header, anywhere, could have changed the entry point:
+   * it could have been `Sys.init` or `Main.main`, or the first function that
+   * makes the implicit one illegal. The entry is a property of the whole
+   * program, so no file or caller narrows it.
+   */
+  get mayChooseEntry(): boolean {
+    return this.unparsed || this.headerFiles.length > 0;
+  }
+}
+
+const NO_DAMAGE = new Damage();
+
+/**
+ * The damage of parsed files. A dropped line belongs to the last function
+ * declared before it, in its own file or, before a file's first function, in
+ * the files before it. `unparsed` is true when a file built no tree at all.
+ */
+function damageOf(
+  files: ParsedVmFile[],
+  rules: { matchFileName: boolean; unparsed: boolean },
+): Damage {
+  const functions = new Set<string>();
+  const headerFiles: string[] = [];
+  let current = IMPLICIT;
+  for (const { name, instructions, skips = [] } of files) {
+    const headers = instructions.filter(
+      (instruction): instruction is FunctionInstruction =>
+        instruction.op === "function",
+    );
+    for (const { interval, kind } of skips) {
+      if (couldBeFunctionHeader(kind)) {
+        headerFiles.push(name);
+      }
+      const owner = headers.filter(
+        ({ span }) => span !== undefined && span.start <= interval.start,
+      );
+      functions.add(owner.at(-1)?.name ?? current);
+    }
+    current = headers.at(-1)?.name ?? current;
+  }
+  return new Damage(
+    rules.unparsed,
+    headerFiles,
+    rules.matchFileName,
+    functions,
+  );
+}
+
+/**
+ * The diagnostics of one build, by the file each belongs to. A diagnostic with
+ * a span lies in the file whose instruction owns that span object; any other
+ * belongs to the file the caller names, or to `VM_INPUT`.
+ */
+class Report {
+  private readonly lists: Record<string, Diagnostic[]> = {};
+
+  constructor(private readonly owners: ReadonlyMap<Span, string> = new Map()) {}
+
+  add(diagnostic: Diagnostic, file?: string) {
+    const owner =
+      (diagnostic.span && this.owners.get(diagnostic.span)) ?? file ?? VM_INPUT;
+    this.lists[owner] ??= [];
+    this.lists[owner].push(diagnostic);
+  }
+
+  get isEmpty(): boolean {
+    return Object.keys(this.lists).length === 0;
+  }
+
+  /** The first diagnostic added, for callers that stop at the first. */
+  first(): Diagnostic | undefined {
+    return Object.values(this.lists)[0]?.[0];
+  }
+
+  /** Each file's diagnostics in source order, without the files with none. */
+  merged(origins?: ReadonlyMap<Diagnostic, Origin>): VmFailure {
+    const files: Record<string, Diagnostics> = {};
+    for (const [file, [first, ...rest]] of Object.entries(this.lists)) {
+      if (first !== undefined) {
+        files[file] = [first, ...rest];
+      }
+    }
+    return mergeByFile(files, origins);
+  }
 }
 
 interface SegmentStatus {
@@ -213,90 +414,102 @@ export class Vm {
     }
   }
 
-  private static fileBasenameNoExtension(file: string): string {
-    // Files that are part of the web-ide are usually passed with folders but without extensions.
-    // e.g.: /projects/08/FibonacciElement/Sys
-    if (file.includes("/")) {
-      file = file.split("/").pop() ?? "";
-    }
-
-    // Local files on Windows are usually passed with extension.
-    // e.g.: Sys.vm
-    if (file.includes(".")) {
-      file = file.split(".")[0];
-    }
-
-    return file;
-
-    // TODO: Check if this also works for Linux and MacOS
-  }
-
-  private static validateFile(file: ParsedVmFile) {
+  /**
+   * Reports each function of `file` whose name is not `<class>.<name>`, and,
+   * with `matchFileName`, each whose class is not the file's name.
+   */
+  private static validateFile(
+    file: ParsedVmFile,
+    matchFileName: boolean,
+    report: Report,
+  ) {
     for (const inst of file.instructions) {
       if (inst.op == "function") {
         const parts = inst.name.split(".");
         if (parts.length != 2) {
-          return Err(
-            createError(
+          report.add(
+            semanticError(
               `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`,
               inst.span,
             ),
+            file.name,
           );
-        }
-        if (parts[0] != this.fileBasenameNoExtension(file.name)) {
-          return Err(
-            createError(
+        } else if (
+          matchFileName &&
+          parts[0] != fileBasenameNoExtension(file.name)
+        ) {
+          report.add(
+            semanticError(
               `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`,
               inst.span,
             ),
+            file.name,
           );
         }
       }
     }
-    return Ok();
   }
 
-  private static validateFiles(files: ParsedVmFile[]) {
+  private static validateFiles(
+    files: ParsedVmFile[],
+    matchFileName: boolean,
+    report: Report,
+  ) {
     const names: Set<string> = new Set();
 
     for (const file of files) {
       if (names.has(file.name)) {
-        return Err(createError(`File ${file.name} already exists`));
-      }
-      const result = this.validateFile(file);
-      if (isErr(result)) {
-        return result;
+        report.add(
+          semanticError(`File ${file.name} already exists`),
+          file.name,
+        );
       }
       names.add(file.name);
+      this.validateFile(file, matchFileName, report);
     }
-    return Ok();
   }
 
-  private validateStackInstructions() {
+  private validateStackInstructions(report: Report) {
     for (const fn of Object.values(this.functionMap)) {
       for (const inst of fn.operations) {
         if (inst.op == "pop" || inst.op == "push") {
-          const base = this.memory.baseSegment(inst.segment, inst.offset);
-          if (isErr(base)) {
-            return Err(createError(Err(base).message, inst.span));
+          try {
+            const base = this.memory.baseSegment(inst.segment, inst.offset);
+            if (isErr(base)) {
+              report.add(semanticError(Err(base).message, inst.span));
+            }
+          } catch (e) {
+            // A pointer offset out of bounds throws instead of giving an Err.
+            report.add(
+              semanticError(
+                e instanceof Error ? e.message : String(e),
+                inst.span,
+              ),
+            );
           }
         }
       }
     }
-    return Ok();
   }
 
+  /**
+   * Reports each function and call of `instructions` that is ill formed. A
+   * call to a function that is not declared is a builtin or an error, unless
+   * `damage` says a dropped line could have declared it.
+   */
   private static validateFunctions(
     instructions: VmInstruction[],
-  ): Result<void, CompilationError> {
+    report: Report,
+    damage: Damage,
+  ) {
     const functions: Set<string> = new Set();
     const calls = [];
 
     for (const inst of instructions) {
       if (inst.op == "function") {
         if (inst.nVars < 0 || inst.nVars > 32767) {
-          return Err(
-            createError(
+          report.add(
+            semanticError(
               `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`,
               inst.span,
             ),
@@ -306,8 +519,8 @@ export class Vm {
       }
       if (inst.op == "call") {
         if (inst.nArgs < 0 || inst.nArgs > 32767) {
-          return Err(
-            createError(
+          report.add(
+            semanticError(
               `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`,
               inst.span,
             ),
@@ -318,7 +531,13 @@ export class Vm {
     }
 
     for (const call of calls) {
-      if (!functions.has(call.name)) {
+      // Suppressed when `damage.mayDeclare(call.name)`: a dropped line that
+      // could have been a `function` header could have declared the function,
+      // which also overrides any builtin of its name. That hides both the
+      // undefined function and the builtin argument count checks of this call.
+      // A dropped push, pop, arithmetic, call, return, goto or label line
+      // could not, and hides neither.
+      if (!functions.has(call.name) && !damage.mayDeclare(call.name)) {
         const builtin = VM_BUILTINS[call.name];
         if (builtin) {
           const expectedNArgs =
@@ -326,8 +545,8 @@ export class Vm {
               ? builtin.args.length + 1
               : builtin.args.length;
           if (expectedNArgs != call.nArgs) {
-            return Err(
-              createError(
+            report.add(
+              semanticError(
                 `OS function ${call.name} expects ${
                   expectedNArgs
                 } arguments, not ${call.nArgs}`,
@@ -336,52 +555,98 @@ export class Vm {
             );
           }
         } else {
-          return Err(createError(`Undefined function ${call.name}`, call.span));
+          report.add(
+            semanticError(`Undefined function ${call.name}`, call.span),
+          );
         }
       }
     }
-
-    return Ok();
   }
 
-  static buildFromFiles(files: ParsedVmFile[]): Result<Vm, CompilationError> {
+  /**
+   * Builds each file's functions and checks them. Every file is checked, and
+   * every check reports all that it finds; no `Vm` is given when there is any.
+   */
+  private static check(
+    files: ParsedVmFile[],
+    rules: { names: boolean; matchFileName: boolean; unparsed: boolean },
+  ): Result<Vm, VmFailure> {
+    const owners = new Map<Span, string>();
+    for (const { name, instructions } of files) {
+      for (const { span } of instructions) {
+        if (span !== undefined) {
+          owners.set(span, name);
+        }
+      }
+    }
+    const report = new Report(owners);
+    const damage = damageOf(files, rules);
+    if (rules.names) {
+      this.validateFiles(files, rules.matchFileName, report);
+    }
+    const instructions = files.flatMap((file) => file.instructions);
+    this.validateFunctions(instructions, report, damage);
+
+    const vm = new Vm();
+    vm.loadInto(instructions, false, report, damage);
+    const booted = vm.bootstrap();
+    // Suppressed when `damage.mayChooseEntry`: a dropped line that could have
+    // been a `function` header could have declared the entry point, or the
+    // first function that makes the implicit one illegal. A dropped push, pop,
+    // arithmetic, call, return, goto or label line could not.
+    if (isErr(booted) && !damage.mayChooseEntry) {
+      report.add({ ...Err(booted), stage: "semantic" });
+    }
+
+    return report.isEmpty ? Ok(vm) : Err(report.merged());
+  }
+
+  /**
+   * Builds a VM from named files, or fails with every diagnostic of each
+   * file. By default each function's class must be its file's name; a function
+   * name that is not `<class>.<name>` is always rejected.
+   */
+  static buildFromFiles(
+    files: ParsedVmFile[],
+    options: { validateFileNames?: boolean; unparsed?: boolean } = {},
+  ): Result<Vm, VmFailure> {
     if (files.length === 0) {
-      return Err(
-        createError("No .vm files to load. Compile your Jack files first."),
-      );
+      return Err({
+        [VM_INPUT]: [
+          semanticError("No .vm files to load. Compile your Jack files first."),
+        ],
+      });
     }
-    let result = this.validateFiles(files);
-    if (isErr(result)) {
-      return result;
-    }
-    const instructions = files
-      .map((file) => file.instructions)
-      .reduce((list1, list2) => list1.concat(list2), [] as VmInstruction[]);
-    result = this.validateFunctions(instructions);
-    if (isErr(result)) {
-      return result;
-    }
-    const vm = new Vm();
-    const load = vm.load(instructions);
-    if (isErr(load)) return load;
-    return vm.bootstrap();
+    return this.check(files, {
+      names: true,
+      matchFileName: options.validateFileNames ?? true,
+      unparsed: options.unparsed ?? false,
+    });
   }
 
-  static build(instructions: VmInstruction[]): Result<Vm, CompilationError> {
-    const result = this.validateFunctions(instructions);
-    if (isErr(result)) {
-      return result;
-    }
-    const vm = new Vm();
-    const load = vm.load(instructions);
-    if (isErr(load)) return load;
-    return vm.bootstrap();
+  /**
+   * Builds a VM from instructions that have no file. This raw path checks no
+   * function name's shape; the final call `loadVm` does.
+   */
+  static build(instructions: VmInstruction[]): Result<Vm, VmFailure> {
+    return this.check([{ name: VM_INPUT, instructions }], {
+      names: false,
+      matchFileName: false,
+      unparsed: false,
+    });
   }
 
+  /**
+   * Builds the function that starts at `instructions[i]`, reporting its label
+   * errors, and gives it with the index where the next function starts.
+   * `damaged` is true when a dropped line could have declared one of its labels.
+   */
   private static buildFunction(
     instructions: VmInstruction[],
     i: number,
-  ): Result<[VmFunction, number], CompilationError> {
+    report: Report,
+    damaged: boolean,
+  ): [VmFunction, number] {
     if (instructions[i].op !== "function")
       throw new Error(
         "Only call buildFunction at the initial Function instruction",
@@ -397,7 +662,7 @@ export class Vm {
     };
 
     const declaredLabels: Set<string> = new Set();
-    const usedLabels: Record<string, Span | undefined> = {};
+    const usedLabels: [string, Span | undefined][] = [];
 
     i += 1;
     instructions: while (i < instructions.length) {
@@ -459,7 +724,7 @@ export class Vm {
         case "goto":
         case "if-goto": {
           const { label } = instructions[i] as { label: string };
-          usedLabels[label] = instructions[i].span;
+          usedLabels.push([label, instructions[i].span]);
           fn.operations.push({
             op: instructions[i].op as "goto" | "if-goto",
             label,
@@ -469,17 +734,19 @@ export class Vm {
         }
         case "label": {
           const { label } = instructions[i] as { label: string };
-          declaredLabels.add(label);
-          if (fn.labels[label])
-            return Err(
-              createError(
+          if (declaredLabels.has(label)) {
+            report.add(
+              semanticError(
                 `Cannot redeclare label ${label} in function ${
                   fn.name
                 } (previously at line ${fn.labels[label] + 1})`,
                 instructions[i].span,
               ),
             );
-          fn.labels[label] = fn.operations.length;
+          } else {
+            declaredLabels.add(label);
+            fn.labels[label] = fn.operations.length;
+          }
           fn.operations.push({
             op: "label",
             label,
@@ -496,13 +763,17 @@ export class Vm {
       i += 1;
     }
 
-    for (const label of Object.keys(usedLabels)) {
-      if (!declaredLabels.has(label)) {
-        return Err(createError(`Undeclared label ${label}`, usedLabels[label]));
+    // Suppressed when `damaged`: a dropped line of this function, of any kind
+    // (see `Damage`), may have declared the label.
+    if (!damaged) {
+      for (const [label, span] of usedLabels) {
+        if (!declaredLabels.has(label)) {
+          report.add(semanticError(`Undeclared label ${label}`, span));
+        }
       }
     }
 
-    return Ok([fn, i]);
+    return [fn, i];
   }
 
   get RAM(): RAM {
@@ -547,10 +818,20 @@ export class Vm {
     return this.currentFunction.operations[this.invocation.opPtr];
   }
 
-  load(
+  load(instructions: VmInstruction[], reset = false): Result<this, Diagnostic> {
+    const report = new Report();
+    this.loadInto(instructions, reset, report, NO_DAMAGE);
+    const first = report.first();
+    return first === undefined ? Ok(this) : Err(first);
+  }
+
+  /** `load`, reporting every diagnostic of `instructions` to `report`. */
+  private loadInto(
     instructions: VmInstruction[],
-    reset = false,
-  ): Result<this, CompilationError> {
+    reset: boolean,
+    report: Report,
+    damage: Damage,
+  ) {
     if (reset) {
       this.functionMap = {};
       this.statics = {};
@@ -563,39 +844,37 @@ export class Vm {
 
     let i = 0;
     while (i < instructions.length) {
-      const buildFn = Vm.buildFunction(instructions, i);
-
-      if (isErr(buildFn)) return buildFn;
-      const [fn, i_] = unwrap(buildFn);
+      const header = instructions[i] as FunctionInstruction;
+      const [fn, next] = Vm.buildFunction(
+        instructions,
+        i,
+        report,
+        damage.functions.has(header.name),
+      );
       if (
         this.functionMap[fn.name] &&
         this.memory.strict &&
         fn.name !== IMPLICIT &&
         fn.name !== SYS_INIT.name
       ) {
-        return Err(
-          createError(
+        report.add(
+          semanticError(
             `VM Already has a function named ${fn.name}`,
-            instructions[0].span,
+            header.span,
           ),
         );
       }
 
       this.functionMap[fn.name] = fn;
-      i = i_;
+      i = next;
     }
 
-    const result = this.validateStackInstructions();
-    if (isErr(result)) {
-      return result;
-    }
+    this.validateStackInstructions(report);
     this.registerStatics();
 
     if (reset) {
       this.bootstrap();
     }
-
-    return Ok(this);
   }
 
   bootstrap() {
@@ -1063,4 +1342,129 @@ function writeOp(op: VmInstruction): string {
     case "push":
       return `  ${op.op}    ${op.segment} ${op.offset}`;
   }
+}
+
+/** Where each file starts in the joined buffer of `files`: characters and lines. */
+function joinedBases(files: VmFile[]): { chars: number; lines: number }[] {
+  const bases = [];
+  let chars = 0;
+  let lines = 0;
+  for (const { content } of files) {
+    bases.push({ chars, lines });
+    // The joining newline follows each file's content, whatever it ends with.
+    chars += content.length + 1;
+    lines += content.split("\n").length;
+  }
+  return bases;
+}
+
+/**
+ * Loads VM files to a `Vm`, or to every diagnostic of each file, in source
+ * order. Each key is a file's name, or `VM_INPUT` for a failure of no file. No
+ * `Vm` is given when there is any diagnostic.
+ *
+ * A file that recovered from syntax errors still has its intact functions
+ * checked; a file that built no tree is checked as syntax only, and a check
+ * whose input it could have supplied is suppressed (see `Damage`).
+ *
+ * The spans of a given `Vm`'s instructions lie in the joined buffer
+ * `files.map((f) => f.content).join("\n")`, where an editor shows them. The
+ * spans of diagnostics stay local to their file: see `joinedDiagnostics`.
+ */
+export function loadVm(
+  files: VmFile[],
+  options: LoadVmOptions = {},
+): Result<Vm, VmFailure> {
+  if (files.length === 0) {
+    return Vm.buildFromFiles([]);
+  }
+  const attemptRecovery = options.attemptRecovery ?? true;
+  const bases = joinedBases(files);
+  const report = new Report();
+  const origins = new Map<Diagnostic, Origin>();
+  const parsed: ParsedVmFile[] = [];
+  const placed: (() => void)[] = [];
+  let unparsed = false;
+  files.forEach(({ name, content }, i) => {
+    const outcome = VM.parse(content, { attemptRecovery });
+    for (const diagnostic of outcome.diagnostics) {
+      report.add(diagnostic, name);
+    }
+    const recovered = recoveredOf(outcome, prune);
+    if (recovered === undefined) {
+      unparsed = true;
+      return;
+    }
+    for (const [diagnostic, origin] of originsOf(recovered.provenance)) {
+      origins.set(diagnostic, origin);
+    }
+    const instructions = [...recovered.ast.instructions];
+    parsed.push({ name, instructions, skips: recovered.provenance });
+    placed.push(() => {
+      for (const { span } of instructions) {
+        if (span !== undefined) {
+          span.start += bases[i].chars;
+          span.end += bases[i].chars;
+          span.line += bases[i].lines;
+        }
+      }
+    });
+  });
+
+  if (parsed.length > 0) {
+    const built = Vm.buildFromFiles(parsed, {
+      validateFileNames: options.validateFileNames ?? true,
+      unparsed,
+    });
+    if (isErr(built)) {
+      for (const [name, diagnostics] of Object.entries(Err(built))) {
+        for (const diagnostic of diagnostics) {
+          report.add(diagnostic, name);
+        }
+      }
+    } else if (report.isEmpty) {
+      placed.forEach((place) => place());
+      return built;
+    }
+  }
+  return Err(report.merged(origins));
+}
+
+/**
+ * The diagnostics of a failed `loadVm` as an editor of the joined buffer
+ * `files.map((f) => f.content).join("\n")` shows them: file by file, each
+ * diagnostic a copy whose span (both ends and line) and "Line N:" message
+ * lie in the joined buffer. The failure's own diagnostics stay file-local.
+ */
+export function joinedDiagnostics(
+  files: VmFile[],
+  failure: VmFailure,
+): Diagnostic[] {
+  const bases = joinedBases(files);
+  const names = [...new Set(files.map(({ name }) => name))];
+  const others = Object.keys(failure).filter((name) => !names.includes(name));
+  return [...names, ...others].flatMap((name) => {
+    const base = bases[files.findIndex((file) => file.name === name)];
+    return (failure[name] ?? []).map((diagnostic) =>
+      base === undefined || diagnostic.span === undefined
+        ? { ...diagnostic }
+        : movedBy(diagnostic, diagnostic.span, base),
+    );
+  });
+}
+
+function movedBy(
+  diagnostic: Diagnostic,
+  span: Span,
+  base: { chars: number; lines: number },
+): Diagnostic {
+  const line = span.line + base.lines;
+  const label = `Line ${span.line}: `;
+  return {
+    ...diagnostic,
+    message: diagnostic.message.startsWith(label)
+      ? `Line ${line}: ${diagnostic.message.slice(label.length)}`
+      : diagnostic.message,
+    span: { start: span.start + base.chars, end: span.end + base.chars, line },
+  };
 }

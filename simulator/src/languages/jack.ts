@@ -1,5 +1,17 @@
 import { type Node, grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, Span, span } from "./base.js";
+import {
+  baseSemantics,
+  carrierOf,
+  grammars,
+  isRecovered,
+  makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  Span,
+  type SyntaxMessage,
+  span,
+} from "./base.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
 const primitives = new Set(["int", "boolean", "char"] as const);
@@ -11,15 +23,28 @@ export function isPrimitive(value: string): value is Primitive {
 
 export type Type = Primitive | string;
 
+/**
+ * A class's name. A recovered class header leaves a null name: its value is
+ * empty and it stands in for the skipped header.
+ */
+export interface ClassName extends Recovery {
+  value: string;
+  span: Span;
+}
+
+/**
+ * One type for valid and recovered classes: a recovered list item is a null
+ * object of its item type (see `isRecovered`).
+ */
 export interface Class {
-  name: { value: string; span: Span };
+  name: ClassName;
   varDecs: ClassVarDec[];
   subroutines: Subroutine[];
 }
 
 export type ClassVarType = "static" | "field";
 
-export interface ClassVarDec {
+export interface ClassVarDec extends Recovery {
   varType: ClassVarType;
   type: { value: Type; span: Span };
   names: string[];
@@ -33,7 +58,7 @@ export interface Parameter {
 export type ReturnType = Type | "void";
 export type SubroutineType = "constructor" | "function" | "method";
 
-export interface Subroutine {
+export interface Subroutine extends Recovery {
   type: SubroutineType;
   name: { value: string; span: Span };
   returnType: { value: ReturnType; span: Span };
@@ -46,11 +71,15 @@ export interface SubroutineBody {
   statements: Statement[];
 }
 
-export interface VarDec {
+export interface VarDec extends Recovery {
   type: { value: Type; span: Span };
   names: string[];
 }
 
+/**
+ * A recovered statement reuses `ReturnStatement` with no value as its null
+ * object, because it is the only member whose fields need no expression.
+ */
 export type Statement =
   | LetStatement
   | IfStatement
@@ -58,7 +87,7 @@ export type Statement =
   | DoStatement
   | ReturnStatement;
 
-export interface LetStatement {
+export interface LetStatement extends Recovery {
   statementType: "letStatement";
   name: { value: string; span: Span };
   arrayIndex?: Expression;
@@ -66,25 +95,25 @@ export interface LetStatement {
   span: Span;
 }
 
-export interface IfStatement {
+export interface IfStatement extends Recovery {
   statementType: "ifStatement";
   condition: Expression;
   body: Statement[];
   else: Statement[];
 }
 
-export interface WhileStatement {
+export interface WhileStatement extends Recovery {
   statementType: "whileStatement";
   condition: Expression;
   body: Statement[];
 }
 
-export interface DoStatement {
+export interface DoStatement extends Recovery {
   statementType: "doStatement";
   call: SubroutineCall;
 }
 
-export interface ReturnStatement {
+export interface ReturnStatement extends Recovery {
   statementType: "returnStatement";
   value?: Expression;
   span: Span;
@@ -163,9 +192,158 @@ export interface Expression {
 export const grammar = ohmGrammar(jackGrammar, grammars);
 export const jackSemantics = grammar.extendSemantics(baseSemantics);
 
-function statements(node: Node) {
-  return node.children.map((n) => n.statement);
+/**
+ * What a Jack null object stands in for, by the grammar slot that recovered:
+ * a skipped class header before its `{`, a skipped header with the class
+ * variables before the first subroutine, a skipped declaration body or
+ * subroutine header, skipped input before the class closer, the class closer
+ * missing at the end of the input (which skipped nothing), a skipped
+ * statement body or head, or the missing or skipped closer of a block.
+ */
+export type JackSkipKind =
+  | "ClassHead"
+  | "ClassStart"
+  | "ClassVarDecBody"
+  | "SubroutineHead"
+  | "ClassClose"
+  | "MissingClassClose"
+  | "VarDecBody"
+  | "LetBody"
+  | "DoBody"
+  | "ReturnBody"
+  | "IfHead"
+  | "WhileHead"
+  | "SubroutineBodyClose"
+  | "IfClose"
+  | "ElseClose"
+  | "WhileClose";
+
+type StatementSkipKind = Exclude<
+  JackSkipKind,
+  | "ClassHead"
+  | "ClassStart"
+  | "ClassVarDecBody"
+  | "SubroutineHead"
+  | "ClassClose"
+  | "MissingClassClose"
+  | "VarDecBody"
+>;
+type BlockCloseKind =
+  | "SubroutineBodyClose"
+  | "IfClose"
+  | "ElseClose"
+  | "WhileClose";
+
+/** Null objects for the recovered positions. */
+function nullName(
+  point: RecoveryPoint,
+  kind: "ClassHead" | "ClassStart",
+): ClassName {
+  return { value: "", span: point.span, ...carrierOf(point, kind) };
 }
+
+function nullClassVarDec(point: RecoveryPoint): ClassVarDec {
+  return {
+    varType: "field",
+    type: { value: "", span: point.span },
+    names: [],
+    ...carrierOf(point, "ClassVarDecBody"),
+  };
+}
+
+function nullSubroutine(
+  point: RecoveryPoint,
+  kind: "SubroutineHead" | "ClassClose" | "MissingClassClose",
+): Subroutine {
+  const { span } = point;
+  return {
+    type: "function",
+    name: { value: "", span },
+    returnType: { value: "void", span },
+    parameters: [],
+    body: { varDecs: [], statements: [] },
+    ...carrierOf(point, kind),
+  };
+}
+
+function nullVarDec(point: RecoveryPoint): VarDec {
+  return {
+    type: { value: "", span: point.span },
+    names: [],
+    ...carrierOf(point, "VarDecBody"),
+  };
+}
+
+function nullStatement(
+  point: RecoveryPoint,
+  kind: StatementSkipKind,
+): Statement {
+  return {
+    statementType: "returnStatement",
+    span: point.span,
+    ...carrierOf(point, kind),
+  };
+}
+
+/**
+ * A block's statements: the kept statements, then the synchronizer slot's
+ * null statement when the block recovered. A recovered list slot is an empty
+ * placeholder with no children.
+ */
+function block(list: Node, end: Node, kind: BlockCloseKind): Statement[] {
+  const kept: Statement[] = list.children.map((n) => n.statement);
+  const recovered: RecoveryPoint | undefined = end.recovery;
+  return recovered ? [...kept, nullStatement(recovered, kind)] : kept;
+}
+
+const keep = <T extends Recovery>(items: T[]): T[] =>
+  items.filter((item) => !isRecovered(item));
+
+function pruneStatements(statements: Statement[]): Statement[] {
+  return keep(statements).map((statement) => {
+    switch (statement.statementType) {
+      case "ifStatement":
+        return {
+          ...statement,
+          body: pruneStatements(statement.body),
+          else: pruneStatements(statement.else),
+        };
+      case "whileStatement":
+        return { ...statement, body: pruneStatements(statement.body) };
+      default:
+        return statement;
+    }
+  });
+}
+
+/** A class and each subroutine open a scope named for them. */
+function scopeOf(node: object): string | undefined {
+  return "subroutines" in node || "parameters" in node
+    ? (node as Class | Subroutine).name.value
+    : undefined;
+}
+
+/**
+ * Drops recovered items from every list; the result is checked and minted
+ * `Valid`. Its provenance scopes each skip by its class and subroutine.
+ */
+export const prune = makePrune<Class>(
+  (tree) => ({
+    ...tree,
+    name: isRecovered(tree.name)
+      ? { value: "", span: tree.name.span }
+      : tree.name,
+    varDecs: keep(tree.varDecs),
+    subroutines: keep(tree.subroutines).map((sub) => ({
+      ...sub,
+      body: {
+        varDecs: keep(sub.body.varDecs),
+        statements: pruneStatements(sub.body.statements),
+      },
+    })),
+  }),
+  scopeOf,
+);
 
 jackSemantics.addAttribute<Class>("Root", {
   Root(_) {
@@ -173,18 +351,71 @@ jackSemantics.addAttribute<Class>("Root", {
   },
 });
 
-jackSemantics.addAttribute<Class>("class", {
-  Class(_a, name, _b, varDecs, subroutines, _c) {
+/** A class's name, or the null name of a header skipped up to its `{`. */
+jackSemantics.addAttribute<ClassName>("className", {
+  ClassOpen(head, open) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
+    return recovered
+      ? nullName(recovered, "ClassHead")
+      : {
+          value: head.child(1).sourceString,
+          span: span(head.child(1).source),
+        };
+  },
+});
+
+/** A class's name and variables, or the null name of a skipped header. */
+type ClassStart = Pick<Class, "name" | "varDecs">;
+
+jackSemantics.addAttribute<ClassStart>("classStart", {
+  ClassStart(open, varDecs) {
     return {
-      name: { value: name.sourceString, span: span(name.source) },
+      name: open.className,
       varDecs: varDecs.children.map((n) => n.classVarDec),
-      subroutines: subroutines.children.map((n) => n.subroutineDec),
+    };
+  },
+});
+
+/**
+ * The null subroutine of a recovered class closer: `ClassClose` for skipped
+ * input before the end, which could be a subroutine, or `MissingClassClose`
+ * for a `}` that is only missing at the end, which supplies nothing.
+ */
+function classCloser(close: Node): Subroutine[] {
+  const recovered: RecoveryPoint | undefined = close.recovery;
+  if (recovered === undefined) return [];
+  const kind =
+    close.sourceString.length > 0 ? "ClassClose" : "MissingClassClose";
+  return [nullSubroutine(recovered, kind)];
+}
+
+jackSemantics.addAttribute<Class>("class", {
+  Class_body(start, subroutinesStart, subroutines, close) {
+    const header: RecoveryPoint | undefined = subroutinesStart.recovery;
+    const kept = subroutines.children.map((n) => n.subroutineDec);
+    return {
+      ...(header
+        ? { name: nullName(header, "ClassStart"), varDecs: [] }
+        : (start.classStart as ClassStart)),
+      subroutines: [...kept, ...classCloser(close)],
+    };
+  },
+  // Reached when a class with no subroutines lacks its `}` at the end.
+  Class_unclosed(_class, open, varDecs, close) {
+    return {
+      name: open.className,
+      varDecs: varDecs.children.map((n) => n.classVarDec),
+      subroutines: classCloser(close),
     };
   },
 });
 
 jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
-  ClassVarDec(varType, type, name, rest, _) {
+  ClassVarDec(body, end) {
+    const recovered: RecoveryPoint | undefined = end.recovery;
+    return recovered ? nullClassVarDec(recovered) : body.classVarDec;
+  },
+  ClassVarDecBody(varType, type, name, rest) {
     return {
       varType: varType.sourceString.trim() as ClassVarType,
       type: {
@@ -200,7 +431,12 @@ jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
 });
 
 jackSemantics.addAttribute<Subroutine>("subroutineDec", {
-  SubroutineDec(type, returnType, name, _a, parameters, _b, body) {
+  SubroutineDec(head, open, body) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
+    if (recovered) {
+      return nullSubroutine(recovered, "SubroutineHead");
+    }
+    const [type, returnType, name, _a, parameters] = head.children;
     return {
       type: type.sourceString.trim() as SubroutineType,
       returnType: {
@@ -239,16 +475,20 @@ jackSemantics.addAttribute<Expression[]>("parameters", {
 });
 
 jackSemantics.addAttribute<SubroutineBody>("subroutineBody", {
-  SubroutineBody(_a, varDecs, statementList, _b) {
+  SubroutineBody(_a, varDecs, statementList, end) {
     return {
       varDecs: varDecs.children.map((n) => n.varDec),
-      statements: statements(statementList),
+      statements: block(statementList, end, "SubroutineBodyClose"),
     };
   },
 });
 
 jackSemantics.addAttribute<VarDec>("varDec", {
-  VarDec(_a, type, name, rest, _b) {
+  VarDec(body, end) {
+    const recovered: RecoveryPoint | undefined = end.recovery;
+    return recovered ? nullVarDec(recovered) : body.varDec;
+  },
+  VarDecBody(_a, type, name, rest) {
     return {
       type: {
         value: type.sourceString.trim() as Type,
@@ -269,7 +509,14 @@ jackSemantics.addAttribute<VarDec>("varDec", {
 // })
 
 jackSemantics.addAttribute<Statement>("statement", {
-  LetStatement(_a, target, _b, value, _c) {
+  LetStatement(body, end) {
+    const recovered: RecoveryPoint | undefined = end.recovery;
+    return recovered
+      ? nullStatement(recovered, "LetBody")
+      : { ...body.statement, span: span(this.source) };
+  },
+
+  LetBody(_a, target, _b, value) {
     if (target.term.termType == "variable") {
       return {
         statementType: "letStatement",
@@ -291,35 +538,55 @@ jackSemantics.addAttribute<Statement>("statement", {
     }
   },
 
-  IfStatement(_a, _b, condition, _c, _d, body, _e, elseBlock) {
+  IfStatement(head, open, body, end, elseBlock) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
+    if (recovered) {
+      return nullStatement(recovered, "IfHead");
+    }
     return {
       statementType: "ifStatement",
-      condition: condition.expression,
-      body: statements(body),
+      condition: head.child(2).expression,
+      body: block(body, end, "IfClose"),
       else: elseBlock.child(0)?.else ?? [],
     };
   },
 
-  WhileStatement(_a, _b, condition, _c, _d, body, _e) {
+  WhileStatement(head, open, body, end) {
+    const recovered: RecoveryPoint | undefined = open.recovery;
+    if (recovered) {
+      return nullStatement(recovered, "WhileHead");
+    }
     return {
       statementType: "whileStatement",
-      condition: condition.expression,
-      body: statements(body),
+      condition: head.child(2).expression,
+      body: block(body, end, "WhileClose"),
     };
   },
 
-  DoStatement(_a, call, _b) {
+  DoStatement(body, end) {
+    const recovered: RecoveryPoint | undefined = end.recovery;
+    return recovered ? nullStatement(recovered, "DoBody") : body.statement;
+  },
+
+  DoBody(_a, call) {
     return { statementType: "doStatement", call: call.term as SubroutineCall };
   },
 
-  EmptyReturn(_a, _b) {
+  ReturnStatement(body, end) {
+    const recovered: RecoveryPoint | undefined = end.recovery;
+    return recovered
+      ? nullStatement(recovered, "ReturnBody")
+      : { ...body.statement, span: span(this.source) };
+  },
+
+  EmptyReturn(_a) {
     return {
       statementType: "returnStatement",
       span: span(this.source),
     };
   },
 
-  ReturnValue(_a, value, _b) {
+  ReturnValue(_a, value) {
     return {
       statementType: "returnStatement",
       value: value.expression,
@@ -329,8 +596,8 @@ jackSemantics.addAttribute<Statement>("statement", {
 });
 
 jackSemantics.addAttribute<Statement[]>("else", {
-  ElseBlock(_a, _b, body, _c) {
-    return statements(body);
+  ElseBlock(_a, _b, body, end) {
+    return block(body, end, "ElseClose");
   },
 });
 
@@ -430,9 +697,63 @@ jackSemantics.addAttribute<ExpressionPart>("expressionPart", {
   },
 });
 
+/** The null root of a parse that built no class: an empty, unnamed class. */
+function emptyClass(): Class {
+  return {
+    name: { value: "", span: { start: 0, end: 0, line: 1 } },
+    varDecs: [],
+    subroutines: [],
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Restored message: `expected "}"` right after a class's variables.
+//
+// What changed: `Class = ClassStart ! &SubroutinesStart ...` checks for a
+// subroutine keyword or `}` where the class's variables end. Where they end
+// exactly at the failure (no space or comment between, as in `class Main {`
+// or `field int x;` at the end of the file), that lookahead adds `"method"`,
+// `"function"` and `"constructor"` to the expected text. Before it, those
+// expectations came from `SubroutineDec*`, which matched nothing there, so
+// Ohm marked them fluffy and showed only `expected "}"`. Fluffy `"field"`
+// failures (the variables' own `ClassVarDec*` ended there) mark the case.
+// `makeParser` applies the rewrite with recovery on and off alike, so a
+// recovered parse still reports the strict parse's first message.
+//
+// Tradeoff: accepting the end of input in the lookahead's join would also
+// keep this text, but every recovery scan that reaches the end would then
+// match it, so nearly every truncated Jack file would recover as an empty
+// class instead of reaching `Class_unclosed`, which keeps the class's name
+// and variables and reports the missing `}`.
+//
+// To revert to the longer list: delete this block and the
+// `restoreClassCloseMessage` argument to `makeParser` below, and change the
+// literal `expected "}"` in the test "the strict Jack message at a class
+// with no subroutines" (`recovery/headers.test.ts`) to
+// `expected "}", "method", "function", or "constructor"`.
+const LOOKAHEAD_EXPECTED =
+  'expected "}", "method", "function", or "constructor"';
+const CLOSER_EXPECTED = 'expected "}"';
+
+const restoreClassCloseMessage: SyntaxMessage = (message, failures) => {
+  const afterClassVariables = failures.some(
+    (failure) => failure.isFluffy() && failure.toString() === '"field"',
+  );
+  return afterClassVariables && message.endsWith(LOOKAHEAD_EXPECTED)
+    ? message.slice(0, -LOOKAHEAD_EXPECTED.length) + CLOSER_EXPECTED
+    : message;
+};
+// ---------------------------------------------------------------------------
+
 export const JACK = {
   parser: grammar,
   grammar: jackGrammar,
   semantics: jackSemantics,
-  parse: makeParser<Class>(grammar, jackSemantics, (n) => n.class),
+  ...makeParser<Class>(
+    grammar,
+    jackSemantics,
+    emptyClass,
+    "class",
+    restoreClassCloseMessage,
+  ),
 };

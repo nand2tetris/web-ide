@@ -1,9 +1,6 @@
 import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
-import {
-  CompilationError,
-  Span,
-} from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
 import { type Grammar } from "ohm-js";
 import { CSSProperties, lazy, Suspense, useContext } from "react";
 import { AppContext } from "../App.context";
@@ -13,14 +10,27 @@ import { Action } from "@nand2tetris/simulator/types";
 
 const Monaco = lazy(() => import("./Monaco"));
 
-export const ErrorPanel = ({ error }: { error?: CompilationError }) => {
-  return error ? (
+const NO_DIAGNOSTICS: readonly Diagnostic[] = [];
+
+export const ErrorPanel = ({
+  diagnostics = [],
+  file,
+}: {
+  diagnostics?: readonly Diagnostic[];
+  /** The file the diagnostics belong to, when it is not the one in the editor. */
+  file?: string;
+}) => {
+  return diagnostics.length > 0 ? (
     <details className="ErrorPanel" open>
       <summary role="button" className="secondary">
-        <Trans>Parse Error</Trans>
+        {file === undefined ? (
+          <Trans>Parse Error</Trans>
+        ) : (
+          <Trans>Errors in {file}</Trans>
+        )}
       </summary>
       <pre>
-        <code>{error?.message}</code>
+        <code>{diagnostics.map((e) => e.message).join("\n")}</code>
       </pre>
     </details>
   ) : (
@@ -66,7 +76,8 @@ export const Editor = ({
   style = {},
   disabled = false,
   value,
-  error,
+  diagnostics,
+  dependencyDiagnostics,
   onChange,
   onCursorPositionChange,
   grammar,
@@ -84,7 +95,13 @@ export const Editor = ({
   disabled?: boolean;
   value: string;
   path: string;
-  error?: CompilationError;
+  /** The diagnostics of this file, each marked at its own span. */
+  diagnostics?: readonly Diagnostic[];
+  /**
+   * The diagnostics of other files, by path. Their spans belong to those
+   * files, so each list shows in a panel that names its file, never as a marker.
+   */
+  dependencyDiagnostics?: Record<string, readonly Diagnostic[]>;
   onChange: Action<string>;
   onCursorPositionChange?: (index: number) => void;
   grammar?: Grammar;
@@ -97,6 +114,8 @@ export const Editor = ({
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { monaco } = useContext(AppContext);
+  const list = diagnostics ?? NO_DIAGNOSTICS;
+  const dependencies = Object.entries(dependencyDiagnostics ?? {});
 
   return (
     <div
@@ -111,7 +130,7 @@ export const Editor = ({
             onCursorPositionChange={onCursorPositionChange}
             path={path}
             language={language}
-            error={error}
+            diagnostics={list}
             disabled={disabled}
             highlight={highlight}
             highlightType={highlightType}
@@ -129,8 +148,15 @@ export const Editor = ({
             language={language}
             disabled={disabled}
           />
-          <ErrorPanel error={error} />
+          <ErrorPanel diagnostics={list} />
         </>
+      )}
+      {dependencies.length > 0 && (
+        <div className="dependency-diagnostics">
+          {dependencies.map(([file, fileDiagnostics]) => (
+            <ErrorPanel key={file} file={file} diagnostics={fileDiagnostics} />
+          ))}
+        </div>
       )}
     </div>
   );

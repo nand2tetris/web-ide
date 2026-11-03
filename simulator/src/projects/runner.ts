@@ -5,10 +5,9 @@ import {
   AssignmentStubs,
 } from "@nand2tetris/projects/base.js";
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
-import { build as buildChip } from "../chip/builder.js";
+import { parse as buildChip, type ChipDiagnostics } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
-import { CompilationError } from "../languages/base.js";
-import { HDL, HdlParse } from "../languages/hdl.js";
+import { Diagnostics, Valid, validOf } from "../languages/base.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
 
@@ -19,8 +18,7 @@ export interface AssignmentFiles extends Assignment {
 }
 
 export interface AssignmentParse extends AssignmentFiles {
-  maybeParsedHDL: Result<HdlParse, CompilationError>;
-  maybeParsedTST: Result<Tst, CompilationError>;
+  maybeParsedTST: Result<Valid<Tst>, Diagnostics>;
 }
 
 export interface AssignmentBuild extends AssignmentParse {
@@ -44,31 +42,37 @@ export const hasTest = ({
   AssignmentStubs[name as keyof typeof AssignmentStubs] !== undefined &&
   [".hdl", ".tst"].includes(ext);
 
-/** Try parsing the loaded files. */
+/** Try parsing the loaded test script. */
 export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
-  const maybeParsedHDL = HDL.parse(file.hdl);
-  const maybeParsedTST = TST.parse(file.tst);
-  return { ...file, maybeParsedHDL, maybeParsedTST };
+  const maybeParsedTST = validOf(TST.parse(file.tst));
+  return { ...file, maybeParsedTST };
 };
 
-/** After parsing the assignment, compile the Chip and Tst. */
+/** Every diagnostic of a chip and its dependencies, a line each naming its file. */
+function describeFailures(failures: ChipDiagnostics): string {
+  return Object.entries(failures)
+    .flatMap(([file, diagnostics]) =>
+      diagnostics.map(({ message }) => `${file}: ${message}`),
+    )
+    .join("\n");
+}
+
+/** What a run may be told: whether a final call keeps checking after a syntax error (default true). */
+export interface RunOptions {
+  attemptRecovery?: boolean;
+}
+
+/** After parsing the test script, build the Chip from its source, and the Tst. */
 export const maybeBuild =
-  (fs: FileSystem) =>
+  (fs: FileSystem, options: RunOptions = {}) =>
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
-    let maybeChip: Result<Chip, Error>;
-    if (isOk(file.maybeParsedHDL)) {
-      const maybeBuilt = await buildChip({
-        parts: Ok(file.maybeParsedHDL),
-        fs,
-      });
-      if (isErr(maybeBuilt)) {
-        maybeChip = Err(new Error(Err(maybeBuilt).message));
-      } else {
-        maybeChip = maybeBuilt;
-      }
-    } else {
-      maybeChip = Err(new Error("HDL Was not parsed"));
-    }
+    const built = await buildChip(file.hdl, undefined, undefined, fs, {
+      file: `${file.name}.hdl`,
+      attemptRecovery: options.attemptRecovery,
+    });
+    const maybeChip: Result<Chip, Error> = isErr(built)
+      ? Err(new Error(describeFailures(Err(built))))
+      : built;
     const maybeTest = isOk(file.maybeParsedTST)
       ? ChipTest.from(Ok(file.maybeParsedTST))
       : Err(new Error("TST Was not parsed"));
@@ -104,9 +108,13 @@ export const tryRun =
   };
 
 /** Parse & execute a Nand2tetris assignment, possibly also including the Java output in shadow mode. */
-export const runner = (fs: FileSystem, ideRunner?: Runner) => {
+export const runner = (
+  fs: FileSystem,
+  ideRunner?: Runner,
+  options: RunOptions = {},
+) => {
   const tryRunWithFs = tryRun(fs);
-  const maybeBuildWithFs = maybeBuild(fs);
+  const maybeBuildWithFs = maybeBuild(fs, options);
   return async (assignment: AssignmentFiles): Promise<AssignmentRun> => {
     const jsRunner = async () =>
       tryRunWithFs(await maybeBuildWithFs(await maybeParse(assignment)));
@@ -123,8 +131,9 @@ export async function runTests(
   loadAssignment: (file: Assignment) => Promise<AssignmentFiles>,
   fs: FileSystem,
   ideRunner?: Runner,
+  options: RunOptions = {},
 ): Promise<AssignmentRun[]> {
-  const run = runner(fs, ideRunner);
+  const run = runner(fs, ideRunner, options);
   return Promise.all(
     files.map(loadAssignment).map(async (assignment) => run(await assignment)),
   );

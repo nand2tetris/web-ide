@@ -22,7 +22,7 @@ export const Asm = () => {
   const { filePicker } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, actions, dispatch } = stores.asm;
-  const { fs, localFsRoot } = useContext(BaseContext);
+  const { fs, localFsRoot, attemptRecovery } = useContext(BaseContext);
 
   const sourceCursorPos = useRef(0);
   const resultCursorPos = useRef(0);
@@ -35,6 +35,15 @@ export const Asm = () => {
   useEffect(() => {
     setTool("asm");
   }, [setTool]);
+
+  // Turning Attempt Recovery on or off changes the diagnostics of the open source.
+  const recovery = useRef(attemptRecovery);
+  useEffect(() => {
+    if (recovery.current !== attemptRecovery) {
+      recovery.current = attemptRecovery;
+      actions.recompile();
+    }
+  }, [attemptRecovery, actions]);
 
   useEffect(() => {
     runner.current = new (class AsmRunner extends Timer {
@@ -158,7 +167,7 @@ export const Asm = () => {
               {runnerAssigned && runner.current && (
                 <Runbar
                   runner={runner.current}
-                  disabled={state.error != undefined}
+                  disabled={state.diagnostics.length > 0}
                   prefix={
                     <button
                       className="flex-0"
@@ -192,7 +201,7 @@ export const Asm = () => {
         <Editor
           value={state.asm}
           path={state.path ?? "tmp.asm"}
-          error={state.error}
+          diagnostics={state.diagnostics}
           alwaysRecenter={false}
           onChange={(source: string) => {
             actions.setAsm(source);

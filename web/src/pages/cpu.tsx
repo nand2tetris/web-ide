@@ -20,7 +20,7 @@ export const CPU = () => {
   const { filePicker } = useContext(AppContext);
   const { setTool, stores } = useContext(PageContext);
   const { state, actions, dispatch } = stores.cpu;
-  const { fs } = useContext(BaseContext);
+  const { fs, setStatus } = useContext(BaseContext);
 
   const [tst, setTst] = useStateInitializer(state.test.tst);
   const [out, setOut] = useStateInitializer(state.test.out);
@@ -70,6 +70,7 @@ export const CPU = () => {
       }
 
       override reset() {
+        setStatus("");
         actions.reset();
       }
 

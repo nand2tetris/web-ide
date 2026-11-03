@@ -45,6 +45,10 @@ export class TestPanel {
     }
   }
 
+  async reset(): Promise<void> {
+    await this.panel.locator('[data-tooltip="Reset"]').click();
+  }
+
   async #progressSnapshot(): Promise<string> {
     const steps = this.panel.locator('[data-testid="test-step-count"]');
     const outputs = this.panel.locator('[data-testid="test-output-count"]');

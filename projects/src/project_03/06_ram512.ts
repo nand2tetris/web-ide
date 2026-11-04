@@ -18,7 +18,7 @@ CHIP RAM512 {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/b/RAM512.tst
+// File name: RAM512.tst
 
 load RAM512.hdl,
 compare-to RAM512.cmp,

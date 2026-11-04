@@ -28,7 +28,7 @@ CHIP Mux4Way16 {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Mux4Way16.tst
+// File name: Mux4Way16.tst
 
 load Mux4Way16.hdl,
 compare-to Mux4Way16.cmp,

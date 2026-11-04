@@ -74,7 +74,11 @@ export const cmp = `|        x         |        y         |zx |nx |zy |ny | f |n
 | 0101101110100000 | 0001111011010010 | 0 | 0 | 0 | 0 | 0 | 0 | 0001101010000000 |
 | 0101101110100000 | 0001111011010010 | 0 | 1 | 0 | 1 | 0 | 1 | 0101111111110010 |
 `;
-export const tst = `
+export const tst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: ALU-nostat.tst
+
 // ALU no stat tst provides a partial test of the ALU chip.
 // It IS NOT a replacement for ALU.tst.
 

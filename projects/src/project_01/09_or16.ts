@@ -24,7 +24,7 @@ CHIP Or16 {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Or16.tst
+// File name: Or16.tst
 
 load Or16.hdl,
 compare-to Or16.cmp,

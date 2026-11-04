@@ -32,12 +32,12 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-\t//// Replace this comment with your code.
+    //// Replace this comment with your code.
 }`;
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/CPU.tst
+// File name: CPU.tst
 
 load CPU.hdl,
 compare-to CPU.cmp,
@@ -280,7 +280,7 @@ export const cmp = `|time| inM  |  instruction   |reset| outM  |writeM |addre| p
 export const external_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/CPU-external.tst
+// File name: CPU-external.tst
 
 load CPU.hdl,
 output-list time%S0.4.0 inM%D0.6.0 instruction%B0.16.0 reset%B2.1.2 outM%D1.6.0 writeM%B3.1.3 addressM%D0.5.0 pc%D0.5.0;

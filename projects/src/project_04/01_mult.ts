@@ -11,7 +11,7 @@ export const asm = `// This file is part of www.nand2tetris.org
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/4/mult/Mult.tst
+// File name: Mult/Mult.tst
 
 // Tests the Mult program, designed to compute R2 = R0 * R1.
 // Tests the program by having it multiply several sets of

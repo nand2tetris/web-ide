@@ -22,7 +22,7 @@ export const cmp = `|        in        |       out        |
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/Inc16.tst
+// File name: Inc16.tst
 
 load Inc16.hdl,
 compare-to Inc16.cmp,

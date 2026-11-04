@@ -18,7 +18,7 @@ CHIP Bit {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/a/Bit.tst
+// File name: Bit.tst
 
 load Bit.hdl,
 compare-to Bit.cmp,

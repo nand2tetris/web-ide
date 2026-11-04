@@ -18,7 +18,7 @@ CHIP RAM8 {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/a/RAM8.tst
+// File name: RAM8.tst
 
 load RAM8.hdl,
 compare-to RAM8.cmp,

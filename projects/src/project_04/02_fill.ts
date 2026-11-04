@@ -3,7 +3,7 @@ export const asm = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: Fill/Fill.asm
 
-// Runs an infinite loop that listens to the keyboard input; 
+// Runs an infinite loop that listens to the keyboard input. 
 // When a key is pressed (any key), the program blackens the screen,
 // (writes "black" in every pixel). When no key is pressed, 
 // the program clears the screen (writes "white" in every pixel).
@@ -13,7 +13,7 @@ export const asm = `// This file is part of www.nand2tetris.org
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/4/fill/Fill.tst
+// File name: Fill/Fill.tst
 
 // Tests the Fill.hack program in the CPU emulator.
 
@@ -27,7 +27,7 @@ repeat {
 export const autoTst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/4/fill/FillAutomatic
+// File name: Fill/FillAutomatic.tst
 
 // This script can be used to test the Fill program automatically, 
 // rather than interactively. Specifically, the script sets the keyboard

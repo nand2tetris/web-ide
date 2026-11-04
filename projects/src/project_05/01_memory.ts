@@ -8,11 +8,12 @@ export const hdl = `// This file is part of www.nand2tetris.org
  * Outputs the value of the memory location specified by address.
  * If (load==1), the in value is loaded into the memory location specified by address.
  * Addressing space rules:
- * Only the upper 16K+8K+1 words of the memory are used:
+ * Only the lower 16K+8K+1 words of the memory are used:
  * Access to address 0 to 16383 (0x0000 to 0x3FFF) results in accessing the RAM;
  * Access to address 16384 to 24575 (0x4000 to 0x5FFF) results in accessing 
  * the Screen memory map;
  * Access to address 24576 (0x6000) results in accessing the Keyboard memory map.
+ * Access to any address > 24576 (0x6000) results in the output zero.
  */ 
 
 CHIP Memory {
@@ -20,12 +21,12 @@ CHIP Memory {
     OUT out[16];
 
     PARTS:
-\t//// Replace this comment with your code.
+    //// Replace this comment with your code.
 }`;
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/05/Memory.tst
+// File name: Memory.tst
 
 // Tests the Memory chip by inputting values to selected addresses, 
 // verifying that these addresses were indeed written to, and verifying  

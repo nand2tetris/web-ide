@@ -17,7 +17,7 @@ CHIP DMux {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/DMux.tst
+// File name: DMux.tst
 
 load DMux.hdl,
 compare-to DMux.cmp,

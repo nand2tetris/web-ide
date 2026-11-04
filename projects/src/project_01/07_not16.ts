@@ -17,7 +17,7 @@ CHIP Not16 {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Not16.tst
+// File name: Not16.tst
 
 load Not16.hdl,
 compare-to Not16.cmp,

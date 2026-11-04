@@ -83,7 +83,7 @@ export const cmp = `|        x         |        y         |zx |nx |zy |ny | f |n
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/ALU.tst
+// File name: ALU.tst
 
 load ALU.hdl,
 compare-to ALU.cmp,
@@ -457,7 +457,7 @@ output;`;
 export const basic_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/ALU-basic.tst
+// File name: ALU-basic.tst
 
 // Tests the basic version of the ALU chip.
 // DOES NOT replace the final test provided by ALU.tst.

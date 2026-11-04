@@ -1,4 +1,8 @@
-export const MaxTst = `
+export const MaxTst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: Max.tst
+
 load Max.asm;
 set %0 16548, set %1 12944;
 

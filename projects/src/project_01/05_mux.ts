@@ -25,7 +25,7 @@ CHIP Mux {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Mux.tst
+// File name: Mux.tst
 
 load Mux.hdl,
 compare-to Mux.cmp,

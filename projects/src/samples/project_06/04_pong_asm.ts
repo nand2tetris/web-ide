@@ -4,8 +4,8 @@ export const PongAsm = `// This file is part of www.nand2tetris.org
 // by Nisan and Schocken, MIT Press.
 // File name: Pong.asm
 
-// The source Pong program was written in the high-level Jack language;
-// The computer’s operating system is also written in Jack;
+// The source Pong program was written in the high-level Jack language.
+// The computer’s operating system is also written in Jack.
 // The Pong code + the OS code were compiled by the Jack compiler,
 // creating (after further processing by the VM translator) a single
 // file named Pong.asm, containing the assembly code shown here.

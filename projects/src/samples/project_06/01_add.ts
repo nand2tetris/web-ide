@@ -1,4 +1,9 @@
-export const AddTst = `repeat 6 { tick, tock; }`;
+export const AddTst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: Add.tst
+
+repeat 6 { tick, tock; }`;
 export const AddAsm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.

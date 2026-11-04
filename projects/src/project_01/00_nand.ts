@@ -17,7 +17,7 @@ CHIP Nand {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/1/Nand.tst
+// File name: Nand.tst
 
 output-list a b out;
 

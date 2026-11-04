@@ -25,7 +25,7 @@ export const cmp = `| a | b | c |sum|carry|
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/FullAdder.tst
+// File name: FullAdder.tst
 
 load FullAdder.hdl,
 compare-to FullAdder.cmp,

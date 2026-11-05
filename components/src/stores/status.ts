@@ -1,6 +1,9 @@
 import { isValid } from "@nand2tetris/simulator/languages/base.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
-import type { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
+import {
+  type Diagnostic,
+  Stage,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import type { Action } from "@nand2tetris/simulator/types.js";
 import { useMemo, useState } from "react";
 import { compare } from "../compare.js";
@@ -14,6 +17,13 @@ export interface StatusDiagnostic {
   diagnostic: Diagnostic;
 }
 
+export interface StatusHeading {
+  source: StatusSource;
+  count: number;
+  /** Count of semantic and compile errors; omitted when zero. */
+  semantic?: number;
+}
+
 /**
  * What the bottom status bar shows: a message, diagnostics, or both. A status
  * with diagnostics shows those in place of its message, and the UI words each
@@ -23,7 +33,7 @@ export interface StatusDiagnostic {
 export interface Status {
   severity?: StatusSeverity;
   message?: string;
-  heading?: { source: StatusSource; count: number };
+  heading?: StatusHeading;
   comparison?: "equal" | "different";
   diagnostics?: readonly StatusDiagnostic[];
 }
@@ -52,8 +62,15 @@ export function failureStatus(
   diagnostics: readonly Diagnostic[],
   { marked = true }: { marked?: boolean } = {},
 ): Status {
+  const semantic = diagnostics.filter(
+    ({ stage }) => stage === Stage.SEMANTIC || stage === Stage.COMPILE,
+  ).length;
   return {
-    heading: { source, count: diagnostics.length },
+    heading: {
+      source,
+      count: diagnostics.length,
+      ...(semantic > 0 ? { semantic } : {}),
+    },
     diagnostics: diagnostics
       .filter(({ span }) => !marked || span === undefined)
       .map((diagnostic) => ({ diagnostic })),

@@ -26,6 +26,22 @@ function failure(source: StatusSource, count: number): Status {
   return { heading: { source, count }, diagnostics: [] };
 }
 
+describe("a heading with semantic errors", () => {
+  it("names a semantic error, not a syntax error", () => {
+    const heading = { source: "hdl", count: 1, semantic: 1 } as const;
+    expect(describeStatus({ heading, diagnostics: [] })).toBe(
+      "HDL code: 1 semantic error",
+    );
+  });
+
+  it("names plain errors when syntax and semantic errors mix", () => {
+    const heading = { source: "hdl", count: 3, semantic: 1 } as const;
+    expect(describeStatus({ heading, diagnostics: [] })).toBe(
+      "HDL code: 3 errors",
+    );
+  });
+});
+
 function StatusUnderTest({ status }: { status: Status }) {
   const context = useContext(BaseContext);
   return (

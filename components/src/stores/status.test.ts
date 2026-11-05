@@ -1,6 +1,7 @@
 import {
   DiagnosticCode,
   diagnostic,
+  Stage,
 } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { describe, expect, it, vi } from "vitest";
 import { comparisonStatus, failureStatus, statusActions } from "./status.js";
@@ -23,6 +24,25 @@ describe("failureStatus", () => {
     expect(failureStatus("asm", [bad(2), bad(3), bad(5)]).heading).toEqual({
       source: "asm",
       count: 3,
+    });
+  });
+
+  it("counts the semantic errors apart from syntax errors", () => {
+    const semantic = diagnostic(
+      DiagnosticCode.Chip.NOT_FOUND,
+      { name: "A" },
+      at(4),
+      Stage.SEMANTIC,
+    );
+    expect(failureStatus("hdl", [semantic]).heading).toEqual({
+      source: "hdl",
+      count: 1,
+      semantic: 1,
+    });
+    expect(failureStatus("hdl", [bad(2), semantic]).heading).toEqual({
+      source: "hdl",
+      count: 2,
+      semantic: 1,
     });
   });
 

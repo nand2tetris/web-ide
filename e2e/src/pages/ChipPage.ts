@@ -114,7 +114,7 @@ export class ChipPage {
 
   async expectSyntaxError(): Promise<void> {
     await expect(
-      this._page.getByText("Syntax errors in the HDL code or test"),
+      this._page.getByText("Errors in the HDL code or test"),
     ).toBeVisible();
   }
 }

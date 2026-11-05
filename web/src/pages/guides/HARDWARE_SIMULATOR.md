@@ -9,6 +9,26 @@ To build or edit a chip (HDL program), select the chip name from the Project men
 
 **Builtin chips:** Each chip in projects 1, 2, 3 and 5 has a builtin version. The builtin version features the chip’s interface, and a builtin implementation which is part of the simulator’s software. The builtin version allows users to experiment with the chip’s operations before implementing it in HDL. To do so, select the BuiltIn toggle and test the chip using either interactive or script-based simulation (described next).
 
+**Editor help:** The HDL editor understands your chip while you type. A red squiggle marks a chip or a pin name that does not exist, and a pin that is declared twice. Hover over a squiggle to read what is wrong. Try this in the `Not` chip, which you build from a `Nand` chip:
+
+```
+CHIP Not {
+    IN in;
+    OUT out;
+
+    PARTS:
+    Nand(a=in, b=in, out=out);
+}
+```
+
+* **Completion.** Press `Ctrl+Space` (`Cmd+Space` on a Mac) for suggestions that fit where the cursor is. At the start of a part you are offered chip names, including your own chips from other files in the same project. After `Nand(` you are offered the pins of `Nand`, which are `a`, `b` and `out`. After an equals sign you are offered the pins of the chip you are writing, any internal pins you have already used, and `true` and `false`.
+* **Go to definition.** Put the cursor on a pin and press `F12` to jump to the place where the pin is declared. For an internal pin, that is the first wire that mentions it.
+* **Find all references.** Press `Shift+F12` on a pin to list every wire that uses it.
+* **Rename.** Press `F2` on a pin and type a new name. Every use in the chip changes together. The rename is refused if the new name is already taken.
+* **Outline.** Press `Ctrl+Shift+O` (`Cmd+Shift+O` on a Mac) to list the chip and its pins, and to jump to any of them.
+
+The editor checks your chip against the builtin chips and the other `.hdl` files in the project, so it can tell you about a misspelled chip or pin before you click Eval. If you have a half typed line, the rest of the file is still checked, and a name that depends on the broken line is shown only as a faint hint instead of an error.
+
 ##### **Pins panel** (in the middle)
 
 Displays the names of the chip’s pins (input, output, internal), and their current values. The current pin values are computed by the chip logic when the user clicks the Eval button, or when an “eval” command is executed in the chip’s test script. If a pin’s width is more than one bit, a dec/bin toggle allows displaying its value in either a decimal or a binary format. To “evaluate a chip”, change one or more of its input pins, and click the Eval button.

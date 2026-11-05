@@ -50,7 +50,31 @@ All tests pass!
 
 ---
 
+## Editing HDL
+
+While you type in the HDL panel, the editor checks names and offers help.
+
+1. Choose the `Not` chip. Its outline is loaded into the HDL panel.
+2. On the line after `PARTS:`, type `Na` and press `Ctrl+Space`. The editor offers `Nand` and the other chips you can use.
+3. Choose `Nand` and the editor fills in `Nand(a=, b=, out=)`. Put the cursor after `a=` and press `Ctrl+Space` again. The editor offers `in`, `out`, `true` and `false`, which are the names that can be wired here.
+4. Type `Nnad(a=in, b=in, out=out);` by mistake. The name `Nnad` gets a red squiggle. Hover over it to read that no such chip exists.
+5. Click on `in` in a wire and press `F12`. The editor jumps to the `IN` line that declares it. Press `Shift+F12` to see every wire that uses it.
+6. Press `F2` on `in`, type `x`, and press `Enter`. The declaration and every wire change together.
+
+---
+
 ![Settings](%PUBLIC_URL%/user_guide/07_settings.png)
 
 Clicking `Save` in the HDL panel will store the HDL chip to user's local storage.
 In settings, clicking `Files: Reset` will restore the files to the book' projects.
+
+## Jack Compiler
+
+The Jack editor knows the classes, fields, variables and subroutines you write, and the classes of the Jack OS.
+
+1. In `Main.jack`, declare `field int x;` and write `method int get() { return y; }`. The name `y` gets a red squiggle, because no field or variable has that name. Change it to `x` and the squiggle goes away.
+2. Put the cursor on `x` in `return x;` and press `F12`. The editor jumps to the `field int x;` line. Press `Shift+F12` to see every use of `x` in the class.
+3. Press `F2` on `x` and type `count`. The field and every use of it change together. Names in other subroutines that happen to be called `x`, such as a local variable, are left alone.
+4. Inside a `function`, press `Ctrl+Space` to be offered the fields, variables, parameters and classes that are in scope. Calling a subroutine that does not exist, such as `Output.printIntt(1);`, shows a squiggle that names the class and the missing subroutine.
+5. When your program has several classes, each file can use the others, and a class that no file declares is marked as undefined. The editor refuses to rename a name that other files use unless those files are open, so that no use is left behind.
+6. Press `Ctrl+Shift+O` for an outline of the class, with its fields and subroutines. Parameters and variables are listed under their subroutine.

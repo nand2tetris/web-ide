@@ -21,7 +21,7 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: { value: "void", span: { start: 304, end: 309, line: 11 } },
+      returnType: { value: "void", span: { start: 304, end: 308, line: 11 } },
       name: { value: "main", span: { start: 309, end: 313, line: 11 } },
       parameters: [],
       body: {
@@ -67,6 +67,7 @@ export const parsed = {
             span: { start: 363, end: 370, line: 13 },
           },
         ],
+        close: { start: 374, end: 375, line: 14 },
       },
     },
   ],

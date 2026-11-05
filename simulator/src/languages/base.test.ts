@@ -6,6 +6,7 @@ import {
   actionError,
   baseSemantics,
   categorize,
+  didYouMean,
   failedOf,
   grammars,
   isRecovered,
@@ -18,6 +19,7 @@ import {
   type Recovery,
   type RecoveryPoint,
   recoveryOf,
+  reservedName,
   rewrites,
   type SyntaxExpected,
   span,
@@ -912,6 +914,40 @@ describe("syntax expectation rewrites", () => {
     expect(shown("go;\nxx;", true)).toEqual(["Line 2: unknown word xx"]);
   });
 
+  it("suggests an expected word for case and adjacent transposition in strict and recovery modes", () => {
+    const shown = wordsParser(rewrites(didYouMean(["go", "stop"])));
+    for (const recovery of [false, true]) {
+      expect(shown("GO;", recovery)).toEqual([
+        "Line 1: unknown GO; did you mean go?",
+      ]);
+      expect(shown("stpo;", recovery)).toEqual([
+        "Line 1: unknown stpo; did you mean stop?",
+      ]);
+      expect(shown("stop;", recovery)).toEqual([]);
+    }
+  });
+
+  it("leaves distant, ambiguous and unexpected words alone", () => {
+    const shown = wordsParser(rewrites(didYouMean(["go", "stop"])));
+    expect(shown("xyz;", false)).toEqual(['Line 1: expected "stop" or "go"']);
+    const fake = (text: string, fluffy = false) =>
+      ({
+        toString: () => JSON.stringify(text),
+        isFluffy: () => fluffy,
+      }) as never;
+    const rule = didYouMean(["cat", "car"]);
+    expect(
+      rule([], [fake("cat"), fake("car")], { source: "cap", position: 0 }),
+    ).toBeUndefined();
+    expect(
+      rule([], [fake("car")], { source: "cat", position: 0 }),
+    ).toBeUndefined();
+    expect(rule([], [], { source: "cAt", position: 0 })).toBeUndefined();
+    expect(
+      rule([], [fake("cat", true)], { source: "cAt", position: 0 }),
+    ).toBeUndefined();
+  });
+
   it("ends the chain at a fault", () => {
     const shown = wordsParser(
       rewrites(
@@ -930,6 +966,50 @@ describe("syntax expectation rewrites", () => {
     expect(wordsParser(rule)("go;\n;", false)).toEqual([
       'Line 2: expected end of input, "stop", or "go"',
     ]);
+  });
+
+  it("names a reserved word where a name was expected", () => {
+    const names = grammar(
+      `Names { Root = (name ! ";")+ name (a name) = ~"go" letter+ }`,
+    );
+    const semantics = names.createSemantics();
+    semantics.addAttribute<string>("root", {
+      Root(_names, _corrections, _ends) {
+        return "ast";
+      },
+    });
+    const parser = makeParser<string>(
+      names,
+      semantics,
+      () => "",
+      "root",
+      rewrites(reservedName(["go"], ["a name"])),
+    );
+    const shown = (source: string, attemptRecovery: boolean) =>
+      parser
+        .parse(source, { attemptRecovery })
+        .diagnostics.map((d) => describeDiagnostic(d));
+
+    expect(shown("ab;\ngo;", false)).toEqual([
+      "Line 2: expected a name that is not a keyword",
+    ]);
+    expect(shown("ab;\ngo;", true)).toEqual([
+      "Line 2: expected a name that is not a keyword",
+    ]);
+  });
+
+  it("keeps the expectations where the word is not reserved or no name was expected", () => {
+    const rule = rewrites(reservedName(["go"], ["a name"]));
+    const site = { source: "go", position: 0 };
+
+    expect(rule(["a name"], [], { source: "ab", position: 0 })).toEqual([
+      "a name",
+    ]);
+    expect(rule(['";"'], [], site)).toEqual(['";"']);
+    expect(rule(["a name"], [], site)).toEqual({
+      code: DiagnosticCode.Syntax.NAME,
+      args: { word: "go", reason: "reserved" },
+    });
   });
 
   it("places a missing separator at the end of the previous line", () => {

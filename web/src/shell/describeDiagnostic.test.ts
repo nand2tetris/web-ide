@@ -14,6 +14,8 @@ import { describeStatus } from "./statusline";
 const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Syntax.EXPECTED]: { expected: ['"a"', '"b"', '"c"'] },
   [DiagnosticCode.Syntax.UNKNOWN_WORD]: { kind: "command", word: "psh" },
+  [DiagnosticCode.Syntax.DID_YOU_MEAN]: { word: "Push", suggestion: "push" },
+  [DiagnosticCode.Syntax.NAME]: { word: "let", reason: "reserved" },
   [DiagnosticCode.Error.UNEXPECTED]: { message: "boom" },
   [DiagnosticCode.Asm.INVALID_TARGET]: { target: "DA", suggestion: "AD" },
   [DiagnosticCode.Asm.INVALID_VALUE]: { value: "M+A" },
@@ -98,6 +100,7 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Jack.DUPLICATE_SUBROUTINE]: { name: "a" },
   [DiagnosticCode.Jack.MISSING_RETURN_VALUE]: {},
   [DiagnosticCode.Jack.MISSING_RETURN_PATH]: { name: "main" },
+  [DiagnosticCode.Jack.FIELD_IN_FUNCTION]: { name: "main", field: "size" },
 };
 
 const span = { start: 8, end: 14, line: 4 };
@@ -136,6 +139,11 @@ describe("describeDiagnostic in English", () => {
       rhsWidth: 2,
     }),
     diagnostic(DiagnosticCode.Asm.A_VALUE_RANGE, { value: 1234567 }),
+    diagnostic(DiagnosticCode.Jack.ARG_COUNT, {
+      name: "Main.f",
+      expected: 2,
+      received: 1,
+    }),
     diagnostic(DiagnosticCode.Jack.CALLED_AS_METHOD, {
       kind: "constructor",
       name: "A.new",

@@ -37,6 +37,8 @@ export const DiagnosticCode = Object.freeze({
   Syntax: Object.freeze({
     EXPECTED: "syntax.expected",
     UNKNOWN_WORD: "syntax.unknownWord",
+    DID_YOU_MEAN: "syntax.didYouMean",
+    NAME: "syntax.name",
   }),
   Error: Object.freeze({
     UNEXPECTED: "error.unexpected",
@@ -110,6 +112,7 @@ export const DiagnosticCode = Object.freeze({
     DUPLICATE_SUBROUTINE: "jack.duplicateSubroutine",
     MISSING_RETURN_VALUE: "jack.missingReturnValue",
     MISSING_RETURN_PATH: "jack.missingReturnPath",
+    FIELD_IN_FUNCTION: "jack.fieldInFunction",
     DUPLICATE_CLASS_FILE: "jack.duplicateClassFile",
   }),
 });
@@ -124,6 +127,10 @@ export interface DiagnosticArgs {
   [DiagnosticCode.Syntax.EXPECTED]: { expected: readonly string[] };
   /** A word stands where a `kind` (for example `command`) was expected. */
   [DiagnosticCode.Syntax.UNKNOWN_WORD]: { kind: string; word: string };
+  /** A word resembles an expected literal. */
+  [DiagnosticCode.Syntax.DID_YOU_MEAN]: { word: string; suggestion: string };
+  /** `word` stands where a name was expected but is not a name: it is reserved. */
+  [DiagnosticCode.Syntax.NAME]: { word: string; reason: "reserved" };
 
   // Unexpected failures that carry only a programmer facing message.
   [DiagnosticCode.Error.UNEXPECTED]: { message: string };
@@ -228,6 +235,7 @@ export interface DiagnosticArgs {
   [DiagnosticCode.Jack.DUPLICATE_SUBROUTINE]: { name: string };
   [DiagnosticCode.Jack.MISSING_RETURN_VALUE]: Record<string, never>;
   [DiagnosticCode.Jack.MISSING_RETURN_PATH]: { name: string };
+  [DiagnosticCode.Jack.FIELD_IN_FUNCTION]: { name: string; field: string };
 }
 
 /** The name of a user visible problem: one value of `DiagnosticCode`. */
@@ -334,6 +342,9 @@ export const ENGLISH: Catalog = {
       `expected ${listOf(expected)}`,
     [DiagnosticCode.Syntax.UNKNOWN_WORD]: ({ kind, word }) =>
       `unknown ${kind} ${word}`,
+    [DiagnosticCode.Syntax.DID_YOU_MEAN]: ({ word, suggestion }) =>
+      `unknown ${word}; did you mean ${suggestion}?`,
+    [DiagnosticCode.Syntax.NAME]: () => "expected a name that is not a keyword",
 
     [DiagnosticCode.Error.UNEXPECTED]: ({ message }) => message,
 
@@ -448,7 +459,7 @@ export const ENGLISH: Catalog = {
     }) =>
       `OS subroutine ${cls}.${subroutine} must follow the interface ${signature})`,
     [DiagnosticCode.Jack.ARG_COUNT]: ({ name, expected, received }) =>
-      `${name} expected ${expected} arguments, got ${received}`,
+      `${name} expected ${expected} argument${expected === 1 ? "" : "s"}, got ${received}`,
     [DiagnosticCode.Jack.METHOD_CALLED_AS_FUNCTION]: ({ name }) =>
       `Method ${name} was called as a function/constructor`,
     [DiagnosticCode.Jack.CALLED_AS_METHOD]: ({ kind, name }) =>
@@ -467,6 +478,8 @@ export const ENGLISH: Catalog = {
       "A non void subroutine must return a value",
     [DiagnosticCode.Jack.MISSING_RETURN_PATH]: ({ name }) =>
       `Subroutine ${name}: not all code paths return a value`,
+    [DiagnosticCode.Jack.FIELD_IN_FUNCTION]: ({ name, field }) =>
+      `Function ${name} cannot use field ${field}`,
   },
 };
 

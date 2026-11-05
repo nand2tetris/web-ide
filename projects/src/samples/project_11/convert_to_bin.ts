@@ -86,13 +86,13 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: { value: "void", span: { start: 973, end: 978, line: 26 } },
+      returnType: { value: "void", span: { start: 973, end: 977, line: 26 } },
       name: { value: "main", span: { start: 978, end: 982, line: 26 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: { value: "int", span: { start: 997, end: 1001, line: 27 } },
+            type: { value: "int", span: { start: 997, end: 1000, line: 27 } },
             names: ["value"],
           },
         ],
@@ -183,28 +183,29 @@ export const parsed = {
             span: { start: 1244, end: 1251, line: 31 },
           },
         ],
+        close: { start: 1256, end: 1257, line: 32 },
       },
     },
     {
       type: "function",
-      returnType: { value: "void", span: { start: 1393, end: 1398, line: 36 } },
+      returnType: { value: "void", span: { start: 1393, end: 1397, line: 36 } },
       name: { value: "convert", span: { start: 1398, end: 1405, line: 36 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 1406, end: 1410, line: 36 } },
+          type: { value: "int", span: { start: 1406, end: 1409, line: 36 } },
           name: "value",
         },
       ],
       body: {
         varDecs: [
           {
-            type: { value: "int", span: { start: 1429, end: 1433, line: 37 } },
+            type: { value: "int", span: { start: 1429, end: 1432, line: 37 } },
             names: ["mask", "position"],
           },
           {
             type: {
               value: "boolean",
-              span: { start: 1459, end: 1467, line: 38 },
+              span: { start: 1459, end: 1466, line: 38 },
             },
             names: ["loop"],
           },
@@ -450,15 +451,16 @@ export const parsed = {
             span: { start: 1953, end: 1960, line: 58 },
           },
         ],
+        close: { start: 1965, end: 1966, line: 59 },
       },
     },
     {
       type: "function",
-      returnType: { value: "int", span: { start: 2061, end: 2065, line: 62 } },
+      returnType: { value: "int", span: { start: 2061, end: 2064, line: 62 } },
       name: { value: "nextMask", span: { start: 2065, end: 2073, line: 62 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 2074, end: 2078, line: 62 } },
+          type: { value: "int", span: { start: 2074, end: 2077, line: 62 } },
           name: "mask",
         },
       ],
@@ -508,23 +510,24 @@ export const parsed = {
             ],
           },
         ],
+        close: { start: 2184, end: 2185, line: 69 },
       },
     },
     {
       type: "function",
-      returnType: { value: "void", span: { start: 2304, end: 2309, line: 73 } },
+      returnType: { value: "void", span: { start: 2304, end: 2308, line: 73 } },
       name: { value: "fillMemory", span: { start: 2309, end: 2319, line: 73 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 2320, end: 2324, line: 73 } },
+          type: { value: "int", span: { start: 2320, end: 2323, line: 73 } },
           name: "address",
         },
         {
-          type: { value: "int", span: { start: 2333, end: 2337, line: 73 } },
+          type: { value: "int", span: { start: 2333, end: 2336, line: 73 } },
           name: "length",
         },
         {
-          type: { value: "int", span: { start: 2345, end: 2349, line: 73 } },
+          type: { value: "int", span: { start: 2345, end: 2348, line: 73 } },
           name: "value",
         },
       ],
@@ -621,6 +624,7 @@ export const parsed = {
             span: { start: 2525, end: 2532, line: 79 },
           },
         ],
+        close: { start: 2537, end: 2538, line: 80 },
       },
     },
   ],

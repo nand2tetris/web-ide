@@ -26,6 +26,12 @@ function messageOf(found: Diagnostic): string {
       const { kind, word } = found.args;
       return t`unknown ${kind} ${word}`;
     }
+    case DiagnosticCode.Syntax.DID_YOU_MEAN: {
+      const { word, suggestion } = found.args;
+      return t`unknown ${word}; did you mean ${suggestion}?`;
+    }
+    case DiagnosticCode.Syntax.NAME:
+      return t`expected a name that is not a keyword`;
 
     case DiagnosticCode.Error.UNEXPECTED: {
       // A programmer facing message that has no translation.
@@ -224,7 +230,9 @@ function messageOf(found: Diagnostic): string {
     }
     case DiagnosticCode.Jack.ARG_COUNT: {
       const { name, expected, received } = found.args;
-      return t`${name} expected ${expected} arguments, got ${received}`;
+      return expected === 1
+        ? t`${name} expected ${expected} argument, got ${received}`
+        : t`${name} expected ${expected} arguments, got ${received}`;
     }
     case DiagnosticCode.Jack.METHOD_CALLED_AS_FUNCTION: {
       const { name } = found.args;
@@ -269,6 +277,10 @@ function messageOf(found: Diagnostic): string {
     case DiagnosticCode.Jack.MISSING_RETURN_PATH: {
       const { name } = found.args;
       return t`Subroutine ${name}: not all code paths return a value`;
+    }
+    case DiagnosticCode.Jack.FIELD_IN_FUNCTION: {
+      const { name, field } = found.args;
+      return t`Function ${name} cannot use field ${field}`;
     }
 
     default: {

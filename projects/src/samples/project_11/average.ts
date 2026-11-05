@@ -32,21 +32,21 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: { value: "void", span: { start: 253, end: 258, line: 8 } },
+      returnType: { value: "void", span: { start: 253, end: 257, line: 8 } },
       name: { value: "main", span: { start: 258, end: 262, line: 8 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: { value: "Array", span: { start: 277, end: 283, line: 9 } },
+            type: { value: "Array", span: { start: 277, end: 282, line: 9 } },
             names: ["a"],
           },
           {
-            type: { value: "int", span: { start: 297, end: 301, line: 10 } },
+            type: { value: "int", span: { start: 297, end: 300, line: 10 } },
             names: ["length"],
           },
           {
-            type: { value: "int", span: { start: 319, end: 323, line: 11 } },
+            type: { value: "int", span: { start: 319, end: 322, line: 11 } },
             names: ["i", "sum"],
           },
         ],
@@ -283,6 +283,7 @@ export const parsed = {
             span: { start: 714, end: 721, line: 25 },
           },
         ],
+        close: { start: 725, end: 726, line: 26 },
       },
     },
   ],

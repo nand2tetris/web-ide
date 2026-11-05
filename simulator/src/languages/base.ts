@@ -189,6 +189,13 @@ export interface Skip extends Skipped {
 
 export type Provenance = readonly Skip[];
 
+export function skipsAny(
+  provenance: Provenance,
+  kinds: ReadonlySet<string>,
+): boolean {
+  return provenance.some(({ kind }) => kinds.has(kind));
+}
+
 export interface Recovered<T> {
   readonly ast: Valid<T>;
   readonly provenance: Provenance;
@@ -537,6 +544,54 @@ function isExpectation(reading: SyntaxReading): reading is readonly string[] {
 
 const WORD = /^[A-Za-z_.$:][\w.$:-]*/;
 
+/** Suggests a uniquely closest expected literal for a case or one-edit typo. */
+export function didYouMean(words: readonly string[]): SyntaxRewrite {
+  return (_expected, failures, { source, position }) => {
+    const word = WORD.exec(source.slice(position))?.[0];
+    if (!word || words.includes(word)) return undefined;
+    const candidates = words.filter((candidate) =>
+      failures.some(
+        (failure) =>
+          !failure.isFluffy() &&
+          failure.toString() === JSON.stringify(candidate),
+      ),
+    );
+    const folded = word.toLowerCase();
+    const exactCase = candidates.filter(
+      (candidate) => candidate.toLowerCase() === folded,
+    );
+    const close = exactCase.length
+      ? exactCase
+      : candidates.filter((candidate) =>
+          oneEditApart(folded, candidate.toLowerCase()),
+        );
+    return close.length === 1
+      ? {
+          code: DiagnosticCode.Syntax.DID_YOU_MEAN,
+          args: { word, suggestion: close[0] },
+        }
+      : undefined;
+  };
+}
+
+/** One insertion, deletion, substitution, or adjacent transposition. */
+function oneEditApart(a: string, b: string): boolean {
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) i++;
+  if (a.length === b.length) {
+    if (a.slice(i + 1) === b.slice(i + 1)) return true;
+    return (
+      a[i] === b[i + 1] &&
+      a[i + 1] === b[i] &&
+      a.slice(i + 2) === b.slice(i + 2)
+    );
+  }
+  return a.length > b.length
+    ? a.slice(i + 1) === b.slice(i)
+    : a.slice(i) === b.slice(i + 1);
+}
+
 /**
  * Reports `unknown <kind> <word>` when the failure stands at the start of a
  * word that is not in `words`, where Ohm tried one of `words`. The kind is
@@ -554,6 +609,24 @@ export function unknownWord(
     return word === undefined || !tried || words.includes(word)
       ? undefined
       : { code: DiagnosticCode.Syntax.UNKNOWN_WORD, args: { kind, word } };
+  };
+}
+
+/**
+ * Reports `Syntax.NAME` when the failure stands at a reserved word, where a
+ * name was expected: one of `names`, the descriptions of name rules.
+ */
+export function reservedName(
+  reserved: readonly string[],
+  names: readonly string[],
+): SyntaxRewrite {
+  return (expected, _failures, { source, position }) => {
+    const word = WORD.exec(source.slice(position))?.[0];
+    return word !== undefined &&
+      reserved.includes(word) &&
+      expected.some((item) => names.includes(item))
+      ? { code: DiagnosticCode.Syntax.NAME, args: { word, reason: "reserved" } }
+      : undefined;
   };
 }
 

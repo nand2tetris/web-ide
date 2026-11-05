@@ -117,31 +117,31 @@ export const parsed = {
   varDecs: [
     {
       varType: "field",
-      type: { value: "int", span: { start: 303, end: 307, line: 10 } },
+      type: { value: "int", span: { start: 303, end: 306, line: 10 } },
       names: ["x", "y"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 379, end: 383, line: 11 } },
+      type: { value: "int", span: { start: 379, end: 382, line: 11 } },
       names: ["size"],
     },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: { value: "Square", span: { start: 517, end: 524, line: 14 } },
+      returnType: { value: "Square", span: { start: 517, end: 523, line: 14 } },
       name: { value: "new", span: { start: 524, end: 527, line: 14 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 528, end: 532, line: 14 } },
+          type: { value: "int", span: { start: 528, end: 531, line: 14 } },
           name: "ax",
         },
         {
-          type: { value: "int", span: { start: 536, end: 540, line: 14 } },
+          type: { value: "int", span: { start: 536, end: 539, line: 14 } },
           name: "ay",
         },
         {
-          type: { value: "int", span: { start: 544, end: 548, line: 14 } },
+          type: { value: "int", span: { start: 544, end: 547, line: 14 } },
           name: "asize",
         },
       ],
@@ -209,11 +209,12 @@ export const parsed = {
             span: { start: 640, end: 652, line: 19 },
           },
         ],
+        close: { start: 656, end: 657, line: 20 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 701, end: 706, line: 23 } },
+      returnType: { value: "void", span: { start: 701, end: 705, line: 23 } },
       name: { value: "dispose", span: { start: 706, end: 713, line: 23 } },
       parameters: [],
       body: {
@@ -242,11 +243,12 @@ export const parsed = {
             span: { start: 755, end: 762, line: 25 },
           },
         ],
+        close: { start: 766, end: 767, line: 26 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 837, end: 842, line: 29 } },
+      returnType: { value: "void", span: { start: 837, end: 841, line: 29 } },
       name: { value: "draw", span: { start: 842, end: 846, line: 29 } },
       parameters: [],
       body: {
@@ -342,11 +344,12 @@ export const parsed = {
             span: { start: 994, end: 1001, line: 33 },
           },
         ],
+        close: { start: 1005, end: 1006, line: 34 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1048, end: 1053, line: 37 } },
+      returnType: { value: "void", span: { start: 1048, end: 1052, line: 37 } },
       name: { value: "erase", span: { start: 1053, end: 1058, line: 37 } },
       parameters: [],
       body: {
@@ -442,11 +445,12 @@ export const parsed = {
             span: { start: 1226, end: 1233, line: 41 },
           },
         ],
+        close: { start: 1237, end: 1238, line: 42 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1315, end: 1320, line: 45 } },
+      returnType: { value: "void", span: { start: 1315, end: 1319, line: 45 } },
       name: { value: "incSize", span: { start: 1320, end: 1327, line: 45 } },
       parameters: [],
       body: {
@@ -580,11 +584,12 @@ export const parsed = {
             span: { start: 1470, end: 1477, line: 51 },
           },
         ],
+        close: { start: 1481, end: 1482, line: 52 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1558, end: 1563, line: 55 } },
+      returnType: { value: "void", span: { start: 1558, end: 1562, line: 55 } },
       name: { value: "decSize", span: { start: 1563, end: 1570, line: 55 } },
       parameters: [],
       body: {
@@ -655,11 +660,12 @@ export const parsed = {
             span: { start: 1682, end: 1689, line: 61 },
           },
         ],
+        close: { start: 1693, end: 1694, line: 62 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1764, end: 1769, line: 65 } },
+      returnType: { value: "void", span: { start: 1764, end: 1768, line: 65 } },
       name: { value: "moveUp", span: { start: 1769, end: 1775, line: 65 } },
       parameters: [],
       body: {
@@ -893,11 +899,12 @@ export const parsed = {
             span: { start: 2186, end: 2193, line: 75 },
           },
         ],
+        close: { start: 2197, end: 2198, line: 76 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 2269, end: 2274, line: 79 } },
+      returnType: { value: "void", span: { start: 2269, end: 2273, line: 79 } },
       name: { value: "moveDown", span: { start: 2274, end: 2282, line: 79 } },
       parameters: [],
       body: {
@@ -1147,11 +1154,12 @@ export const parsed = {
             span: { start: 2556, end: 2563, line: 87 },
           },
         ],
+        close: { start: 2567, end: 2568, line: 88 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 2639, end: 2644, line: 91 } },
+      returnType: { value: "void", span: { start: 2639, end: 2643, line: 91 } },
       name: { value: "moveLeft", span: { start: 2644, end: 2652, line: 91 } },
       parameters: [],
       body: {
@@ -1385,13 +1393,14 @@ export const parsed = {
             span: { start: 2915, end: 2922, line: 99 },
           },
         ],
+        close: { start: 2926, end: 2927, line: 100 },
       },
     },
     {
       type: "method",
       returnType: {
         value: "void",
-        span: { start: 2999, end: 3004, line: 103 },
+        span: { start: 2999, end: 3003, line: 103 },
       },
       name: { value: "moveRight", span: { start: 3004, end: 3013, line: 103 } },
       parameters: [],
@@ -1642,6 +1651,7 @@ export const parsed = {
             span: { start: 3287, end: 3294, line: 111 },
           },
         ],
+        close: { start: 3298, end: 3299, line: 112 },
       },
     },
   ],

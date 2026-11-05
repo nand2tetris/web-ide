@@ -1,4 +1,5 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { Diagnostic, Span } from "@nand2tetris/simulator/languages/diagnostic";
 import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor";
@@ -6,6 +7,11 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { describeDiagnostic } from "./diagnostics";
 import { Decoration, HighlightType } from "./editor";
+import {
+  attachLanguageServices,
+  setLanguageServiceRecovery,
+} from "./languageServices";
+import { setWorkspaceFileSystem, takeWorkspaceSelection } from "./workspace";
 import "./monacoSetup";
 
 const isRangeVisible = (
@@ -98,6 +104,8 @@ export const Monaco = ({
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
+  const { fs, attemptRecovery } = useContext(BaseContext);
+  useEffect(() => setWorkspaceFileSystem(fs), [fs]);
   const monaco = useRef<typeof monacoT | undefined>(undefined);
   const [height, setHeight] = useState(0);
   const [editorReady, setEditorReady] = useState(false);
@@ -176,6 +184,7 @@ export const Monaco = ({
     (ed, mon) => {
       monaco.current = mon;
       editor.current = ed;
+      attachLanguageServices(mon);
       editor.current?.updateOptions({
         fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
       Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
@@ -194,6 +203,8 @@ export const Monaco = ({
         quickSuggestions: {
           other: "inline",
         },
+
+        suggest: { showWords: language !== "hdl" && language !== "jack" },
       });
 
       document.fonts.ready.then(() => {
@@ -214,6 +225,30 @@ export const Monaco = ({
     },
     [codeTheme],
   );
+
+  useEffect(() => {
+    const model = editor.current?.getModel();
+    if (model?.uri) setLanguageServiceRecovery(model, attemptRecovery);
+  }, [attemptRecovery, editorReady, path]);
+
+  useEffect(() => {
+    const model = editor.current?.getModel();
+    if (!model?.uri) return;
+    const selection = takeWorkspaceSelection(model.uri.toString());
+    if (!selection) return;
+    const range =
+      "endLineNumber" in selection
+        ? selection
+        : new monacoT.Range(
+            selection.lineNumber,
+            selection.column,
+            selection.lineNumber,
+            selection.column,
+          );
+    editor.current?.setSelection(range);
+    editor.current?.revealRangeInCenter(range);
+    editor.current?.focus();
+  }, [editorReady, path]);
 
   useEffect(() => {
     if (editor.current === undefined) return;

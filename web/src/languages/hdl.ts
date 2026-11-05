@@ -1,5 +1,6 @@
 import type * as monaco from "monaco-editor";
 import { base } from "./base";
+import { hdlSlot } from "./hdlCompletion";
 
 export const HdlLanguage: monaco.languages.IMonarchLanguage = {
   defaultToken: "invalid",
@@ -205,7 +206,18 @@ export function resetCustomChips() {
 }
 
 export const HdlSnippets = {
-  provideCompletionItems: () => {
+  // Builtin chips as whole parts, which only fit where a part starts.
+  provideCompletionItems: (
+    model: { getValueInRange(range: unknown): string },
+    position: { lineNumber: number; column: number },
+  ) => {
+    const before = model.getValueInRange({
+      startLineNumber: 1,
+      startColumn: 1,
+      endLineNumber: position.lineNumber,
+      endColumn: position.column,
+    });
+    if (hdlSlot(before).slot !== "chip") return { suggestions: [] };
     return {
       suggestions: Object.entries(HdlSignatures).map(([name, signature]) => ({
         label: name,

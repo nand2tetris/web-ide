@@ -18,7 +18,7 @@ The parts of the user guide that describe the UI may be out of sync with the cod
 
 Install the CLI tool:
 
-    npm install
+    npm run bootstrap
     npm run build && npm i -g ./cli
 
 Run the CLI:
@@ -36,7 +36,7 @@ Run the CLI with a nand2tetris Java install. The `--java_ide` option defaults to
 
 Build the web IDE:
 
-    npm install
+    npm run bootstrap
     npm run build && npm run start
 
 The dev server prints its URL, <http://localhost:5173/web-ide/>, to the console. Changes in `web` reload automatically. To rebuild the libraries on change as well, run `npm run watch` in a second terminal.

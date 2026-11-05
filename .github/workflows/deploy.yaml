@@ -56,7 +56,7 @@ jobs:
           cache: npm
 
       - name: Install
-        run: npm install
+        run: npm run bootstrap
 
       - name: build & release
         run: |

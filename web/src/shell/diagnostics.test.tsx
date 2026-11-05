@@ -40,6 +40,7 @@ vi.mock("../App.context", async () => {
   };
 });
 vi.mock("./monacoSetup", () => ({}));
+vi.mock("./languageServices", () => ({ attachLanguageServices: vi.fn() }));
 vi.mock("monaco-editor", () => ({ editor: { EndOfLineSequence: { LF: 0 } } }));
 vi.mock("@monaco-editor/react", async () => {
   const { useEffect } = await import("react");

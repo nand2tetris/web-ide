@@ -1,4 +1,5 @@
 import MonacoEditor, { type OnMount } from "@monaco-editor/react";
+import { BaseContext } from "@nand2tetris/components/stores/base.context";
 import { Diagnostic, Span } from "@nand2tetris/simulator/languages/diagnostic";
 import { Action } from "@nand2tetris/simulator/types";
 import * as monacoT from "monaco-editor";
@@ -6,6 +7,8 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AppContext } from "../App.context";
 import { describeDiagnostic } from "./diagnostics";
 import { Decoration, HighlightType } from "./editor";
+import { attachLanguageServices } from "./languageServices";
+import { setWorkspaceFileSystem } from "./workspace";
 import "./monacoSetup";
 
 const isRangeVisible = (
@@ -98,6 +101,8 @@ export const Monaco = ({
   lineNumberTransform?: (n: number) => string;
 }) => {
   const { theme } = useContext(AppContext);
+  const { fs } = useContext(BaseContext);
+  useEffect(() => setWorkspaceFileSystem(fs), [fs]);
   const monaco = useRef<typeof monacoT | undefined>(undefined);
   const [height, setHeight] = useState(0);
   const [editorReady, setEditorReady] = useState(false);
@@ -176,6 +181,7 @@ export const Monaco = ({
     (ed, mon) => {
       monaco.current = mon;
       editor.current = ed;
+      attachLanguageServices(mon);
       editor.current?.updateOptions({
         fontFamily: `"JetBrains Mono", source-code-pro, Menlo, Monaco,
       Consolas, "Roboto Mono", "Ubuntu Monospace", "Noto Mono", "Oxygen Mono",
@@ -194,6 +200,8 @@ export const Monaco = ({
         quickSuggestions: {
           other: "inline",
         },
+        // The language service says which names fit; other words in the file do not.
+        suggest: { showWords: language !== "hdl" && language !== "jack" },
       });
 
       document.fonts.ready.then(() => {

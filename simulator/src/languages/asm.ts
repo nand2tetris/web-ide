@@ -357,11 +357,17 @@ const L = (label: string, span?: Span): AsmLabelInstruction => ({
   span,
 });
 
+/** The null root of a parse that built no program: no instructions. */
+function emptyAsm(): Asm {
+  return { instructions: [] };
+}
+
 export const ASM = {
   grammar: asmGrammar,
   semantics: asmSemantics,
   parser: grammar,
-  parse: makeParser<Asm>(grammar, asmSemantics),
+  ...makeParser<Asm>(grammar, asmSemantics, emptyAsm),
+
   passes: {
     fillLabel,
     emit,

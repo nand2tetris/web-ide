@@ -143,6 +143,7 @@ describe("ChipStore", () => {
 
       await state.store.actions.toggleBuiltin();
 
+      expect(state.store.state.files.hdl).toContain("BUILTIN Not;\n}");
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
 

@@ -53,7 +53,7 @@ export function isBuiltinOnly(
 }
 
 function convertToBuiltin(name: string, hdl: string) {
-  return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};`);
+  return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};\n}`);
 }
 
 export interface ChipPageState {

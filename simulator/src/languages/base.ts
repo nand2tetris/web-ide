@@ -4,6 +4,9 @@ import {
   type Grammar,
   grammar,
   Interval,
+  type MatchResult,
+  type Node,
+  type RecoveredFailure,
   type Semantics,
 } from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
@@ -13,6 +16,7 @@ import {
   DiagnosticCode,
   type Diagnostics,
   diagnostic,
+  faultKey,
   type Span,
   Stage,
 } from "./diagnostic.js";
@@ -76,7 +80,7 @@ baseSemantics.addAttribute("String", {
 });
 
 export interface Skipped {
-  /** Original grammar rule name. */
+  /** A rule name or language-defined recovery tag. */
   readonly kind: string;
   /** Full source range of the failed node. The diagnostic may cover less. */
   readonly interval: Span;
@@ -90,12 +94,102 @@ export interface Recovery {
   readonly skipped?: Skipped;
 }
 
+/** `span` covers discarded input; `recovery.span` locates the failure. */
+export interface RecoveryPoint {
+  readonly recovery: Diagnostic;
+  readonly span: Span;
+  readonly key: string;
+}
+
+/**
+ * Includes a discarded guarded prefix without moving the diagnostic. A
+ * zero-width inferred join retains the guard and returns undefined. For an
+ * inferred join with a nonempty skipped tail, callers retaining the guard can
+ * record the tail with `attachTrailingSkip`.
+ */
+export function guardedRecovery(
+  guarded: Node,
+  correction: Node,
+): RecoveryPoint | undefined {
+  // A zero-width inferred join keeps the guarded values and discards no input.
+  if (
+    correction.recoveredFailure?.missing &&
+    correction.source.contents === ""
+  ) {
+    return undefined;
+  }
+  const point: RecoveryPoint | undefined = correction.recovery;
+  return point === undefined
+    ? undefined
+    : { ...point, span: { ...span(guarded.source), end: point.span.end } };
+}
+
+// A retained node may have skipped trailing text before an inferred join.
+// Keep that provenance separate from recovered placeholders, which are pruned.
+// Entries live with the raw AST object identity. Capture provenance before
+// cloning or serialization, which do not preserve this side table.
+const trailingSkips = new WeakMap<
+  object,
+  { point: RecoveryPoint; kind: string }[]
+>();
+
+export function attachTrailingSkip<T extends object>(
+  value: T,
+  correction: Node,
+  kind: string,
+): T {
+  if (
+    correction.recoveredFailure?.missing &&
+    correction.source.contents !== ""
+  ) {
+    const point: RecoveryPoint | undefined = correction.recovery;
+    if (point) {
+      const existing = trailingSkips.get(value) ?? [];
+      if (
+        !existing.some(
+          (tail) => tail.kind === kind && tail.point.key === point.key,
+        )
+      ) {
+        trailingSkips.set(value, [...existing, { point, kind }]);
+      }
+    }
+  }
+  return value;
+}
+
+/** Preserve correction metadata when an intermediate AST node is collapsed. */
+export function transferTrailingSkips(from: object, to: object): void {
+  const tails = trailingSkips.get(from);
+  if (tails)
+    trailingSkips.set(to, [...(trailingSkips.get(to) ?? []), ...tails]);
+}
+
+export function carrierOf(
+  { recovery, span, key }: RecoveryPoint,
+  kind: string,
+): Required<Recovery> {
+  return { recovery, skipped: { kind, interval: span, key } };
+}
+
 export function failedOf(
   diagnostic: Diagnostic,
   interval: Span,
   kind: string,
 ): Required<Recovery> {
   return { recovery: diagnostic, skipped: { kind, interval } };
+}
+
+/** Capture before pruning; scopes are ordered outermost first. */
+export interface Skip extends Skipped {
+  readonly diagnostic: Diagnostic;
+  readonly scope: readonly string[];
+}
+
+export type Provenance = readonly Skip[];
+
+export interface Recovered<T> {
+  readonly ast: Valid<T>;
+  readonly provenance: Provenance;
 }
 
 export function recoveryOf(node: Recovery): Diagnostic | undefined {
@@ -106,10 +200,124 @@ export function isRecovered(node: Recovery): boolean {
   return node.recovery !== undefined;
 }
 
+declare const valid: unique symbol;
+
+/** Contains no recovered nodes; semantic validation may still report errors. */
+export type Valid<T> = T & { readonly [valid]: true };
+
+/** `nullRoot` marks an empty fallback; callers must skip semantic checks. */
+export type Outcome<T> =
+  | { readonly ast: Valid<T>; readonly diagnostics: readonly [] }
+  | {
+      readonly ast: T;
+      readonly diagnostics: Diagnostics;
+      readonly nullRoot?: true;
+    };
+
+export interface ParseOptions {
+  /**
+   * Opt-in. When set, a syntax error is recovered so later checks run on the
+   * rest of the source; the result then carries diagnostics and no executable
+   * output. Strict parsing is the default.
+   */
+  attemptRecovery?: boolean;
+}
+
+export interface Parser<T> {
+  parse(source: string, options?: ParseOptions): Outcome<T>;
+  empty(): T;
+}
+
+export function isValid<T>(
+  outcome: Outcome<T>,
+): outcome is { readonly ast: Valid<T>; readonly diagnostics: readonly [] } {
+  return outcome.diagnostics.length === 0;
+}
+
+export function validOf<T>(outcome: Outcome<T>): Result<Valid<T>, Diagnostics> {
+  return isValid(outcome) ? Ok(outcome.ast) : Err(outcome.diagnostics);
+}
+
+export interface Prune<T> {
+  (tree: T): Valid<T>;
+  provenance(tree: T): Provenance;
+}
+
+export type ScopeOf = (node: object) => string | undefined;
+
+/** `drop` must remove every recovered node, including nodes inside arrays. */
+export function makePrune<T>(
+  drop: (tree: T) => T,
+  scopeOf: ScopeOf = () => undefined,
+): Prune<T> {
+  const prune = (tree: T) => {
+    const pruned = drop(tree);
+    if (containsRecovered(pruned)) {
+      throw new Error("prune left a recovered node outside a list");
+    }
+    return mint(pruned);
+  };
+  return Object.assign(prune, {
+    provenance: (tree: T): Provenance => skipsIn(tree, [], scopeOf),
+  });
+}
+
+function skipsIn(
+  value: unknown,
+  scope: readonly string[],
+  scopeOf: ScopeOf,
+): Skip[] {
+  if (typeof value !== "object" || value === null) {
+    return [];
+  }
+  const { recovery, skipped } = value as Recovery;
+  if (recovery !== undefined) {
+    return skipped === undefined
+      ? []
+      : [{ ...skipped, diagnostic: recovery, scope }];
+  }
+  const name = Array.isArray(value) ? undefined : scopeOf(value);
+  const inner = name === undefined ? scope : [...scope, name];
+  const own = (trailingSkips.get(value) ?? []).map(({ point, kind }) => ({
+    kind,
+    interval: point.span,
+    key: point.key,
+    diagnostic: point.recovery,
+    scope: inner,
+  }));
+  return [
+    ...own,
+    ...Object.values(value).flatMap((child) => skipsIn(child, inner, scopeOf)),
+  ];
+}
+
+/** A null root cannot proceed to semantic validation. */
+export function recoveredOf<T>(
+  outcome: Outcome<T>,
+  prune: Prune<T>,
+): Recovered<T> | undefined {
+  return "nullRoot" in outcome && outcome.nullRoot
+    ? undefined
+    : { ast: prune(outcome.ast), provenance: prune.provenance(outcome.ast) };
+}
+
+function containsRecovered(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) {
+    return false;
+  }
+  return Object.entries(value).some(([key, child]) =>
+    key === "recovery" ? child !== undefined : containsRecovered(child),
+  );
+}
+
+function mint<T>(ast: T): Valid<T> {
+  return ast as Valid<T>;
+}
+
+/** Lexical only when every displayed expectation failed inside a token. */
 export function syntaxStageOf(
   failures: readonly Failure[],
 ): typeof Stage.LEX | typeof Stage.PARSE {
-  // Classify the expectations shown in Ohm's error message.
   const shown = failures.filter((failure) => !failure.isFluffy());
   return shown.length > 0 && shown.every((failure) => failure.isLexical())
     ? Stage.LEX
@@ -137,52 +345,248 @@ export function actionError<C extends DiagnosticCode>(
   return failed;
 }
 
-declare const valid: unique symbol;
+export interface Origin {
+  /** Distinct recovery IDs keep otherwise equal diagnostics separate. */
+  readonly recovery?: string;
+  /** Diagnostics sharing a cause merge even when their contents differ. */
+  readonly cause?: string;
+}
 
-/** The parser returns this type only when there are no diagnostics. */
-export type Valid<T> = T & { readonly [valid]: true };
+export type Origins = ReadonlyMap<Diagnostic, Origin>;
+
+export function originsOf(provenance: Provenance): [Diagnostic, Origin][] {
+  return provenance.flatMap(({ diagnostic, key }): [Diagnostic, Origin][] =>
+    key === undefined ? [] : [[diagnostic, { recovery: key }]],
+  );
+}
 
 /**
- * The parser retains the AST after `actionError` reports an error. A failed
- * match or an exception sets `ast` to `empty()` and `nullRoot` to true.
+ * The scope in which a repeated fault is shown once, or undefined to keep
+ * every repeat. Scope names are compared as strings.
  */
-export type Outcome<T> =
-  | { readonly ast: Valid<T>; readonly diagnostics: readonly [] }
-  | {
-      readonly ast: T;
-      readonly diagnostics: Diagnostics;
-      readonly nullRoot?: true;
-    };
+export type DedupeScope = (diagnostic: Diagnostic) => string | undefined;
 
-export interface Parser<T> {
-  parse(source: string): Outcome<T>;
-  empty(): T;
+/** Syntax diagnostics repeat within one line; other stages are kept. */
+export const lineScope: DedupeScope = ({ span, stage }) =>
+  span !== undefined && (stage === Stage.LEX || stage === Stage.PARSE)
+    ? `line ${span.line}`
+    : undefined;
+
+/**
+ * Merge one file at a time. Sort by position, then stage, then input order.
+ * Equal code, arguments, complete span and recovery ID merge; spanless
+ * records merge only by object identity or a shared cause. With `scopeOf`,
+ * equal code and arguments also merge within one scope. Keep the first.
+ */
+export function mergeDiagnostics(
+  diagnostics: Diagnostics,
+  origins?: Origins,
+  scopeOf?: DedupeScope,
+): Diagnostics {
+  const sorted = [...diagnostics].sort(byPosition);
+  const [first] = sorted;
+  const kept = new Set<Diagnostic>();
+  const identities = new Set<string>();
+  const causes = new Set<string>();
+  const scoped = new Set<string>();
+  for (const diagnostic of sorted) {
+    const origin = origins?.get(diagnostic);
+    const identity = identityOf(diagnostic, origin);
+    const scope = scopeOf?.(diagnostic);
+    const inScope =
+      scope === undefined
+        ? undefined
+        : JSON.stringify([scope, faultKey(diagnostic)]);
+    const repeats =
+      kept.has(diagnostic) ||
+      (origin?.cause !== undefined && causes.has(origin.cause)) ||
+      (identity !== undefined && identities.has(identity)) ||
+      (inScope !== undefined && scoped.has(inScope));
+    if (!repeats) {
+      kept.add(diagnostic);
+      if (identity !== undefined) identities.add(identity);
+      if (origin?.cause !== undefined) causes.add(origin.cause);
+      if (inScope !== undefined) scoped.add(inScope);
+    }
+  }
+  // Nothing precedes the first diagnostic, so it is always kept.
+  const [, ...others] = kept;
+  return [first, ...others];
 }
 
-export function isValid<T>(
-  outcome: Outcome<T>,
-): outcome is { readonly ast: Valid<T>; readonly diagnostics: readonly [] } {
-  return outcome.diagnostics.length === 0;
+function identityOf(
+  record: Diagnostic,
+  origin: Origin | undefined,
+): string | undefined {
+  const { span } = record;
+  return span === undefined
+    ? undefined
+    : JSON.stringify([
+        faultKey(record),
+        span.start,
+        span.end,
+        span.line,
+        origin?.recovery ?? null,
+      ]);
 }
 
-export function validOf<T>(outcome: Outcome<T>): Result<Valid<T>, Diagnostics> {
-  return isValid(outcome) ? Ok(outcome.ast) : Err(outcome.diagnostics);
+const STAGE_ORDER: readonly Stage[] = [
+  Stage.LEX,
+  Stage.PARSE,
+  Stage.SEMANTIC,
+  Stage.COMPILE,
+];
+
+function stageRank(stage: Stage | undefined): number {
+  return stage === undefined ? STAGE_ORDER.length : STAGE_ORDER.indexOf(stage);
 }
 
-function mint<T>(ast: T): Valid<T> {
-  return ast as Valid<T>;
+function byPosition(a: Diagnostic, b: Diagnostic): number {
+  const starts = Number(a.span === undefined) - Number(b.span === undefined);
+  return (
+    starts ||
+    (a.span && b.span ? a.span.start - b.span.start : 0) ||
+    stageRank(a.stage) - stageRank(b.stage)
+  );
 }
 
-function syntaxDiagnostic(at: Span, failures: readonly Failure[]): Diagnostic {
-  const expected = failures
+interface RecoveringGrammar {
+  match(
+    input: string,
+    startRule?: string,
+    options?: { recover: boolean },
+  ): MatchResult;
+}
+
+function spanAt(source: string, position: number): Span {
+  let line = 1;
+  for (let i = 0; i < position && i < source.length; i++) {
+    if (source[i] === "\n") line++;
+  }
+  return { start: position, end: position, line };
+}
+
+function failureKey(failure: RecoveredFailure): string {
+  const { interval, position, shortMessage } = failure;
+  return `${interval.startIdx}:${interval.endIdx}:${position}:${shortMessage}`;
+}
+
+/** Applied to strict and recovered failures; includes Ohm's hidden expectations. */
+export type SyntaxExpected = (
+  expected: readonly string[],
+  failures: readonly Failure[],
+) => readonly string[];
+
+/** One rewrite of an expectation list; undefined when the rule does not apply. */
+export type SyntaxRewrite = (
+  expected: readonly string[],
+  failures: readonly Failure[],
+) => readonly string[] | undefined;
+
+const ohmExpected: SyntaxExpected = (expected) => expected;
+
+/**
+ * Applies `rules` in order. Each applicable rule replaces the list, and later
+ * rules see its output.
+ */
+export function rewrites(...rules: SyntaxRewrite[]): SyntaxExpected {
+  return (expected, failures) =>
+    rules.reduce<readonly string[]>(
+      (current, rule) => rule(current, failures) ?? current,
+      expected,
+    );
+}
+
+/**
+ * Replaces the expectations found in `set` with `label`, placed first. An
+ * entry of `set` matches an expectation either as Ohm quotes a literal
+ * (`"eval"`) or as an unquoted description (`end of input`).
+ */
+export function categorize(
+  set: readonly string[],
+  label: string,
+): SyntaxRewrite {
+  const members = new Set(set.flatMap((word) => [word, JSON.stringify(word)]));
+  return (expected) => {
+    const rest = expected.filter((item) => !members.has(item));
+    return rest.length === expected.length ? undefined : [label, ...rest];
+  };
+}
+
+function syntaxDiagnostic(
+  at: Span,
+  failures: readonly Failure[],
+  expectedOf: SyntaxExpected = ohmExpected,
+): Diagnostic {
+  const shown = failures
     .filter((failure) => !failure.isFluffy())
     .map((failure) => failure.toString());
   return diagnostic(
     DiagnosticCode.Syntax.EXPECTED,
-    { expected },
+    { expected: expectedOf(shown, failures) },
     at,
     syntaxStageOf(failures),
   );
+}
+
+function diagnosticOf(
+  source: string,
+  failure: RecoveredFailure,
+  expectedOf: SyntaxExpected = ohmExpected,
+): Diagnostic {
+  return syntaxDiagnostic(
+    spanAt(source, failure.getDiagnosticPosition()),
+    failure.getRightmostFailures(),
+    expectedOf,
+  );
+}
+
+// Scoped around semantic evaluation; nested parses restore the outer links.
+let linked: Map<string, Diagnostic> | undefined;
+
+function recoveryFor(correction: Node): RecoveryPoint | undefined {
+  const failure = correction.recoveredFailure;
+  if (failure === undefined) {
+    return undefined;
+  }
+  const recovery =
+    linked?.get(failureKey(failure)) ??
+    diagnosticOf(correction.source.sourceString, failure);
+  return { recovery, span: span(correction.source), key: failureKey(failure) };
+}
+
+/** Only correction slots expose recovery metadata. */
+baseSemantics.addAttribute<RecoveryPoint | undefined>("recovery", {
+  _correction() {
+    return recoveryFor(this);
+  },
+  _nonterminal() {
+    return undefined;
+  },
+  _terminal() {
+    return undefined;
+  },
+  _iter() {
+    return undefined;
+  },
+});
+
+function isMissingCorrectionAction(e: unknown): boolean {
+  return (
+    e instanceof Error &&
+    /Missing semantic action for _correction/.test(e.message)
+  );
+}
+
+function outcomeOf<T>(ast: T, diagnostics: readonly Diagnostic[]): Outcome<T> {
+  const [first, ...rest] = diagnostics;
+  return first === undefined
+    ? { ast: mint(ast), diagnostics: [] }
+    : { ast, diagnostics: [first, ...rest] };
+}
+
+function nullRootOf<T>(empty: T, diagnostics: Diagnostics): Outcome<T> {
+  return { ast: empty, diagnostics, nullRoot: true };
 }
 
 function thrownDiagnostic(e: unknown): Diagnostic {
@@ -206,52 +610,57 @@ function thrownDiagnostic(e: unknown): Diagnostic {
   );
 }
 
-function outcomeOf<T>(ast: T, diagnostics: readonly Diagnostic[]): Outcome<T> {
-  const [first, ...rest] = diagnostics;
-  return first === undefined
-    ? { ast: mint(ast), diagnostics: [] }
-    : { ast, diagnostics: [first, ...rest] };
-}
-
-function nullRootOf<T>(empty: T, diagnostics: Diagnostics): Outcome<T> {
-  return { ast: empty, diagnostics, nullRoot: true };
-}
-
 /** T must match the value returned by the selected semantic attribute. */
 export function makeParser<T>(
   grammar: Grammar,
   semantics: Semantics,
   empty: () => T,
   attribute = "root",
+  expectedOf: SyntaxExpected = ohmExpected,
 ): Parser<T> {
   return {
     empty,
-    parse(source) {
-      // Don't mix errors from nested parses.
-      const outer = failedActions;
+    parse(source, options) {
+      let diagnostics: Diagnostic[] = [];
       const failed: Diagnostic[] = [];
-      failedActions = failed;
+      const outer = linked;
+      const outerActions = failedActions;
       try {
-        const match = grammar.match(source);
+        const recover = options?.attemptRecovery ?? false;
+        const match = recover
+          ? (grammar as unknown as RecoveringGrammar).match(source, undefined, {
+              recover,
+            })
+          : grammar.match(source);
+        const failures = recover ? match.getRecoveredFailures() : [];
+        diagnostics = failures.map((f) => diagnosticOf(source, f, expectedOf));
         if (match.failed()) {
-          return nullRootOf(empty(), [
-            syntaxDiagnostic(
-              span(match.getInterval()),
-              match.getRightmostFailures(),
-            ),
-          ]);
+          const first = syntaxDiagnostic(
+            span(match.getInterval()),
+            match.getRightmostFailures(),
+            expectedOf,
+          );
+          return nullRootOf(empty(), [first, ...diagnostics.slice(1)]);
         }
+        linked = new Map(
+          failures.map((f, i) => [failureKey(f), diagnostics[i]]),
+        );
+        failedActions = failed;
         const ast: T = semantics(match)[attribute];
-        return outcomeOf(ast, failed);
+        return outcomeOf(ast, [...diagnostics, ...failed]);
       } catch (e) {
-        const [first, ...rest] = failed;
+        if (isMissingCorrectionAction(e)) {
+          throw e;
+        }
+        const [first, ...rest] = [...diagnostics, ...failed];
         const thrown = thrownDiagnostic(e);
         return nullRootOf(
           empty(),
           first === undefined ? [thrown] : [first, ...rest, thrown],
         );
       } finally {
-        failedActions = outer;
+        linked = outer;
+        failedActions = outerActions;
       }
     },
   };

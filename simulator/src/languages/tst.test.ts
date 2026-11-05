@@ -4,6 +4,7 @@ import {
 } from "@davidsouther/jiffies/fs.ts";
 import { resetFiles } from "@nand2tetris/projects/full.js";
 import { describe, expect, it } from "vitest";
+import { describeDiagnostic } from "./diagnostic.js";
 import { grammar, TST } from "./tst.js";
 
 const NOT_TST = `
@@ -505,4 +506,89 @@ it("loads all project tst files", async () => {
     }
   }
   await check();
+});
+
+describe("repeat counts", () => {
+  it.each(["repeat {\n tick;\n}", "repeat 0 {\n tick;\n}"])(
+    "accepts %j",
+    (source) => {
+      expect(TST.parse(source).diagnostics).toEqual([]);
+    },
+  );
+
+  it("rejects a negative count at the count", () => {
+    const outcome = TST.parse("output;\nrepeat -2 {\n tick;\n}");
+
+    expect(outcome.diagnostics).toMatchObject([
+      { code: "tst.negativeRepeat", args: { count: -2 }, span: { line: 2 } },
+    ]);
+  });
+});
+
+describe("test script diagnostic wording and position", () => {
+  const messagesOf = (source: string, attemptRecovery = false) =>
+    TST.parse(source, { attemptRecovery }).diagnostics.map((d) =>
+      describeDiagnostic(d),
+    );
+
+  /** A three-step And test whose twelfth line and tail vary. */
+  const andTst = (twelfth: string, last: string[]) =>
+    [
+      "load And.hdl,",
+      "compare-to And.cmp,",
+      "output-list a b out;",
+      "",
+      "set a 0,",
+      "set b 0,",
+      "eval,",
+      "output;",
+      "",
+      "set a 0,",
+      "set b 1,",
+      `${twelfth},`,
+      "output;",
+      "",
+      "set a 1,",
+      "set b 0,",
+      "eval,",
+      "output;",
+      "",
+      ...last,
+    ].join("\n");
+
+  const misspelled = andTst("evl", [
+    "set a 1,",
+    "set b 1,",
+    "eval,",
+    "output;",
+  ]);
+
+  it("reports a misspelled command as an expected command, not a keyword list", () => {
+    expect(messagesOf(misspelled)).toEqual(["Line 12: expected a command"]);
+  });
+
+  it("reports a misspelled command the same way with recovery", () => {
+    expect(messagesOf(misspelled, true)).toEqual([
+      "Line 12: expected a command",
+    ]);
+  });
+
+  it("reports an empty script as an expected command", () => {
+    expect(messagesOf("")).toEqual(["Line 1: expected a command"]);
+  });
+
+  it("reports a negative repeat count with the count", () => {
+    const source = andTst("eval", [
+      "repeat -1 {",
+      "    set a 1,",
+      "    set b 1,",
+      "    eval,",
+      "    output;",
+      "}",
+    ]);
+
+    expect(messagesOf(source)).toEqual([
+      "Line 20: A repeat count cannot be negative (got -1)",
+    ]);
+  });
 });

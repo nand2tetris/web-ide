@@ -21,8 +21,8 @@ import {
   diagnostic,
   Span,
 } from "@nand2tetris/simulator/languages/diagnostic.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
@@ -141,6 +141,7 @@ export function makeVmStore(
   status: StatusActions,
   storage: Record<string, string>,
   dispatch: MutableRefObject<VmStoreDispatch>,
+  attemptRecovery: () => boolean = () => false,
 ) {
   const parsed = unwrap(validOf(VM.parse(FIBONACCI)));
   let vm = unwrap(Vm.build(parsed.instructions));
@@ -198,7 +199,9 @@ export function makeVmStore(
     },
     testFinished(state: VmPageState) {
       status.setStatus(
-        comparisonStatus(state.files.cmp.trim(), state.files.out),
+        comparisonStatus(state.files.cmp.trim(), state.files.out, {
+          attemptRecovery: attemptRecovery(),
+        }),
       );
     },
 
@@ -354,19 +357,8 @@ export function makeVmStore(
 
     loadTest(path: string, source: string) {
       dispatch.current({ action: "setTst", payload: { tst: source } });
-      const tst = validOf(TST.parse(source));
-
-      if (isErr(tst)) {
-        dispatch.current({ action: "setValid", payload: false });
-        status.setFailureStatus("tst", Err(tst), { marked: false });
-        return false;
-      }
-      dispatch.current({ action: "setValid", payload: true });
-      status.setStatus({ message: `Parsed tst` });
-
-      vm.reset();
-
-      const maybeTest = VMTest.from(unwrap(tst), {
+      const maybeTest = buildTst({ name: path, content: source }, "vm", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         doLoad: async (path) => {
           await this.load(path);
@@ -379,11 +371,15 @@ export function makeVmStore(
         },
       });
       if (isErr(maybeTest)) {
-        status.setFailureStatus("tst", [Err(maybeTest)], {
+        dispatch.current({ action: "setValid", payload: false });
+        status.setFailureStatus("tst", Err(maybeTest), {
           marked: false,
         });
         return false;
       } else {
+        dispatch.current({ action: "setValid", payload: true });
+        status.setStatus({ message: `Parsed tst` });
+        vm.reset();
         test = Ok(maybeTest).using(fs);
         test.vm = vm;
         dispatch.current({ action: "update" });
@@ -474,10 +470,18 @@ export function makeVmStore(
 }
 
 export function useVmPageStore() {
-  const { fs, setStatus, clearStatus, setFailureStatus, storage } =
-    useContext(BaseContext);
+  const {
+    fs,
+    setStatus,
+    clearStatus,
+    setFailureStatus,
+    storage,
+    attemptRecovery,
+  } = useContext(BaseContext);
 
   const dispatch = useRef<VmStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
@@ -486,6 +490,7 @@ export function useVmPageStore() {
         { setStatus, clearStatus, setFailureStatus },
         storage,
         dispatch,
+        () => recovery.current,
       ),
     [fs, setStatus, clearStatus, setFailureStatus, storage, dispatch],
   );

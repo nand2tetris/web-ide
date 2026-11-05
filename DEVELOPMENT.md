@@ -48,6 +48,7 @@ Run these from the repository root.
 | Command | What it does |
 |---------|-------------|
 | `npm run check` | Builds the libraries, then checks format, types, and lint |
+| `npm run grammars -w simulator -- cmp.ohm tst.ohm` | Regenerates grammar modules after changing their `.ohm` sources; omit filenames for all grammars |
 | `npm run format` | Formats TypeScript sources with Biome and writes the result |
 | `npm run fix` | Applies automated Biome lint fixes |
 | `npm test` | Runs `npm run build` (which runs `npm run check`), then Vitest in `simulator`, `components`, and `web` |

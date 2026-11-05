@@ -4,6 +4,7 @@ import {
   DiagnosticCode,
   describeDiagnostic,
   diagnostic,
+  faultKey,
   Stage,
 } from "./diagnostic.js";
 
@@ -16,6 +17,8 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Asm.A_VALUE_RANGE]: { value: 32768 },
   [DiagnosticCode.Asm.DUPLICATE_LABEL]: { label: "LOOP" },
   [DiagnosticCode.Tst.MISSING_LOAD]: {},
+  [DiagnosticCode.Tst.NEGATIVE_REPEAT]: { count: -1 },
+  [DiagnosticCode.Cmp.ROW_WIDTH]: { row: 4, header: 3 },
   [DiagnosticCode.Chip.BUS_RANGE]: {},
   [DiagnosticCode.Chip.NOT_LOADED]: { file: "Foo.hdl" },
   [DiagnosticCode.Chip.MULTIPLE_WRITES]: { pin: "out", index: 2 },
@@ -188,5 +191,33 @@ describe("diagnostic", () => {
       span,
       stage: Stage.SEMANTIC,
     });
+  });
+});
+
+describe("faultKey", () => {
+  it("is equal for equal code and arguments whatever their key order", () => {
+    const a = diagnostic(DiagnosticCode.Vm.OS_ARG_COUNT, {
+      name: "f",
+      expected: 1,
+      received: 2,
+    });
+    const b = diagnostic(DiagnosticCode.Vm.OS_ARG_COUNT, {
+      received: 2,
+      expected: 1,
+      name: "f",
+    });
+
+    expect(faultKey(a)).toBe(faultKey(b));
+  });
+
+  it("differs for a different argument or code", () => {
+    const base = diagnostic(DiagnosticCode.Chip.NOT_FOUND, { name: "x" });
+
+    expect(faultKey(base)).not.toBe(
+      faultKey(diagnostic(DiagnosticCode.Chip.NOT_FOUND, { name: "y" })),
+    );
+    expect(faultKey(base)).not.toBe(
+      faultKey(diagnostic(DiagnosticCode.Chip.NOT_BUILTIN, { name: "x" })),
+    );
   });
 });

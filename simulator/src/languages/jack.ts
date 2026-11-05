@@ -1,5 +1,16 @@
 import { type Node, grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, span } from "./base.js";
+import {
+  baseSemantics,
+  carrierOf,
+  grammars,
+  guardedRecovery,
+  isRecovered,
+  makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  span,
+} from "./base.js";
 import { Span } from "./diagnostic.js";
 import jackGrammar from "./grammars/jack.ohm.js";
 
@@ -12,6 +23,10 @@ export function isPrimitive(value: string): value is Primitive {
 
 export type Type = Primitive | string;
 
+/**
+ * One type for valid and recovered classes: a recovered list item is a null
+ * object of its item type (see `isRecovered`).
+ */
 export interface Class {
   name: { value: string; span: Span };
   varDecs: ClassVarDec[];
@@ -20,7 +35,7 @@ export interface Class {
 
 export type ClassVarType = "static" | "field";
 
-export interface ClassVarDec {
+export interface ClassVarDec extends Recovery {
   varType: ClassVarType;
   type: { value: Type; span: Span };
   names: string[];
@@ -34,7 +49,7 @@ export interface Parameter {
 export type ReturnType = Type | "void";
 export type SubroutineType = "constructor" | "function" | "method";
 
-export interface Subroutine {
+export interface Subroutine extends Recovery {
   type: SubroutineType;
   name: { value: string; span: Span };
   returnType: { value: ReturnType; span: Span };
@@ -47,11 +62,15 @@ export interface SubroutineBody {
   statements: Statement[];
 }
 
-export interface VarDec {
+export interface VarDec extends Recovery {
   type: { value: Type; span: Span };
   names: string[];
 }
 
+/**
+ * A recovered statement reuses `ReturnStatement` with no value as its null
+ * object, because it is the only member whose fields need no expression.
+ */
 export type Statement =
   | LetStatement
   | IfStatement
@@ -59,7 +78,7 @@ export type Statement =
   | DoStatement
   | ReturnStatement;
 
-export interface LetStatement {
+export interface LetStatement extends Recovery {
   statementType: "letStatement";
   name: { value: string; span: Span };
   arrayIndex?: Expression;
@@ -67,25 +86,25 @@ export interface LetStatement {
   span: Span;
 }
 
-export interface IfStatement {
+export interface IfStatement extends Recovery {
   statementType: "ifStatement";
   condition: Expression;
   body: Statement[];
   else: Statement[];
 }
 
-export interface WhileStatement {
+export interface WhileStatement extends Recovery {
   statementType: "whileStatement";
   condition: Expression;
   body: Statement[];
 }
 
-export interface DoStatement {
+export interface DoStatement extends Recovery {
   statementType: "doStatement";
   call: SubroutineCall;
 }
 
-export interface ReturnStatement {
+export interface ReturnStatement extends Recovery {
   statementType: "returnStatement";
   value?: Expression;
   span: Span;
@@ -164,9 +183,141 @@ export interface Expression {
 export const grammar = ohmGrammar(jackGrammar, grammars);
 export const jackSemantics = grammar.extendSemantics(baseSemantics);
 
-function statements(node: Node) {
-  return node.children.map((n) => n.statement);
+/**
+ * What a Jack null object stands in for, by the grammar slot that recovered:
+ * a skipped declaration body or subroutine header, skipped input before the
+ * class closer, a skipped statement body or head, or the missing or skipped
+ * closer of a block.
+ */
+export type JackSkipKind =
+  | "ClassVarDecBody"
+  | "SubroutineHead"
+  | "ClassClose"
+  | "VarDecBody"
+  | "LetBody"
+  | "DoBody"
+  | "ReturnBody"
+  | "IfHead"
+  | "WhileHead"
+  | "SubroutineBodyClose"
+  | "IfClose"
+  | "ElseClose"
+  | "WhileClose";
+
+type StatementSkipKind = Exclude<
+  JackSkipKind,
+  "ClassVarDecBody" | "SubroutineHead" | "ClassClose" | "VarDecBody"
+>;
+type BlockCloseKind =
+  | "SubroutineBodyClose"
+  | "IfClose"
+  | "ElseClose"
+  | "WhileClose";
+
+/** Null objects for the recovered positions. */
+function nullClassVarDec(point: RecoveryPoint): ClassVarDec {
+  return {
+    varType: "field",
+    type: { value: "", span: point.span },
+    names: [],
+    ...carrierOf(point, "ClassVarDecBody"),
+  };
 }
+
+function nullSubroutine(
+  point: RecoveryPoint,
+  kind: "SubroutineHead" | "ClassClose",
+): Subroutine {
+  const { span } = point;
+  return {
+    type: "function",
+    name: { value: "", span },
+    returnType: { value: "void", span },
+    parameters: [],
+    body: { varDecs: [], statements: [] },
+    ...carrierOf(point, kind),
+  };
+}
+
+function nullVarDec(point: RecoveryPoint): VarDec {
+  return {
+    type: { value: "", span: point.span },
+    names: [],
+    ...carrierOf(point, "VarDecBody"),
+  };
+}
+
+function nullStatement(
+  point: RecoveryPoint,
+  kind: StatementSkipKind,
+): Statement {
+  return {
+    statementType: "returnStatement",
+    span: point.span,
+    ...carrierOf(point, kind),
+  };
+}
+
+/**
+ * A block's statements: the kept statements, then the correction slot's
+ * null statement when the block recovered. The guarded list retains its
+ * successfully matched statements.
+ */
+function block(
+  list: Node,
+  correction: Node,
+  kind: BlockCloseKind,
+): Statement[] {
+  const kept: Statement[] = list.children.map((n) => n.statement);
+  const recovered: RecoveryPoint | undefined = correction.recovery;
+  return recovered ? [...kept, nullStatement(recovered, kind)] : kept;
+}
+
+const keep = <T extends Recovery>(items: T[]): T[] =>
+  items.filter((item) => !isRecovered(item));
+
+function pruneStatements(statements: Statement[]): Statement[] {
+  return keep(statements).map((statement) => {
+    switch (statement.statementType) {
+      case "ifStatement":
+        return {
+          ...statement,
+          body: pruneStatements(statement.body),
+          else: pruneStatements(statement.else),
+        };
+      case "whileStatement":
+        return { ...statement, body: pruneStatements(statement.body) };
+      default:
+        return statement;
+    }
+  });
+}
+
+/** A class and each subroutine open a scope named for them. */
+function scopeOf(node: object): string | undefined {
+  return "subroutines" in node || "parameters" in node
+    ? (node as Class | Subroutine).name.value
+    : undefined;
+}
+
+/**
+ * Drops recovered items from every list; the result is checked and minted
+ * `Valid`. Its provenance scopes each skip by its class and subroutine.
+ */
+export const prune = makePrune<Class>(
+  (tree) => ({
+    ...tree,
+    varDecs: keep(tree.varDecs),
+    subroutines: keep(tree.subroutines).map((sub) => ({
+      ...sub,
+      body: {
+        varDecs: keep(sub.body.varDecs),
+        statements: pruneStatements(sub.body.statements),
+      },
+    })),
+  }),
+  scopeOf,
+);
 
 jackSemantics.addAttribute<Class>("Root", {
   Root(_) {
@@ -175,17 +326,32 @@ jackSemantics.addAttribute<Class>("Root", {
 });
 
 jackSemantics.addAttribute<Class>("class", {
-  Class(_a, name, _b, varDecs, subroutines, _c) {
+  Class(_a, name, _b, varDecs, subroutines, correction, _close) {
+    const kept = subroutines.children.map((n) => n.subroutineDec);
+    // Skipped text after the subroutines becomes a null subroutine; a class
+    // that only lacks its `}` keeps its subroutines as they are.
+    const recovered: RecoveryPoint | undefined = correction.recovery;
+    const skipped =
+      recovered && correction.sourceString.length > 0 ? recovered : undefined;
     return {
       name: { value: name.sourceString, span: span(name.source) },
       varDecs: varDecs.children.map((n) => n.classVarDec),
-      subroutines: subroutines.children.map((n) => n.subroutineDec),
+      subroutines: skipped
+        ? [...kept, nullSubroutine(skipped, "ClassClose")]
+        : kept,
     };
   },
 });
 
 jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
-  ClassVarDec(varType, type, name, rest, _) {
+  ClassVarDec(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered ? nullClassVarDec(recovered) : body.classVarDec;
+  },
+  ClassVarDecBody(varType, type, name, rest) {
     return {
       varType: varType.sourceString.trim() as ClassVarType,
       type: {
@@ -201,7 +367,15 @@ jackSemantics.addAttribute<ClassVarDec>("classVarDec", {
 });
 
 jackSemantics.addAttribute<Subroutine>("subroutineDec", {
-  SubroutineDec(type, returnType, name, _a, parameters, _b, body) {
+  SubroutineDec(head, correction, _open, body) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      head,
+      correction,
+    );
+    if (recovered) {
+      return nullSubroutine(recovered, "SubroutineHead");
+    }
+    const [type, returnType, name, _a, parameters] = head.children;
     return {
       type: type.sourceString.trim() as SubroutineType,
       returnType: {
@@ -240,16 +414,23 @@ jackSemantics.addAttribute<Expression[]>("parameters", {
 });
 
 jackSemantics.addAttribute<SubroutineBody>("subroutineBody", {
-  SubroutineBody(_a, varDecs, statementList, _b) {
+  SubroutineBody(_a, varDecs, statementList, correction, _end) {
     return {
       varDecs: varDecs.children.map((n) => n.varDec),
-      statements: statements(statementList),
+      statements: block(statementList, correction, "SubroutineBodyClose"),
     };
   },
 });
 
 jackSemantics.addAttribute<VarDec>("varDec", {
-  VarDec(_a, type, name, rest, _b) {
+  VarDec(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered ? nullVarDec(recovered) : body.varDec;
+  },
+  VarDecBody(_a, type, name, rest) {
     return {
       type: {
         value: type.sourceString.trim() as Type,
@@ -263,14 +444,18 @@ jackSemantics.addAttribute<VarDec>("varDec", {
   },
 });
 
-// jackSemantics.addAttribute<string | ArrayAccess>("letTarget", {
-//   LetTarget() {
-//     jackI
-//   }
-// })
-
 jackSemantics.addAttribute<Statement>("statement", {
-  LetStatement(_a, target, _b, value, _c) {
+  LetStatement(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered
+      ? nullStatement(recovered, "LetBody")
+      : { ...body.statement, span: span(this.source) };
+  },
+
+  LetBody(_a, target, _b, value) {
     if (target.term.termType == "variable") {
       return {
         statementType: "letStatement",
@@ -292,35 +477,67 @@ jackSemantics.addAttribute<Statement>("statement", {
     }
   },
 
-  IfStatement(_a, _b, condition, _c, _d, body, _e, elseBlock) {
+  IfStatement(head, correction, _open, body, bodyCorrection, _end, elseBlock) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      head,
+      correction,
+    );
+    if (recovered) {
+      return nullStatement(recovered, "IfHead");
+    }
     return {
       statementType: "ifStatement",
-      condition: condition.expression,
-      body: statements(body),
+      condition: head.child(2).expression,
+      body: block(body, bodyCorrection, "IfClose"),
       else: elseBlock.child(0)?.else ?? [],
     };
   },
 
-  WhileStatement(_a, _b, condition, _c, _d, body, _e) {
+  WhileStatement(head, correction, _open, body, bodyCorrection, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      head,
+      correction,
+    );
+    if (recovered) {
+      return nullStatement(recovered, "WhileHead");
+    }
     return {
       statementType: "whileStatement",
-      condition: condition.expression,
-      body: statements(body),
+      condition: head.child(2).expression,
+      body: block(body, bodyCorrection, "WhileClose"),
     };
   },
 
-  DoStatement(_a, call, _b) {
+  DoStatement(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered ? nullStatement(recovered, "DoBody") : body.statement;
+  },
+
+  DoBody(_a, call) {
     return { statementType: "doStatement", call: call.term as SubroutineCall };
   },
 
-  EmptyReturn(_a, _b) {
+  ReturnStatement(body, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      body,
+      correction,
+    );
+    return recovered
+      ? nullStatement(recovered, "ReturnBody")
+      : { ...body.statement, span: span(this.source) };
+  },
+
+  EmptyReturn(_a) {
     return {
       statementType: "returnStatement",
       span: span(this.source),
     };
   },
 
-  ReturnValue(_a, value, _b) {
+  ReturnValue(_a, value) {
     return {
       statementType: "returnStatement",
       value: value.expression,
@@ -330,8 +547,8 @@ jackSemantics.addAttribute<Statement>("statement", {
 });
 
 jackSemantics.addAttribute<Statement[]>("else", {
-  ElseBlock(_a, _b, body, _c) {
-    return statements(body);
+  ElseBlock(_a, _b, body, bodyCorrection, _end) {
+    return block(body, bodyCorrection, "ElseClose");
   },
 });
 

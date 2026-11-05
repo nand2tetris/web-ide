@@ -11,6 +11,7 @@ import {
   isValid,
   makeParser,
   makePrune,
+  mergeByFile,
   mergeDiagnostics,
   type Recovery,
   type RecoveryPoint,
@@ -765,5 +766,41 @@ describe("merging a file's diagnostics", () => {
 
     expect(input).toEqual([late, early, late]);
     expect(early).toEqual(named("early", at(2)));
+  });
+});
+
+describe("merging diagnostics by file", () => {
+  it("never merges records of different files", () => {
+    const place = { start: 3, end: 6, line: 2 };
+    const top: Diagnostic = named("m", place, Stage.PARSE);
+    const child: Diagnostic = named("m", place, Stage.PARSE);
+    const topLater: Diagnostic = named("m", place, Stage.SEMANTIC);
+
+    const merged = mergeByFile({
+      "Top.hdl": [topLater, top],
+      "Child.hdl": [child],
+    });
+
+    expect(Object.keys(merged)).toEqual(["Top.hdl", "Child.hdl"]);
+    expect(merged["Top.hdl"]).toEqual([top]);
+    expect(merged["Child.hdl"]).toEqual([child]);
+    expect(merged["Child.hdl"][0]).toBe(child);
+  });
+
+  it("does not link causes across files", () => {
+    const top: Diagnostic = named("one", undefined, Stage.PARSE);
+    const child: Diagnostic = named("two", undefined, Stage.PARSE);
+    const origins = new Map([
+      [top, { cause: "k" }],
+      [child, { cause: "k" }],
+    ]);
+
+    const merged = mergeByFile(
+      { "Top.hdl": [top], "Child.hdl": [child] },
+      origins,
+    );
+
+    expect(merged["Top.hdl"]).toEqual([top]);
+    expect(merged["Child.hdl"]).toEqual([child]);
   });
 });

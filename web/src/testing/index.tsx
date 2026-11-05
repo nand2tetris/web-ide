@@ -46,6 +46,10 @@ export const useTestingAppContext = () => ({
     },
     ...NO_STATUS,
     storage: {},
+    attemptRecovery: true,
+    setAttemptRecovery() {
+      // no-op
+    },
     permissionPrompt: useDialog(),
     async requestPermission() {
       // no-op

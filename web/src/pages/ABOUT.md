@@ -3,7 +3,7 @@ teaching of Nand to Tetris courses. It includes the following tools:
 
 **Hardware simulator:** Used to create chips. Features a built-in HDL editor and all the necessary
 services for simulating and testing chips. If the user enables PC storage, custom chips can be loaded 
-into other HDL files within the same project. Relevant Nand to Tetris projects: 1, 2, 3, 5.
+into other HDL files within the same project. The HDL editor flags unknown chips and pins as you type, and offers completion, go to definition, find references, rename and an outline. Relevant Nand to Tetris projects: 1, 2, 3, 5.
 
 **CPU Emulator:** Emulates the Hack computer (CPU, RAM, ROM, Screen, Keyboard). Allows
 loading the computer with machine language code stored in a file, or entering machine language
@@ -23,7 +23,7 @@ segments, and learning how they are realized on the host RAM, and (ii) Executing
 programs. Includes a builtin implementation of the Jack OS. Relevant projects: 7, 8, 9, 11, 12
 
 **Jack compiler:** Used for writing Jack programs and translating them into VM code. The latter can
-then be loaded into, and executed by, the VM emulator. Relevant projects: 9, 12
+then be loaded into, and executed by, the VM emulator. The Jack editor flags undefined variables, classes and subroutines as you type, and offers the same completion, navigation and rename. Relevant projects: 9, 12
 
 ---
 

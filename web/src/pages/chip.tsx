@@ -330,7 +330,7 @@ export const Chip = () => {
   const [inputValid, setInputValid] = useState(true);
 
   const showCannotTestError = () => {
-    setStatus({ message: t`Cannot test a chip that has syntax errors` });
+    setStatus({ message: t`Cannot test a chip that has errors` });
   };
 
   const evalIfCan = () => {
@@ -405,7 +405,7 @@ export const Chip = () => {
       }
     >
       {state.sim.invalid ? (
-        <Trans>Syntax errors in the HDL code or test</Trans>
+        <Trans>Errors in the HDL code or test</Trans>
       ) : (
         state.controls.chipName != "" && (
           <>

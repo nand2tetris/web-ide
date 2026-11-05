@@ -1,5 +1,11 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { type Grammar, grammar, Interval, type Semantics } from "ohm-js";
+import {
+  type Failure,
+  type Grammar,
+  grammar,
+  Interval,
+  type Semantics,
+} from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
 import {
   type Diagnostic,
@@ -69,6 +75,20 @@ baseSemantics.addAttribute("String", {
   },
 });
 
+/**
+ * The stage of a syntax failure from its expected failures: `lex` when every
+ * expectation shown in the message failed inside a token that had begun, and
+ * `parse` otherwise, including mixed and empty expectations.
+ */
+export function syntaxStageOf(
+  failures: readonly Failure[],
+): typeof Stage.LEX | typeof Stage.PARSE {
+  const shown = failures.filter((failure) => !failure.isFluffy());
+  return shown.length > 0 && shown.every((failure) => failure.isLexical())
+    ? Stage.LEX
+    : Stage.PARSE;
+}
+
 /** A diagnostic of a check on a well formed program. */
 export function semanticError<C extends DiagnosticCode>(
   code: C,
@@ -134,13 +154,22 @@ function mint<T>(ast: T): Valid<T> {
   return ast as Valid<T>;
 }
 
-/** A syntax failure's public expected text, retaining its failure span. */
-function syntaxDiagnostic(at: Span, expected: string): Diagnostic {
+/**
+ * A syntax failure's diagnostic, tagged with the stage its failures show. It
+ * expects what the failures expected, other than the fluffy ones. Ohm marks a
+ * failure fluffy when a rule had already matched up to the failure position
+ * when it was tried, as for the continuation of an optional repetition, and
+ * leaves it out of its own message.
+ */
+function syntaxDiagnostic(at: Span, failures: readonly Failure[]): Diagnostic {
+  const expected = failures
+    .filter((failure) => !failure.isFluffy())
+    .map((failure) => failure.toString());
   return diagnostic(
     DiagnosticCode.Syntax.EXPECTED,
-    { expected: [expected] },
+    { expected },
     at,
-    Stage.PARSE,
+    syntaxStageOf(failures),
   );
 }
 
@@ -192,7 +221,7 @@ export function makeParser<T>(
           return outcomeOf(empty(), [
             syntaxDiagnostic(
               span(match.getInterval()),
-              match.getExpectedText(),
+              match.getRightmostFailures(),
             ),
           ]);
         }

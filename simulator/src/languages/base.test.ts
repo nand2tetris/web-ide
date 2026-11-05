@@ -263,19 +263,28 @@ describe("recovering parser factory", () => {
 
   it("rethrows Ohm's missing `_correction` action", () => {
     const visiting = recoveringGrammar.createSemantics();
-    visiting.addAttribute<string[]>("root", {
-      Root(_words, corrections, _ends) {
-        return corrections.children.map((correction) => correction.text);
+    // Ohm skips corrections unless an operation asks to throw at them.
+    visiting.addAttribute<string[]>(
+      "root",
+      {
+        Root(_words, corrections, _ends) {
+          return corrections.children.map((correction) => correction.text);
+        },
       },
-    });
-    visiting.addAttribute<string>("text", {
-      _terminal() {
-        return this.sourceString;
+      { corrections: "throw" },
+    );
+    visiting.addAttribute<string>(
+      "text",
+      {
+        _terminal() {
+          return this.sourceString;
+        },
+        _iter(...children) {
+          return children.map((child) => child.text).join("");
+        },
       },
-      _iter(...children) {
-        return children.map((child) => child.text).join("");
-      },
-    });
+      { corrections: "throw" },
+    );
     const unhandled = makeParser<string[]>(
       recoveringGrammar,
       visiting,

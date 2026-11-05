@@ -36,6 +36,7 @@ export interface Span {
 export const DiagnosticCode = Object.freeze({
   Syntax: Object.freeze({
     EXPECTED: "syntax.expected",
+    UNKNOWN_WORD: "syntax.unknownWord",
   }),
   Error: Object.freeze({
     UNEXPECTED: "error.unexpected",
@@ -94,6 +95,7 @@ export const DiagnosticCode = Object.freeze({
     POINTER_OUT_OF_BOUNDS: "vm.pointerOutOfBounds",
     STATIC_OUT_OF_BOUNDS: "vm.staticOutOfBounds",
     TEMP_OUT_OF_BOUNDS: "vm.tempOutOfBounds",
+    POP_CONSTANT: "vm.popConstant",
   }),
   Jack: Object.freeze({
     UNDECLARED_VARIABLE: "jack.undeclaredVariable",
@@ -120,6 +122,8 @@ export interface DiagnosticArgs {
   // Syntax errors derived from a failed match.
   /** The input did not match; `expected` lists what would have matched. */
   [DiagnosticCode.Syntax.EXPECTED]: { expected: readonly string[] };
+  /** A word stands where a `kind` (for example `command`) was expected. */
+  [DiagnosticCode.Syntax.UNKNOWN_WORD]: { kind: string; word: string };
 
   // Unexpected failures that carry only a programmer facing message.
   [DiagnosticCode.Error.UNEXPECTED]: { message: string };
@@ -183,9 +187,10 @@ export interface DiagnosticArgs {
   };
   [DiagnosticCode.Vm.UNDEFINED_FUNCTION]: { name: string };
   [DiagnosticCode.Vm.NO_FILES]: Record<string, never>;
+  /** `function` is absent outside a declared function; `line` is a source line. */
   [DiagnosticCode.Vm.DUPLICATE_LABEL]: {
     label: string;
-    function: string;
+    function?: string;
     line: number;
   };
   [DiagnosticCode.Vm.UNDECLARED_LABEL]: { label: string };
@@ -196,6 +201,7 @@ export interface DiagnosticArgs {
   [DiagnosticCode.Vm.POINTER_OUT_OF_BOUNDS]: { offset: number };
   [DiagnosticCode.Vm.STATIC_OUT_OF_BOUNDS]: { offset: number };
   [DiagnosticCode.Vm.TEMP_OUT_OF_BOUNDS]: { offset: number };
+  [DiagnosticCode.Vm.POP_CONSTANT]: Record<string, never>;
 
   // Jack classes.
   [DiagnosticCode.Jack.UNDECLARED_VARIABLE]: { name: string };
@@ -326,6 +332,8 @@ export const ENGLISH: Catalog = {
   messages: {
     [DiagnosticCode.Syntax.EXPECTED]: ({ expected }) =>
       `expected ${listOf(expected)}`,
+    [DiagnosticCode.Syntax.UNKNOWN_WORD]: ({ kind, word }) =>
+      `unknown ${kind} ${word}`,
 
     [DiagnosticCode.Error.UNEXPECTED]: ({ message }) => message,
 
@@ -409,7 +417,9 @@ export const ENGLISH: Catalog = {
     [DiagnosticCode.Vm.NO_FILES]: () =>
       "No .vm files to load. Compile your Jack files first.",
     [DiagnosticCode.Vm.DUPLICATE_LABEL]: ({ label, function: fn, line }) =>
-      `Cannot redeclare label ${label} in function ${fn} (previously at line ${line})`,
+      fn === undefined
+        ? `Cannot redeclare label ${label} (previously at line ${line})`
+        : `Cannot redeclare label ${label} in function ${fn} (previously at line ${line})`,
     [DiagnosticCode.Vm.UNDECLARED_LABEL]: ({ label }) =>
       `Undeclared label ${label}`,
     [DiagnosticCode.Vm.DUPLICATE_FUNCTION]: ({ name }) =>
@@ -421,11 +431,12 @@ export const ENGLISH: Catalog = {
     [DiagnosticCode.Vm.ILLEGAL_OFFSET]: ({ offset }) =>
       `Illegal offset value ${offset} (must be between 0 and 32767)`,
     [DiagnosticCode.Vm.POINTER_OUT_OF_BOUNDS]: ({ offset }) =>
-      `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`,
+      `pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset})`,
     [DiagnosticCode.Vm.STATIC_OUT_OF_BOUNDS]: ({ offset }) =>
       `Cannot access statics beyond 239: ${offset}`,
     [DiagnosticCode.Vm.TEMP_OUT_OF_BOUNDS]: ({ offset }) =>
-      `Temp out of bounds access (temp can be 0 to 7, but got ${offset}`,
+      `Temp out of bounds access (temp can be 0 to 7, but got ${offset})`,
+    [DiagnosticCode.Vm.POP_CONSTANT]: () => "Cannot pop to constant",
 
     [DiagnosticCode.Jack.UNDECLARED_VARIABLE]: ({ name }) =>
       `Undeclared variable ${name}`,

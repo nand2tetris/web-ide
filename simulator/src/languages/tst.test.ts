@@ -150,6 +150,23 @@ describe("tst language", () => {
     });
   });
 
+  it("accepts a colon inside a name", () => {
+    const list = grammar.match("output-list a:b", "TstOutputListOperation");
+    expect(list).toHaveSucceeded();
+    expect(TST.semantics(list).operation).toMatchObject({
+      op: "output-list",
+      spec: [{ id: "a:b" }],
+    });
+
+    const set = grammar.match("set a:b 1", "TstSetOperation");
+    expect(set).toHaveSucceeded();
+    expect(TST.semantics(set).operation).toEqual({
+      op: "set",
+      id: "a:b",
+      value: 1,
+    });
+  });
+
   it("parses simple multiline", () => {
     const match = grammar.match("eval;\n\neval;\n\n");
     expect(match).toHaveSucceeded();

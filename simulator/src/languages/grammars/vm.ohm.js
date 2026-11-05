@@ -1,20 +1,22 @@
-const vm = `Vm <: Base {
+const vm = `
+Vm <: Base {
   Root := Vm
 
-  Vm = newline* VmInstructionLine* VmInstruction?
+  Vm = newline* VmInstruction*
 
-  space := comment | " " | "\t"
+  space := comment | " " | "\\t"
   whitespace = lineComment | comment | space
 
-  VmInstructionLine = VmInstruction newline+
-  VmInstruction =
-    | StackInstruction
+  number := decimal
+  decimal (a number) = digit+
+
+  VmInstruction = (StackInstruction
     | OpInstruction
     | FunctionInstruction
     | CallInstruction
     | ReturnInstruction
     | GotoInstruction
-    | LabelInstruction
+    | LabelInstruction) ! (newline+ | end)
   
   StackInstruction = (push | pop) MemorySegment Number
   OpInstruction = Add | Sub | Neg | Lt | Gt | Eq | And | Or | Not
@@ -53,5 +55,6 @@ const vm = `Vm <: Base {
   And = "and" 
   Or = "or" 
   Not = "not"
-}`;
+}
+`;
 export default vm;

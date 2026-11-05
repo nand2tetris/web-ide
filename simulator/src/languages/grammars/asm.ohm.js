@@ -5,8 +5,6 @@ ASM <: Base {
   
   instruction = (label | aInstruction | cInstruction) ! (space+ | end)
 
-  identifier := (letter|underscore|dot|dollar|colon) (alnum|underscore|dot|dollar|colon)*
-
   label = openParen identifier closeParen
   aInstruction = at (identifier | digit+)
   cInstruction = assign? op jmp?

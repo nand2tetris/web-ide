@@ -16,7 +16,9 @@ import {
   DiagnosticCode,
   type Diagnostics,
   diagnostic,
+  type Fault,
   faultKey,
+  located,
   type Span,
   Stage,
 } from "./diagnostic.js";
@@ -450,6 +452,18 @@ function byPosition(a: Diagnostic, b: Diagnostic): number {
   );
 }
 
+export function mergeByFile(
+  files: Readonly<Record<string, Diagnostics>>,
+  origins?: Origins,
+): Record<string, Diagnostics> {
+  return Object.fromEntries(
+    Object.entries(files).map(([file, diagnostics]) => [
+      file,
+      mergeDiagnostics(diagnostics, origins),
+    ]),
+  );
+}
+
 interface RecoveringGrammar {
   match(
     input: string,
@@ -471,30 +485,76 @@ function failureKey(failure: RecoveredFailure): string {
   return `${interval.startIdx}:${interval.endIdx}:${position}:${shortMessage}`;
 }
 
+/**
+ * Where a syntax failure occurred: the parsed source and the rightmost failure
+ * offset. The reported span can start earlier, after the preceding token.
+ */
+export interface SyntaxSite {
+  source: string;
+  position: number;
+}
+
+/**
+ * What a syntax failure reports: an expectation list, shown as `expected …`,
+ * or a fault that replaces that wording.
+ */
+export type SyntaxReading = readonly string[] | Fault;
+
 /** Applied to strict and recovered failures; includes Ohm's hidden expectations. */
 export type SyntaxExpected = (
   expected: readonly string[],
   failures: readonly Failure[],
-) => readonly string[];
+  site: SyntaxSite,
+) => SyntaxReading;
 
 /** One rewrite of an expectation list; undefined when the rule does not apply. */
 export type SyntaxRewrite = (
   expected: readonly string[],
   failures: readonly Failure[],
-) => readonly string[] | undefined;
+  site: SyntaxSite,
+) => SyntaxReading | undefined;
 
 const ohmExpected: SyntaxExpected = (expected) => expected;
 
 /**
  * Applies `rules` in order. Each applicable rule replaces the list, and later
- * rules see its output.
+ * rules see its output. A rule that returns a fault ends the chain.
  */
 export function rewrites(...rules: SyntaxRewrite[]): SyntaxExpected {
-  return (expected, failures) =>
-    rules.reduce<readonly string[]>(
-      (current, rule) => rule(current, failures) ?? current,
+  return (expected, failures, site) =>
+    rules.reduce<SyntaxReading>(
+      (current, rule) =>
+        isExpectation(current)
+          ? (rule(current, failures, site) ?? current)
+          : current,
       expected,
     );
+}
+
+function isExpectation(reading: SyntaxReading): reading is readonly string[] {
+  return Array.isArray(reading);
+}
+
+const WORD = /^[A-Za-z_.$:][\w.$:-]*/;
+
+/**
+ * Reports `unknown <kind> <word>` when the failure stands at the start of a
+ * word that is not in `words`, where Ohm tried one of `words`. The kind is
+ * `label` without its article: `a command` gives `unknown command psh`.
+ */
+export function unknownWord(
+  label: string,
+  words: readonly string[],
+): SyntaxRewrite {
+  const quoted = new Set(words.map((word) => JSON.stringify(word)));
+  const kind = label.replace(/^an? /, "");
+  return (_expected, failures, { source, position }) => {
+    const word = WORD.exec(source.slice(position))?.[0];
+    const tried = failures.some((failure) => quoted.has(failure.toString()));
+    return word === undefined || !tried || words.includes(word)
+      ? undefined
+      : { code: DiagnosticCode.Syntax.UNKNOWN_WORD, args: { kind, word } };
+  };
 }
 
 /**
@@ -513,20 +573,51 @@ export function categorize(
   };
 }
 
+/**
+ * Ohm fails after the whitespace that follows the last matched token, so a
+ * missing delimiter lands on the next token, possibly on the next line. When
+ * only punctuation was expected, step back over that whitespace. When a word
+ * was expected, the next token is the mistake and stays where it is.
+ */
+function errorPosition(
+  source: string,
+  position: number,
+  expected: readonly string[],
+): number {
+  const onlyPunctuation =
+    expected.length > 0 && expected.every((item) => /^"[^\w"]+"$/.test(item));
+  if (!onlyPunctuation) {
+    return position;
+  }
+  let at = position;
+  while (at > 0 && /\s/.test(source[at - 1])) {
+    at--;
+  }
+  return at;
+}
+
 function syntaxDiagnostic(
+  source: string,
   at: Span,
+  position: number,
   failures: readonly Failure[],
   expectedOf: SyntaxExpected = ohmExpected,
 ): Diagnostic {
   const shown = failures
     .filter((failure) => !failure.isFluffy())
     .map((failure) => failure.toString());
-  return diagnostic(
-    DiagnosticCode.Syntax.EXPECTED,
-    { expected: expectedOf(shown, failures) },
-    at,
-    syntaxStageOf(failures),
-  );
+  const reading = expectedOf(shown, failures, { source, position });
+  const stage = syntaxStageOf(failures);
+  // A rewritten fault names the word at the failure, so it is located there.
+  return isExpectation(reading)
+    ? located(
+        { code: DiagnosticCode.Syntax.EXPECTED, args: { expected: reading } },
+        at.start === at.end
+          ? spanAt(source, errorPosition(source, at.start, reading))
+          : at,
+        stage,
+      )
+    : located(reading, spanAt(source, position), stage);
 }
 
 function diagnosticOf(
@@ -535,7 +626,9 @@ function diagnosticOf(
   expectedOf: SyntaxExpected = ohmExpected,
 ): Diagnostic {
   return syntaxDiagnostic(
+    source,
     spanAt(source, failure.getDiagnosticPosition()),
+    failure.position,
     failure.getRightmostFailures(),
     expectedOf,
   );
@@ -659,7 +752,9 @@ export function makeParser<T>(
         );
         if (match.failed()) {
           const first = syntaxDiagnostic(
+            source,
             span(match.getInterval()),
+            match.getRightmostFailurePosition(),
             match.getRightmostFailures(),
             expectedOf,
           );

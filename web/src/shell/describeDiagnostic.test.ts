@@ -13,6 +13,7 @@ import { describeStatus } from "./statusline";
 /** One argument object for every code; a new code must add its sample here. */
 const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Syntax.EXPECTED]: { expected: ['"a"', '"b"', '"c"'] },
+  [DiagnosticCode.Syntax.UNKNOWN_WORD]: { kind: "command", word: "psh" },
   [DiagnosticCode.Error.UNEXPECTED]: { message: "boom" },
   [DiagnosticCode.Asm.INVALID_TARGET]: { target: "DA", suggestion: "AD" },
   [DiagnosticCode.Asm.INVALID_VALUE]: { value: "M+A" },
@@ -76,6 +77,7 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Vm.POINTER_OUT_OF_BOUNDS]: { offset: 2 },
   [DiagnosticCode.Vm.STATIC_OUT_OF_BOUNDS]: { offset: 300 },
   [DiagnosticCode.Vm.TEMP_OUT_OF_BOUNDS]: { offset: 8 },
+  [DiagnosticCode.Vm.POP_CONSTANT]: {},
   [DiagnosticCode.Jack.UNDECLARED_VARIABLE]: { name: "y" },
   [DiagnosticCode.Jack.UNKNOWN_TYPE]: { type: "Foo" },
   [DiagnosticCode.Jack.OS_INTERFACE]: {
@@ -126,6 +128,7 @@ describe("describeDiagnostic in English", () => {
       suggestion: "A+M",
     }),
     diagnostic(DiagnosticCode.Chip.MULTIPLE_WRITES, { pin: "out" }),
+    diagnostic(DiagnosticCode.Vm.DUPLICATE_LABEL, { label: "L", line: 3 }),
     diagnostic(DiagnosticCode.Chip.BUS_WIDTH_MISMATCH, {
       lhs: "a",
       lhsWidth: undefined,

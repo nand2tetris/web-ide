@@ -158,7 +158,7 @@ export const Asm = () => {
               {runnerAssigned && runner.current && (
                 <Runbar
                   runner={runner.current}
-                  disabled={state.error != undefined}
+                  disabled={state.diagnostics.length > 0}
                   prefix={
                     <button
                       className="flex-0"
@@ -192,7 +192,7 @@ export const Asm = () => {
         <Editor
           value={state.asm}
           path={state.path ?? "tmp.asm"}
-          error={state.error}
+          diagnostics={state.diagnostics}
           alwaysRecenter={false}
           onChange={(source: string) => {
             actions.setAsm(source);

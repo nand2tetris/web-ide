@@ -1,11 +1,11 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { CompilationError, createError, Span } from "../languages/base.js";
+import { createError, Diagnostic, Span } from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
 
-function pinWidth(pin: PinParts): Result<number | undefined, CompilationError> {
+function pinWidth(pin: PinParts): Result<number | undefined, Diagnostic> {
   const start = pin.start ?? 0;
   if (pin.end === undefined) {
     return Ok(undefined);
@@ -26,7 +26,7 @@ export async function parse(
   dir?: string,
   name?: string,
   fs?: FileSystem,
-): Promise<Result<Chip, CompilationError>> {
+): Promise<Result<Chip, Diagnostic>> {
   const parsed = HDL.parse(code.toString());
   if (isErr(parsed)) {
     return parsed;
@@ -104,7 +104,7 @@ function display(pin: PinParts): string {
 function createConnection(
   lhs: PinParts,
   rhs: PinParts,
-): Result<Connection, CompilationError> {
+): Result<Connection, Diagnostic> {
   const lhsWidth = pinWidth(lhs);
   const rhsWidth = pinWidth(rhs);
   if (isErr(lhsWidth)) {
@@ -142,7 +142,7 @@ function getIndices(pin: PinParts): number[] {
 function checkMultipleAssignments(
   pin: PinParts,
   assignedIndexes: Map<string, Set<number>>,
-): Result<void, CompilationError> {
+): Result<void, Diagnostic> {
   let errorIndex: number | undefined = undefined; // -1 stands for the whole bus width
   const indices = assignedIndexes.get(pin.pin);
   if (!indices) {
@@ -219,7 +219,7 @@ class ChipBuilder {
     );
   }
 
-  async build(): Promise<Result<Chip, CompilationError>> {
+  async build(): Promise<Result<Chip, Diagnostic>> {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
       return Err(createError(`Wrong chip name`, this.parts.name.span));
     }
@@ -247,7 +247,7 @@ class ChipBuilder {
     return Ok(this.chip);
   }
 
-  private async wireParts(): Promise<Result<void, CompilationError>> {
+  private async wireParts(): Promise<Result<void, Diagnostic>> {
     if (this.parts.parts === "BUILTIN") {
       return Ok();
     }
@@ -283,10 +283,7 @@ class ChipBuilder {
     return Ok();
   }
 
-  private checkLoops(
-    part: Part,
-    partChip: Chip,
-  ): Result<void, CompilationError> {
+  private checkLoops(part: Part, partChip: Chip): Result<void, Diagnostic> {
     const ins = new Set<string>();
     const outs = new Set<string>();
 
@@ -314,7 +311,7 @@ class ChipBuilder {
     return Ok();
   }
 
-  private wirePart(part: Part, partChip: Chip): Result<void, CompilationError> {
+  private wirePart(part: Part, partChip: Chip): Result<void, Diagnostic> {
     const result = this.checkLoops(part, partChip);
     if (isErr(result)) {
       return result;
@@ -358,7 +355,7 @@ class ChipBuilder {
     partChip: Chip,
     lhs: PinParts,
     rhs: PinParts,
-  ): Result<void, CompilationError> {
+  ): Result<void, Diagnostic> {
     if (partChip.isInPin(lhs.pin)) {
       const result = this.validateInputWire(lhs, rhs);
       if (isErr(result)) {
@@ -381,7 +378,7 @@ class ChipBuilder {
   private validateInputWire(
     lhs: PinParts,
     rhs: PinParts,
-  ): Result<void, CompilationError> {
+  ): Result<void, Diagnostic> {
     let result = this.validateInputSource(rhs);
     if (isErr(result)) {
       return result;
@@ -411,7 +408,7 @@ class ChipBuilder {
     partChip: Chip,
     lhs: PinParts,
     rhs: PinParts,
-  ): Result<void, CompilationError> {
+  ): Result<void, Diagnostic> {
     let result = this.validateWriteTarget(rhs);
     if (isErr(result)) {
       return result;
@@ -454,7 +451,7 @@ class ChipBuilder {
     return Ok();
   }
 
-  private validateWriteTarget(rhs: PinParts): Result<void, CompilationError> {
+  private validateWriteTarget(rhs: PinParts): Result<void, Diagnostic> {
     if (this.chip.isInPin(rhs.pin)) {
       return Err(createError(`Cannot write to input pin ${rhs.pin}`, rhs.span));
     }
@@ -466,7 +463,7 @@ class ChipBuilder {
     return Ok();
   }
 
-  private validateInputSource(rhs: PinParts): Result<void, CompilationError> {
+  private validateInputSource(rhs: PinParts): Result<void, Diagnostic> {
     if (this.chip.isOutPin(rhs.pin)) {
       return Err(createError(`Cannot use output pin as input`, rhs.span));
     } else if (!this.chip.isInPin(rhs.pin) && rhs.start != undefined) {
@@ -482,7 +479,7 @@ class ChipBuilder {
     return Ok();
   }
 
-  private validateInternalPins(): Result<void, CompilationError> {
+  private validateInternalPins(): Result<void, Diagnostic> {
     for (const [name, pinData] of this.internalPins) {
       if (!pinData.isDefined) {
         return Err(
@@ -498,7 +495,7 @@ class ChipBuilder {
     return Ok();
   }
 
-  private validateWireWidths(): Result<void, CompilationError> {
+  private validateWireWidths(): Result<void, Diagnostic> {
     for (const wire of this.wires) {
       const lhsWidth =
         getSubBusWidth(wire.lhs) ?? wire.partChip.get(wire.lhs.pin)?.width;

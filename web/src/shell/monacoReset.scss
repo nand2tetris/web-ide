@@ -1,0 +1,13 @@
+// Pico styles bare elements (`button`, `input`, `textarea`, ...) in the `pico`
+// cascade layer, so it reaches into Monaco's find widget, hovers and hidden
+// input. Monaco's own stylesheet is unlayered and still wins for every
+// property it sets; `all: revert` here only removes what Pico adds on top.
+// The `user` layer comes after `pico` in `public/root.css`.
+@layer user {
+  .monaco-editor,
+  .monaco-editor *,
+  .monaco-editor *::before,
+  .monaco-editor *::after {
+    all: revert;
+  }
+}

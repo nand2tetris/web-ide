@@ -5,11 +5,18 @@ import { validOf } from "./base.js";
 import { JACK } from "./jack.js";
 
 describe("jack language", () => {
-  describe.each(Object.keys(Programs))("Program %s", (program) => {
-    it.each(Object.keys(Programs[program]))("File %s", (filename) => {
-      const parsed = validOf(JACK.parse(Programs[program][filename].jack));
-      expect(parsed).toBeOk();
-      expect(unwrap(parsed)).toEqual(Programs[program][filename].parsed);
-    });
-  });
+  describe.each([undefined, { attemptRecovery: true }])(
+    "recovery %j",
+    (options) => {
+      describe.each(Object.keys(Programs))("Program %s", (program) => {
+        it.each(Object.keys(Programs[program]))("File %s", (filename) => {
+          const parsed = validOf(
+            JACK.parse(Programs[program][filename].jack, options),
+          );
+          expect(parsed).toBeOk();
+          expect(unwrap(parsed)).toEqual(Programs[program][filename].parsed);
+        });
+      });
+    },
+  );
 });

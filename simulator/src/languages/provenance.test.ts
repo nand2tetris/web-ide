@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isRecovered, recoveredOf } from "./base.js";
 
+import { JACK, prune as jackPrune } from "./jack.js";
 import { TST, type TstRepeat, prune as tstPrune } from "./tst.js";
 
 const RECOVER = { attemptRecovery: true };
@@ -24,5 +25,83 @@ describe("a null object records what it stands in for", () => {
 
     expect(outcome).toHaveProperty("nullRoot", true);
     expect(recoveredOf(outcome, tstPrune)).toBeUndefined();
+  });
+});
+
+describe("provenance captured before pruning", () => {
+  it("records each Jack skip with its kind, full interval and owning scopes", () => {
+    const source = [
+      "class Main {",
+      "  function void a() {",
+      "    if (true) {",
+      "      let x = 1",
+      "    }",
+      "    return;",
+      "  }",
+      "  function void b() {",
+      "    do Output.printInt(1)",
+      "    return;",
+      "  }",
+      "}",
+    ].join("\n");
+    const outcome = JACK.parse(source, RECOVER);
+
+    const provenance = jackPrune.provenance(outcome.ast);
+
+    expect(provenance).toMatchObject([
+      {
+        // The statement before `}` lacks its `;`: the if block's closer slot
+        // recovered, so the skip is that closer's, inside the subroutine.
+        kind: "IfClose",
+        scope: ["Main", "a"],
+        interval: { start: source.indexOf("let x") },
+        diagnostic: outcome.diagnostics[0],
+      },
+      {
+        kind: "DoBody",
+        scope: ["Main", "b"],
+        interval: { start: source.indexOf("do Output") },
+        diagnostic: outcome.diagnostics[1],
+      },
+    ]);
+    // The interval is the whole skipped input; the diagnostic is a point.
+    for (const { key, interval, diagnostic } of provenance) {
+      expect(key).toEqual(expect.any(String));
+      expect(interval.end).toBeGreaterThan(interval.start);
+      expect(diagnostic.span?.end).toBe(diagnostic.span?.start);
+    }
+  });
+});
+
+describe("a recovered tree beside a null root", () => {
+  const _PROBE = [
+    "CHIP Probe {",
+    "  IN a;",
+    "  OUT x;",
+    "  PARTS:",
+    "  Not(in=a out=x);",
+    "  Not(in=a, out=x);",
+    "}",
+  ].join("\n");
+
+  it("leaves a no-tree file out of a class table", () => {
+    const files: Record<string, string> = {
+      Damaged:
+        "class Damaged {\n  function void a() {\n    let x = ;\n    return;\n  }\n}",
+      Broken: "class B",
+    };
+
+    const table = Object.fromEntries(
+      Object.entries(files).flatMap(([name, source]) => {
+        const recovered = recoveredOf(JACK.parse(source, RECOVER), jackPrune);
+        return recovered ? [[name, recovered]] : [];
+      }),
+    );
+
+    expect(Object.keys(table)).toEqual(["Damaged"]);
+    expect(table.Damaged.ast.subroutines[0].body.statements).toHaveLength(1);
+    expect(table.Damaged.provenance).toMatchObject([
+      { kind: "LetBody", scope: ["Damaged", "a"] },
+    ]);
   });
 });

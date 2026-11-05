@@ -135,6 +135,13 @@ export interface Skip extends Skipped {
 
 export type Provenance = readonly Skip[];
 
+export function skipsAny(
+  provenance: Provenance,
+  kinds: ReadonlySet<string>,
+): boolean {
+  return provenance.some(({ kind }) => kinds.has(kind));
+}
+
 export interface Recovered<T> {
   readonly ast: Valid<T>;
   readonly provenance: Provenance;
@@ -401,22 +408,39 @@ function failureKey(failure: RecoveredFailure): string {
   return `${interval.startIdx}:${interval.endIdx}:${position}:${shortMessage}`;
 }
 
-function syntaxDiagnostic(at: Span, failures: readonly Failure[]): Diagnostic {
+/** Applied to strict and recovered failures; includes Ohm's hidden expectations. */
+export type SyntaxExpected = (
+  expected: readonly string[],
+  failures: readonly Failure[],
+) => readonly string[];
+
+const ohmExpected: SyntaxExpected = (expected) => expected;
+
+function syntaxDiagnostic(
+  at: Span,
+  failures: readonly Failure[],
+  expectedOf: SyntaxExpected = ohmExpected,
+): Diagnostic {
   const shown = failures
     .filter((failure) => !failure.isFluffy())
     .map((failure) => failure.toString());
   return diagnostic(
     DiagnosticCode.Syntax.EXPECTED,
-    { expected: shown },
+    { expected: expectedOf(shown, failures) },
     at,
     syntaxStageOf(failures),
   );
 }
 
-function diagnosticOf(source: string, failure: RecoveredFailure): Diagnostic {
+function diagnosticOf(
+  source: string,
+  failure: RecoveredFailure,
+  expectedOf: SyntaxExpected = ohmExpected,
+): Diagnostic {
   return syntaxDiagnostic(
     spanAt(source, failure.position),
     failure.getRightmostFailures(),
+    expectedOf,
   );
 }
 
@@ -495,6 +519,7 @@ export function makeParser<T>(
   semantics: Semantics,
   empty: () => T,
   attribute = "root",
+  expectedOf: SyntaxExpected = ohmExpected,
 ): Parser<T> {
   return {
     empty,
@@ -511,11 +536,12 @@ export function makeParser<T>(
             })
           : grammar.match(source);
         const failures = recover ? match.getRecoveredFailures() : [];
-        diagnostics = failures.map((f) => diagnosticOf(source, f));
+        diagnostics = failures.map((f) => diagnosticOf(source, f, expectedOf));
         if (match.failed()) {
           const first = syntaxDiagnostic(
             span(match.getInterval()),
             match.getRightmostFailures(),
+            expectedOf,
           );
           return nullRootOf(empty(), [first, ...diagnostics.slice(1)]);
         }

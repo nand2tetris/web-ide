@@ -1,8 +1,17 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { isValid, semanticError, Valid } from "../languages/base.js";
+import {
+  mergeByFile,
+  Origin,
+  Provenance,
+  recoveredOf,
+  semanticError,
+  skipsAny,
+  Valid,
+} from "../languages/base.js";
 import {
   Diagnostic,
+  DiagnosticArgs,
   DiagnosticCode,
   Diagnostics,
   diagnostic,
@@ -10,8 +19,16 @@ import {
   Span,
   Stage,
 } from "../languages/diagnostic.js";
-import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
-import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
+import {
+  HDL,
+  HdlParse,
+  HdlSkipKind,
+  Part,
+  PinParts,
+  prune,
+} from "../languages/hdl.js";
+import { builtinOverrides } from "./builtins/builtinOverrides.js";
+import { hasBuiltinChip, REGISTRY } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
 
 function pinWidth(pin: PinParts): Result<number | undefined, Diagnostic> {
@@ -25,46 +42,217 @@ function pinWidth(pin: PinParts): Result<number | undefined, Diagnostic> {
   return Err(semanticError(DiagnosticCode.Chip.BUS_RANGE, {}, pin.span));
 }
 
+/** A chip's and its dependencies' diagnostics, keyed by source file. */
+export type ChipDiagnostics = Record<string, Diagnostics>;
+
+export interface ChipOptions {
+  /** Recover from syntax errors to keep checking. Default false. */
+  attemptRecovery?: boolean;
+}
+
+const INPUT_KEY = "<input>.hdl";
+
+function fileKeyOf(dir: string | undefined, name: string): string {
+  return [dir, `${name}.hdl`].filter(Boolean).join("/");
+}
+
+function rootKeyOf(dir: string | undefined, name: string | undefined): string {
+  return name === undefined ? INPUT_KEY : fileKeyOf(dir, name);
+}
+
+/**
+ * Builds a chip from HDL source, reporting the diagnostics of the source and
+ * of every dependency it loads, each under its source key. Any diagnostic
+ * withholds the chip.
+ */
 export async function parse(
   code: string,
   dir?: string,
   name?: string,
   fs?: FileSystem,
-): Promise<Result<Chip, Diagnostics>> {
-  const outcome = HDL.parse(code.toString());
-  if (!isValid(outcome)) {
-    return Err(outcome.diagnostics);
-  }
-  const chip = await build({ parts: outcome.ast, dir, name, fs });
-  return isErr(chip) ? Err([Err(chip)]) : chip;
+  options?: ChipOptions & { file?: string },
+): Promise<Result<Chip, ChipDiagnostics>> {
+  const file = options?.file ?? rootKeyOf(dir, name);
+  const files = new FileDiagnostics();
+  const { chip } = await loadSource(
+    code.toString(),
+    file,
+    { dir, name },
+    { fs, attemptRecovery: options?.attemptRecovery ?? false, files },
+  );
+  return files.result(file, chip);
 }
 
+/**
+ * Loads chip `name` as a part would: a builtin, or `name.hdl` in `dir`. A
+ * source that cannot be read reports a spanless diagnostic under its key.
+ */
 export async function loadChip(
   name: string,
   dir?: string,
   fs?: FileSystem,
-): Promise<Result<Chip, Diagnostic>> {
-  if (hasBuiltinChip(name) || fs === undefined) {
-    return await getBuiltinChip(name);
+  options?: ChipOptions,
+): Promise<Result<Chip, ChipDiagnostics>> {
+  const files = new FileDiagnostics();
+  const { chip } = await loadDependency(name, dir, {
+    fs,
+    attemptRecovery: options?.attemptRecovery ?? false,
+    files,
+  });
+  return files.result(fileKeyOf(dir, name), chip);
+}
+
+/**
+ * Builds a chip from a valid tree. Dependencies parse without recovery unless
+ * `attemptRecovery` is set; `provenance` is what pruning dropped from `parts`.
+ */
+export async function build(options: {
+  parts: Valid<HdlParse>;
+  provenance?: Provenance;
+  fs?: FileSystem;
+  dir?: string;
+  name?: string;
+  attemptRecovery?: boolean;
+  file?: string;
+}): Promise<Result<Chip, ChipDiagnostics>> {
+  const { parts, provenance = [], fs, dir, name } = options;
+  const file = options.file ?? rootKeyOf(dir, name);
+  const files = new FileDiagnostics();
+  const chip = await new ChipBuilder({
+    ast: parts,
+    provenance,
+    dir,
+    name,
+    file,
+    context: { fs, attemptRecovery: options.attemptRecovery ?? false, files },
+  }).build();
+  return files.result(file, chip);
+}
+
+class FileDiagnostics {
+  private readonly lists = new Map<string, Diagnostic[]>();
+  private readonly origins = new Map<Diagnostic, Origin>();
+  private readonly allocations = new Set<Chip>();
+
+  own(chip: Chip): Chip {
+    this.allocations.add(chip);
+    return chip;
   }
-  try {
-    const file = await fs.readFile(`${dir}/${name}.hdl`);
-    const outcome = HDL.parse(file);
-    if (!isValid(outcome)) {
-      return Err(outcome.diagnostics[0]);
+
+  add(file: string, ...diagnostics: readonly Diagnostic[]) {
+    if (diagnostics.length > 0) {
+      this.lists.set(file, [...(this.lists.get(file) ?? []), ...diagnostics]);
     }
-    return await build({ parts: outcome.ast, dir, name, fs });
-  } catch (_e) {
-    return Err(
-      diagnostic(DiagnosticCode.Chip.NOT_LOADED, { file: `${name}.hdl` }),
-    );
+  }
+
+  /** Keeps each skip's recovery identity, so distinct skips stay apart. */
+  addProvenance(provenance: Provenance) {
+    for (const { diagnostic, key } of provenance) {
+      if (key !== undefined) {
+        this.origins.set(diagnostic, { recovery: key });
+      }
+    }
+  }
+
+  result(file: string, chip: Chip | undefined): Result<Chip, ChipDiagnostics> {
+    if (this.lists.size === 0) {
+      if (chip !== undefined) {
+        return Ok(chip);
+      }
+      this.add(file, diagnostic(DiagnosticCode.Chip.NOT_LOADED, { file }));
+    }
+    const files: Record<string, Diagnostics> = {};
+    for (const [key, [first, ...rest]] of this.lists) {
+      files[key] = [first, ...rest];
+    }
+    for (const allocated of this.allocations) {
+      allocated.remove();
+    }
+    return Err(mergeByFile(files, this.origins));
   }
 }
 
-export async function build(
-  ...args: Parameters<typeof ChipBuilder.build>
-): Promise<ReturnType<typeof ChipBuilder.build>> {
-  return await ChipBuilder.build(...args);
+interface LoadContext {
+  readonly fs?: FileSystem;
+  readonly attemptRecovery: boolean;
+  readonly files: FileDiagnostics;
+}
+
+/**
+ * A partial chip exposes intact pins for caller checks only, never execution.
+ * No tree or missing source leaves `chip` undefined.
+ */
+interface Loaded {
+  readonly chip?: Chip;
+  readonly provenance: Provenance;
+  /** No source was found, so the referring part names an undefined chip. */
+  readonly missing?: true;
+}
+
+async function loadSource(
+  code: string,
+  file: string,
+  { dir, name }: { dir?: string; name?: string },
+  context: LoadContext,
+): Promise<Loaded> {
+  const outcome = HDL.parse(code, {
+    attemptRecovery: context.attemptRecovery,
+  });
+  context.files.add(file, ...outcome.diagnostics);
+  const recovered = recoveredOf(outcome, prune);
+  if (recovered === undefined) {
+    return { provenance: [] };
+  }
+  context.files.addProvenance(recovered.provenance);
+  const chip = await new ChipBuilder({
+    ...recovered,
+    dir,
+    name,
+    file,
+    context,
+  }).build();
+  return { chip, provenance: recovered.provenance };
+}
+
+async function loadDependency(
+  name: string,
+  dir: string | undefined,
+  context: LoadContext,
+): Promise<Loaded> {
+  const { fs } = context;
+  if (hasBuiltinChip(name) || fs === undefined) {
+    return loadBuiltin(name, context);
+  }
+  const file = fileKeyOf(dir, name);
+  let code: string;
+  try {
+    code = await fs.readFile(file);
+  } catch (_e) {
+    return { provenance: [], missing: true };
+  }
+  return loadSource(code, file, { dir, name }, context);
+}
+
+/**
+ * Loads a builtin chip. An overridden builtin builds from its HDL, whose
+ * diagnostics report under `builtin:Name.hdl`.
+ */
+async function loadBuiltin(
+  name: string,
+  context: LoadContext,
+): Promise<Loaded> {
+  if (Object.hasOwn(builtinOverrides, name)) {
+    return loadSource(
+      builtinOverrides[name],
+      `builtin:${name}.hdl`,
+      { name },
+      { ...context, fs: undefined },
+    );
+  }
+  const allocate = REGISTRY.get(name);
+  return allocate === undefined
+    ? { provenance: [], missing: true }
+    : { chip: context.files.own(allocate()), provenance: [] };
 }
 
 interface InternalPin {
@@ -168,65 +356,127 @@ function checkMultipleAssignments(
   return Ok();
 }
 
+const SUPPLIES_OWN_PIN: ReadonlySet<string> = new Set<HdlSkipKind>([
+  "ChipStart",
+  "InListBody",
+  "OutListBody",
+  "PartBody",
+  "PartsClose",
+  "ChipClose",
+]);
+
+const DECLARES_PIN: ReadonlySet<string> = new Set<HdlSkipKind>([
+  "ChipStart",
+  "InListBody",
+  "OutListBody",
+]);
+
+const NAMES_CHIP: ReadonlySet<string> = new Set<HdlSkipKind>([
+  "ChipHead",
+  "ChipStart",
+]);
+
 class ChipBuilder {
-  private parts: HdlParse;
-  private fs?: FileSystem;
+  private parts: Valid<HdlParse>;
+  private provenance: Provenance;
   private dir?: string;
   private expectedName?: string;
+  private file: string;
+  private context: LoadContext;
 
   private chip: Chip;
+  private unnamed: boolean;
+  private name: string;
   private internalPins: Map<string, InternalPin> = new Map();
   private inPins: Map<string, Set<number>> = new Map();
   private outPins: Map<string, Set<number>> = new Map();
   private wires: WireData[] = [];
+  private mayBeDriven = new Set<string>();
+  private failed = false;
 
-  static build(options: {
-    parts: Valid<HdlParse>;
-    fs?: FileSystem;
-    dir?: string;
-    name?: string;
-  }) {
-    return new ChipBuilder(options).build();
-  }
-
-  private constructor({
-    parts,
-    fs,
+  constructor({
+    ast,
+    provenance,
     dir,
     name,
+    file,
+    context,
   }: {
-    parts: Valid<HdlParse>;
-    fs?: FileSystem;
+    ast: Valid<HdlParse>;
+    provenance: Provenance;
     dir?: string;
     name?: string;
+    file: string;
+    context: LoadContext;
   }) {
-    this.parts = parts;
+    this.parts = ast;
+    this.provenance = provenance;
     this.expectedName = name;
     this.dir = dir;
-    this.fs = fs;
-    this.chip = new Chip(
-      parts.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
-      parts.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
-      parts.name.value,
-      [],
-      parts.clocked,
+    this.file = file;
+    this.context = context;
+    this.unnamed = skipsAny(provenance, NAMES_CHIP);
+    this.name = this.unnamed ? (name ?? "") : ast.name.value;
+    this.chip = context.files.own(
+      new Chip(
+        ast.ins.map(({ pin, width }) => ({ pin: pin.toString(), width })),
+        ast.outs.map(({ pin, width }) => ({ pin: pin.toString(), width })),
+        this.name,
+        [],
+        ast.clocked,
+      ),
     );
   }
 
-  async build(): Promise<Result<Chip, Diagnostic>> {
-    if (this.expectedName && this.parts.name.value != this.expectedName) {
-      return Err(
-        semanticError(DiagnosticCode.Chip.WRONG_NAME, {}, this.parts.name.span),
-      );
+  private fail(diagnostic: Diagnostic) {
+    this.failed = true;
+    this.context.files.add(this.file, diagnostic);
+  }
+
+  private report<C extends DiagnosticCode>(
+    code: C,
+    args: DiagnosticArgs[C],
+    span?: Span,
+  ) {
+    this.fail(semanticError(code, args, span));
+  }
+
+  async build(): Promise<Chip> {
+    // Suppressed: a wrong chip name, when recovery skipped the header that
+    // names the chip.
+    if (
+      !this.unnamed &&
+      this.expectedName &&
+      this.parts.name.value != this.expectedName
+    ) {
+      // The source is not the chip asked for, so its parts are not loaded:
+      // a chip that names itself as a part must not load itself forever.
+      this.report(DiagnosticCode.Chip.WRONG_NAME, {}, this.parts.name.span);
+      return this.chip;
     }
 
     if (this.parts.parts === "BUILTIN") {
-      return await getBuiltinChip(this.parts.name.value);
+      const builtin = await loadBuiltin(this.name, this.context);
+      // Suppressed: a builtin missing from the registry, when recovery
+      // skipped the header that names it.
+      if (builtin.missing && !this.unnamed) {
+        this.report(
+          DiagnosticCode.Chip.NOT_BUILTIN,
+          { name: this.name },
+          this.parts.name.span,
+        );
+      }
+      if (builtin.chip !== undefined) {
+        this.chip.remove();
+      }
+      return builtin.chip ?? this.chip;
     }
 
-    const result = await this.wireParts();
-    if (isErr(result)) {
-      return result;
+    await this.wireParts();
+    if (this.failed) {
+      // A chip with diagnostics may hold a part loop; clock analysis would
+      // not finish. Callers check their parts only against its pins.
+      return this.chip;
     }
 
     this.chip.clockedPins = new Set(
@@ -235,55 +485,48 @@ class ChipBuilder {
         .filter((pin) => this.chip.isClockedPin(pin)),
     );
 
-    // Reset clock order after wiring sub-pins
     for (const part of this.chip.parts) {
       part.subscribeToClock();
     }
 
-    return Ok(this.chip);
+    return this.chip;
   }
 
-  private async wireParts(): Promise<Result<void, Diagnostic>> {
+  private async wireParts() {
     if (this.parts.parts === "BUILTIN") {
-      return Ok();
+      return;
     }
 
     for (const part of this.parts.parts) {
-      const builtin = await loadChip(part.name, this.dir, this.fs);
-      if (isErr(builtin)) {
-        return Err(
-          semanticError(
+      const loaded = await loadDependency(part.name, this.dir, this.context);
+      if (loaded.chip === undefined) {
+        // A dependency read but built with no tree reports under its file.
+        if (loaded.missing) {
+          this.report(
             DiagnosticCode.Chip.NOT_FOUND,
             { name: part.name },
             part.span,
-          ),
-        );
+          );
+        }
+        this.mayDrive(part);
+        continue;
       }
-      const partChip = Ok(builtin);
+      const partChip = loaded.chip;
       if (partChip.name == this.chip.name) {
-        return Err(
-          semanticError(
-            DiagnosticCode.Chip.SELF_REFERENCE,
-            { name: part.name },
-            part.span,
-          ),
+        this.report(
+          DiagnosticCode.Chip.SELF_REFERENCE,
+          { name: String(partChip.name) },
+          part.span,
         );
+        this.mayDrive(part);
+        continue;
       }
-      const result = this.wirePart(part, partChip);
-      if (isErr(result)) {
-        return result;
-      }
+      this.wirePart(part, partChip, loaded.provenance);
     }
-    let result = this.validateInternalPins();
-    if (isErr(result)) {
-      return result;
-    }
-    // We need to check this at the end because during wiring we might not know the width of some internal pins
-    result = this.validateWireWidths();
-    if (isErr(result)) {
-      return result;
-    }
-    return Ok();
+    this.validateInternalPins();
+    // Checked last because the width of an internal pin is known only once
+    // every part is wired.
+    this.validateWireWidths();
   }
 
   private checkLoops(part: Part, partChip: Chip): Result<void, Diagnostic> {
@@ -320,31 +563,54 @@ class ChipBuilder {
     return Ok();
   }
 
-  private wirePart(part: Part, partChip: Chip): Result<void, Diagnostic> {
-    const result = this.checkLoops(part, partChip);
-    if (isErr(result)) {
-      return result;
+  private mayDrive(part: Part) {
+    for (const { rhs } of part.wires) {
+      this.mayBeDriven.add(rhs.pin);
+    }
+  }
+
+  private wirePart(part: Part, partChip: Chip, partProvenance: Provenance) {
+    const loop = this.checkLoops(part, partChip);
+    if (isErr(loop)) {
+      this.fail(Err(loop));
     }
 
     const connections: Connection[] = [];
+    let valid = true;
     this.inPins.clear();
     for (const { lhs, rhs } of part.wires) {
-      const result = this.validateWire(partChip, lhs, rhs);
-      if (isErr(result)) {
-        return result;
+      if (!partChip.isInPin(lhs.pin) && !partChip.isOutPin(lhs.pin)) {
+        // Suppressed: an undefined pin when the part's chip skipped an `IN`
+        // or `OUT` line that could have declared it. Its direction is then
+        // unknown, so its pin may be driven.
+        if (!skipsAny(partProvenance, DECLARES_PIN)) {
+          this.report(
+            DiagnosticCode.Chip.UNDEFINED_PIN,
+            { pin: lhs.pin },
+            lhs.span,
+          );
+        }
+        this.mayBeDriven.add(rhs.pin);
+        valid = false;
+        continue;
       }
-      const connection = createConnection(lhs, rhs);
+      const connection = this.connect(partChip, lhs, rhs);
       if (isErr(connection)) {
-        return connection;
+        this.fail(Err(connection));
+        valid = false;
+      } else {
+        connections.push(Ok(connection));
       }
-      connections.push(Ok(connection));
+    }
+    if (!valid) {
+      return;
     }
 
     try {
       const result = this.chip.wire(partChip, connections);
       if (isErr(result)) {
         const error = Err(result);
-        return Err(
+        this.fail(
           located(
             error.fault,
             error.lhs
@@ -353,18 +619,25 @@ class ChipBuilder {
             Stage.SEMANTIC,
           ),
         );
+        return;
       }
       this.chip.sortParts();
-      return Ok();
     } catch (e) {
-      return Err(
-        semanticError(
-          DiagnosticCode.Error.UNEXPECTED,
-          { message: (e as Error).message },
-          part.span,
-        ),
+      this.report(
+        DiagnosticCode.Error.UNEXPECTED,
+        { message: (e as Error).message },
+        part.span,
       );
     }
+  }
+
+  private connect(
+    partChip: Chip,
+    lhs: PinParts,
+    rhs: PinParts,
+  ): Result<Connection, Diagnostic> {
+    const result = this.validateWire(partChip, lhs, rhs);
+    return isErr(result) ? result : createConnection(lhs, rhs);
   }
 
   private validateWire(
@@ -382,14 +655,6 @@ class ChipBuilder {
       if (isErr(result)) {
         return result;
       }
-    } else {
-      return Err(
-        semanticError(
-          DiagnosticCode.Chip.UNDEFINED_PIN,
-          { pin: lhs.pin },
-          lhs.span,
-        ),
-      );
     }
     if (!isConstantPin(rhs.pin)) {
       this.wires.push({ partChip: partChip, lhs, rhs });
@@ -410,7 +675,6 @@ class ChipBuilder {
       return result;
     }
 
-    // track internal pin use to detect undefined pins
     if (this.chip.isInternalPin(rhs.pin)) {
       const pinData = this.internalPins.get(rhs.pin);
       if (pinData == undefined) {
@@ -452,7 +716,6 @@ class ChipBuilder {
           ),
         );
       }
-      // track internal pin creation to detect undefined pins
       const pinData = this.internalPins.get(rhs.pin);
       const width = getSubBusWidth(lhs) ?? partChip.get(lhs.pin)?.width;
       if (pinData == undefined) {
@@ -519,29 +782,41 @@ class ChipBuilder {
     return Ok();
   }
 
-  private validateInternalPins(): Result<void, Diagnostic> {
+  /**
+   * Suppressed: an undefined internal pin that a skipped part, `IN` line or
+   * `OUT` line could have driven or declared, or that only a part of unknown
+   * chip or pins could drive. A file holds one chip, so its provenance is
+   * that chip's scope.
+   */
+  private validateInternalPins() {
+    if (skipsAny(this.provenance, SUPPLIES_OWN_PIN)) {
+      return;
+    }
     for (const [name, pinData] of this.internalPins) {
-      if (!pinData.isDefined) {
-        return Err(
-          name.toLowerCase() == "true" || name.toLowerCase() == "false"
-            ? semanticError(
-                DiagnosticCode.Chip.CONSTANT_CASE,
-                { name: name.toLowerCase() },
-                pinData.firstUse,
-              )
-            : semanticError(
-                DiagnosticCode.Chip.UNDEFINED_INTERNAL_PIN,
-                { name },
-                pinData.firstUse,
-              ),
-        );
+      if (!pinData.isDefined && !this.mayBeDriven.has(name)) {
+        if (name.toLowerCase() == "true" || name.toLowerCase() == "false") {
+          this.report(
+            DiagnosticCode.Chip.CONSTANT_CASE,
+            { name: name.toLowerCase() },
+            pinData.firstUse,
+          );
+        } else {
+          this.report(
+            DiagnosticCode.Chip.UNDEFINED_INTERNAL_PIN,
+            { name },
+            pinData.firstUse,
+          );
+        }
       }
     }
-    return Ok();
   }
 
-  private validateWireWidths(): Result<void, Diagnostic> {
+  private validateWireWidths() {
     for (const wire of this.wires) {
+      // An undriven internal pin has no width to compare.
+      if (this.internalPins.get(wire.rhs.pin)?.isDefined === false) {
+        continue;
+      }
       const lhsWidth =
         getSubBusWidth(wire.lhs) ?? wire.partChip.get(wire.lhs.pin)?.width;
       const rhsWidth =
@@ -549,24 +824,21 @@ class ChipBuilder {
         this.chip.get(wire.rhs.pin)?.width ??
         this.internalPins.get(wire.rhs.pin)?.width;
       if (lhsWidth != rhsWidth) {
-        return Err(
-          semanticError(
-            DiagnosticCode.Chip.BUS_WIDTH_MISMATCH,
-            {
-              lhs: display(wire.lhs),
-              lhsWidth,
-              rhs: display(wire.rhs),
-              rhsWidth,
-            },
-            {
-              start: wire.lhs.span.start,
-              end: wire.rhs.span.end,
-              line: wire.lhs.span.line,
-            },
-          ),
+        this.report(
+          DiagnosticCode.Chip.BUS_WIDTH_MISMATCH,
+          {
+            lhs: display(wire.lhs),
+            lhsWidth,
+            rhs: display(wire.rhs),
+            rhsWidth,
+          },
+          {
+            start: wire.lhs.span.start,
+            end: wire.rhs.span.end,
+            line: wire.lhs.span.line,
+          },
         );
       }
     }
-    return Ok();
   }
 }

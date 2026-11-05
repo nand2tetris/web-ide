@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { isRecovered, recoveredOf } from "./base.js";
-
+import { HDL, prune as hdlPrune } from "./hdl.js";
 import { JACK, prune as jackPrune } from "./jack.js";
 import { TST, type TstRepeat, prune as tstPrune } from "./tst.js";
 
@@ -74,7 +74,7 @@ describe("provenance captured before pruning", () => {
 });
 
 describe("a recovered tree beside a null root", () => {
-  const _PROBE = [
+  const PROBE = [
     "CHIP Probe {",
     "  IN a;",
     "  OUT x;",
@@ -83,6 +83,41 @@ describe("a recovered tree beside a null root", () => {
     "  Not(in=a, out=x);",
     "}",
   ].join("\n");
+
+  it("gives a recovered HDL tree, pruned, with its provenance", () => {
+    const outcome = HDL.parse(PROBE, RECOVER);
+
+    const recovered = recoveredOf(outcome, hdlPrune);
+
+    expect(recovered?.ast.parts).toHaveLength(1);
+    expect(recovered?.provenance).toMatchObject([
+      {
+        kind: "PartBody",
+        scope: ["Probe"],
+        diagnostic: outcome.diagnostics[0],
+      },
+    ]);
+  });
+
+  it("gives a valid tree with no provenance", () => {
+    const fixed = PROBE.replace("in=a out", "in=a, out");
+
+    const recovered = recoveredOf(HDL.parse(fixed, RECOVER), hdlPrune);
+
+    expect(recovered?.ast.parts).toHaveLength(2);
+    expect(recovered?.provenance).toEqual([]);
+  });
+
+  it.each([
+    ["recovery off", PROBE, undefined],
+    ["an unrecoverable header", "CHIP {", RECOVER],
+  ])("takes the syntax-only path for %s", (_name, source, options) => {
+    const outcome = HDL.parse(source, options);
+
+    expect(outcome).toHaveProperty("nullRoot", true);
+    expect(outcome.diagnostics).not.toHaveLength(0);
+    expect(recoveredOf(outcome, hdlPrune)).toBeUndefined();
+  });
 
   it("leaves a no-tree file out of a class table", () => {
     const files: Record<string, string> = {

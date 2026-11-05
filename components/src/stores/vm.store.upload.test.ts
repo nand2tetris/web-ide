@@ -3,6 +3,7 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
 import { expect, test, vi } from "vitest";
+import { statusActions } from "./status.js";
 import { makeVmStore, VmStoreDispatch } from "./vm.store.js";
 
 // #673: a VME .tst uploaded from disk reaches the store as a bare basename, so
@@ -15,7 +16,7 @@ function vmHarness(fs = new FileSystem(new ObjectFileSystemAdapter({}))) {
   const statuses: string[] = [];
   const { actions } = makeVmStore(
     fs,
-    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    statusActions((s) => statuses.push(s.message ?? "")),
     {},
     { current: vi.fn() as unknown as VmStoreDispatch },
   );

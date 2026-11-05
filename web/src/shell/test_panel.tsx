@@ -129,7 +129,7 @@ export const TestPanel = ({
     if (isPath(file)) {
       const files = await loadTestFiles(fs, file.path);
       if (isErr(files)) {
-        setStatus(`Failed to load test`);
+        setStatus({ message: `Failed to load test` });
         return;
       }
       setPath?.(file.path);

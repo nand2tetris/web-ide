@@ -8,6 +8,7 @@ import { MutableRefObject } from "react";
 import { cleanState } from "../clean_state.js";
 import { ImmPin } from "../pinout.js";
 import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
+import { statusActions } from "./status.js";
 
 function testChipStore(
   fs: Record<string, string> = {
@@ -23,7 +24,7 @@ function testChipStore(
 
   const { initialState, actions, reducers } = makeChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
-    setStatus,
+    statusActions(setStatus),
     storage,
     dispatch,
     false,

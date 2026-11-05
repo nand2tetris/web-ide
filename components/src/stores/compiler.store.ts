@@ -1,6 +1,11 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
-import { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
+import {
+  Diagnostic,
+  DiagnosticCode,
+  Diagnostics,
+  diagnostic,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -30,6 +35,45 @@ export type CompilerStoreDispatch = Dispatch<{
 
 const COMPILE_DEBOUNCE_MS = 250;
 
+/** The class a Jack file declares: the file's name without its folder and extension. */
+function classNameOf(path: string): string {
+  return (path.split("/").pop() ?? path).replace(/\.jack$/, "");
+}
+
+/**
+ * Compiles files keyed by editor path. `compile` keys files by class name, so
+ * each path goes in by its basename and its result comes back under the path.
+ */
+function compileByPath(
+  files: Record<string, string>,
+  attemptRecovery: boolean,
+): Record<string, string | Diagnostics> {
+  const paths: Record<string, string> = {};
+  const byClass: Record<string, string> = {};
+  const duplicates: Record<string, Diagnostics> = {};
+  for (const [path, content] of Object.entries(files)) {
+    const name = classNameOf(path);
+    if (name in byClass) {
+      duplicates[path] = [
+        diagnostic(DiagnosticCode.Jack.DUPLICATE_CLASS_FILE, {
+          path,
+          other: paths[name],
+        }),
+      ];
+      continue;
+    }
+    paths[name] = path;
+    byClass[name] = content;
+  }
+  const compiled = compile(byClass, { attemptRecovery });
+  return {
+    ...Object.fromEntries(
+      Object.entries(compiled).map(([name, result]) => [paths[name], result]),
+    ),
+    ...duplicates,
+  };
+}
+
 function classTemplate(name: string) {
   return `class ${name} {\n\n}\n`;
 }
@@ -37,6 +81,7 @@ function classTemplate(name: string) {
 export function makeCompilerStore(
   status: StatusActions,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
+  attemptRecovery: () => boolean = () => true,
 ) {
   let fs: FileSystem | undefined;
   let compileTimer: ReturnType<typeof setTimeout> | undefined;
@@ -74,7 +119,6 @@ export function makeCompilerStore(
       }
     },
 
-    // the keys of 'files' have to be the full file path, not basename
     setFiles(state: CompilerPageState, files: Record<string, string>) {
       state.files = files;
       state.isCompiled = false;
@@ -82,7 +126,7 @@ export function makeCompilerStore(
     },
 
     compile(state: CompilerPageState) {
-      const compiledFiles = compile(state.files);
+      const compiledFiles = compileByPath(state.files, attemptRecovery());
       state.compiled = {};
       for (const [name, compiled] of Object.entries(compiledFiles)) {
         if (typeof compiled === "string") {
@@ -174,6 +218,13 @@ export function makeCompilerStore(
     async compile() {
       flushCompile();
       dispatch.current({ action: "writeCompiled" });
+    },
+
+    /** Recompiles the loaded files with the current settings. */
+    recompile() {
+      clearTimeout(compileTimer);
+      compileTimer = undefined;
+      dispatch.current({ action: "compile" });
     },
   };
 

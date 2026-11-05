@@ -1,5 +1,6 @@
 import { expect, test } from "vitest";
-import { grammar, VM, Vm } from "./vm.js";
+import { recoveredOf } from "./base.js";
+import { grammar, prune, VM, Vm } from "./vm.js";
 
 const SIMPLE_ADD = `
 push constant 7
@@ -493,4 +494,34 @@ test.each([
 ])("VM Parser Error: '%s'", (bad, message) => {
   const match = grammar.match(bad);
   expect(match).toHaveFailed(message);
+});
+
+test.each([
+  ["push nowhere 2", "StackInstruction"],
+  ["pop constant", "StackInstruction"],
+  ["add 1", "OpInstruction"],
+  ["not not", "OpInstruction"],
+  ["function Foo.bar ?", "FunctionInstruction"],
+  ["function Foo.bar 0 junk", "FunctionInstruction"],
+  ["function", "FunctionInstruction"],
+  ["call Foo.bar ?", "CallInstruction"],
+  ["return 1", "ReturnInstruction"],
+  ["push constant 1 junk", "StackInstruction"],
+  ["goto", "GotoInstruction"],
+  ["if-goto ?", "GotoInstruction"],
+  ["label", "LabelInstruction"],
+  // A first token that names no instruction: the line could be any, a function header included.
+  ["fucntion Main.f 0", "VmInstruction"],
+  ["?? ? ?", "VmInstruction"],
+  ["function.Foo 0", "VmInstruction"],
+])("records a skipped `%s` as a %s", (line, kind) => {
+  const source = `function A.f 0\n  ${line}  // note\nreturn\n`;
+
+  const outcome = VM.parse(source, { attemptRecovery: true });
+  const provenance = recoveredOf(outcome, prune)?.provenance;
+
+  expect(provenance).toMatchObject([{ kind }]);
+  expect(source.slice(provenance?.[0].interval.start).startsWith(line)).toBe(
+    true,
+  );
 });

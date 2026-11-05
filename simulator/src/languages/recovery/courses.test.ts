@@ -6,6 +6,7 @@ import { ASM } from "../asm.js";
 import { isValid, type Outcome, type ParseOptions } from "../base.js";
 import { rawCMP } from "../cmp.js";
 import { describeDiagnostic } from "../diagnostic.js";
+import { HDL } from "../hdl.js";
 import { TST } from "../tst.js";
 import { VM } from "../vm.js";
 
@@ -19,6 +20,7 @@ const LANGUAGES: Record<string, Language> = {
   out: rawCMP,
   asm: ASM,
   vm: VM,
+  hdl: HDL,
 };
 
 function courseFiles(): Map<string, string> {
@@ -28,7 +30,10 @@ function courseFiles(): Map<string, string> {
     if (typeof value !== "object" || value === null || seen.has(value)) return;
     seen.add(value);
     for (const [key, child] of Object.entries(value)) {
-      if (typeof child === "string" && /\.(tst|cmp|out|asm|vm)$/.test(key)) {
+      if (
+        typeof child === "string" &&
+        /\.(tst|cmp|out|asm|vm|hdl)$/.test(key)
+      ) {
         if (!/\.(hdl|vm)$/.test(key) || !child.includes("REDACTED")) {
           files.set(`${path}/${key}`, child);
         }
@@ -51,7 +56,10 @@ const files = courseFiles();
 
 it("recovery accepts the valid course corpus", () => {
   expect([...files.keys()].some((name) => extension(name) === "vm")).toBe(true);
-  expect(files.size).toBeGreaterThan(0);
+  expect([...files.keys()].some((name) => extension(name) === "hdl")).toBe(
+    true,
+  );
+  expect(files.size).toBeGreaterThan(50);
   for (const [name, source] of files) {
     expect(
       LANGUAGES[extension(name)].parse(source, RECOVER).diagnostics,

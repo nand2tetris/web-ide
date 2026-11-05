@@ -56,7 +56,7 @@ const CLOCKED = `CHIP Foo {
 const ERRORS = [
   ["Not { BUILTIN }", 'Line 1, col 1: expected "CHIP"'],
   ["CHIP { BUILTIN }", "Line 1, col 6: expected a letter"], // A chip name is expected
-  ["CHIP Not BUILTIN }", 'Line 1, col 10: expected "{"'],
+  ["CHIP Not BUILTIN }", 'Line 1, col 9: expected "{"'],
   ["CHIP Not { BUILTIN }", 'Line 1, col 20: expected ";" or a letter'],
   ["CHIP Not { BONKERS; }", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
   ["CHIP Not { ", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
@@ -65,14 +65,21 @@ const ERRORS = [
     'Line 1, col 19: expected "}", "CLOCKED", "BUILTIN", or a letter', // A chip name is expected
   ],
   ["CHIP Not { PARTS: Nand; }", 'Line 1, col 23: expected "("'],
-  ["CHIP Not { PARTS: Nand() }", "Line 1, col 24: expected a letter"], // A pin name is expected
-  ["CHIP Not { PARTS: Nand(=a) }", "Line 1, col 24: expected a letter"], // A pin name is expected
+  ["CHIP Not { PARTS: Nand() }", "Line 1, col 24: expected a pin name"],
+  ["CHIP Not { PARTS: Nand(=a) }", "Line 1, col 24: expected a pin name"],
   [
     "CHIP Not { PARTS: Nand(a=) }",
-    'Line 1, col 26: expected "false", "true", or a letter',
-  ], // A pin name is expected
+    'Line 1, col 26: expected "false", "true", or a pin name',
+  ],
   ["CHIP Not { PARTS: Nand(a) }", 'Line 1, col 25: expected "="'],
   ["CHIP Not { PARTS: Nand(a=a }", 'Line 1, col 28: expected ")", ",", or "["'],
+  ["CHIP Not { IN a,; BUILTIN; }", "Line 1, col 17: expected a pin name"],
+  ["CHIP Not { OUT out,; BUILTIN; }", "Line 1, col 20: expected a pin name"],
+  [
+    "CHIP Not { IN in; PARTS: CLOCKED in,; }",
+    "Line 1, col 37: expected a pin name",
+  ],
+  ["CHIP Not { IN CHIP; BUILTIN; }", "Line 1, col 15: expected a pin name"],
 ];
 
 describe("HDL w/ Ohm", () => {
@@ -264,13 +271,27 @@ describe("HDL w/ Ohm", () => {
     it("parses a simple decl", () => {
       const decl = grammar.match("a", "PinDecl");
       expect(decl).toHaveSucceeded();
-      expect(hdlSemantics(decl).PinDecl).toEqual({ pin: "a", width: 1 });
+      expect(hdlSemantics(decl).PinDecl).toEqual({
+        pin: "a",
+        width: 1,
+        span: { start: 0, end: 1, line: 1 },
+      });
+    });
+
+    it("parses a name that starts with a keyword", () => {
+      const decl = grammar.match("INPUT", "PinDecl");
+      expect(decl).toHaveSucceeded();
+      expect(hdlSemantics(decl).PinDecl).toMatchObject({ pin: "INPUT" });
     });
 
     it("parses a wide decl", () => {
       const decl = grammar.match("a[3]", "PinDecl");
       expect(decl).toHaveSucceeded();
-      expect(hdlSemantics(decl).PinDecl).toEqual({ pin: "a", width: 3 });
+      expect(hdlSemantics(decl).PinDecl).toEqual({
+        pin: "a",
+        width: 3,
+        span: { start: 0, end: 4, line: 1 },
+      });
     });
   });
 
@@ -281,10 +302,10 @@ describe("HDL w/ Ohm", () => {
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: { value: "And", span: { start: 5, end: 8, line: 1 } },
         ins: [
-          { pin: "a", width: 1 },
-          { pin: "b", width: 1 },
+          { pin: "a", width: 1, span: { start: 18, end: 19, line: 2 } },
+          { pin: "b", width: 1, span: { start: 21, end: 22, line: 2 } },
         ],
-        outs: [{ pin: "out", width: 1 }],
+        outs: [{ pin: "out", width: 1, span: { start: 32, end: 35, line: 3 } }],
         parts: "BUILTIN",
       });
     });
@@ -294,8 +315,8 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: { value: "Not", span: { start: 5, end: 8, line: 1 } },
-        ins: [{ pin: "in", width: 1 }],
-        outs: [{ pin: "out", width: 1 }],
+        ins: [{ pin: "in", width: 1, span: { start: 18, end: 20, line: 2 } }],
+        outs: [{ pin: "out", width: 1, span: { start: 30, end: 33, line: 3 } }],
         parts: [
           {
             name: "Nand",
@@ -325,8 +346,8 @@ describe("HDL w/ Ohm", () => {
 
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: { value: "Not", span: { start: 5, end: 8, line: 1 } },
-        ins: [{ pin: "in", width: 1 }],
-        outs: [{ pin: "out", width: 1 }],
+        ins: [{ pin: "in", width: 1, span: { start: 18, end: 20, line: 2 } }],
+        outs: [{ pin: "out", width: 1, span: { start: 30, end: 33, line: 3 } }],
         parts: [],
       });
     });
@@ -337,10 +358,12 @@ describe("HDL w/ Ohm", () => {
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: { value: "And16", span: { start: 5, end: 10, line: 1 } },
         ins: [
-          { pin: "a", width: 16 },
-          { pin: "b", width: 16 },
+          { pin: "a", width: 16, span: { start: 18, end: 23, line: 2 } },
+          { pin: "b", width: 16, span: { start: 25, end: 30, line: 2 } },
         ],
-        outs: [{ pin: "out", width: 16 }],
+        outs: [
+          { pin: "out", width: 16, span: { start: 38, end: 45, line: 3 } },
+        ],
         parts: "BUILTIN",
       });
     });
@@ -362,7 +385,7 @@ describe("HDL w/ Ohm", () => {
       expect(match).toHaveSucceeded();
       expect<HdlParse>(hdlSemantics(match).Chip).toEqual({
         name: { value: "Foo", span: { start: 5, end: 8, line: 1 } },
-        ins: [{ pin: "in", width: 1 }],
+        ins: [{ pin: "in", width: 1, span: { start: 18, end: 20, line: 2 } }],
         outs: [],
         parts: [],
         clocked: ["in"],

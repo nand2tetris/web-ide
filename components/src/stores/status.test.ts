@@ -60,6 +60,16 @@ describe("failureStatus", () => {
       failureStatus("tst", [marked, spanless], { marked: false }).diagnostics,
     ).toEqual([{ diagnostic: marked }, { diagnostic: spanless }]);
   });
+
+  it("lists the diagnostics of other files by path and counts them", () => {
+    const [own, other] = [bad(2), bad(5)];
+    expect(
+      failureStatus("hdl", [own], { others: { "a/Child.hdl": [other] } }),
+    ).toEqual({
+      heading: { source: "hdl", count: 2 },
+      diagnostics: [{ diagnostic: other, file: "a/Child.hdl" }],
+    });
+  });
 });
 
 describe("failureStatus with the head of the list", () => {
@@ -79,6 +89,16 @@ describe("failureStatus with the head of the list", () => {
         head: true,
       }).diagnostics,
     ).toEqual([{ diagnostic: first }, { diagnostic: spanless }]);
+  });
+
+  it("lists a dependency's first diagnostic once when the file has none", () => {
+    const only = bad(5);
+    expect(
+      failureStatus("hdl", [], {
+        head: true,
+        others: { "a/Child.hdl": [only] },
+      }).diagnostics,
+    ).toEqual([{ diagnostic: only, file: "a/Child.hdl" }]);
   });
 });
 

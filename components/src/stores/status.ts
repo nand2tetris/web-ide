@@ -12,9 +12,10 @@ export type StatusSeverity = "SUCCESS" | "WARNING" | "ERROR" | "INFO";
 
 export type StatusSource = "asm" | "hdl" | "vm" | "tst" | "cmp" | "builtin";
 
-/** A diagnostic a status lists. */
+/** A diagnostic a status lists, with the file it belongs to when that is not the open one. */
 export interface StatusDiagnostic {
   diagnostic: Diagnostic;
+  file?: string;
 }
 
 export interface StatusHeading {
@@ -53,34 +54,47 @@ export interface StatusContext extends StatusActions {
 
 /**
  * What `setStatus` takes to report the diagnostics of a file, which it shows
- * as an error. An editor marks each diagnostic that has a span, so the status
- * lists only the others; with `marked: false` no editor shows the file and
- * every diagnostic is listed.
+ * as an error. An editor marks each
+ * diagnostic that has a span, so the status lists only the others; with
+ * `marked: false` no editor shows the file and every diagnostic is listed.
+ * `head` also lists the first diagnostic. `others` holds diagnostics of other
+ * files by path; no editor marks them, so they are all listed and counted.
  */
 export function failureStatus(
   source: StatusSource,
   diagnostics: readonly Diagnostic[],
-  { marked = true, head = false }: { marked?: boolean; head?: boolean } = {},
+  {
+    marked = true,
+    head = false,
+    others = {},
+  }: {
+    marked?: boolean;
+    head?: boolean;
+    others?: Record<string, readonly Diagnostic[]>;
+  } = {},
 ): Status {
-  const semantic = diagnostics.filter(
-    ({ stage }) => stage === Stage.SEMANTIC || stage === Stage.COMPILE,
-  ).length;
-  const unmarked = diagnostics
-    .filter(({ span }) => !marked || span === undefined)
-    .map((diagnostic) => ({ diagnostic }));
-  const [first] = diagnostics;
+  const unmarked: StatusDiagnostic[] = [
+    ...diagnostics
+      .filter(({ span }) => !marked || span === undefined)
+      .map((diagnostic) => ({ diagnostic })),
+    ...Object.entries(others).flatMap(([path, list]) =>
+      list.map((diagnostic) => ({ diagnostic, file: path })),
+    ),
+  ];
+  const [first = Object.values(others).flat()[0]] = diagnostics;
   const listed =
     head &&
     first !== undefined &&
     !unmarked.some(({ diagnostic }) => diagnostic === first)
       ? [{ diagnostic: first }, ...unmarked]
       : unmarked;
+  const all = [...diagnostics, ...Object.values(others).flat()];
+  const count = all.length;
+  const semantic = all.filter(
+    ({ stage }) => stage === Stage.SEMANTIC || stage === Stage.COMPILE,
+  ).length;
   return {
-    heading: {
-      source,
-      count: diagnostics.length,
-      ...(semantic > 0 ? { semantic } : {}),
-    },
+    heading: { source, count, ...(semantic > 0 ? { semantic } : {}) },
     diagnostics: listed,
   };
 }

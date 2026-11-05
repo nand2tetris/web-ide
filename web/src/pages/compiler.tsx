@@ -15,6 +15,7 @@ import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { Tab, TabList } from "../shell/tabs";
+import { jackFiles } from "../shell/workspace";
 import URLs from "../urls";
 import "./compiler.scss";
 
@@ -26,6 +27,9 @@ export const Compiler = () => {
   const { state, dispatch, actions } = stores.compiler;
 
   const [selected, setSelected] = useState(0);
+
+  // The language service resolves a class against the page's other files.
+  useEffect(() => jackFiles.set(state.files), [state.files]);
   const [suppressStatus, setSuppressStatus] = useState(false);
   const [editable, setEditable] = useState(false);
 

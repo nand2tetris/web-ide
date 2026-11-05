@@ -8,6 +8,7 @@ import {
 } from "@nand2tetris/projects/samples/vm/vm.js";
 import { describe, expect, test } from "vitest";
 import { validOf } from "../languages/base.js";
+import { DiagnosticCode, describeDiagnostic } from "../languages/diagnostic.js";
 import { VM } from "../languages/vm.js";
 import { Vm } from "./vm.js";
 
@@ -418,7 +419,8 @@ describe("debug frame views", () => {
 test("buildFromFiles with no files returns a Diagnostic", () => {
   const result = Vm.buildFromFiles([]);
   if (!isErr(result)) throw new Error("expected Err result");
-  expect(Err(result).message).toMatch(/no\s+\.vm/i);
+  expect(Err(result)).toMatchObject({ code: DiagnosticCode.Vm.NO_FILES });
+  expect(describeDiagnostic(Err(result))).toMatch(/no\s+\.vm/i);
 });
 
 describe("Array.new / Array.dispose bridge to user Memory", () => {

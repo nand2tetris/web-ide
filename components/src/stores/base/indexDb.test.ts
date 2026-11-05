@@ -1,5 +1,5 @@
-// #592: storing must use put so re-selecting a folder over a stale handle
-// does not fail with ConstraintError.
+// Storing must use put so re-selecting a folder over a stale handle does not
+// fail with ConstraintError.
 import { describe, expect, it, vi } from "vitest";
 import { createAndStoreLocalAdapterInIndexedDB } from "./indexDb.js";
 

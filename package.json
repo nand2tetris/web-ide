@@ -58,9 +58,9 @@
     "@biomejs/biome": "^2.6.3",
     "concurrently": "^10.0.6",
     "cross-env": "^10.1.0",
+    "ohm-js": "github:davidsouther/ohm#d1f1f64cde7fc02fa9bdfb0e01bcd8833b45a100",
     "shx": "^0.4.0",
-    "typescript": "^7.0",
-    "ohm-js": "github:davidsouther/ohm#feat/fallible"
+    "typescript": "^7.0"
   },
   "dependencies": {
     "typescript": "^7.0"

@@ -6,8 +6,14 @@
  */
 import { describe, expect, it } from "vitest";
 import { ASM } from "./asm.js";
-import { isRecovered, isValid, type Outcome, recoveryOf } from "./base.js";
-import { CMP } from "./cmp.js";
+import {
+  isRecovered,
+  isValid,
+  type Outcome,
+  type ParseOptions,
+  recoveryOf,
+} from "./base.js";
+import { rawCMP } from "./cmp.js";
 import {
   DiagnosticCode,
   describeDiagnostic,
@@ -20,7 +26,7 @@ import { TST } from "./tst.js";
 import { VM } from "./vm.js";
 
 interface Language {
-  parse: (source: string) => Outcome<unknown>;
+  parse: (source: string, options?: ParseOptions) => Outcome<unknown>;
   empty: () => unknown;
 }
 
@@ -48,7 +54,7 @@ const NULL_ROOTS: [string, Language, string, unknown][] = [
     },
   ],
   ["TST", TST, "set a", { lines: [] }],
-  ["CMP", CMP, "| a", []],
+  ["CMP", rawCMP, "| a", []],
   ["ASM", ASM, "@@", { instructions: [] }],
   ["VM", VM, "push nowhere 1", { instructions: [] }],
 ];
@@ -65,23 +71,14 @@ describe("a failed match", () => {
       expect(describeDiagnostic(outcome.diagnostics[0])).toMatch(/^Line 1: /);
     },
   );
-});
 
-describe("an empty file", () => {
-  it.each([
-    ["CMP", CMP],
-    ["ASM", ASM],
-    ["VM", VM],
-  ] as [string, Language][])(
-    "%s differs from an unparsed file only by its diagnostics",
-    (_name, language) => {
-      const empty = language.parse("");
-      const unparsed = language.parse("}");
-      expect(empty.ast).toEqual(unparsed.ast);
-      expect(empty.diagnostics).toEqual([]);
-      expect(isValid(empty)).toBe(true);
-      expect(unparsed.diagnostics).not.toHaveLength(0);
-      expect(isValid(unparsed)).toBe(false);
+  it.each(NULL_ROOTS.slice(2, 3))(
+    "%s gives its null root with recovery on",
+    (_name, language, source, root) => {
+      const outcome = language.parse(source, { attemptRecovery: true });
+      expect(outcome.ast).toEqual(root);
+      expect(outcome.diagnostics).not.toHaveLength(0);
+      expect(isValid(outcome)).toBe(false);
     },
   );
 });
@@ -134,4 +131,23 @@ describe("the ASM parser", () => {
       false,
     ]);
   });
+});
+
+describe("an empty file", () => {
+  it.each([
+    ["CMP", rawCMP],
+    ["ASM", ASM],
+    ["VM", VM],
+  ] as [string, Language][])(
+    "%s differs from an unparsed file only by its diagnostics",
+    (_name, language) => {
+      const empty = language.parse("");
+      const unparsed = language.parse("}");
+      expect(empty.ast).toEqual(unparsed.ast);
+      expect(empty.diagnostics).toEqual([]);
+      expect(isValid(empty)).toBe(true);
+      expect(unparsed.diagnostics).not.toHaveLength(0);
+      expect(isValid(unparsed)).toBe(false);
+    },
+  );
 });

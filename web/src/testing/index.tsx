@@ -28,6 +28,7 @@ const i18nRender: (ui: ReactElement, options?: RenderOptions) => RenderResult =
 
 export const useTestingAppContext = () => ({
   base: {
+    attemptRecovery: false,
     fs: new FileSystem(
       new ObjectFileSystemAdapter({
         "chip/project": "01",

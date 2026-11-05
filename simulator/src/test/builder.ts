@@ -1,21 +1,48 @@
 import { checkExhaustive } from "@davidsouther/jiffies/assert.ts";
-import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { semanticError } from "../languages/base.js";
-import type { Diagnostic } from "../languages/diagnostic.js";
-import { DiagnosticCode, Span } from "../languages/diagnostic.js";
 import {
+  Err,
+  isErr,
+  Ok,
+  Result,
+  unwrap,
+} from "@davidsouther/jiffies/result.ts";
+import type { Chip } from "../chip/chip.js";
+import type { ROM } from "../cpu/memory.js";
+import {
+  mergeDiagnostics,
+  originsOf,
+  recoveredOf,
+  type Skip,
+  semanticError,
+} from "../languages/base.js";
+import {
+  type Diagnostic,
+  DiagnosticCode,
+  type Diagnostics,
+  type Span,
+} from "../languages/diagnostic.js";
+import {
+  prune,
+  TST,
   Tst,
   TstCommand,
   TstOperation,
+  type TstSkipKind,
   TstStatement,
   TstWhileStatement,
 } from "../languages/tst.js";
+import type { Action, AsyncAction } from "../types.js";
 import {
+  ChipTest,
   TestEvalInstruction,
   TestTickInstruction,
   TestTockInstruction,
 } from "./chiptst.js";
-import { TestResetRamInstruction, TestTickTockInstruction } from "./cputst.js";
+import {
+  CPUTest,
+  TestResetRamInstruction,
+  TestTickTockInstruction,
+} from "./cputst.js";
 import {
   Condition,
   TestBreakInstruction,
@@ -34,7 +61,7 @@ import {
   TestWhileInstruction,
 } from "./instruction.js";
 import { Test } from "./tst.js";
-import { TestVMStepInstruction } from "./vmtst.js";
+import { TestVMStepInstruction, VMTest } from "./vmtst.js";
 
 export function isTstCommand(line: TstStatement): line is TstCommand {
   return (line as TstCommand).op !== undefined;
@@ -82,11 +109,135 @@ function makeInstruction(inst: TstOperation) {
   }
 }
 
+export interface TstSource {
+  name: string;
+  content: string;
+}
+
+export interface TstRecoveryOptions {
+  /** Default false. */
+  attemptRecovery?: boolean;
+}
+
+export type ChipTstBuildOptions = TstRecoveryOptions & {
+  dir?: string;
+  setStatus?: Action<string>;
+  loadAction?: (path: string) => Promise<Chip>;
+  compareTo?: Action<string>;
+  requireLoad?: boolean;
+};
+
+export type CpuTstBuildOptions = TstRecoveryOptions & {
+  dir?: string;
+  rom?: ROM;
+  doEcho?: Action<string>;
+  doLoad?: AsyncAction<string>;
+  compareTo?: Action<string>;
+  requireLoad?: boolean;
+};
+
+export type VmTstBuildOptions = TstRecoveryOptions & {
+  dir?: string;
+  doLoad?: AsyncAction<string>;
+  doEcho?: Action<string>;
+  compareTo?: Action<string>;
+};
+
+/** Diagnostics withhold the test; construction never runs its callbacks. */
+export function buildTst(
+  source: TstSource,
+  target: "chip",
+  options?: ChipTstBuildOptions,
+): Result<ChipTest, Diagnostics>;
+export function buildTst(
+  source: TstSource,
+  target: "cpu",
+  options?: CpuTstBuildOptions,
+): Result<CPUTest, Diagnostics>;
+export function buildTst(
+  source: TstSource,
+  target: "vm",
+  options?: VmTstBuildOptions,
+): Result<VMTest, Diagnostics>;
+export function buildTst(
+  { content }: TstSource,
+  target: "chip" | "cpu" | "vm",
+  {
+    attemptRecovery = false,
+    ...options
+  }: ChipTstBuildOptions | CpuTstBuildOptions | VmTstBuildOptions = {},
+): Result<ChipTest | CPUTest | VMTest, Diagnostics> {
+  const outcome = TST.parse(content, { attemptRecovery });
+  const recovered = recoveredOf(outcome, prune);
+  if (recovered === undefined) {
+    return Err(outcome.diagnostics as Diagnostics);
+  }
+  const diagnostics: Diagnostic[] = [...outcome.diagnostics];
+  const origins = new Map(originsOf(recovered.provenance));
+  const built = testOf(recovered.ast, target, options);
+  if (isErr(built)) {
+    const error = Err(built);
+    if (!(error instanceof MissingLoadError)) {
+      diagnostics.push(
+        semanticError(DiagnosticCode.Error.UNEXPECTED, {
+          message: error.message,
+        }),
+      );
+    } else if (!recovered.provenance.some(couldBeLoad)) {
+      diagnostics.push(
+        semanticError(DiagnosticCode.Tst.MISSING_LOAD, {}, endOf(content)),
+      );
+    }
+  }
+  const [first, ...rest] = diagnostics;
+  // Suppressed builder errors always have a syntax diagnostic from the skip.
+  return first === undefined
+    ? Ok(unwrap(built))
+    : Err(mergeDiagnostics([first, ...rest], origins));
+}
+
+function testOf(
+  tst: Tst,
+  target: "chip" | "cpu" | "vm",
+  options: Omit<
+    ChipTstBuildOptions & CpuTstBuildOptions & VmTstBuildOptions,
+    "attemptRecovery"
+  >,
+): Result<ChipTest | CPUTest | VMTest, Error> {
+  switch (target) {
+    case "chip":
+      return ChipTest.from(tst, options);
+    case "cpu":
+      return CPUTest.from(tst, options);
+    case "vm":
+      return VMTest.from(tst, options);
+  }
+}
+
+/** A block-close correction alone does not suppress the missing-load check. */
+function couldBeLoad({ kind }: Skip): boolean {
+  return kind === ("TstOperation" satisfies TstSkipKind);
+}
+
+function endOf(content: string): Span {
+  return {
+    start: content.length,
+    end: content.length,
+    line: content.split("\n").length,
+  };
+}
+
+class MissingLoadError extends Error {
+  constructor() {
+    super("A test script must have a load command");
+  }
+}
+
 export function fill<T extends Test>(
   test: T,
   tst: Tst,
   requireLoad = true,
-): Result<T, Diagnostic> {
+): Result<T, Error> {
   let span: Span | undefined;
   let stepInstructions: TestInstruction[] = [];
 
@@ -147,7 +298,7 @@ export function fill<T extends Test>(
   }
 
   if (requireLoad && !hasLoad) {
-    return Err(semanticError(DiagnosticCode.Tst.MISSING_LOAD, {}));
+    return Err(new MissingLoadError());
   }
 
   test.reset();

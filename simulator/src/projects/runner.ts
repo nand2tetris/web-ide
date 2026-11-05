@@ -30,7 +30,7 @@ export interface AssignmentParse extends AssignmentFiles {
 
 export interface AssignmentBuild extends AssignmentParse {
   maybeChip: Result<Chip, Diagnostics>;
-  maybeTest: Result<ChipTest, Diagnostics>;
+  maybeTest: Result<ChipTest, Error>;
 }
 
 export interface AssignmentRun extends AssignmentBuild {
@@ -71,9 +71,15 @@ export const maybeBuild =
     const maybeChip: Result<Chip, Diagnostics> = isOk(file.maybeParsedHDL)
       ? listed(await buildChip({ parts: Ok(file.maybeParsedHDL), fs }))
       : file.maybeParsedHDL;
-    const maybeTest: Result<ChipTest, Diagnostics> = isOk(file.maybeParsedTST)
-      ? listed(ChipTest.from(Ok(file.maybeParsedTST)))
-      : file.maybeParsedTST;
+    const maybeTest = isOk(file.maybeParsedTST)
+      ? ChipTest.from(Ok(file.maybeParsedTST))
+      : Err(
+          new Error(
+            Err(file.maybeParsedTST)
+              .map((found) => describeDiagnostic(found))
+              .join("\n"),
+          ),
+        );
 
     return { ...file, maybeChip, maybeTest };
   };
@@ -93,7 +99,7 @@ export const tryRun =
       return {
         ...assignment,
         pass: false,
-        out: describeAll(Err(assignment.maybeTest)),
+        out: Err(assignment.maybeTest).message,
       };
     }
     const test = Ok(assignment.maybeTest)

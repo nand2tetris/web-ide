@@ -1,5 +1,5 @@
 import { Err, Ok } from "@davidsouther/jiffies/result.ts";
-import { grammar } from "ohm-js";
+import { type ActionDict, grammar, type Semantics } from "ohm-js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
@@ -10,7 +10,10 @@ import {
   isRecovered,
   isValid,
   makeParser,
+  makePrune,
+  mergeDiagnostics,
   type Recovery,
+  type RecoveryPoint,
   recoveryOf,
   span,
   validOf,
@@ -110,17 +113,17 @@ describe("Ohm Base", () => {
       expect(outcome.diagnostics).toHaveLength(1);
       expect(outcome.diagnostics[0]).toMatchObject({
         code: DiagnosticCode.Syntax.EXPECTED,
-        span: { line: 1 },
-        stage: Stage.PARSE,
       });
       expect(describeDiagnostic(outcome.diagnostics[0])).toMatch(
         /^Line 1: expected /,
       );
-      expect(outcome.diagnostics[0]).not.toHaveProperty("message");
+      expect(outcome.diagnostics[0]).not.toHaveProperty("errors");
     });
 
     it("tags a failure inside a begun token as lex", () => {
-      expect(parse("1 %XZ").diagnostics).toEqual([
+      const outcome = parse("1 %XZ");
+
+      expect(outcome.diagnostics).toEqual([
         {
           code: DiagnosticCode.Syntax.EXPECTED,
           args: { expected: ["a hexadecimal digit"] },
@@ -170,18 +173,158 @@ describe("Ohm Base", () => {
       expect(unparsed.diagnostics).not.toHaveLength(0);
       expect(isValid(unparsed)).toBe(false);
     });
+
+    describe("recovery helpers", () => {
+      it("identify null objects and expose their diagnostics", () => {
+        const recovery = named("bad");
+        const broken: Recovery = { recovery };
+        const clean: Recovery = {};
+        expect(isRecovered(broken)).toBe(true);
+        expect(recoveryOf(broken)).toBe(recovery);
+        expect(isRecovered(clean)).toBe(false);
+        expect(recoveryOf(clean)).toBeUndefined();
+      });
+    });
+  });
+
+  describe("prune", () => {
+    interface Item extends Recovery {
+      name: string;
+    }
+    interface Tree {
+      items: Item[];
+      last?: Item;
+    }
+    const recovery = named("bad");
+    const tree: Tree = {
+      items: [{ name: "a" }, { name: "", recovery }, { name: "b" }],
+    };
+
+    it("returns the tree with no recovered item", () => {
+      const prune = makePrune<Tree>((t) => ({
+        ...t,
+        items: t.items.filter((item) => !isRecovered(item)),
+      }));
+      expect(prune(tree)).toEqual({ items: [{ name: "a" }, { name: "b" }] });
+    });
+
+    it("refuses a tree whose drop leaves a recovered node", () => {
+      const prune = makePrune<Tree>((t) => ({
+        items: [],
+        last: t.items[1],
+      }));
+      expect(() => prune(tree)).toThrow(/recovered/);
+    });
   });
 });
+describe("recovering parser factory", () => {
+  const recoveringGrammar = grammar(
+    `Words { Root = (word ! ";")+ word = letter+ }`,
+  );
+  const semantics = recoveringGrammar.createSemantics();
+  semantics.addAttribute<string>("root", {
+    Root(_words, _corrections, _ends) {
+      return "partial AST";
+    },
+  });
+  const parser = makeParser<string>(
+    recoveringGrammar,
+    semantics,
+    () => "null root",
+  );
 
-describe("recovery helpers", () => {
-  it("identify null objects and expose their diagnostics", () => {
-    const recovery = named("bad");
-    const broken: Recovery = { recovery };
-    const clean: Recovery = {};
-    expect(isRecovered(broken)).toBe(true);
-    expect(recoveryOf(broken)).toBe(recovery);
-    expect(isRecovered(clean)).toBe(false);
-    expect(recoveryOf(clean)).toBeUndefined();
+  const RECOVER = { attemptRecovery: true };
+
+  it.each([
+    ["omitted", undefined],
+    ["empty", {}],
+    ["false", { attemptRecovery: false }],
+  ])("keeps recovery off with options %s", (_, options) => {
+    const strict = parser.parse("1;2;", options);
+
+    expect(strict.ast).toBe("null root");
+    expect(strict.diagnostics).toHaveLength(1);
+  });
+
+  it("recovers when a caller opts in", () => {
+    const outcome = parser.parse("1;2;", RECOVER);
+
+    expect(outcome.ast).toBe("partial AST");
+    expect(outcome.diagnostics).toHaveLength(2);
+  });
+
+  it("validOf rejects a recovered AST and the outcome retains every diagnostic", () => {
+    const recovered = parser.parse("1;2;", RECOVER);
+    expect(isValid(recovered)).toBe(false);
+    expect(recovered.ast).toBe("partial AST");
+    const result = validOf(recovered);
+    expect(result).toBeErr();
+    expect(Err(result as Err<Diagnostics>)).toBe(recovered.diagnostics);
+  });
+
+  it("rethrows a missing correction action when semantics explicitly require one", () => {
+    // npm prepare regenerates declarations without the runtime corrections option.
+    const visiting = recoveringGrammar.createSemantics() as Semantics & {
+      addAttribute<T>(
+        name: string,
+        actions: ActionDict<T>,
+        options: { corrections: "throw" | "skip" },
+      ): Semantics;
+    };
+    visiting.addAttribute<string[]>("root", {
+      Root(_words, corrections, _ends) {
+        return corrections.children.map((correction) => correction.text);
+      },
+    });
+    visiting.addAttribute<string>(
+      "text",
+      {
+        _terminal() {
+          return this.sourceString;
+        },
+        _iter(...children) {
+          return children.map((child) => child.text).join("");
+        },
+      },
+      { corrections: "throw" },
+    );
+    const unhandled = makeParser<string[]>(
+      recoveringGrammar,
+      visiting,
+      () => [],
+    );
+    expect(isValid(unhandled.parse("a;b;"))).toBe(true);
+    expect(() => unhandled.parse("a 1;b;", RECOVER)).toThrow(
+      /Missing semantic action for _correction/,
+    );
+  });
+
+  it("keeps syntax diagnostics ahead of an AST conversion error", () => {
+    const conversionError = new Error("AST conversion failed");
+    const throwing = recoveringGrammar.createSemantics();
+    throwing.addAttribute<string>("root", {
+      Root(_words, _corrections, _ends) {
+        throw conversionError;
+      },
+    });
+    const failing = makeParser<string>(
+      recoveringGrammar,
+      throwing,
+      () => "null root",
+    );
+    const outcome = failing.parse("1;2;", RECOVER);
+    expect(isValid(outcome)).toBe(false);
+    expect(outcome.ast).toBe("null root");
+    expect(outcome).toHaveProperty("nullRoot", true);
+    expect(outcome.diagnostics).toHaveLength(3);
+    expect(outcome.diagnostics.slice(0, 2)).toEqual(
+      parser.parse("1;2;", RECOVER).diagnostics,
+    );
+    expect(outcome.diagnostics[2]).toEqual({
+      code: DiagnosticCode.Error.UNEXPECTED,
+      args: { message: "AST conversion failed" },
+      stage: Stage.SEMANTIC,
+    });
   });
 });
 
@@ -266,5 +409,361 @@ describe("a semantic action that fails", () => {
         stage: Stage.SEMANTIC,
       },
     ]);
+  });
+});
+
+describe("syntax stages", () => {
+  const stages = grammar(
+    `Stages <: Base {
+      Root := (Item ! semi)*
+      Item = Number | Pair | pair | arrow
+      Pair = "<" "a"
+      pair = "<" "b"
+      arrow = "=" ">"
+    }`,
+    grammars,
+  );
+  const semantics = stages.extendSemantics(baseSemantics);
+  semantics.addAttribute<string>("root", {
+    Root(_items, _corrections, _ends) {
+      return "partial AST";
+    },
+  });
+  const parser = makeParser<string>(stages, semantics, () => "null root");
+
+  it.each([
+    ["a malformed token", "%XZ;", [Stage.LEX]],
+    ["a missing separator", "1 2;", [Stage.PARSE]],
+    [
+      "a token continuation beside a structural expectation",
+      "<c;",
+      [Stage.PARSE],
+    ],
+    ["a terminal inside a token", "=x;", [Stage.LEX]],
+    ["a terminal at a token boundary", "1 =;", [Stage.PARSE]],
+    [
+      "each recovered failure",
+      "%XZ; 1 2; =x;",
+      [Stage.LEX, Stage.PARSE, Stage.LEX],
+    ],
+  ])("tags %s", (_, source, expected) => {
+    const outcome = parser.parse(source, { attemptRecovery: true });
+
+    expect(outcome.ast).toBe("partial AST");
+    expect(outcome.diagnostics.map((d) => d.stage)).toEqual(expected);
+  });
+
+  it.each([
+    [Stage.LEX, "1; %XZ"],
+    [Stage.PARSE, "1; 2 3"],
+  ])("tags an unrecoverable failure as %s", (stage, source) => {
+    const outcome = parser.parse(source, { attemptRecovery: true });
+
+    expect(outcome.ast).toBe("null root");
+    expect(outcome.diagnostics.at(-1)?.stage).toBe(stage);
+  });
+});
+
+describe("the recovery attribute", () => {
+  const blocks = grammar(
+    `Blocks <: Base {
+      Root := Block
+      Block = "{" Item* ! "}"
+      Item = Block | Stmt
+      Stmt = Body ! ";"
+      Body = letter+
+    }`,
+    grammars,
+  );
+  const semantics = blocks.extendSemantics(baseSemantics);
+  semantics.addAttribute<(RecoveryPoint | undefined)[]>("slots", {
+    Root(block) {
+      return block.slots;
+    },
+    Block(_open, items, correction, _close) {
+      return [
+        ...items.children.flatMap((item) => item.slots),
+        correction.recovery,
+      ];
+    },
+    Item(item) {
+      return item.slots;
+    },
+    Stmt(body, correction, _end) {
+      return [body.recovery, correction.recovery];
+    },
+  });
+  semantics.addAttribute("root", {
+    Root(_) {
+      return this.slots;
+    },
+  });
+  const parser = makeParser<(RecoveryPoint | undefined)[]>(
+    blocks,
+    semantics,
+    () => [],
+  );
+
+  const RECOVER = { attemptRecovery: true };
+
+  it("is undefined everywhere in a valid parse", () => {
+    const outcome = parser.parse("{ a; { b; } }", RECOVER);
+    expect(outcome).toEqual({
+      ast: [undefined, undefined, undefined, undefined, undefined, undefined],
+      diagnostics: [],
+    });
+  });
+
+  it("links only the correction slot to its diagnostic", () => {
+    const outcome = parser.parse("{ a 1; c; }", RECOVER);
+    expect(outcome.ast).toHaveLength(5);
+    expect(outcome.diagnostics).toHaveLength(1);
+    const [body, correction, ...rest] = outcome.ast;
+    expect(body).toBeUndefined();
+    expect(correction?.recovery).toBe(outcome.diagnostics[0]);
+    expect(correction?.span).toMatchObject({ start: 4, end: 5 });
+    expect(rest).toEqual([undefined, undefined, undefined]);
+  });
+
+  it("returns the null root when nested blocks have no matching join", () => {
+    const outcome = parser.parse("{ a; { b;", RECOVER);
+    expect(outcome).toHaveProperty("nullRoot", true);
+    expect(outcome.ast).toEqual([]);
+    expect(outcome.diagnostics.length).toBeGreaterThan(0);
+  });
+
+  it("keeps the guarded prefix and the real join beside the correction", () => {
+    const bindings = blocks.extendSemantics(semantics);
+    bindings.addAttribute("bindings", {
+      Block(_open, items, correction, close) {
+        return {
+          items: items.children.map((item) => item.sourceString),
+          correction: correction.recoveredFailure,
+          join: close.sourceString,
+        };
+      },
+    });
+
+    const match = blocks.match("{ a; 1 }", undefined, { recover: true });
+    expect(match.succeeded()).toBe(true);
+    expect(bindings(match).child(0).bindings).toMatchObject({
+      items: ["a;"],
+      correction: { position: 5 },
+      join: "}",
+    });
+  });
+
+  it("is never read with recovery off", () => {
+    const outcome = parser.parse("{ a 1; c; }");
+    expect(isValid(outcome)).toBe(false);
+    expect(outcome.ast).toEqual([]);
+  });
+});
+
+describe("merging a file's diagnostics", () => {
+  const at = (start: number, end = start, line = 1) => ({ start, end, line });
+
+  it("orders by span start with spanless records last", () => {
+    const spanless: Diagnostic = named("no place", undefined, Stage.PARSE);
+    const late: Diagnostic = named("late", at(9), Stage.PARSE);
+    const early: Diagnostic = named("early", at(2), Stage.PARSE);
+
+    const merged = mergeDiagnostics([spanless, late, early]);
+
+    expect(merged).toEqual([early, late, spanless]);
+  });
+
+  it("orders records at one start by stage, absent last, then input", () => {
+    const unstaged: Diagnostic = named("unstaged", at(4));
+    const compile: Diagnostic = named("compile", at(4), Stage.COMPILE);
+    const semantic: Diagnostic = named("semantic", at(4), Stage.SEMANTIC);
+    const parse: Diagnostic = named("parse", at(4), Stage.PARSE);
+    const lex: Diagnostic = named("lex", at(4), Stage.LEX);
+    const otherParse: Diagnostic = named("other parse", at(4, 6), Stage.PARSE);
+
+    const merged = mergeDiagnostics([
+      unstaged,
+      compile,
+      semantic,
+      parse,
+      otherParse,
+      lex,
+    ]);
+
+    expect(merged).toEqual([
+      lex,
+      parse,
+      otherParse,
+      semantic,
+      compile,
+      unstaged,
+    ]);
+  });
+
+  it("orders spanless records among themselves by stage", () => {
+    const compile: Diagnostic = named("compile", undefined, Stage.COMPILE);
+    const unstaged: Diagnostic = named("unstaged");
+    const parse: Diagnostic = named("parse", undefined, Stage.PARSE);
+
+    const merged = mergeDiagnostics([compile, unstaged, parse]);
+
+    expect(merged).toEqual([parse, compile, unstaged]);
+  });
+
+  it("keeps the earlier stage of records with one code, arguments and span", () => {
+    const semantic: Diagnostic = named(
+      "Line 3: same",
+      at(8, 11, 3),
+      Stage.SEMANTIC,
+    );
+    const parse: Diagnostic = named("Line 3: same", at(8, 11, 3), Stage.PARSE);
+
+    const merged = mergeDiagnostics([semantic, parse]);
+
+    expect(merged).toEqual([parse]);
+    expect(merged[0]).toBe(parse);
+  });
+
+  it("keeps distinct arguments of one code at one point", () => {
+    const first: Diagnostic = named("one", at(5), Stage.PARSE);
+    const second: Diagnostic = named("two", at(5), Stage.SEMANTIC);
+
+    const merged = mergeDiagnostics([first, second]);
+
+    expect(merged).toEqual([first, second]);
+  });
+
+  it("keeps records of different codes with equal arguments", () => {
+    const notFound = diagnostic(
+      DiagnosticCode.Chip.NOT_FOUND,
+      { name: "x" },
+      at(5),
+      Stage.PARSE,
+    );
+    const notBuiltin = diagnostic(
+      DiagnosticCode.Chip.NOT_BUILTIN,
+      { name: "x" },
+      at(5),
+      Stage.PARSE,
+    );
+
+    const merged = mergeDiagnostics([notFound, notBuiltin]);
+
+    expect(merged).toEqual([notFound, notBuiltin]);
+  });
+
+  it("compares the complete span, not only its start", () => {
+    const point: Diagnostic = named("m", at(5, 5, 2), Stage.PARSE);
+    const longer: Diagnostic = named("m", at(5, 9, 2), Stage.PARSE);
+    const otherLine: Diagnostic = named("m", at(5, 5, 3), Stage.PARSE);
+
+    const merged = mergeDiagnostics([point, longer, otherLine]);
+
+    expect(merged).toEqual([point, longer, otherLine]);
+  });
+
+  it("keeps the first input of equal records at one stage", () => {
+    const first: Diagnostic = named("m", at(5), Stage.SEMANTIC);
+    const second: Diagnostic = { ...first };
+
+    const merged = mergeDiagnostics([first, second]);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]).toBe(first);
+  });
+
+  it("lets an absent stage inherit nothing and yield to a staged record", () => {
+    const unstaged: Diagnostic = named("m", at(5));
+    const compile: Diagnostic = named("m", at(5), Stage.COMPILE);
+
+    const merged = mergeDiagnostics([unstaged, compile]);
+
+    expect(merged).toEqual([compile]);
+    expect(merged[0]?.stage).toBe(Stage.COMPILE);
+    expect(unstaged).not.toHaveProperty("stage");
+  });
+
+  it("keeps spanless records with equal text", () => {
+    const first: Diagnostic = named("m", undefined, Stage.COMPILE);
+    const second: Diagnostic = named("m", undefined, Stage.COMPILE);
+    const spanned: Diagnostic = named("m", at(1), Stage.COMPILE);
+
+    const merged = mergeDiagnostics([first, second, spanned]);
+
+    expect(merged).toEqual([spanned, first, second]);
+  });
+
+  it("merges a spanless record only with proof of one cause", () => {
+    const first: Diagnostic = named("m", undefined, Stage.COMPILE);
+    const second: Diagnostic = named("m", undefined, Stage.COMPILE);
+    const third: Diagnostic = named("n", undefined, Stage.COMPILE);
+    const origins = new Map([
+      [first, { cause: "k" }],
+      [third, { cause: "k" }],
+    ]);
+
+    const merged = mergeDiagnostics([first, second, third], origins);
+
+    expect(merged).toEqual([first, second]);
+    expect(merged[0]).toBe(first);
+  });
+
+  it("merges one record listed twice, spanless or not", () => {
+    const spanless: Diagnostic = named("m", undefined, Stage.COMPILE);
+    const spanned: Diagnostic = named("n", at(2), Stage.PARSE);
+
+    const merged = mergeDiagnostics([spanless, spanned, spanless, spanned]);
+
+    expect(merged).toEqual([spanned, spanless]);
+  });
+
+  it("merges differently worded records only when a cause links them", () => {
+    const parse: Diagnostic = named("one", at(3), Stage.PARSE);
+    const semantic: Diagnostic = named("two", at(7), Stage.SEMANTIC);
+    const linked = new Map([
+      [parse, { cause: "k" }],
+      [semantic, { cause: "k" }],
+    ]);
+    const unlinked = new Map([
+      [parse, { cause: "k" }],
+      [semantic, { cause: "j" }],
+    ]);
+
+    expect(mergeDiagnostics([semantic, parse], linked)).toEqual([parse]);
+    expect(mergeDiagnostics([semantic, parse], unlinked)).toEqual([
+      parse,
+      semantic,
+    ]);
+    expect(mergeDiagnostics([semantic, parse])).toEqual([parse, semantic]);
+  });
+
+  it("keeps records of equal code, arguments and span from distinct skipped regions", () => {
+    const first: Diagnostic = named("m", at(4), Stage.PARSE);
+    const second: Diagnostic = named("m", at(4), Stage.PARSE);
+    const again: Diagnostic = named("m", at(4), Stage.PARSE);
+    const bare: Diagnostic = named("m", at(4), Stage.PARSE);
+    const origins = new Map([
+      [first, { recovery: "4:9" }],
+      [second, { recovery: "4:12" }],
+      [again, { recovery: "4:9" }],
+    ]);
+
+    const merged = mergeDiagnostics([first, second, again, bare], origins);
+
+    expect(merged).toEqual([first, second, bare]);
+    expect(merged[0]).toBe(first);
+    expect(merged[1]).toBe(second);
+    expect(merged[2]).toBe(bare);
+  });
+
+  it("does not change its input", () => {
+    const late: Diagnostic = named("late", at(9), Stage.PARSE);
+    const early: Diagnostic = named("early", at(2));
+    const input: readonly Diagnostic[] = [late, early, late];
+
+    mergeDiagnostics(input);
+
+    expect(input).toEqual([late, early, late]);
+    expect(early).toEqual(named("early", at(2)));
   });
 });

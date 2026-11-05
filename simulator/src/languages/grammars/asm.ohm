@@ -1,9 +1,8 @@
 ASM <: Base {
   Root := ASM
-  ASM = intermediateInstruction* instruction?
+  ASM = instruction*
   
-  instruction = label|aInstruction|cInstruction
-  intermediateInstruction = instruction space+
+  instruction = (label | aInstruction | cInstruction) ! (space+ | end)
 
   identifier := (letter|underscore|dot|dollar|colon) (alnum|underscore|dot|dollar|colon)*
 

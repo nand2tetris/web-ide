@@ -19,19 +19,35 @@ import { makeC } from "../util/asm.js";
 import {
   actionError,
   baseSemantics,
+  carrierOf,
   failedOf,
   grammars,
+  guardedRecovery,
+  isRecovered,
   makeParser,
+  makePrune,
+  mergeDiagnostics,
+  originsOf,
   type Recovery,
+  type RecoveryPoint,
+  recoveredOf,
   semanticError,
   span,
+  type Valid,
 } from "./base.js";
-import { Diagnostic, DiagnosticCode, diagnostic, Span } from "./diagnostic.js";
+import {
+  Diagnostic,
+  DiagnosticCode,
+  type Diagnostics,
+  diagnostic,
+  Span,
+} from "./diagnostic.js";
 import asmGrammar from "./grammars/asm.ohm.js";
 
 export const grammar = ohmGrammar(asmGrammar, grammars);
 export const asmSemantics = grammar.extendSemantics(baseSemantics);
 
+/** Raw ASTs can contain placeholders identified by `isRecovered`; prune before use. */
 export interface Asm {
   instructions: AsmInstruction[];
 }
@@ -81,6 +97,24 @@ export interface AsmLabelInstruction extends Recovery {
   span?: Span;
 }
 
+/** An empty label carries recovery without emitting code. */
+function nullInstruction(point: RecoveryPoint): AsmInstruction {
+  return {
+    type: "L",
+    label: "",
+    span: point.span,
+    ...carrierOf(point, "instruction"),
+  };
+}
+
+function failedInstruction(
+  diagnostic: Diagnostic,
+  at: Span,
+  kind: "aInstruction" | "cInstruction",
+): AsmInstruction {
+  return { type: "L", label: "", span: at, ...failedOf(diagnostic, at, kind) };
+}
+
 asmSemantics.addAttribute<Asm>("root", {
   Root(_) {
     return this.asm;
@@ -88,26 +122,15 @@ asmSemantics.addAttribute<Asm>("root", {
 });
 
 asmSemantics.addAttribute<Asm>("asm", {
-  ASM(asm, last) {
-    const instructions =
-      asm.children.map(
-        (node) => node.intermediateInstruction as AsmInstruction,
-      ) ?? [];
+  ASM(asm) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: asm.children.map(
+        (node) => node.instruction as AsmInstruction,
+      ),
     };
   },
 });
 
-asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
-  intermediateInstruction(inst, _n) {
-    return inst.instruction;
-  },
-});
-
-/** The C target, or the action error of an invalid one. */
 function getAsmAssign(assignN: Node): string | Diagnostic {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
@@ -134,7 +157,6 @@ function getAsmAssign(assignN: Node): string | Diagnostic {
   return assign;
 }
 
-/** The C value, or the action error of an invalid one. */
 function getAsmOp(opN: Node): string | Diagnostic {
   const op = opN.sourceString;
 
@@ -153,16 +175,15 @@ function getAsmOp(opN: Node): string | Diagnostic {
   return op;
 }
 
-/** The null instruction where an instruction action of `kind` failed. */
-function failedInstruction(
-  diagnostic: Diagnostic,
-  at: Span,
-  kind: "aInstruction" | "cInstruction",
-): AsmInstruction {
-  return { type: "L", label: "", span: at, ...failedOf(diagnostic, at, kind) };
-}
-
 asmSemantics.addAttribute<AsmInstruction>("instruction", {
+  instruction(inst, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      inst,
+      correction,
+    );
+    return recovered ? nullInstruction(recovered) : inst.instruction;
+  },
+
   aInstruction(_at, name): AsmInstruction {
     const at = span(this.source);
     if (typeof name.value === "string") return makeA(name.value, at);
@@ -217,10 +238,14 @@ export type Pointer =
   | "SCREEN"
   | "KBD";
 
+/**
+ * Reports every repeated label definition; the first definition wins. On success,
+ * replaces A labels with values. Calls `symbolCallback` for each new label or variable.
+ */
 export function fillLabel(
   asm: Asm,
   symbolCallback?: (name: string, value: number, isVar: boolean) => void,
-): Result<void, Diagnostic> {
+): Result<void, Diagnostics> {
   let nextLabel = 16;
   const symbols = new Map<Pointer | string, number>([
     ["R0", 0],
@@ -264,11 +289,12 @@ export function fillLabel(
   }
 
   const unfilled: AsmALabelInstruction[] = [];
+  const duplicates: Diagnostic[] = [];
   let line = 0;
   for (const instruction of asm.instructions) {
     if (instruction.type === "L") {
       if (symbols.has(instruction.label)) {
-        return Err(
+        duplicates.push(
           semanticError(
             DiagnosticCode.Asm.DUPLICATE_LABEL,
             { label: instruction.label },
@@ -291,6 +317,10 @@ export function fillLabel(
     }
   }
 
+  const [first, ...rest] = duplicates;
+  if (first !== undefined) {
+    return Err([first, ...rest]);
+  }
   unfilled.forEach(transmuteAInstruction);
   return Ok();
 }
@@ -315,7 +345,6 @@ export const AsmToString = (inst: AsmInstruction | string): string => {
   }
 };
 
-/** The word of an instruction, none for a label, or the error of an unfilled A instruction. */
 export function translateInstruction(
   inst: AsmInstruction,
 ): Result<number | undefined, Diagnostic> {
@@ -344,7 +373,6 @@ export function translateInstruction(
   return Ok(undefined);
 }
 
-/** The words of the instructions of `asm`, or the error of the first that has none. */
 export function emit(asm: Asm): Result<number[], Diagnostic> {
   const words: number[] = [];
   for (const inst of asm.instructions) {
@@ -355,18 +383,15 @@ export function emit(asm: Asm): Result<number[], Diagnostic> {
   return Ok(words);
 }
 
-/** True when `value` fits an A instruction. */
 function isAValue(value: number): boolean {
   return !(value > 32767 || value < 0);
 }
 
-/** An A instruction of `source`, which the caller has checked. */
 const makeA = (source: string | number, span?: Span): AsmAInstruction =>
   typeof source === "string"
     ? { type: "A", label: source, span }
     : { type: "A", value: source, span };
 
-/** The A instruction of `source`, or the error of a value that does not fit one. */
 const A = (
   source: string | number,
   span?: Span,
@@ -413,6 +438,60 @@ const L = (label: string, span?: Span): AsmLabelInstruction => ({
   label,
   span,
 });
+
+export interface AssembleOptions {
+  /** Recover from syntax errors to keep checking. Default false. */
+  attemptRecovery?: boolean;
+}
+
+export const prune = makePrune<Asm>((tree) => ({
+  ...tree,
+  instructions: tree.instructions.filter(
+    (instruction) => !isRecovered(instruction),
+  ),
+}));
+
+/**
+ * Resolves labels, retaining label instructions and source spans for the animation.
+ * Reports merged diagnostics in source order; a null root has syntax diagnostics only.
+ */
+export function resolveAsm(
+  source: string,
+  options: AssembleOptions = {},
+  symbolCallback?: (name: string, value: number, isVar: boolean) => void,
+): Result<Valid<Asm>, Diagnostics> {
+  const outcome = ASM.parse(source, {
+    attemptRecovery: options.attemptRecovery ?? false,
+  });
+  const recovered = recoveredOf(outcome, prune);
+  if (recovered === undefined) {
+    return Err(outcome.diagnostics as Diagnostics);
+  }
+  const diagnostics: Diagnostic[] = [...outcome.diagnostics];
+  const origins = new Map(originsOf(recovered.provenance));
+  const labels = fillLabel(recovered.ast, symbolCallback);
+  if (isErr(labels)) {
+    diagnostics.push(...Err(labels));
+  }
+  const [first, ...rest] = diagnostics;
+  return first === undefined
+    ? Ok(recovered.ast)
+    : Err(mergeDiagnostics([first, ...rest], origins));
+}
+
+/**
+ * Assembles `source` to its instruction words, or to every diagnostic of it,
+ * in source order. No instructions are given when there is any diagnostic.
+ */
+export function assemble(
+  source: string,
+  options: AssembleOptions = {},
+): Result<number[], Diagnostics> {
+  const resolved = resolveAsm(source, options);
+  if (isErr(resolved)) return resolved;
+  const emitted = emit(Ok(resolved));
+  return isErr(emitted) ? Err([Err(emitted)]) : emitted;
+}
 
 /** The null root of a parse that built no program: no instructions. */
 function emptyAsm(): Asm {

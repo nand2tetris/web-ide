@@ -1,5 +1,5 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
 import {
   CompareResultLengths,
   CompareResultLine,
@@ -10,13 +10,11 @@ import {
   SCREEN_OFFSET,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import {
-  ASM,
   Asm,
-  fillLabel,
   isAValueInstruction,
+  resolveAsm,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
-import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import {
   type Diagnostic,
   Span,
@@ -71,27 +69,25 @@ class Translator {
     return this.lines.join("\n");
   }
 
-  load(asm: Asm, lineNum: number): Result<void, Diagnostic> {
+  beginLoad(): (name: string, value: number, isVar: boolean) => void {
     this.symbols = defaultSymbols();
     this.variables.clear();
-    this.asm = asm;
-
-    const result = fillLabel(asm, (name, value, isVar) => {
+    return (name, value, isVar) => {
       if (isVar) {
         this.variables.set(value, { name: name, isHidden: true });
       } else {
         this.symbols.push({ name: name, value: value.toString() });
       }
-    });
-    if (isErr(result)) {
-      return result;
-    }
+    };
+  }
 
+  /** Requires A labels to be resolved by `resolveAsm`. */
+  load(asm: Asm, lineNum: number) {
+    this.asm = asm;
     asm.instructions = asm.instructions.filter(({ type }) => type !== "L");
 
     this.resolveLineNumbers(lineNum);
     this.reset();
-    return Ok();
   }
 
   resolveLineNumbers(lineNum: number) {
@@ -184,7 +180,6 @@ export interface AsmPageState {
   compare: string;
   compareName: string | undefined;
   lineNumbers: number[];
-  /** Every diagnostic of the last compile. */
   diagnostics: readonly Diagnostic[];
   compareError: boolean;
   title?: string;
@@ -205,6 +200,7 @@ export function makeAsmStore(
   status: StatusActions,
   dispatch: MutableRefObject<AsmStoreDispatch>,
   upgraded: boolean,
+  attemptRecovery: () => boolean = () => false,
 ) {
   const translator = new Translator();
   const highlightInfo: HighlightInfo = {
@@ -217,10 +213,10 @@ export function makeAsmStore(
   let compiled = false;
   let translating = false;
   let failure = false;
+  let source = "";
 
-  /** Shows the diagnostics of ASM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    status.setFailureStatus("asm", diagnostics);
+    status.setFailureStatus("asm", diagnostics, { head: true });
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     compiled = false;
   };
@@ -322,6 +318,7 @@ export function makeAsmStore(
 
     setAsm(asm: string, path?: string) {
       asm = asm.replace(/\r\n/g, "\n");
+      source = asm;
       dispatch.current({
         action: "setAsm",
         payload: { asm, path },
@@ -341,25 +338,26 @@ export function makeAsmStore(
 
     compileAsm(asm: string) {
       this.reset();
-      const parseResult = validOf(ASM.parse(asm));
-      if (isErr(parseResult)) {
-        compileFailed(Err(parseResult));
+      const loaded = resolveAsm(
+        asm,
+        { attemptRecovery: attemptRecovery() },
+        translator.beginLoad(),
+      );
+      if (isErr(loaded)) {
+        compileFailed(Err(loaded));
         return;
       }
 
-      const loadResult = translator.load(
-        Ok(parseResult),
-        asm.split("\n").length,
-      );
-      if (isErr(loadResult)) {
-        compileFailed([Err(loadResult)]);
-        return;
-      }
+      translator.load(Ok(loaded), asm.split("\n").length);
 
       compiled = translator.asm.instructions.length > 0;
       status.clearStatus();
       dispatch.current({ action: "setDiagnostics" });
       dispatch.current({ action: "update" });
+    },
+
+    recompile() {
+      this.compileAsm(source);
     },
 
     setAnimate(value: boolean) {
@@ -479,10 +477,18 @@ export function makeAsmStore(
 }
 
 export function useAsmPageStore() {
-  const { setStatus, clearStatus, setFailureStatus, fs, localFsRoot } =
-    useContext(BaseContext);
+  const {
+    setStatus,
+    clearStatus,
+    setFailureStatus,
+    fs,
+    localFsRoot,
+    attemptRecovery,
+  } = useContext(BaseContext);
 
   const dispatch = useRef<AsmStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
@@ -491,6 +497,7 @@ export function useAsmPageStore() {
         { setStatus, clearStatus, setFailureStatus },
         dispatch,
         localFsRoot != undefined,
+        () => recovery.current,
       ),
     [setStatus, clearStatus, setFailureStatus, dispatch, fs],
   );

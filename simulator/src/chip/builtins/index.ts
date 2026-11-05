@@ -125,7 +125,7 @@ export async function getBuiltinChip(name: string): Promise<Result<Chip>> {
   if (builtinOverrides[name]) {
     const result = await parse(builtinOverrides[name], name);
     if (isErr(result)) {
-      return Err(new Error(Err(result).message));
+      return Err(new Error(Err(result)[0].message));
     }
     return result;
   }

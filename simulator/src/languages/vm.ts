@@ -252,9 +252,14 @@ vmSemantics.addAttribute<Vm>("root", {
   },
 });
 
+/** The null root of a parse that built no program: no instructions. */
+function emptyVm(): Vm {
+  return { instructions: [] };
+}
+
 export const VM = {
   grammar: vmGrammar,
   semantics: vmSemantics,
   parser: grammar,
-  parse: makeParser<Vm>(grammar, vmSemantics),
+  ...makeParser<Vm>(grammar, vmSemantics, emptyVm),
 };

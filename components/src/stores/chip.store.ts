@@ -23,7 +23,14 @@ import {
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
-import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
+import {
+  Dispatch,
+  MutableRefObject,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
@@ -95,6 +102,7 @@ export interface ControlsState {
   testName: string;
   usingBuiltin: boolean;
   runningTest: boolean;
+  testResult?: BaseContext["status"];
   span?: Span;
   error?: CompilationError;
   visualizationParameters: Set<string>;
@@ -126,7 +134,9 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  publishStatus: Action<
+    string | { message: string; severity?: StatusSeverity }
+  >,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
@@ -139,6 +149,12 @@ export function makeChipStore(
   let test = new ChipTest();
   let usingBuiltin = false;
   let invalid = false;
+
+  const setStatus: typeof publishStatus = (status) => {
+    // A newer action's status supersedes any completion waiting to commit.
+    dispatch.current({ action: "clearTestResult" });
+    publishStatus(status);
+  };
 
   const reducers = {
     setFiles(
@@ -225,20 +241,19 @@ export function makeChipStore(
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
       const passed = compare(state.files.cmp.trim(), state.files.out.trim());
-      // For some reason, this is happening during a render but I can't track it down.
-      Promise.resolve().then(() => {
-        setStatus(
-          passed
-            ? {
-                message: `Simulation successful: The output file is identical to the compare file`,
-                severity: "SUCCESS",
-              }
-            : {
-                message: `Simulation error: The output file differs from the compare file`,
-                severity: "ERROR",
-              },
-        );
-      });
+      state.controls.testResult = passed
+        ? {
+            message: `Simulation successful: The output file is identical to the compare file`,
+            severity: "SUCCESS",
+          }
+        : {
+            message: `Simulation error: The output file differs from the compare file`,
+            severity: "ERROR",
+          };
+    },
+
+    clearTestResult(state: ChipPageState) {
+      state.controls.testResult = undefined;
     },
 
     updateTestStep(state: ChipPageState) {
@@ -627,7 +642,12 @@ export function makeChipStore(
     };
   })();
 
-  return { initialState, reducers, actions };
+  // Publish accepted state outside reduction; callers detect result identity changes.
+  function publishTestResult(result: ControlsState["testResult"]) {
+    if (result) publishStatus(result);
+  }
+
+  return { initialState, reducers, actions, publishTestResult };
 }
 
 export function useChipPageStore() {
@@ -635,7 +655,7 @@ export function useChipPageStore() {
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 
-  const { initialState, reducers, actions } = useMemo(
+  const { initialState, reducers, actions, publishTestResult } = useMemo(
     () =>
       makeChipStore(fs, setStatus, storage, dispatch, localFsRoot != undefined),
     [fs, setStatus, storage, dispatch],
@@ -643,6 +663,15 @@ export function useChipPageStore() {
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);
   dispatch.current = dispatcher;
+  const observedTestResult = useRef<ControlsState["testResult"]>(undefined);
+
+  useEffect(() => {
+    // Reducers can run during render or be replayed; publish after commit.
+    const result = state.controls.testResult;
+    if (observedTestResult.current === result) return;
+    observedTestResult.current = result;
+    if (result) publishTestResult(result);
+  }, [state.controls.testResult, publishTestResult]);
 
   return { state, dispatch, actions };
 }

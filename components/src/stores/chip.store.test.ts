@@ -21,7 +21,7 @@ function testChipStore(
 
   const setStatus = vi.fn();
 
-  const { initialState, actions, reducers } = makeChipStore(
+  const { initialState, actions, reducers, publishTestResult } = makeChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
     setStatus,
     storage,
@@ -32,9 +32,13 @@ function testChipStore(
   dispatch.current = vi.fn().mockImplementation(
     // biome-ignore lint/suspicious/noExplicitAny: covariants are hard
     (command: { action: keyof typeof reducers; payload: any }) => {
+      const previousResult = store.state.controls.testResult;
       store.state = produce(store.state, (draft: typeof initialState) => {
         reducers[command.action](draft, command.payload);
       });
+      if (store.state.controls.testResult !== previousResult) {
+        publishTestResult(store.state.controls.testResult);
+      }
     },
   );
 
@@ -167,6 +171,17 @@ describe("ChipStore", () => {
         start: 167,
         end: 220,
         line: 6,
+      });
+    });
+
+    it("publishes the comparison result after a headless run", async () => {
+      await state.store.actions.toggleBuiltin();
+      while (!(await state.store.actions.stepTest()));
+
+      expect(state.store.setStatus).toHaveBeenLastCalledWith({
+        message:
+          "Simulation successful: The output file is identical to the compare file",
+        severity: "SUCCESS",
       });
     });
 

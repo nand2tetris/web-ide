@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/b/RAM4K.hdl
+// File name: RAM4K.hdl
 /**
  * Memory of 4K 16-bit registers.
  * If load is asserted, the value of the register selected by
@@ -18,7 +18,7 @@ CHIP RAM4K {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/b/RAM4K.tst
+// File name: RAM4K.tst
 
 load RAM4K.hdl,
 compare-to RAM4K.cmp,

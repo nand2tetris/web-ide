@@ -2,12 +2,14 @@
 export const PongAsm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/06/pong/Pong.asm
+// File name: Pong.asm
 
-// The Pong game program was originally written in the high-level Jack language.
-// The Jack code was then translated by the Jack compiler into VM code.
-// The VM code was then translated by the VM translator into the Hack
-// assembly code shown here.
+// The source Pong program was written in the high-level Jack language.
+// The computer’s operating system is also written in Jack.
+// The Pong code + the OS code were compiled by the Jack compiler,
+// creating (after further processing by the VM translator) a single
+// file named Pong.asm, containing the assembly code shown here.
+// The code contains many compiler-generated labels and symbols.
 
 @256
 D=A
@@ -28378,7 +28380,7 @@ M=D`;
 export const PongLAsm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/6/pong/PongL.asm
+// File name: PongL.asm
 
 // Symbol-less version of the Pong.asm program.
 // Designed for testing the basic version of the assembler.

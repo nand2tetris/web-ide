@@ -2,7 +2,9 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
+import { isErr } from "@davidsouther/jiffies/result.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
+import { parse as parseChip } from "@nand2tetris/simulator/chip/builder.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
 import { cleanState } from "../clean_state.js";
@@ -143,7 +145,7 @@ describe("ChipStore", () => {
 
       await state.store.actions.toggleBuiltin();
 
-      expect(state.store.state.files.hdl).toContain("BUILTIN Not;\n}");
+      expect(isErr(await parseChip(state.store.state.files.hdl))).toBe(false);
       expect(bits(state.store.state.sim.inPins)).toEqual([[0]]);
       expect(bits(state.store.state.sim.outPins)).toEqual([[1]]);
 

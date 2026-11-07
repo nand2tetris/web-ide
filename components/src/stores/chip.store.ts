@@ -52,8 +52,8 @@ export function isBuiltinOnly(
   return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
-function convertToBuiltin(name: string, hdl: string) {
-  return hdl.replace(/PARTS:([\s\S]*?)\}/, `PARTS:\n\tBUILTIN ${name};\n}`);
+function convertToBuiltin(hdl: string) {
+  return hdl.replace(/PARTS:[\s\S]*?\}/, "BUILTIN;}");
 }
 
 export interface ChipPageState {
@@ -272,7 +272,7 @@ export function makeChipStore(
     displayBuiltin(state: ChipPageState) {
       backupHdl = state.files.hdl;
       this.setFiles(state, {
-        hdl: convertToBuiltin(state.controls.chipName, state.files.hdl),
+        hdl: convertToBuiltin(state.files.hdl),
       });
     },
 

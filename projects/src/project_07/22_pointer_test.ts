@@ -1,7 +1,7 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/PointerTest/PointerTest.vm
+// File name: PointerTest/PointerTest.vm
 
 // Executes pop and push commands using the 
 // pointer, this, and that segments.
@@ -26,12 +26,11 @@ add
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/PointerTest/PointerTestVME.tst
+// File name: PointerTest/PointerTestVME.tst
 
-// Tests and illustrates PointerTest.vm on the VM simulator.
+// Tests PointerTest.vm on the VM simulator.
 
 load PointerTest.vm,
-compare-to PointerTest.cmp,
 
 set RAM[0] 256,   // initializes the stack pointer
 
@@ -41,6 +40,7 @@ repeat 15 {       // PointerTest.vm has 15 VM commands
 
 // Outputs the stack base, THIS, THAT, and
 // some values from the the this and that segments
+compare-to PointerTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1
             RAM[3032]%D1.6.1 RAM[3046]%D1.6.1;
 output;
@@ -49,11 +49,10 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/PointerTest/PointerTest.tst
+// File name: PointerTest/PointerTest.tst
 
 // Tests PointerTest.asm on the CPU emulator.
-
-compare-to PointerTest.cmp,
+// Assumes that the program is already loaded.
 
 set RAM[0] 256,   // initializes the stack pointer
 
@@ -63,6 +62,7 @@ repeat 450 {      // enough cycles to complete the execution
 
 // Outputs the value at the stack's base, THIS, THAT, and
 // some values from the the this and that segments
+compare-to PointerTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[3]%D1.6.1 
             RAM[4]%D1.6.1 RAM[3032]%D1.6.1 RAM[3046]%D1.6.1;
 output;

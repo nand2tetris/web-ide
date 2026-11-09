@@ -1,7 +1,7 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/StackTest/StackTest.vm
+// File name: StackTest/StackTest.vm
 
 // Executes a sequence of arithmetic and logical operations on the stack. 
 
@@ -48,12 +48,11 @@ not
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/StackTest/StackTestVME.tst
+// File name: StackTest/StackTestVME.tst
 
-// Tests and illustrates StackTest.vm on the VM simulator.
+// Tests StackTest.vm on the VM simulator.
 
 load StackTest.vm,
-compare-to StackTest.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -62,6 +61,7 @@ repeat 38 {      // StackTest.vm has 38 VM commands
 }
 
 // Outputs the stack pointer (RAM[0]) and the stack contents: RAM[256]-RAM[265]
+compare-to StackTest.cmp,
 output-list RAM[0]%D2.6.2 
         RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 output;
@@ -72,11 +72,10 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/StackTest/StackTest.tst
+// File name: StackTest/StackTest.tst
 
 // Tests StackTest.asm on the CPU emulator.
-
-compare-to StackTest.cmp,
+// Assumes that the program is already loaded.
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -85,6 +84,7 @@ repeat 1000 {    // enough cycles to complete the execution
 }
 
 // Outputs the stack pointer and the stack contents: RAM[256]-RAM[265]
+compare-to StackTest.cmp,
 output-list RAM[0]%D2.6.2 
         RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 output;

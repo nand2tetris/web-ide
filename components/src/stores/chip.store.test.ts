@@ -2,12 +2,18 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
+import { isOk } from "@davidsouther/jiffies/result.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
+import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
 import { cleanState } from "../clean_state.js";
 import { ImmPin } from "../pinout.js";
-import { ChipStoreDispatch, makeChipStore } from "./chip.store.js";
+import {
+  ChipStoreDispatch,
+  convertToBuiltin,
+  makeChipStore,
+} from "./chip.store.js";
 
 function testChipStore(
   fs: Record<string, string> = {
@@ -84,6 +90,15 @@ describe("ChipStore", () => {
 
       expect(store.state.controls.chipName).toBe("");
       expect(store.state.controls.chips).toEqual([]);
+    });
+  });
+
+  describe("convertToBuiltin", () => {
+    it("generates valid BUILTIN HDL", () => {
+      const builtin = convertToBuiltin("Not", not.hdl);
+
+      expect(builtin).toContain("BUILTIN;");
+      expect(isOk(HDL.parse(builtin))).toBe(true);
     });
   });
 

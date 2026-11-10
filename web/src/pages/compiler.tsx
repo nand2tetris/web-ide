@@ -15,6 +15,7 @@ import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Panel } from "../shell/panel";
 import { Tab, TabList } from "../shell/tabs";
+import { jackFiles, registerWorkspaceNavigation } from "../shell/workspace";
 import URLs from "../urls";
 import "./compiler.scss";
 
@@ -26,6 +27,8 @@ export const Compiler = () => {
   const { state, dispatch, actions } = stores.compiler;
 
   const [selected, setSelected] = useState(0);
+
+  useEffect(() => jackFiles.set(state.files), [state.files]);
   const [suppressStatus, setSuppressStatus] = useState(false);
   const [editable, setEditable] = useState(false);
 
@@ -64,6 +67,20 @@ export const Compiler = () => {
       tracking.trackEvent("tab", "change", tab);
     },
     [tracking],
+  );
+
+  useEffect(
+    () =>
+      registerWorkspaceNavigation("jack", (uri) => {
+        const file = decodeURIComponent(new URL(uri).pathname).replace(
+          /^\//,
+          "",
+        );
+        if (!Object.hasOwn(state.files, file)) return false;
+        onSelect(file);
+        return true;
+      }),
+    [state.files, onSelect],
   );
 
   useEffect(() => {

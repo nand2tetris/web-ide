@@ -32,6 +32,7 @@ import { PageContext } from "../Page.context";
 import { Editor } from "../shell/editor";
 import { Accordian, Panel } from "../shell/panel";
 import { TestPanel } from "../shell/test_panel";
+import { registerWorkspaceNavigation, workspacePath } from "../shell/workspace";
 import { zip } from "../shell/zip";
 
 interface CompileInput {
@@ -46,6 +47,17 @@ export const Chip = () => {
   const { stores, setTool } = useContext(PageContext);
   const { tracking, filePicker } = useContext(AppContext);
   const { state, actions, dispatch } = stores.chip;
+
+  useEffect(
+    () =>
+      registerWorkspaceNavigation("hdl", async (uri) => {
+        const path = await workspacePath(uri);
+        if (!path?.endsWith(".hdl")) return false;
+        await actions.loadChip(path, false);
+        return true;
+      }),
+    [actions],
+  );
 
   const [hdl, setHdl] = useStateInitializer(state.files.hdl);
   const [tst, setTst] = useStateInitializer(state.files.tst);

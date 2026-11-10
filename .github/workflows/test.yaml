@@ -23,7 +23,7 @@ jobs:
         run: npm list
 
       - name: Install
-        run: npm ci
+        run: npm run bootstrap
 
       - name: CI
         run: |

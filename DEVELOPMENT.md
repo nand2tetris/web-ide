@@ -18,6 +18,29 @@ The repository is a TypeScript monorepo of npm workspaces. It implements the ful
 | Vitest | ^4 | Unit tests for `simulator`, `components`, `web`, and `cli` |
 | Playwright | ^1.52 | End to end tests for `web`, Chromium only |
 
+## Pinned language-service setup
+
+Run `npm run bootstrap` before the build or checks. It prepares the existing
+`file:../../ohm/packages/language` dependency in the sibling `../ohm` directory:
+
+- Clone the public [DavidSouther/ohm source](https://github.com/davidsouther/ohm)
+  when the sibling is absent and detach at companion revision
+  `8f82747b5fa9b1e8fa0b911556f693ffe8eb98b5`.
+- Verify an existing sibling has that exact revision and no tracked changes;
+  a different checkout is left intact and setup stops.
+- Run the application's `npm ci`, link the owned sibling's dependency resolution
+  to this application's installed dependencies, and run the companion package's
+  `npm run build` to create its declarations before the application typecheck.
+
+The companion revision supplies the reviewed HDL/Jack role-based service. The
+application's Ohm engine remains pinned independently at
+`d1f1f64cde7fc02fa9bdfb0e01bcd8833b45a100`. The script never replaces an existing
+companion dependency directory or a link to another install. If `../ohm` is in
+use for other work, put this application checkout in a separate parent directory
+and run setup there. Subsequent bootstrap runs reuse only that exact source and
+its link to this install. CI uses the same bootstrap; no SSH credentials,
+published companion package, or vendored source is required.
+
 ## Package Roles
 
 | Package | Role |

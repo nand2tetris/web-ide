@@ -3,10 +3,15 @@ import { grammar } from "ohm-js";
 import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
+  actionError,
   baseSemantics,
+  failedOf,
   grammars,
+  isRecovered,
   isValid,
   makeParser,
+  type Recovery,
+  recoveryOf,
   span,
   validOf,
 } from "./base.js";
@@ -168,55 +173,96 @@ describe("Ohm Base", () => {
   });
 });
 
-describe("makeParser", () => {
-  const numbers = grammar(`Nums <: Base { Root := Number+ }`, grammars);
+describe("recovery helpers", () => {
+  it("identify null objects and expose their diagnostics", () => {
+    const recovery = named("bad");
+    const broken: Recovery = { recovery };
+    const clean: Recovery = {};
+    expect(isRecovered(broken)).toBe(true);
+    expect(recoveryOf(broken)).toBe(recovery);
+    expect(isRecovered(clean)).toBe(false);
+    expect(recoveryOf(clean)).toBeUndefined();
+  });
+});
 
-  function throwing(thrown: () => never) {
-    const semantics = numbers.extendSemantics(baseSemantics);
-    semantics.addAttribute<number[]>("root", {
-      Root(_nums) {
-        return thrown();
-      },
-    });
-    return makeParser<number[]>(numbers, semantics, () => []);
+describe("a semantic action that fails", () => {
+  interface Digit extends Recovery {
+    value: number;
   }
+  const digits = grammar(
+    `Digits <: Base { Root := (Number ! ";")* }`,
+    grammars,
+  );
+  const semantics = digits.extendSemantics(baseSemantics);
+  semantics.addAttribute<Digit>("digit", {
+    Number(_) {
+      const at = span(this.source);
+      return this.value < 10
+        ? { value: this.value }
+        : {
+            value: 0,
+            ...failedOf(
+              actionError(
+                DiagnosticCode.Chip.NOT_FOUND,
+                { name: `${this.value}` },
+                at,
+              ),
+              at,
+              "Number",
+            ),
+          };
+    },
+  });
+  semantics.addAttribute<Digit[]>("root", {
+    Root(numbers, _corrections, _ends) {
+      return numbers.children.map((n) => n.digit);
+    },
+  });
+  const parser = makeParser<Digit[]>(digits, semantics, () => []);
 
-  it("keeps a diagnostic thrown by a semantic action", () => {
-    const semantics = numbers.extendSemantics(baseSemantics);
-    semantics.addAttribute<number[]>("root", {
-      Root(_nums) {
-        throw diagnostic(
-          DiagnosticCode.Asm.DUPLICATE_LABEL,
-          { label: "A" },
-          span(this.source),
-        );
-      },
-    });
-    const outcome = makeParser<number[]>(numbers, semantics, () => []).parse(
-      "1",
-    );
+  it("keeps the tree, with a null object beside a semantic diagnostic", () => {
+    const outcome = parser.parse("1; 23; 4;");
 
-    expect(outcome.ast).toEqual([]);
+    expect(outcome).not.toHaveProperty("nullRoot");
     expect(outcome.diagnostics).toEqual([
       {
-        code: DiagnosticCode.Asm.DUPLICATE_LABEL,
-        args: { label: "A" },
-        span: { start: 0, end: 1, line: 1 },
+        code: DiagnosticCode.Chip.NOT_FOUND,
+        args: { name: "23" },
+        span: { start: 3, end: 5, line: 1 },
         stage: Stage.SEMANTIC,
       },
     ]);
+    const [one, broken, four] = outcome.ast;
+    expect([one.value, four.value]).toEqual([1, 4]);
+    expect(recoveryOf(broken)).toBe(outcome.diagnostics[0]);
+    expect(broken.skipped).toEqual({
+      kind: "Number",
+      interval: { start: 3, end: 5, line: 1 },
+    });
   });
 
-  it("reports any other thrown error as an unexpected one", () => {
-    const outcome = throwing(() => {
-      throw new Error("boom");
-    }).parse("1");
+  it("keeps an action error when a later action throws", () => {
+    const throwing = digits.extendSemantics(semantics);
+    throwing.extendAttribute<Digit[]>("root", {
+      Root(numbers, _corrections, _ends) {
+        numbers.children.forEach((n) => n.digit);
+        throw new Error("unexpected");
+      },
+    });
+    const failing = makeParser<Digit[]>(digits, throwing, () => []);
 
-    expect(outcome.ast).toEqual([]);
-    expect(outcome.diagnostics).toEqual([
+    const outcome = failing.parse("23;");
+
+    expect(outcome).toHaveProperty("nullRoot", true);
+    expect(outcome.diagnostics).toMatchObject([
+      {
+        code: DiagnosticCode.Chip.NOT_FOUND,
+        args: { name: "23" },
+        stage: Stage.SEMANTIC,
+      },
       {
         code: DiagnosticCode.Error.UNEXPECTED,
-        args: { message: "boom" },
+        args: { message: "unexpected" },
         stage: Stage.SEMANTIC,
       },
     ]);

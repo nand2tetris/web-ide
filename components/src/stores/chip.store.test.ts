@@ -97,7 +97,7 @@ describe("ChipStore", () => {
     it("generates valid BUILTIN HDL", () => {
       const builtin = convertToBuiltin("Not", not.hdl);
 
-      expect(builtin).toContain("BUILTIN;");
+      expect(builtin).toContain("BUILTIN Not;");
       expect(isOk(HDL.parse(builtin))).toBe(true);
     });
   });

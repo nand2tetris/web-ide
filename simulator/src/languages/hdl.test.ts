@@ -32,6 +32,19 @@ const AND_16_BUILTIN = `CHIP And16 {
   BUILTIN;
 }`;
 
+const AND_BUILTIN_NAMED = `CHIP And {
+    IN a, b;
+    OUT out;
+    BUILTIN And;
+}`;
+
+const AND_BUILTIN_IN_PARTS = `CHIP And {
+    IN a, b;
+    OUT out;
+    PARTS:
+    BUILTIN And;
+}`;
+
 const CLOCKED = `CHIP Foo {
     IN in;
 
@@ -44,12 +57,12 @@ const ERRORS = [
   ["Not { BUILTIN }", 'Line 1, col 1: expected "CHIP"'],
   ["CHIP { BUILTIN }", "Line 1, col 6: expected a letter"], // A chip name is expected
   ["CHIP Not BUILTIN }", 'Line 1, col 10: expected "{"'],
-  ["CHIP Not { BUILTIN }", 'Line 1, col 20: expected ";"'],
+  ["CHIP Not { BUILTIN }", 'Line 1, col 20: expected ";" or a letter'],
   ["CHIP Not { BONKERS; }", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
   ["CHIP Not { ", 'Line 1, col 12: expected "PARTS:" or "BUILTIN"'],
   [
     "CHIP Not { PARTS: (); }",
-    'Line 1, col 19: expected "}", "CLOCKED", or a letter', // A chip name is expected
+    'Line 1, col 19: expected "}", "CLOCKED", "BUILTIN", or a letter', // A chip name is expected
   ],
   ["CHIP Not { PARTS: Nand; }", 'Line 1, col 23: expected "("'],
   ["CHIP Not { PARTS: Nand() }", "Line 1, col 24: expected a letter"], // A pin name is expected
@@ -330,6 +343,18 @@ describe("HDL w/ Ohm", () => {
         outs: [{ pin: "out", width: 16 }],
         parts: "BUILTIN",
       });
+    });
+
+    it("parses chip using a named builtin", () => {
+      const match = grammar.match(AND_BUILTIN_NAMED);
+      expect(match).toHaveSucceeded();
+      expect<HdlParse>(hdlSemantics(match).Chip.parts).toBe("BUILTIN");
+    });
+
+    it("parses chip with builtin inside PARTS", () => {
+      const match = grammar.match(AND_BUILTIN_IN_PARTS);
+      expect(match).toHaveSucceeded();
+      expect<HdlParse>(hdlSemantics(match).Chip.parts).toBe("BUILTIN");
     });
 
     it("parses a chip with clocked pins", () => {

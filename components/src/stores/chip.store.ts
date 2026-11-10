@@ -52,8 +52,8 @@ export function isBuiltinOnly(
   return BUILTIN_CHIP_PROJECTS[project].includes(chipName);
 }
 
-export function convertToBuiltin(_name: string, hdl: string) {
-  return hdl.replace(/PARTS:[\s\S]*?(?=CLOCKED|\})/, "\n\tBUILTIN;\n\t");
+export function convertToBuiltin(name: string, hdl: string) {
+  return hdl.replace(/PARTS:[\s\S]*?(?=CLOCKED|\})/, `\n\tBUILTIN ${name};\n`);
 }
 
 export interface ChipPageState {

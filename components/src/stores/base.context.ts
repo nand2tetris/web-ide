@@ -23,21 +23,35 @@ import {
 } from "./base/indexDb.js";
 import { NO_STATUS, type StatusContext, useStatus } from "./status.js";
 
+export const ATTEMPT_RECOVERY_KEY = "/attemptRecovery";
+
+/** The development override enables recovery; otherwise use an explicit stored opt-in. */
+export function readAttemptRecovery(
+  storage: Pick<Storage, "getItem">,
+  developmentOverride = false,
+): boolean {
+  return (
+    developmentOverride || storage.getItem(ATTEMPT_RECOVERY_KEY) === "true"
+  );
+}
+
 export interface BaseContext extends StatusContext {
   fs: FileSystem;
-  attemptRecovery: boolean;
   localFsRoot?: string;
   canUpgradeFs: boolean;
   upgradeFs: (force?: boolean, createFiles?: boolean) => Promise<void>;
   closeFs: () => void;
   storage: Record<string, string>;
+  /** Opt in to checking beyond recoverable syntax errors. Default false. */
+  attemptRecovery: boolean;
+  setAttemptRecovery: Action<boolean>;
   permissionPrompt: ReturnType<typeof useDialog>;
   requestPermission: AsyncAction<void>;
   loadFs: Action<void>;
 }
 
 export function useBaseContext({
-  attemptRecovery = false,
+  attemptRecovery: developmentOverride = false,
 }: {
   attemptRecovery?: boolean;
 } = {}): BaseContext {
@@ -139,12 +153,21 @@ export function useBaseContext({
     setFs(new FileSystem(localAdapter));
   }, [root]);
 
+  const [attemptRecovery, setAttemptRecoveryState] = useState(() =>
+    readAttemptRecovery(localStorage, developmentOverride),
+  );
+  const setAttemptRecovery = useCallback((value: boolean) => {
+    localStorage.setItem(ATTEMPT_RECOVERY_KEY, String(value));
+    setAttemptRecoveryState(value);
+  }, []);
+
   return {
-    attemptRecovery,
     fs,
     localFsRoot: root,
     ...statusContext,
     storage: localStorage,
+    attemptRecovery,
+    setAttemptRecovery,
     canUpgradeFs,
     permissionPrompt,
     upgradeFs,
@@ -155,7 +178,6 @@ export function useBaseContext({
 }
 
 export const BaseContext = createContext<BaseContext>({
-  attemptRecovery: false,
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
@@ -164,6 +186,9 @@ export const BaseContext = createContext<BaseContext>({
   closeFs() {},
   ...NO_STATUS,
   storage: {},
+  attemptRecovery: false,
+  // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
+  setAttemptRecovery() {},
   permissionPrompt: {} as ReturnType<typeof useDialog>,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base
   async requestPermission() {},

@@ -214,6 +214,7 @@ export function makeAsmStore(
   let translating = false;
   let failure = false;
   let source = "";
+  let lastCompiledRecovery: boolean | undefined;
 
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
     status.setFailureStatus("asm", diagnostics, { head: true });
@@ -338,9 +339,10 @@ export function makeAsmStore(
 
     compileAsm(asm: string) {
       this.reset();
+      lastCompiledRecovery = attemptRecovery();
       const loaded = resolveAsm(
         asm,
-        { attemptRecovery: attemptRecovery() },
+        { attemptRecovery: lastCompiledRecovery },
         translator.beginLoad(),
       );
       if (isErr(loaded)) {
@@ -356,7 +358,9 @@ export function makeAsmStore(
       dispatch.current({ action: "update" });
     },
 
-    recompile() {
+    recompile({ onlyIfRecoveryChanged = false } = {}) {
+      if (onlyIfRecoveryChanged && lastCompiledRecovery === attemptRecovery())
+        return;
       this.compileAsm(source);
     },
 

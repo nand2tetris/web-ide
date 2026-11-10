@@ -16,7 +16,11 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import { Diagnostic, Span } from "@nand2tetris/simulator/languages/base.js";
+import {
+  Diagnostic,
+  Span,
+  validOf,
+} from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
@@ -378,7 +382,7 @@ export function makeChipStore(
       chip.remove();
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
-        const diagnostics = [Err(maybeChip)];
+        const diagnostics = Err(maybeChip);
         status.setFailureStatus(...diagnostics);
         invalid = true;
         dispatch.current({
@@ -434,9 +438,9 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = TST.parse(file);
+      const tst = validOf(TST.parse(file));
       if (isErr(tst)) {
-        status.setFailureStatus(Err(tst));
+        status.setFailureStatus(...Err(tst));
         invalid = true;
         return false;
       }

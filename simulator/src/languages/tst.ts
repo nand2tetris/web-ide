@@ -264,9 +264,14 @@ tstSemantics.addAttribute<Tst>("root", {
   },
 });
 
+/** The null root of a parse that built no test: a test with no statements. */
+function emptyTst(): Tst {
+  return { lines: [] };
+}
+
 export const TST = {
   grammar: tstGrammar,
   semantics: tstSemantics,
   parser: grammar,
-  parse: makeParser<Tst>(grammar, tstSemantics),
+  ...makeParser<Tst>(grammar, tstSemantics, emptyTst),
 };

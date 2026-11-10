@@ -1,6 +1,13 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import { Err, isErr, isOk, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { createError, Diagnostic, Span } from "../languages/base.js";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import {
+  createError,
+  Diagnostic,
+  Diagnostics,
+  isValid,
+  Span,
+  Valid,
+} from "../languages/base.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
@@ -26,12 +33,11 @@ export async function parse(
   dir?: string,
   name?: string,
   fs?: FileSystem,
-): Promise<Result<Chip, Diagnostic>> {
+): Promise<Result<Chip, Diagnostics>> {
   const parsed = HDL.parse(code.toString());
-  if (isErr(parsed)) {
-    return parsed;
-  }
-  return build({ parts: Ok(parsed), dir, name, fs });
+  if (!isValid(parsed)) return Err(parsed.diagnostics);
+  const chip = await build({ parts: parsed.ast, dir, name, fs });
+  return isErr(chip) ? Err([Err(chip)]) : chip;
 }
 
 export async function loadChip(
@@ -47,9 +53,9 @@ export async function loadChip(
     const maybeParsedHDL = HDL.parse(file);
 
     let maybeChip: Result<Chip, Error>;
-    if (isOk(maybeParsedHDL)) {
+    if (isValid(maybeParsedHDL)) {
       const maybeBuilt = await build({
-        parts: Ok(maybeParsedHDL),
+        parts: maybeParsedHDL.ast,
         dir,
         name,
         fs,
@@ -175,7 +181,7 @@ function checkMultipleAssignments(
 }
 
 class ChipBuilder {
-  private parts: HdlParse;
+  private parts: Valid<HdlParse>;
   private fs?: FileSystem;
   private dir?: string;
   private expectedName?: string;
@@ -187,7 +193,7 @@ class ChipBuilder {
   private wires: WireData[] = [];
 
   static build(options: {
-    parts: HdlParse;
+    parts: Valid<HdlParse>;
     fs?: FileSystem;
     dir?: string;
     name?: string;
@@ -201,7 +207,7 @@ class ChipBuilder {
     dir,
     name,
   }: {
-    parts: HdlParse;
+    parts: Valid<HdlParse>;
     fs?: FileSystem;
     dir?: string;
     name?: string;

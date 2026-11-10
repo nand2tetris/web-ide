@@ -1,9 +1,3 @@
-/**
- * A parse gives a tree and a diagnostics list. A source that does not match,
- * or whose tree cannot be built, gives the language's null root beside a list
- * that says why, so an unparsed file differs from an empty file only in its
- * diagnostics.
- */
 import { describe, expect, it } from "vitest";
 import { ASM } from "./asm.js";
 import {
@@ -46,7 +40,7 @@ const NULL_ROOTS: [string, Language, string, unknown][] = [
   [
     "Jack",
     JACK,
-    "class {",
+    "class B",
     {
       name: { value: "", span: { start: 0, end: 0, line: 1 } },
       varDecs: [],
@@ -72,7 +66,7 @@ describe("a failed match", () => {
     },
   );
 
-  it.each(NULL_ROOTS.slice(2, 3))(
+  it.each(NULL_ROOTS.slice(1, 3))(
     "%s gives its null root with recovery on",
     (_name, language, source, root) => {
       const outcome = language.parse(source, { attemptRecovery: true });

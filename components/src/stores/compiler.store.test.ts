@@ -1,3 +1,6 @@
+import { DiagnosticCode } from "@nand2tetris/simulator/languages/diagnostic.js";
+import { statusActions } from "./status.js";
+
 vi.mock("@nand2tetris/simulator/jack/compiler.js", async (orig) => {
   const mod =
     await orig<typeof import("@nand2tetris/simulator/jack/compiler.js")>();
@@ -13,13 +16,13 @@ import * as simCompiler from "@nand2tetris/simulator/jack/compiler.js";
 import { produce } from "immer";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CompilerStoreDispatch, makeCompilerStore } from "./compiler.store.js";
-import { statusActions } from "./status.js";
 
 function mk() {
   const dispatch = { current: vi.fn() as unknown as CompilerStoreDispatch };
   const { initialState, reducers, actions } = makeCompilerStore(
     statusActions(vi.fn()),
     dispatch,
+    () => true,
   );
   const store = { state: initialState, reducers, actions, dispatch };
   dispatch.current = ((c: {
@@ -32,6 +35,148 @@ function mk() {
   }) as CompilerStoreDispatch;
   return store;
 }
+
+const lines = (...l: string[]) => l.join("\n");
+const main = lines(
+  "class Main {",
+  "  function void a() {",
+  "    return;",
+  "    let x = 1", // line 4: syntax error, no semicolon
+  "  }",
+  "  function void b() {",
+  "    let y = 2;", // line 7: y is not declared
+  "    return;",
+  "  }",
+  "}",
+);
+
+describe("Jack diagnostics by editor path", () => {
+  const util = lines(
+    "class Util {",
+    "  function void c() {",
+    "    let z = 3;", // line 3: z is not declared
+    "    return;",
+    "  }",
+    "}",
+  );
+
+  it("files each list under the path its editor shows, with offsets local to the file", () => {
+    const s = mk();
+
+    s.dispatch.current({
+      action: "setFiles",
+      payload: { "proj/Main": main, "proj/Util": util },
+    });
+
+    const [syntax, semantic, ...rest] =
+      s.state.compiled["proj/Main"].diagnostics;
+    expect(rest).toEqual([]);
+    expect([4, 5]).toContain(syntax.span?.line);
+    expect(semantic).toMatchObject({
+      code: DiagnosticCode.Jack.UNDECLARED_VARIABLE,
+      args: { name: "y" },
+      span: { start: main.indexOf("let y") + 4, line: 7 },
+    });
+    expect(s.state.compiled["proj/Util"].diagnostics).toMatchObject([
+      {
+        code: DiagnosticCode.Jack.UNDECLARED_VARIABLE,
+        args: { name: "z" },
+        span: { start: util.indexOf("let z") + 4 },
+      },
+    ]);
+  });
+});
+
+describe("Jack files that share a class name", () => {
+  it("compiles a class whose name is inherited from Object.prototype", () => {
+    const s = mk();
+
+    s.dispatch.current({
+      action: "setFiles",
+      payload: { "proj/toString": "class toString {}" },
+    });
+
+    expect(s.state.compiled["proj/toString"]).toEqual({
+      valid: true,
+      vm: "",
+      diagnostics: [],
+    });
+    expect(s.state.isValid).toBe(true);
+  });
+
+  it("keeps diagnostics for a path whose basename is __proto__", () => {
+    const s = mk();
+
+    s.dispatch.current({
+      action: "setFiles",
+      payload: { "proj/__proto__": "class Main {}" },
+    });
+
+    expect(s.state.compiled["proj/__proto__"]).toMatchObject({
+      valid: false,
+      diagnostics: [
+        {
+          code: DiagnosticCode.Jack.CLASS_NAME_MISMATCH,
+          args: { name: "Main", file: "__proto__" },
+        },
+      ],
+    });
+    expect(s.state.isValid).toBe(false);
+  });
+
+  it("compiles the first and reports the repeat, so every path has a result", () => {
+    const s = mk();
+    const empty = "class Main {\n}\n";
+
+    s.dispatch.current({
+      action: "setFiles",
+      payload: { "a/Main": empty, "b/Main": empty },
+    });
+
+    expect(s.state.compiled["a/Main"].valid).toBe(true);
+    expect(s.state.compiled["b/Main"]).toMatchObject({
+      valid: false,
+      diagnostics: [
+        {
+          code: DiagnosticCode.Jack.DUPLICATE_CLASS_FILE,
+          args: { path: "b/Main", other: "a/Main" },
+        },
+      ],
+    });
+    expect(s.state.isValid).toBe(false);
+  });
+});
+
+describe("Attempt Recovery setting in the compiler store", () => {
+  it("reaches the next compile, so only the syntax error remains once it is off", () => {
+    let recover = true;
+    const dispatch = { current: vi.fn() as unknown as CompilerStoreDispatch };
+    const { initialState, reducers } = makeCompilerStore(
+      statusActions(vi.fn()),
+      dispatch,
+      () => recover,
+    );
+    let state = initialState;
+    dispatch.current = ((c: {
+      action: keyof typeof reducers;
+      payload: unknown;
+    }) => {
+      state = produce(state, (d: typeof initialState) => {
+        reducers[c.action].call(reducers, d, c.payload as never);
+      });
+    }) as CompilerStoreDispatch;
+    const files = {
+      Main: main,
+    };
+    dispatch.current({ action: "setFiles", payload: files });
+    expect(state.compiled.Main.diagnostics).toHaveLength(2);
+
+    recover = false;
+    dispatch.current({ action: "compile" });
+
+    expect(state.compiled.Main.diagnostics).toHaveLength(1);
+  });
+});
 
 describe("keystroke edits (#447)", () => {
   afterEach(() => vi.useRealTimers());
@@ -85,7 +230,7 @@ describe("overlapping fs writes (#363)", () => {
     const disk: Record<string, string> = {};
     const adapter = new ObjectFileSystemAdapter(disk);
     const fs = new FileSystem(adapter);
-    // First write is slow, second is fast -> slow one lands last.
+    // Without serialization, the delayed first write would overwrite the second.
     const orig = fs.writeFile.bind(fs);
     let n = 0;
     fs.writeFile = (async (p: string, c: string) => {
@@ -99,6 +244,6 @@ describe("overlapping fs writes (#363)", () => {
       s.actions.writeFile("Main", "class Main {} // newest"),
     ]);
     expect(s.state.files.Main).toBe("class Main {} // newest");
-    expect(await fs.readFile("Main.jack")).toBe("class Main {} // newest"); // fails if race
+    expect(await fs.readFile("Main.jack")).toBe("class Main {} // newest");
   });
 });

@@ -2,6 +2,7 @@ import { plural, t } from "@lingui/core/macro";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
 import {
   type Status,
+  type StatusHeading,
   type StatusSource,
 } from "@nand2tetris/components/stores/status.js";
 import { useContext } from "react";
@@ -24,10 +25,7 @@ export function describeStatus({
     }
     return message ?? "";
   }
-  const lead =
-    heading === undefined
-      ? []
-      : [describeHeading(heading.source, heading.count)];
+  const lead = heading === undefined ? [] : [describeHeading(heading)];
   const listed = diagnostics.map(({ diagnostic }) =>
     describeDiagnostic(diagnostic),
   );
@@ -51,12 +49,17 @@ function describeSource(source: StatusSource): string {
   }
 }
 
-function describeHeading(source: StatusSource, count: number): string {
+function describeHeading({ source, count, semantic = 0 }: StatusHeading) {
   const file = describeSource(source);
-  const errors = plural(count, {
-    one: "# syntax error",
-    other: "# syntax errors",
-  });
+  const errors =
+    semantic === 0
+      ? plural(count, { one: "# syntax error", other: "# syntax errors" })
+      : semantic < count
+        ? plural(count, { one: "# error", other: "# errors" })
+        : plural(count, {
+            one: "# semantic error",
+            other: "# semantic errors",
+          });
   return t`${file}: ${errors}`;
 }
 

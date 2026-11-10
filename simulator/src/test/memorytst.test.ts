@@ -1,4 +1,4 @@
-// Regression for #561: Memory.tst keyboard loop `while out <> 75 { tick, tock, }`.
+// Memory.tst keyboard loop `while out <> 75 { tick, tock, }`.
 // With ',' separators the whole while loop runs inside ONE Test.step() call; step()
 // must still yield to the event loop so keyboard events can arrive.
 import { unwrap } from "@davidsouther/jiffies/result.ts";

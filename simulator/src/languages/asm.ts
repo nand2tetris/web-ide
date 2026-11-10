@@ -1,5 +1,5 @@
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
-import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { type Node, grammar as ohmGrammar } from "ohm-js";
 import {
   ASSIGN,
@@ -17,14 +17,14 @@ import {
 import { KEYBOARD_OFFSET, SCREEN_OFFSET } from "../cpu/memory.js";
 import { makeC } from "../util/asm.js";
 import {
+  actionError,
   baseSemantics,
-  createError,
-  Diagnostic,
   grammars,
   makeParser,
-  Span,
+  semanticError,
   span,
 } from "./base.js";
+import { Diagnostic, DiagnosticCode, diagnostic, Span } from "./diagnostic.js";
 import asmGrammar from "./grammars/asm.ohm.js";
 
 export const grammar = ohmGrammar(asmGrammar, grammars);
@@ -105,11 +105,12 @@ asmSemantics.addAttribute<AsmInstruction>("intermediateInstruction", {
   },
 });
 
-function getAsmAssign(assignN: Node) {
+/** The C target, or the action error of an invalid one. */
+function getAsmAssign(assignN: Node): string | Diagnostic {
   let assign = assignN.child(0)?.child(0)?.sourceString ?? "";
 
-  // The book (figure 4.5) specifies DM and ADM as the correct forms for destination,
-  // but since the desktop simulators accept only MD and AMD we have decided to accept both */
+  // The book (figure 4.5) specifies DM and ADM as the destination forms, but
+  // the desktop simulators accept only MD and AMD, so both are accepted.
   if (assign == "DM") {
     assign = "MD";
   }
@@ -118,11 +119,12 @@ function getAsmAssign(assignN: Node) {
   }
   if (assign != "" && !isAssignAsm(assign)) {
     const reversed = assign.split("").reverse().join("");
-    const suggestion = isAssignAsm(reversed)
-      ? `. Did you mean ${reversed}?`
-      : "";
-    throw createError(
-      `Invalid ASM target: ${assign}${suggestion}`,
+    return actionError(
+      DiagnosticCode.Asm.INVALID_TARGET,
+      {
+        target: assign,
+        ...(isAssignAsm(reversed) ? { suggestion: reversed } : {}),
+      },
       span(assignN.source),
     );
   }
@@ -130,16 +132,18 @@ function getAsmAssign(assignN: Node) {
   return assign;
 }
 
-function getAsmOp(opN: Node) {
+/** The C value, or the action error of an invalid one. */
+function getAsmOp(opN: Node): string | Diagnostic {
   const op = opN.sourceString;
 
   if (!isCommandAsm(op)) {
     const reversed = op.split("").reverse().join("");
-    const suggestion = isCommandAsm(reversed)
-      ? `. Did you mean ${reversed}?`
-      : "";
-    throw createError(
-      `Invalid ASM value: ${opN.sourceString}${suggestion}`,
+    return actionError(
+      DiagnosticCode.Asm.INVALID_VALUE,
+      {
+        value: opN.sourceString,
+        ...(isCommandAsm(reversed) ? { suggestion: reversed } : {}),
+      },
       span(opN.source),
     );
   }
@@ -147,17 +151,33 @@ function getAsmOp(opN: Node) {
   return op;
 }
 
-asmSemantics.addAttribute<AsmInstruction>("instruction", {
-  aInstruction(_at, name): AsmAInstruction {
-    if (typeof name.value === "string") return A(name.value, span(this.source));
-    else return A(parseInt(name.value.join(""), 10), span(this.source));
-  },
-  cInstruction(assignN, opN, jmpN): AsmCInstruction {
-    const assign = getAsmAssign(assignN);
+/** The placeholder of an action that failed; the parse ends with its error, so nothing reads it. */
+const failedInstruction = (at: Span): AsmInstruction => ({
+  type: "L",
+  label: "",
+  span: at,
+});
 
-    const op = getAsmOp(opN) as COMMANDS_ASM;
+asmSemantics.addAttribute<AsmInstruction>("instruction", {
+  aInstruction(_at, name): AsmInstruction {
+    const at = span(this.source);
+    if (typeof name.value === "string") return makeA(name.value, at);
+    const value = parseInt(name.value.join(""), 10);
+    if (!isAValue(value)) {
+      actionError(DiagnosticCode.Asm.A_VALUE_RANGE, { value }, at);
+      return failedInstruction(at);
+    }
+    return makeA(value, at);
+  },
+  cInstruction(assignN, opN, jmpN): AsmInstruction {
+    const at = span(this.source);
+    const assign = getAsmAssign(assignN);
+    const op = getAsmOp(opN);
+    if (typeof assign !== "string" || typeof op !== "string") {
+      return failedInstruction(at);
+    }
     const jmp = (jmpN.child(0)?.child(1)?.sourceString ?? "") as JUMP_ASM;
-    return C(assign as ASSIGN_ASM, op, jmp, span(this.source));
+    return C(assign as ASSIGN_ASM, op as COMMANDS_ASM, jmp, at);
   },
   label(_o, { name }, _c): AsmLabelInstruction {
     return L(name, span(this.source));
@@ -241,7 +261,11 @@ export function fillLabel(
     if (instruction.type === "L") {
       if (symbols.has(instruction.label)) {
         return Err(
-          createError(`Duplicate label ${instruction.label}`, instruction.span),
+          semanticError(
+            DiagnosticCode.Asm.DUPLICATE_LABEL,
+            { label: instruction.label },
+            instruction.span,
+          ),
         );
       } else {
         symbols.set(instruction.label, line);
@@ -283,49 +307,71 @@ export const AsmToString = (inst: AsmInstruction | string): string => {
   }
 };
 
-export function translateInstruction(inst: AsmInstruction): number | undefined {
+/** The word of an instruction, none for a label, or the error of an unfilled A instruction. */
+export function translateInstruction(
+  inst: AsmInstruction,
+): Result<number | undefined, Diagnostic> {
   if (inst.type === "A") {
     if (isALabelInstruction(inst)) {
-      throw new Error(`ASM Emitting unfilled A instruction`);
+      return Err(
+        diagnostic(
+          DiagnosticCode.Error.UNEXPECTED,
+          { message: "ASM emitting unfilled A instruction" },
+          inst.span,
+        ),
+      );
     }
-    return inst.value;
+    return Ok(inst.value);
   }
   if (inst.type === "C") {
-    return makeC(
-      inst.isM,
-      inst.op,
-      (inst.store ?? 0) as ASSIGN_OP,
-      (inst.jump ?? 0) as ASSIGN_OP,
+    return Ok(
+      makeC(
+        inst.isM,
+        inst.op,
+        (inst.store ?? 0) as ASSIGN_OP,
+        (inst.jump ?? 0) as ASSIGN_OP,
+      ),
     );
   }
-  return undefined;
+  return Ok(undefined);
 }
 
-export function emit(asm: Asm): number[] {
-  return asm.instructions
-    .map(translateInstruction)
-    .filter((op): op is number => op !== undefined);
-}
-
-const A = (source: string | number, span?: Span): AsmAInstruction => {
-  if (typeof source === "number" && (source > 32767 || source < 0)) {
-    throw createError(
-      `${source} is invalid for an A instruction (should be 0 to 32767)`,
-      span,
-    );
+/** The words of the instructions of `asm`, or the error of the first that has none. */
+export function emit(asm: Asm): Result<number[], Diagnostic> {
+  const words: number[] = [];
+  for (const inst of asm.instructions) {
+    const word = translateInstruction(inst);
+    if (isErr(word)) return word;
+    if (Ok(word) !== undefined) words.push(Ok(word) as number);
   }
-  return typeof source === "string"
-    ? {
-        type: "A",
-        label: source,
-        span,
-      }
-    : {
-        type: "A",
-        value: source,
-        span,
-      };
-};
+  return Ok(words);
+}
+
+/** True when `value` fits an A instruction. */
+function isAValue(value: number): boolean {
+  return !(value > 32767 || value < 0);
+}
+
+/** An A instruction of `source`, which the caller has checked. */
+const makeA = (source: string | number, span?: Span): AsmAInstruction =>
+  typeof source === "string"
+    ? { type: "A", label: source, span }
+    : { type: "A", value: source, span };
+
+/** The A instruction of `source`, or the error of a value that does not fit one. */
+const A = (
+  source: string | number,
+  span?: Span,
+): Result<AsmAInstruction, Diagnostic> =>
+  typeof source === "number" && !isAValue(source)
+    ? Err(
+        semanticError(
+          DiagnosticCode.Asm.A_VALUE_RANGE,
+          { value: source },
+          span,
+        ),
+      )
+    : Ok(makeA(source, span));
 
 const C = (
   assign: ASSIGN_ASM,
@@ -349,7 +395,10 @@ const AC = (
   assign: ASSIGN_ASM,
   op: COMMANDS_ASM,
   jmp?: JUMP_ASM,
-) => [A(source), C(assign, op, jmp)];
+): Result<AsmInstruction[], Diagnostic> => {
+  const a = A(source);
+  return isErr(a) ? a : Ok([Ok(a), C(assign, op, jmp)]);
+};
 
 const L = (label: string, span?: Span): AsmLabelInstruction => ({
   type: "L",

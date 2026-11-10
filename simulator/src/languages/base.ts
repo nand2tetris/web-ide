@@ -1,6 +1,15 @@
 import { Err, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { type Grammar, grammar, Interval, type Semantics } from "ohm-js";
 import { int2, int10, int16 } from "../util/twos.js";
+import {
+  type Diagnostic,
+  type DiagnosticArgs,
+  DiagnosticCode,
+  type Diagnostics,
+  diagnostic,
+  type Span,
+  Stage,
+} from "./diagnostic.js";
 
 import baseGrammar from "./grammars/base.ohm.js";
 export const grammars = {
@@ -60,25 +69,33 @@ baseSemantics.addAttribute("String", {
   },
 });
 
-/** One diagnostic: a message and, when known, where it applies. */
-export interface Diagnostic {
-  message: string;
-  span?: Span;
+/** A diagnostic of a check on a well formed program. */
+export function semanticError<C extends DiagnosticCode>(
+  code: C,
+  args: DiagnosticArgs[C],
+  span?: Span,
+): Diagnostic {
+  return diagnostic(code, args, span, Stage.SEMANTIC);
 }
 
-export type Diagnostics = readonly [Diagnostic, ...Diagnostic[]];
+/**
+ * The action errors of the parse running now, in the order the actions ran.
+ * `makeParser` sets this around the semantics.
+ */
+let failedActions: Diagnostic[] | undefined;
 
-const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
-
-export function createError(description: string, span?: Span): Diagnostic {
-  const match = description.match(/Line \d+, col \d+: (?<message>.*)/);
-  const message = match?.groups?.message ? match.groups.message : description;
-  return {
-    message: `${
-      span?.line != undefined ? `Line ${span.line}: ` : ""
-    }${message}`,
-    span: span,
-  };
+/**
+ * A semantic action's error: a `semantic` diagnostic that the parse running now
+ * ends with. The action returns a placeholder of its own instead of throwing.
+ */
+export function actionError<C extends DiagnosticCode>(
+  code: C,
+  args: DiagnosticArgs[C],
+  at: Span,
+): Diagnostic {
+  const failed = semanticError(code, args, at);
+  failedActions?.push(failed);
+  return failed;
 }
 
 declare const valid: unique symbol;
@@ -117,16 +134,46 @@ function mint<T>(ast: T): Valid<T> {
   return ast as Valid<T>;
 }
 
-function isDiagnostic(error: unknown): error is Diagnostic {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "message" in error &&
-    typeof error.message === "string"
+/** A syntax failure's public expected text, retaining its failure span. */
+function syntaxDiagnostic(at: Span, expected: string): Diagnostic {
+  return diagnostic(
+    DiagnosticCode.Syntax.EXPECTED,
+    { expected: [expected] },
+    at,
+    Stage.PARSE,
   );
 }
 
-/** A failed parse always returns its language's null root. */
+/**
+ * A thrown value as a diagnostic: a thrown diagnostic is kept, tagged
+ * `semantic` when it has no stage, and any other value becomes a spanless
+ * `semantic` diagnostic of code `error.unexpected` with its message.
+ */
+function thrownDiagnostic(e: unknown): Diagnostic {
+  if (typeof e === "object" && e !== null && "code" in e && "args" in e) {
+    const thrown = e as Diagnostic;
+    return { ...thrown, stage: thrown.stage ?? Stage.SEMANTIC };
+  }
+  return diagnostic(
+    DiagnosticCode.Error.UNEXPECTED,
+    { message: e instanceof Error ? e.message : String(e) },
+    undefined,
+    Stage.SEMANTIC,
+  );
+}
+
+/** A tree and its diagnostics, valid only when the list is empty. */
+function outcomeOf<T>(ast: T, diagnostics: readonly Diagnostic[]): Outcome<T> {
+  const [first, ...rest] = diagnostics;
+  return first === undefined
+    ? { ast: mint(ast), diagnostics: [] }
+    : { ast, diagnostics: [first, ...rest] };
+}
+
+/**
+ * A parser reading `attribute` from the semantics of a successful match. A
+ * failed match or a thrown semantic error gives `empty()` as the tree.
+ */
 export function makeParser<T>(
   grammar: Grammar,
   semantics: Semantics,
@@ -136,36 +183,31 @@ export function makeParser<T>(
   return {
     empty,
     parse(source) {
+      const outer = failedActions;
+      const failed: Diagnostic[] = [];
+      failedActions = failed;
       try {
         const match = grammar.match(source);
-        if (match.failed())
-          return {
-            ast: empty(),
-            diagnostics: [
-              createError(
-                match.shortMessage ?? UNKNOWN_HDL_ERROR,
-                span(match.getInterval()),
-              ),
-            ],
-          };
+        if (match.failed()) {
+          return outcomeOf(empty(), [
+            syntaxDiagnostic(
+              span(match.getInterval()),
+              match.getExpectedText(),
+            ),
+          ]);
+        }
+        // Ohm attributes are untyped, so the tree is taken to be `T`.
         const ast: T = semantics(match)[attribute];
-        return { ast: mint(ast), diagnostics: [] };
-      } catch (error) {
-        return {
-          ast: empty(),
-          diagnostics: [
-            isDiagnostic(error) ? error : createError(String(error)),
-          ],
-        };
+        return failed.length > 0
+          ? outcomeOf(empty(), failed)
+          : outcomeOf(ast, []);
+      } catch (e) {
+        return outcomeOf(empty(), [thrownDiagnostic(e)]);
+      } finally {
+        failedActions = outer;
       }
     },
   };
-}
-
-export interface Span {
-  start: number;
-  end: number;
-  line: number;
 }
 
 export function span(span: Interval): Span {

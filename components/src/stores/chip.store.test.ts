@@ -27,7 +27,7 @@ function testChipStore(
     "projects/01/Not.cmp": not.cmp,
   },
   storage: Record<string, string> = {},
-  attemptRecovery?: () => boolean,
+  attemptRecovery: () => boolean = () => true,
 ) {
   const dispatch: MutableRefObject<ChipStoreDispatch> = { current: vi.fn() };
 
@@ -53,6 +53,32 @@ function testChipStore(
 
   return store;
 }
+
+const chipWith = (name: string, ...parts: string[]) =>
+  [`CHIP ${name} {`, "  IN a;", "  OUT out;", "  PARTS:", ...parts, "}"].join(
+    "\n",
+  );
+
+it("reports a built-in load failure as a diagnostic for the status renderer", async () => {
+  const store = testChipStore({ "Custom.hdl": chipWith("Custom") });
+  await store.actions.loadChip("Custom.hdl", false);
+  store.setStatus.mockClear();
+
+  await store.actions.loadBuiltin();
+
+  expect(store.setStatus).toHaveBeenLastCalledWith({
+    severity: "ERROR",
+    heading: { source: "builtin", count: 1, semantic: 1 },
+    diagnostics: [
+      {
+        diagnostic: expect.objectContaining({
+          code: DiagnosticCode.Chip.NOT_BUILTIN,
+          args: { name: "Custom" },
+        }),
+      },
+    ],
+  });
+});
 
 describe("test script diagnostics", () => {
   it("lists a block correction and the missing load, with only syntax when recovery is off", () => {
@@ -93,6 +119,84 @@ describe("test script diagnostics", () => {
         },
       ],
     });
+  });
+});
+
+describe("HDL diagnostics by file", () => {
+  it("keeps a dependency's diagnostics out of the editor's markers", async () => {
+    const child = chipWith(
+      "Child",
+      "  Not(in=a out=x);", // line 5: syntax error, no comma
+      "  Not(in=a, out=out);",
+    );
+    const top = chipWith("Top", "  Child(a=a, out=out);");
+    const store = testChipStore({ "projects/01/Child.hdl": child });
+
+    await store.actions.compileChip(top, "projects/01", "Top");
+
+    expect(store.state.controls.diagnostics).toEqual([]);
+    expect(
+      store.state.controls.dependencyDiagnostics["projects/01/Child.hdl"],
+    ).toMatchObject([{ span: { line: 5 } }]);
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      severity: "ERROR",
+      heading: { source: "hdl", count: 1 },
+      diagnostics: [
+        {
+          file: "projects/01/Child.hdl",
+          diagnostic: expect.objectContaining({
+            span: expect.objectContaining({ line: 5 }),
+          }),
+        },
+      ],
+    });
+  });
+});
+
+describe("HDL syntax and semantic diagnostics", () => {
+  const source = chipWith(
+    "Top",
+    "  Nand(a=a b=a, out=x);", // line 5: syntax error, no comma
+    "  Nope(a=x, out=out);", // line 6: grammatical, but Nope is not a chip
+  );
+  const offsetOf = (text: string) => source.indexOf(text);
+
+  it("marks both at their own offsets in source order, and names the first in the status", async () => {
+    const store = testChipStore();
+
+    await store.actions.compileChip(source, "projects/01", "Top");
+
+    const [syntax, semantic, ...rest] = store.state.controls.diagnostics;
+    expect(rest).toEqual([]);
+    expect(syntax.span).toEqual({
+      start: offsetOf("b=a"),
+      end: offsetOf("b=a"),
+      line: 5,
+    });
+    expect(semantic).toMatchObject({
+      code: DiagnosticCode.Chip.NOT_FOUND,
+      args: { name: "Nope" },
+      span: { start: offsetOf("Nope"), line: 6 },
+    });
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      severity: "ERROR",
+      heading: { source: "hdl", count: 2, semantic: 1 },
+      diagnostics: [{ diagnostic: syntax }],
+    });
+  });
+
+  it("reports only the syntax error once Attempt Recovery is turned off", async () => {
+    let recover = true;
+    const store = testChipStore(undefined, undefined, () => recover);
+    await store.actions.compileChip(source, "projects/01", "Top");
+    expect(store.state.controls.diagnostics).toHaveLength(2);
+
+    recover = false;
+    await store.actions.compileChip(source, "projects/01", "Top");
+
+    expect(store.state.controls.diagnostics).toMatchObject([
+      { span: { line: 5 } },
+    ]);
   });
 });
 
@@ -198,13 +302,23 @@ describe("ChipStore", () => {
 
     it.todo("compiles chips");
 
-    it("counts the syntax errors of HDL code that does not compile", async () => {
+    it("counts the syntax errors of HDL code that does not compile, and names the first", async () => {
       await state.store.actions.compileChip("CHIP Not {", "projects/01", "Not");
       expect(state.store.setStatus).toHaveBeenLastCalledWith({
         severity: "ERROR",
         heading: { source: "hdl", count: 1 },
-        diagnostics: [],
+        diagnostics: [
+          {
+            diagnostic: expect.objectContaining({
+              code: DiagnosticCode.Syntax.EXPECTED,
+              span: expect.objectContaining({ line: 1 }),
+            }),
+          },
+        ],
       });
+      expect(
+        describeDiagnostic(state.store.state.controls.diagnostics[0]),
+      ).toBe('Line 1: expected "PARTS:" or "BUILTIN"');
     });
 
     it("lists the syntax errors of a test script that does not parse", () => {
@@ -216,7 +330,6 @@ describe("ChipStore", () => {
           {
             diagnostic: expect.objectContaining({
               code: DiagnosticCode.Syntax.EXPECTED,
-              span: expect.objectContaining({ line: 1 }),
             }),
           },
         ],

@@ -18,6 +18,7 @@ import {
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
 import {
   Diagnostic,
+  Diagnostics,
   Span,
 } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { buildTst } from "@nand2tetris/simulator/test/builder.js";
@@ -55,6 +56,22 @@ export function isBuiltinOnly(
 
 export function convertToBuiltin(name: string, hdl: string) {
   return hdl.replace(/PARTS:[\s\S]*?(?=CLOCKED|\})/, `\n\tBUILTIN ${name};\n`);
+}
+
+/**
+ * Select current-source diagnostics by the exact file key; keep the remaining
+ * entries as dependency diagnostics. Dependency spans belong to their own files
+ * and must not mark the current buffer.
+ */
+function splitFailures(
+  failures: Record<string, Diagnostics>,
+  file = "<input>.hdl",
+): {
+  root: readonly Diagnostic[];
+  dependencies: Record<string, readonly Diagnostic[]>;
+} {
+  const { [file]: root = [], ...dependencies } = failures;
+  return { root, dependencies };
 }
 
 export interface ChipPageState {
@@ -97,8 +114,10 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
-  /** The diagnostics of the file in the editor, which marks each of them. */
+  /** Diagnostics for the current HDL buffer. */
   diagnostics: readonly Diagnostic[];
+  /** Dependency diagnostics by path, with spans in those files. */
+  dependencyDiagnostics: Record<string, readonly Diagnostic[]>;
   visualizationParameters: Set<string>;
 }
 
@@ -171,6 +190,7 @@ export function makeChipStore(
         invalid?: boolean;
         chipName?: string;
         diagnostics?: readonly Diagnostic[];
+        dependencyDiagnostics?: Record<string, readonly Diagnostic[]>;
       },
     ) {
       state.sim = reduceChip(
@@ -181,6 +201,10 @@ export function makeChipStore(
       state.controls.diagnostics = state.sim.invalid
         ? (payload?.diagnostics ?? state.controls.diagnostics)
         : [];
+      state.controls.dependencyDiagnostics = state.sim.invalid
+        ? (payload?.dependencyDiagnostics ??
+          state.controls.dependencyDiagnostics)
+        : {};
     },
 
     setProjects(state: ChipPageState, projects: string[]) {
@@ -232,7 +256,8 @@ export function makeChipStore(
         state.files.out.trim(),
         { attemptRecovery: attemptRecovery() },
       );
-      // For some reason, this is happening during a render but I can't track it down.
+      // React runs this reducer during rendering. Defer the status update
+      // because it updates a separate context.
       Promise.resolve().then(() => {
         status.setStatus(comparison);
       });
@@ -357,8 +382,8 @@ export function makeChipStore(
         await this.initializeTests(dir, name);
       }
 
-      // Update the closure before any dispatch: React applies reducers lazily
-      // during render, so loadBuiltin below must not depend on setChip.
+      // Set the closure values before loading built-ins; React may defer
+      // setChip until render.
       _dir = dir;
       _chipName = name;
       dispatch.current({
@@ -375,14 +400,28 @@ export function makeChipStore(
 
     async compileChip(hdl: string, dir?: string, name?: string) {
       chip.remove();
-      const maybeChip = await parseChip(hdl, dir, name, fs);
+      const file =
+        name === undefined
+          ? undefined
+          : [dir, `${name}.hdl`].filter(Boolean).join("/");
+      const maybeChip = await parseChip(hdl, dir, name, fs, {
+        attemptRecovery: attemptRecovery(),
+        file,
+      });
       if (isErr(maybeChip)) {
-        const diagnostics = Err(maybeChip);
-        status.setFailureStatus("hdl", diagnostics);
+        const { root, dependencies } = splitFailures(Err(maybeChip), file);
+        status.setFailureStatus("hdl", root, {
+          head: true,
+          others: dependencies,
+        });
         invalid = true;
         dispatch.current({
           action: "updateChip",
-          payload: { invalid: true, diagnostics },
+          payload: {
+            invalid: true,
+            diagnostics: root,
+            dependencyDiagnostics: dependencies,
+          },
         });
         return;
       }
@@ -390,7 +429,6 @@ export function makeChipStore(
     },
 
     replaceChip(nextChip: SimChip) {
-      // Store current inPins
       const inPins = chip.ins;
       for (const [pin, { busVoltage }] of inPins) {
         const nextPin = nextChip.ins.get(pin);
@@ -592,6 +630,7 @@ export function makeChipStore(
       usingBuiltin: false,
       runningTest: false,
       diagnostics: [],
+      dependencyDiagnostics: {},
       visualizationParameters: new Set(),
     };
 

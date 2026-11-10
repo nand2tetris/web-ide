@@ -114,6 +114,17 @@ describe("Ohm Base", () => {
       expect(outcome.diagnostics[0]).not.toHaveProperty("message");
     });
 
+    it("tags a failure inside a begun token as lex", () => {
+      expect(parse("1 %XZ").diagnostics).toEqual([
+        {
+          code: DiagnosticCode.Syntax.EXPECTED,
+          args: { expected: ["a hexadecimal digit"] },
+          span: { start: 4, end: 4, line: 1 },
+          stage: Stage.LEX,
+        },
+      ]);
+    });
+
     it("validOf returns the AST for valid source", () => {
       expect(Ok(validOf(parse("1 2 3")))).toEqual([1, 2, 3]);
     });

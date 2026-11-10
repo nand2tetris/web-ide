@@ -1,6 +1,6 @@
 {
   "name": "@nand2tetris/web-ide",
-  "version": "2026.44.1",
+  "version": "2026.44.2",
   "description": "A Javascript implementation of nand2tetris.org.",
   "repository": {
     "type": "git",

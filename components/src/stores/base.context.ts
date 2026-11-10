@@ -25,6 +25,7 @@ import { NO_STATUS, type StatusContext, useStatus } from "./status.js";
 
 export interface BaseContext extends StatusContext {
   fs: FileSystem;
+  attemptRecovery: boolean;
   localFsRoot?: string;
   canUpgradeFs: boolean;
   upgradeFs: (force?: boolean, createFiles?: boolean) => Promise<void>;
@@ -35,7 +36,11 @@ export interface BaseContext extends StatusContext {
   loadFs: Action<void>;
 }
 
-export function useBaseContext(): BaseContext {
+export function useBaseContext({
+  attemptRecovery = false,
+}: {
+  attemptRecovery?: boolean;
+} = {}): BaseContext {
   const statusContext = useStatus();
   const { setStatus } = statusContext;
   const localAdapter = useMemo(() => new LocalStorageFileSystemAdapter(), []);
@@ -135,6 +140,7 @@ export function useBaseContext(): BaseContext {
   }, [root]);
 
   return {
+    attemptRecovery,
     fs,
     localFsRoot: root,
     ...statusContext,
@@ -149,6 +155,7 @@ export function useBaseContext(): BaseContext {
 }
 
 export const BaseContext = createContext<BaseContext>({
+  attemptRecovery: false,
   fs: new FileSystem(new LocalStorageFileSystemAdapter()),
   canUpgradeFs: false,
   // biome-ignore lint/suspicious/noEmptyBlockStatements: abstract base

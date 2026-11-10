@@ -164,7 +164,6 @@ const VM = () => {
         });
         title = target.path.split("/").pop() ?? "";
       }
-      loadTest(target.path);
     } else {
       files = Array.isArray(target)
         ? target.filter((file) => file.name.endsWith(".vm"))
@@ -177,9 +176,11 @@ const VM = () => {
 
     dispatch.current({ action: "setTitle", payload: title });
 
-    actions.loadVm(files);
-    actions.reset();
-    clearStatus();
+    if (actions.loadVm(files)) {
+      if (isPath(target)) loadTest(target.path);
+      actions.reset();
+      clearStatus();
+    }
   };
 
   const loadTest = async (path: string) => {

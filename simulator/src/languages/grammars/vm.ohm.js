@@ -1,20 +1,19 @@
-const vm = `Vm <: Base {
+const vm = `
+Vm <: Base {
   Root := Vm
 
-  Vm = newline* VmInstructionLine* VmInstruction?
+  Vm = newline* VmInstruction*
 
-  space := comment | " " | "\t"
+  space := comment | " " | "\\t"
   whitespace = lineComment | comment | space
 
-  VmInstructionLine = VmInstruction newline+
-  VmInstruction =
-    | StackInstruction
+  VmInstruction = (StackInstruction
     | OpInstruction
     | FunctionInstruction
     | CallInstruction
     | ReturnInstruction
     | GotoInstruction
-    | LabelInstruction
+    | LabelInstruction) ! (newline+ | end)
   
   StackInstruction = (push | pop) MemorySegment Number
   OpInstruction = Add | Sub | Neg | Lt | Gt | Eq | And | Or | Not

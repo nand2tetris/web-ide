@@ -1,24 +1,30 @@
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-  unwrap,
-} from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { semanticError } from "../languages/base.js";
+import {
+  mergeByFile,
+  type Origin,
+  originsOf,
+  type Provenance,
+  recoveredOf,
+  semanticError,
+} from "../languages/base.js";
 import {
   Diagnostic,
   DiagnosticCode,
+  type Diagnostics,
+  diagnostic,
   located,
   Span,
   Stage,
 } from "../languages/diagnostic.js";
 import {
   CallInstruction,
+  couldBeFunctionHeader,
   FunctionInstruction,
+  prune,
   Segment,
   StackInstruction,
+  VM,
   VmInstruction,
 } from "../languages/vm.js";
 import { VM_BUILTINS } from "./builtins.js";
@@ -59,19 +65,14 @@ export interface VmFunction {
 
 interface VmFunctionInvocation {
   function: string;
-  // The current operation offset in the function
   opPtr: number;
-  // Base address of the frame in memory
   frameBase: number;
-  // The number of args the function was called with
   nArgs: number;
-  // Whether the THIS segment was initialized in this invocation
   thisInitialized: boolean;
-  // Whether the THAT segment was initialized in this invocation
   thatInitialized: boolean;
-  // The size of the memory block pointed to by the function's THIS (if exists)
+  // Length of THIS shown in a debugger frame, when known.
   thisN?: number;
-  // The highest accessed index + 1 of the function's THAT segment
+  // THAT's debugger extent grows to include every accessed offset.
   thatN?: number;
 }
 
@@ -159,9 +160,149 @@ const OUTPUT_PRINT_STRING_BRIDGE: VmFunction = {
   ],
 };
 
+/** Carries skipped-source provenance into semantic checking. */
 export interface ParsedVmFile {
   name: string;
   instructions: VmInstruction[];
+  skips?: Provenance;
+}
+
+export interface VmFile {
+  name: string;
+  content: string;
+}
+
+export interface LoadVmOptions {
+  /** Recover from syntax errors to keep checking. Default false. */
+  attemptRecovery?: boolean;
+  /**
+   * Require each function's class prefix to match its source filename. Default
+   * true. Set false for an unnamed editor buffer. Function names must still
+   * have the form `<class>.<name>`.
+   */
+  validateFileNames?: boolean;
+}
+
+/** Diagnostic key for errors without a source file. */
+export const VM_INPUT = "<input>.vm";
+
+/** Nonempty diagnostics grouped by source file. */
+export type VmFailure = Record<string, Diagnostics>;
+
+function fileBasenameNoExtension(file: string): string {
+  if (file.includes("/")) {
+    file = file.split("/").pop() ?? "";
+  }
+
+  if (file.includes(".")) {
+    file = file.split(".")[0];
+  }
+
+  return file;
+}
+
+/**
+ * Tracks declarations that syntax recovery may have discarded, so missing-name
+ * checks do not report errors that the skipped source could resolve. Skipped
+ * labels or headers affect label checks in their owning function; headers also
+ * affect calls and entry selection. An unparsed file may declare any function.
+ */
+class Damage {
+  constructor(
+    private readonly unparsed = false,
+    private readonly headerFiles: readonly string[] = [],
+    private readonly matchFileName = false,
+    readonly functions: ReadonlySet<string> = new Set(),
+  ) {}
+
+  /** Filename checks restrict missing declarations to the matching class. */
+  mayDeclare(name: string): boolean {
+    const className = name.split(".")[0];
+    return (
+      this.unparsed ||
+      this.headerFiles.some(
+        (file) =>
+          !this.matchFileName || fileBasenameNoExtension(file) === className,
+      )
+    );
+  }
+
+  /** Even a header in another file can change the program's entry point. */
+  get mayChooseEntry(): boolean {
+    return this.unparsed || this.headerFiles.length > 0;
+  }
+}
+
+const NO_DAMAGE = new Damage();
+
+/** Skips before the first header belong to the preceding function, even across files. */
+function damageOf(
+  files: ParsedVmFile[],
+  rules: { matchFileName: boolean; unparsed: boolean },
+): Damage {
+  const functions = new Set<string>();
+  const headerFiles: string[] = [];
+  let current = IMPLICIT;
+  for (const { name, instructions, skips = [] } of files) {
+    const headers = instructions.filter(
+      (instruction): instruction is FunctionInstruction =>
+        instruction.op === "function",
+    );
+    for (const { interval, kind } of skips) {
+      if (couldBeFunctionHeader(kind)) {
+        headerFiles.push(name);
+      }
+      if (kind === "LabelInstruction" || couldBeFunctionHeader(kind)) {
+        const owner = headers.filter(
+          ({ span }) => span !== undefined && span.start <= interval.start,
+        );
+        functions.add(owner.at(-1)?.name ?? current);
+      }
+    }
+    current = headers.at(-1)?.name ?? current;
+  }
+  return new Damage(
+    rules.unparsed,
+    headerFiles,
+    rules.matchFileName,
+    functions,
+  );
+}
+
+/**
+ * Span identity takes precedence over the caller's fallback filename, so
+ * semantic diagnostics stay with their original instructions. Unowned
+ * diagnostics use the caller's filename or `VM_INPUT`.
+ */
+class Report {
+  private readonly lists: Record<string, Diagnostic[]> = Object.create(null);
+
+  constructor(private readonly owners: ReadonlyMap<Span, string> = new Map()) {}
+
+  add(diagnostic: Diagnostic, file?: string) {
+    const owner =
+      (diagnostic.span && this.owners.get(diagnostic.span)) ?? file ?? VM_INPUT;
+    this.lists[owner] ??= [];
+    this.lists[owner].push(diagnostic);
+  }
+
+  get isEmpty(): boolean {
+    return Object.keys(this.lists).length === 0;
+  }
+
+  first(): Diagnostic | undefined {
+    return Object.values(this.lists)[0]?.[0];
+  }
+
+  merged(origins?: ReadonlyMap<Diagnostic, Origin>): VmFailure {
+    const files: Record<string, Diagnostics> = Object.create(null);
+    for (const [file, [first, ...rest]] of Object.entries(this.lists)) {
+      if (first !== undefined) {
+        files[file] = [first, ...rest];
+      }
+    }
+    return mergeByFile(files, origins);
+  }
 }
 
 interface SegmentStatus {
@@ -220,93 +361,94 @@ export class Vm {
     }
   }
 
-  private static fileBasenameNoExtension(file: string): string {
-    // Files that are part of the web-ide are usually passed with folders but without extensions.
-    // e.g.: /projects/08/FibonacciElement/Sys
-    if (file.includes("/")) {
-      file = file.split("/").pop() ?? "";
-    }
-
-    // Local files on Windows are usually passed with extension.
-    // e.g.: Sys.vm
-    if (file.includes(".")) {
-      file = file.split(".")[0];
-    }
-
-    return file;
-
-    // TODO: Check if this also works for Linux and MacOS
-  }
-
-  private static validateFile(file: ParsedVmFile) {
+  private static validateFile(
+    file: ParsedVmFile,
+    matchFileName: boolean,
+    report: Report,
+  ) {
     for (const inst of file.instructions) {
       if (inst.op == "function") {
         const parts = inst.name.split(".");
         if (parts.length != 2) {
-          return Err(
+          report.add(
             semanticError(
               DiagnosticCode.Vm.ILLEGAL_SUBROUTINE_NAME,
               { name: inst.name },
               inst.span,
             ),
+            file.name,
           );
-        }
-        if (parts[0] != this.fileBasenameNoExtension(file.name)) {
-          return Err(
+        } else if (
+          matchFileName &&
+          parts[0] != fileBasenameNoExtension(file.name)
+        ) {
+          report.add(
             semanticError(
               DiagnosticCode.Vm.FILE_NAME_MISMATCH,
               { file: file.name, className: parts[0], name: inst.name },
               inst.span,
             ),
+            file.name,
           );
         }
       }
     }
-    return Ok();
   }
 
-  private static validateFiles(files: ParsedVmFile[]) {
+  private static validateFiles(
+    files: ParsedVmFile[],
+    matchFileName: boolean,
+    report: Report,
+  ) {
     const names: Set<string> = new Set();
 
     for (const file of files) {
       if (names.has(file.name)) {
-        return Err(
+        report.add(
           semanticError(DiagnosticCode.Vm.DUPLICATE_FILE, { file: file.name }),
+          file.name,
         );
       }
-      const result = this.validateFile(file);
-      if (isErr(result)) {
-        return result;
-      }
       names.add(file.name);
+      this.validateFile(file, matchFileName, report);
     }
-    return Ok();
   }
 
-  private validateStackInstructions() {
-    for (const fn of Object.values(this.functionMap)) {
+  private validateStackInstructions(functions: VmFunction[], report: Report) {
+    for (const fn of functions) {
       for (const inst of fn.operations) {
         if (inst.op == "pop" || inst.op == "push") {
-          const base = this.memory.baseSegment(inst.segment, inst.offset);
-          if (isErr(base)) {
-            return Err(located(Err(base), inst.span, Stage.SEMANTIC));
+          try {
+            const base = this.memory.baseSegment(inst.segment, inst.offset);
+            if (isErr(base)) {
+              report.add(located(Err(base), inst.span, Stage.SEMANTIC));
+            }
+          } catch (e) {
+            report.add(
+              semanticError(
+                DiagnosticCode.Error.UNEXPECTED,
+                { message: e instanceof Error ? e.message : String(e) },
+                inst.span,
+              ),
+            );
           }
         }
       }
     }
-    return Ok();
   }
 
   private static validateFunctions(
     instructions: VmInstruction[],
-  ): Result<void, Diagnostic> {
+    report: Report,
+    damage: Damage,
+  ) {
     const functions: Set<string> = new Set();
     const calls = [];
 
     for (const inst of instructions) {
       if (inst.op == "function") {
         if (inst.nVars < 0 || inst.nVars > 32767) {
-          return Err(
+          report.add(
             semanticError(
               DiagnosticCode.Vm.ILLEGAL_LOCAL_COUNT,
               { count: inst.nVars },
@@ -318,7 +460,7 @@ export class Vm {
       }
       if (inst.op == "call") {
         if (inst.nArgs < 0 || inst.nArgs > 32767) {
-          return Err(
+          report.add(
             semanticError(
               DiagnosticCode.Vm.ILLEGAL_ARG_COUNT,
               { count: inst.nArgs },
@@ -331,7 +473,8 @@ export class Vm {
     }
 
     for (const call of calls) {
-      if (!functions.has(call.name)) {
+      // A skipped user declaration could override a builtin's argument count.
+      if (!functions.has(call.name) && !damage.mayDeclare(call.name)) {
         const builtin = VM_BUILTINS[call.name];
         if (builtin) {
           const expectedNArgs =
@@ -339,7 +482,7 @@ export class Vm {
               ? builtin.args.length + 1
               : builtin.args.length;
           if (expectedNArgs != call.nArgs) {
-            return Err(
+            report.add(
               semanticError(
                 DiagnosticCode.Vm.OS_ARG_COUNT,
                 {
@@ -352,7 +495,7 @@ export class Vm {
             );
           }
         } else {
-          return Err(
+          report.add(
             semanticError(
               DiagnosticCode.Vm.UNDEFINED_FUNCTION,
               { name: call.name },
@@ -362,46 +505,77 @@ export class Vm {
         }
       }
     }
-
-    return Ok();
   }
 
-  static buildFromFiles(files: ParsedVmFile[]): Result<Vm, Diagnostic> {
+  private static check(
+    files: ParsedVmFile[],
+    rules: { names: boolean; matchFileName: boolean; unparsed: boolean },
+  ): Result<Vm, VmFailure> {
+    const owners = new Map<Span, string>();
+    for (const { name, instructions } of files) {
+      for (const { span } of instructions) {
+        if (span !== undefined) {
+          owners.set(span, name);
+        }
+      }
+    }
+    const report = new Report(owners);
+    const damage = damageOf(files, rules);
+    if (rules.names) {
+      this.validateFiles(files, rules.matchFileName, report);
+    }
+    const instructions = files.flatMap((file) => file.instructions);
+    this.validateFunctions(instructions, report, damage);
+
+    const vm = new Vm();
+    vm.loadInto(instructions, false, report, damage);
+    const booted = vm.bootstrap();
+    if (isErr(booted) && !damage.mayChooseEntry) {
+      report.add({ ...Err(booted), stage: Stage.SEMANTIC });
+    }
+
+    return report.isEmpty ? Ok(vm) : Err(report.merged());
+  }
+
+  /**
+   * Builds named files or returns semantic diagnostics grouped by source file.
+   * Function names must be `<class>.<name>`; class/filename matching defaults
+   * to true.
+   */
+  static buildFromFiles(
+    files: ParsedVmFile[],
+    options: { validateFileNames?: boolean; unparsed?: boolean } = {},
+  ): Result<Vm, VmFailure> {
     if (files.length === 0) {
-      return Err(semanticError(DiagnosticCode.Vm.NO_FILES, {}));
+      return Err({
+        [VM_INPUT]: [semanticError(DiagnosticCode.Vm.NO_FILES, {})],
+      });
     }
-    let result = this.validateFiles(files);
-    if (isErr(result)) {
-      return result;
-    }
-    const instructions = files
-      .map((file) => file.instructions)
-      .reduce((list1, list2) => list1.concat(list2), [] as VmInstruction[]);
-    result = this.validateFunctions(instructions);
-    if (isErr(result)) {
-      return result;
-    }
-    const vm = new Vm();
-    const load = vm.load(instructions);
-    if (isErr(load)) return load;
-    return vm.bootstrap();
+    return this.check(files, {
+      names: true,
+      matchFileName: options.validateFileNames ?? true,
+      unparsed: options.unparsed ?? false,
+    });
   }
 
-  static build(instructions: VmInstruction[]): Result<Vm, Diagnostic> {
-    const result = this.validateFunctions(instructions);
-    if (isErr(result)) {
-      return result;
-    }
-    const vm = new Vm();
-    const load = vm.load(instructions);
-    if (isErr(load)) return load;
-    return vm.bootstrap();
+  /**
+   * Builds instructions without filename or function-name validation.
+   * Use `loadVm` for source parsing and name checks.
+   */
+  static build(instructions: VmInstruction[]): Result<Vm, VmFailure> {
+    return this.check([{ name: VM_INPUT, instructions }], {
+      names: false,
+      matchFileName: false,
+      unparsed: false,
+    });
   }
 
   private static buildFunction(
     instructions: VmInstruction[],
     i: number,
-  ): Result<[VmFunction, number], Diagnostic> {
+    report: Report,
+    damaged: boolean,
+  ): [VmFunction, number] {
     if (instructions[i].op !== "function")
       throw new Error(
         "Only call buildFunction at the initial Function instruction",
@@ -417,7 +591,7 @@ export class Vm {
     };
 
     const declaredLabels: Set<string> = new Set();
-    const usedLabels: Record<string, Span | undefined> = {};
+    const usedLabels: [string, Span | undefined][] = [];
 
     i += 1;
     instructions: while (i < instructions.length) {
@@ -479,7 +653,7 @@ export class Vm {
         case "goto":
         case "if-goto": {
           const { label } = instructions[i] as { label: string };
-          usedLabels[label] = instructions[i].span;
+          usedLabels.push([label, instructions[i].span]);
           fn.operations.push({
             op: instructions[i].op as "goto" | "if-goto",
             label,
@@ -489,9 +663,8 @@ export class Vm {
         }
         case "label": {
           const { label } = instructions[i] as { label: string };
-          declaredLabels.add(label);
-          if (fn.labels[label])
-            return Err(
+          if (declaredLabels.has(label)) {
+            report.add(
               semanticError(
                 DiagnosticCode.Vm.DUPLICATE_LABEL,
                 {
@@ -502,7 +675,10 @@ export class Vm {
                 instructions[i].span,
               ),
             );
-          fn.labels[label] = fn.operations.length;
+          } else {
+            declaredLabels.add(label);
+            fn.labels[label] = fn.operations.length;
+          }
           fn.operations.push({
             op: "label",
             label,
@@ -519,19 +695,17 @@ export class Vm {
       i += 1;
     }
 
-    for (const label of Object.keys(usedLabels)) {
-      if (!declaredLabels.has(label)) {
-        return Err(
-          semanticError(
-            DiagnosticCode.Vm.UNDECLARED_LABEL,
-            { label },
-            usedLabels[label],
-          ),
-        );
+    if (!damaged) {
+      for (const [label, span] of usedLabels) {
+        if (!declaredLabels.has(label)) {
+          report.add(
+            semanticError(DiagnosticCode.Vm.UNDECLARED_LABEL, { label }, span),
+          );
+        }
       }
     }
 
-    return Ok([fn, i]);
+    return [fn, i];
   }
 
   get RAM(): RAM {
@@ -577,6 +751,18 @@ export class Vm {
   }
 
   load(instructions: VmInstruction[], reset = false): Result<this, Diagnostic> {
+    const report = new Report();
+    this.loadInto(instructions, reset, report, NO_DAMAGE);
+    const first = report.first();
+    return first === undefined ? Ok(this) : Err(first);
+  }
+
+  private loadInto(
+    instructions: VmInstruction[],
+    reset: boolean,
+    report: Report,
+    damage: Damage,
+  ) {
     if (reset) {
       this.functionMap = {};
       this.statics = {};
@@ -587,49 +773,48 @@ export class Vm {
       instructions.unshift({ op: "function", name: IMPLICIT, nVars: 0 });
     }
 
+    const functions = Object.values(this.functionMap);
     let i = 0;
     while (i < instructions.length) {
-      const buildFn = Vm.buildFunction(instructions, i);
-
-      if (isErr(buildFn)) return buildFn;
-      const [fn, i_] = unwrap(buildFn);
+      const header = instructions[i] as FunctionInstruction;
+      const [fn, next] = Vm.buildFunction(
+        instructions,
+        i,
+        report,
+        damage.functions.has(header.name),
+      );
       if (
         this.functionMap[fn.name] &&
         this.memory.strict &&
         fn.name !== IMPLICIT &&
         fn.name !== SYS_INIT.name
       ) {
-        return Err(
+        report.add(
           semanticError(
             DiagnosticCode.Vm.DUPLICATE_FUNCTION,
             { name: fn.name },
-            instructions[0].span,
+            header.span,
           ),
         );
       }
 
+      functions.push(fn);
       this.functionMap[fn.name] = fn;
-      i = i_;
+      i = next;
     }
 
-    const result = this.validateStackInstructions();
-    if (isErr(result)) {
-      return result;
-    }
+    this.validateStackInstructions(functions, report);
     this.registerStatics();
 
     if (reset) {
       this.bootstrap();
     }
-
-    return Ok(this);
   }
 
   bootstrap() {
     if (!this.functionMap[SYS_INIT.name] && this.functionMap["Main.main"]) {
       this.functionMap[SYS_INIT.name] = SYS_INIT;
       this.addedSysInit = true;
-      // TODO should this be an error from the compiler/OS?
     }
 
     if (
@@ -664,18 +849,18 @@ export class Vm {
     }
 
     if (this.functionMap[IMPLICIT] && this.functionMap[SYS_INIT.name]) {
-      return Err(semanticError(DiagnosticCode.Vm.BOOTSTRAP_AND_IMPLICIT, {}));
+      return Err(diagnostic(DiagnosticCode.Vm.BOOTSTRAP_AND_IMPLICIT, {}));
     }
 
     if (this.entry === "") {
-      return Err(semanticError(DiagnosticCode.Vm.NO_ENTRY_POINT, {}));
+      return Err(diagnostic(DiagnosticCode.Vm.NO_ENTRY_POINT, {}));
     }
 
     this.functions = Object.values(this.functionMap);
     this.functions.sort((a, b) => {
       if (a.name === this.entry) return -1;
       if (b.name === this.entry) return 1;
-      return 0; // Stable sort otherwise
+      return 0; // Keep non-entry functions in source order.
     });
 
     let offset = 0;
@@ -719,7 +904,6 @@ export class Vm {
       for (const segment of ["local", "argument"] as const) {
         if (op.segment == segment) {
           if (this.segmentInitializations[segment].initialized) {
-            // the size of that segment is always 1
             this.segmentInitializations[segment].n = Math.max(
               op.offset + 1,
               this.segmentInitializations[segment].n,
@@ -814,7 +998,6 @@ export class Vm {
         const value = this.memory.pop();
         this.memory.setSegment(operation.segment, operation.offset, value);
 
-        // update THIS/THAT segment status
         if (operation.segment == "pointer") {
           if (operation.offset == 0) {
             this.invocation.thisInitialized = true;
@@ -835,7 +1018,6 @@ export class Vm {
         break;
       }
       case "neg": {
-        // neg by flipping the sign bit
         this.memory.unOp((a) => -a);
         break;
       }
@@ -893,7 +1075,7 @@ export class Vm {
         } else if (VM_BUILTINS[fnName]) {
           const ret = VM_BUILTINS[fnName].func(this.memory, this.os);
           if (this.os.sys.blocked) {
-            return; // we will handle the return when the OS is released
+            return; // Resume this call when the OS releases it.
           }
           const sp = this.memory.SP - operation.nArgs;
           this.memory.set(sp, ret);
@@ -1088,4 +1270,122 @@ function writeOp(op: VmInstruction): string {
     case "push":
       return `  ${op.op}    ${op.segment} ${op.offset}`;
   }
+}
+
+function joinedBases(files: VmFile[]): { chars: number; lines: number }[] {
+  const bases = [];
+  let chars = 0;
+  let lines = 0;
+  for (const { content } of files) {
+    bases.push({ chars, lines });
+    // Offsets include the separator newline even when the file ends with one.
+    chars += content.length + 1;
+    lines += content.split("\n").length;
+  }
+  return bases;
+}
+
+/**
+ * Checks retained instructions after parsing every file, including recovery.
+ * Returns diagnostics by filename in source order, or a runnable VM when no
+ * syntax or semantic diagnostics remain. Files with no tree contribute syntax
+ * diagnostics and leave function declarations unknown.
+ *
+ * Executable instruction spans use `files.map((f) => f.content).join("\n")`;
+ * diagnostic spans remain file-local. Use `joinedDiagnostics` to map them to
+ * that editor buffer.
+ */
+export function loadVm(
+  files: VmFile[],
+  options: LoadVmOptions = {},
+): Result<Vm, VmFailure> {
+  if (files.length === 0) {
+    return Vm.buildFromFiles([]);
+  }
+  const attemptRecovery = options.attemptRecovery ?? false;
+  const bases = joinedBases(files);
+  const report = new Report();
+  const origins = new Map<Diagnostic, Origin>();
+  const parsed: ParsedVmFile[] = [];
+  const placements = new Map<
+    VmInstruction[],
+    { chars: number; lines: number }
+  >();
+  let unparsed = false;
+  for (const [i, { name, content }] of files.entries()) {
+    const outcome = VM.parse(content, { attemptRecovery });
+    for (const diagnostic of outcome.diagnostics) {
+      report.add(diagnostic, name);
+    }
+    const recovered = recoveredOf(outcome, prune);
+    if (recovered === undefined) {
+      unparsed = true;
+      continue;
+    }
+    for (const [diagnostic, origin] of originsOf(recovered.provenance)) {
+      origins.set(diagnostic, origin);
+    }
+    const instructions = [...recovered.ast.instructions];
+    parsed.push({ name, instructions, skips: recovered.provenance });
+    placements.set(instructions, bases[i]);
+  }
+
+  if (parsed.length > 0) {
+    const built = Vm.buildFromFiles(parsed, {
+      validateFileNames: options.validateFileNames ?? true,
+      unparsed,
+    });
+    if (isErr(built)) {
+      for (const [name, diagnostics] of Object.entries(Err(built))) {
+        for (const diagnostic of diagnostics) {
+          report.add(diagnostic, name);
+        }
+      }
+    } else if (report.isEmpty) {
+      for (const [instructions, base] of placements) {
+        for (const { span } of instructions) {
+          if (span !== undefined) {
+            span.start += base.chars;
+            span.end += base.chars;
+            span.line += base.lines;
+          }
+        }
+      }
+      return built;
+    }
+  }
+  return Err(report.merged(origins));
+}
+
+/**
+ * Copies diagnostics into the joined-buffer coordinates used by `loadVm`.
+ * The original failure retains its file-local spans.
+ */
+export function joinedDiagnostics(
+  files: VmFile[],
+  failure: VmFailure,
+): Diagnostic[] {
+  const bases = joinedBases(files);
+  const names = [...new Set(files.map(({ name }) => name))];
+  const others = Object.keys(failure).filter((name) => !names.includes(name));
+  return [...names, ...others].flatMap((name) => {
+    const base = bases[files.findIndex((file) => file.name === name)];
+    return (failure[name] ?? []).map((diagnostic) =>
+      base === undefined || diagnostic.span === undefined
+        ? { ...diagnostic }
+        : movedBy(diagnostic, diagnostic.span, base),
+    );
+  });
+}
+
+function movedBy(
+  diagnostic: Diagnostic,
+  span: Span,
+  base: { chars: number; lines: number },
+): Diagnostic {
+  const line = span.line + base.lines;
+  return {
+    ...diagnostic,
+    span: { start: span.start + base.chars, end: span.end + base.chars, line },
+  };
 }

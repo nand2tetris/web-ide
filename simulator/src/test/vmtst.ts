@@ -5,15 +5,12 @@ import { RAM } from "../cpu/memory.js";
 import { Tst } from "../languages/tst.js";
 import { Segment } from "../languages/vm.js";
 import { Action, AsyncAction } from "../types.js";
-import { Vm } from "../vm/vm.js";
+import { Vm, type VmFile } from "../vm/vm.js";
 import { fill } from "./builder.js";
 import { TestInstruction } from "./instruction.js";
 import { Test } from "./tst.js";
 
-export interface VmFile {
-  name: string;
-  content: string;
-}
+export type { VmFile };
 
 export class VMTest extends Test<VMTestInstruction> {
   vm: Vm = new Vm();

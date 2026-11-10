@@ -1,12 +1,6 @@
 import { assertExists } from "@davidsouther/jiffies/assert.ts";
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
-import {
-  Err,
-  isErr,
-  Ok,
-  Result,
-  unwrap,
-} from "@davidsouther/jiffies/result.ts";
+import { Err, isErr, Ok, unwrap } from "@davidsouther/jiffies/result.ts";
 import { FIBONACCI } from "@nand2tetris/projects/base.js";
 import {
   Format,
@@ -23,9 +17,16 @@ import {
 } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { VM, VmInstruction } from "@nand2tetris/simulator/languages/vm.js";
 import { buildTst } from "@nand2tetris/simulator/test/builder.js";
-import { VMTest, VmFile } from "@nand2tetris/simulator/test/vmtst.js";
+import { VMTest } from "@nand2tetris/simulator/test/vmtst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
-import { Vm, VmFrame } from "@nand2tetris/simulator/vm/vm.js";
+import {
+  joinedDiagnostics,
+  loadVm,
+  VM_INPUT,
+  Vm,
+  VmFile,
+  VmFrame,
+} from "@nand2tetris/simulator/vm/vm.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { ScreenScales } from "../chips/screen.js";
 import { useImmerReducer } from "../react.js";
@@ -150,15 +151,38 @@ export function makeVmStore(
   }).with(vm);
   let useTest = false;
   let animate = true;
-  let vmSource = "";
   let loadedFiles: VmFile[] = [];
   let showHighlight = true;
+  let compiled:
+    | {
+        files: VmFile[];
+        single: boolean;
+        attemptRecovery: boolean;
+        diagnostics: readonly Diagnostic[];
+      }
+    | undefined;
 
-  /** Shows the diagnostics of VM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    status.setFailureStatus("vm", diagnostics);
+    status.setFailureStatus("vm", diagnostics, { head: true });
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     return false;
+  };
+
+  const cachedCompile = (files: VmFile[], single: boolean) => {
+    if (
+      compiled?.single !== single ||
+      compiled.attemptRecovery !== attemptRecovery() ||
+      compiled.files.length !== files.length ||
+      !compiled.files.every(
+        (file, i) =>
+          file.name === files[i].name && file.content === files[i].content,
+      )
+    ) {
+      return undefined;
+    }
+    return compiled.diagnostics.length > 0
+      ? compileFailed(compiled.diagnostics)
+      : true;
   };
 
   const reducers = {
@@ -248,14 +272,12 @@ export function makeVmStore(
       const stat = await fs.stat(path).catch(() => undefined);
 
       if (stat?.isFile()) {
-        // single file
         files.push({
           name: assertExists(path.split("/").pop()).replace(".vm", ""),
           content: await fs.readFile(path),
         });
         title = path.split("/").pop() ?? "";
       } else {
-        // folder
         const entries = stat ? await fs.scandir(path) : [];
         for (const file of entries.filter(
           (entry) => entry.isFile() && entry.name.endsWith(".vm"),
@@ -268,7 +290,7 @@ export function makeVmStore(
         title = `${path.split("/").pop()} / *.vm`;
 
         // A bare `load,` from a test uploaded from disk has no directory to
-        // scan. Keep the VM files the user already loaded (#673).
+        // scan. Keep the VM files the user already loaded.
         if (files.length === 0 && !path && loadedFiles.length > 0) {
           this.reset();
           status.clearStatus();
@@ -277,9 +299,10 @@ export function makeVmStore(
         if (!stat) throw new Error(`Cannot find ${path}`);
       }
       dispatch.current({ action: "setTitle", payload: title });
-      this.loadVm(files);
-      this.reset();
-      status.clearStatus();
+      if (this.loadVm(files)) {
+        this.reset();
+        status.clearStatus();
+      }
     },
     setVm(content: string) {
       showHighlight = false;
@@ -287,19 +310,8 @@ export function makeVmStore(
         action: "setVm",
         payload: content,
       });
-      if (vmSource == content) {
-        return;
-      }
-      vmSource = content;
-
-      const parseResult = validOf(VM.parse(content));
-
-      if (isErr(parseResult)) {
-        return compileFailed(Err(parseResult));
-      }
-      const instructions = unwrap(parseResult).instructions;
-      const buildResult = Vm.build(instructions);
-      return this.replaceVm(buildResult);
+      const files = [{ name: VM_INPUT, content }];
+      return cachedCompile(files, true) ?? this.compile(files, true);
     },
     loadVm(files: VmFile[]) {
       showHighlight = false;
@@ -310,49 +322,38 @@ export function makeVmStore(
         payload: content,
       });
 
-      if (vmSource == content) {
-        return;
-      }
-      vmSource = content;
-      loadedFiles = files;
+      loadedFiles = files.map((file) => ({ ...file }));
 
-      const parsed = [];
-
-      let lineOffset = 0;
-      for (const file of files) {
-        const parseResult = validOf(VM.parse(file.content));
-
-        if (isErr(parseResult)) {
-          return compileFailed(Err(parseResult));
-        }
-        const instructions = unwrap(parseResult).instructions;
-
-        for (const instruction of instructions) {
-          if (instruction.span?.line != undefined) {
-            instruction.span.line += lineOffset;
-          }
-        }
-        lineOffset += file.content.split("\n").length;
-
-        parsed.push({
-          name: file.name,
-          instructions,
-        });
-      }
-      const buildResult = Vm.buildFromFiles(parsed);
-      return this.replaceVm(buildResult);
+      return cachedCompile(files, false) ?? this.compile(files, false);
     },
-    replaceVm(buildResult: Result<Vm, Diagnostic>) {
-      if (isErr(buildResult)) {
-        return compileFailed([Err(buildResult)]);
+    /** A single buffer disables filename equality only; instruction name shape is still checked. */
+    compile(files: VmFile[], single: boolean) {
+      compiled = {
+        files: files.map((file) => ({ ...file })),
+        single,
+        attemptRecovery: attemptRecovery(),
+        diagnostics: [],
+      };
+      const loaded = loadVm(files, {
+        attemptRecovery: compiled.attemptRecovery,
+        validateFileNames: !single,
+      });
+      if (isErr(loaded)) {
+        compiled.diagnostics = joinedDiagnostics(files, Err(loaded));
+        return compileFailed(compiled.diagnostics);
       }
       dispatch.current({ action: "setDiagnostics" });
-      // setStatus("Compiled VM code successfully");
 
-      vm = unwrap(buildResult);
+      vm = unwrap(loaded);
       test.vm = vm;
       dispatch.current({ action: "update" });
       return true;
+    },
+    recompile() {
+      if (compiled) {
+        showHighlight = false;
+        this.compile(compiled.files, compiled.single);
+      }
     },
 
     loadTest(path: string, source: string) {

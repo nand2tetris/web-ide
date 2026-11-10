@@ -368,6 +368,18 @@ function byPosition(a: Diagnostic, b: Diagnostic): number {
   );
 }
 
+export function mergeByFile(
+  files: Readonly<Record<string, Diagnostics>>,
+  origins?: Origins,
+): Record<string, Diagnostics> {
+  return Object.fromEntries(
+    Object.entries(files).map(([file, diagnostics]) => [
+      file,
+      mergeDiagnostics(diagnostics, origins),
+    ]),
+  );
+}
+
 interface RecoveringGrammar {
   match(
     input: string,

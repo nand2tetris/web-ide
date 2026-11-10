@@ -1,13 +1,23 @@
-/** Reads tst files to apply and perform test runs. */
-
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, span } from "./base.js";
+import {
+  baseSemantics,
+  carrierOf,
+  grammars,
+  guardedRecovery,
+  isRecovered,
+  makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  span,
+} from "./base.js";
 import { Span } from "./diagnostic.js";
 
 import vmGrammar from "./grammars/vm.ohm.js";
 export const grammar = ohmGrammar(vmGrammar, grammars);
 export const vmSemantics = grammar.extendSemantics(baseSemantics);
 
+/** Raw ASTs can contain placeholders identified by `isRecovered`; prune before use. */
 export interface Vm {
   instructions: VmInstruction[];
 }
@@ -31,41 +41,93 @@ export type VmInstruction =
   | GotoInstruction
   | LabelInstruction;
 
-export interface StackInstruction {
+export interface StackInstruction extends Recovery {
   op: "push" | "pop";
   segment: Segment;
   offset: number;
   span?: Span;
 }
-export interface OpInstruction {
+export interface OpInstruction extends Recovery {
   op: "add" | "sub" | "neg" | "lt" | "gt" | "eq" | "and" | "or" | "not";
   span?: Span;
 }
-export interface FunctionInstruction {
+export interface FunctionInstruction extends Recovery {
   op: "function";
   name: string;
   nVars: number;
   span?: Span;
 }
-export interface CallInstruction {
+export interface CallInstruction extends Recovery {
   op: "call";
   name: string;
   nArgs: number;
   span?: Span;
 }
-export interface ReturnInstruction {
+export interface ReturnInstruction extends Recovery {
   op: "return";
   span?: Span;
 }
-export interface LabelInstruction {
+export interface LabelInstruction extends Recovery {
   op: "label";
   label: string;
   span?: Span;
 }
-export interface GotoInstruction {
+export interface GotoInstruction extends Recovery {
   op: "goto" | "if-goto";
   label: string;
   span?: Span;
+}
+
+export type VmSkipKind =
+  | "StackInstruction"
+  | "OpInstruction"
+  | "FunctionInstruction"
+  | "CallInstruction"
+  | "ReturnInstruction"
+  | "GotoInstruction"
+  | "LabelInstruction"
+  | "VmInstruction";
+
+const KIND_OF_WORD: Readonly<Record<string, VmSkipKind>> = {
+  push: "StackInstruction",
+  pop: "StackInstruction",
+  function: "FunctionInstruction",
+  call: "CallInstruction",
+  return: "ReturnInstruction",
+  goto: "GotoInstruction",
+  "if-goto": "GotoInstruction",
+  label: "LabelInstruction",
+  add: "OpInstruction",
+  sub: "OpInstruction",
+  neg: "OpInstruction",
+  lt: "OpInstruction",
+  gt: "OpInstruction",
+  eq: "OpInstruction",
+  and: "OpInstruction",
+  or: "OpInstruction",
+  not: "OpInstruction",
+};
+
+/** An unknown opening word may hide any instruction, including a function header. */
+export function skippedKind(line: string): VmSkipKind {
+  const [word] = line.trim().split(/\s/, 1);
+  return Object.hasOwn(KIND_OF_WORD, word)
+    ? KIND_OF_WORD[word]
+    : "VmInstruction";
+}
+
+export function couldBeFunctionHeader(kind: string): boolean {
+  return kind === "FunctionInstruction" || kind === "VmInstruction";
+}
+
+/** An empty label carries recovery without executing an operation. */
+function nullInstruction(point: RecoveryPoint, line: string): VmInstruction {
+  return {
+    op: "label",
+    label: "",
+    span: point.span,
+    ...carrierOf(point, skippedKind(line)),
+  };
 }
 
 vmSemantics.addAttribute<
@@ -219,11 +281,9 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
   ReturnInstruction(_) {
     return { op: "return", span: span(this.source) };
   },
-  // LabelInstruction = Label Name
   LabelInstruction(_, { name: label }) {
     return { op: "label", label, span: span(this.source) };
   },
-  // GotoInstruction = (Goto | IfGoto) Name
   GotoInstruction({ op }, { name: label }) {
     return {
       op: op as "goto" | "if-goto",
@@ -231,18 +291,23 @@ vmSemantics.addAttribute<VmInstruction>("instruction", {
       span: span(this.source),
     };
   },
-  VmInstructionLine(inst, _) {
-    return inst.instruction;
+  VmInstruction(inst, correction, _end) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      inst,
+      correction,
+    );
+    return recovered
+      ? nullInstruction(recovered, this.sourceString)
+      : inst.instruction;
   },
 });
 
 vmSemantics.addAttribute<Vm>("vm", {
-  Vm(_, lines, last) {
-    const instructions = lines.children.map((node) => node.instruction) ?? [];
+  Vm(_, lines) {
     return {
-      instructions: last.child(0)
-        ? [...instructions, last.child(0).instruction]
-        : instructions,
+      instructions: lines.children.map(
+        (node) => node.instruction as VmInstruction,
+      ),
     };
   },
 });
@@ -252,6 +317,13 @@ vmSemantics.addAttribute<Vm>("root", {
     return vm;
   },
 });
+
+export const prune = makePrune<Vm>((tree) => ({
+  ...tree,
+  instructions: tree.instructions.filter(
+    (instruction) => !isRecovered(instruction),
+  ),
+}));
 
 /** The null root of a parse that built no program: no instructions. */
 function emptyVm(): Vm {

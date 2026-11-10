@@ -26,7 +26,8 @@ import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
-import { BaseContext, StatusSeverity } from "./base.context.js";
+import { BaseContext } from "./base.context.js";
+import type { StatusActions } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -123,7 +124,7 @@ export type ChipStoreDispatch = Dispatch<{
 
 export function makeChipStore(
   fs: FileSystem,
-  setStatus: Action<string | { message: string; severity?: StatusSeverity }>,
+  status: StatusActions,
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
@@ -224,7 +225,7 @@ export function makeChipStore(
       const passed = compare(state.files.cmp.trim(), state.files.out.trim());
       // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
-        setStatus(
+        status.setStatus(
           passed
             ? {
                 message: `Simulation successful: The output file is identical to the compare file`,
@@ -378,10 +379,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const diagnostics = [Err(maybeChip)];
-        setStatus({
-          message: Err(maybeChip).message,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(...diagnostics);
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -425,7 +423,7 @@ export function makeChipStore(
         dispatch.current({ action: "setTest", payload: name });
         this.compileTest(tst, dir);
       } catch (e) {
-        setStatus({
+        status.setStatus({
           message: `Could not find ${name}.tst. Please load test file separately.`,
           severity: "WARNING",
         });
@@ -438,16 +436,13 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = TST.parse(file);
       if (isErr(tst)) {
-        setStatus({
-          message: `Failed to parse test ${Err(tst).message}`,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(tst));
         invalid = true;
         return false;
       }
       const maybeTest = ChipTest.from(Ok(tst), {
         dir: path,
-        setStatus: setStatus,
+        setStatus: (message) => status.setStatus({ message }),
         loadAction: async (file) => {
           await this.loadChip(file, false);
           return chip;
@@ -459,10 +454,7 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        setStatus({
-          message: Err(maybeTest).message,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(maybeTest));
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -493,14 +485,14 @@ export function makeChipStore(
           this.compileTest(tst, tstPath ?? _dir);
         }
       } catch (e) {
-        setStatus({
+        status.setStatus({
           message: display(e),
           severity: "ERROR",
         });
       }
       dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
       if (!invalid) {
-        setStatus(`HDL code: No syntax errors`);
+        status.setStatus({ message: `HDL code: No syntax errors` });
       }
     },
 
@@ -542,10 +534,7 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        setStatus({
-          message: `Failed to load builtin ${builtinName}: ${display(Err(nextChip))}`,
-          severity: "ERROR",
-        });
+        status.setFailureStatus(Err(nextChip));
         return;
       }
       this.replaceChip(Ok(nextChip));
@@ -574,7 +563,7 @@ export function makeChipStore(
         }
         return done;
       } catch (e) {
-        setStatus({
+        status.setStatus({
           message: (e as Error).message,
           severity: "ERROR",
         });
@@ -628,14 +617,21 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { fs, setStatus, storage, localFsRoot } = useContext(BaseContext);
+  const { fs, setStatus, clearStatus, setFailureStatus, storage, localFsRoot } =
+    useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
 
   const { initialState, reducers, actions } = useMemo(
     () =>
-      makeChipStore(fs, setStatus, storage, dispatch, localFsRoot != undefined),
-    [fs, setStatus, storage, dispatch],
+      makeChipStore(
+        fs,
+        { setStatus, clearStatus, setFailureStatus },
+        storage,
+        dispatch,
+        localFsRoot != undefined,
+      ),
+    [fs, setStatus, clearStatus, setFailureStatus, storage, dispatch],
   );
 
   const [state, dispatcher] = useImmerReducer(reducers, initialState);

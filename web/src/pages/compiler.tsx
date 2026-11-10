@@ -19,7 +19,7 @@ import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { setStatus, canUpgradeFs } = useContext(BaseContext);
+  const { setStatus, clearStatus, canUpgradeFs } = useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;
@@ -37,7 +37,12 @@ export const Compiler = () => {
   const showStatus = () => {
     const current = state.compiled[state.selected];
     if (current) {
-      setStatus(current.valid ? "" : (current.diagnostics[0]?.message ?? ""));
+      const [first] = current.diagnostics;
+      if (current.valid || first === undefined) {
+        clearStatus();
+      } else {
+        setStatus({ severity: "INFO", diagnostics: [first] });
+      }
     }
   };
 
@@ -71,10 +76,10 @@ export const Compiler = () => {
         ).length == 0;
 
       if (empty) {
-        setStatus("No .jack files in the selected folder");
+        setStatus({ message: "No .jack files in the selected folder" });
         setSuppressStatus(true);
       } else {
-        setStatus("");
+        clearStatus();
         actions.loadProject(fs, `${handle.name} / *.jack`);
         setEditable(true);
       }
@@ -115,7 +120,7 @@ export const Compiler = () => {
   const compileFiles = () => {
     if (state.isValid) {
       actions.compile();
-      setStatus("Compiled successfully");
+      setStatus({ message: "Compiled successfully" });
     }
   };
 
@@ -142,7 +147,7 @@ export const Compiler = () => {
 
   const createFile = () => {
     if (!state.fs) {
-      setStatus("No project folder loaded");
+      setStatus({ message: "No project folder loaded" });
       return;
     }
     newFileDialog.open();

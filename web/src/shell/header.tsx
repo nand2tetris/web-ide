@@ -52,7 +52,7 @@ const GUIDE_NOT_AVAILABLE_MESSAGE = "Guide not available for this tool";
 function openGuide(context: HeaderButtonContext) {
   const pdfLink = guideLinks[context.pathname];
   if (!pdfLink) {
-    context.baseContext.setStatus(GUIDE_NOT_AVAILABLE_MESSAGE);
+    context.baseContext.setStatus({ message: GUIDE_NOT_AVAILABLE_MESSAGE });
     return;
   }
   // Must call window.open synchronously inside the click handler — any
@@ -100,7 +100,7 @@ const Header = () => {
   const appContext = useContext(AppContext);
   const baseContext = useContext(BaseContext);
   const { title, setTool } = useContext(PageContext);
-  const { setStatus } = useContext(BaseContext);
+  const { clearStatus } = useContext(BaseContext);
 
   const redirectRefs: Record<string, RefObject<HTMLAnchorElement | null>> = {};
   for (const button of headerButtons) {
@@ -139,7 +139,7 @@ const Header = () => {
                   data-placement="bottom"
                   onClick={() => {
                     setTool(tool);
-                    setStatus("");
+                    clearStatus();
                     if (onClick) {
                       onClick?.({ appContext, baseContext, pathname });
                     } else {

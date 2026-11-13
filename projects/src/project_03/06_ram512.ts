@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/b/RAM512.hdl
+// File name: RAM512.hdl
 /**
  * Memory of 512 16-bit registers.
  * If load is asserted, the value of the register selected by
@@ -18,7 +18,7 @@ CHIP RAM512 {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/b/RAM512.tst
+// File name: RAM512.tst
 
 load RAM512.hdl,
 compare-to RAM512.cmp,

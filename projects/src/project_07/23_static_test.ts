@@ -1,9 +1,9 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/StaticTest/StaticTest.vm
+// File name: StaticTest/StaticTest.vm
 
-// Executes pop and push commands using the static segment.
+// Executes push/pop commands using the static segment.
 
 push constant 111
 push constant 333
@@ -21,12 +21,11 @@ add
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/StaticTest/StaticTestVME.tst
+// File name: StaticTest/StaticTestVME.tst
 
-// Tests and illustrates StaticTest.vm on the VM simulator.
+// Tests StaticTest.vm on the VM simulator.
 
 load StaticTest.vm,
-compare-to StaticTest.cmp,
 
 set sp 256,    // initializes the stack pointer
 
@@ -35,6 +34,7 @@ repeat 11 {    // StaticTest.vm has 11 VM commands
 }
 
 // Outputs the value at the stack's base 
+compare-to StaticTest.cmp,
 output-list RAM[256]%D1.6.1;
 output;
 `;
@@ -42,11 +42,10 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/StaticTest/StaticTest.tst
+// File name: StaticTest/StaticTest.tst
 
 // Tests StaticTest.asm on the CPU emulator.
-
-compare-to StaticTest.cmp,
+// Assumes that the program is already loaded.
 
 set RAM[0] 256,    // initializes the stack pointer
 
@@ -55,6 +54,7 @@ repeat 200 {       // enough cycles to complete the execution
 }
 
 // Outputs the value at the stack's base 
+compare-to StaticTest.cmp,
 output-list RAM[256]%D1.6.1;
 output;
 `;

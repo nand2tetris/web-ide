@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/05/Screen.hdl
+// File name: Screen.hdl
 /**
  * The Screen (memory map).
  * Same functionality as a 16-bit 8K RAM:

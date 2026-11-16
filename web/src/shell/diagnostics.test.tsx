@@ -29,6 +29,7 @@ const fixture = vi.hoisted(() => {
     },
     monaco: {
       Range: { fromPositions: () => ({}) },
+      MarkerSeverity: { Warning: 4, Error: 8 },
       editor: { setModelMarkers: vi.fn(), remeasureFonts: vi.fn() },
     },
   };
@@ -419,5 +420,58 @@ describe("Problems panel", () => {
     ]);
     view.rerender(panel());
     expect(view.container.querySelector("details")).toBeNull();
+  });
+});
+
+describe("warnings", () => {
+  const undriven: Diagnostic = {
+    ...diagnostic(
+      DiagnosticCode.Chip.UNDRIVEN_OUTPUT,
+      { pin: "out" },
+      { start: 0, end: 1, line: 1 },
+      Stage.SEMANTIC,
+    ),
+    severity: "warning",
+  };
+
+  it("marks a warning with Monaco's warning severity", async () => {
+    render(
+      <Monaco
+        value="out"
+        onChange={() => undefined}
+        language="hdl"
+        path="Chip.hdl"
+        diagnostics={[undriven, second]}
+      />,
+    );
+    await waitFor(() =>
+      expect(
+        fixture.monaco.editor.setModelMarkers.mock.lastCall?.[2].map(
+          ({ severity }: { severity: number }) => severity,
+        ),
+      ).toEqual([4, 8]),
+    );
+  });
+
+  it("lists errors before warnings and labels each warning", () => {
+    const view = render(
+      <Context showAll>{sourceEditor([undriven, second])}</Context>,
+    );
+
+    expect(messages(view.container)).toEqual([
+      "Line 3: Undefined chip name: Second",
+      "Warning: Line 1: Output pin out is never set",
+    ]);
+    expect(
+      view.container.querySelectorAll(".ErrorPanel li.warning"),
+    ).toHaveLength(1);
+  });
+
+  it("shows a lone warning as the first problem", () => {
+    const view = render(<Context>{sourceEditor([undriven])}</Context>);
+
+    expect(messages(view.container)).toEqual([
+      "First problem: Warning: Line 1: Output pin out is never set",
+    ]);
   });
 });

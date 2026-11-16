@@ -99,6 +99,10 @@
       overflow-wrap: anywhere;
       white-space: pre-wrap;
     }
+
+    li.warning::marker {
+      content: "⚠ ";
+    }
   }
 
   .overlay {

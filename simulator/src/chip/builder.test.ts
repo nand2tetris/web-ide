@@ -1122,3 +1122,89 @@ describe("HDL diagnostic wording and position", () => {
     ]);
   });
 });
+
+describe("undriven output pins", () => {
+  it("warns on a successful build when no part drives an output", async () => {
+    const source = [
+      "CHIP Foo {",
+      "    IN a, b;",
+      "    OUT out, other;",
+      "    PARTS:",
+      "    Nand(a=a, b=b, out=other);",
+      "}",
+    ].join("\n");
+
+    const chip = unwrap(await parse(source));
+
+    expect(chip.warnings).toMatchObject([
+      {
+        code: DiagnosticCode.Chip.UNDRIVEN_OUTPUT,
+        args: { pin: "out" },
+        severity: "warning",
+        span: { line: 3 },
+      },
+    ]);
+    chip.remove();
+  });
+
+  it("does not warn when part of a bus output is driven", async () => {
+    const source = [
+      "CHIP Foo {",
+      "    IN a;",
+      "    OUT out[2];",
+      "    PARTS:",
+      "    Not(in=a, out=out[0]);",
+      "}",
+    ].join("\n");
+
+    const chip = unwrap(await parse(source));
+
+    expect(chip.warnings).toEqual([]);
+    chip.remove();
+  });
+
+  it("carries no warnings when the build fails", async () => {
+    const source = [
+      "CHIP Foo {",
+      "    IN a;",
+      "    OUT out;",
+      "    PARTS:",
+      "    Missing(in=a, out=x);",
+      "}",
+    ].join("\n");
+
+    const built = await parse(source);
+
+    if (!isErr(built)) throw new Error("the build should fail");
+    expect(
+      Object.values(Err(built))
+        .flat()
+        .map(({ severity }) => severity),
+    ).toEqual([undefined]);
+  });
+
+  it("describes an output pin that is never set as a warning", async () => {
+    const source = [
+      "CHIP And {",
+      "    IN a, b;",
+      "    OUT out;",
+      "    PARTS:",
+      "    Nand(a=a, b=b, out=x);",
+      "}",
+    ].join("\n");
+
+    const chip = unwrap(await parse(source));
+
+    expect(
+      chip.warnings.map((d) => `${d.severity}: ${describeDiagnostic(d)}`),
+    ).toEqual(["warning: Line 3: Output pin out is never set"]);
+    chip.remove();
+  });
+
+  it("gives a builtin chip no warnings", async () => {
+    const chip = unwrap(await loadChip("Not"));
+
+    expect(chip.warnings).toEqual([]);
+    chip.remove();
+  });
+});

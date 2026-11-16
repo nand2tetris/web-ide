@@ -4,7 +4,12 @@ import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
 import type { Subscription } from "rxjs";
-import { DiagnosticCode, type Fault, fault } from "../languages/diagnostic.js";
+import {
+  type Diagnostic,
+  DiagnosticCode,
+  type Fault,
+  fault,
+} from "../languages/diagnostic.js";
 import { bin } from "../util/twos.js";
 import { Clock } from "./clock.js";
 
@@ -301,6 +306,8 @@ export class Chip {
   parts: Chip[] = [];
   clockedPins: Set<string>;
   clockSubscription?: Subscription;
+  /** Warnings from the build that produced this chip, which still runs. */
+  warnings: readonly Diagnostic[] = [];
 
   get clocked() {
     if (this.clockedPins.size > 0) {

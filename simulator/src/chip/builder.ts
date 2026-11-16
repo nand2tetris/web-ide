@@ -512,6 +512,8 @@ class ChipBuilder {
       return this.chip;
     }
 
+    this.chip.warnings = this.undrivenOutputs();
+
     this.chip.clockedPins = new Set(
       [...this.chip.ins.entries(), ...this.chip.outs.entries()]
         .map((pin) => pin.name)
@@ -877,6 +879,22 @@ class ChipBuilder {
         }
       }
     }
+  }
+
+  /**
+   * An output pin that no part drives, even in part, stays low. Suppressed
+   * when recovery skipped a part that could have driven it.
+   */
+  private undrivenOutputs(): Diagnostic[] {
+    if (skipsAny(this.provenance, SUPPLIES_OWN_PIN)) {
+      return [];
+    }
+    return this.parts.outs
+      .filter(({ pin }) => !this.outPins.has(pin))
+      .map(({ pin, span }) => ({
+        ...semanticError(DiagnosticCode.Chip.UNDRIVEN_OUTPUT, { pin }, span),
+        severity: "warning" as const,
+      }));
   }
 
   private validateWireWidths() {

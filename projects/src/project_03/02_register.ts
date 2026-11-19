@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/a/Register.hdl
+// File name: Register.hdl
 /**
  * 16-bit register:
  * If load is asserted, the register's value is set to in;
@@ -18,7 +18,7 @@ CHIP Register {
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/3/a/Register.tst
+// File name: Register.tst
 
 load Register.hdl,
 compare-to Register.cmp,

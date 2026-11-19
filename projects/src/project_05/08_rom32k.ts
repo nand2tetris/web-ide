@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/05/ROM32K.hdl
+// File name: ROM32K.hdl
 /**
  * Read-Only memory (ROM) of 32K registers, each 16-bit wide.
  * Facilitates data read, as follows:

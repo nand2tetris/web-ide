@@ -1,17 +1,18 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/Computer.hdl
+// File name: Computer.hdl
 /**
- * The Hack computer, consisting of CPU, ROM and RAM.
- * When reset = 0, the program stored in the ROM executes.
- * When reset = 1, the program's execution restarts. 
+ * The Hack computer, consisting of CPU, ROM, and RAM.
+ * When reset == 0, the program stored in ROM executes.
+ * When reset == 1, the program restarts from the beginning.
  * Thus, to start running the currently loaded program,
- * set reset to 1, and then set it to 0. 
- * From this point onwards, the user is at the mercy of the software.
- * Depending on the program's code, and whether the code is correct,
- * the screen may show some output, the user may be expected to enter
- * some input using the keyboard, or the program may do some procerssing. 
+ * set reset to 1, and then set it to 0.
+ * From this point onward, the user is at the mercy of the software.
+ * Depending on the program and its correctness, the screen may
+ * display output, the user may be expected to enter input using
+ * the keyboard, or, in general, the program may do whatever it is
+ * designed to do.
  */
 CHIP Computer {
 
@@ -23,7 +24,7 @@ CHIP Computer {
 export const add_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/ComputerAdd.tst
+// File name: ComputerAdd.tst
 
 // Tests the Computer chip by having it execute the program Add.hack.
 // The program adds up the constants 2 and 3 and writes the result in RAM[0]. 
@@ -73,7 +74,7 @@ export const add_cmp = `|time |reset|ARegister|DRegister|PC[]|RAM16K[0]|RAM16K[1
 export const max_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/ComputerMax.tst
+// File name: ComputerMax.tst
 
 // Tests the Computer chip by having it execute the program Max.hack.
 // The program computes maximum(R0, R1) and writes the result in RAM[2].
@@ -142,7 +143,7 @@ export const max_cmp = `|time |reset|ARegister|DRegister|PC[]|RAM16K[0]|RAM16K[1
 export const rect_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/ComputerRect.tst
+// File name: ComputerRect.tst
 
 // Tests the Computer chip by having it execute the program Rect.hack.
 // The program draws a rectangle of width 16 pixels and length RAM[0]

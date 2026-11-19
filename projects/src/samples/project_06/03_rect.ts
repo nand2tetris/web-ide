@@ -1,4 +1,8 @@
-export const RectTst = `
+export const RectTst = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: Rect.tst
+
 load Rect.asm;
 set %0 16;
 
@@ -9,7 +13,7 @@ repeat {
 export const RectAsm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/6/rect/Rect.asm
+// File name: Rect.asm
 
 // Draws a rectangle at the top-left corner of the screen.
 // The rectangle is 16 pixels wide and R0 pixels high.
@@ -51,7 +55,7 @@ export const RectAsm = `// This file is part of www.nand2tetris.org
 export const RectLAsm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/6/rect/RectL.asm
+// File name: RectL.asm
 
 // Symbol-less version of the Rect.asm program.
 // Designed for testing the basic version of the assembler.

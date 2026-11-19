@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/03/DFF.hdl
+// File name: DFF.hdl
 /**
  * Data Flip-flop:
  * maintains its current value:

@@ -1,4 +1,9 @@
-export const TickTock = `// TickTock forever
+export const TickTock = `// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: TickTock.tst
+
+// TickTock forever
 
 // Uncomment for a sample progam. Can use any program name in /samples
 // ROM32K load Max.hack;

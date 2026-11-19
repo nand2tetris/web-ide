@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/CPU.hdl
+// File name: CPU.hdl
 /**
  * The Hack Central Processing unit (CPU).
  * Parses the binary code in the instruction input and executes it according to the
@@ -9,7 +9,7 @@ export const hdl = `// This file is part of www.nand2tetris.org
  * function specified by the instruction. If the instruction specifies to read a memory
  * value, the inM input is expected to contain this value. If the instruction specifies
  * to write a value to the memory, sets the outM output to this value, sets the addressM
- * output to the target address, and asserts the writeM output (when writeM = 0, any
+ * output to the target address, and asserts the writeM output (when writeM == 0, any
  * value may appear in outM).
  * If the reset input is 0, computes the address of the next instruction and sets the
  * pc output to that value. If the reset input is 1, sets pc to 0.
@@ -32,12 +32,12 @@ CHIP CPU {
         pc[15];          // address of next instruction
 
     PARTS:
-	//// Replace this comment with your code.
+    //// Replace this comment with your code.
 }`;
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/CPU.tst
+// File name: CPU.tst
 
 load CPU.hdl,
 compare-to CPU.cmp,
@@ -280,7 +280,7 @@ export const cmp = `|time| inM  |  instruction   |reset| outM  |writeM |addre| p
 export const external_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/CPU-external.tst
+// File name: CPU-external.tst
 
 load CPU.hdl,
 output-list time%S0.4.0 inM%D0.6.0 instruction%B0.16.0 reset%B2.1.2 outM%D1.6.0 writeM%B3.1.3 addressM%D0.5.0 pc%D0.5.0;

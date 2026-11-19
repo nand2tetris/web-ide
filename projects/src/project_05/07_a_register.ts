@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/05/ARegister.hdl
+// File name: ARegister.hdl
 /**
  * A 16-bit register named ARegister with the same functionality
  * of the Register chip:

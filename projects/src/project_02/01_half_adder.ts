@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/HalfAdder.hdl
+// File name: HalfAdder.hdl
 /**
  * Computes the sum of two bits.
  */
@@ -21,7 +21,7 @@ export const cmp = `| a | b |sum|car|
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/HalfAdder.tst
+// File name: HalfAdder.tst
 
 load HalfAdder.hdl,
 compare-to HalfAdder.cmp,

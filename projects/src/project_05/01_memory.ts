@@ -1,36 +1,32 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/5/Memory.hdl
+// File name: Memory.hdl
 /**
- * The complete address space of the Hack computer's memory,
- * including RAM and memory-mapped I/O. 
- * The chip facilitates read and write operations, as follows:
- *     Read:  out(t) = Memory[address(t)](t)
- *     Write: if load(t-1) then Memory[address(t-1)](t) = in(t-1)
- * In words: the chip always outputs the value stored at the memory 
- * location specified by address. If load=1, the in value is loaded 
- * into the memory location specified by address. This value becomes 
- * available through the out output from the next time step onward.
- * Address space rules:
- * Only the lower 16K+8K+1 words of the Memory chip are used. 
- * Access to address>0x6000 is invalid and reads 0. Access to any address
- * in the range 0x4000-0x5FFF results in accessing the screen memory 
- * map. Access to address 0x6000 results in accessing the keyboard 
- * memory map. The behavior in these addresses is described in the Screen
- * and Keyboard chip specifications given in the lectures and the book.
- */
+ * Complete address space of the computer’s data memory,
+ * including RAM, screen memory map, and keyboard memory map.
+ * Outputs the value of the memory location specified by address.
+ * If (load==1), the in value is loaded into the memory location specified by address.
+ * Addressing space rules:
+ * Only the lower 16K+8K+1 words of the memory are used:
+ * Access to address 0 to 16383 (0x0000 to 0x3FFF) results in accessing the RAM;
+ * Access to address 16384 to 24575 (0x4000 to 0x5FFF) results in accessing 
+ * the Screen memory map;
+ * Access to address 24576 (0x6000) results in accessing the Keyboard memory map.
+ * Access to any address > 24576 (0x6000) results in the output zero.
+ */ 
+
 CHIP Memory {
     IN in[16], load, address[15];
     OUT out[16];
 
     PARTS:
-	//// Replace this comment with your code.
+    //// Replace this comment with your code.
 }`;
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/05/Memory.tst
+// File name: Memory.tst
 
 // Tests the Memory chip by inputting values to selected addresses, 
 // verifying that these addresses were indeed written to, and verifying  

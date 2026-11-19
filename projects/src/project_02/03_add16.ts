@@ -1,7 +1,7 @@
 export const hdl = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/Add16.hdl
+// File name: Add16.hdl
 /**
  * 16-bit adder: Adds two 16-bit two's complement values.
  * The most significant carry bit is ignored.
@@ -23,7 +23,7 @@ export const cmp = `|        a         |        b         |       out        |
 export const tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/2/Add16.tst
+// File name: Add16.tst
 
 load Add16.hdl,
 compare-to Add16.cmp,

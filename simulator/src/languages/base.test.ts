@@ -13,12 +13,15 @@ import {
   lineScope,
   makeParser,
   makePrune,
+  mergeByFile,
   mergeDiagnostics,
   type Recovery,
   type RecoveryPoint,
   recoveryOf,
   rewrites,
+  type SyntaxExpected,
   span,
+  unknownWord,
   validOf,
 } from "./base.js";
 import {
@@ -821,42 +824,10 @@ describe("merging a file's diagnostics", () => {
 
 describe("syntax expectation rewrites", () => {
   const COMMANDS = ["eval", "vmstep", "ROM32K", "end of input"];
+  const SITE = { source: "", position: 0 };
 
-  it("folds a set of expectations into one label", () => {
-    const expectedOf = rewrites(categorize(COMMANDS, "a command"));
-
-    const result = expectedOf(['"eval"', '"vmstep"', '"ROM32K"', '";"'], []);
-
-    expect(result).toEqual(["a command", '";"']);
-  });
-
-  it("matches a set entry as an unquoted description", () => {
-    const expectedOf = rewrites(categorize(COMMANDS, "a command"));
-
-    expect(expectedOf(["end of input", '"eval"'], [])).toEqual(["a command"]);
-  });
-
-  it("leaves a list that does not meet the set unchanged", () => {
-    const expected = ['","', '";"'];
-
-    const result = rewrites(categorize(COMMANDS, "a command"))(expected, []);
-
-    expect(result).toEqual(expected);
-  });
-
-  it("applies rules in order, each to the previous output", () => {
-    const expectedOf = rewrites(
-      categorize(["eval", "tick"], "a command"),
-      categorize(["a command", ";"], "a statement"),
-      categorize(["eval"], "unreachable"),
-    );
-
-    expect(expectedOf(['"eval"', '"tick"', '";"'], [])).toEqual([
-      "a statement",
-    ]);
-  });
-
-  it("rewrites strict and recovered failures alike", () => {
+  /** A parser for `word;` lines whose syntax wording is `expectedOf`. */
+  const wordsParser = (expectedOf: SyntaxExpected) => {
     const words = grammar(
       `Words { Root = (word ! ";")+ word = "go" | "stop" }`,
     );
@@ -871,18 +842,93 @@ describe("syntax expectation rewrites", () => {
       semantics,
       () => "",
       "root",
-      rewrites(categorize(["go", "stop"], "a word")),
+      expectedOf,
     );
-    const shown = (source: string, attemptRecovery: boolean) =>
+    return (source: string, attemptRecovery: boolean) =>
       parser
         .parse(source, { attemptRecovery })
         .diagnostics.map((d) => describeDiagnostic(d));
+  };
+
+  it("folds a set of expectations into one label", () => {
+    const expectedOf = rewrites(categorize(COMMANDS, "a command"));
+
+    const result = expectedOf(
+      ['"eval"', '"vmstep"', '"ROM32K"', '";"'],
+      [],
+      SITE,
+    );
+
+    expect(result).toEqual(["a command", '";"']);
+  });
+
+  it("matches a set entry as an unquoted description", () => {
+    const expectedOf = rewrites(categorize(COMMANDS, "a command"));
+
+    expect(expectedOf(["end of input", '"eval"'], [], SITE)).toEqual([
+      "a command",
+    ]);
+  });
+
+  it("leaves a list that does not meet the set unchanged", () => {
+    const expected = ['","', '";"'];
+
+    const result = rewrites(categorize(COMMANDS, "a command"))(
+      expected,
+      [],
+      SITE,
+    );
+
+    expect(result).toEqual(expected);
+  });
+
+  it("applies rules in order, each to the previous output", () => {
+    const expectedOf = rewrites(
+      categorize(["eval", "tick"], "a command"),
+      categorize(["a command", ";"], "a statement"),
+      categorize(["eval"], "unreachable"),
+    );
+
+    expect(expectedOf(['"eval"', '"tick"', '";"'], [], SITE)).toEqual([
+      "a statement",
+    ]);
+  });
+
+  it("rewrites strict and recovered failures alike", () => {
+    const shown = wordsParser(rewrites(categorize(["go", "stop"], "a word")));
 
     expect(shown("go;\nxx;", false)).toEqual([
       "Line 2: expected a word or end of input",
     ]);
     expect(shown("go;\nxx;", true)).toEqual([
       "Line 2: expected a word or end of input",
+    ]);
+  });
+
+  it("names an unknown word where a listed word was tried", () => {
+    const shown = wordsParser(rewrites(unknownWord("a word", ["go", "stop"])));
+
+    expect(shown("go;\nxx;", false)).toEqual(["Line 2: unknown word xx"]);
+    expect(shown("go;\nxx;", true)).toEqual(["Line 2: unknown word xx"]);
+  });
+
+  it("ends the chain at a fault", () => {
+    const shown = wordsParser(
+      rewrites(
+        unknownWord("a word", ["go", "stop"]),
+        categorize(["go", "stop"], "a word"),
+      ),
+    );
+
+    expect(shown("xx;", false)).toEqual(["Line 1: unknown word xx"]);
+  });
+
+  it("keeps the expectations where no listed word was tried or no word stands", () => {
+    const rule = rewrites(unknownWord("a word", ["go"]));
+
+    expect(rule(['";"'], [], { source: "xx", position: 0 })).toEqual(['";"']);
+    expect(wordsParser(rule)("go;\n;", false)).toEqual([
+      'Line 2: expected end of input, "stop", or "go"',
     ]);
   });
 
@@ -901,5 +947,41 @@ describe("syntax expectation rewrites", () => {
     });
 
     expect(outcome.diagnostics.map((d) => d.span?.line)).toEqual([2]);
+  });
+});
+
+describe("merging diagnostics by file", () => {
+  it("never merges records of different files", () => {
+    const place = { start: 3, end: 6, line: 2 };
+    const top: Diagnostic = named("m", place, Stage.PARSE);
+    const child: Diagnostic = named("m", place, Stage.PARSE);
+    const topLater: Diagnostic = named("m", place, Stage.SEMANTIC);
+
+    const merged = mergeByFile({
+      "Top.hdl": [topLater, top],
+      "Child.hdl": [child],
+    });
+
+    expect(Object.keys(merged)).toEqual(["Top.hdl", "Child.hdl"]);
+    expect(merged["Top.hdl"]).toEqual([top]);
+    expect(merged["Child.hdl"]).toEqual([child]);
+    expect(merged["Child.hdl"][0]).toBe(child);
+  });
+
+  it("does not link causes across files", () => {
+    const top: Diagnostic = named("one", undefined, Stage.PARSE);
+    const child: Diagnostic = named("two", undefined, Stage.PARSE);
+    const origins = new Map([
+      [top, { cause: "k" }],
+      [child, { cause: "k" }],
+    ]);
+
+    const merged = mergeByFile(
+      { "Top.hdl": [top], "Child.hdl": [child] },
+      origins,
+    );
+
+    expect(merged["Top.hdl"]).toEqual([top]);
+    expect(merged["Child.hdl"]).toEqual([child]);
   });
 });

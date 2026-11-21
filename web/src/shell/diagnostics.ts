@@ -22,6 +22,10 @@ function messageOf(found: Diagnostic): string {
       const list = listOf(found.args.expected);
       return t`expected ${list}`;
     }
+    case DiagnosticCode.Syntax.UNKNOWN_WORD: {
+      const { kind, word } = found.args;
+      return t`unknown ${kind} ${word}`;
+    }
 
     case DiagnosticCode.Error.UNEXPECTED: {
       // A programmer facing message that has no translation.
@@ -170,7 +174,9 @@ function messageOf(found: Diagnostic): string {
     case DiagnosticCode.Vm.DUPLICATE_LABEL: {
       const { label, line } = found.args;
       const fn = found.args.function;
-      return t`Cannot redeclare label ${label} in function ${fn} (previously at line ${line})`;
+      return fn === undefined
+        ? t`Cannot redeclare label ${label} (previously at line ${line})`
+        : t`Cannot redeclare label ${label} in function ${fn} (previously at line ${line})`;
     }
     case DiagnosticCode.Vm.UNDECLARED_LABEL: {
       const { label } = found.args;
@@ -190,7 +196,7 @@ function messageOf(found: Diagnostic): string {
     }
     case DiagnosticCode.Vm.POINTER_OUT_OF_BOUNDS: {
       const { offset } = found.args;
-      return t`pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset}`;
+      return t`pointer out of bounds access (pointer can be 0 for this, 1 for that, but got ${offset})`;
     }
     case DiagnosticCode.Vm.STATIC_OUT_OF_BOUNDS: {
       const { offset } = found.args;
@@ -198,8 +204,10 @@ function messageOf(found: Diagnostic): string {
     }
     case DiagnosticCode.Vm.TEMP_OUT_OF_BOUNDS: {
       const { offset } = found.args;
-      return t`Temp out of bounds access (temp can be 0 to 7, but got ${offset}`;
+      return t`Temp out of bounds access (temp can be 0 to 7, but got ${offset})`;
     }
+    case DiagnosticCode.Vm.POP_CONSTANT:
+      return t`Cannot pop to constant`;
 
     case DiagnosticCode.Jack.UNDECLARED_VARIABLE: {
       const { name } = found.args;

@@ -13,9 +13,17 @@
 
 .Editor {
   width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 
   &:not(.dynamic-height) {
     height: 100%;
+
+    > section {
+      flex: 1;
+      min-height: 0;
+    }
   }
 
   .monaco-editor {
@@ -58,14 +66,27 @@
     background-color: var(--diff-highlight-correct-cell-bg-color);
   }
 
-  textarea {
+  > textarea {
     flex: 1;
+    min-height: 0;
   }
 
   position: relative; // For ".overlay", below.
   &:has(.overlay) {
     // Available in chrome 105
     position: relative;
+  }
+
+  .dependency-diagnostics {
+    flex: 0 1 auto;
+    max-height: 40%;
+    overflow: auto;
+    background-color: var(--background-color, Canvas);
+    color: var(--text-color, CanvasText);
+
+    summary {
+      color: inherit;
+    }
   }
 
   .overlay {

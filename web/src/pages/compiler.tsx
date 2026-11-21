@@ -50,7 +50,7 @@ export const Compiler = () => {
     if (!suppressStatus) {
       showStatus();
     }
-  }, [state.selected, state.files, suppressStatus]);
+  }, [state.selected, state.compiled, suppressStatus]);
 
   const onSelect = useCallback(
     (tab: string) => {

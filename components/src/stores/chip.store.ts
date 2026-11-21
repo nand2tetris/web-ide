@@ -492,7 +492,7 @@ export function makeChipStore(
       }
       dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
       if (!invalid) {
-        status.setStatus({ message: `HDL code: No syntax errors` });
+        status.setStatus({ message: `HDL code: No errors` });
       }
     },
 

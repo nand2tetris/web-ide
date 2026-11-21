@@ -97,6 +97,10 @@ function messageOf(found: Diagnostic): string {
       const { name } = found.args;
       return t`Cannot use chip ${name} to implement itself`;
     }
+    case DiagnosticCode.Chip.PIN_REDECLARED: {
+      const { pin } = found.args;
+      return t`Pin ${pin} is declared more than once`;
+    }
     case DiagnosticCode.Chip.LOOPING_WIRE: {
       const { pin } = found.args;
       return t`Looping wire ${pin}`;

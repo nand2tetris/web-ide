@@ -31,6 +31,7 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Chip.NOT_BUILTIN]: { name: "Foo" },
   [DiagnosticCode.Chip.NOT_FOUND]: { name: "Foo" },
   [DiagnosticCode.Chip.SELF_REFERENCE]: { name: "Foo" },
+  [DiagnosticCode.Chip.PIN_REDECLARED]: { pin: "a" },
   [DiagnosticCode.Chip.LOOPING_WIRE]: { pin: "x" },
   [DiagnosticCode.Chip.UNDEFINED_PIN]: { pin: "x" },
   [DiagnosticCode.Chip.INTERNAL_PIN_SUBSCRIPTED]: { pin: "x" },

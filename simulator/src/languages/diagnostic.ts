@@ -64,6 +64,7 @@ export const DiagnosticCode = Object.freeze({
     NOT_BUILTIN: "chip.notBuiltin",
     NOT_FOUND: "chip.notFound",
     SELF_REFERENCE: "chip.selfReference",
+    PIN_REDECLARED: "chip.pinRedeclared",
     LOOPING_WIRE: "chip.loopingWire",
     UNDEFINED_PIN: "chip.undefinedPin",
     INTERNAL_PIN_SUBSCRIPTED: "chip.internalPinSubscripted",
@@ -157,6 +158,7 @@ export interface DiagnosticArgs {
   [DiagnosticCode.Chip.NOT_BUILTIN]: { name: string };
   [DiagnosticCode.Chip.NOT_FOUND]: { name: string };
   [DiagnosticCode.Chip.SELF_REFERENCE]: { name: string };
+  [DiagnosticCode.Chip.PIN_REDECLARED]: { pin: string };
   [DiagnosticCode.Chip.LOOPING_WIRE]: { pin: string };
   [DiagnosticCode.Chip.UNDEFINED_PIN]: { pin: string };
   [DiagnosticCode.Chip.INTERNAL_PIN_SUBSCRIPTED]: { pin: string };
@@ -380,6 +382,8 @@ export const ENGLISH: Catalog = {
       `Undefined chip name: ${name}`,
     [DiagnosticCode.Chip.SELF_REFERENCE]: ({ name }) =>
       `Cannot use chip ${name} to implement itself`,
+    [DiagnosticCode.Chip.PIN_REDECLARED]: ({ pin }) =>
+      `Pin ${pin} is declared more than once`,
     [DiagnosticCode.Chip.LOOPING_WIRE]: ({ pin }) => `Looping wire ${pin}`,
     [DiagnosticCode.Chip.UNDEFINED_PIN]: ({ pin }) =>
       `Undefined pin name: ${pin}`,

@@ -26,9 +26,10 @@ export function describeStatus({
     return message ?? "";
   }
   const lead = heading === undefined ? [] : [describeHeading(heading)];
-  const listed = diagnostics.map(({ diagnostic }) =>
-    describeDiagnostic(diagnostic),
-  );
+  const listed = diagnostics.map(({ diagnostic, file }) => {
+    const text = describeDiagnostic(diagnostic);
+    return file === undefined ? text : t`${file}: ${text}`;
+  });
   return [...lead, ...listed].join(". ");
 }
 

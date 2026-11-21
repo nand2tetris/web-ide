@@ -66,7 +66,7 @@ describe("a failed match", () => {
     },
   );
 
-  it.each(NULL_ROOTS.slice(1, 3))(
+  it.each(NULL_ROOTS.slice(0, 3))(
     "%s gives its null root with recovery on",
     (_name, language, source, root) => {
       const outcome = language.parse(source, { attemptRecovery: true });

@@ -60,20 +60,28 @@ export interface StatusContext extends StatusActions {
 export function failureStatus(
   source: StatusSource,
   diagnostics: readonly Diagnostic[],
-  { marked = true }: { marked?: boolean } = {},
+  { marked = true, head = false }: { marked?: boolean; head?: boolean } = {},
 ): Status {
   const semantic = diagnostics.filter(
     ({ stage }) => stage === Stage.SEMANTIC || stage === Stage.COMPILE,
   ).length;
+  const unmarked = diagnostics
+    .filter(({ span }) => !marked || span === undefined)
+    .map((diagnostic) => ({ diagnostic }));
+  const [first] = diagnostics;
+  const listed =
+    head &&
+    first !== undefined &&
+    !unmarked.some(({ diagnostic }) => diagnostic === first)
+      ? [{ diagnostic: first }, ...unmarked]
+      : unmarked;
   return {
     heading: {
       source,
       count: diagnostics.length,
       ...(semantic > 0 ? { semantic } : {}),
     },
-    diagnostics: diagnostics
-      .filter(({ span }) => !marked || span === undefined)
-      .map((diagnostic) => ({ diagnostic })),
+    diagnostics: listed,
   };
 }
 

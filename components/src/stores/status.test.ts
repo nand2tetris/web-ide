@@ -62,6 +62,26 @@ describe("failureStatus", () => {
   });
 });
 
+describe("failureStatus with the head of the list", () => {
+  it("lists the first diagnostic ahead of the ones it cannot mark", () => {
+    const [first, second, spanless] = [bad(2), bad(3), nowhere("A")];
+    expect(
+      failureStatus("hdl", [first, second, spanless], { head: true })
+        .diagnostics,
+    ).toEqual([{ diagnostic: first }, { diagnostic: spanless }]);
+  });
+
+  it("lists the first diagnostic once when no editor marks the file", () => {
+    const [first, spanless] = [bad(2), nowhere("A")];
+    expect(
+      failureStatus("tst", [first, spanless], {
+        marked: false,
+        head: true,
+      }).diagnostics,
+    ).toEqual([{ diagnostic: first }, { diagnostic: spanless }]);
+  });
+});
+
 describe("comparisonStatus", () => {
   it("succeeds when the output matches the compare file", () => {
     expect(comparisonStatus("| a |\n| 1 |", "| a |\n| 1 |")).toEqual({

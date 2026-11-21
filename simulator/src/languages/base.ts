@@ -578,15 +578,36 @@ function isMissingCorrectionAction(e: unknown): boolean {
   );
 }
 
+/**
+ * Recovery can fail repeatedly on one line, each time with the same message.
+ * Later failures share the first one's diagnostic, so lists drop repeats.
+ */
+function sameLineOnce(found: Diagnostic[]): Diagnostic[] {
+  const first = new Map<string, Diagnostic>();
+  return found.map((one) => {
+    const key = JSON.stringify([one.code, one.args, one.span?.line, one.stage]);
+    const seen = first.get(key);
+    if (seen !== undefined) {
+      return seen;
+    }
+    first.set(key, one);
+    return one;
+  });
+}
+
 function outcomeOf<T>(ast: T, diagnostics: readonly Diagnostic[]): Outcome<T> {
-  const [first, ...rest] = diagnostics;
+  const [first, ...rest] = [...new Set(diagnostics)];
   return first === undefined
     ? { ast: mint(ast), diagnostics: [] }
     : { ast, diagnostics: [first, ...rest] };
 }
 
 function nullRootOf<T>(empty: T, diagnostics: Diagnostics): Outcome<T> {
-  return { ast: empty, diagnostics, nullRoot: true };
+  return {
+    ast: empty,
+    diagnostics: [...new Set(diagnostics)] as unknown as Diagnostics,
+    nullRoot: true,
+  };
 }
 
 function thrownDiagnostic(e: unknown): Diagnostic {
@@ -633,7 +654,9 @@ export function makeParser<T>(
             })
           : grammar.match(source);
         const failures = recover ? match.getRecoveredFailures() : [];
-        diagnostics = failures.map((f) => diagnosticOf(source, f, expectedOf));
+        diagnostics = sameLineOnce(
+          failures.map((f) => diagnosticOf(source, f, expectedOf)),
+        );
         if (match.failed()) {
           const first = syntaxDiagnostic(
             span(match.getInterval()),

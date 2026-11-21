@@ -48,6 +48,10 @@ export const DiagnosticCode = Object.freeze({
   }),
   Tst: Object.freeze({
     MISSING_LOAD: "tst.missingLoad",
+    NEGATIVE_REPEAT: "tst.negativeRepeat",
+  }),
+  Cmp: Object.freeze({
+    ROW_WIDTH: "cmp.rowWidth",
   }),
   Chip: Object.freeze({
     BUS_RANGE: "chip.busRange",
@@ -128,6 +132,11 @@ export interface DiagnosticArgs {
 
   // Test scripts.
   [DiagnosticCode.Tst.MISSING_LOAD]: Record<string, never>;
+  [DiagnosticCode.Tst.NEGATIVE_REPEAT]: { count: number };
+
+  // Comparison files.
+  /** A row with more cells than the header row. */
+  [DiagnosticCode.Cmp.ROW_WIDTH]: { row: number; header: number };
 
   // HDL chips.
   [DiagnosticCode.Chip.BUS_RANGE]: Record<string, never>;
@@ -272,6 +281,16 @@ export function located(found: Fault, span?: Span, stage?: Stage): Diagnostic {
   } as Diagnostic;
 }
 
+/** A stable text of a diagnostic's code and arguments, for identity checks. */
+export function faultKey({ code, args }: Fault): string {
+  return JSON.stringify([
+    code,
+    Object.entries(args as Record<string, unknown>).sort(([a], [b]) =>
+      a < b ? -1 : a > b ? 1 : 0,
+    ),
+  ]);
+}
+
 /** Expectations as Ohm words them: `a`, `a or b`, `a, b, or c`. */
 function listOf(items: readonly string[]): string {
   return items
@@ -321,6 +340,11 @@ export const ENGLISH: Catalog = {
 
     [DiagnosticCode.Tst.MISSING_LOAD]: () =>
       "A test script must have a load command",
+    [DiagnosticCode.Tst.NEGATIVE_REPEAT]: ({ count }) =>
+      `A repeat count cannot be negative (got ${count})`,
+
+    [DiagnosticCode.Cmp.ROW_WIDTH]: ({ row, header }) =>
+      `The row has ${row} columns, but the header has ${header}`,
 
     [DiagnosticCode.Chip.BUS_RANGE]: () =>
       "Bus start index should be less than or equal to bus end index",

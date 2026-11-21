@@ -19,6 +19,8 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Asm.A_VALUE_RANGE]: { value: 32768 },
   [DiagnosticCode.Asm.DUPLICATE_LABEL]: { label: "LOOP" },
   [DiagnosticCode.Tst.MISSING_LOAD]: {},
+  [DiagnosticCode.Tst.NEGATIVE_REPEAT]: { count: -1 },
+  [DiagnosticCode.Cmp.ROW_WIDTH]: { row: 4, header: 3 },
   [DiagnosticCode.Chip.BUS_RANGE]: {},
   [DiagnosticCode.Chip.NOT_LOADED]: { file: "Foo.hdl" },
   [DiagnosticCode.Chip.MULTIPLE_WRITES]: { pin: "out", index: 2 },

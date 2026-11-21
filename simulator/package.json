@@ -36,6 +36,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "grammars": "bash src/languages/grammars/prep.sh"
   }
 }

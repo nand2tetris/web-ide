@@ -1,9 +1,28 @@
 import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser } from "./base.js";
+import {
+  actionError,
+  baseSemantics,
+  carrierOf,
+  failedOf,
+  grammars,
+  guardedRecovery,
+  isRecovered,
+  makeParser,
+  type Outcome,
+  type Parser,
+  type Recovery,
+  type RecoveryPoint,
+  span,
+} from "./base.js";
+import { DiagnosticCode } from "./diagnostic.js";
 
 export type Cell = string;
-export type Line = Cell[];
+export type Line = Cell[] & Recovery;
 export type Cmp = Line[];
+
+function nullLine(point: RecoveryPoint): Line {
+  return Object.assign([], carrierOf(point, "line"));
+}
 
 import cmpGrammar from "./grammars/cmp.ohm.js";
 export const grammar = ohmGrammar(cmpGrammar, grammars);
@@ -16,25 +35,57 @@ cmpSemantics.addAttribute<Cell>("cell", {
 });
 
 cmpSemantics.addAttribute<Line>("line", {
-  line(_a, cells, _b) {
-    return cells.children.map((c) => c.cell);
+  line(bar, cells, correction, _end) {
+    const recovered = guardedRecovery(bar, correction);
+    return recovered ? nullLine(recovered) : cells.children.map((c) => c.cell);
   },
 });
 
+/**
+ * A row wider than the first row, the header, is an error; a narrower one is
+ * not. A damaged header disables the check.
+ */
 cmpSemantics.addAttribute<Cmp>("root", {
   Root(lines) {
-    return lines.children.map((c) => c.line);
+    const rows: Cmp = lines.children.map((c) => c.line);
+    const [header] = rows;
+    if (header === undefined || isRecovered(header)) return rows;
+    return rows.map((row, i) => {
+      if (isRecovered(row) || row.length <= header.length) return row;
+      const at = span(lines.children[i].source);
+      const wide = actionError(
+        DiagnosticCode.Cmp.ROW_WIDTH,
+        { row: row.length, header: header.length },
+        at,
+      );
+      return Object.assign(row, failedOf(wide, at, "rowWidth"));
+    });
   },
 });
 
-/** The null root of a parse that built no table: a table with no lines. */
 function emptyCmp(): Cmp {
   return [];
+}
+
+export const rawCMP: Parser<Cmp> = makeParser<Cmp>(
+  grammar,
+  cmpSemantics,
+  emptyCmp,
+);
+
+export interface CmpParseOptions {
+  /** See `ParseOptions.attemptRecovery`. */
+  attemptRecovery?: boolean;
 }
 
 export const CMP = {
   grammar: cmpGrammar,
   semantics: cmpSemantics,
   parser: grammar,
-  ...makeParser<Cmp>(grammar, cmpSemantics, emptyCmp),
+  empty: emptyCmp,
+  parse(source: string, options: CmpParseOptions = {}): Outcome<Cmp> {
+    return rawCMP.parse(source, {
+      attemptRecovery: options.attemptRecovery ?? false,
+    });
+  },
 };

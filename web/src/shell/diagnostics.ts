@@ -51,6 +51,15 @@ function messageOf(found: Diagnostic): string {
 
     case DiagnosticCode.Tst.MISSING_LOAD:
       return t`A test script must have a load command`;
+    case DiagnosticCode.Tst.NEGATIVE_REPEAT: {
+      const { count } = found.args;
+      return t`A repeat count cannot be negative (got ${count})`;
+    }
+
+    case DiagnosticCode.Cmp.ROW_WIDTH: {
+      const { row, header } = found.args;
+      return t`The row has ${row} columns, but the header has ${header}`;
+    }
 
     case DiagnosticCode.Chip.BUS_RANGE:
       return t`Bus start index should be less than or equal to bus end index`;

@@ -1,8 +1,20 @@
-/** Reads tst files to apply and perform test runs. */
-
-import { grammar as ohmGrammar } from "ohm-js";
-import { baseSemantics, grammars, makeParser, span } from "./base.js";
-import { Span } from "./diagnostic.js";
+import { type Node, grammar as ohmGrammar } from "ohm-js";
+import {
+  actionError,
+  baseSemantics,
+  carrierOf,
+  categorize,
+  grammars,
+  guardedRecovery,
+  isRecovered,
+  makeParser,
+  makePrune,
+  type Recovery,
+  type RecoveryPoint,
+  rewrites,
+  span,
+} from "./base.js";
+import { DiagnosticCode, Span } from "./diagnostic.js";
 
 export interface TstEchoOperation {
   op: "echo";
@@ -74,7 +86,7 @@ export type TstOperation =
 
 export type Separator = "," | ";" | "!";
 
-export interface TstCommand {
+export interface TstCommand extends Recovery {
   op: TstOperation;
   separator: Separator;
   span: Span;
@@ -103,6 +115,18 @@ export type TstStatement = TstCommand | TstRepeat | TstWhileStatement;
 export interface Tst {
   lines: TstStatement[];
 }
+
+/** Prune before execution: the placeholder operation is not executable. */
+function nullCommand(point: RecoveryPoint, kind: TstSkipKind): TstCommand {
+  return {
+    op: { op: "eval" },
+    separator: ",",
+    span: point.span,
+    ...carrierOf(point, kind),
+  };
+}
+
+export type TstSkipKind = "TstOperation" | "TstRepeatClose" | "TstWhileClose";
 
 import tstGrammar from "./grammars/tst.ohm.js";
 export const grammar = ohmGrammar(tstGrammar, grammars);
@@ -212,7 +236,14 @@ tstSemantics.addAttribute<TstOperation>("operation", {
 });
 
 tstSemantics.addAttribute<TstCommand>("command", {
-  TstCommand(op, sep) {
+  TstCommand(op, correction, sep) {
+    const recovered: RecoveryPoint | undefined = guardedRecovery(
+      op,
+      correction,
+    );
+    if (recovered) {
+      return nullCommand(recovered, "TstOperation");
+    }
     return {
       op: op.operation,
       separator: sep.sourceString as Separator,
@@ -231,18 +262,53 @@ tstSemantics.addAttribute<TstWhileCondition>("condition", {
   },
 });
 
+function blockCommands(
+  commands: Node,
+  correction: Node,
+  kind: "TstRepeatClose" | "TstWhileClose",
+): TstCommand[] {
+  const statements = commands.children.map((node) => node.command);
+  if (
+    correction.recoveredFailure?.missing &&
+    correction.source.contents === ""
+  ) {
+    return statements;
+  }
+  const recovered: RecoveryPoint | undefined = correction.recovery;
+  if (recovered === undefined) return statements;
+  const { span: skipped, recovery } = recovered;
+  // A scanned insertion may skip a command after its synthesized diagnostic.
+  // For ordinary recovery, only a skipped prefix before the failure may be a load.
+  const discardedCommand =
+    skipped.start < skipped.end &&
+    (correction.recoveredFailure?.missing ||
+      (recovery.span !== undefined && skipped.start < recovery.span.start));
+  return [
+    ...statements,
+    nullCommand(recovered, discardedCommand ? "TstOperation" : kind),
+  ];
+}
+
 tstSemantics.addAttribute<TstStatement>("statement", {
-  TstWhile(op, cond, _o, commands, _c) {
+  TstWhile(op, cond, _o, commands, correction, _stop) {
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
+      statements: blockCommands(commands, correction, "TstWhileClose"),
       condition: cond.condition,
       span: span(this.source),
     };
   },
-  TstRepeat(op, count, _o, commands, _c) {
+  TstRepeat(op, count, _o, commands, correction, _stop) {
+    const given = count.sourceString ? Number(count.sourceString) : undefined;
+    if (given !== undefined && given < 0) {
+      actionError(
+        DiagnosticCode.Tst.NEGATIVE_REPEAT,
+        { count: given },
+        span(count.source),
+      );
+    }
     return {
-      statements: commands.children.map((node) => node.command as TstCommand),
-      count: count.sourceString ? Number(count.sourceString) : -1,
+      statements: blockCommands(commands, correction, "TstRepeatClose"),
+      count: given ?? -1,
       span: span(this.source),
     };
   },
@@ -265,14 +331,55 @@ tstSemantics.addAttribute<Tst>("root", {
   },
 });
 
-/** The null root of a parse that built no test: a test with no statements. */
+export const prune = makePrune<Tst>((tree) => ({
+  ...tree,
+  lines: tree.lines.flatMap((line): TstStatement[] =>
+    "statements" in line
+      ? [{ ...line, statements: line.statements.filter(isIntact) }]
+      : isIntact(line)
+        ? [line]
+        : [],
+  ),
+}));
+
+function isIntact(command: TstCommand): boolean {
+  return !isRecovered(command);
+}
+
 function emptyTst(): Tst {
   return { lines: [] };
 }
+
+/**
+ * Every word that starts a statement. Where a statement may start, the end of
+ * input is folded in too: a misspelled command is the likelier mistake.
+ */
+const TST_COMMANDS = [
+  "load",
+  "output-file",
+  "compare-to",
+  "output-list",
+  "eval",
+  "tick",
+  "tock",
+  "ticktock",
+  "vmstep",
+  "set",
+  "output",
+  "echo",
+  "clear-echo",
+  "ROM32K",
+  "resetRam",
+  "repeat",
+  "while",
+  "end of input",
+];
+
+const tstExpected = rewrites(categorize(TST_COMMANDS, "a command"));
 
 export const TST = {
   grammar: tstGrammar,
   semantics: tstSemantics,
   parser: grammar,
-  ...makeParser<Tst>(grammar, tstSemantics, emptyTst),
+  ...makeParser<Tst>(grammar, tstSemantics, emptyTst, "root", tstExpected),
 };

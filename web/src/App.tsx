@@ -13,6 +13,7 @@ import { registerLanguages } from "./languages/loader";
 import { messages } from "./locales";
 import { PageContextProvider } from "./Page.context";
 import { Redirect } from "./pages/redirect";
+import { recoveryConfiguration } from "./recovery";
 import { FilePicker } from "./shell/file_select";
 import Footer from "./shell/footer";
 import Header from "./shell/header";
@@ -31,7 +32,7 @@ i18n.activate(navigator.language);
 type STATE = "none" | "initializing" | "initialized";
 
 function App() {
-  const baseContext = useBaseContext();
+  const baseContext = useBaseContext(recoveryConfiguration);
   const appContext = useAppContext();
   const state = useRef<STATE>("none");
   const [initialized, setInitialized] = useState(false);

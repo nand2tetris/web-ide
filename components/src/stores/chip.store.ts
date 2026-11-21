@@ -16,12 +16,11 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
-import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import {
   Diagnostic,
   Span,
 } from "@nand2tetris/simulator/languages/diagnostic.js";
-import { TST } from "@nand2tetris/simulator/languages/tst.js";
+import { buildTst } from "@nand2tetris/simulator/test/builder.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -133,6 +132,7 @@ export function makeChipStore(
   storage: Record<string, string>,
   dispatch: MutableRefObject<ChipStoreDispatch>,
   upgraded: boolean,
+  attemptRecovery: () => boolean = () => false,
 ) {
   let _chipName = "";
   let _dir = "";
@@ -230,6 +230,7 @@ export function makeChipStore(
       const comparison = comparisonStatus(
         state.files.cmp.trim(),
         state.files.out.trim(),
+        { attemptRecovery: attemptRecovery() },
       );
       // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
@@ -432,13 +433,8 @@ export function makeChipStore(
     compileTest(file: string, path: string) {
       if (!fs) return;
       dispatch.current({ action: "setFiles", payload: { tst: file } });
-      const tst = validOf(TST.parse(file));
-      if (isErr(tst)) {
-        status.setFailureStatus("tst", Err(tst), { marked: false });
-        invalid = true;
-        return false;
-      }
-      const maybeTest = ChipTest.from(Ok(tst), {
+      const maybeTest = buildTst({ name: path, content: file }, "chip", {
+        attemptRecovery: attemptRecovery(),
         dir: path,
         setStatus: (message) => status.setStatus({ message }),
         loadAction: async (file) => {
@@ -452,7 +448,7 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        status.setFailureStatus("tst", [Err(maybeTest)], {
+        status.setFailureStatus("tst", Err(maybeTest), {
           marked: false,
         });
         return false;
@@ -619,10 +615,19 @@ export function makeChipStore(
 }
 
 export function useChipPageStore() {
-  const { fs, setStatus, clearStatus, setFailureStatus, storage, localFsRoot } =
-    useContext(BaseContext);
+  const {
+    fs,
+    setStatus,
+    clearStatus,
+    setFailureStatus,
+    storage,
+    localFsRoot,
+    attemptRecovery,
+  } = useContext(BaseContext);
 
   const dispatch = useRef<ChipStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
@@ -632,6 +637,7 @@ export function useChipPageStore() {
         storage,
         dispatch,
         localFsRoot != undefined,
+        () => recovery.current,
       ),
     [fs, setStatus, clearStatus, setFailureStatus, storage, dispatch],
   );

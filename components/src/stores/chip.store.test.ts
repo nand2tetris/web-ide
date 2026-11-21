@@ -4,7 +4,10 @@ import {
 } from "@davidsouther/jiffies/fs.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
 import { isValid } from "@nand2tetris/simulator/languages/base.js";
-import { DiagnosticCode } from "@nand2tetris/simulator/languages/diagnostic.js";
+import {
+  DiagnosticCode,
+  describeDiagnostic,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
@@ -24,6 +27,7 @@ function testChipStore(
     "projects/01/Not.cmp": not.cmp,
   },
   storage: Record<string, string> = {},
+  attemptRecovery?: () => boolean,
 ) {
   const dispatch: MutableRefObject<ChipStoreDispatch> = { current: vi.fn() };
 
@@ -35,6 +39,7 @@ function testChipStore(
     storage,
     dispatch,
     false,
+    attemptRecovery,
   );
   const store = { state: initialState, actions, reducers, dispatch, setStatus };
   dispatch.current = vi.fn().mockImplementation(
@@ -48,6 +53,48 @@ function testChipStore(
 
   return store;
 }
+
+describe("test script diagnostics", () => {
+  it("lists a block correction and the missing load, with only syntax when recovery is off", () => {
+    let recovery = true;
+    const store = testChipStore(undefined, {}, () => recovery);
+
+    expect(
+      store.actions.compileTest("repeat 1 { eval; ? }", "projects/01"),
+    ).toBe(false);
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      severity: "ERROR",
+      heading: { source: "tst", count: 2, semantic: 1 },
+      diagnostics: [
+        {
+          diagnostic: expect.objectContaining({
+            code: DiagnosticCode.Syntax.EXPECTED,
+          }),
+        },
+        {
+          diagnostic: expect.objectContaining({
+            code: DiagnosticCode.Tst.MISSING_LOAD,
+          }),
+        },
+      ],
+    });
+
+    recovery = false;
+    store.actions.compileTest("repeat 1 { eval; ? }", "projects/01");
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      severity: "ERROR",
+      heading: { source: "tst", count: 1 },
+      diagnostics: [
+        {
+          diagnostic: expect.objectContaining({
+            code: DiagnosticCode.Syntax.EXPECTED,
+            args: { expected: expect.arrayContaining(['"}"']) },
+          }),
+        },
+      ],
+    });
+  });
+});
 
 describe("ChipStore", () => {
   describe("initialization", () => {

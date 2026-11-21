@@ -78,8 +78,12 @@ export function failureStatus(
 }
 
 /** The status after a test run compares its output to the compare file. */
-export function comparisonStatus(cmp: string, out: string): Status {
-  const parsed = CMP.parse(cmp);
+export function comparisonStatus(
+  cmp: string,
+  out: string,
+  { attemptRecovery = false }: { attemptRecovery?: boolean } = {},
+): Status {
+  const parsed = CMP.parse(cmp, { attemptRecovery });
   if (!isValid(parsed)) {
     return failureStatus("cmp", parsed.diagnostics, { marked: false });
   }

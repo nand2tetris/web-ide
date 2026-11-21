@@ -83,12 +83,12 @@ export const parsed = {
   varDecs: [
     {
       varType: "field",
-      type: { value: "Square", span: { start: 734, end: 741, line: 16 } },
+      type: { value: "Square", span: { start: 734, end: 740, line: 16 } },
       names: ["square"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 785, end: 789, line: 17 } },
+      type: { value: "int", span: { start: 785, end: 788, line: 17 } },
       names: ["direction"],
     },
   ],
@@ -97,7 +97,7 @@ export const parsed = {
       type: "constructor",
       returnType: {
         value: "SquareGame",
-        span: { start: 957, end: 968, line: 21 },
+        span: { start: 957, end: 967, line: 21 },
       },
       name: { value: "new", span: { start: 968, end: 971, line: 21 } },
       parameters: [],
@@ -164,11 +164,12 @@ export const parsed = {
             span: { start: 1129, end: 1141, line: 25 },
           },
         ],
+        close: { start: 1145, end: 1146, line: 26 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1188, end: 1193, line: 29 } },
+      returnType: { value: "void", span: { start: 1188, end: 1192, line: 29 } },
       name: { value: "dispose", span: { start: 1193, end: 1200, line: 29 } },
       parameters: [],
       body: {
@@ -209,11 +210,12 @@ export const parsed = {
             span: { start: 1269, end: 1276, line: 32 },
           },
         ],
+        close: { start: 1280, end: 1281, line: 33 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1346, end: 1351, line: 36 } },
+      returnType: { value: "void", span: { start: 1346, end: 1350, line: 36 } },
       name: { value: "moveSquare", span: { start: 1351, end: 1361, line: 36 } },
       parameters: [],
       body: {
@@ -358,23 +360,24 @@ export const parsed = {
             span: { start: 1626, end: 1633, line: 42 },
           },
         ],
+        close: { start: 1637, end: 1638, line: 43 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1734, end: 1739, line: 46 } },
+      returnType: { value: "void", span: { start: 1734, end: 1738, line: 46 } },
       name: { value: "run", span: { start: 1739, end: 1742, line: 46 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: { value: "char", span: { start: 1757, end: 1762, line: 47 } },
+            type: { value: "char", span: { start: 1757, end: 1761, line: 47 } },
             names: ["key"],
           },
           {
             type: {
               value: "boolean",
-              span: { start: 1819, end: 1827, line: 48 },
+              span: { start: 1819, end: 1826, line: 48 },
             },
             names: ["exit"],
           },
@@ -851,6 +854,7 @@ export const parsed = {
             span: { start: 2824, end: 2831, line: 74 },
           },
         ],
+        close: { start: 2835, end: 2836, line: 75 },
       },
     },
   ],

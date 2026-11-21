@@ -1,6 +1,11 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
-import { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
+import {
+  Diagnostic,
+  DiagnosticCode,
+  Diagnostics,
+  diagnostic,
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -30,6 +35,45 @@ export type CompilerStoreDispatch = Dispatch<{
 
 const COMPILE_DEBOUNCE_MS = 250;
 
+function classNameOf(path: string): string {
+  return (path.split("/").pop() ?? path).replace(/\.jack$/, "");
+}
+
+/**
+ * Compiles sources using the filename without `.jack` as the class name,
+ * then returns each result under its original path. If names collide, the
+ * first source is compiled and later paths receive duplicate-class diagnostics.
+ */
+function compileByPath(
+  files: Record<string, string>,
+  attemptRecovery: boolean,
+): Record<string, string | Diagnostics> {
+  const paths: Record<string, string> = Object.create(null);
+  const byClass: Record<string, string> = Object.create(null);
+  const duplicates: Record<string, Diagnostics> = Object.create(null);
+  for (const [path, content] of Object.entries(files)) {
+    const name = classNameOf(path);
+    if (Object.hasOwn(byClass, name)) {
+      duplicates[path] = [
+        diagnostic(DiagnosticCode.Jack.DUPLICATE_CLASS_FILE, {
+          path,
+          other: paths[name],
+        }),
+      ];
+      continue;
+    }
+    paths[name] = path;
+    byClass[name] = content;
+  }
+  const compiled = compile(byClass, { attemptRecovery });
+  return {
+    ...Object.fromEntries(
+      Object.entries(compiled).map(([name, result]) => [paths[name], result]),
+    ),
+    ...duplicates,
+  };
+}
+
 function classTemplate(name: string) {
   return `class ${name} {\n\n}\n`;
 }
@@ -37,6 +81,7 @@ function classTemplate(name: string) {
 export function makeCompilerStore(
   status: StatusActions,
   dispatch: MutableRefObject<CompilerStoreDispatch>,
+  attemptRecovery: () => boolean = () => false,
 ) {
   let fs: FileSystem | undefined;
   let compileTimer: ReturnType<typeof setTimeout> | undefined;
@@ -74,7 +119,6 @@ export function makeCompilerStore(
       }
     },
 
-    // the keys of 'files' have to be the full file path, not basename
     setFiles(state: CompilerPageState, files: Record<string, string>) {
       state.files = files;
       state.isCompiled = false;
@@ -82,7 +126,7 @@ export function makeCompilerStore(
     },
 
     compile(state: CompilerPageState) {
-      const compiledFiles = compile(state.files);
+      const compiledFiles = compileByPath(state.files, attemptRecovery());
       state.compiled = {};
       for (const [name, compiled] of Object.entries(compiledFiles)) {
         if (typeof compiled === "string") {
@@ -175,6 +219,12 @@ export function makeCompilerStore(
       flushCompile();
       dispatch.current({ action: "writeCompiled" });
     },
+
+    recompile() {
+      clearTimeout(compileTimer);
+      compileTimer = undefined;
+      dispatch.current({ action: "compile" });
+    },
   };
 
   const initialState: CompilerPageState = {
@@ -189,13 +239,20 @@ export function makeCompilerStore(
 }
 
 export function useCompilerPageStore() {
-  const { setStatus, clearStatus, setFailureStatus } = useContext(BaseContext);
+  const { setStatus, clearStatus, setFailureStatus, attemptRecovery } =
+    useContext(BaseContext);
 
   const dispatch = useRef<CompilerStoreDispatch>(() => undefined);
+  const recovery = useRef(attemptRecovery);
+  recovery.current = attemptRecovery;
 
   const { initialState, reducers, actions } = useMemo(
     () =>
-      makeCompilerStore({ setStatus, clearStatus, setFailureStatus }, dispatch),
+      makeCompilerStore(
+        { setStatus, clearStatus, setFailureStatus },
+        dispatch,
+        () => recovery.current,
+      ),
     [setStatus, clearStatus, setFailureStatus, dispatch],
   );
 

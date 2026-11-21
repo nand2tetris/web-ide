@@ -12,6 +12,8 @@ import {
 const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Syntax.EXPECTED]: { expected: ['"a"', '"b"'] },
   [DiagnosticCode.Syntax.UNKNOWN_WORD]: { kind: "command", word: "psh" },
+  [DiagnosticCode.Syntax.DID_YOU_MEAN]: { word: "Push", suggestion: "push" },
+  [DiagnosticCode.Syntax.NAME]: { word: "let", reason: "reserved" },
   [DiagnosticCode.Error.UNEXPECTED]: { message: "boom" },
   [DiagnosticCode.Asm.INVALID_TARGET]: { target: "DA", suggestion: "AD" },
   [DiagnosticCode.Asm.INVALID_VALUE]: { value: "M+A" },
@@ -96,6 +98,7 @@ const SAMPLES: { [C in DiagnosticCode]: DiagnosticArgs[C] } = {
   [DiagnosticCode.Jack.DUPLICATE_SUBROUTINE]: { name: "a" },
   [DiagnosticCode.Jack.MISSING_RETURN_VALUE]: {},
   [DiagnosticCode.Jack.MISSING_RETURN_PATH]: { name: "main" },
+  [DiagnosticCode.Jack.FIELD_IN_FUNCTION]: { name: "main", field: "size" },
 };
 
 describe("describeDiagnostic", () => {

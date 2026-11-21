@@ -20,7 +20,7 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: { value: "void", span: { start: 263, end: 268, line: 8 } },
+      returnType: { value: "void", span: { start: 263, end: 267, line: 8 } },
       name: { value: "main", span: { start: 268, end: 272, line: 8 } },
       parameters: [],
       body: {
@@ -28,7 +28,7 @@ export const parsed = {
           {
             type: {
               value: "SquareGame",
-              span: { start: 289, end: 300, line: 9 },
+              span: { start: 289, end: 299, line: 9 },
             },
             names: ["game"],
           },
@@ -81,6 +81,7 @@ export const parsed = {
             span: { start: 401, end: 408, line: 13 },
           },
         ],
+        close: { start: 413, end: 414, line: 14 },
       },
     },
   ],

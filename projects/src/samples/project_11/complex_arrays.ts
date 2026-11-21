@@ -74,13 +74,13 @@ export const parsed = {
   subroutines: [
     {
       type: "function",
-      returnType: { value: "void", span: { start: 400, end: 405, line: 12 } },
+      returnType: { value: "void", span: { start: 400, end: 404, line: 12 } },
       name: { value: "main", span: { start: 405, end: 409, line: 12 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: { value: "Array", span: { start: 426, end: 432, line: 13 } },
+            type: { value: "Array", span: { start: 426, end: 431, line: 13 } },
             names: ["a", "b", "c"],
           },
         ],
@@ -933,15 +933,16 @@ export const parsed = {
             span: { start: 1820, end: 1827, line: 55 },
           },
         ],
+        close: { start: 1832, end: 1833, line: 56 },
       },
     },
     {
       type: "function",
-      returnType: { value: "int", span: { start: 1852, end: 1856, line: 58 } },
+      returnType: { value: "int", span: { start: 1852, end: 1855, line: 58 } },
       name: { value: "double", span: { start: 1856, end: 1862, line: 58 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 1863, end: 1867, line: 58 } },
+          type: { value: "int", span: { start: 1863, end: 1866, line: 58 } },
           name: "a",
         },
       ],
@@ -964,19 +965,20 @@ export const parsed = {
             span: { start: 1878, end: 1891, line: 59 },
           },
         ],
+        close: { start: 1896, end: 1897, line: 60 },
       },
     },
     {
       type: "function",
-      returnType: { value: "void", span: { start: 1916, end: 1921, line: 62 } },
+      returnType: { value: "void", span: { start: 1916, end: 1920, line: 62 } },
       name: { value: "fill", span: { start: 1921, end: 1925, line: 62 } },
       parameters: [
         {
-          type: { value: "Array", span: { start: 1926, end: 1932, line: 62 } },
+          type: { value: "Array", span: { start: 1926, end: 1931, line: 62 } },
           name: "a",
         },
         {
-          type: { value: "int", span: { start: 1935, end: 1939, line: 62 } },
+          type: { value: "int", span: { start: 1935, end: 1938, line: 62 } },
           name: "size",
         },
       ],
@@ -1059,6 +1061,7 @@ export const parsed = {
             span: { start: 2065, end: 2072, line: 67 },
           },
         ],
+        close: { start: 2077, end: 2078, line: 68 },
       },
     },
   ],

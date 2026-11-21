@@ -108,40 +108,40 @@ export const parsed = {
   varDecs: [
     {
       varType: "field",
-      type: { value: "int", span: { start: 677, end: 681, line: 18 } },
+      type: { value: "int", span: { start: 677, end: 680, line: 18 } },
       names: ["x", "y"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 736, end: 740, line: 19 } },
+      type: { value: "int", span: { start: 736, end: 739, line: 19 } },
       names: ["width", "height"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 796, end: 800, line: 20 } },
+      type: { value: "int", span: { start: 796, end: 799, line: 20 } },
       names: ["direction"],
     },
   ],
   subroutines: [
     {
       type: "constructor",
-      returnType: { value: "Bat", span: { start: 991, end: 995, line: 24 } },
+      returnType: { value: "Bat", span: { start: 991, end: 994, line: 24 } },
       name: { value: "new", span: { start: 995, end: 998, line: 24 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 999, end: 1003, line: 24 } },
+          type: { value: "int", span: { start: 999, end: 1002, line: 24 } },
           name: "Ax",
         },
         {
-          type: { value: "int", span: { start: 1007, end: 1011, line: 24 } },
+          type: { value: "int", span: { start: 1007, end: 1010, line: 24 } },
           name: "Ay",
         },
         {
-          type: { value: "int", span: { start: 1015, end: 1019, line: 24 } },
+          type: { value: "int", span: { start: 1015, end: 1018, line: 24 } },
           name: "Awidth",
         },
         {
-          type: { value: "int", span: { start: 1027, end: 1031, line: 24 } },
+          type: { value: "int", span: { start: 1027, end: 1030, line: 24 } },
           name: "Aheight",
         },
       ],
@@ -245,11 +245,12 @@ export const parsed = {
             span: { start: 1194, end: 1206, line: 31 },
           },
         ],
+        close: { start: 1211, end: 1212, line: 32 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1269, end: 1274, line: 35 } },
+      returnType: { value: "void", span: { start: 1269, end: 1273, line: 35 } },
       name: { value: "dispose", span: { start: 1274, end: 1281, line: 35 } },
       parameters: [],
       body: {
@@ -278,11 +279,12 @@ export const parsed = {
             span: { start: 1327, end: 1334, line: 37 },
           },
         ],
+        close: { start: 1339, end: 1340, line: 38 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1379, end: 1384, line: 41 } },
+      returnType: { value: "void", span: { start: 1379, end: 1383, line: 41 } },
       name: { value: "show", span: { start: 1384, end: 1388, line: 41 } },
       parameters: [],
       body: {
@@ -323,11 +325,12 @@ export const parsed = {
             span: { start: 1454, end: 1461, line: 44 },
           },
         ],
+        close: { start: 1466, end: 1467, line: 45 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1506, end: 1511, line: 48 } },
+      returnType: { value: "void", span: { start: 1506, end: 1510, line: 48 } },
       name: { value: "hide", span: { start: 1511, end: 1515, line: 48 } },
       parameters: [],
       body: {
@@ -368,11 +371,12 @@ export const parsed = {
             span: { start: 1582, end: 1589, line: 51 },
           },
         ],
+        close: { start: 1594, end: 1595, line: 52 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1634, end: 1639, line: 55 } },
+      returnType: { value: "void", span: { start: 1634, end: 1638, line: 55 } },
       name: { value: "draw", span: { start: 1639, end: 1643, line: 55 } },
       parameters: [],
       body: {
@@ -450,18 +454,19 @@ export const parsed = {
             span: { start: 1718, end: 1725, line: 57 },
           },
         ],
+        close: { start: 1730, end: 1731, line: 58 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1807, end: 1812, line: 61 } },
+      returnType: { value: "void", span: { start: 1807, end: 1811, line: 61 } },
       name: {
         value: "setDirection",
         span: { start: 1812, end: 1824, line: 61 },
       },
       parameters: [
         {
-          type: { value: "int", span: { start: 1825, end: 1829, line: 61 } },
+          type: { value: "int", span: { start: 1825, end: 1828, line: 61 } },
           name: "Adirection",
         },
       ],
@@ -490,11 +495,12 @@ export const parsed = {
             span: { start: 1887, end: 1894, line: 63 },
           },
         ],
+        close: { start: 1899, end: 1900, line: 64 },
       },
     },
     {
       type: "method",
-      returnType: { value: "int", span: { start: 1953, end: 1957, line: 67 } },
+      returnType: { value: "int", span: { start: 1953, end: 1956, line: 67 } },
       name: { value: "getLeft", span: { start: 1957, end: 1964, line: 67 } },
       parameters: [],
       body: {
@@ -514,11 +520,12 @@ export const parsed = {
             span: { start: 1977, end: 1986, line: 68 },
           },
         ],
+        close: { start: 1991, end: 1992, line: 69 },
       },
     },
     {
       type: "method",
-      returnType: { value: "int", span: { start: 2046, end: 2050, line: 72 } },
+      returnType: { value: "int", span: { start: 2046, end: 2049, line: 72 } },
       name: { value: "getRight", span: { start: 2050, end: 2058, line: 72 } },
       parameters: [],
       body: {
@@ -547,15 +554,16 @@ export const parsed = {
             span: { start: 2071, end: 2088, line: 73 },
           },
         ],
+        close: { start: 2093, end: 2094, line: 74 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 2140, end: 2145, line: 77 } },
+      returnType: { value: "void", span: { start: 2140, end: 2144, line: 77 } },
       name: { value: "setWidth", span: { start: 2145, end: 2153, line: 77 } },
       parameters: [
         {
-          type: { value: "int", span: { start: 2154, end: 2158, line: 77 } },
+          type: { value: "int", span: { start: 2154, end: 2157, line: 77 } },
           name: "Awidth",
         },
       ],
@@ -608,11 +616,12 @@ export const parsed = {
             span: { start: 2242, end: 2249, line: 81 },
           },
         ],
+        close: { start: 2254, end: 2255, line: 82 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 2326, end: 2331, line: 85 } },
+      returnType: { value: "void", span: { start: 2326, end: 2330, line: 85 } },
       name: { value: "move", span: { start: 2331, end: 2335, line: 85 } },
       parameters: [],
       body: {
@@ -1158,6 +1167,7 @@ export const parsed = {
             span: { start: 3010, end: 3017, line: 102 },
           },
         ],
+        close: { start: 3022, end: 3023, line: 103 },
       },
     },
   ],

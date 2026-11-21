@@ -141,42 +141,42 @@ export const parsed = {
   varDecs: [
     {
       varType: "static",
-      type: { value: "PongGame", span: { start: 285, end: 294, line: 11 } },
+      type: { value: "PongGame", span: { start: 285, end: 293, line: 11 } },
       names: ["instance"],
     },
     {
       varType: "field",
-      type: { value: "Bat", span: { start: 334, end: 338, line: 12 } },
+      type: { value: "Bat", span: { start: 334, end: 337, line: 12 } },
       names: ["bat"],
     },
     {
       varType: "field",
-      type: { value: "Ball", span: { start: 371, end: 376, line: 13 } },
+      type: { value: "Ball", span: { start: 371, end: 375, line: 13 } },
       names: ["ball"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 409, end: 413, line: 14 } },
+      type: { value: "int", span: { start: 409, end: 412, line: 14 } },
       names: ["wall"],
     },
     {
       varType: "field",
-      type: { value: "boolean", span: { start: 488, end: 496, line: 15 } },
+      type: { value: "boolean", span: { start: 488, end: 495, line: 15 } },
       names: ["exit"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 548, end: 552, line: 16 } },
+      type: { value: "int", span: { start: 548, end: 551, line: 16 } },
       names: ["score"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 595, end: 599, line: 17 } },
+      type: { value: "int", span: { start: 595, end: 598, line: 17 } },
       names: ["lastWall"],
     },
     {
       varType: "field",
-      type: { value: "int", span: { start: 704, end: 708, line: 20 } },
+      type: { value: "int", span: { start: 704, end: 707, line: 20 } },
       names: ["batWidth"],
     },
   ],
@@ -185,7 +185,7 @@ export const parsed = {
       type: "constructor",
       returnType: {
         value: "PongGame",
-        span: { start: 774, end: 783, line: 23 },
+        span: { start: 774, end: 782, line: 23 },
       },
       name: { value: "new", span: { start: 783, end: 786, line: 23 } },
       parameters: [],
@@ -462,11 +462,12 @@ export const parsed = {
             span: { start: 1241, end: 1253, line: 38 },
           },
         ],
+        close: { start: 1258, end: 1259, line: 39 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1316, end: 1321, line: 42 } },
+      returnType: { value: "void", span: { start: 1316, end: 1320, line: 42 } },
       name: { value: "dispose", span: { start: 1321, end: 1328, line: 42 } },
       parameters: [],
       body: {
@@ -519,11 +520,12 @@ export const parsed = {
             span: { start: 1425, end: 1432, line: 46 },
           },
         ],
+        close: { start: 1437, end: 1438, line: 47 },
       },
     },
     {
       type: "function",
-      returnType: { value: "void", span: { start: 1500, end: 1505, line: 50 } },
+      returnType: { value: "void", span: { start: 1500, end: 1504, line: 50 } },
       name: {
         value: "newInstance",
         span: { start: 1505, end: 1516, line: 50 },
@@ -558,13 +560,14 @@ export const parsed = {
             span: { start: 1568, end: 1575, line: 52 },
           },
         ],
+        close: { start: 1580, end: 1581, line: 53 },
       },
     },
     {
       type: "function",
       returnType: {
         value: "PongGame",
-        span: { start: 1635, end: 1644, line: 56 },
+        span: { start: 1635, end: 1643, line: 56 },
       },
       name: {
         value: "getInstance",
@@ -588,17 +591,18 @@ export const parsed = {
             span: { start: 1668, end: 1684, line: 57 },
           },
         ],
+        close: { start: 1689, end: 1690, line: 58 },
       },
     },
     {
       type: "method",
-      returnType: { value: "void", span: { start: 1815, end: 1820, line: 62 } },
+      returnType: { value: "void", span: { start: 1815, end: 1819, line: 62 } },
       name: { value: "run", span: { start: 1820, end: 1823, line: 62 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: { value: "char", span: { start: 1840, end: 1845, line: 63 } },
+            type: { value: "char", span: { start: 1840, end: 1844, line: 63 } },
             names: ["key"],
           },
         ],
@@ -1025,20 +1029,21 @@ export const parsed = {
             span: { start: 2752, end: 2759, line: 96 },
           },
         ],
+        close: { start: 2764, end: 2765, line: 97 },
       },
     },
     {
       type: "method",
       returnType: {
         value: "void",
-        span: { start: 3046, end: 3051, line: 105 },
+        span: { start: 3046, end: 3050, line: 105 },
       },
       name: { value: "moveBall", span: { start: 3051, end: 3059, line: 105 } },
       parameters: [],
       body: {
         varDecs: [
           {
-            type: { value: "int", span: { start: 3076, end: 3080, line: 106 } },
+            type: { value: "int", span: { start: 3076, end: 3079, line: 106 } },
             names: [
               "bouncingDirection",
               "batLeft",
@@ -1592,6 +1597,7 @@ export const parsed = {
             span: { start: 4158, end: 4165, line: 135 },
           },
         ],
+        close: { start: 4170, end: 4171, line: 136 },
       },
     },
   ],

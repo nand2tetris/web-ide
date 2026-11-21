@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { isRecovered, recoveredOf } from "./base.js";
 
+import { JACK, prune as jackPrune } from "./jack.js";
 import { TST, type TstRepeat, prune as tstPrune } from "./tst.js";
 
 const RECOVER = { attemptRecovery: true };
@@ -45,4 +46,89 @@ describe("a null object records what it stands in for", () => {
     expect(source.slice(skip.interval.start, skip.interval.end)).toBe("xyz");
     expect(skip.kind).toBe("TstOperation");
   });
+});
+
+describe("provenance captured before pruning", () => {
+  it("retains Jack statements when missing semicolons are inferred", () => {
+    const source = [
+      "class Main {",
+      "  function void a() {",
+      "    if (true) {",
+      "      let x = 1",
+      "    }",
+      "    return;",
+      "  }",
+      "  function void b() {",
+      "    do Output.printInt(1)",
+      "    return;",
+      "  }",
+      "}",
+    ].join("\n");
+    const outcome = JACK.parse(source, RECOVER);
+
+    const provenance = jackPrune.provenance(outcome.ast);
+
+    expect(provenance).toEqual([]);
+    const tree = jackPrune(outcome.ast);
+    expect(tree.subroutines[0].body.statements[0]).toMatchObject({
+      statementType: "ifStatement",
+      body: [{ statementType: "letStatement", name: { value: "x" } }],
+    });
+    expect(tree.subroutines[1].body.statements[0]).toMatchObject({
+      statementType: "doStatement",
+    });
+    expect(outcome.diagnostics).toHaveLength(2);
+  });
+});
+
+describe("a recovered tree beside a null root", () => {
+  const _PROBE = [
+    "CHIP Probe {",
+    "  IN a;",
+    "  OUT x;",
+    "  PARTS:",
+    "  Not(in=a out=x);",
+    "  Not(in=a, out=x);",
+    "}",
+  ].join("\n");
+
+  it("leaves a no-tree file out of a class table", () => {
+    const files: Record<string, string> = {
+      Damaged:
+        "class Damaged {\n  function void a() {\n    let x = ;\n    return;\n  }\n}",
+      Broken: "class B",
+    };
+
+    const table = Object.fromEntries(
+      Object.entries(files).flatMap(([name, source]) => {
+        const recovered = recoveredOf(JACK.parse(source, RECOVER), jackPrune);
+        return recovered ? [[name, recovered]] : [];
+      }),
+    );
+
+    expect(Object.keys(table)).toEqual(["Damaged"]);
+    expect(table.Damaged.ast.subroutines[0].body.statements).toHaveLength(1);
+    expect(table.Damaged.provenance).toMatchObject([
+      { kind: "LetBody", scope: ["Damaged", "a"] },
+    ]);
+  });
+});
+
+it("retains guarded statement and skipped provenance", () => {
+  const source =
+    "class Main { function void f() { let x = 1 xyz let y = 2; return; } }";
+  const result = JACK.parse(source, { attemptRecovery: true });
+  const clean = jackPrune(result.ast);
+  expect(clean.subroutines[0].body.statements[0]).toMatchObject({
+    statementType: "letStatement",
+    name: { value: "x" },
+  });
+  const [skip] = jackPrune.provenance(result.ast);
+  expect(skip).toMatchObject({
+    kind: "StatementTrailing",
+    interval: { start: source.indexOf("xyz"), end: source.indexOf("xyz") + 3 },
+    scope: ["Main", "f"],
+    key: expect.any(String),
+  });
+  expect(result.diagnostics).toContain(skip.diagnostic);
 });

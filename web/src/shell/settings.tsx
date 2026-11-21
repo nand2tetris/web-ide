@@ -26,6 +26,8 @@ export const Settings = () => {
     permissionPrompt,
     requestPermission,
     loadFs,
+    attemptRecovery,
+    setAttemptRecovery,
   } = useContext(BaseContext);
   const { settings, monaco, theme, setTheme } = useContext(AppContext);
 
@@ -426,6 +428,40 @@ export const Settings = () => {
                   />
                   <Trans>Use Monaco Editor</Trans>
                 </label>
+              </dd>
+
+              <dt>
+                <Trans>Problems</Trans>
+              </dt>
+              <dd>
+                <fieldset aria-label={t`Problems`}>
+                  <label>
+                    <input
+                      type="radio"
+                      name="problems"
+                      checked={!attemptRecovery}
+                      onChange={() => setAttemptRecovery(false)}
+                    />
+                    <Trans>Show First Problem</Trans>
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      name="problems"
+                      checked={attemptRecovery}
+                      onChange={() => setAttemptRecovery(true)}
+                    />
+                    <Trans>Show All Problems</Trans>
+                  </label>
+                </fieldset>
+                <small>
+                  <Trans>
+                    Start with Show First Problem to focus on one issue at a
+                    time. As you gain confidence, try Show All Problems to see
+                    the bigger picture. Fixing one problem may clear other
+                    messages too.
+                  </Trans>
+                </small>
               </dd>
 
               {/* Theme Section */}

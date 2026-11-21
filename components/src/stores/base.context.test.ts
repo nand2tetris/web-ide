@@ -70,3 +70,51 @@ describe("#592 stored handle permission flow", () => {
     expect(result.current.localFsRoot).toBeUndefined();
   });
 });
+
+describe("Attempt Recovery setting", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("is off by default", () => {
+    const { result } = renderHook(() => useBaseContext());
+    expect(result.current.attemptRecovery).toBe(false);
+  });
+
+  it("is stored with the settings, and read back by the next session", () => {
+    const first = renderHook(() => useBaseContext());
+    act(() => first.result.current.setAttemptRecovery(true));
+    expect(first.result.current.attemptRecovery).toBe(true);
+
+    const next = renderHook(() => useBaseContext());
+    expect(next.result.current.attemptRecovery).toBe(true);
+  });
+});
+
+describe("Attempt Recovery startup precedence", () => {
+  beforeEach(() => localStorage.clear());
+
+  it.each([null, "false", "invalid", "true"])(
+    "reads only stored true as an opt-in: %s",
+    (stored) => {
+      if (stored !== null) localStorage.setItem("/attemptRecovery", stored);
+      const { result } = renderHook(() => useBaseContext());
+      expect(result.current.attemptRecovery).toBe(stored === "true");
+    },
+  );
+
+  it("lets the development override win at startup and live changes persist", () => {
+    localStorage.setItem("/attemptRecovery", "false");
+    const first = renderHook(() => useBaseContext({ attemptRecovery: true }));
+    expect(first.result.current.attemptRecovery).toBe(true);
+
+    act(() => first.result.current.setAttemptRecovery(false));
+    expect(first.result.current.attemptRecovery).toBe(false);
+    expect(localStorage.getItem("/attemptRecovery")).toBe("false");
+    first.rerender();
+    expect(first.result.current.attemptRecovery).toBe(false);
+
+    const next = renderHook(() => useBaseContext({ attemptRecovery: true }));
+    expect(next.result.current.attemptRecovery).toBe(true);
+    const production = renderHook(() => useBaseContext());
+    expect(production.result.current.attemptRecovery).toBe(false);
+  });
+});

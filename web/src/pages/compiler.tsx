@@ -19,7 +19,8 @@ import URLs from "../urls";
 import "./compiler.scss";
 
 export const Compiler = () => {
-  const { setStatus, clearStatus, canUpgradeFs } = useContext(BaseContext);
+  const { setStatus, clearStatus, canUpgradeFs, attemptRecovery } =
+    useContext(BaseContext);
   const { tracking } = useContext(AppContext);
   const { stores, setTool } = useContext(PageContext);
   const { state, dispatch, actions } = stores.compiler;
@@ -51,6 +52,11 @@ export const Compiler = () => {
       showStatus();
     }
   }, [state.selected, state.compiled, suppressStatus]);
+
+  // The retained store may have compiled before recovery changed on another route.
+  useEffect(() => {
+    actions.recompile();
+  }, [attemptRecovery, actions]);
 
   const onSelect = useCallback(
     (tab: string) => {

@@ -131,6 +131,20 @@ describe("compiling a single VM buffer", () => {
       diagnostics: [{ diagnostic: s.state.controls.diagnostics[0] }],
     });
   });
+
+  it("recompiles on return only when the recovery setting changed", () => {
+    let recovery = false;
+    const s = mk(() => recovery);
+    s.actions.setVm(TWO_MISTAKES);
+    s.setStatus.mockClear();
+
+    s.actions.recompile({ onlyIfRecoveryChanged: true });
+    expect(s.setStatus).not.toHaveBeenCalled();
+
+    recovery = true;
+    s.actions.recompile({ onlyIfRecoveryChanged: true });
+    expect(s.state.controls.diagnostics).toHaveLength(2);
+  });
 });
 
 describe("loading several VM files", () => {

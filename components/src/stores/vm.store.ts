@@ -350,8 +350,12 @@ export function makeVmStore(
       dispatch.current({ action: "update" });
       return true;
     },
-    recompile() {
-      if (compiled) {
+    recompile(options: { onlyIfRecoveryChanged?: boolean } = {}) {
+      if (
+        compiled &&
+        (!options.onlyIfRecoveryChanged ||
+          compiled.attemptRecovery !== attemptRecovery())
+      ) {
         showHighlight = false;
         this.compile(compiled.files, compiled.single);
       }

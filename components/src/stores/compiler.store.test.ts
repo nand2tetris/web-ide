@@ -13,9 +13,16 @@ import {
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
 import * as simCompiler from "@nand2tetris/simulator/jack/compiler.js";
+import { act, renderHook } from "@testing-library/react";
 import { produce } from "immer";
+import { createElement, ReactNode, useContext } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { CompilerStoreDispatch, makeCompilerStore } from "./compiler.store.js";
+import { BaseContext } from "./base.context.js";
+import {
+  CompilerStoreDispatch,
+  makeCompilerStore,
+  useCompilerPageStore,
+} from "./compiler.store.js";
 
 function mk() {
   const dispatch = { current: vi.fn() as unknown as CompilerStoreDispatch };
@@ -182,6 +189,35 @@ describe("Attempt Recovery setting in the compiler store", () => {
 
     expect(state.compiled.Main.diagnostics).toHaveLength(1);
     expect(state.compiled.Main.diagnostics[0].code).toBe(
+      DiagnosticCode.Syntax.EXPECTED,
+    );
+  });
+});
+
+describe("Attempt Recovery setting changed while the compiler page is open", () => {
+  it("recompiles the files already loaded under the new setting", () => {
+    let attemptRecovery = true;
+    const wrapper = ({ children }: { children: ReactNode }) =>
+      createElement(
+        BaseContext.Provider,
+        { value: { ...useContext(BaseContext), attemptRecovery } },
+        children,
+      );
+    const view = renderHook(() => useCompilerPageStore(), { wrapper });
+    act(() =>
+      view.result.current.dispatch.current({
+        action: "setFiles",
+        payload: { Main: main },
+      }),
+    );
+    expect(view.result.current.state.compiled.Main.diagnostics).toHaveLength(3);
+
+    attemptRecovery = false;
+    view.rerender();
+    act(() => view.result.current.actions.recompile());
+
+    expect(view.result.current.state.compiled.Main.diagnostics).toHaveLength(1);
+    expect(view.result.current.state.compiled.Main.diagnostics[0].code).toBe(
       DiagnosticCode.Syntax.EXPECTED,
     );
   });

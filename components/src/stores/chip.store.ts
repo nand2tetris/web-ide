@@ -200,7 +200,7 @@ export function makeChipStore(
       );
       state.controls.diagnostics = state.sim.invalid
         ? (payload?.diagnostics ?? state.controls.diagnostics)
-        : [];
+        : chip.warnings;
       state.controls.dependencyDiagnostics = state.sim.invalid
         ? (payload?.dependencyDiagnostics ??
           state.controls.dependencyDiagnostics)
@@ -528,7 +528,15 @@ export function makeChipStore(
       }
       dispatch.current({ action: "updateChip", payload: { invalid: invalid } });
       if (!invalid) {
-        status.setStatus({ message: `HDL code: No errors` });
+        const warnings = chip.warnings.length;
+        status.setStatus(
+          warnings === 0
+            ? { message: `HDL code: No errors` }
+            : {
+                message: `HDL code: No errors, ${warnings} ${warnings === 1 ? "warning" : "warnings"}`,
+                severity: "WARNING",
+              },
+        );
       }
     },
 

@@ -258,6 +258,55 @@ describe("HDL that the builder rejects outright", () => {
   });
 });
 
+describe("HDL warnings", () => {
+  const undriven = [
+    "CHIP Not {",
+    "  IN in;",
+    "  OUT out;",
+    "  PARTS:",
+    "  Nand(a=in, b=in, out=x);",
+    "}",
+  ].join("\n");
+
+  it("lists an undriven output as a warning and keeps the chip runnable", async () => {
+    const store = testChipStore();
+    await store.actions.loadChip("projects/01/Not.hdl");
+
+    await store.actions.updateFiles({ hdl: undriven, cmp: "" });
+
+    expect(store.state.sim.invalid).toBe(false);
+    expect(store.state.controls.diagnostics).toEqual([
+      expect.objectContaining({
+        code: DiagnosticCode.Chip.UNDRIVEN_OUTPUT,
+        args: { pin: "out" },
+        severity: "warning",
+        span: expect.objectContaining({ line: 3 }),
+      }),
+    ]);
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      message: "HDL code: No errors, 1 warning",
+      severity: "WARNING",
+    });
+  });
+
+  it("clears the warning when the output is driven", async () => {
+    const store = testChipStore();
+    await store.actions.loadChip("projects/01/Not.hdl");
+    await store.actions.updateFiles({ hdl: undriven, cmp: "" });
+
+    await store.actions.updateFiles({
+      hdl: undriven.replace("out=x", "out=out"),
+      cmp: "",
+    });
+
+    expect(store.state.controls.diagnostics).toEqual([]);
+    expect(store.setStatus).toHaveBeenLastCalledWith({
+      message: "HDL code: No errors",
+      severity: "INFO",
+    });
+  });
+});
+
 describe("Attempt Recovery setting in the chip page store", () => {
   const source = chipWith(
     "Top",

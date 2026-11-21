@@ -238,6 +238,7 @@ export const Monaco = ({
     if (!monaco.current) return;
     const model = editor.current.getModel();
     if (model === null) return;
+    const { MarkerSeverity } = monaco.current;
     const markers = diagnostics.flatMap((e) => {
       if (e.span === undefined) return [];
       const startPos = model.getPositionAt(e.span.start);
@@ -249,7 +250,10 @@ export const Monaco = ({
           startLineNumber: startPos.lineNumber,
           endColumn: endPos.column,
           endLineNumber: endPos.lineNumber,
-          severity: 8, // monacoT.MarkerSeverity.Error,
+          severity:
+            e.severity === "warning"
+              ? MarkerSeverity.Warning
+              : MarkerSeverity.Error,
         },
       ];
     });

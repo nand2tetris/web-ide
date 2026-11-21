@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro";
 import { Trans } from "@lingui/react/macro";
 import { useStateInitializer } from "@nand2tetris/components/react";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
@@ -40,14 +41,19 @@ const stageOrder = (problem: Diagnostic) => {
   return 2;
 };
 
+const severityOrder = (problem: Diagnostic) =>
+  problem.severity === "warning" ? 1 : 0;
+
+/** Errors come before warnings; the first problem is never a warning beside an error. */
 const selectProblems = (
   diagnostics: readonly Diagnostic[],
   showAll: boolean,
 ) => {
   const ordered = [...diagnostics].sort(
-    showAll
-      ? sourceOrder
-      : (a, b) => stageOrder(a) - stageOrder(b) || sourceOrder(a, b),
+    (a, b) =>
+      severityOrder(a) - severityOrder(b) ||
+      (showAll ? 0 : stageOrder(a) - stageOrder(b)) ||
+      sourceOrder(a, b),
   );
   return showAll ? ordered : ordered.slice(0, 1);
 };
@@ -74,9 +80,11 @@ export const ErrorPanel = ({
       </summary>
       <ol>
         {diagnostics.map((problem, index) => {
-          const message = describeDiagnostic(problem);
+          const warning = problem.severity === "warning";
+          const description = describeDiagnostic(problem);
+          const message = warning ? t`Warning: ${description}` : description;
           return (
-            <li key={index}>
+            <li key={index} className={warning ? "warning" : "error"}>
               {showFirst ? (
                 additionalCount > 0 ? (
                   <Trans>

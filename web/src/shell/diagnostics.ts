@@ -101,6 +101,10 @@ function messageOf(found: Diagnostic): string {
       const { pin } = found.args;
       return t`Pin ${pin} is declared more than once`;
     }
+    case DiagnosticCode.Chip.UNDRIVEN_OUTPUT: {
+      const { pin } = found.args;
+      return t`Output pin ${pin} is never set`;
+    }
     case DiagnosticCode.Chip.LOOPING_WIRE: {
       const { pin } = found.args;
       return t`Looping wire ${pin}`;

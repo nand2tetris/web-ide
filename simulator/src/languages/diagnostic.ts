@@ -65,6 +65,7 @@ export const DiagnosticCode = Object.freeze({
     NOT_FOUND: "chip.notFound",
     SELF_REFERENCE: "chip.selfReference",
     PIN_REDECLARED: "chip.pinRedeclared",
+    UNDRIVEN_OUTPUT: "chip.undrivenOutput",
     LOOPING_WIRE: "chip.loopingWire",
     UNDEFINED_PIN: "chip.undefinedPin",
     INTERNAL_PIN_SUBSCRIPTED: "chip.internalPinSubscripted",
@@ -159,6 +160,7 @@ export interface DiagnosticArgs {
   [DiagnosticCode.Chip.NOT_FOUND]: { name: string };
   [DiagnosticCode.Chip.SELF_REFERENCE]: { name: string };
   [DiagnosticCode.Chip.PIN_REDECLARED]: { pin: string };
+  [DiagnosticCode.Chip.UNDRIVEN_OUTPUT]: { pin: string };
   [DiagnosticCode.Chip.LOOPING_WIRE]: { pin: string };
   [DiagnosticCode.Chip.UNDEFINED_PIN]: { pin: string };
   [DiagnosticCode.Chip.INTERNAL_PIN_SUBSCRIPTED]: { pin: string };
@@ -250,13 +252,18 @@ export type Fault = {
   [C in DiagnosticCode]: { code: C; args: DiagnosticArgs[C] };
 }[DiagnosticCode];
 
+/** How serious a diagnostic is. A warning does not withhold a result. */
+export type Severity = "error" | "warning";
+
 /**
  * One diagnostic: a fault and, when known, where it applies and which stage
- * found it. Narrowing on `code` narrows `args`.
+ * found it. Narrowing on `code` narrows `args`. An absent `severity` is an
+ * error.
  */
 export type Diagnostic = Fault & {
   span?: Span;
   stage?: Stage;
+  severity?: Severity;
 };
 
 /** One or more diagnostics, first error first. */
@@ -384,6 +391,8 @@ export const ENGLISH: Catalog = {
       `Cannot use chip ${name} to implement itself`,
     [DiagnosticCode.Chip.PIN_REDECLARED]: ({ pin }) =>
       `Pin ${pin} is declared more than once`,
+    [DiagnosticCode.Chip.UNDRIVEN_OUTPUT]: ({ pin }) =>
+      `Output pin ${pin} is never set`,
     [DiagnosticCode.Chip.LOOPING_WIRE]: ({ pin }) => `Looping wire ${pin}`,
     [DiagnosticCode.Chip.UNDEFINED_PIN]: ({ pin }) =>
       `Undefined pin name: ${pin}`,

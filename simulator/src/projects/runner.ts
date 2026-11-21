@@ -43,12 +43,14 @@ export const hasTest = ({
   AssignmentStubs[name as keyof typeof AssignmentStubs] !== undefined &&
   [".hdl", ".tst"].includes(ext);
 
-export const maybeParse = (file: AssignmentFiles): AssignmentParse => {
-  const maybeParsedTST = validOf(TST.parse(file.tst));
+export const maybeParse = (
+  file: AssignmentFiles,
+  options: RunOptions = {},
+): AssignmentParse => {
+  const maybeParsedTST = validOf(TST.parse(file.tst, options));
   return { ...file, maybeParsedTST };
 };
 
-/** Every diagnostic of a chip and its dependencies, a line each naming its file. */
 function describeFailures(failures: ChipDiagnostics): string {
   return Object.entries(failures)
     .flatMap(([file, diagnostics]) =>
@@ -57,11 +59,17 @@ function describeFailures(failures: ChipDiagnostics): string {
     .join("\n");
 }
 
+/** Recovery is opt-in; omitted options are strict. */
+export interface RunOptions {
+  attemptRecovery?: boolean;
+}
+
 export const maybeBuild =
-  (fs: FileSystem) =>
+  (fs: FileSystem, options: RunOptions = {}) =>
   async (file: AssignmentParse): Promise<AssignmentBuild> => {
     const built = await buildChip(file.hdl, undefined, undefined, fs, {
       file: `${file.name}.hdl`,
+      attemptRecovery: options.attemptRecovery,
     });
     const maybeChip: Result<Chip, Error> = isErr(built)
       ? Err(new Error(describeFailures(Err(built))))
@@ -107,12 +115,16 @@ export const tryRun =
   };
 
 /** Parse & execute a Nand2tetris assignment, possibly also including the Java output in shadow mode. */
-export const runner = (fs: FileSystem, ideRunner?: Runner) => {
+export const runner = (
+  fs: FileSystem,
+  ideRunner?: Runner,
+  options: RunOptions = {},
+) => {
   const tryRunWithFs = tryRun(fs);
-  const maybeBuildWithFs = maybeBuild(fs);
+  const maybeBuildWithFs = maybeBuild(fs, options);
   return async (assignment: AssignmentFiles): Promise<AssignmentRun> => {
     const jsRunner = async () =>
-      tryRunWithFs(await maybeBuildWithFs(await maybeParse(assignment)));
+      tryRunWithFs(await maybeBuildWithFs(maybeParse(assignment, options)));
     const javaRunner = async () => ideRunner?.hdl(assignment);
 
     const [jsRun, shadow] = await Promise.all([jsRunner(), javaRunner()]);
@@ -126,8 +138,9 @@ export async function runTests(
   loadAssignment: (file: Assignment) => Promise<AssignmentFiles>,
   fs: FileSystem,
   ideRunner?: Runner,
+  options: RunOptions = {},
 ): Promise<AssignmentRun[]> {
-  const run = runner(fs, ideRunner);
+  const run = runner(fs, ideRunner, options);
   return Promise.all(
     files.map(loadAssignment).map(async (assignment) => run(await assignment)),
   );

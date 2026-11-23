@@ -11565,7 +11565,7 @@ CHIP DRegister {
 }`,Wt=e({BUILTIN_CHIPS:()=>Gt,CHIPS:()=>Y,resetFiles:()=>Kt,resetTests:()=>qt}),Y={"Memory.hdl":yt,"Memory.tst":bt,"Memory.cmp":xt,"CPU.hdl":St,"CPU.tst":Ct,"CPU.cmp":wt,"CPU-external.tst":Tt,"CPU-external.cmp":Et,"Computer.hdl":Dt,"ComputerAdd.tst":Ot,"ComputerAdd.cmp":kt,"ComputerMax.tst":At,"ComputerMax.cmp":jt,"ComputerRect.tst":Mt,"ComputerRect.cmp":Nt,"MaxRam.tst":Lt,"MaxRam.cmp":Rt,"Add.hack":Pt,"Max.hack":Ft,"Rect.hack":It},Gt={Screen:zt,Keyboard:Bt,DRegister:Vt,ARegister:Ht,ROM32K:Ut,RAM16K:G.replace(`//// Replace this comment with your code.`,`BUILTIN RAM16K;`)};async function Kt(e){await e.pushd(`/projects/05`),await t(e,Y),await e.popd()}async function qt(e){await e.pushd(`/projects/05`),await i(e,Y,`.tst`),await i(e,Y,`.cmp`),await e.popd()}var Jt=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm
+// File name: SimpleAdd/SimpleAdd.vm
 
 // Pushes and adds two constants.
 
@@ -11575,12 +11575,11 @@ add
 `,Yt=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAddVME.tst
+// File name: SimpleAdd/SimpleAddVME.tst
 
-// Tests and illustrates SimpleAdd.vm on the VM simulator.
+// Tests SimpleAdd.vm on the VM simulator.
 
 load SimpleAdd.vm,
-compare-to SimpleAdd.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -11589,15 +11588,15 @@ repeat 3 {       // SimpleAdd.vm has 3 VM commands
 }
 
 // Outputs the stack pointer and the value at the stack's base
+compare-to SimpleAdd.cmp,
 output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
 output;`,Xt=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.tst
+// File name: SimpleAdd/SimpleAdd.tst
 
 // Tests SimpleAdd.asm on the CPU emulator.
-
-compare-to SimpleAdd.cmp,
+// Assumes that the program is already loaded in the CPU emulator.
 
 set RAM[0] 256,  // initializes the stack pointer 
 
@@ -11606,6 +11605,7 @@ repeat 60 {      // enough cycles to complete the execution
 }
 
 // Outputs the stack pointer and the value at the stack's base
+compare-to SimpleAdd.cmp,
 output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
 output;
 `,Zt=`|  RAM[0]  | RAM[256] |
@@ -11613,7 +11613,7 @@ output;
 `,Qt=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/StackTest/StackTest.vm
+// File name: StackTest/StackTest.vm
 
 // Executes a sequence of arithmetic and logical operations on the stack. 
 
@@ -11658,12 +11658,11 @@ not
 `,$t=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/StackTest/StackTestVME.tst
+// File name: StackTest/StackTestVME.tst
 
-// Tests and illustrates StackTest.vm on the VM simulator.
+// Tests StackTest.vm on the VM simulator.
 
 load StackTest.vm,
-compare-to StackTest.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -11672,6 +11671,7 @@ repeat 38 {      // StackTest.vm has 38 VM commands
 }
 
 // Outputs the stack pointer (RAM[0]) and the stack contents: RAM[256]-RAM[265]
+compare-to StackTest.cmp,
 output-list RAM[0]%D2.6.2 
         RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 output;
@@ -11680,11 +11680,10 @@ output;
 `,en=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/StackTest/StackTest.tst
+// File name: StackTest/StackTest.tst
 
 // Tests StackTest.asm on the CPU emulator.
-
-compare-to StackTest.cmp,
+// Assumes that the program is already loaded.
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -11693,6 +11692,7 @@ repeat 1000 {    // enough cycles to complete the execution
 }
 
 // Outputs the stack pointer and the stack contents: RAM[256]-RAM[265]
+compare-to StackTest.cmp,
 output-list RAM[0]%D2.6.2 
         RAM[256]%D2.6.2 RAM[257]%D2.6.2 RAM[258]%D2.6.2 RAM[259]%D2.6.2 RAM[260]%D2.6.2;
 output;
@@ -11705,9 +11705,9 @@ output;
 `,nn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/BasicTest/BasicTest.vm
+// File name: BasicTest/BasicTest.vm
 
-// Executes pop and push commands.
+// Executes push/pop commands using memory segments.
 
 push constant 10
 pop local 0
@@ -11737,14 +11737,13 @@ add
 `,rn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/BasicTest/BasicTestVME.tst
+// File name: BasicTest/BasicTestVME.tst
 
-// Tests and illustrates BasicTest.vm on the VM simulator.
+// Tests BasicTest.vm on the VM simulator.
 // Starts by setting the stack pointer and the base addresses
 // of relevant memory segments to selected RAM addresses.
 
 load BasicTest.vm,
-compare-to BasicTest.cmp,
 
 set sp 256,        // stack pointer
 set local 300,     // base address of the local segment
@@ -11757,6 +11756,7 @@ repeat 25 {        // BasicTest.vm has 25 VM commands
 }
 
 // Outputs the value at the stack's base and some values from the tested memory segments
+compare-to BasicTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[300]%D1.6.1 RAM[401]%D1.6.1 
             RAM[402]%D1.6.1 RAM[3006]%D1.6.1 RAM[3012]%D1.6.1
             RAM[3015]%D1.6.1 RAM[11]%D1.6.1;
@@ -11764,11 +11764,12 @@ output;
 `,an=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/BasicTest/BasicTest.tst
+// File name: BasicTest/BasicTest.tst
 
 // Tests BasicTest.asm on the CPU emulator.
-
-compare-to BasicTest.cmp,
+// Assumes that the program is already loaded.
+// Starts by setting the stack pointer and the base addresses
+// of relevant memory segments to selected RAM addresses.
 
 set RAM[0] 256,   // stack pointer
 set RAM[1] 300,   // base address of the local segment
@@ -11781,6 +11782,7 @@ repeat 600 {      // enough cycles to complete the execution
 }
 
 // Outputs the value at the stack's base and some values from the tested memory segments
+compare-to BasicTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[300]%D1.6.1 RAM[401]%D1.6.1 
             RAM[402]%D1.6.1 RAM[3006]%D1.6.1 RAM[3012]%D1.6.1
             RAM[3015]%D1.6.1 RAM[11]%D1.6.1;
@@ -11789,7 +11791,7 @@ output;
 |    472 |     10 |     21 |     22 |     36 |     42 |     45 |    510 |`,sn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/PointerTest/PointerTest.vm
+// File name: PointerTest/PointerTest.vm
 
 // Executes pop and push commands using the 
 // pointer, this, and that segments.
@@ -11812,12 +11814,11 @@ add
 `,cn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/PointerTest/PointerTestVME.tst
+// File name: PointerTest/PointerTestVME.tst
 
-// Tests and illustrates PointerTest.vm on the VM simulator.
+// Tests PointerTest.vm on the VM simulator.
 
 load PointerTest.vm,
-compare-to PointerTest.cmp,
 
 set RAM[0] 256,   // initializes the stack pointer
 
@@ -11827,17 +11828,17 @@ repeat 15 {       // PointerTest.vm has 15 VM commands
 
 // Outputs the stack base, THIS, THAT, and
 // some values from the the this and that segments
+compare-to PointerTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1
             RAM[3032]%D1.6.1 RAM[3046]%D1.6.1;
 output;
 `,ln=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/PointerTest/PointerTest.tst
+// File name: PointerTest/PointerTest.tst
 
 // Tests PointerTest.asm on the CPU emulator.
-
-compare-to PointerTest.cmp,
+// Assumes that the program is already loaded.
 
 set RAM[0] 256,   // initializes the stack pointer
 
@@ -11847,6 +11848,7 @@ repeat 450 {      // enough cycles to complete the execution
 
 // Outputs the value at the stack's base, THIS, THAT, and
 // some values from the the this and that segments
+compare-to PointerTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[3]%D1.6.1 
             RAM[4]%D1.6.1 RAM[3032]%D1.6.1 RAM[3046]%D1.6.1;
 output;
@@ -11854,9 +11856,9 @@ output;
   |   6084 |   3030 |   3040 |     32 |     46 |`,dn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/StaticTest/StaticTest.vm
+// File name: StaticTest/StaticTest.vm
 
-// Executes pop and push commands using the static segment.
+// Executes push/pop commands using the static segment.
 
 push constant 111
 push constant 333
@@ -11872,12 +11874,11 @@ add
 `,fn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/StaticTest/StaticTestVME.tst
+// File name: StaticTest/StaticTestVME.tst
 
-// Tests and illustrates StaticTest.vm on the VM simulator.
+// Tests StaticTest.vm on the VM simulator.
 
 load StaticTest.vm,
-compare-to StaticTest.cmp,
 
 set sp 256,    // initializes the stack pointer
 
@@ -11886,16 +11887,16 @@ repeat 11 {    // StaticTest.vm has 11 VM commands
 }
 
 // Outputs the value at the stack's base 
+compare-to StaticTest.cmp,
 output-list RAM[256]%D1.6.1;
 output;
 `,pn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/StaticTest/StaticTest.tst
+// File name: StaticTest/StaticTest.tst
 
 // Tests StaticTest.asm on the CPU emulator.
-
-compare-to StaticTest.cmp,
+// Assumes that the program is already loaded.
 
 set RAM[0] 256,    // initializes the stack pointer
 
@@ -11904,17 +11905,18 @@ repeat 200 {       // enough cycles to complete the execution
 }
 
 // Outputs the value at the stack's base 
+compare-to StaticTest.cmp,
 output-list RAM[256]%D1.6.1;
 output;
 `,mn=`|RAM[256]|
 |   1110 |`,hn=e({VMS:()=>X,resetFiles:()=>gn,resetTests:()=>_n}),X={SimpleAdd:{"SimpleAdd.vm":Jt,"SimpleAddVME.tst":Yt,"SimpleAdd.cmp":Zt,"SimpleAdd.tst":Xt},StackTest:{"StackTest.vm":Qt,"StackTestVME.tst":$t,"StackTest.cmp":tn,"StackTest.tst":en},BasicTest:{"BasicTest.vm":nn,"BasicTestVME.tst":rn,"BasicTest.cmp":on,"BasicTest.tst":an},PointerTest:{"PointerTest.vm":sn,"PointerTestVME.tst":cn,"PointerTest.cmp":un,"PointerTest.tst":ln},StaticTest:{"StaticTest.vm":dn,"StaticTestVME.tst":fn,"StaticTest.cmp":mn,"StaticTest.tst":pn}};async function gn(e){await e.pushd(`/projects/07`),await t(e,X),await e.popd()}async function _n(e){await e.pushd(`/projects/07`),await i(e,X,`.tst`),await i(e,X,`VME.tst`),await i(e,X,`.cmp`),await e.popd()}var vn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/BasicLoop/BasicLoop.vm
+// File name: BasicLoop/BasicLoop.vm
 
 // Computes the sum 1 + 2 + ... + n and pushes the result onto
 // the stack. The value n is given in argument[0], which must be 
-// initialized by the caller of this code.
+// initialized before this code is executed.
 
 	push constant 0    
 	pop local 0         // sum = 0
@@ -11933,16 +11935,13 @@ label LOOP
 `,yn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/BasicLoop/BasicLoopVME.tst
+// File name: BasicLoop/BasicLoopVME.tst
 
-// Tests and illustrates BasicLoop.vm on the VM emulator.
-// Before executing the code, initializes the stack pointer
-// and the base addresses of the local and argument segments,
-// and sets argument[0].
+// Tests BasicLoop.vm in the VM emulator.
 
 load BasicLoop.vm,
-compare-to BasicLoop.cmp,
 
+// Before executing, initializes SP, LCL, ARG, and argument[0].
 set sp 256,
 set local 300,
 set argument 400,
@@ -11952,31 +11951,33 @@ repeat 33 {
  	vmstep;
 }
 
-// Outputs the stack pointer and the value at the stack's base
+// Verifies the final SP and the result at the stack's base.
+// Expected: SP=257, RAM[256]=6.
+compare-to BasicLoop.cmp,
 output-list RAM[0]%D1.6.1 RAM[256]%D1.6.1;
 output;
 `,bn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/BasicLoop/BasicLoop.tst
+// File name: BasicLoop/BasicLoop.tst
 
-// Tests BasicLoop.asm on the CPU emulator.
-// Before executing the code, initializes the stack pointer
-// and the base addresses of the local and argument segments,
-// and sets argument[0].
+// Tests BasicLoop.asm in the CPU emulator.
+// Assumes that the program is already loaded.
 
-compare-to BasicLoop.cmp,
-
+// Before executing, initializes SP, LCL, ARG, and argument[0].
 set RAM[0] 256,  // SP
 set RAM[1] 300,  // LCL
 set RAM[2] 400,  // ARG
 set RAM[400] 3,  // argument 0
 
+// Executes enough CPU cycles to complete the loop.
 repeat 600 {
 	ticktock;
 }
 
-// Outputs the stack pointer and the value at the stack's base
+// Verifies the final SP and the result at the stack's base.
+// Expected: SP=257, RAM[256]=6.
+compare-to BasicLoop.cmp,
 output-list RAM[0]%D1.6.1 RAM[256]%D1.6.1;
 output;
 `,xn=`| RAM[0] |RAM[256]|
@@ -11984,61 +11985,59 @@ output;
 `,Sn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.vm
+// File name: FibonacciSeries/FibonacciSeries.vm
 
-// Puts the first n elements of the Fibonacci series in the memory,
-// starting at address addr. n and addr are given in argument[0] and
-// argument[1], which must be initialized by the caller of this code.
+// Computes and stores the first n elements of the Fibonacci series,
+// starting at RAM address addr. The values n and addr are supplied
+// in argument[0] and argument[1], which must be initialized before
+// this code is executed.
 
-	push argument 1         // sets THAT, the base address of the
-	pop pointer 1           // that segment, to argument[1]
-	push constant 0         // sets the series' first and second
-	pop that 0              // elements to 0 and 1, respectively       
-	push constant 1   
-	pop that 1              
-	push argument 0         // sets n, the number of remaining elements
-	push constant 2         // to be computed, to argument[0] minus 2,
-	sub                     // since 2 elements were already computed.
-	pop argument 0          
+    push argument 1         // Sets THAT, the base address of the
+    pop pointer 1           // that segment, to argument[1]
+    push constant 0         // Initializes the first two elements
+    pop that 0              // of the series to 0 and 1
+    push constant 1
+    pop that 1
+    push argument 0         // Sets n to the number of remaining
+    push constant 2         // elements to compute, namely n - 2
+    sub
+    pop argument 0
 
 label LOOP
-	push argument 0
-	if-goto COMPUTE_ELEMENT // if n > 0, goto COMPUTE_ELEMENT
-	goto END                // otherwise, goto END
+    push argument 0
+    if-goto COMPUTE_ELEMENT // If n != 0, compute the next element
+    goto END                // Otherwise, terminate
 
 label COMPUTE_ELEMENT
-    // that[2] = that[0] + that[1]
-	push that 0
-	push that 1
-	add
-	pop that 2
-	// THAT += 1 (updates the base address of that)
-	push pointer 1
-	push constant 1
-	add
-	pop pointer 1 
-	// updates n-- and loops          
-	push argument 0
-	push constant 1
-	sub
-	pop argument 0          
-	goto LOOP
+    // Computes that[2] = that[0] + that[1]
+    push that 0
+    push that 1
+    add
+    pop that 2
+    // Advances THAT to the next element
+    push pointer 1
+    push constant 1
+    add
+    pop pointer 1
+    // Decrements n and repeats
+    push argument 0
+    push constant 1
+    sub
+    pop argument 0
+    goto LOOP
 
 label END
 `,Cn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/FibonacciSeries/FibonacciSeriesVME.tst
+// File name: FibonacciSeries/FibonacciSeriesVME.tst
 
-// Tests and illustrates FibonacciSeries.vm on the VM emulator.
-// Before executing the code, initializes the stack pointer
-// and the base addresses of the local and argument segments,
-// and sets argument[0] to n and argument [1] to the base address
-// of the generated series.
+// Tests FibonacciSeries.vm in the VM emulator.
 
 load FibonacciSeries.vm,
-compare-to FibonacciSeries.cmp,
 
+// Initializes SP, LCL, and ARG, and sets the program's two arguments:
+// n = 6 and the RAM base address for storing the series = 3000.
 set sp 256,
 set local 300,
 set argument 400,
@@ -12046,37 +12045,40 @@ set argument[0] 6,
 set argument[1] 3000,
 
 repeat 73 {
-	vmstep;
+    vmstep;
 }
 
-// Outputs the series of values generated and written by the code.
-output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2 
+// Verifies the six Fibonacci elements stored in RAM.
+// Expected values: 0, 1, 1, 2, 3, 5.
+compare-to FibonacciSeries.cmp,
+output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2
             RAM[3003]%D1.6.2 RAM[3004]%D1.6.2 RAM[3005]%D1.6.2;
 output;
 `,wn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/FibonacciSeries/FibonacciSeries.tst
+// File name: FibonacciSeries/FibonacciSeries.tst
 
-// Tests FibonacciSeries.asm on the CPU emulator.
-// Before executing the code, initializes the stack pointer
-// and the base addresses of the local and argument segments,
-// and sets argument[0] and argument [1].
+// Tests FibonacciSeries.asm in the CPU emulator.
+// Assumes that the program is already loaded.
 
-compare-to FibonacciSeries.cmp,
-
+// Initializes SP, LCL, and ARG, and sets the program's two arguments:
+// n = 6 and the RAM base address for storing the series = 3000.
 set RAM[0] 256,    // SP
 set RAM[1] 300,    // LCL
 set RAM[2] 400,    // ARG
 set RAM[400] 6,    // argument[0], n
-set RAM[401] 3000, // argument[1], base address of the generated series
+set RAM[401] 3000, // argument[1], base address of the series
 
+// Executes enough CPU cycles to compute the six Fibonacci elements.
 repeat 1100 {
-	ticktock;
+    ticktock;
 }
 
-// Outputs the series of values generated and written by the code.
-output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2 
+// Verifies the six Fibonacci elements stored in RAM.
+// Expected values: 0, 1, 1, 2, 3, 5.
+compare-to FibonacciSeries.cmp,
+output-list RAM[3000]%D1.6.2 RAM[3001]%D1.6.2 RAM[3002]%D1.6.2
             RAM[3003]%D1.6.2 RAM[3004]%D1.6.2 RAM[3005]%D1.6.2;
 output;
 `,Tn=`|RAM[3000]|RAM[3001]|RAM[3002]|RAM[3003]|RAM[3004]|RAM[3005]|
@@ -12084,7 +12086,7 @@ output;
 `,En=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/SimpleFunction/SimpleFunction.vm
+// File name: SimpleFunction/SimpleFunction.vm
 
 // Performs a simple calculation and returns the result.
 // argument[0] and argument[1] must be set by the caller.
@@ -12102,21 +12104,45 @@ function SimpleFunction.test 2
 `,Dn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/SimpleFunction/SimpleFunctionVME.tst
+// File name: SimpleFunction/SimpleFunctionVME.tst
 
-// Tests and illustrates SimpleFunction.vm in the VM emulator. 
-// Before executing the code, initializes the stack pointer
-// and the base addresses of some of the memory segments, 
-// and sets some values in the argument segment.
+// Tests SimpleFunction.vm in the VM emulator.
 
 load SimpleFunction.vm,
-compare-to SimpleFunction.cmp,
 
-set sp 317,
-set local 317,
+// The test checks that the "function" command initializes two local
+// variables to zero, and that the "return" command places the computed
+// result on the caller's stack and restores the caller's state.
+
+// Initializes the VM pointers to simulate the state immediately after
+// executing "call SimpleFunction.test 2", and before the first command
+// of SimpleFunction.test executes.
+// ARG = 310 is an arbitrary choice. Since the call has two arguments
+// and pushes five values onto the stack, LCL = SP = 310 + 2 + 5 = 317.
+// THIS and THAT are assigned arbitrary values.
 set argument 310,
+set local 317,
+set sp 317,
 set this 3000,
 set that 4000,
+
+// The "call" command is bypassed by constructing the call frame that we would
+// expect immediately after executing "call SimpleFunction.test 2":
+//
+//   Address   Value   Contents
+//   --------------------------------
+//   310       1234    argument 0  <-- ARG
+//   311       37      argument 1
+//   312       9       return address
+//   313       305     saved LCL
+//   314       300     saved ARG
+//   315       3010    saved THIS
+//   316       4010    saved THAT
+//   317               <-- LCL, SP
+//
+// The five values at RAM[312..316] represent the caller's saved state.
+// The saved THIS and THAT values are deliberately different from the current
+// values, allowing the test to verify that "return" restores them.
 set argument[0] 1234,
 set argument[1] 37,
 set argument[2] 9,
@@ -12125,131 +12151,212 @@ set argument[4] 300,
 set argument[5] 3010,
 set argument[6] 4010,
 
+// Executes the function, which computes !(0 + 0) + 1234 - 37 = 1196.
 repeat 10 {
-	vmstep;
+    vmstep;
 }
 
-// Outputs SP, LCL, ARG, THIS, THAT, and the return value.
-output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 
+// The "return" command must place the result at RAM[310],
+// set SP to 311, and restore the caller's segment pointers.
+// Expected results:
+//
+//   Address   Value   Contents
+//   --------------------------------
+//   310       1196    return value  <-- SP - 1
+//   311                             <-- SP
+//
+//   LCL  = 305
+//   ARG  = 300
+//   THIS = 3010
+//   THAT = 4010
+//
+compare-to SimpleFunction.cmp,
+output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1
             RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[310]%D1.6.1;
 output;
 `,On=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/SimpleFunction/SimpleFunction.tst
+// File name: SimpleFunction/SimpleFunction.tst
 
 // Tests SimpleFunction.asm in the CPU emulator.
-// In particular, tests how the assembly implementation of the 'function'
-// VM command initializes local variables, and how the assembly implementation
-// of the 'return' VM command handles the return value, SP, LCL, ARG, THIS, and THAT. 
-// Before executing the code, initializes the stack pointer and the pointers of some
-// of the memory segments, and sets some values in the argument segment.
+// Assumes that the program is already loaded.
 
-compare-to SimpleFunction.cmp,
+// The test checks that the "function" command initializes two local
+// variables to zero, and that the "return" command places the computed
+// result on the caller's stack and restores the caller's state.
 
-set RAM[0] 317,    // SP
-set RAM[1] 317,    // LCL
+// Initializes the VM pointers to simulate the state immediately after
+// executing "call SimpleFunction.test 2", and before the first command
+// of SimpleFunction.test executes.
+// ARG = 310 is an arbitrary choice. Since the call has two arguments
+// and pushes five values onto the stack, LCL = SP = 310 + 2 + 5 = 317.
+// THIS and THAT are assigned arbitrary values.
 set RAM[2] 310,    // ARG
+set RAM[1] 317,    // LCL
+set RAM[0] 317,    // SP
 set RAM[3] 3000,   // THIS
 set RAM[4] 4000,   // THAT
-set RAM[310] 1234, 
-set RAM[311] 37,    
-set RAM[312] 1000, 
+
+// The "call" command is bypassed by constructing the call frame that we would
+// expect immediately after executing "call SimpleFunction.test 2":
+//
+//   Address   Value   Contents
+//   --------------------------------
+//   310       1234    argument 0  <-- ARG
+//   311       37      argument 1
+//   312       1000    return address
+//   313       305     saved LCL
+//   314       300     saved ARG
+//   315       3010    saved THIS
+//   316       4010    saved THAT
+//   317               <-- LCL, SP
+//
+// The five values at RAM[312..316] represent the caller's saved state.
+// The saved THIS and THAT values are deliberately different from the current
+// values, allowing the test to verify that "return" restores them.
+set RAM[310] 1234,
+set RAM[311] 37,
+set RAM[312] 1000,
 set RAM[313] 305,
 set RAM[314] 300,
 set RAM[315] 3010,
-set RAM[316] 4010, 
+set RAM[316] 4010,
 
+// Executes enough CPU cycles to complete the function, which computes
+// !(0 + 0) + 1234 - 37 = 1196, and return.
 repeat 300 {
-	ticktock;
+    ticktock;
 }
 
-// Outputs SP, LCL, ARG, THIS, THAT, and the return value.
-output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 
+// The "return" command must place the result at RAM[310],
+// set SP to 311, and restore the caller's segment pointers.
+// Expected results:
+//
+//   Address   Value   Contents
+//   --------------------------------
+//   310       1196    return value  <-- SP - 1
+//   311                             <-- SP
+//
+//   LCL  = 305
+//   ARG  = 300
+//   THIS = 3010
+//   THAT = 4010
+//
+compare-to SimpleFunction.cmp,
+output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1
             RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[310]%D1.6.1;
 output;
 `,kn=`| RAM[0] | RAM[1] | RAM[2] | RAM[3] | RAM[4] |RAM[310]|
 |    311 |    305 |    300 |   3010 |   4010 |   1196 |
-`,An=`// Sys.vm. Tested by the NestedCall test script.
-// Consists of three functions: Sys.init, Sys.main, and Sys.add12.
+`,An=`// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: NestedCall/Sys.vm
 
-// Calls Sys.main() and stores a return value in temp 1.
-// Does not return (enters infinite loop).
-// The VM implementation starts running the Sys.init function, by default.
+// Tests nested function calls and returns using three functions:
+// Sys.init, Sys.main, and Sys.add12.
+// Each function assigns distinct values to THIS and THAT,
+// allowing the test to verify that these pointers are saved
+// and restored correctly across nested function calls.
+
+// Sys.init is the entry point.
+// Sets THIS = 4000 and THAT = 5000, then calls Sys.main.
+// Stores the returned value (expected: 246) in temp 1,
+// and enters an infinite loop.
 function Sys.init 0
-	push constant 4000	// tests that THIS and THAT are handled correctly
-	pop pointer 0
-	push constant 5000
-	pop pointer 1
-	call Sys.main 0
-	pop temp 1
-	label LOOP
-	goto LOOP
+    push constant 4000
+    pop pointer 0
+    push constant 5000
+    pop pointer 1
+    call Sys.main 0
+    pop temp 1
+    label LOOP
+    goto LOOP
 
-// Sets locals 1, 2 and 3 to some values. Leaves locals 0 and 4 unchanged, 
-// to test that the 'function' VM command initializes them to 0 (the test 
-// script sets them to -1 before this code starts running).
-// Calls Sys.add12(123) and stores the return value (should be 135) in temp 0.
-// Returns local 0 + local 1 + local 2 + local 3 + local 4 (should be 456), to 
-// confirm that locals were not mangled by the function call.
+// Sys.main declares five local variables.
+// Before execution, the test script sets their RAM
+// locations to -1, to allow checking that the "function"
+// command initializes all local variables to zero.
+//
+// Sys.main sets local 1 = 200, local 2 = 40, and local 3 = 6,
+// leaving local 0 and local 4 at their initialized values (0).
+// It then calls Sys.add12 with argument 123 and stores the
+// returned value (expected: 135) in temp 0.
+//
+// Finally, Sys.main returns the sum of its five local variables
+// (expected: 246). This allows checking that the nested call preserved
+// the caller's local variables and restored its segment pointers.
 function Sys.main 5
-	push constant 4001
-	pop pointer 0
-	push constant 5001
-	pop pointer 1
-	push constant 200
-	pop local 1
-	push constant 40
-	pop local 2
-	push constant 6
-	pop local 3
-	push constant 123
-	call Sys.add12 1
-	pop temp 0
-	push local 0
-	push local 1
-	push local 2
-	push local 3
-	push local 4
-	add
-	add
-	add
-	add
-	return
+    push constant 4001
+    pop pointer 0
+    push constant 5001
+    pop pointer 1
+    push constant 200
+    pop local 1
+    push constant 40
+    pop local 2
+    push constant 6
+    pop local 3
+    push constant 123
+    call Sys.add12 1
+    pop temp 0
+    push local 0
+    push local 1
+    push local 2
+    push local 3
+    push local 4
+    add
+    add
+    add
+    add
+    return
 
-// Returns (argument 0) + 12.
+// Sys.add12 sets THIS = 4002 and THAT = 5002,
+// then returns argument 0 + 12 (expected: 135).
 function Sys.add12 0
-	push constant 4002
-	pop pointer 0
-	push constant 5002
-	pop pointer 1
-	push argument 0
-	push constant 12
-	add
-	return
-`,jn=`// Tests and illustrates how the VM implementation handles function-call-and-return,
-// by executing the functions in Sys.vm in the VM emulator.
-// In particular, loads and runs the functions in Sys.vm.
+    push constant 4002
+    pop pointer 0
+    push constant 5002
+    pop pointer 1
+    push argument 0
+    push constant 12
+    add
+    return
+`,jn=`// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: NestedCall/NestedCallVME.tst
+
+// Tests nested function calls and returns by executing
+// NestedCall/Sys.vm in the VM emulator.
+// See Sys.vm for more details.
 
 load Sys.vm,
-compare-to NestedCall.cmp,
-output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
+
+// This test does not execute bootstrap code. Instead of calling Sys.init,
+// it manually simulates the call frame that would have been created by
+// calling Sys.init. The five-word frame occupies RAM[256] through RAM[260],
+// and the stack pointer is initialized to 261.
 
 set RAM[0] 261,
 set RAM[1] 261,
 set RAM[2] 256,
 set RAM[3] -3,
 set RAM[4] -4,
-set RAM[5] -1, // test results
+set RAM[5] -1,     // Locations for test results
 set RAM[6] -1,
-set RAM[256] 1234, // fake stack frame from call Sys.init
+set RAM[256] 1234, // Simulated call frame for Sys.init
 set RAM[257] -1,
 set RAM[258] -2,
 set RAM[259] -3,
 set RAM[260] -4,
 
-set RAM[261] -1, // Initialize stack to check for local segment
-set RAM[262] -1, // being cleared to zero.
+// Initialize unused stack locations to -1.
+// This helps verify that the "function" command initializes
+// local variables to zero, rather than leaving previous values.
+set RAM[261] -1,
+set RAM[262] -1,
 set RAM[263] -1,
 set RAM[264] -1,
 set RAM[265] -1,
@@ -12288,6 +12395,7 @@ set RAM[297] -1,
 set RAM[298] -1,
 set RAM[299] -1,
 
+// Sets the VM segment pointers to match the simulated call frame.
 set sp 261,
 set local 261,
 set argument 256,
@@ -12295,32 +12403,54 @@ set this 3000,
 set that 4000;
 
 repeat 50 {
-	vmstep;
+    vmstep;
 }
-output;
-`,Mn=`// Tests how the VM implementation handles function-call-and-return,
-// by executing the functions in Sys.vm.
-// In particular, loads and runs NestedCall.asm, which results when 
-// the VM translator is applied to the NestedCall folder, which 
-// includes only one VM file: Sys.vm.
 
 compare-to NestedCall.cmp,
+output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
+output;
+`,Mn=`// This file is part of www.nand2tetris.org
+// and the book "The Elements of Computing Systems"
+// by Nisan and Schocken, MIT Press.
+// File name: NestedCall/NestedCall.tst
 
+// Tests Sys.asm in the CPU emulator.
+// Assumes that the program is already loaded.
+
+// Tests nested function calls and returns, including preservation and
+// restoration of segment pointers and the caller's local variables.
+// Also checks that local variables are initialized to zero and
+// that return values are passed correctly between functions.
+// See Sys.vm for details.
+//
+// This test does not execute bootstrap code. Instead of calling Sys.init,
+// the test initializes the segment pointers and sets up a five-word call 
+// frame, using distinct saved values to verify that the pointers are 
+// restored correctly upon return.
+
+// Initializes SP, LCL, ARG, THIS, and THAT.
 set RAM[0] 261,
 set RAM[1] 261,
 set RAM[2] 256,
 set RAM[3] -3,
 set RAM[4] -4,
-set RAM[5] -1,     // test results
-set RAM[6] -1,
-set RAM[256] 1234, // fake stack frame from call Sys.init
-set RAM[257] -1,
-set RAM[258] -2,
-set RAM[259] -3,
-set RAM[260] -4,
 
-set RAM[261] -1,   // Initializes the stack, to check that the local segment
-set RAM[262] -1,   // is initialized to zeros by the 'function' VM command.
+// Initializes temp 0 and temp 1, which store the nested return values.
+set RAM[5] -1,
+set RAM[6] -1,
+
+// Simulates the five-word frame that would have been created by
+// "call Sys.init 0":
+set RAM[256] 1234,  // return address
+set RAM[257] -1,    // saved LCL
+set RAM[258] -2,    // saved ARG
+set RAM[259] -3,    // saved THIS
+set RAM[260] -4,    // saved THAT
+
+// Fills unused stack locations with -1, to check that the "function"
+// command initializes local variables to zero.
+set RAM[261] -1,
+set RAM[262] -1,
 set RAM[263] -1,
 set RAM[264] -1,
 set RAM[265] -1,
@@ -12363,6 +12493,7 @@ repeat 4000 {
 	ticktock;
 }
 
+compare-to NestedCall.cmp,
 output-list RAM[0]%D1.6.1 RAM[1]%D1.6.1 RAM[2]%D1.6.1 RAM[3]%D1.6.1 RAM[4]%D1.6.1 RAM[5]%D1.6.1 RAM[6]%D1.6.1;
 output;
 `,Nn=`| RAM[0] | RAM[1] | RAM[2] | RAM[3] | RAM[4] | RAM[5] | RAM[6] |
@@ -12370,38 +12501,36 @@ output;
 `,Pn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/FibonacciElement/Main.vm
+// File name: FibonacciElement/Main.vm
 
-// Contains one function: Main.fibonacci.
-
-// Computes the n'th element of the Fibonacci series, recursively.
-// n is given in argument[0]. Called by the Sys.init function 
-// (part of the Sys.vm file), which sets argument[0] to an input
-// value and then calls Main.fibonacci.
+// Contains one function: Main.fibonacci. This function 
+// Computes the nth Fibonacci number recursively, where n is
+// supplied in argument[0]. The Sys.init function (in Sys.vm)
+// calls Main.fibonacci with the desired input value (n).
 function Main.fibonacci 0
 	push argument 0
 	push constant 2
-	lt                     
-	if-goto N_LT_2        
+	lt
+	if-goto N_LT_2
 	goto N_GE_2
-label N_LT_2               // if n < 2 returns n
-	push argument 0        
+label N_LT_2               // If n < 2, return n.
+	push argument 0
 	return
-label N_GE_2               // if n >= 2 returns fib(n - 2) + fib(n - 1)
+label N_GE_2               // Otherwise, return fib(n - 2) + fib(n - 1).
 	push argument 0
 	push constant 2
 	sub
-	call Main.fibonacci 1  // computes fib(n - 2)
+	call Main.fibonacci 1  // Compute fib(n - 2).
 	push argument 0
 	push constant 1
 	sub
-	call Main.fibonacci 1  // computes fib(n - 1)
-	add                    // returns fib(n - 1) + fib(n - 2)
+	call Main.fibonacci 1  // Compute fib(n - 1).
+	add                    // Add the two results.
 	return
 `,Fn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/FibonacciElement/Sys.vm
+// File name: FibonacciElement/Sys.vm
 
 // Containts one function: Sys.init.
 
@@ -12418,40 +12547,49 @@ label END
 	goto END  // loops infinitely`,In=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/FibonacciElement/FibonacciElementVME.tst
+// File name: FibonacciElementVME.tst
 
-// Tests and illustrates the given Fibonacci element program on the VM emulator.
+// Tests the FibonacciElement program in the VM emulator.
+// The program computes a Fibonacci number using recursive function calls.
+// See Main.vm and Sys.vm for details.
 
-load,
-compare-to FibonacciElement.cmp,
+load,  // Loads all the .vm files in the test folder.
 
+// The VM emulator does not execute bootstrap code (does not call Sys.init).
+// To simulate the stack pointer after the bootstrap call to Sys.init,
+// the test initializes SP to 261.
 set sp 261,
 
 repeat 110 {
   vmstep;
 }
 
-// Outputs the stack pointer and the value at the stack's base.
-// That's where the implementation should put the return value.  
+// Outputs the stack pointer and the return value at RAM[261],
+// where Sys.init leaves the result of the Fibonacci computation.
+compare-to FibonacciElement.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1;
 output;
-`,Ln=`// This file is part of www.nand2tetris.org
+`,Ln=`
+// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/FibonacciElement/FibonacciElement.tst
+// File name: FibonacciElement/FibonacciElement.tst
 
-// Tests FibonacciElement.asm on the CPU emulator. 
-// FibonacciElement.asm results from translating Main.vm and Sys.vm into
-// a single assembly program, stored in the file FibonacciElement.asm.
+// Runs the FibonacciElement.asm program in the CPU emulator.
+// Asssumes that the program is already loaded.
 
-compare-to FibonacciElement.cmp,
+// FibonacciElement.asm is generated by translating Main.vm and Sys.vm
+// into a single assembly program.
+// The translated program must include bootstrap code that
+// sets SP = 256 and executes "call Sys.init 0".
 
 repeat 6000 {
-	ticktock;
+    ticktock;
 }
 
-// Outputs the stack pointer and the value at the stack's base.
-// That's where the implementation should put the return value.
+// Outputs the stack pointer and the return value at RAM[261],
+// where Sys.init leaves the result of the Fibonacci computation.
+compare-to FibonacciElement.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1;
 output;
 `,Rn=`| RAM[0] |RAM[261]|
@@ -12459,7 +12597,7 @@ output;
 `,zn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/Class1.vm
+// File name: StaticsTest/Class1.vm
 
 // Stores two supplied arguments in static[0] and static[1].
 function Class1.set 0
@@ -12478,7 +12616,7 @@ function Class1.get 0
 	return`,Bn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/Class2.vm
+// File name: StaticsTest/Class2.vm
 
 // Stores two supplied arguments in static[0] and static[1].
 function Class2.set 0
@@ -12497,7 +12635,7 @@ function Class2.get 0
 	return`,Vn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/Sys.vm
+// File name: StaticsTest/Sys.vm
 
 // Tests that different functions, stored in two different 
 // class files, manipulate the static segment correctly. 
@@ -12517,12 +12655,16 @@ label END
 	goto END`,Hn=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/StaticsTestVME.tst
+// File name: StaticsTest/StaticsTestVME.tst
 
-// Tests and illustrates the statics test on the VM emulator.
+// Tests the statics test on the VM emulator.
 
-load,
-compare-to StaticsTest.cmp,
+load,  // Loads all the .vm files from the folder associated with this test
+
+// In the translated assembly program, the bootstrap code sets
+// SP = 256 and executes call Sys.init 0. This call pushes five
+// values onto the stack, so Sys.init starts executing with SP = 261.
+// We set SP = 261 to simulate this initial state.
 
 set sp 261,
 
@@ -12530,24 +12672,26 @@ repeat 36 {
 	vmstep;
 }
 
+compare-to StaticsTest.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1 RAM[262]%D1.6.1;
 output;
 `,Un=`// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/StaticsTest.tst
+// File name: StaticsTest/StaticsTest.tst
 
-// Tests StaticTest.asm in the CPU emulator.
-// This assembly file results from translating the staticsTest folder.
+// Tests StaticsTest.asm in the CPU emulator.
+// This assembly program results from translating the StaticsTest folder.
+// Assumes that the program is already loaded.
 
-compare-to StaticsTest.cmp,
-
-set RAM[0] 256,
+// The translated program must include bootstrap code that
+// sets SP = 256 and executes "call Sys.init 0".
 
 repeat 2500 {
 	ticktock;
 }
 
+compare-to StaticsTest.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1 RAM[262]%D1.6.1;
 output;
 `,Wn=`| RAM[0] |RAM[261]|RAM[262]|

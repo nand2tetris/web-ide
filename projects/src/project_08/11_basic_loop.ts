@@ -1,11 +1,11 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/BasicLoop/BasicLoop.vm
+// File name: BasicLoop/BasicLoop.vm
 
 // Computes the sum 1 + 2 + ... + n and pushes the result onto
 // the stack. The value n is given in argument[0], which must be 
-// initialized by the caller of this code.
+// initialized before this code is executed.
 
 	push constant 0    
 	pop local 0         // sum = 0
@@ -26,16 +26,13 @@ label LOOP
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/BasicLoop/BasicLoopVME.tst
+// File name: BasicLoop/BasicLoopVME.tst
 
-// Tests and illustrates BasicLoop.vm on the VM emulator.
-// Before executing the code, initializes the stack pointer
-// and the base addresses of the local and argument segments,
-// and sets argument[0].
+// Tests BasicLoop.vm in the VM emulator.
 
 load BasicLoop.vm,
-compare-to BasicLoop.cmp,
 
+// Before executing, initializes SP, LCL, ARG, and argument[0].
 set sp 256,
 set local 300,
 set argument 400,
@@ -45,7 +42,9 @@ repeat 33 {
  	vmstep;
 }
 
-// Outputs the stack pointer and the value at the stack's base
+// Verifies the final SP and the result at the stack's base.
+// Expected: SP=257, RAM[256]=6.
+compare-to BasicLoop.cmp,
 output-list RAM[0]%D1.6.1 RAM[256]%D1.6.1;
 output;
 `;
@@ -53,25 +52,25 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/ProgramFlow/BasicLoop/BasicLoop.tst
+// File name: BasicLoop/BasicLoop.tst
 
-// Tests BasicLoop.asm on the CPU emulator.
-// Before executing the code, initializes the stack pointer
-// and the base addresses of the local and argument segments,
-// and sets argument[0].
+// Tests BasicLoop.asm in the CPU emulator.
+// Assumes that the program is already loaded.
 
-compare-to BasicLoop.cmp,
-
+// Before executing, initializes SP, LCL, ARG, and argument[0].
 set RAM[0] 256,  // SP
 set RAM[1] 300,  // LCL
 set RAM[2] 400,  // ARG
 set RAM[400] 3,  // argument 0
 
+// Executes enough CPU cycles to complete the loop.
 repeat 600 {
 	ticktock;
 }
 
-// Outputs the stack pointer and the value at the stack's base
+// Verifies the final SP and the result at the stack's base.
+// Expected: SP=257, RAM[256]=6.
+compare-to BasicLoop.cmp,
 output-list RAM[0]%D1.6.1 RAM[256]%D1.6.1;
 output;
 `;

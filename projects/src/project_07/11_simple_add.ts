@@ -1,7 +1,7 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.vm
+// File name: SimpleAdd/SimpleAdd.vm
 
 // Pushes and adds two constants.
 
@@ -13,12 +13,11 @@ add
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAddVME.tst
+// File name: SimpleAdd/SimpleAddVME.tst
 
-// Tests and illustrates SimpleAdd.vm on the VM simulator.
+// Tests SimpleAdd.vm on the VM simulator.
 
 load SimpleAdd.vm,
-compare-to SimpleAdd.cmp,
 
 set RAM[0] 256,  // initializes the stack pointer
 
@@ -27,17 +26,17 @@ repeat 3 {       // SimpleAdd.vm has 3 VM commands
 }
 
 // Outputs the stack pointer and the value at the stack's base
+compare-to SimpleAdd.cmp,
 output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
 output;`;
 
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/StackArithmetic/SimpleAdd/SimpleAdd.tst
+// File name: SimpleAdd/SimpleAdd.tst
 
 // Tests SimpleAdd.asm on the CPU emulator.
-
-compare-to SimpleAdd.cmp,
+// Assumes that the program is already loaded in the CPU emulator.
 
 set RAM[0] 256,  // initializes the stack pointer 
 
@@ -46,6 +45,7 @@ repeat 60 {      // enough cycles to complete the execution
 }
 
 // Outputs the stack pointer and the value at the stack's base
+compare-to SimpleAdd.cmp,
 output-list RAM[0]%D2.6.2 RAM[256]%D2.6.2;
 output;
 `;

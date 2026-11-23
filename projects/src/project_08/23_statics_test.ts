@@ -1,7 +1,7 @@
 export const class1 = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/Class1.vm
+// File name: StaticsTest/Class1.vm
 
 // Stores two supplied arguments in static[0] and static[1].
 function Class1.set 0
@@ -22,7 +22,7 @@ function Class1.get 0
 export const class2 = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/Class2.vm
+// File name: StaticsTest/Class2.vm
 
 // Stores two supplied arguments in static[0] and static[1].
 function Class2.set 0
@@ -43,7 +43,7 @@ function Class2.get 0
 export const sys = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/Sys.vm
+// File name: StaticsTest/Sys.vm
 
 // Tests that different functions, stored in two different 
 // class files, manipulate the static segment correctly. 
@@ -65,12 +65,16 @@ label END
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/StaticsTestVME.tst
+// File name: StaticsTest/StaticsTestVME.tst
 
-// Tests and illustrates the statics test on the VM emulator.
+// Tests the statics test on the VM emulator.
 
-load,
-compare-to StaticsTest.cmp,
+load,  // Loads all the .vm files from the folder associated with this test
+
+// In the translated assembly program, the bootstrap code sets
+// SP = 256 and executes call Sys.init 0. This call pushes five
+// values onto the stack, so Sys.init starts executing with SP = 261.
+// We set SP = 261 to simulate this initial state.
 
 set sp 261,
 
@@ -78,6 +82,7 @@ repeat 36 {
 	vmstep;
 }
 
+compare-to StaticsTest.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1 RAM[262]%D1.6.1;
 output;
 `;
@@ -85,19 +90,20 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/8/FunctionCalls/StaticsTest/StaticsTest.tst
+// File name: StaticsTest/StaticsTest.tst
 
-// Tests StaticTest.asm in the CPU emulator.
-// This assembly file results from translating the staticsTest folder.
+// Tests StaticsTest.asm in the CPU emulator.
+// This assembly program results from translating the StaticsTest folder.
+// Assumes that the program is already loaded.
 
-compare-to StaticsTest.cmp,
-
-set RAM[0] 256,
+// The translated program must include bootstrap code that
+// sets SP = 256 and executes "call Sys.init 0".
 
 repeat 2500 {
 	ticktock;
 }
 
+compare-to StaticsTest.cmp,
 output-list RAM[0]%D1.6.1 RAM[261]%D1.6.1 RAM[262]%D1.6.1;
 output;
 `;

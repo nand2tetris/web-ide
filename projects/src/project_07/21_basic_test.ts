@@ -1,9 +1,9 @@
 export const vm = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/BasicTest/BasicTest.vm
+// File name: BasicTest/BasicTest.vm
 
-// Executes pop and push commands.
+// Executes push/pop commands using memory segments.
 
 push constant 10
 pop local 0
@@ -35,14 +35,13 @@ add
 export const vm_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/BasicTest/BasicTestVME.tst
+// File name: BasicTest/BasicTestVME.tst
 
-// Tests and illustrates BasicTest.vm on the VM simulator.
+// Tests BasicTest.vm on the VM simulator.
 // Starts by setting the stack pointer and the base addresses
 // of relevant memory segments to selected RAM addresses.
 
 load BasicTest.vm,
-compare-to BasicTest.cmp,
 
 set sp 256,        // stack pointer
 set local 300,     // base address of the local segment
@@ -55,6 +54,7 @@ repeat 25 {        // BasicTest.vm has 25 VM commands
 }
 
 // Outputs the value at the stack's base and some values from the tested memory segments
+compare-to BasicTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[300]%D1.6.1 RAM[401]%D1.6.1 
             RAM[402]%D1.6.1 RAM[3006]%D1.6.1 RAM[3012]%D1.6.1
             RAM[3015]%D1.6.1 RAM[11]%D1.6.1;
@@ -64,11 +64,12 @@ output;
 export const hdl_tst = `// This file is part of www.nand2tetris.org
 // and the book "The Elements of Computing Systems"
 // by Nisan and Schocken, MIT Press.
-// File name: projects/7/MemoryAccess/BasicTest/BasicTest.tst
+// File name: BasicTest/BasicTest.tst
 
 // Tests BasicTest.asm on the CPU emulator.
-
-compare-to BasicTest.cmp,
+// Assumes that the program is already loaded.
+// Starts by setting the stack pointer and the base addresses
+// of relevant memory segments to selected RAM addresses.
 
 set RAM[0] 256,   // stack pointer
 set RAM[1] 300,   // base address of the local segment
@@ -81,6 +82,7 @@ repeat 600 {      // enough cycles to complete the execution
 }
 
 // Outputs the value at the stack's base and some values from the tested memory segments
+compare-to BasicTest.cmp,
 output-list RAM[256]%D1.6.1 RAM[300]%D1.6.1 RAM[401]%D1.6.1 
             RAM[402]%D1.6.1 RAM[3006]%D1.6.1 RAM[3012]%D1.6.1
             RAM[3015]%D1.6.1 RAM[11]%D1.6.1;

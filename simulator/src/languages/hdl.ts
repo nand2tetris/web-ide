@@ -86,9 +86,13 @@ hdlSemantics.addAttribute<Part>("Part", {
 
 hdlSemantics.addAttribute<Part[] | "BUILTIN">("Parts", {
   Parts(_, parts) {
-    return parts.children.map((c) => c.Part);
+    const entries = parts.children.map((c) => {
+      const entry = c.child(0);
+      return entry.ctorName === "BuiltinPart" ? "BUILTIN" : entry.Part;
+    });
+    return entries.includes("BUILTIN") ? "BUILTIN" : (entries as Part[]);
   },
-  BuiltinPart(_a, _b) {
+  BuiltinPart(_a, _name, _b) {
     return "BUILTIN";
   },
 });

@@ -4,6 +4,7 @@
 import { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 import EditorWorker from "monaco-editor/editor/editor.worker.js?worker";
+import "./monacoReset.scss";
 
 // The app only uses Monarch languages, which need the generic editor worker.
 self.MonacoEnvironment = {

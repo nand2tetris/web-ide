@@ -6,7 +6,14 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/result.ts";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { createError, Diagnostic, Span } from "../languages/base.js";
+import { semanticError } from "../languages/base.js";
+import {
+  Diagnostic,
+  DiagnosticCode,
+  located,
+  Span,
+  Stage,
+} from "../languages/diagnostic.js";
 import {
   CallInstruction,
   FunctionInstruction,
@@ -237,16 +244,18 @@ export class Vm {
         const parts = inst.name.split(".");
         if (parts.length != 2) {
           return Err(
-            createError(
-              `Illegal subroutine name ${inst.name} (Expected <className>.<SubroutineName>)`,
+            semanticError(
+              DiagnosticCode.Vm.ILLEGAL_SUBROUTINE_NAME,
+              { name: inst.name },
               inst.span,
             ),
           );
         }
         if (parts[0] != this.fileBasenameNoExtension(file.name)) {
           return Err(
-            createError(
-              `File name ${file.name} doesn't match class name ${parts[0]} (at ${inst.name})`,
+            semanticError(
+              DiagnosticCode.Vm.FILE_NAME_MISMATCH,
+              { file: file.name, className: parts[0], name: inst.name },
               inst.span,
             ),
           );
@@ -261,7 +270,9 @@ export class Vm {
 
     for (const file of files) {
       if (names.has(file.name)) {
-        return Err(createError(`File ${file.name} already exists`));
+        return Err(
+          semanticError(DiagnosticCode.Vm.DUPLICATE_FILE, { file: file.name }),
+        );
       }
       const result = this.validateFile(file);
       if (isErr(result)) {
@@ -278,7 +289,7 @@ export class Vm {
         if (inst.op == "pop" || inst.op == "push") {
           const base = this.memory.baseSegment(inst.segment, inst.offset);
           if (isErr(base)) {
-            return Err(createError(Err(base).message, inst.span));
+            return Err(located(Err(base), inst.span, Stage.SEMANTIC));
           }
         }
       }
@@ -296,8 +307,9 @@ export class Vm {
       if (inst.op == "function") {
         if (inst.nVars < 0 || inst.nVars > 32767) {
           return Err(
-            createError(
-              `Illegal number of local variables ${inst.nVars} (Expected 0-32767)`,
+            semanticError(
+              DiagnosticCode.Vm.ILLEGAL_LOCAL_COUNT,
+              { count: inst.nVars },
               inst.span,
             ),
           );
@@ -307,8 +319,9 @@ export class Vm {
       if (inst.op == "call") {
         if (inst.nArgs < 0 || inst.nArgs > 32767) {
           return Err(
-            createError(
-              `Illegal number of arguments ${inst.nArgs} (Expected 0-32767)`,
+            semanticError(
+              DiagnosticCode.Vm.ILLEGAL_ARG_COUNT,
+              { count: inst.nArgs },
               inst.span,
             ),
           );
@@ -327,16 +340,25 @@ export class Vm {
               : builtin.args.length;
           if (expectedNArgs != call.nArgs) {
             return Err(
-              createError(
-                `OS function ${call.name} expects ${
-                  expectedNArgs
-                } arguments, not ${call.nArgs}`,
+              semanticError(
+                DiagnosticCode.Vm.OS_ARG_COUNT,
+                {
+                  name: call.name,
+                  expected: expectedNArgs,
+                  received: call.nArgs,
+                },
                 call.span,
               ),
             );
           }
         } else {
-          return Err(createError(`Undefined function ${call.name}`, call.span));
+          return Err(
+            semanticError(
+              DiagnosticCode.Vm.UNDEFINED_FUNCTION,
+              { name: call.name },
+              call.span,
+            ),
+          );
         }
       }
     }
@@ -346,9 +368,7 @@ export class Vm {
 
   static buildFromFiles(files: ParsedVmFile[]): Result<Vm, Diagnostic> {
     if (files.length === 0) {
-      return Err(
-        createError("No .vm files to load. Compile your Jack files first."),
-      );
+      return Err(semanticError(DiagnosticCode.Vm.NO_FILES, {}));
     }
     let result = this.validateFiles(files);
     if (isErr(result)) {
@@ -472,10 +492,13 @@ export class Vm {
           declaredLabels.add(label);
           if (fn.labels[label])
             return Err(
-              createError(
-                `Cannot redeclare label ${label} in function ${
-                  fn.name
-                } (previously at line ${fn.labels[label] + 1})`,
+              semanticError(
+                DiagnosticCode.Vm.DUPLICATE_LABEL,
+                {
+                  label,
+                  function: fn.name,
+                  line: fn.labels[label] + 1,
+                },
                 instructions[i].span,
               ),
             );
@@ -498,7 +521,13 @@ export class Vm {
 
     for (const label of Object.keys(usedLabels)) {
       if (!declaredLabels.has(label)) {
-        return Err(createError(`Undeclared label ${label}`, usedLabels[label]));
+        return Err(
+          semanticError(
+            DiagnosticCode.Vm.UNDECLARED_LABEL,
+            { label },
+            usedLabels[label],
+          ),
+        );
       }
     }
 
@@ -571,8 +600,9 @@ export class Vm {
         fn.name !== SYS_INIT.name
       ) {
         return Err(
-          createError(
-            `VM Already has a function named ${fn.name}`,
+          semanticError(
+            DiagnosticCode.Vm.DUPLICATE_FUNCTION,
+            { name: fn.name },
             instructions[0].span,
           ),
         );
@@ -634,13 +664,11 @@ export class Vm {
     }
 
     if (this.functionMap[IMPLICIT] && this.functionMap[SYS_INIT.name]) {
-      return Err(
-        createError("Cannot use both bootstrap and an implicit function"),
-      );
+      return Err(semanticError(DiagnosticCode.Vm.BOOTSTRAP_AND_IMPLICIT, {}));
     }
 
     if (this.entry === "") {
-      return Err(createError("Could not determine an entry point for VM"));
+      return Err(semanticError(DiagnosticCode.Vm.NO_ENTRY_POINT, {}));
     }
 
     this.functions = Object.values(this.functionMap);

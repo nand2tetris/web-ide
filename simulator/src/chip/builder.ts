@@ -1,13 +1,15 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
+import { isValid, semanticError, Valid } from "../languages/base.js";
 import {
-  createError,
   Diagnostic,
+  DiagnosticCode,
   Diagnostics,
-  isValid,
+  diagnostic,
+  located,
   Span,
-  Valid,
-} from "../languages/base.js";
+  Stage,
+} from "../languages/diagnostic.js";
 import { HDL, HdlParse, Part, PinParts } from "../languages/hdl.js";
 import { getBuiltinChip, hasBuiltinChip } from "./builtins/index.js";
 import { Chip, Connection, isConstantPin } from "./chip.js";
@@ -20,12 +22,7 @@ function pinWidth(pin: PinParts): Result<number | undefined, Diagnostic> {
   if (pin.end >= start) {
     return Ok(pin.end - start + 1);
   }
-  return Err(
-    createError(
-      `Bus start index should be less than or equal to bus end index`,
-      pin.span,
-    ),
-  );
+  return Err(semanticError(DiagnosticCode.Chip.BUS_RANGE, {}, pin.span));
 }
 
 export async function parse(
@@ -34,9 +31,11 @@ export async function parse(
   name?: string,
   fs?: FileSystem,
 ): Promise<Result<Chip, Diagnostics>> {
-  const parsed = HDL.parse(code.toString());
-  if (!isValid(parsed)) return Err(parsed.diagnostics);
-  const chip = await build({ parts: parsed.ast, dir, name, fs });
+  const outcome = HDL.parse(code.toString());
+  if (!isValid(outcome)) {
+    return Err(outcome.diagnostics);
+  }
+  const chip = await build({ parts: outcome.ast, dir, name, fs });
   return isErr(chip) ? Err([Err(chip)]) : chip;
 }
 
@@ -44,34 +43,21 @@ export async function loadChip(
   name: string,
   dir?: string,
   fs?: FileSystem,
-): Promise<Result<Chip>> {
+): Promise<Result<Chip, Diagnostic>> {
   if (hasBuiltinChip(name) || fs === undefined) {
     return await getBuiltinChip(name);
   }
   try {
     const file = await fs.readFile(`${dir}/${name}.hdl`);
-    const maybeParsedHDL = HDL.parse(file);
-
-    let maybeChip: Result<Chip, Error>;
-    if (isValid(maybeParsedHDL)) {
-      const maybeBuilt = await build({
-        parts: maybeParsedHDL.ast,
-        dir,
-        name,
-        fs,
-      });
-      if (isErr(maybeBuilt)) {
-        maybeChip = Err(new Error(Err(maybeBuilt).message));
-      } else {
-        maybeChip = maybeBuilt;
-      }
-    } else {
-      maybeChip = Err(new Error("HDL Was not parsed"));
+    const outcome = HDL.parse(file);
+    if (!isValid(outcome)) {
+      return Err(outcome.diagnostics[0]);
     }
-
-    return maybeChip;
+    return await build({ parts: outcome.ast, dir, name, fs });
   } catch (_e) {
-    return Err(new Error(`Could not load chip ${name}.hdl` /*, { cause: e }*/));
+    return Err(
+      diagnostic(DiagnosticCode.Chip.NOT_LOADED, { file: `${name}.hdl` }),
+    );
   }
 }
 
@@ -169,10 +155,12 @@ function checkMultipleAssignments(
   }
   if (errorIndex != undefined) {
     return Err(
-      createError(
-        `Cannot write to pin ${pin.pin}${
-          errorIndex != -1 ? `[${errorIndex}]` : ""
-        } multiple times`,
+      semanticError(
+        DiagnosticCode.Chip.MULTIPLE_WRITES,
+        {
+          pin: pin.pin,
+          ...(errorIndex != -1 ? { index: errorIndex } : {}),
+        },
         pin.span,
       ),
     );
@@ -181,7 +169,7 @@ function checkMultipleAssignments(
 }
 
 class ChipBuilder {
-  private parts: Valid<HdlParse>;
+  private parts: HdlParse;
   private fs?: FileSystem;
   private dir?: string;
   private expectedName?: string;
@@ -227,7 +215,9 @@ class ChipBuilder {
 
   async build(): Promise<Result<Chip, Diagnostic>> {
     if (this.expectedName && this.parts.name.value != this.expectedName) {
-      return Err(createError(`Wrong chip name`, this.parts.name.span));
+      return Err(
+        semanticError(DiagnosticCode.Chip.WRONG_NAME, {}, this.parts.name.span),
+      );
     }
 
     if (this.parts.parts === "BUILTIN") {
@@ -261,13 +251,20 @@ class ChipBuilder {
     for (const part of this.parts.parts) {
       const builtin = await loadChip(part.name, this.dir, this.fs);
       if (isErr(builtin)) {
-        return Err(createError(`Undefined chip name: ${part.name}`, part.span));
+        return Err(
+          semanticError(
+            DiagnosticCode.Chip.NOT_FOUND,
+            { name: part.name },
+            part.span,
+          ),
+        );
       }
       const partChip = Ok(builtin);
       if (partChip.name == this.chip.name) {
         return Err(
-          createError(
-            `Cannot use chip ${partChip.name} to implement itself`,
+          semanticError(
+            DiagnosticCode.Chip.SELF_REFERENCE,
+            { name: part.name },
             part.span,
           ),
         );
@@ -312,7 +309,13 @@ class ChipBuilder {
       }
     }
     if (loop) {
-      return Err(createError(`Looping wire ${loop}`, part.span));
+      return Err(
+        semanticError(
+          DiagnosticCode.Chip.LOOPING_WIRE,
+          { pin: loop },
+          part.span,
+        ),
+      );
     }
     return Ok();
   }
@@ -342,18 +345,25 @@ class ChipBuilder {
       if (isErr(result)) {
         const error = Err(result);
         return Err(
-          createError(
-            error.message,
+          located(
+            error.fault,
             error.lhs
               ? part.wires[error.wireIndex].lhs.span
               : part.wires[error.wireIndex].rhs.span,
+            Stage.SEMANTIC,
           ),
         );
       }
       this.chip.sortParts();
       return Ok();
     } catch (e) {
-      return Err(createError((e as Error).message, part.span));
+      return Err(
+        semanticError(
+          DiagnosticCode.Error.UNEXPECTED,
+          { message: (e as Error).message },
+          part.span,
+        ),
+      );
     }
   }
 
@@ -373,7 +383,13 @@ class ChipBuilder {
         return result;
       }
     } else {
-      return Err(createError(`Undefined pin name: ${lhs.pin}`, lhs.span));
+      return Err(
+        semanticError(
+          DiagnosticCode.Chip.UNDEFINED_PIN,
+          { pin: lhs.pin },
+          lhs.span,
+        ),
+      );
     }
     if (!isConstantPin(rhs.pin)) {
       this.wires.push({ partChip: partChip, lhs, rhs });
@@ -429,8 +445,9 @@ class ChipBuilder {
       // rhs is necessarily an internal pin
       if (rhs.start !== undefined || rhs.end !== undefined) {
         return Err(
-          createError(
-            `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
+          semanticError(
+            DiagnosticCode.Chip.INTERNAL_PIN_SUBSCRIPTED,
+            { pin: rhs.pin },
             rhs.span,
           ),
         );
@@ -447,7 +464,11 @@ class ChipBuilder {
       } else {
         if (pinData.isDefined) {
           return Err(
-            createError(`Internal pin ${rhs.pin} already defined`, rhs.span),
+            semanticError(
+              DiagnosticCode.Chip.INTERNAL_PIN_REDEFINED,
+              { pin: rhs.pin },
+              rhs.span,
+            ),
           );
         }
         pinData.isDefined = true;
@@ -459,11 +480,17 @@ class ChipBuilder {
 
   private validateWriteTarget(rhs: PinParts): Result<void, Diagnostic> {
     if (this.chip.isInPin(rhs.pin)) {
-      return Err(createError(`Cannot write to input pin ${rhs.pin}`, rhs.span));
+      return Err(
+        semanticError(
+          DiagnosticCode.Chip.WRITE_TO_INPUT,
+          { pin: rhs.pin },
+          rhs.span,
+        ),
+      );
     }
     if (isConstantPin(rhs.pin)) {
       return Err(
-        createError(`Internal pin name cannot be "true" or "false"`, rhs.span),
+        semanticError(DiagnosticCode.Chip.INTERNAL_PIN_RESERVED, {}, rhs.span),
       );
     }
     return Ok();
@@ -471,15 +498,22 @@ class ChipBuilder {
 
   private validateInputSource(rhs: PinParts): Result<void, Diagnostic> {
     if (this.chip.isOutPin(rhs.pin)) {
-      return Err(createError(`Cannot use output pin as input`, rhs.span));
+      return Err(
+        semanticError(DiagnosticCode.Chip.OUTPUT_AS_INPUT, {}, rhs.span),
+      );
     } else if (!this.chip.isInPin(rhs.pin) && rhs.start != undefined) {
       return Err(
-        createError(
-          isConstantPin(rhs.pin)
-            ? `Constant bus cannot be subscripted or indexed`
-            : `Internal pins (in this case: ${rhs.pin}) cannot be subscripted or indexed`,
-          rhs.span,
-        ),
+        isConstantPin(rhs.pin)
+          ? semanticError(
+              DiagnosticCode.Chip.CONSTANT_SUBSCRIPTED,
+              {},
+              rhs.span,
+            )
+          : semanticError(
+              DiagnosticCode.Chip.INTERNAL_PIN_SUBSCRIPTED,
+              { pin: rhs.pin },
+              rhs.span,
+            ),
       );
     }
     return Ok();
@@ -489,12 +523,17 @@ class ChipBuilder {
     for (const [name, pinData] of this.internalPins) {
       if (!pinData.isDefined) {
         return Err(
-          createError(
-            name.toLowerCase() == "true" || name.toLowerCase() == "false"
-              ? `The constant bus ${name.toLowerCase()} must be in lower-case`
-              : `Undefined internal pin name: ${name}`,
-            pinData.firstUse,
-          ),
+          name.toLowerCase() == "true" || name.toLowerCase() == "false"
+            ? semanticError(
+                DiagnosticCode.Chip.CONSTANT_CASE,
+                { name: name.toLowerCase() },
+                pinData.firstUse,
+              )
+            : semanticError(
+                DiagnosticCode.Chip.UNDEFINED_INTERNAL_PIN,
+                { name },
+                pinData.firstUse,
+              ),
         );
       }
     }
@@ -511,10 +550,14 @@ class ChipBuilder {
         this.internalPins.get(wire.rhs.pin)?.width;
       if (lhsWidth != rhsWidth) {
         return Err(
-          createError(
-            `Different bus widths: ${display(
-              wire.lhs,
-            )}(${lhsWidth}) and ${display(wire.rhs)}(${rhsWidth})`,
+          semanticError(
+            DiagnosticCode.Chip.BUS_WIDTH_MISMATCH,
+            {
+              lhs: display(wire.lhs),
+              lhsWidth,
+              rhs: display(wire.rhs),
+              rhsWidth,
+            },
             {
               start: wire.lhs.span.start,
               end: wire.rhs.span.end,

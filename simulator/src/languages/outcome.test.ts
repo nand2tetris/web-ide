@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 import { ASM } from "./asm.js";
 import { isValid, type Outcome } from "./base.js";
 import { CMP } from "./cmp.js";
+import { DiagnosticCode, describeDiagnostic, Stage } from "./diagnostic.js";
 import { HDL } from "./hdl.js";
 import { JACK } from "./jack.js";
 import { TST } from "./tst.js";
@@ -56,7 +57,7 @@ describe("a failed match", () => {
       expect(outcome.ast).toEqual(root);
       expect(outcome.ast).toEqual(language.empty());
       expect(outcome.diagnostics).not.toHaveLength(0);
-      expect(outcome.diagnostics[0].message).toMatch(/^Line 1: /);
+      expect(describeDiagnostic(outcome.diagnostics[0])).toMatch(/^Line 1: /);
     },
   );
 
@@ -65,9 +66,10 @@ describe("a failed match", () => {
     expect(outcome.ast).toEqual(ASM.empty());
     expect(outcome.diagnostics).toEqual([
       {
-        message:
-          "Line 1: 32768 is invalid for an A instruction (should be 0 to 32767)",
+        code: DiagnosticCode.Asm.A_VALUE_RANGE,
+        args: { value: 32768 },
         span: { start: 0, end: 6, line: 1 },
+        stage: Stage.SEMANTIC,
       },
     ]);
     expect(isValid(outcome)).toBe(false);

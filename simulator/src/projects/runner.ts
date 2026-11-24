@@ -7,7 +7,12 @@ import {
 import type { Runner, RunResult } from "@nand2tetris/runner/types.js";
 import { build as buildChip } from "../chip/builder.js";
 import { Chip } from "../chip/chip.js";
-import { Diagnostic, Diagnostics, Valid, validOf } from "../languages/base.js";
+import { Valid, validOf } from "../languages/base.js";
+import {
+  Diagnostic,
+  Diagnostics,
+  describeDiagnostic,
+} from "../languages/diagnostic.js";
 import { HDL, HdlParse } from "../languages/hdl.js";
 import { TST, Tst } from "../languages/tst.js";
 import { ChipTest } from "../test/chiptst.js";
@@ -57,7 +62,7 @@ const listed = <T>(result: Result<T, Diagnostic>): Result<T, Diagnostics> =>
 
 /** Every diagnostic of a failure, one per line. */
 const describeAll = (diagnostics: Diagnostics): string =>
-  diagnostics.map((found) => found.message).join("\n");
+  diagnostics.map((found) => describeDiagnostic(found)).join("\n");
 
 /** After parsing the assignment, compile the Chip and Tst. */
 export const maybeBuild =

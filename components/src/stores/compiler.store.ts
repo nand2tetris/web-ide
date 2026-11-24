@@ -1,6 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
-import { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";

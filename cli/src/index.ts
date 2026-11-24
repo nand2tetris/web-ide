@@ -2,6 +2,7 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { NodeFileSystemAdapter } from "@davidsouther/jiffies/fs_node.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
+import { describeDiagnostic } from "@nand2tetris/simulator/languages/diagnostic.js";
 import * as fsCore from "fs";
 import path, { dirname, parse, resolve } from "path";
 import yargs from "yargs";
@@ -154,7 +155,7 @@ yargs(hideBin(process.argv))
           for (const diagnostic of compiled) {
             console.error(
               Colors.Red +
-                diagnostic.message.replace(
+                describeDiagnostic(diagnostic).replace(
                   /Line\s([\d]+):/g,
                   name + ".jack:$1" + Colors.Reset,
                 ),

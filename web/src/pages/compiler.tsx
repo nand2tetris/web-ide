@@ -41,7 +41,7 @@ export const Compiler = () => {
       if (current.valid || first === undefined) {
         clearStatus();
       } else {
-        setStatus({ severity: "INFO", diagnostics: [first] });
+        setStatus({ severity: "INFO", diagnostics: [{ diagnostic: first }] });
       }
     }
   };

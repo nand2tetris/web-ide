@@ -16,22 +16,22 @@ import {
   Chip as SimChip,
 } from "@nand2tetris/simulator/chip/chip.js";
 import { Clock } from "@nand2tetris/simulator/chip/clock.js";
+import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import {
   Diagnostic,
   Span,
-  validOf,
-} from "@nand2tetris/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
 import { ChipTest } from "@nand2tetris/simulator/test/chiptst.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
-import { compare } from "../compare.js";
 import { sortFiles } from "../file_utils.js";
 import { ImmPin, reducePins } from "../pinout.js";
 import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import type { StatusActions } from "./status.js";
+import { comparisonStatus, failureStatus } from "./status.js";
 
 export const NO_SCREEN = "noScreen";
 
@@ -98,6 +98,7 @@ export interface ControlsState {
   usingBuiltin: boolean;
   runningTest: boolean;
   span?: Span;
+  /** The diagnostics of the file in the editor, which marks each of them. */
   diagnostics: readonly Diagnostic[];
   visualizationParameters: Set<string>;
 }
@@ -226,20 +227,13 @@ export function makeChipStore(
 
     testFinished(state: ChipPageState) {
       state.controls.runningTest = false;
-      const passed = compare(state.files.cmp.trim(), state.files.out.trim());
+      const comparison = comparisonStatus(
+        state.files.cmp.trim(),
+        state.files.out.trim(),
+      );
       // For some reason, this is happening during a render but I can't track it down.
       Promise.resolve().then(() => {
-        status.setStatus(
-          passed
-            ? {
-                message: `Simulation successful: The output file is identical to the compare file`,
-                severity: "SUCCESS",
-              }
-            : {
-                message: `Simulation error: The output file differs from the compare file`,
-                severity: "ERROR",
-              },
-        );
+        status.setStatus(comparison);
       });
     },
 
@@ -383,7 +377,7 @@ export function makeChipStore(
       const maybeChip = await parseChip(hdl, dir, name, fs);
       if (isErr(maybeChip)) {
         const diagnostics = Err(maybeChip);
-        status.setFailureStatus(...diagnostics);
+        status.setFailureStatus("hdl", diagnostics);
         invalid = true;
         dispatch.current({
           action: "updateChip",
@@ -440,7 +434,7 @@ export function makeChipStore(
       dispatch.current({ action: "setFiles", payload: { tst: file } });
       const tst = validOf(TST.parse(file));
       if (isErr(tst)) {
-        status.setFailureStatus(...Err(tst));
+        status.setFailureStatus("tst", Err(tst), { marked: false });
         invalid = true;
         return false;
       }
@@ -458,7 +452,9 @@ export function makeChipStore(
       });
       if (isErr(maybeTest)) {
         invalid = true;
-        status.setFailureStatus(Err(maybeTest));
+        status.setFailureStatus("tst", [Err(maybeTest)], {
+          marked: false,
+        });
         return false;
       } else {
         test = Ok(maybeTest).with(chip).reset();
@@ -538,7 +534,9 @@ export function makeChipStore(
       const builtinName = _chipName;
       const nextChip = await getBuiltinChip(builtinName);
       if (isErr(nextChip)) {
-        status.setFailureStatus(Err(nextChip));
+        status.setFailureStatus("builtin", [Err(nextChip)], {
+          marked: false,
+        });
         return;
       }
       this.replaceChip(Ok(nextChip));

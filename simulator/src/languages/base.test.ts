@@ -4,12 +4,28 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { cleanState } from "../clean_state.js";
 import {
   baseSemantics,
-  createError,
   grammars,
   isValid,
   makeParser,
+  span,
   validOf,
 } from "./base.js";
+import {
+  type Diagnostic,
+  DiagnosticCode,
+  type Diagnostics,
+  describeDiagnostic,
+  diagnostic,
+  type Span,
+  Stage,
+} from "./diagnostic.js";
+
+/**
+ * A diagnostic that only needs to be told apart from others: its argument is
+ * a label.
+ */
+const named = (name: string, span?: Span, stage?: Stage): Diagnostic =>
+  diagnostic(DiagnosticCode.Chip.NOT_FOUND, { name }, span, stage);
 
 describe("Ohm Base", () => {
   it("parses numbers", () => {
@@ -60,65 +76,138 @@ describe("Ohm Base", () => {
       expect(state.repGrammar.match(str, tag)).toHaveSucceeded();
     });
   });
-});
 
-describe("parse outcomes", () => {
-  const numbers = grammar(`Nums <: Base { Root := Number+ }`, grammars);
-  function parser() {
-    const semantics = numbers.extendSemantics(baseSemantics);
-    semantics.addAttribute<number[]>("root", {
+  describe("partial parse result", () => {
+    const listGrammar = grammar(`Nums <: Base { Root := Number+ }`, grammars);
+    const numsSemantics = listGrammar.extendSemantics(baseSemantics);
+    numsSemantics.addAttribute<number[]>("root", {
       Root(nums) {
         return nums.children.map((n) => n.value);
       },
     });
+    const { parse, empty } = makeParser<number[]>(
+      listGrammar,
+      numsSemantics,
+      () => [],
+    );
+
+    it("returns a valid outcome for valid source", () => {
+      const outcome = parse("1 2 3");
+      expect(outcome).toEqual({ ast: [1, 2, 3], diagnostics: [] });
+      expect(isValid(outcome)).toBe(true);
+    });
+
+    it("returns the null root and today's message for invalid source", () => {
+      const outcome = parse("1 x");
+      if (isValid(outcome)) throw new Error("parse is valid");
+      expect(outcome.ast).toEqual([]);
+      expect(outcome.ast).toEqual(empty());
+      expect(outcome.diagnostics).toHaveLength(1);
+      expect(outcome.diagnostics[0]).toMatchObject({
+        code: DiagnosticCode.Syntax.EXPECTED,
+        span: { line: 1 },
+        stage: Stage.PARSE,
+      });
+      expect(describeDiagnostic(outcome.diagnostics[0])).toMatch(
+        /^Line 1: expected /,
+      );
+      expect(outcome.diagnostics[0]).not.toHaveProperty("message");
+    });
+
+    it("validOf returns the AST for valid source", () => {
+      expect(Ok(validOf(parse("1 2 3")))).toEqual([1, 2, 3]);
+    });
+
+    it("validOf rejects invalid source with every diagnostic", () => {
+      const outcome = parse("1 x");
+      const result = validOf(outcome);
+      expect(result).toBeErr();
+      expect(Err(result as Err<Diagnostics>)).toBe(outcome.diagnostics);
+    });
+
+    it("validOf rejects a tree with diagnostics, keeping their order", () => {
+      const first = named("first");
+      const second = named("second");
+      const outcome = {
+        ast: [1],
+        diagnostics: [first, second],
+      } as const;
+      expect(isValid(outcome)).toBe(false);
+      expect(validOf(outcome)).toBeErr();
+      expect(Err(validOf(outcome))).toEqual([first, second]);
+    });
+
+    it("tells an unparsed file from an empty valid file by its diagnostics", () => {
+      const optional = grammar(`Opt <: Base { Root := Number* }`, grammars);
+      const optSemantics = optional.extendSemantics(baseSemantics);
+      optSemantics.addAttribute<number[]>("root", {
+        Root(nums) {
+          return nums.children.map((n) => n.value);
+        },
+      });
+      const opt = makeParser<number[]>(optional, optSemantics, () => []);
+      const emptyFile = opt.parse("");
+      const unparsed = opt.parse("x");
+      expect(emptyFile.ast).toEqual(unparsed.ast);
+      expect(emptyFile.diagnostics).toEqual([]);
+      expect(isValid(emptyFile)).toBe(true);
+      expect(unparsed.diagnostics).not.toHaveLength(0);
+      expect(isValid(unparsed)).toBe(false);
+    });
+  });
+});
+
+describe("makeParser", () => {
+  const numbers = grammar(`Nums <: Base { Root := Number+ }`, grammars);
+
+  function throwing(thrown: () => never) {
+    const semantics = numbers.extendSemantics(baseSemantics);
+    semantics.addAttribute<number[]>("root", {
+      Root(_nums) {
+        return thrown();
+      },
+    });
     return makeParser<number[]>(numbers, semantics, () => []);
   }
-  it("returns a valid tree for valid source", () => {
-    const result = parser().parse("1 2 3");
-    expect(isValid(result)).toBe(true);
-    expect(Ok(validOf(result))).toEqual([1, 2, 3]);
-  });
-  it("returns its null root and located message for invalid source", () => {
-    const result = parser().parse("1 x");
-    expect(result.ast).toEqual([]);
-    expect(isValid(result)).toBe(false);
-    expect(result.diagnostics[0]).toMatchObject({
-      message: expect.stringMatching(/^Line 1:/),
-      span: { line: 1 },
-    });
-    expect(Err(validOf(result))).toBe(result.diagnostics);
-  });
-  it("keeps every diagnostic in order when taking the Result view", () => {
-    const diagnostics = [{ message: "first" }, { message: "second" }] as const;
-    const result = { ast: [1], diagnostics };
-    expect(isValid(result)).toBe(false);
-    expect(Err(validOf(result))).toBe(diagnostics);
-  });
+
   it("keeps a diagnostic thrown by a semantic action", () => {
-    const failure = createError("bad number", { start: 0, end: 1, line: 1 });
     const semantics = numbers.extendSemantics(baseSemantics);
     semantics.addAttribute<number[]>("root", {
       Root(_nums) {
-        throw failure;
+        throw diagnostic(
+          DiagnosticCode.Asm.DUPLICATE_LABEL,
+          { label: "A" },
+          span(this.source),
+        );
       },
     });
-    const result = makeParser<number[]>(numbers, semantics, () => []).parse(
+    const outcome = makeParser<number[]>(numbers, semantics, () => []).parse(
       "1",
     );
-    expect(result.ast).toEqual([]);
-    expect(result.diagnostics).toEqual([failure]);
+
+    expect(outcome.ast).toEqual([]);
+    expect(outcome.diagnostics).toEqual([
+      {
+        code: DiagnosticCode.Asm.DUPLICATE_LABEL,
+        args: { label: "A" },
+        span: { start: 0, end: 1, line: 1 },
+        stage: Stage.SEMANTIC,
+      },
+    ]);
   });
-  it("keeps the message of an unexpected semantic error", () => {
-    const semantics = numbers.extendSemantics(baseSemantics);
-    semantics.addAttribute<number[]>("root", {
-      Root(_nums) {
-        throw new Error("boom");
+
+  it("reports any other thrown error as an unexpected one", () => {
+    const outcome = throwing(() => {
+      throw new Error("boom");
+    }).parse("1");
+
+    expect(outcome.ast).toEqual([]);
+    expect(outcome.diagnostics).toEqual([
+      {
+        code: DiagnosticCode.Error.UNEXPECTED,
+        args: { message: "boom" },
+        stage: Stage.SEMANTIC,
       },
-    });
-    const result = makeParser<number[]>(numbers, semantics, () => []).parse(
-      "1",
-    );
-    expect(result.ast).toEqual([]);
-    expect(result.diagnostics[0]?.message).toBe("boom");
+    ]);
   });
 });

@@ -1,4 +1,4 @@
-// Regression for #662: `Nand16` is not a course chip, so it must not be a builtin;
+// `Nand16` is not a course chip, so it must not be a builtin;
 // otherwise And16.hdl can be "implemented" with no real gate wiring.
 import { isErr } from "@davidsouther/jiffies/result.ts";
 import { describe, expect, test } from "vitest";

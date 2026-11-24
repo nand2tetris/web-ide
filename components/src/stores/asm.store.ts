@@ -16,11 +16,11 @@ import {
   isAValueInstruction,
   translateInstruction,
 } from "@nand2tetris/simulator/languages/asm.js";
+import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import {
   type Diagnostic,
   Span,
-  validOf,
-} from "@nand2tetris/simulator/languages/base.js";
+} from "@nand2tetris/simulator/languages/diagnostic.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { bin } from "@nand2tetris/simulator/util/twos.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
@@ -28,6 +28,7 @@ import { useImmerReducer } from "../react.js";
 import { RunSpeed } from "../runbar.js";
 import { BaseContext } from "./base.context.js";
 import type { StatusActions } from "./status.js";
+import { failureStatus } from "./status.js";
 
 export interface TranslatorSymbol {
   name: string;
@@ -115,11 +116,11 @@ class Translator {
     const instruction = this.asm.instructions[this.current];
     if (instruction.type === "A" || instruction.type === "C") {
       highlightInfo.sourceHighlight = instruction.span;
-      const result = translateInstruction(this.asm.instructions[this.current]);
-      if (result === undefined) {
+      const word = translateInstruction(this.asm.instructions[this.current]);
+      if (isErr(word) || Ok(word) === undefined) {
         return;
       }
-      this.lines.push(`${bin(result)}`);
+      this.lines.push(`${bin(Ok(word) as number)}`);
       highlightInfo.resultHighlight = {
         start: this.current * 17,
         end: (this.current + 1) * 17,
@@ -219,7 +220,7 @@ export function makeAsmStore(
 
   /** Shows the diagnostics of ASM code that did not compile. */
   const compileFailed = (diagnostics: readonly Diagnostic[]) => {
-    status.setFailureStatus(...diagnostics);
+    status.setFailureStatus("asm", diagnostics);
     dispatch.current({ action: "setDiagnostics", payload: diagnostics });
     compiled = false;
   };

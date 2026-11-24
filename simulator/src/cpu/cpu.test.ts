@@ -183,7 +183,6 @@ describe("CPU", () => {
     expect(RAM.get(2)).toBe(6);
   });
 
-  // https://github.com/nand2tetris/web-ide/issues/337
   it("MD=D+1 does not double-update on tock", () => {
     const RAM = new Memory(1);
     const ROM = new Memory(

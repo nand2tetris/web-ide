@@ -39,6 +39,15 @@ export async function loadChip(
   dir?: string,
   fs?: FileSystem,
 ): Promise<Result<Chip>> {
+  return loadDependency(name, dir, fs, new Set());
+}
+
+async function loadDependency(
+  name: string,
+  dir: string | undefined,
+  fs: FileSystem | undefined,
+  ancestors: ReadonlySet<string>,
+): Promise<Result<Chip>> {
   if (hasBuiltinChip(name) || fs === undefined) {
     return await getBuiltinChip(name);
   }
@@ -48,12 +57,10 @@ export async function loadChip(
 
     let maybeChip: Result<Chip, Error>;
     if (isOk(maybeParsedHDL)) {
-      const maybeBuilt = await build({
-        parts: Ok(maybeParsedHDL),
-        dir,
-        name,
-        fs,
-      });
+      const maybeBuilt = await ChipBuilder.build(
+        { parts: Ok(maybeParsedHDL), dir, name, fs },
+        ancestors,
+      );
       if (isErr(maybeBuilt)) {
         maybeChip = Err(new Error(Err(maybeBuilt).message));
       } else {
@@ -69,10 +76,17 @@ export async function loadChip(
   }
 }
 
+interface BuildOptions {
+  parts: HdlParse;
+  fs?: FileSystem;
+  dir?: string;
+  name?: string;
+}
+
 export async function build(
-  ...args: Parameters<typeof ChipBuilder.build>
+  options: BuildOptions,
 ): Promise<ReturnType<typeof ChipBuilder.build>> {
-  return await ChipBuilder.build(...args);
+  return await ChipBuilder.build(options);
 }
 
 interface InternalPin {
@@ -186,26 +200,20 @@ class ChipBuilder {
   private outPins: Map<string, Set<number>> = new Map();
   private wires: WireData[] = [];
 
-  static build(options: {
-    parts: HdlParse;
-    fs?: FileSystem;
-    dir?: string;
-    name?: string;
-  }) {
-    return new ChipBuilder(options).build();
+  static build(
+    options: BuildOptions,
+    ancestors: ReadonlySet<string> = new Set(),
+  ) {
+    return new ChipBuilder(
+      options,
+      new Set([...ancestors, options.parts.name.value]),
+    ).build();
   }
 
-  private constructor({
-    parts,
-    fs,
-    dir,
-    name,
-  }: {
-    parts: HdlParse;
-    fs?: FileSystem;
-    dir?: string;
-    name?: string;
-  }) {
+  private constructor(
+    { parts, fs, dir, name }: BuildOptions,
+    private readonly ancestors: ReadonlySet<string>,
+  ) {
     this.parts = parts;
     this.expectedName = name;
     this.dir = dir;
@@ -253,7 +261,20 @@ class ChipBuilder {
     }
 
     for (const part of this.parts.parts) {
-      const builtin = await loadChip(part.name, this.dir, this.fs);
+      if (this.ancestors.has(part.name)) {
+        return Err(
+          createError(
+            `Cannot use chip ${part.name} to implement itself`,
+            part.span,
+          ),
+        );
+      }
+      const builtin = await loadDependency(
+        part.name,
+        this.dir,
+        this.fs,
+        this.ancestors,
+      );
       if (isErr(builtin)) {
         return Err(createError(`Undefined chip name: ${part.name}`, part.span));
       }

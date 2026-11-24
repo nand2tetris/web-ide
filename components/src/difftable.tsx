@@ -1,6 +1,7 @@
 import { display } from "@davidsouther/jiffies/display.ts";
 import { range } from "@davidsouther/jiffies/range.ts";
 import { Err, isErr, Ok } from "@davidsouther/jiffies/result.ts";
+import { validOf } from "@nand2tetris/simulator/languages/base.js";
 import { CMP } from "@nand2tetris/simulator/languages/cmp.js";
 import { ReactElement } from "react";
 
@@ -15,14 +16,14 @@ export const DiffTable = ({
   className?: string;
   zeroState?: ReactElement;
 }) => {
-  const output = CMP.parse(out);
-  const compare = CMP.parse(cmp);
+  const output = validOf(CMP.parse(out));
+  const compare = validOf(CMP.parse(cmp));
 
   if (isErr(output)) {
     return (
       <details>
         <summary>Failed to parse output</summary>
-        <pre>{display(Err(output))}</pre>
+        <pre>{Err(output).map(display).join("\n")}</pre>
         <code>
           <pre>{out}</pre>
         </code>
@@ -35,7 +36,7 @@ export const DiffTable = ({
       <details>
         <summary>Failed to parse compare</summary>
         <code>
-          <pre>{display(Err(compare))}</pre>
+          <pre>{Err(compare).map(display).join("\n")}</pre>
           <pre>{cmp}</pre>
         </code>
       </details>

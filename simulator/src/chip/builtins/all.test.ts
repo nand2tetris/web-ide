@@ -8,6 +8,7 @@ import { ChipProjects } from "@nand2tetris/projects/full.js";
 import { Max } from "@nand2tetris/projects/samples/hack.js";
 import { describe, expect, it } from "vitest";
 import { compare } from "../../compare.js";
+import { type Valid, validOf } from "../../languages/base.js";
 import { CMP, Cmp } from "../../languages/cmp.js";
 import { HDL, HdlParse } from "../../languages/hdl.js";
 import { TST, Tst } from "../../languages/tst.js";
@@ -38,12 +39,12 @@ describe("All Projects", () => {
       const partsIdx = hdlFile.indexOf("PARTS:");
       expect(partsIdx).toBeGreaterThan(0);
       hdlFile = hdlFile.substring(0, partsIdx) + "BUILTIN; }";
-      const hdl = HDL.parse(hdlFile);
+      const hdl = validOf(HDL.parse(hdlFile));
       expect(hdl).toBeOk();
-      const tst = TST.parse(tstFile);
+      const tst = validOf(TST.parse(tstFile));
       expect(tst).toBeOk();
 
-      const chip = await build({ parts: Ok(hdl as Ok<HdlParse>) });
+      const chip = await build({ parts: Ok(hdl as Ok<Valid<HdlParse>>) });
       expect(chip).toBeOk();
       const test = unwrap(ChipTest.from(Ok(tst as Ok<Tst>))).with(
         Ok(chip as Ok<Chip>),
@@ -61,9 +62,9 @@ describe("All Projects", () => {
 
       const outFile = test.log();
 
-      const cmp = CMP.parse(cmpFile);
+      const cmp = validOf(CMP.parse(cmpFile));
       expect(cmp).toBeOk();
-      const out = CMP.parse(outFile);
+      const out = validOf(CMP.parse(outFile));
       expect(out).toBeOk();
 
       const diffs = compare(Ok(cmp as Ok<Cmp>), Ok(out as Ok<Cmp>));

@@ -430,9 +430,18 @@ jackSemantics.addAttribute<ExpressionPart>("expressionPart", {
   },
 });
 
+/** The null root of a parse that built no class: an empty, unnamed class. */
+function emptyClass(): Class {
+  return {
+    name: { value: "", span: { start: 0, end: 0, line: 1 } },
+    varDecs: [],
+    subroutines: [],
+  };
+}
+
 export const JACK = {
   parser: grammar,
   grammar: jackGrammar,
   semantics: jackSemantics,
-  parse: makeParser<Class>(grammar, jackSemantics, (n) => n.class),
+  ...makeParser<Class>(grammar, jackSemantics, emptyClass, "class"),
 };

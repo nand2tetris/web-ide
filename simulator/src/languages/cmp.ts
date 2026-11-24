@@ -27,9 +27,14 @@ cmpSemantics.addAttribute<Cmp>("root", {
   },
 });
 
+/** The null root of a parse that built no table: a table with no lines. */
+function emptyCmp(): Cmp {
+  return [];
+}
+
 export const CMP = {
   grammar: cmpGrammar,
   semantics: cmpSemantics,
   parser: grammar,
-  parse: makeParser<Cmp>(grammar, cmpSemantics),
+  ...makeParser<Cmp>(grammar, cmpSemantics, emptyCmp),
 };

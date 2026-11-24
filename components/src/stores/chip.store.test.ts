@@ -2,8 +2,8 @@ import {
   FileSystem,
   ObjectFileSystemAdapter,
 } from "@davidsouther/jiffies/fs.ts";
-import { isOk } from "@davidsouther/jiffies/result.ts";
 import * as not from "@nand2tetris/projects/project_01/01_not.js";
+import { isValid } from "@nand2tetris/simulator/languages/base.js";
 import { HDL } from "@nand2tetris/simulator/languages/hdl.js";
 import { produce } from "immer";
 import { MutableRefObject } from "react";
@@ -99,7 +99,7 @@ describe("ChipStore", () => {
       const builtin = convertToBuiltin("Not", not.hdl);
 
       expect(builtin).toContain("BUILTIN Not;");
-      expect(isOk(HDL.parse(builtin))).toBe(true);
+      expect(isValid(HDL.parse(builtin))).toBe(true);
     });
   });
 

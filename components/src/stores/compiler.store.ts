@@ -1,6 +1,6 @@
 import { FileSystem } from "@davidsouther/jiffies/fs.ts";
 import { compile } from "@nand2tetris/simulator/jack/compiler.js";
-import { CompilationError } from "@nand2tetris/simulator/languages/base.js";
+import { Diagnostic } from "@nand2tetris/simulator/languages/base.js";
 import { Action } from "@nand2tetris/simulator/types.js";
 import { Dispatch, MutableRefObject, useContext, useMemo, useRef } from "react";
 import { useImmerReducer } from "../react.js";
@@ -9,7 +9,7 @@ import { BaseContext, StatusSeverity } from "./base.context.js";
 export interface CompiledFile {
   vm?: string;
   valid: boolean;
-  error?: CompilationError;
+  diagnostics: readonly Diagnostic[];
 }
 
 export interface CompilerPageState {
@@ -88,11 +88,12 @@ export function makeCompilerStore(
           state.compiled[name] = {
             valid: true,
             vm: compiled,
+            diagnostics: [],
           };
         } else {
           state.compiled[name] = {
             valid: false,
-            error: compiled,
+            diagnostics: [compiled],
           };
         }
       }

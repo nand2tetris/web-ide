@@ -1,5 +1,5 @@
 import { Err, isErr, Ok, Result } from "@davidsouther/jiffies/result.ts";
-import { CompilationError, createError, Span } from "../languages/base.js";
+import { createError, Diagnostic, Span } from "../languages/base.js";
 import {
   ArrayAccess,
   Class,
@@ -47,8 +47,8 @@ function isOsClass(name: string): boolean {
   return osClasses.has(name);
 }
 
-function isError(value: unknown): value is CompilationError {
-  return (value as CompilationError).message != undefined;
+function isError(value: unknown): value is Diagnostic {
+  return (value as Diagnostic).message != undefined;
 }
 
 function capitalize(s: string) {
@@ -57,8 +57,8 @@ function capitalize(s: string) {
 
 export function compile(
   files: Record<string, string>,
-): Record<string, string | CompilationError> {
-  const classes: Record<string, Class | CompilationError> = {};
+): Record<string, string | Diagnostic> {
+  const classes: Record<string, Class | Diagnostic> = {};
   for (const [name, content] of Object.entries(files)) {
     const parsed = JACK.parse(content);
     if (isErr(parsed)) {
@@ -82,7 +82,7 @@ export function compile(
     Object.entries(classes).filter(([_, parsed]) => !isError(parsed)),
   ) as Record<string, Class>;
 
-  const vms: Record<string, string | CompilationError> = {};
+  const vms: Record<string, string | Diagnostic> = {};
   for (const [name, parsed] of Object.entries(classes)) {
     if (isError(parsed)) {
       vms[name] = parsed;
@@ -95,14 +95,14 @@ export function compile(
           vms[name] = Ok(compiled);
         }
       } catch (e) {
-        vms[name] = e as CompilationError;
+        vms[name] = e as Diagnostic;
       }
     }
   }
   return vms;
 }
 
-function validateClass(cls: Class): Result<void, CompilationError> {
+function validateClass(cls: Class): Result<void, Diagnostic> {
   const subroutineNames = new Set<string>();
   for (const subroutine of cls.subroutines) {
     if (subroutineNames.has(subroutine.name.value)) {
@@ -210,7 +210,7 @@ export class Compiler {
   compile(
     cls: Class,
     other?: Record<string, Class>,
-  ): Result<string, CompilationError> {
+  ): Result<string, Diagnostic> {
     this.className = cls.name.value;
     this.classes = other ?? {};
     for (const varDec of cls.varDecs) {

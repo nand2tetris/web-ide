@@ -66,17 +66,15 @@ baseSemantics.addAttribute("String", {
   },
 });
 
-export interface CompilationError {
+/** One diagnostic: a message and, when known, where it applies. */
+export interface Diagnostic {
   message: string;
   span?: Span;
 }
 
 const UNKNOWN_HDL_ERROR = `HDL statement has a syntax error`;
 
-export function createError(
-  description: string,
-  span?: Span,
-): CompilationError {
+export function createError(description: string, span?: Span): Diagnostic {
   const match = description.match(/Line \d+, col \d+: (?<message>.*)/);
   const message = match?.groups?.message ? match.groups.message : description;
   return {
@@ -91,7 +89,7 @@ export function makeParser<ResultType>(
   grammar: Grammar,
   semantics: Semantics,
   property: (obj: Dict) => ResultType = ({ root }) => root,
-): (source: string) => Result<ResultType, CompilationError> {
+): (source: string) => Result<ResultType, Diagnostic> {
   return function parse(source) {
     try {
       const match = grammar.match(source);

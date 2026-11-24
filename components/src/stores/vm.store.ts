@@ -15,7 +15,7 @@ import {
   MemoryKeyboard,
 } from "@nand2tetris/simulator/cpu/memory.js";
 import {
-  CompilationError,
+  type Diagnostic,
   Span,
 } from "@nand2tetris/simulator/languages/base.js";
 import { TST } from "@nand2tetris/simulator/languages/tst.js";
@@ -72,7 +72,8 @@ export interface ControlsState {
   exitCode: number | undefined;
   animate: boolean;
   valid: boolean;
-  error?: CompilationError;
+  /** Every diagnostic of the last compile or run. */
+  diagnostics: readonly Diagnostic[];
 }
 
 export interface VMFiles {
@@ -102,10 +103,9 @@ function reduceVMTest(
   try {
     stack = vmTest.vm.vmStack().reverse();
   } catch (_e) {
-    dispatch.current({
-      action: "setError",
-      payload: new Error("Runtime error: Invalid stack"),
-    });
+    const error = new Error("Runtime error: Invalid stack");
+    setStatus({ message: error.message, severity: "ERROR" });
+    dispatch.current({ action: "setDiagnostics", payload: [error] });
   }
 
   return {
@@ -138,6 +138,14 @@ export function makeVmStore(
   let vmSource = "";
   let loadedFiles: VmFile[] = [];
   let showHighlight = true;
+
+  /** Shows the diagnostics of VM code that did not compile. */
+  const compileFailed = (diagnostics: readonly Diagnostic[]) => {
+    setStatus({ message: diagnostics[0].message, severity: "ERROR" });
+    dispatch.current({ action: "setDiagnostics", payload: diagnostics });
+    return false;
+  };
+
   const reducers = {
     setVm(state: VmPageState, vm: string) {
       state.files.vm = vm;
@@ -157,17 +165,12 @@ export function makeVmStore(
     setShowHighlight(state: VmPageState, value: boolean) {
       state.vm.showHighlight = value;
     },
-    setError(state: VmPageState, error?: CompilationError) {
-      if (error) {
-        state.controls.valid = false;
-        setStatus({
-          message: error?.message,
-          severity: "ERROR",
-        });
-      } else {
-        state.controls.valid = true;
-      }
-      state.controls.error = error;
+    setDiagnostics(
+      state: VmPageState,
+      diagnostics: readonly Diagnostic[] = [],
+    ) {
+      state.controls.valid = diagnostics.length === 0;
+      state.controls.diagnostics = diagnostics;
     },
     update(state: VmPageState) {
       state.vm = reduceVMTest(test, dispatch, setStatus, showHighlight);
@@ -209,6 +212,7 @@ export function makeVmStore(
       runningTest: false,
       animate: true,
       valid: true,
+      diagnostics: [],
     },
     test: {
       highlight: undefined,
@@ -283,8 +287,7 @@ export function makeVmStore(
       const parseResult = VM.parse(content);
 
       if (isErr(parseResult)) {
-        dispatch.current({ action: "setError", payload: Err(parseResult) });
-        return false;
+        return compileFailed([Err(parseResult)]);
       }
       const instructions = unwrap(parseResult).instructions;
       const buildResult = Vm.build(instructions);
@@ -312,8 +315,7 @@ export function makeVmStore(
         const parseResult = VM.parse(file.content);
 
         if (isErr(parseResult)) {
-          dispatch.current({ action: "setError", payload: Err(parseResult) });
-          return false;
+          return compileFailed([Err(parseResult)]);
         }
         const instructions = unwrap(parseResult).instructions;
 
@@ -332,12 +334,11 @@ export function makeVmStore(
       const buildResult = Vm.buildFromFiles(parsed);
       return this.replaceVm(buildResult);
     },
-    replaceVm(buildResult: Result<Vm, CompilationError>) {
+    replaceVm(buildResult: Result<Vm, Diagnostic>) {
       if (isErr(buildResult)) {
-        dispatch.current({ action: "setError", payload: Err(buildResult) });
-        return false;
+        return compileFailed([Err(buildResult)]);
       }
-      dispatch.current({ action: "setError" });
+      dispatch.current({ action: "setDiagnostics" });
       // setStatus("Compiled VM code successfully");
 
       vm = unwrap(buildResult);
@@ -411,7 +412,7 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: error });
+        dispatch.current({ action: "setDiagnostics", payload: [error] });
         return true;
       }
     },
@@ -440,7 +441,7 @@ export function makeVmStore(
           message: `Runtime error: ${error.message}`,
           severity: "ERROR",
         });
-        dispatch.current({ action: "setError", payload: error });
+        dispatch.current({ action: "setDiagnostics", payload: [error] });
         return true;
       }
     },

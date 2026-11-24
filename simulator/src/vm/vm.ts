@@ -6,7 +6,7 @@ import {
   unwrap,
 } from "@davidsouther/jiffies/result.ts";
 import { MemoryAdapter, RAM } from "../cpu/memory.js";
-import { CompilationError, createError, Span } from "../languages/base.js";
+import { createError, Diagnostic, Span } from "../languages/base.js";
 import {
   CallInstruction,
   FunctionInstruction,
@@ -288,7 +288,7 @@ export class Vm {
 
   private static validateFunctions(
     instructions: VmInstruction[],
-  ): Result<void, CompilationError> {
+  ): Result<void, Diagnostic> {
     const functions: Set<string> = new Set();
     const calls = [];
 
@@ -344,7 +344,7 @@ export class Vm {
     return Ok();
   }
 
-  static buildFromFiles(files: ParsedVmFile[]): Result<Vm, CompilationError> {
+  static buildFromFiles(files: ParsedVmFile[]): Result<Vm, Diagnostic> {
     if (files.length === 0) {
       return Err(
         createError("No .vm files to load. Compile your Jack files first."),
@@ -367,7 +367,7 @@ export class Vm {
     return vm.bootstrap();
   }
 
-  static build(instructions: VmInstruction[]): Result<Vm, CompilationError> {
+  static build(instructions: VmInstruction[]): Result<Vm, Diagnostic> {
     const result = this.validateFunctions(instructions);
     if (isErr(result)) {
       return result;
@@ -381,7 +381,7 @@ export class Vm {
   private static buildFunction(
     instructions: VmInstruction[],
     i: number,
-  ): Result<[VmFunction, number], CompilationError> {
+  ): Result<[VmFunction, number], Diagnostic> {
     if (instructions[i].op !== "function")
       throw new Error(
         "Only call buildFunction at the initial Function instruction",
@@ -547,10 +547,7 @@ export class Vm {
     return this.currentFunction.operations[this.invocation.opPtr];
   }
 
-  load(
-    instructions: VmInstruction[],
-    reset = false,
-  ): Result<this, CompilationError> {
+  load(instructions: VmInstruction[], reset = false): Result<this, Diagnostic> {
     if (reset) {
       this.functionMap = {};
       this.statics = {};

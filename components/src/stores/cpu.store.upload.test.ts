@@ -8,6 +8,7 @@ import { loadAsm } from "@nand2tetris/simulator/loader.js";
 import { produce } from "immer";
 import { expect, test, vi } from "vitest";
 import { CpuPageState, CpuStoreDispatch, makeCpuStore } from "./cpu.store.js";
+import { statusActions } from "./status.js";
 
 // #622: a .tst uploaded from disk reaches the store as a bare basename and is
 // never written to `fs`, so `load Mult.asm` resolved to the missing /Mult.asm.
@@ -20,7 +21,7 @@ async function runTest(tstPath: string) {
   const statuses: string[] = [];
   const { actions } = makeCpuStore(
     fs,
-    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    statusActions((s) => statuses.push(s.message ?? "")),
     {},
     { current: vi.fn() as unknown as CpuStoreDispatch },
   );
@@ -51,7 +52,7 @@ test("a program the test loaded is reloaded on the next run", async () => {
   await fs.writeFile("/proj/Prog.hack", "0000000000000111");
   const { actions } = makeCpuStore(
     fs,
-    vi.fn(),
+    statusActions(vi.fn()),
     {},
     { current: vi.fn() as unknown as CpuStoreDispatch },
   );
@@ -105,7 +106,7 @@ test("a test loaded from the file system keeps an uploaded program", async () =>
   const dispatch = { current: vi.fn() as unknown as CpuStoreDispatch };
   const { initialState, reducers, actions } = makeCpuStore(
     fs,
-    (s) => statuses.push(typeof s === "string" ? s : s.message),
+    statusActions((s) => statuses.push(s.message ?? "")),
     {},
     dispatch,
   );

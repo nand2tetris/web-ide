@@ -62,7 +62,7 @@ export const Asm = () => {
 
   const loadAsm = async () => {
     const fileRef = await filePicker.selectAllowLocal({ suffix: ".asm" });
-    setStatus(LOADING);
+    setStatus({ message: LOADING });
     requestAnimationFrame(async () => {
       let title: string;
       if (isPath(fileRef)) {
@@ -73,7 +73,7 @@ export const Asm = () => {
         await actions.loadAsm(undefined, file.content);
         title = file.name;
       }
-      setStatus("");
+      clearStatus();
       dispatch.current({ action: "setTitle", payload: title });
     });
   };
@@ -95,7 +95,7 @@ export const Asm = () => {
     }
   };
 
-  const { setStatus } = useContext(BaseContext);
+  const { setStatus, clearStatus } = useContext(BaseContext);
 
   const downloadAsm = () =>
     download(state.asm, state.path?.split("/").pop() ?? "source.asm");

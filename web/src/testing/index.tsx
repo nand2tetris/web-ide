@@ -6,6 +6,7 @@ import { i18n } from "@lingui/core";
 import { I18nProvider } from "@lingui/react";
 import { useDialog } from "@nand2tetris/components/dialog";
 import { BaseContext } from "@nand2tetris/components/stores/base.context.js";
+import { NO_STATUS } from "@nand2tetris/components/stores/status.js";
 import * as Not from "@nand2tetris/projects/project_01/01_not.js";
 import { RenderOptions, RenderResult, render } from "@testing-library/react";
 import ue from "@testing-library/user-event";
@@ -43,10 +44,7 @@ export const useTestingAppContext = () => ({
     closeFs(force?: boolean) {
       // no-op
     },
-    status: { message: "", severity: "INFO" },
-    setStatus() {
-      // no-op
-    },
+    ...NO_STATUS,
     storage: {},
     permissionPrompt: useDialog(),
     async requestPermission() {

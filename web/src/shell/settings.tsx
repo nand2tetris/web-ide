@@ -53,7 +53,7 @@ export const Settings = () => {
         setStorageMode("browser");
       } else {
         console.error("Failed to upgrade FS", { err });
-        setStatus(t`Failed to load local file system.`);
+        setStatus({ message: t`Failed to load local file system.` });
         setStorageMode("browser");
       }
     } finally {

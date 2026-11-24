@@ -237,7 +237,7 @@ export const Memory = forwardRef(
       onChange?.();
       if (fileSelect) {
         const { name, content } = await fileSelect();
-        setStatus(LOADING);
+        setStatus({ message: LOADING });
         requestAnimationFrame(async () => {
           const loader = name.endsWith("hack")
             ? loadHack
@@ -248,7 +248,7 @@ export const Memory = forwardRef(
             try {
               const bytes = await loader(content);
               memory.loadBytes(bytes);
-              setStatus("");
+              clearStatus();
               setFormat(
                 name.endsWith("hack")
                   ? "bin"
@@ -269,7 +269,7 @@ export const Memory = forwardRef(
       }
     };
 
-    const { setStatus } = useContext(BaseContext);
+    const { setStatus, clearStatus } = useContext(BaseContext);
 
     const rerenderMemoryBlock = () => {
       setRenderKey(renderKey + 1);

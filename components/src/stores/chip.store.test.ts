@@ -14,6 +14,7 @@ import {
   convertToBuiltin,
   makeChipStore,
 } from "./chip.store.js";
+import { statusActions } from "./status.js";
 
 function testChipStore(
   fs: Record<string, string> = {
@@ -29,7 +30,7 @@ function testChipStore(
 
   const { initialState, actions, reducers } = makeChipStore(
     new FileSystem(new ObjectFileSystemAdapter(fs)),
-    setStatus,
+    statusActions(setStatus),
     storage,
     dispatch,
     false,

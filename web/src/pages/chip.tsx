@@ -330,7 +330,7 @@ export const Chip = () => {
   const [inputValid, setInputValid] = useState(true);
 
   const showCannotTestError = () => {
-    setStatus(t`Cannot test a chip that has syntax errors`);
+    setStatus({ message: t`Cannot test a chip that has syntax errors` });
   };
 
   const evalIfCan = () => {

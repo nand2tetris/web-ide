@@ -70,7 +70,7 @@ export const CPU = () => {
       }
 
       override reset() {
-        setStatus("");
+        setStatus({ message: "" });
         actions.reset();
       }
 
